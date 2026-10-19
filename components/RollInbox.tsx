@@ -27,7 +27,8 @@ import {
   classifyFateEvent,
   classifyFateEventCandidate,
 } from '../utils/fateEventEligibility';
-import { parsePastedEvents, pasteSummary } from '../utils/runelitePaste';
+import { addRuneliteEvents, parsePastedEvents, pasteSummary, sentSummary } from '../utils/runelitePaste';
+import { listenForSentEvents } from '../services/relayInbox';
 import { petById, type Pet } from '../data/pets';
 import { PetPicker } from './PetPicker';
 
@@ -133,9 +134,9 @@ function terminalAck(
 }
 
 /**
- * RuneLite keeps detections local and the relay has no acknowledgement
- * resource (docs/online-relay.md), so by default a decision stays in this
- * browser's inbox.
+ * RuneLite is never told what the player decided: the relay only holds what
+ * Send to tracker sent until the tracker takes it (docs/online-relay.md), so
+ * by default a decision stays in this browser's inbox.
  */
 const keepAcknowledgementLocal = async (): Promise<boolean> => false;
 
@@ -154,6 +155,11 @@ export function RollInboxView({
   const rolling = useRef(new Set<string>());
 
   useEffect(() => store.subscribe(() => refresh((value) => value + 1)), [store]);
+  // What RuneLite's Send to tracker added, here or while the inbox was closed.
+  useEffect(
+    () => listenForSentEvents(game.state.runId, (sent) => setPasteNote(sentSummary(sent))),
+    [game.state.runId],
+  );
 
   const allRows = store.list();
   const active = allRows.filter((row) => !TERMINAL.has(row.state));
@@ -217,10 +223,7 @@ export function RollInboxView({
       setPasteNote(`That isn’t a copy from RuneLite. In its Roll inbox card, choose ${RUNELITE_TERMS.COPY_FOR_TRACKER} first.`);
       return false;
     }
-    const added = store.ingest(pasted.events);
-    const characters = game.state.linkedAccount
-      ? []
-      : [...new Set(pasted.events.map((event) => event.account))];
+    const { added, characters } = addRuneliteEvents(store, pasted, game.state.linkedAccount);
     setPasteNote(pasteSummary(pasted, added, characters));
     setPasting(false);
     setPasteText('');

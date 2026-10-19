@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { initialState } from '../context/GameContext';
@@ -9,6 +9,7 @@ import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { RUNELITE_COPY_FORMAT } from '../utils/runelitePaste';
 import { relaySync } from '../services/relaySync';
+import { announceSentEvents, resetRelayInboxForTest } from '../services/relayInbox';
 import { createRollInboxStore } from '../services/rollInboxStore';
 import type { GameState } from '../types';
 import { RollInboxView, type RollInboxGame } from './RollInbox';
@@ -431,5 +432,34 @@ describe('Paste from RuneLite', () => {
 
     expect((await screen.findByRole('status')).textContent).toBe('Added 2 from Zezima.');
     expect(screen.getAllByText('Zezima')).toHaveLength(2);
+  });
+});
+
+describe('Send to tracker', () => {
+  afterEach(() => resetRelayInboxForTest());
+
+  function view(state = gameState()) {
+    const store = createRollInboxStore(new MemoryStorage(), state.runId);
+    render(<RollInboxView store={store} game={{ state, acceptDetectedEvent: vi.fn().mockReturnValue(true) }} />);
+    return store;
+  }
+
+  it('says what RuneLite sent while the inbox was closed, once', () => {
+    announceSentEvents('run-1', { added: 2, tooOld: 0, unreadable: 0, characters: [] });
+    announceSentEvents('run-1', { added: 1, tooOld: 1, unreadable: 0, characters: [] });
+    view();
+    expect(screen.getByRole('status').textContent).toBe('Added 3 from RuneLite. 1 was too old.');
+
+    cleanup();
+    view();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('says what RuneLite sends while the inbox is open, for this run only', () => {
+    view(gameState({ linkedAccount: undefined }));
+    act(() => announceSentEvents('run-2', { added: 4, tooOld: 0, unreadable: 0, characters: [] }));
+    expect(screen.queryByRole('status')).toBeNull();
+    act(() => announceSentEvents('run-1', { added: 1, tooOld: 0, unreadable: 0, characters: ['Player One'] }));
+    expect(screen.getByRole('status').textContent).toBe('Added 1 from RuneLite (Player One).');
   });
 });

@@ -118,6 +118,8 @@ export class RelaySyncService {
       && (pairedProfile === undefined || pairedProfile === this.activeProfileId);
   }
   get code() { return this.enabled && this.session ? this.session.code : null; }
+  /** The pairing's write token while this tab may use it: the Roll Inbox reads what RuneLite sent with it. */
+  get token() { return this.enabled && this.session ? this.session.token : null; }
 
   /**
    * Record the profile this tab shows. App's GameProviderBridge calls this

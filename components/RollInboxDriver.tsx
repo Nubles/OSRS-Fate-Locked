@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useGame } from '../context/GameContext';
 import { getRollInboxStore } from '../services/rollInboxRuntime';
+import { useRelayInboxSync } from '../hooks/useRelayInboxSync';
 import type { RollInboxRow } from '../services/rollInboxStore';
 import type { EventClassification, GameState } from '../types';
 import {
@@ -29,11 +30,14 @@ export function RollInboxDriver() {
   const stateRef = useRef<GameState>(game);
   stateRef.current = game;
 
+  // RuneLite's Send to tracker: while paired, take what it left on the relay
+  // into this run's Roll Inbox, as Paste from RuneLite would. Nothing rolls.
+  useRelayInboxSync(game.runId, game.linkedAccount, game.saveOwnershipStatus === 'owner');
+
   useEffect(() => {
-    // RuneLite keeps observations local and only reads the app-authored
-    // profile from the relay. Retain classification for rows migrated from
-    // older browser sessions; the relay has no event or acknowledgement
-    // resources any more.
+    // Classify rows already in the inbox (from older browser sessions, a
+    // paste or Send to tracker) again when the run changes. The relay has no
+    // per-decision acknowledgement resource: decisions stay in this browser.
     const current = stateRef.current;
     for (const row of store.list()) {
       if (TERMINAL.has(row.state)) continue;

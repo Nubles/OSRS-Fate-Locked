@@ -15,6 +15,18 @@ Browser  POST /r/<code>   marks the code gone when the player presses Disconnect
 RuneLite GET  /r/<code>   retrieves and validates that profile
 ```
 
+With the plugin update that adds **Send to tracker** and badges (relay
+deployed separately, see `workers/fate-relay/DEPLOY-NOTES.md`):
+
+```text
+RuneLite POST   /r/<code>/inbox      Send to tracker: what RuneLite noticed, to wait for the tracker
+Browser  GET    /r/<code>/inbox      the tracker takes it into the Roll Inbox (write token)
+Browser  POST   /r/<code>/inbox/ack  and empties what it took (write token)
+RuneLite POST   /r/<code>/badge      the player's opt-in badge: character name and milestone
+RuneLite DELETE /r/<code>/badge      sharing turned off, or Disconnect
+RuneLite GET    /badges              the public badge list
+```
+
 RuneLite creates a random 32-character pairing code when the player presses
 **Connect tracker**, then opens the online app with that code in the URL
 fragment. After the player approves the current profile, the browser:
@@ -68,12 +80,65 @@ After the initial pairing check, RuneLite revalidates a connected profile no
 more than once per minute and backs off transient failures and rate limits. The
 optional stream overlay checks every 30 seconds.
 
-The plugin does **not** upload gameplay, account names, detected events,
-acknowledgements, suggestions, heartbeats, telemetry, or any other state.
-Supported gameplay detections stay in RuneLite's local event history until the
-player selects **Copy for tracker**, which puts them on the clipboard. The Roll
-Inbox's **Paste from RuneLite** reads them from there. Neither step uses the
-relay.
+The Plugin Hub build does **not** upload gameplay, account names, detected
+events, acknowledgements, suggestions, heartbeats, telemetry, or any other
+state. Supported gameplay detections stay in RuneLite's local event history
+until the player selects **Copy for tracker**, which puts them on the
+clipboard. The Roll Inbox's **Paste from RuneLite** reads them from there.
+Neither step uses the relay.
+
+## Send to tracker
+
+The plugin update adds **Send to tracker** beside Copy for tracker. Only
+when the player presses it, RuneLite posts exactly what Copy for tracker
+would copy to `POST /r/<code>/inbox`. The relay holds the events under
+`ri:<code>`, merged by event id (a re-sent id replaces the held copy), the
+newest 250 within 256 KiB, for 30 days after the last send; an event older
+than 30 days, or larger than the tracker's 8 KiB, is never held. Anyone
+holding the pairing code can add to it, as anyone holding it can read the
+profile; only the code's write token, which only the tracker has, can read
+or empty it. A code with no profile, or one marked gone, answers `404`
+`{"error":"no profile"}`.
+
+The tracker's tab that saves the paired profile takes them
+(`hooks/useRelayInboxSync.ts`, `services/relayInbox.ts`): at once on start
+and when the tab shows again, every minute while it shows, never twice in
+10 seconds, and after a failure only after the publish backoff (15 s, 1 min,
+then every 5 min). It adds the events to the Roll Inbox through the same
+function as Paste from RuneLite (`addRuneliteEvents`,
+`utils/runelitePaste.ts`): the inbox skips event ids it already has, refuses
+events older than 30 days, and names whose events they were for a run
+linked to no one. Then it acknowledges every id it read, those already here
+and those it couldn't use too, so the relay empties. The Roll Inbox says
+"Added 3 from RuneLite." Nothing rolls: the player still chooses Roll. A
+relay from before Send to tracker answers `404 not found`, and the tracker
+stops asking until the page is reloaded.
+
+## Badges
+
+Off by default in the plugin. With **Share my badge** on, the plugin posts
+`{ name, tier }` to `POST /r/<code>/badge` (a live profile is needed): the
+character name, 1 to 12 letters, digits, spaces, `-` and `_`, and the
+milestone, 0 (under 25%) to 4 (Fate Unbound, 100%). Every badge lives in
+one KV record, `badges`: `{"v":1,"byCode":{"<code>":{"n","t","at"}}}`. A
+post or `DELETE` (allowed even for a gone code) rewrites it, one KV write
+per change, dropping badges over 30 days old; the plugin resends its badge
+at least daily while sharing is on, and the same badge again within an hour
+writes nothing. KV takes about one write a second per key, so a write can
+fail: the relay then answers `503` with `Retry-After: 60`, and the plugin
+tries again later. Two changes at once can also read the same record, and
+the later write wins; the lost one comes back with that player's next
+resend. With 5000 live badges held, a new code gets `503` and nobody is
+dropped for it.
+
+`GET /badges` is public: `{"badges":[{"n","t"}]}`, live badges only, one
+entry per name (its newest badge, names compared as the plugin compares
+them), sorted by name, at most 5000. It reads the one record through the
+location's KV cache (`cacheTtl` 5 minutes) and each Worker isolate keeps
+the list it built for 5 minutes, so serving it never lists KV (the free plan
+allows 1,000 list operations a day, and Cloudflare's Cache API does nothing
+on a `*.workers.dev` address). It has `Cache-Control: public, max-age=600`
+and an `ETag` of its body for `If-None-Match`.
 
 ## What “Profile sent” means
 
@@ -92,6 +157,12 @@ that condition.
 | `POST` | `/r/<code>` | `{ token?, payload }` | Browser publishes the v4 profile; kept 30 days after the last publish. Refused without the code's write token. |
 | `POST` | `/r/<code>` | `{ token, gone: true }` → `{ version, gone: true }` | The owner marks the code gone: a tombstone replaces the profile for 90 days. Refused without the code's write token. |
 | `GET` | `/r/<code>` | `{ version, payload }` | RuneLite reads; supports `If-None-Match`. A gone code answers `404` with `{"gone":true}`. |
+| `POST` | `/r/<code>/inbox` | `{ format, events }` → `{ accepted, held }` | RuneLite's Send to tracker; anyone with the code. |
+| `GET` | `/r/<code>/inbox` | → `{ format, events }` | The tracker, with `Authorization: Bearer <write token>`. |
+| `POST` | `/r/<code>/inbox/ack` | `{ ids }` → `{ held }` | The tracker, with its write token. |
+| `POST` | `/r/<code>/badge` | `{ name, tier }` → `{ ok: true }` | The plugin; anyone with the code. |
+| `DELETE` | `/r/<code>/badge` | → `{ deleted: true }` | The plugin; anyone with the code. |
+| `GET` | `/badges` | → `{ badges: [{ n, t }] }` | Public. |
 
 `<code>` is RuneLite's pairing code, 32 lower-case hex digits; any other
 code is answered `400`. A `payload` is `FLGZ:` and base64 gzip, or a bundle
@@ -191,6 +262,9 @@ send, and checks that before it reads or writes KV (the free plan allows
 | `/b/<id>` | 32 bytes in base64url (43 symbols, the last one of the 16 that 32 bytes can end on) | `FLBK1.<16-symbol IV>.<ciphertext>`, base64url, at most the longest sync code encrypted (about 2.67 MiB) |
 | `/p/<id>` | 16 bytes in base64url (22 symbols, ending in `A`, `Q`, `g` or `w`) | the progress summary, at most 8 KiB |
 | `/l/<discordId>` | a Discord snowflake, 17 to 20 digits | the bot's `{ code }` |
+| `/r/<code>/inbox` | as `/r/<code>` | `{ format: "fate-locked-runelite-events", events }`, at most 64 KiB and 1 to 100 events, each an object with an event id (`eventId`, or `id`) of 1 to 128 characters and an `occurredAt` in ms at most 30 days old and 10 minutes ahead |
+| `/r/<code>/inbox/ack` | as `/r/<code>` | `{ ids }`, up to 250 ids of 1 to 128 characters, at most 40 KiB; a `Bearer` token of at most 128 of `A-Z a-z 0-9 _ -` |
+| `/r/<code>/badge` | as `/r/<code>` | `{ name, tier }`, at most 1 KiB; the name 1 to 12 of `A-Z a-z 0-9`, space, `_`, `-` after trimming; the tier 0 to 4 |
 
 Any other id is answered `400`, any other path `404`. The app's tests pin
 each of these to what the app makes (`utils/runelitePairing.test.ts`,
@@ -203,7 +277,7 @@ limit the relay answers `429` with `Retry-After: 60`, before touching KV:
 
 | Binding | Counts | Limit | Why this much |
 |---|---|---|---|
-| `RELAY_WRITE_LIMITER` | every `POST` and `DELETE` to `/r/`, `/b/` and `/p/` | 30 a minute | A player sends at most about one profile, one backup and one progress summary a minute, a few more when switching to the game client sends a waiting profile at once, or on Retry. 30 leaves room for a household of players behind one address. |
+| `RELAY_WRITE_LIMITER` | every `POST` and `DELETE` to `/r/` (Send to tracker, its acknowledgements and badges included), `/b/` and `/p/` | 30 a minute | A player sends at most about one profile, one backup and one progress summary a minute, a few more when switching to the game client sends a waiting profile at once, or on Retry. 30 leaves room for a household of players behind one address. |
 | `RELAY_CLAIM_LIMITER` | writes that create a record: a code's first publish, a new backup id or shared run, each Discord link code | 4 a minute | Turning on RuneLite, online backup and sharing, and asking for a link code, all in one minute, is 4. |
 | `RELAY_ERROR_LIMITER` | `POST /e` | 10 a minute | A page reports each error once (and the relay forwards each message once in 10 minutes anyway). |
 
@@ -271,6 +345,14 @@ gone. The app shows only the code's last four characters. The owner record
 holds no profile data and no token, only the token's hash and a timestamp,
 and expires 90 days after its last refresh. Use clipboard or local-file import
 if relay data should not leave the machine.
+
+With the plugin update, **Send to tracker** events leave RuneLite only when
+the player presses it. They wait on the relay for at most 30 days, until the
+tracker takes them; only someone holding the pairing code can add to them,
+and only the tracker that holds the code's write token can read them.
+Badges are off by default: **Share my badge** puts the character name and
+milestone on a public list the relay serves to every Fate Locked plugin,
+and turning it off removes them.
 
 Separately from sync, when the tracker crashes it sends the relay a short
 error report (the build id, the error message and stack trace, and the page

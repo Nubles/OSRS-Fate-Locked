@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import worker from './worker.js';
 import { MAX_BACKUP_BYTES } from './protocol.js';
 import { resetErrorDedupe } from './errors.js';
+import { BADGES_KEY, resetBadgeCache } from './badges.js';
 
 class MemoryKv {
   records = new Map<string, string>();
@@ -10,7 +11,10 @@ class MemoryKv {
   puts: string[] = [];
   failNextPut = false;
 
-  async get(key: string, options?: { type?: string }) {
+  getOptions: Array<{ key: string; options?: unknown }> = [];
+
+  async get(key: string, options?: { type?: string; cacheTtl?: number }) {
+    this.getOptions.push({ key, options });
     const value = this.records.get(key);
     if (value === undefined) return null;
     if (options?.type === 'arrayBuffer') return new TextEncoder().encode(value).buffer;
@@ -41,6 +45,7 @@ class MemoryKv {
     this.records.delete(key);
     this.metadata.delete(key);
   }
+
 }
 
 const sha256Hex = async (value: string) => [...new Uint8Array(
@@ -1066,5 +1071,541 @@ describe('Fate relay error reports', () => {
   it('takes only POST', async () => {
     const response = await worker.fetch(new Request('https://relay.test/e'), { RELAY: untouchableKv() }, ctx);
     expect(response.status).toBe(405);
+  });
+});
+
+/** An event as RuneLite's Copy for tracker and Send to tracker send it. */
+const NOW = Date.UTC(2026, 9, 19, 12);
+const MINUTE = 60_000;
+const DAY = 86_400_000;
+const runeliteEvent = (eventId: string, minutesAgo = 1, extra: Record<string, unknown> = {}) => ({
+  protocolVersion: 1,
+  eventId,
+  runId: 'run-1',
+  account: 'Player One',
+  runRevision: 3,
+  eventType: 'QUEST',
+  canonicalLabel: 'Cook’s Assistant',
+  occurredAt: NOW - minutesAgo * MINUTE,
+  sessionSequence: 1,
+  bundleVersion: 4,
+  rulesVersion: '1',
+  contentVersion: 1,
+  detectorId: 'quest-state-v1',
+  detectorVersion: 1,
+  confidence: 'EXACT',
+  evidence: {},
+  ...extra,
+});
+const copyOf = (events: unknown[]) => ({ format: 'fate-locked-runelite-events', events });
+
+describe('Fate relay Send to tracker inbox', () => {
+  let kv: MemoryKv;
+  let env: Record<string, unknown> & { RELAY: MemoryKv };
+  let token: string;
+  const INBOX = `/r/${CODE}/inbox`;
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+    kv = new MemoryKv();
+    env = { RELAY: kv };
+    ({ token } = await (await call('POST', `/r/${CODE}`, { body: { payload: flgz('rules') } })).json());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  function call(method: string, path: string, { body, bearer, raw }: { body?: unknown; bearer?: string | null; raw?: string } = {}) {
+    return worker.fetch(new Request(`https://relay.test${path}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+      },
+      ...(raw !== undefined ? { body: raw } : body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }), env);
+  }
+  const send = (events: unknown[], code = CODE) => call('POST', `/r/${code}/inbox`, { body: copyOf(events) });
+  const take = (bearer: string | null = token) => call('GET', INBOX, { bearer });
+  const ack = (ids: unknown, bearer: string | null = token) => call('POST', `${INBOX}/ack`, { body: { ids }, bearer });
+  const heldIds = async () => (await (await take()).json()).events.map((event: { eventId: string }) => event.eventId);
+
+  it('holds what RuneLite sends for 30 days, for the tracker to read with its token', async () => {
+    const response = await send([runeliteEvent('e1'), runeliteEvent('e2', 2)]);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ accepted: 2, held: 2 });
+    expect(kv.ttls.get(`ri:${CODE}`)).toBe(30 * 86_400);
+
+    const read = await take();
+    expect(read.status).toBe(200);
+    expect(read.headers.get('Content-Type')).toBe('application/json');
+    expect(read.headers.get('Cache-Control')).toBe('no-store');
+    // Exactly what a paste reads, oldest first, every field as RuneLite sent it.
+    expect(await read.json()).toEqual(copyOf([runeliteEvent('e2', 2), runeliteEvent('e1')]));
+  });
+
+  it('answers an empty inbox with no events', async () => {
+    const read = await take();
+    expect(read.status).toBe(200);
+    expect(await read.text()).toBe('{"format":"fate-locked-runelite-events","events":[]}');
+  });
+
+  it('passes fields it does not check through untouched', async () => {
+    const odd = runeliteEvent('e1', 1, { evidence: { nested: 'x', n: 1.5 }, futureField: [1, { a: null }] });
+    await send([odd]);
+    expect((await (await take()).json()).events).toEqual([odd]);
+  });
+
+  it('merges by id, a re-sent id replacing the held copy', async () => {
+    await send([runeliteEvent('e1'), runeliteEvent('e2', 5)]);
+    const again = await send([runeliteEvent('e1', 1, { canonicalLabel: 'Corrected' }), runeliteEvent('e3', 3)]);
+    expect(await again.json()).toEqual({ accepted: 2, held: 3 });
+    const { events } = await (await take()).json();
+    expect(events.map((event: { eventId: string }) => event.eventId)).toEqual(['e2', 'e3', 'e1']);
+    expect(events[2].canonicalLabel).toBe('Corrected');
+  });
+
+  it('keeps the newest 250 by when they happened, and counts only the events it stored', async () => {
+    const newer = Array.from({ length: 250 }, (_, index) => runeliteEvent(`new-${index}`, index + 1));
+    for (let from = 0; from < 250; from += 100) await send(newer.slice(from, from + 100));
+    const older = await send([runeliteEvent('old-1', 600), runeliteEvent('old-2', 700)]);
+    expect(await older.json()).toEqual({ accepted: 0, held: 250 });
+    const mixed = await send([runeliteEvent('newest', 0), runeliteEvent('old-3', 800)]);
+    expect(await mixed.json()).toEqual({ accepted: 1, held: 250 });
+    const ids = await heldIds();
+    expect(ids).toHaveLength(250);
+    expect(ids).toContain('newest');
+    expect(ids).not.toContain('new-249');
+    expect(ids.some((id: string) => id.startsWith('old-'))).toBe(false);
+  });
+
+  it('never holds an event too large for the tracker to read', async () => {
+    const huge = runeliteEvent('huge', 1, { evidence: { note: 'x'.repeat(9 * 1024) } });
+    const response = await send([huge, runeliteEvent('fine')]);
+    expect(await response.json()).toEqual({ accepted: 1, held: 1 });
+    expect(await heldIds()).toEqual(['fine']);
+  });
+
+  it('drops held events once they are older than the tracker takes', async () => {
+    await send([runeliteEvent('stale', 60)]);
+    vi.setSystemTime(NOW + 30 * DAY);
+    const response = await send([runeliteEvent('fresh', -30 * 24 * 60)]);
+    expect(await response.json()).toEqual({ accepted: 1, held: 1 });
+  });
+
+  it('reads an event id named id when an event has no eventId', async () => {
+    const { eventId: _dropped, ...rest } = runeliteEvent('ignored');
+    const response = await send([{ ...rest, id: 'by-id' }]);
+    expect(await response.json()).toEqual({ accepted: 1, held: 1 });
+    expect(await (await ack(['by-id'])).json()).toEqual({ held: 0 });
+  });
+
+  it.each([
+    ['another format', { format: 'something-else', events: [runeliteEvent('e1')] }],
+    ['no events', copyOf([])],
+    ['101 events', copyOf(Array.from({ length: 101 }, (_, index) => runeliteEvent(`e${index}`)))],
+    ['events that are not a list', { format: 'fate-locked-runelite-events', events: { e1: runeliteEvent('e1') } }],
+    ['an event that is not an object', copyOf(['e1'])],
+    ['an event with no id', copyOf([{ occurredAt: NOW }])],
+    ['an empty id', copyOf([runeliteEvent('')])],
+    ['an id of 129 characters', copyOf([runeliteEvent('x'.repeat(129))])],
+    ['an id that is not a string', copyOf([runeliteEvent(42 as unknown as string)])],
+    ['an event over 30 days old', copyOf([runeliteEvent('e1', 30 * 24 * 60 + 1)])],
+    ['an event over 10 minutes ahead', copyOf([runeliteEvent('e1', -11)])],
+    ['a time that is not whole ms', copyOf([runeliteEvent('e1', 1, { occurredAt: NOW + 0.5 })])],
+    ['a time as text', copyOf([runeliteEvent('e1', 1, { occurredAt: String(NOW) })])],
+    ['one bad event among good ones', copyOf([runeliteEvent('e1'), runeliteEvent('e2', 1, { occurredAt: null })])],
+    ['a list instead of an object', [runeliteEvent('e1')]],
+  ])('refuses %s, before touching KV', async (_kind, body) => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await call('POST', INBOX, { body })).status).toBe(400);
+  });
+
+  it('accepts an id of 128 characters and an event 10 minutes ahead', async () => {
+    const response = await send([runeliteEvent('x'.repeat(128), -10)]);
+    expect(response.status).toBe(200);
+  });
+
+  it('refuses broken JSON and a body over 64 KiB, before touching KV', async () => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await call('POST', INBOX, { raw: '{"format":' })).status).toBe(400);
+    const padded = { ...copyOf([runeliteEvent('e1')]), padding: 'x'.repeat(64 * 1024) };
+    expect((await call('POST', INBOX, { body: padded })).status).toBe(413);
+  });
+
+  it('answers 404 {"error":"no profile"} for a code with no profile, or one marked gone', async () => {
+    const other = 'f'.repeat(32);
+    const missing = await send([runeliteEvent('e1')], other);
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ error: 'no profile' });
+    expect(kv.records.has(`ri:${other}`)).toBe(false);
+
+    await send([runeliteEvent('e1')]);
+    expect((await call('POST', `/r/${CODE}`, { body: { token, gone: true } })).status).toBe(200);
+    for (const response of [await send([runeliteEvent('e2')]), await take(), await ack(['e1'])]) {
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: 'no profile' });
+    }
+  });
+
+  it('lets only the code’s write token read or empty the inbox', async () => {
+    await send([runeliteEvent('e1')]);
+    for (const bearer of [null, 'someone-else', 'has spaces', 'x'.repeat(129)]) {
+      expect((await take(bearer)).status, String(bearer)).toBe(403);
+      expect((await ack(['e1'], bearer)).status, String(bearer)).toBe(403);
+    }
+    const plainAuth = await worker.fetch(new Request(`https://relay.test${INBOX}`, { headers: { Authorization: token } }), env);
+    expect(plainAuth.status).toBe(403);
+    expect(await heldIds()).toEqual(['e1']);
+  });
+
+  it('checks a missing or malformed token before touching KV', async () => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await take(null)).status).toBe(403);
+    expect((await ack(['e1'], null)).status).toBe(403);
+  });
+
+  it('reads a code published before owner records with the token its record holds', async () => {
+    kv.records.delete(`own:r:${CODE}`);
+    kv.records.set(`r:${CODE}`, JSON.stringify({ version: 3, payload: flgz('old'), token: 'legacy-token' }));
+    await send([runeliteEvent('e1')]);
+    expect((await take('legacy-token')).status).toBe(200);
+    expect((await take(token)).status).toBe(403);
+  });
+
+  it('empties what the tracker took, and removes the record once nothing waits', async () => {
+    await send([runeliteEvent('e1'), runeliteEvent('e2', 2), runeliteEvent('e3', 3)]);
+    const partial = await ack(['e1', 'e3', 'never-sent']);
+    expect(partial.status).toBe(200);
+    expect(await partial.json()).toEqual({ held: 1 });
+    expect(await heldIds()).toEqual(['e2']);
+
+    expect(await (await ack(['e2'])).json()).toEqual({ held: 0 });
+    expect(kv.records.has(`ri:${CODE}`)).toBe(false);
+    expect(await (await ack(['e2'])).json()).toEqual({ held: 0 });
+  });
+
+  it('writes nothing when an acknowledgement names nothing held', async () => {
+    await send([runeliteEvent('e1')]);
+    kv.puts.length = 0;
+    expect(await (await ack(['other'])).json()).toEqual({ held: 1 });
+    expect(await (await ack([])).json()).toEqual({ held: 1 });
+    expect(kv.puts).toEqual([]);
+  });
+
+  it.each([
+    ['ids that are not a list', { ids: 'e1' }],
+    ['no ids', {}],
+    ['251 ids', { ids: Array.from({ length: 251 }, (_, index) => `e${index}`) }],
+    ['an empty id', { ids: [''] }],
+    ['an id of 129 characters', { ids: ['x'.repeat(129)] }],
+    ['an id that is not a string', { ids: [7] }],
+  ])('refuses an acknowledgement with %s, before touching KV', async (_kind, body) => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await call('POST', `${INBOX}/ack`, { body, bearer: token })).status).toBe(400);
+  });
+
+  it('accepts an acknowledgement of 250 ids', async () => {
+    const ids = Array.from({ length: 250 }, (_, index) => `${'x'.repeat(120)}-${index}`);
+    expect((await ack(ids)).status).toBe(200);
+  });
+
+  it('takes only the methods each route has', async () => {
+    for (const [method, path] of [['DELETE', INBOX], ['PUT', INBOX], ['GET', `${INBOX}/ack`], ['DELETE', `${INBOX}/ack`]]) {
+      expect((await call(method, path, { bearer: token })).status, `${method} ${path}`).toBe(405);
+    }
+  });
+
+  it('answers 400 to a malformed code and 404 to an unknown inbox path, before touching KV', async () => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await call('POST', '/r/ABCD/inbox', { body: copyOf([runeliteEvent('e1')]) })).status).toBe(400);
+    expect((await call('GET', `/r/${CODE.toUpperCase()}/inbox`, { bearer: token })).status).toBe(400);
+    expect((await call('POST', '/r/ABCD/inbox/ack', { body: { ids: [] }, bearer: token })).status).toBe(400);
+    expect((await call('GET', `${INBOX}/other`)).status).toBe(404);
+    expect((await call('GET', `${INBOX}/`)).status).toBe(404);
+  });
+
+  it('counts sends and acknowledgements toward the write limit, before touching KV, but not reads', async () => {
+    env = { RELAY: kv, RELAY_WRITE_LIMITER: new FakeLimiter(0) };
+    const putsBefore = kv.puts.length;
+    const sent = await send([runeliteEvent('e1')]);
+    expect(sent.status).toBe(429);
+    expect(sent.headers.get('Retry-After')).toBe('60');
+    expect((await ack(['e1'])).status).toBe(429);
+    expect(kv.puts.length).toBe(putsBefore);
+    expect((await take()).status).toBe(200);
+  });
+});
+
+describe('Fate relay badges', () => {
+  let kv: MemoryKv;
+  let env: Record<string, unknown> & { RELAY: MemoryKv };
+  let token: string;
+  const BADGE = `/r/${CODE}/badge`;
+  const codeFor = (index: number) => index.toString(16).padStart(32, '0');
+
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+    resetBadgeCache();
+    kv = new MemoryKv();
+    // Serving or changing badges never lists KV.
+    (kv as unknown as { list: () => never }).list = () => {
+      throw new Error('the relay listed KV');
+    };
+    env = { RELAY: kv };
+    ({ token } = await (await call('POST', `/r/${CODE}`, { body: { payload: flgz('rules') } })).json());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    resetBadgeCache();
+  });
+
+  function call(method: string, path: string, { body, headers = {} }: { body?: unknown; headers?: Record<string, string> } = {}) {
+    return worker.fetch(new Request(`https://relay.test${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...headers },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }), env);
+  }
+  const postBadge = (body: unknown, code = CODE) => call('POST', `/r/${code}/badge`, { body });
+  const list = async (headers: Record<string, string> = {}) => call('GET', '/badges', { headers });
+  const snapshot = () => JSON.parse(kv.records.get(BADGES_KEY)!);
+  /** The badge list's record, as the relay writes it. */
+  const storeSnapshot = (byCode: Record<string, unknown>) => {
+    kv.records.set(BADGES_KEY, JSON.stringify({ v: 1, byCode }));
+  };
+  const badgePuts = () => kv.puts.filter(key => key === BADGES_KEY).length;
+
+  it('keeps one badge per code in the one list record, for 30 days, one write per change', async () => {
+    kv.puts.length = 0;
+    const response = await postBadge({ name: ' Player One ', tier: 2 });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    expect(snapshot()).toEqual({ v: 1, byCode: { [CODE]: { n: 'Player One', t: 2, at: NOW } } });
+    expect(kv.ttls.get(BADGES_KEY)).toBe(30 * 86_400);
+    expect(kv.puts).toEqual([BADGES_KEY]);
+    expect([...kv.records.keys()].some(key => key.startsWith('bd:'))).toBe(false);
+
+    vi.setSystemTime(NOW + MINUTE);
+    await postBadge({ name: 'Player One', tier: 3 });
+    expect(snapshot().byCode[CODE]).toEqual({ n: 'Player One', t: 3, at: NOW + MINUTE });
+    expect(badgePuts()).toBe(2);
+  });
+
+  it('keeps other codes’ badges when one changes', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Other', t: 1, at: NOW - DAY } });
+    await postBadge({ name: 'Player One', tier: 2 });
+    expect(Object.keys(snapshot().byCode).sort()).toEqual([codeFor(1), CODE].sort());
+  });
+
+  it('writes nothing for the same badge sent again within the hour, and refreshes it after', async () => {
+    await postBadge({ name: 'Player One', tier: 2 });
+    vi.setSystemTime(NOW + 30 * MINUTE);
+    expect((await postBadge({ name: 'Player One', tier: 2 })).status).toBe(200);
+    expect(badgePuts()).toBe(1);
+    vi.setSystemTime(NOW + DAY);
+    await postBadge({ name: 'Player One', tier: 2 });
+    expect(badgePuts()).toBe(2);
+    expect(snapshot().byCode[CODE].at).toBe(NOW + DAY);
+  });
+
+  it('drops badges over 30 days old when it rewrites the record', async () => {
+    storeSnapshot({
+      [codeFor(1)]: { n: 'Stale', t: 1, at: NOW - 31 * DAY },
+      [codeFor(2)]: { n: 'Fresh', t: 1, at: NOW - 29 * DAY },
+      [codeFor(3)]: { n: 'bad<name>', t: 1, at: NOW },
+    });
+    await postBadge({ name: 'Player One', tier: 0 });
+    expect(Object.keys(snapshot().byCode).sort()).toEqual([codeFor(2), CODE].sort());
+  });
+
+  it('starts a new record over one it can’t read', async () => {
+    kv.records.set(BADGES_KEY, 'not json');
+    await postBadge({ name: 'Player One', tier: 4 });
+    expect(snapshot()).toEqual({ v: 1, byCode: { [CODE]: { n: 'Player One', t: 4, at: NOW } } });
+  });
+
+  it.each([
+    ['tier 0', { name: 'a', tier: 0 }],
+    ['tier 4', { name: 'Name_With-12', tier: 4 }],
+  ])('accepts %s', async (_kind, body) => {
+    expect((await postBadge(body)).status).toBe(200);
+  });
+
+  it.each([
+    ['a name of 13 characters', { name: 'x'.repeat(13), tier: 1 }],
+    ['a blank name', { name: '   ', tier: 1 }],
+    ['a name with other symbols', { name: 'Player<One>', tier: 1 }],
+    ['a name with a non-breaking space', { name: 'Player One', tier: 1 }],
+    ['a name that is not text', { name: 7, tier: 1 }],
+    ['tier 5', { name: 'Player', tier: 5 }],
+    ['tier -1', { name: 'Player', tier: -1 }],
+    ['a fractional tier', { name: 'Player', tier: 1.5 }],
+    ['a tier as text', { name: 'Player', tier: '1' }],
+    ['no tier', { name: 'Player' }],
+    ['a list', ['Player', 1]],
+  ])('refuses %s, before touching KV', async (_kind, body) => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await postBadge(body)).status).toBe(400);
+  });
+
+  it('refuses a body over 1 KiB before touching KV', async () => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv };
+    expect((await postBadge({ name: 'Player', tier: 1, padding: 'x'.repeat(1024) })).status).toBe(413);
+  });
+
+  it('answers 404 {"error":"no profile"} for a code with no profile, or one marked gone', async () => {
+    const missing = await postBadge({ name: 'Player', tier: 1 }, 'e'.repeat(32));
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ error: 'no profile' });
+
+    await call('POST', `/r/${CODE}`, { body: { token, gone: true } });
+    const gone = await postBadge({ name: 'Player', tier: 1 });
+    expect(gone.status).toBe(404);
+    expect(kv.records.has(BADGES_KEY)).toBe(false);
+  });
+
+  it('removes the badge, even once the profile is gone or never was, writing only when it held one', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Other', t: 1, at: NOW } });
+    await postBadge({ name: 'Player', tier: 1 });
+    await call('POST', `/r/${CODE}`, { body: { token, gone: true } });
+    const removed = await call('DELETE', BADGE);
+    expect(removed.status).toBe(200);
+    expect(await removed.json()).toEqual({ deleted: true });
+    expect(Object.keys(snapshot().byCode)).toEqual([codeFor(1)]);
+
+    const writes = badgePuts();
+    expect((await call('DELETE', `/r/${'d'.repeat(32)}/badge`)).status).toBe(200);
+    expect((await call('DELETE', BADGE)).status).toBe(200);
+    expect(badgePuts()).toBe(writes);
+  });
+
+  it('answers 503 with Retry-After when KV refuses the write, so the plugin sends it again', async () => {
+    kv.failNextPut = true;
+    const posted = await postBadge({ name: 'Player', tier: 1 });
+    expect(posted.status).toBe(503);
+    expect(posted.headers.get('Retry-After')).toBe('60');
+    expect(kv.records.has(BADGES_KEY)).toBe(false);
+    expect((await postBadge({ name: 'Player', tier: 1 })).status).toBe(200);
+
+    kv.failNextPut = true;
+    expect((await call('DELETE', BADGE)).status).toBe(503);
+    expect(snapshot().byCode[CODE]).toBeDefined();
+  });
+
+  it('refuses a new code with 503 once 5000 live badges are held, without dropping any', async () => {
+    const full = Object.fromEntries(Array.from({ length: 5000 }, (_, index) =>
+      [codeFor(index + 1), { n: `p${index}`, t: 1, at: NOW }]));
+    storeSnapshot(full);
+    const refused = await postBadge({ name: 'Player', tier: 1 });
+    expect(refused.status).toBe(503);
+    expect(Object.keys(snapshot().byCode)).toHaveLength(5000);
+    expect(snapshot().byCode[CODE]).toBeUndefined();
+
+    // A badge over 30 days old makes room.
+    full[codeFor(1)] = { n: 'p0', t: 1, at: NOW - 31 * DAY };
+    storeSnapshot(full);
+    expect((await postBadge({ name: 'Player', tier: 1 })).status).toBe(200);
+    expect(Object.keys(snapshot().byCode)).toHaveLength(5000);
+    expect(snapshot().byCode[codeFor(1)]).toBeUndefined();
+
+    // A code already listed can still change while the list is full.
+    vi.setSystemTime(NOW + 2 * 60 * MINUTE);
+    expect((await postBadge({ name: 'Player', tier: 3 })).status).toBe(200);
+    expect(snapshot().byCode[CODE].t).toBe(3);
+  });
+
+  it('counts badge posts and removals toward the write limit, before touching KV', async () => {
+    env = { RELAY: untouchableKv() as unknown as MemoryKv, RELAY_WRITE_LIMITER: new FakeLimiter(0) };
+    expect((await postBadge({ name: 'Player', tier: 1 })).status).toBe(429);
+    expect((await call('DELETE', BADGE)).status).toBe(429);
+  });
+
+  it('takes only POST and DELETE for a badge, and only GET for the list', async () => {
+    expect((await call('GET', BADGE)).status).toBe(405);
+    expect((await call('POST', '/badges', { body: {} })).status).toBe(405);
+    expect((await call('GET', '/r/ABCD/badge')).status).toBe(400);
+  });
+
+  it('lists every live badge by name from one read of the record, cacheable for 10 minutes', async () => {
+    storeSnapshot({
+      [codeFor(1)]: { n: 'zed', t: 1, at: NOW },
+      [codeFor(2)]: { n: 'Alpha', t: 4, at: NOW },
+      [codeFor(3)]: { n: 'mid name', t: 0, at: NOW },
+      [codeFor(4)]: { n: 'Expired', t: 2, at: NOW - 31 * DAY },
+    });
+    kv.getOptions.length = 0;
+    const response = await list();
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('application/json');
+    expect(response.headers.get('Cache-Control')).toBe('public, max-age=600');
+    expect(response.headers.get('ETag')).toMatch(/^"[0-9a-f]{32}"$/);
+    expect(await response.text()).toBe('{"badges":[{"n":"Alpha","t":4},{"n":"mid name","t":0},{"n":"zed","t":1}]}');
+    // Read through the location's KV cache for 5 minutes.
+    expect(kv.getOptions).toEqual([{ key: BADGES_KEY, options: { cacheTtl: 300 } }]);
+  });
+
+  it('lists a name once, with its newest badge, and skips entries that are not badges', async () => {
+    storeSnapshot({
+      [codeFor(1)]: { n: 'Player One', t: 1, at: NOW - DAY },
+      [codeFor(2)]: { n: 'player_one', t: 3, at: NOW },
+      [codeFor(3)]: { n: 'Other', t: 9, at: NOW },
+      [codeFor(4)]: { n: 'No time', t: 1 },
+      [codeFor(5)]: 'not a badge',
+    });
+    expect((await (await list()).json()).badges).toEqual([{ n: 'player_one', t: 3 }]);
+  });
+
+  it('lists nothing for a missing record, or one of another version', async () => {
+    expect(await (await list()).text()).toBe('{"badges":[]}');
+    resetBadgeCache();
+    kv.records.set(BADGES_KEY, JSON.stringify({ v: 2, byCode: { [CODE]: { n: 'Player', t: 1, at: NOW } } }));
+    expect(await (await list()).text()).toBe('{"badges":[]}');
+  });
+
+  it('lists at most 5000 badges', async () => {
+    storeSnapshot(Object.fromEntries(Array.from({ length: 5100 }, (_, index) =>
+      [codeFor(index), { n: `p${index}`, t: index % 5, at: NOW }])));
+    expect((await (await list()).json()).badges).toHaveLength(5000);
+  });
+
+  it('answers 304 to its ETag, quoted, weak or among others', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Player', t: 2, at: NOW } });
+    const etag = (await list()).headers.get('ETag')!;
+    for (const validator of [etag, `W/${etag}`, etag.slice(1, -1), `"other", ${etag}`, '*']) {
+      const response = await list({ 'If-None-Match': validator });
+      expect(response.status, validator).toBe(304);
+      expect(response.headers.get('ETag')).toBe(etag);
+      expect(await response.text()).toBe('');
+    }
+    expect((await list({ 'If-None-Match': '"other"' })).status).toBe(200);
+  });
+
+  it('reads the record at most every 5 minutes per isolate, sooner after a change it made', async () => {
+    storeSnapshot({ [codeFor(1)]: { n: 'Player', t: 2, at: NOW } });
+    await list();
+    storeSnapshot({ [codeFor(1)]: { n: 'Player', t: 2, at: NOW }, [codeFor(2)]: { n: 'Newcomer', t: 1, at: NOW } });
+    vi.setSystemTime(NOW + 4 * MINUTE);
+    expect((await (await list()).json()).badges).toHaveLength(1);
+    vi.setSystemTime(NOW + 5 * MINUTE);
+    expect((await (await list()).json()).badges).toHaveLength(2);
+
+    await postBadge({ name: 'Player One', tier: 2 });
+    expect((await (await list()).json()).badges).toHaveLength(3);
+  });
+
+  it('is never limited, and lets any page read it', async () => {
+    env = { RELAY: kv, RELAY_WRITE_LIMITER: new FakeLimiter(0) };
+    const response = await list({ Origin: 'https://app.example.test' });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example.test');
+    expect(response.headers.get('Vary')).toBe('Origin');
+    expect(await response.text()).toBe('{"badges":[]}');
   });
 });

@@ -349,6 +349,11 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     visibleResult: 'A stopped teleport shows a banner with the tracker’s reason, a teleport to try instead when there is one, and Pause Strict Mode for 60s. The Strict Mode card says Active, Paused, Off, or Inactive with why.',
     changeWhen: 'Turn it on for a safety net against taking a teleport your rules don’t allow by mistake.',
   },
+  blockNetworks: {
+    purpose: 'Has Strict Mode also stop a network or boat trip that goes to one place your rules lock: a fairy ring’s Zanaris or Last-destination or a code dialled on it, a charter’s Charter-to, or a glider, ferry or boat option that names one place.',
+    visibleResult: 'A stopped trip shows the same banner as a stopped teleport. Options where you pick the place after the click, such as Travel, Glider or Fly, are never stopped. With it off, these trips are only tagged (Locked).',
+    changeWhen: 'Turn it on if you want Strict Mode’s safety net on fairy rings, charters and boats too.',
+  },
   pauseStrictModeHotkey: {
     purpose: 'Pauses Strict Mode for 60 seconds from the keyboard, like the Pause 60s button on its card.',
     visibleResult: 'The Strict Mode card and the HUD count the pause down, then Strict Mode comes back by itself.',
@@ -388,6 +393,11 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     purpose: 'Says when a sync brings something new, such as an area, a bank or a skill tier.',
     visibleResult: 'A chat line names what opened, a banner shows it for a few seconds, and new land glows gold on the world map until you stand in it.',
     changeWhen: 'Turn it off if you’d rather check the tracker yourself.',
+  },
+  fairyRingDialStatus: {
+    purpose: 'Names the fairy ring code you’ve dialled and what your rules say about where it goes.',
+    visibleResult: 'While a fairy ring’s dials are open, one line beside them reads like CKS: Unlocked. It only tells you; it never stops anything.',
+    changeWhen: 'Turn it off if you know your codes by heart.',
   },
   hudMode: {
     purpose: 'A box over the game. Compact shows where you are, its status and why, Strict Mode, and the nearest bank and shop.',
@@ -458,6 +468,21 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     purpose: 'The plugin’s colours: the default set, a set safe for colour-blind players, or your own.',
     visibleResult: 'Changes every colour the plugin draws, in the sidebar, the HUD, the borders, the minimap and the world map.',
     changeWhen: 'Pick Colour-blind safe if red and green are hard to tell apart, or Custom to choose your own.',
+  },
+  badgesInChat: {
+    purpose: 'A key before the name of each player who shares their Fate Locked badge, in public, private, friends chat and clan messages.',
+    visibleResult: 'An iron key under 25% of their run, then bronze, silver, gold and crystal at 25, 50, 75 and 100%. Needs Online sync: RuneLite downloads the public badge list at login and every 30 minutes.',
+    changeWhen: 'Turn it off if you’d rather not see other players’ badges.',
+  },
+  badgesAboveHeads: {
+    purpose: 'The same key above the head of each player near you who shares a badge.',
+    visibleResult: 'A small key over their head while they’re on your floor. Needs Online sync, as Show badges in chat does.',
+    changeWhen: 'Turn it off for a clearer screen in busy places.',
+  },
+  shareBadge: {
+    purpose: 'Puts your character name and milestone (under 25%, Wayfarer, Pathfinder, Trailblazer or Fate Unbound) on a public list the Fate Locked relay serves to every player of the plugin.',
+    visibleResult: 'Other Fate Locked players see your key in chat and above your head. Only for the character your run is linked to, with Online sync on and the tracker connected. Turning it off removes you from the list.',
+    changeWhen: 'Turn it on to show your progress to other Fate Locked players. It’s off by default.',
   },
   unlockedColor: {
     purpose: 'The colour of Unlocked, Can do and other good states, such as Active and Rules up to date, with Colours set to Custom.',
@@ -1053,7 +1078,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
     blocks: [
       {
         kind: 'text',
-        text: `Open RuneLite’s configuration (the wrench) and select Fate Locked Ironman. Its sections are ${listed(RUNELITE_SETTING_SECTIONS)}. Apart from Online sync and Strict Mode, settings change only what RuneLite shows and how it warns you. None of them unlocks anything, rolls or changes your run.`,
+        text: `Open RuneLite’s configuration (the wrench) and select Fate Locked Ironman. Its sections are ${listed(RUNELITE_SETTING_SECTIONS)}. Apart from Online sync, Strict Mode and Share my badge, settings change only what RuneLite shows and how it warns you. None of them unlocks anything, rolls or changes your run.`,
       },
       { kind: 'settings' },
       { kind: 'heading', text: 'Suggested setups' },
