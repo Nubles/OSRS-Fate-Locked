@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-real-map-borders',
+    title: 'The map always shows the real areas',
+    date: '2026-10-19',
+    sections: {
+      fixed: [
+        'The World map, chunk details and your run card always use the real area borders now, even if this browser once had map edits saved.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',

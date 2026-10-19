@@ -12,6 +12,8 @@ import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { chunkUnlocked } from '../utils/chunkLocations';
 import { runProgress } from '../utils/runProgress';
 import { REGION_CHUNKS } from '../data/regionChunks';
+import { mapAuthoringAvailable } from '../utils/mapAuthoring';
+import { REGION_DRAFT_BACKUP_KEY, REGION_DRAFT_KEY } from '../utils/mapDraft';
 
 // ---- mini-map drawing -------------------------------------------------------
 
@@ -123,11 +125,17 @@ const drawMiniMap = async (
 
 // ---- helpers -----------------------------------------------------------------
 
-/** Read authoring data without changing the saved draft or its recovery backup. */
+/**
+ * The map geography the card draws. Players always get the shipped map; only
+ * a browser with map authoring enabled previews its draft (or the recovery
+ * backup). Never changes the saved draft or its backup.
+ */
 export const loadRunCardRegionChunks = (
   storage?: Pick<Storage, 'getItem'>,
+  authoring: boolean = mapAuthoringAvailable(),
 ): Record<string, ChunkCoord[]> => {
-  for (const key of ['fate-region-chunks-draft-v1', 'fate-region-chunks-backup-v1']) {
+  if (!authoring) return REGION_CHUNKS;
+  for (const key of [REGION_DRAFT_KEY, REGION_DRAFT_BACKUP_KEY]) {
     try {
       const raw = (storage ?? localStorage).getItem(key);
       if (!raw) continue;
@@ -190,7 +198,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
   fatePoints, pityThreshold, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [draftChunks] = useState(loadRunCardRegionChunks);
+  const [draftChunks] = useState(() => loadRunCardRegionChunks());
   const { unlocks, gameModeId } = useGame();
   const isChunked = gameModeId === 'chunked';
 
