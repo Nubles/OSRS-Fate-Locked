@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createFreshState, gameReducer, initialState } from './GameContext';
 import { PETS } from '../data/pets';
 import type { FailureFateAward, GameState } from '../types';
-import { replayInvariants } from '../utils/integrity';
+import { replayInvariants } from '../utils/runAudit';
 import { CURRENT_SAVE_VERSION, validateAndMigrateSave } from '../utils/saveSchema';
 import { ACHIEVEMENTS, achievementById, achievementPayouts } from '../utils/achievements';
 import { freeRitualPool, pickFreeRitual, smallFate } from '../utils/achievementRewards';

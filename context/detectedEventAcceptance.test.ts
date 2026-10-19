@@ -7,7 +7,7 @@ import { ALL_CA_TASKS } from '../data/caTasks';
 import { CA_DATA } from '../data/caData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { completedCAPoints } from '../utils/caProgress';
-import { auditHistory } from '../utils/integrity';
+import { auditHistory } from '../utils/runAudit';
 import { DropSource, TableType, type DetectedProgress, type GameState, type RollIntent } from '../types';
 
 // Accepting a detected RuneLite event applies the same rules as completing

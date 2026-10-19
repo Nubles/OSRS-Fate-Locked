@@ -34,7 +34,7 @@ Bad luck is cushioned by **Fate Points** (a pity timer) and the **Void Altar**, 
 - **Game Modes** — Vanilla (the supported ruleset) and the experimental Chunked mode, where land unlocks one map chunk at a time. The mode is chosen at the start of a run and locked in permanently. Runs started under the retired Casual, Hardcore, Region Rush, Xtreme Start and Custom modes keep their original rules.
 - **Region modifiers** — legacy Region Rush runs keep their per-continent passive bonuses.
 - **Region map authoring** — paint custom region/chunk layouts, export/import as JSON.
-- **Integrity & verification** — a tamper-evident hash chain over the run history, a deterministic run ID, invariant replay, and exportable verified bundles, so a completed run can be shared and checked.
+- **Run check** — a hash chain over the run history, a deterministic run ID, and a replay that checks rolls against their chances and adds the history up against the saved Keys, Fate and unlocks. It is self-reported and checked on the player's device: the chain is unkeyed and the run bundle is not signed, so it catches mistakes and casual edits, not a determined forger.
 - **Shareable run card & timelapse** — generate an image of your run, or play its history back as a narrated timelapse.
 - **Profiles** — multiple independent runs in one browser.
 - **RuneLite companion plugin** — imports the active profile, marks locked content in-game, explains the current chunk, and keeps supported gameplay detections in a local history.

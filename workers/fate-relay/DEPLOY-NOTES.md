@@ -40,6 +40,11 @@ Without it, error reports are only logged (`npx wrangler@latest tail`).
   minute get `429`; real clients never send either.
 - `/r/<code>/state`, `/events`, `/acks` and `/suggest` are gone (`404`).
   No released plugin build uses them.
+- `#live-unlocks` posts are limited per run (`feedForPublish` in
+  `progress.js`): at most 10 posting publishes an hour, nothing when a publish
+  gains more than 10 areas or chunks at once, and nothing dated more than 5
+  minutes ahead. The publish still succeeds and the bot still gets the
+  snapshot for roles. Until this deploy, the old relay posts every new unlock.
 
 ## Checking it
 

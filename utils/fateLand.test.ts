@@ -5,7 +5,7 @@ import { gameReducer, initialState } from '../context/GameContext';
 import { CHUNKED_START_KEY, chunkKey, getChunkFrontier } from './chunkAdjacency';
 import { leanTowardThread, threadCandidates, threadLeaning, withFateLand } from './fateLand';
 import { validateAndMigrateSave } from './saveSchema';
-import { replayInvariants } from './integrity';
+import { replayInvariants } from './runAudit';
 import { afterRoll, failFate, rollRitualPlan } from './ritualEffects';
 import { ACTIVITY_CHUNKS } from '../data/activityChunks';
 import { BANK_BY_ID } from '../data/banks';

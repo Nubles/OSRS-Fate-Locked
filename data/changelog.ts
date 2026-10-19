@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-run-check',
+    title: 'The run check says what it checks',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'The run check now adds up your history and compares it with your saved Keys, Fate and unlocks. A run that doesn’t add up gets a warning that says why.',
+        'The badge now reads "History intact (self-reported)", and the export button says "Export run bundle" because nothing is signed.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',

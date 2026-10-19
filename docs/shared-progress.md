@@ -29,7 +29,13 @@ the `PROGRESS_BOT_SECRET` as a Bearer token, after answering the browser.
 `newUnlocks` are the `recent` entries newer than the previous summary's, so
 the first publish after sharing starts never posts a backlog. The bot posts
 them in `#live-unlocks` and keeps the player's mode and milestone roles in
-step with the run. To find the Discord user, the relay keeps `ld:<run id>`
+step with the run. The feed is limited because the summary is
+self-reported: unlocks dated in the future, a publish that gains more than
+10 areas or chunks at once, and anything past 10 posting publishes an hour
+are not posted (the publish itself still succeeds). Milestone roles
+(Wayfarer to Fate Unbound, Quest Cape) go only to members who hold Verified
+Runner, unless the bot's `DISCORD_SELF_REPORTED_MILESTONES` is set; the mode
+role still follows the run. To find the Discord user, the relay keeps `ld:<run id>`
 beside each `l:<discordId>` link; links made before it existed gain it the
 next time the bot reads them. With `DISCORD_EVENTS_URL` unset, nothing is
 sent.
@@ -76,4 +82,5 @@ Then set `FATE_RELAY_URL` and `FATE_RELAY_BOT_SECRET` on the Discord bot's
 Vercel project and register its commands.
 
 Summaries are self-reported, like everything else in the browser. They show
-progress; Verified Runner remains the only mark that a run was checked.
+progress; Verified Runner remains the only mark that a run was checked, which
+is why milestone roles wait for it.
