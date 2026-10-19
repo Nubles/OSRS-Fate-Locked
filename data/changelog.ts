@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-osrs-layout-default',
+    title: 'The OSRS layout for new visitors',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'New visitors on a computer now start in the OSRS-style layout. You can switch any time in Settings.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
