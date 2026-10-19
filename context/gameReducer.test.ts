@@ -86,6 +86,19 @@ describe('ROLL_RESULT', () => {
     expect(failed.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
   });
 
+  it('puts the Fate the roll left on its event, for the result toast', () => {
+    const missed = gameReducer({ ...base(), fatePoints: 10 }, roll({ success: false, failureFate: 3 }));
+    expect(missed.lastEvent).toMatchObject({ type: 'ROLL_FAIL', meta: { fateBefore: 10, fateAfter: 13, pityThreshold: 50 } });
+    const won = gameReducer({ ...base(), fatePoints: 12 }, roll({ success: true }));
+    expect(won.lastEvent).toMatchObject({ type: 'ROLL_SUCCESS', meta: { fateBefore: 12, fateAfter: 0 } });
+    const noPity = gameReducer({
+      ...base(),
+      gameModeId: 'custom',
+      customMode: { pityEnabled: false, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1, regionModifiers: false },
+    }, roll({ success: false }));
+    expect(noPity.lastEvent?.meta).toMatchObject({ fateBefore: 0, fateAfter: 1, pityThreshold: null });
+  });
+
   it('an omni roll grants both a special key and a standard key', () => {
     const s = gameReducer(base(), roll({ success: true, omni: true }));
     expect(s.specialKeys).toBe(initialState.specialKeys + 1);

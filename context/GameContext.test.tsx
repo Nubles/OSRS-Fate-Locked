@@ -2273,6 +2273,9 @@ describe('quest completion integration', () => {
         drawResolution: 1000,
         standardKeysAwarded: 0,
         rewardKind: 'none',
+        fateBefore: before.state.fatePoints,
+        fateAfter: before.state.fatePoints + failureFate,
+        pityThreshold: 50,
       },
     });
   };
