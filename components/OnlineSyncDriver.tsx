@@ -25,7 +25,7 @@ export const NOT_SAVING_PUBLISH_MESSAGE =
  * the relay. Every reducer action bumps runRevision and every publish is a
  * full KV write, so changes are coalesced: one publish of the newest state
  * once they pause, with at most one publish in flight, and a profile the
- * relay already holds (the same fingerprint, sent under a day ago) is not
+ * relay already holds (the same fingerprint, sent under six hours ago) is not
  * sent again (relaySync.alreadyPublished). Pairing and Retry publish at once,
  * whatever the relay holds. A bundle built from failed rules data is never sent: the
  * failure is shown as the relay error and the last good publish stays. Only

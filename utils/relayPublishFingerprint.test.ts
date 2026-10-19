@@ -32,7 +32,7 @@ describe('canSkipRelayPublish', () => {
   const NOW = 1_800_000_000_000;
   const record = { code: 'c', fingerprint: 'f', runRevision: 10, at: NOW - 1_000 };
 
-  it('skips the same profile for the same code, from this revision or a later one, within a day', () => {
+  it('skips the same profile for the same code, from this revision or a later one, within six hours', () => {
     expect(canSkipRelayPublish(record, 'c', 'f', 10, NOW)).toBe(true);
     expect(canSkipRelayPublish(record, 'c', 'f', 99, NOW)).toBe(true);
   });

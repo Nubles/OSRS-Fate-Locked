@@ -14,8 +14,14 @@
 /** The fields that change on every build without changing anything RuneLite uses. */
 const VOLATILE_FIELDS = ['exportedAt', 'runRevision'] as const;
 
-/** Re-publish an unchanged profile after this long anyway, so the relay's copy and its export time never get old while the tracker is in use. */
-export const RELAY_REPUBLISH_UNCHANGED_MS = 24 * 60 * 60 * 1000;
+/**
+ * Re-publish an unchanged profile after this long anyway, so the relay's copy
+ * and its export time never get old while the tracker is in use. Keep it well
+ * under the plugin's 12-hour limit on exportedAt (FreshnessPolicy
+ * DEFAULT_TRACKER_MAX_AGE): past that, Strict Mode stops blocking until the
+ * tracker publishes again.
+ */
+export const RELAY_REPUBLISH_UNCHANGED_MS = 6 * 60 * 60 * 1000;
 
 const withoutVolatile = (value: unknown): unknown => {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return value;
@@ -61,7 +67,7 @@ export interface RelayPublishedRecord {
  * Whether a profile built now can be skipped: the last publish for this
  * pairing code worked, had the same fingerprint, came from this revision or
  * an earlier one (a restored older save goes out again, so RuneLite's
- * revision never runs ahead of the run's), and is under a day old.
+ * revision never runs ahead of the run's), and is under six hours old.
  */
 export function canSkipRelayPublish(
   record: RelayPublishedRecord | null,

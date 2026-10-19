@@ -285,7 +285,7 @@ export class RelaySyncService {
   /**
    * Whether the relay already holds this profile: the last publish for this
    * pairing worked, with the same fingerprint, from this revision or an
-   * earlier one, under a day ago (canSkipRelayPublish), and none has failed
+   * earlier one, under six hours ago (canSkipRelayPublish), and none has failed
    * since. Then the profile needn't be sent, which spares a KV write, and
    * the status shows that publish (after a reload it would otherwise say
    * nothing was sent yet).

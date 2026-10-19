@@ -340,7 +340,7 @@ describe('OnlineSyncDriver', () => {
       expect(relaySync.lastSyncAt).toBe(sentAt);
     });
 
-    it('is sent again once a day, so the relay copy never gets old', async () => {
+    it('is sent again every six hours, so the relay copy never gets old', async () => {
       buildBundlePayloadMock.mockResolvedValue(built('A'));
       relaySync.adoptCode(CODE);
       const view = render(<OnlineSyncDriver />);

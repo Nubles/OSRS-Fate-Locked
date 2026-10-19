@@ -32,7 +32,7 @@ fragment. After the player approves the current profile, the browser:
    profile without its export time and revision
    (`utils/relayPublishFingerprint.ts`) and skips it when the last publish
    for the pairing that worked had the same fingerprint, from the same or an
-   earlier revision, under a day ago (remembered in `fate_relay_published_v1`,
+   earlier revision, under six hours ago (remembered in `fate_relay_published_v1`,
    so a reload or a new tab doesn't send it again either). Retry and pairing
    publish at once, whatever the relay holds.
 
@@ -247,7 +247,7 @@ near the limit.
 
 | Write (KV key) | Who causes it | How often |
 |---|---|---|
-| Profile publish (`r:<code>`) | The tracker tab saving a paired profile | When something RuneLite uses changes: after 15 s of quiet, at most every 2 min while changes never pause, at once when the tab is hidden; an unchanged profile is not re-sent for a day (see step 4 above) |
+| Profile publish (`r:<code>`) | The tracker tab saving a paired profile | When something RuneLite uses changes: after 15 s of quiet, at most every 2 min while changes never pause, at once when the tab is hidden; an unchanged profile is not re-sent for six hours, which keeps it well inside RuneLite's 12-hour limit for Strict Mode (see step 4 above) |
 | Owner record (`own:r:<code>`) | A publish or Disconnect | At most once a week per code |
 | Tombstone (`r:<code>`, `gone`) | Disconnect | Once |
 | Backup (`b:<id>`) | `OnlineBackupDriver` | Changed runs only: at most every 30 min, or every 15 min when the tab is hidden with a change waiting; Back up now at once |
