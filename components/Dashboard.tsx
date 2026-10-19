@@ -77,6 +77,7 @@ import { misthalinListName, tutorialIslandNote } from '../utils/worldWording';
 import { setOsrsProgressionWide } from '../utils/osrsNav';
 import { openOsrsJournal, type OsrsJournalTab } from './osrs/OsrsJournalNav';
 import type { OsrsLabView } from './osrs/OsrsEquipment';
+import { askBeforeRoll, rollCheckOn } from '../utils/rollCheck';
 
 const OSRS_JOURNAL_TAB: Record<'QUESTS' | 'DIARIES' | 'CA' | 'DOABLE', OsrsJournalTab> = {
   QUESTS: 'quests', DIARIES: 'diaries', CA: 'combat', DOABLE: 'ready',
@@ -115,6 +116,11 @@ const TABS = [
   { id: 'JOURNAL', label: 'Journal', icon: ScrollText, img: 'Quest_point_icon.png', color: 'text-cyan-400', border: 'border-cyan-500' },
   { id: 'COLLECTION', label: 'Collection Log', icon: BookOpen, img: 'Collection_log.png', color: 'text-amber-600', border: 'border-amber-600' },
 ];
+
+// The guided first hour (components/FirstHourGuide.tsx) points at these tabs
+// and notices their content being open.
+const FIRST_HOUR_TAB: Record<string, string | undefined> = { JOURNAL: 'journal-tab', AUTOROLL: 'sync-tab' };
+const FIRST_HOUR_OPEN: Record<string, string | undefined> = { JOURNAL: 'journal-open', AUTOROLL: 'sync-open' };
 
 // Define the 10-tier progression colors
 const TIER_COLORS = [
@@ -531,7 +537,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const completionPercent = useMemo(() => runCompletion(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
 
   // --- Handlers ---
-  const handleLevelUp = (skill: string) => {
+  const handleLevelUp = async (skill: string) => {
+    // A new run's first rolls ask first (utils/rollCheck.ts); otherwise this stays synchronous.
+    if (rollCheckOn() && !(await askBeforeRoll(`Did you reach ${skill} level ${(unlocks.levels[skill] || 1) + 1} in game?`))) return;
     if (animationsEnabled) {
         setLevelingSkill(skill);
         setTimeout(() => setLevelingSkill(null), 500);
@@ -1323,6 +1331,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   return (
                       <button
                         key={tab.id}
+                        data-first-hour={FIRST_HOUR_TAB[tab.id]}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
                             flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap
@@ -1363,7 +1372,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               <GoalTracker />
           </Suspense>
           {/* Keyed by tab so the content gently slides in when you switch. */}
-          <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
+          <div key={activeTab} data-first-hour={FIRST_HOUR_OPEN[activeTab]} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
             {activeTab === 'WORLD' && (isOsrs ? (
                 <Suspense fallback={<PaneFallback />}>

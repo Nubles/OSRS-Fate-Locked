@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { STARTING_KEYS } from '../config/economy';
 import { DEFAULT_MODE_ID, getGameMode } from '../config/gameModes';
+import { LATEST_CHANGELOG_ID } from '../data/changelogLatest';
+import { markChangelogSeen } from '../utils/changelogState';
 import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
 import { Dices, Skull, Shield, Sparkles, Key, Dna, Zap } from './OsrsIcon';
 
@@ -385,6 +387,8 @@ export const OnboardingWizard: React.FC = () => {
     if (step < STEPS.length - 1) {
       setStep(s => s + 1);
     } else {
+      // A new player has nothing to catch up on: What's New waits for the next release.
+      markChangelogSeen(LATEST_CHANGELOG_ID);
       completeOnboarding();
     }
   };

@@ -97,6 +97,7 @@ const VoidAltar = lazyWithRetry(() => import('./components/VoidAltar').then(m =>
 const RitualAnimation = lazyWithRetry(() => import('./components/RitualAnimation').then(m => ({ default: m.RitualAnimation })));
 const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
+const FirstHourGuide = lazyWithRetry(() => import('./components/FirstHourGuide'));
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
@@ -115,6 +116,7 @@ import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from './components/OsrsIcon';
+import { useFirstHourView, writeFirstHourEnabled } from './utils/firstHourStore';
 import { DISCORD_INVITE_URL } from './constants';
 
 // --- Error Boundary ---
@@ -323,6 +325,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   const uiStyle = useUiStyle();
   const osrsFits = useIsWideEnoughForOsrs();
   const osrsHeader = useIsOsrsUi();
+  const firstHourRunning = useFirstHourView() !== null;
   const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
@@ -481,7 +484,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
           {/* Resources Bar */}
           <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 bg-black/20 p-1.5 pr-4 rounded-xl border border-white/5 w-full xl:w-auto shadow-inner">
-            <div className="w-full md:w-48 lg:w-64 px-2" title={pityRules.pityEnabled
+            <div data-first-hour="fate" className="w-full md:w-48 lg:w-64 px-2" title={pityRules.pityEnabled
                 ? `Fate Points: failed rolls build these, and at ${pityRules.pityThreshold} you get a guaranteed Pity Key. You can also spend them on rituals at the Altar.`
                 : 'Fate Points: failed rolls build these. Spend them on rituals at the Altar.'}>
                <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
@@ -624,6 +627,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                         <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
                            <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
                            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
+                        </button>
+                        <button onClick={() => { writeFirstHourEnabled(!firstHourRunning); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={firstHourRunning} title="Step-by-step help for a new run. Turning it on starts it again for this run.">
+                           <Key size={13} className={firstHourRunning ? 'text-amber-400' : 'text-gray-500'} />
+                           First steps guide <span className="ml-auto text-[10px] text-gray-500">{firstHourRunning ? 'on' : 'off'}</span>
                         </button>
                         <div className="my-1 border-t border-white/10" />
                         <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
@@ -1257,6 +1264,8 @@ const GameLayout = () => {
         </Suspense>
       )}
 
+      {/* The guided first hour: a card here (classic), the chatbox (OSRS). */}
+      <Suspense fallback={null}><FirstHourGuide /></Suspense>
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       {!isOsrs && <CoachStrip />}
 

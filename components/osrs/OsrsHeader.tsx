@@ -14,6 +14,7 @@ import { ProfileSwitcher } from '../ProfileSwitcher';
 import { FateMapOptions } from '../FateMapOptions';
 import { OsrsXpDrops } from './OsrsXpDrops';
 import { CHUNKED_OMNI_LAND_TEXT } from '../../config/economy';
+import { useFirstHourView, writeFirstHourEnabled } from '../../utils/firstHourStore';
 import './osrs-shell.css';
 
 const OsrsInterfaceOptions = lazyWithRetry(() => import('./OsrsInterfaceOptions'));
@@ -85,6 +86,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   useEscapeKey(() => { setShowRlMenu(false); runeliteRef.current?.focus(); }, showRlMenu);
   const relayDot = useRelayDot();
   const settingsRef = useRef<HTMLButtonElement>(null);
+  const firstHourRunning = useFirstHourView() !== null;
   const mode = getGameMode(gameModeId);
   const runName = [`${mode.name} mode${mode.beta ? ' (Beta)' : ''}`, linkedAccount || activeProfileName].filter(Boolean).join(' · ');
 
@@ -111,7 +113,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
       <div className="osrs-hdr-profile" style={{ flexShrink: 0 }}><ProfileSwitcher /></div>
 
       {/* Fate Points orb */}
-      <div className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={fateTitle} role="img" aria-label={`${fateText}. ${fateTitle}`}>
+      <div data-first-hour="fate" className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={fateTitle} role="img" aria-label={`${fateText}. ${fateTitle}`}>
         <div className="osrs-orb-num" style={nearPity ? { color: '#ff0000' } : undefined}>{fatePoints}</div>
         <div className="osrs-orb" style={{ background: `conic-gradient(${nearPity ? '#c42f2f' : '#8a3fc4'} 0 ${fill}%, #2a1f33 ${fill}% 100%)` }}>
           <img className="osrs-px" src={sprite('void_seal.png')} alt="" aria-hidden="true" width={27} height={24} />
@@ -235,6 +237,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={() => setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs')} aria-pressed={uiStyle === 'osrs'}>OSRS layout {onOff(uiStyle === 'osrs')}</button>
                   {uiStyle === 'osrs' && <Suspense fallback={null}><OsrsInterfaceOptions /></Suspense>}
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAdvisors()} aria-pressed={advisorsEnabled}>Advisor panels {onOff(advisorsEnabled)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => writeFirstHourEnabled(!firstHourRunning)} aria-pressed={firstHourRunning} title="Step-by-step help for a new run. Turning it on starts it again for this run.">First steps guide {onOff(firstHourRunning)}</button>
                   <div className="osrs-menu-sep" />
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onImportSave)}>Import save</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onExportSave)} title={FATE_EXPORT_HINT}>Export save file (.fate)</button>

@@ -263,6 +263,8 @@ describe('App changelog lifecycle', () => {
     readyState.unlocks.levels.Attack = currentLevel;
     storage.setItem(profileKey, JSON.stringify(readyState));
     storage.setItem(changelogStorageKey, latestChangelogId);
+    // This run has rolled once, so First Steps would ask before the level-up roll.
+    storage.setItem('fate_first_hour_enabled_v1', '0');
     vi.spyOn(Math, 'random')
       .mockReturnValueOnce(0.01)
       .mockReturnValue(0.99);
@@ -277,6 +279,30 @@ describe('App changelog lifecycle', () => {
 
     expect(await screen.findByText(expectedMessage)).toBeTruthy();
   });
+
+  it('asks before a new run\'s level-up roll, and Not yet leaves the level alone', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    readyState.animationsEnabled = false;
+    readyState.unlocks.skills.Attack = 1;
+    readyState.unlocks.levels.Attack = 5;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    render(<App />);
+
+    // First Steps loads lazily and turns the check on for this run's first rolls.
+    await screen.findByRole('region', { name: 'Guided first hour' }, { timeout: 10_000 });
+    const attackCard = document.querySelector<HTMLElement>('[data-skill-card="Attack"]')!;
+    fireEvent.click(attackCard);
+    const ask = await screen.findByRole('alertdialog', { name: 'Did you reach Attack level 6 in game?' });
+    fireEvent.click(within(ask).getByRole('button', { name: 'Not yet' }));
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
+    expect(attackCard.textContent).toContain('5/99');
+
+    fireEvent.click(attackCard);
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Yes, roll it' }));
+    await waitFor(() => expect(attackCard.textContent).toContain('6/99'));
+  }, 25_000);
 
   it('recovers a structurally malformed profile registry without blanking the dashboard', async () => {
     const recoveredId = 'recovered-run';
@@ -506,7 +532,7 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByText('Something went wrong')).toBeNull();
   }, 15_000);
 
-  it('auto-opens one unseen release after onboarding completes', async () => {
+  it('does not open What\'s New on top of a brand-new player\'s first look', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -517,18 +543,15 @@ describe('App changelog lifecycle', () => {
     }
     await user.click(screen.getByRole('button', { name: 'Start' }));
 
-    // The release notes load lazily, which takes a while under a full CI run.
-    const dialog = await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 });
-    expect(dialog).toBeTruthy();
-    expect(document.querySelectorAll('[role="dialog"][aria-labelledby="whats-new-title"]')).toHaveLength(1);
-
-    await user.click(screen.getByRole('button', { name: "Close What's New" }));
+    // Finishing the wizard counts every release as seen: the First Steps guide teaches instead.
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
+      expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
     });
-    expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+    // The release notes would load lazily; give them time to (wrongly) appear.
+    await new Promise((r) => setTimeout(r, 1_500));
+    expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
   }, 25_000);
-  it('defers the unseen release until the post-onboarding game-mode prompt closes', async () => {
+  it('keeps What\'s New closed after the post-onboarding game-mode prompt', async () => {
     storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
     const user = userEvent.setup();
     render(<App />);
@@ -543,7 +566,29 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Choose game mode' })).toBeNull();
+    });
+    await new Promise((r) => setTimeout(r, 1_500));
+    expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
+    expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+  }, 25_000);
+
+  it('still opens one unseen release for a returning player', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, 'an-older-release');
+    const user = userEvent.setup();
+    render(<App />);
+
+    // The release notes load lazily, which takes a while under a full CI run.
     expect(await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 })).toBeTruthy();
+    expect(document.querySelectorAll('[role="dialog"][aria-labelledby="whats-new-title"]')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: "Close What's New" }));
+    await waitFor(() => {
+      expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+    });
   }, 25_000);
 
   it('scrubs a valid RuneLite pairing fragment and owns the startup modal', async () => {

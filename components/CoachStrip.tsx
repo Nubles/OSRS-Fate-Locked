@@ -7,6 +7,7 @@ import { relaySync } from '../services/relaySync';
 import { getRollInboxStore } from '../services/rollInboxRuntime';
 import { isRollEntry } from '../utils/logEntry';
 import { LogEntry } from '../types';
+import { useFirstHourView } from '../utils/firstHourStore';
 
 /**
  * The coach strip: one contextual "here's your next step" line under the
@@ -106,7 +107,9 @@ export const CoachStrip: React.FC = () => {
     return null;
   }, [keys, fatePoints, history, gameModeId, customMode, pendingCount, tourDone]);
 
-  if (!hint || hint.id === dismissed) return null;
+  // The guided first hour speaks for itself while it runs.
+  const guiding = useFirstHourView() !== null;
+  if (guiding || !hint || hint.id === dismissed) return null;
 
   const dismiss = () => {
     setDismissed(hint.id);

@@ -16,6 +16,7 @@ import { priceService } from '../services/PriceService';
 import { collectionLogSync, collectionIdentityReview } from '../services/CollectionLogSyncService';
 import { WikiLink } from './WikiLink';
 import { collogReachability } from '../utils/collogReach';
+import { askBeforeRoll, rollCheckOn } from '../utils/rollCheck';
 
 interface CollectionLogProps {
   searchTerm?: string;
@@ -183,12 +184,15 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
       }
   }, [searchTerm]);
 
-  const handleItemClick = (e: React.MouseEvent, itemId: number, itemName: string) => {
+  const handleItemClick = async (e: React.MouseEvent, itemId: number, itemName: string) => {
     if (identityReview.blockedIds.has(itemId)) return;
     const isNewUnlock = !unlocks.collectionLog[itemId];
+    const point = { x: e.clientX, y: e.clientY };
+    // A new run's first rolls ask first (utils/rollCheck.ts).
+    if (isNewUnlock && rollCheckOn() && !(await askBeforeRoll(`Did you get ${itemName} in game?`))) return;
     logCollectionItem(itemId);
     if (isNewUnlock) {
-       rollForKey(`Col. Log: ${itemName}`, DROP_RATES[DropSource.COLLECTION_LOG], failureFateForSource(DropSource.COLLECTION_LOG), e.clientX, e.clientY);
+       rollForKey(`Col. Log: ${itemName}`, DROP_RATES[DropSource.COLLECTION_LOG], failureFateForSource(DropSource.COLLECTION_LOG), point.x, point.y);
     }
   };
 
