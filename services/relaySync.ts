@@ -1,5 +1,8 @@
 import { isRunelitePairCode } from '../utils/runelitePairing';
 import { resolveRelayBase } from '../utils/relayBase';
+import {
+  canSkipRelayPublish, parseRelayPublishedRecord, type RelayPublishedRecord,
+} from '../utils/relayPublishFingerprint';
 
 /**
  * Online relay sync (optional). Pushes the run bundle to a hosted Cloudflare
@@ -11,6 +14,12 @@ import { resolveRelayBase } from '../utils/relayBase';
  * explicitly enables it.
  */
 const SESSION_KEY = 'fate_relay_session_v1';
+/**
+ * The last publish that worked: its pairing code, fingerprint, revision and
+ * time, so an unchanged profile isn't sent again after a reload or from
+ * another tab (utils/relayPublishFingerprint.ts). No profile data or token.
+ */
+const PUBLISHED_KEY = 'fate_relay_published_v1';
 /** Development-only relay override; production ignores it (utils/relayBase.ts). */
 const BASE_KEY = 'fate_relay_base';
 /** A stalled POST fails after this long instead of holding up later publishes. */
@@ -43,6 +52,12 @@ export const isRetryableRelayError = (error: unknown): boolean =>
   || error.status >= 500 || error.status === 429 || error.status === 408;
 
 export type RelayStatus = 'off' | 'syncing' | 'synced' | 'error';
+
+/** What a publish sends, for skipping an unchanged one later (utils/relayPublishFingerprint.ts). */
+export interface PublishedProfile {
+  fingerprint: string | null | undefined;
+  runRevision: number;
+}
 
 interface Session {
   code: string;
@@ -185,7 +200,10 @@ export class RelaySyncService {
    */
   disable() {
     this.session = null;
-    try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(PUBLISHED_KEY);
+    } catch { /* ignore */ }
     this.status = 'off';
     this.lastError = null;
     this.lastSyncAt = null;
@@ -264,8 +282,49 @@ export class RelaySyncService {
     this.emit();
   }
 
-  /** Push a (compressed) bundle payload to the relay. No-op when disabled. */
-  push(payload: string, isCurrent: () => boolean = () => true): Promise<boolean> {
+  /**
+   * Whether the relay already holds this profile: the last publish for this
+   * pairing worked, with the same fingerprint, from this revision or an
+   * earlier one, under a day ago (canSkipRelayPublish), and none has failed
+   * since. Then the profile needn't be sent, which spares a KV write, and
+   * the status shows that publish (after a reload it would otherwise say
+   * nothing was sent yet).
+   */
+  alreadyPublished(fingerprint: string | null | undefined, runRevision: number, now = Date.now()): boolean {
+    const code = this.code;
+    if (!code || this.status === 'error' || this.failures > 0) return false;
+    let record: RelayPublishedRecord | null = null;
+    try { record = parseRelayPublishedRecord(localStorage.getItem(PUBLISHED_KEY)); } catch { return false; }
+    if (!record || !canSkipRelayPublish(record, code, fingerprint, runRevision, now)) return false;
+    if (this.status !== 'synced' || this.lastSyncAt == null) {
+      this.status = 'synced';
+      this.lastSyncAt = record.at;
+      this.lastError = null;
+      this.emit();
+    }
+    return true;
+  }
+
+  /** Remember a publish that worked, for alreadyPublished. Best effort. */
+  private recordPublished(code: string, published: PublishedProfile | undefined, at: number): void {
+    try {
+      if (!published?.fingerprint) {
+        localStorage.removeItem(PUBLISHED_KEY);
+        return;
+      }
+      const record: RelayPublishedRecord = {
+        code, fingerprint: published.fingerprint, runRevision: published.runRevision, at,
+      };
+      localStorage.setItem(PUBLISHED_KEY, JSON.stringify(record));
+    } catch { /* the next publish just isn't skipped */ }
+  }
+
+  /**
+   * Push a (compressed) bundle payload to the relay. No-op when disabled.
+   * `published` names the profile (its fingerprint and revision) so a later
+   * unchanged one can be skipped.
+   */
+  push(payload: string, isCurrent: () => boolean = () => true, published?: PublishedProfile): Promise<boolean> {
     this.bindToActiveProfile();
     const session = this.session;
     if (!session || !this.enabled) return Promise.resolve(false);
@@ -278,7 +337,7 @@ export class RelaySyncService {
     // before the current profile's write, so the relay cannot end on stale data.
     const send = this.pushQueue.then(() => {
       if (!current()) return false;
-      return this.sendPayload(payload, session, current);
+      return this.sendPayload(payload, session, current, published);
     });
     this.pushQueue = send.catch(() => false);
     return send;
@@ -323,7 +382,9 @@ export class RelaySyncService {
     this.emit();
   }
 
-  private async sendPayload(payload: string, session: Session, isCurrent: () => boolean): Promise<boolean> {
+  private async sendPayload(
+    payload: string, session: Session, isCurrent: () => boolean, published?: PublishedProfile,
+  ): Promise<boolean> {
     this.status = 'syncing';
     this.lastError = null;
     this.emit();
@@ -333,6 +394,7 @@ export class RelaySyncService {
       if (!isCurrent()) return false;
       this.status = 'synced';
       this.lastSyncAt = Date.now();
+      this.recordPublished(session.code, published, this.lastSyncAt);
       this.lastError = null;
       this.resetFailures();
       this.emit();

@@ -4,10 +4,18 @@ import { relaySync, relayRetryDelayMs } from '../services/relaySync';
 import type { UnlockState } from '../types';
 import { buildBundlePayload, RunChangedError, type RuneliteRunInput } from '../utils/runeliteExport';
 
-/** A publish waits until run changes have paused this long… */
-const PUBLISH_QUIET_MS = 5_000;
-/** …but no longer than this while they never pause (RuneLite checks once a minute). */
-const PUBLISH_MAX_WAIT_MS = 60_000;
+/**
+ * A publish waits until run changes have paused this long… Rolls come a few
+ * seconds apart, and each publish is one of the relay's 1,000 KV writes a
+ * day for every player, so a burst of rolls goes out once.
+ */
+export const PUBLISH_QUIET_MS = 15_000;
+/**
+ * …but no longer than this while they never pause. Leaving the tab (for the
+ * game client) sends a waiting publish at once, so this bounds only the wait
+ * of a player who keeps the tracker in front.
+ */
+export const PUBLISH_MAX_WAIT_MS = 120_000;
 /** Shown by a tab that is not saving this profile (the save banners say why). */
 export const NOT_SAVING_PUBLISH_MESSAGE =
   "This tab isn't saving this profile, so it can't publish to RuneLite.";
@@ -16,8 +24,10 @@ export const NOT_SAVING_PUBLISH_MESSAGE =
  * Invisible, always-mounted driver: while paired, publishes the run bundle to
  * the relay. Every reducer action bumps runRevision and every publish is a
  * full KV write, so changes are coalesced: one publish of the newest state
- * once they pause, with at most one publish in flight. Pairing and Retry
- * publish at once. A bundle built from failed rules data is never sent: the
+ * once they pause, with at most one publish in flight, and a profile the
+ * relay already holds (the same fingerprint, sent under a day ago) is not
+ * sent again (relaySync.alreadyPublished). Pairing and Retry publish at once,
+ * whatever the relay holds. A bundle built from failed rules data is never sent: the
  * failure is shown as the relay error and the last good publish stays. Only
  * the tab that holds this profile's save lease publishes: another tab of the
  * same profile may hold older progress, and RuneLite would enforce it.
@@ -98,10 +108,13 @@ export function OnlineSyncDriver() {
       explicit = false;
       try {
         const [unlocks, run] = latestRun.current;
-        const { compressed } = await buildBundlePayload(unlocks, run, {
+        const { compressed, fingerprint } = await buildBundlePayload(unlocks, run, {
           requireRulesData: true, retryFailedLoads,
         });
-        if (isCurrent()) await relaySync.push(compressed, isCurrent);
+        // An unchanged profile: nothing RuneLite uses differs from what the relay holds.
+        if (isCurrent() && !(!retryFailedLoads && relaySync.alreadyPublished(fingerprint, run.runRevision))) {
+          await relaySync.push(compressed, isCurrent, { fingerprint, runRevision: run.runRevision });
+        }
       } catch (error) {
         if (isCurrent()) relaySync.reportPushFailure(error);
         // A profile switch overlapped the build: send the new run once it settles.
