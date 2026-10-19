@@ -229,7 +229,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
         <Notices specialKeys={specialKeys} keysOwed={keysOwed ?? 0} isChunked={isChunked} />
         <ChaosRow chaosKeys={chaosKeys} totalLevel={totalLevel} onSpend={handleChaosUnlock} wide={false} busy={!!pendingUnlock} />
         {isChunked && <Suspense fallback={null}><ChunkedFatePanel osrs compact /></Suspense>}
-        <div ref={cardsRef} className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
+        <div ref={cardsRef} data-first-hour="spend-table" className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
           {SPEND_CATEGORIES.map(c => (
             <TableCard key={c.label} c={c} st={stateOf(c)} onRoll={() => handleUnlock(c.type)}
               onOpen={() => { setSpendTable(c.type); openOsrsScreen('keys', 'spend'); }} />
@@ -268,7 +268,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
             <h2>Unlock tables</h2>
             <span>Number = what you already own</span>
           </div>
-          <div className="ospend-cells">
+          <div className="ospend-cells" data-first-hour="spend-table">
             {SPEND_CATEGORIES.map(c => {
               const st = stateOf(c);
               const on = c.type === sel.type;

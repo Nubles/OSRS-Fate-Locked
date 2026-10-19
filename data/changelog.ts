@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-first-steps-guide',
+    title: 'A guide for your first hour',
+    date: '2026-10-19',
+    sections: {
+      added: [
+        'New runs get First Steps: a short guide that points at what to click while you spend your first Keys, find something to do, roll, and meet Fate.',
+        'In the OSRS layout it talks in the chatbox and points with a yellow arrow, like Tutorial Island.',
+        'It gives nothing away. Skip it any time, or turn it on or off in Settings.',
+      ],
+      changed: [
+        'What’s New no longer opens on top of a brand-new player’s first look at the tracker.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',

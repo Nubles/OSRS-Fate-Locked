@@ -116,6 +116,11 @@ const TABS = [
   { id: 'COLLECTION', label: 'Collection Log', icon: BookOpen, img: 'Collection_log.png', color: 'text-amber-600', border: 'border-amber-600' },
 ];
 
+// The guided first hour (components/FirstHourGuide.tsx) points at these tabs
+// and notices their content being open.
+const FIRST_HOUR_TAB: Record<string, string | undefined> = { JOURNAL: 'journal-tab', AUTOROLL: 'sync-tab' };
+const FIRST_HOUR_OPEN: Record<string, string | undefined> = { JOURNAL: 'journal-open', AUTOROLL: 'sync-open' };
+
 // Define the 10-tier progression colors
 const TIER_COLORS = [
   'bg-stone-700',       // Tier 1:  Basic (Stone)
@@ -1323,6 +1328,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   return (
                       <button
                         key={tab.id}
+                        data-first-hour={FIRST_HOUR_TAB[tab.id]}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
                             flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap
@@ -1363,7 +1369,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               <GoalTracker />
           </Suspense>
           {/* Keyed by tab so the content gently slides in when you switch. */}
-          <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
+          <div key={activeTab} data-first-hour={FIRST_HOUR_OPEN[activeTab]} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
             {activeTab === 'WORLD' && (isOsrs ? (
                 <Suspense fallback={<PaneFallback />}>

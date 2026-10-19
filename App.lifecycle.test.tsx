@@ -506,7 +506,7 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByText('Something went wrong')).toBeNull();
   }, 15_000);
 
-  it('auto-opens one unseen release after onboarding completes', async () => {
+  it('does not open What\'s New on top of a brand-new player\'s first look', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -517,18 +517,15 @@ describe('App changelog lifecycle', () => {
     }
     await user.click(screen.getByRole('button', { name: 'Start' }));
 
-    // The release notes load lazily, which takes a while under a full CI run.
-    const dialog = await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 });
-    expect(dialog).toBeTruthy();
-    expect(document.querySelectorAll('[role="dialog"][aria-labelledby="whats-new-title"]')).toHaveLength(1);
-
-    await user.click(screen.getByRole('button', { name: "Close What's New" }));
+    // Finishing the wizard counts every release as seen: the First Steps guide teaches instead.
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
+      expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
     });
-    expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+    // The release notes would load lazily; give them time to (wrongly) appear.
+    await new Promise((r) => setTimeout(r, 1_500));
+    expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
   }, 25_000);
-  it('defers the unseen release until the post-onboarding game-mode prompt closes', async () => {
+  it('keeps What\'s New closed after the post-onboarding game-mode prompt', async () => {
     storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
     const user = userEvent.setup();
     render(<App />);
@@ -543,7 +540,29 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Choose game mode' })).toBeNull();
+    });
+    await new Promise((r) => setTimeout(r, 1_500));
+    expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
+    expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+  }, 25_000);
+
+  it('still opens one unseen release for a returning player', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, 'an-older-release');
+    const user = userEvent.setup();
+    render(<App />);
+
+    // The release notes load lazily, which takes a while under a full CI run.
     expect(await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 })).toBeTruthy();
+    expect(document.querySelectorAll('[role="dialog"][aria-labelledby="whats-new-title"]')).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: "Close What's New" }));
+    await waitFor(() => {
+      expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+    });
   }, 25_000);
 
   it('scrubs a valid RuneLite pairing fragment and owns the startup modal', async () => {

@@ -110,6 +110,7 @@ export const OsrsDashTabs: React.FC<TabsProps> = ({
           type="button"
           role="tab"
           data-dash-tab={TAB_LABEL[tab.id] ?? tab.label}
+          data-first-hour={tab.id === 'JOURNAL' ? 'journal-tab' : tab.id === 'AUTOROLL' ? 'sync-tab' : undefined}
           aria-selected={activeTab === tab.id}
           className="osrs-tab"
           onClick={() => onTab(tab.id)}

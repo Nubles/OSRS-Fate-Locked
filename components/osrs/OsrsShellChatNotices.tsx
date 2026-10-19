@@ -5,6 +5,7 @@ import { relaySync } from '../../services/relaySync';
 import { getRollInboxStore } from '../../services/rollInboxRuntime';
 import { isRollEntry } from '../../utils/logEntry';
 import type { LogEntry } from '../../types';
+import { useFirstHourView } from '../../utils/firstHourStore';
 
 /**
  * Game messages the OSRS chatbox pins under the log, in place of the classic
@@ -89,8 +90,10 @@ export const useOsrsChatNotices = (): OsrsChatNotice[] => {
     return null;
   }, [keys, fatePoints, history, gameModeId, customMode, pendingCount, tourDone]);
 
+  // The guided first hour speaks in the chatbox itself while it runs.
+  const guiding = useFirstHourView() !== null;
   const notices: OsrsChatNotice[] = [];
-  if (hint && hint.id !== dismissed) {
+  if (!guiding && hint && hint.id !== dismissed) {
     notices.push({
       id: `coach-${hint.id}`,
       text: hint.text,

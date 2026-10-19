@@ -567,7 +567,7 @@ export const OsrsJournalScreen: React.FC = () => {
   const menuActions = menu ? actionsFor(menu.sel) : null;
 
   return (
-    <div className="ojs-root">
+    <div className="ojs-root" data-first-hour="journal-open">
       {/* The Progression tab row, so every other tab is one click away. */}
       {progressionTabs.length > 0 && (
         <div role="tablist" aria-label="Dashboard sections" className="osrs-dash-tablist ojs-navtabs no-scrollbar">
