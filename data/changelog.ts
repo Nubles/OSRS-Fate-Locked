@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
