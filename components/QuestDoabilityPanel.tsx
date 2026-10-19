@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Lock, Route, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../utils/areaRoutes';
 import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
 import { cachedChunkedQuestReach } from '../utils/chunkedQuestReach';
@@ -9,7 +11,7 @@ import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations'
 import { chunkAreaLabelAt } from '../utils/chunkPlaceLabel';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
-  evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
+  evaluateQuestEligibility, questReadyFrom, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
 import { actualCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
@@ -57,8 +59,11 @@ export const evaluateQuestDoability = (
   chunk: QuestChunkStatus | null,
   chunkLockedAreas: string[] = [],
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): QuestDoabilityEvaluation => {
-  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+  // With the routes, as the Quest Log reads it, so "Doable now" counts the
+  // same quests as the Journal summary and Next best actions (isQuestReady).
+  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
   const completed = eligibility.status === 'COMPLETED';
   const isChunked = gameModeId === 'chunked';
   // Known catalogue entries may intentionally have no area gate (the tutorial).
@@ -116,7 +121,8 @@ export const evaluateQuestDoability = (
   const missingEquipment = eligibility.blockers.flatMap(blocker => blocker.kind === 'equipment'
     ? [{ slot: blocker.slot, tier: blocker.tier, have: unlocks.equipment?.[blocker.slot] ?? 0, label: blocker.label }]
     : []);
-  const reqsMet = (eligibility.eligible && !unreviewedAccess) || completed;
+  const travelBlockers = completed ? [] : eligibility.blockers.filter(blocker => blocker.kind === 'alternative');
+  const reqsMet = (questReadyFrom(eligibility) && !unreviewedAccess) || completed;
   const manualChecks = completed ? [] : eligibility.manualChecks;
   const otherRequirements = [
     ...eligibility.blockers.filter(blocker => blocker.kind === 'quest'
@@ -126,6 +132,8 @@ export const evaluateQuestDoability = (
     // A shop type or travel network the quest needs, such as Fairy Rings.
     ...eligibility.blockers.filter(blocker => blocker.kind === 'merchant' || blocker.kind === 'mobility')
       .map(blocker => blocker.label),
+    // An owned place no route reaches yet ("No route to Brimhaven").
+    ...travelBlockers.map(blocker => blocker.label),
     ...(unreviewedAccess ? ['Quest access requirements need review'] : []),
   ];
   const alternativeLabel = quest.oneOf?.length
@@ -143,7 +151,8 @@ export const evaluateQuestDoability = (
   } else if (canonicalRegionBlockers.length > 0) {
     bucket = 'LOCKED';
   } else if (!isChunked) {
-    bucket = reqsMet ? 'DOABLE' : 'REQS';
+    // Owned but no route there: the Stranded group, as Chunked mode has it.
+    bucket = reqsMet ? 'DOABLE' : travelBlockers.length > 0 ? 'STRANDED' : 'REQS';
   } else {
     // A catalogue quest with no place at all (Learning the Ropes, on
     // Tutorial Island) reads as the Journal reads it, not as missing data.
@@ -197,7 +206,7 @@ export const questDoabilityRequirementLabels = (
  * chunkContentService to be ready. Fate's Mercy reads it too: it stays shut
  * while a quest here is doable.
  */
-export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[] => {
+export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string, areaRoutes?: AreaRoutes | null): Row[] => {
   // Walk from the free start chunk the map and RuneLite export use, gated on
   // per-chunk quest-entry requirements (questSections), so a quest whose step
   // sits behind an un-done quest reads correctly. The Journal walks the same.
@@ -214,7 +223,7 @@ export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[
       ? chunk.blockers.filter(blocker => blocker.access === 'LOCKED').map(blocker => chunkAreaLabelAt(blocker.cx, blocker.cy))
       : [];
     const evaluation = evaluateQuestDoability(
-      q, unlocks, chunk, chunkLockedAreas, gameModeId,
+      q, unlocks, chunk, chunkLockedAreas, gameModeId, areaRoutes,
     );
     const strandedFirst = evaluation.bucket === 'STRANDED'
       ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
@@ -237,6 +246,7 @@ export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[
  */
 export const useQuestDoabilityRows = () => {
   const { unlocks, gameModeId } = useGame();
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const isChunked = gameModeId === 'chunked';
   const [ready, setReady] = useState(() => isChunked && chunkContentService.ready);
   useEffect(() => {
@@ -246,13 +256,13 @@ export const useQuestDoabilityRows = () => {
   const rows = useMemo<Row[]>(() => {
     if (!isChunked) {
       return Object.values(QUEST_DATA).map(quest => ({
-        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
+        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId, areaRoutes),
         strandedChunk: null,
       }));
     }
     if (!ready) return [];
-    return chunkedQuestRows(unlocks, gameModeId);
-  }, [ready, unlocks, gameModeId, isChunked]);
+    return chunkedQuestRows(unlocks, gameModeId, areaRoutes);
+  }, [ready, unlocks, gameModeId, isChunked, areaRoutes]);
 
   return { rows, isChunked, ready };
 };
@@ -329,6 +339,9 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
                         <span className="text-red-300/90 flex items-center gap-1 justify-end">
                           <Lock size={10} className="shrink-0" /> {r.lockedAreas.slice(0, 2).join(', ')}{r.lockedAreas.length > 2 ? `, +${r.lockedAreas.length - 2}` : ''}
                         </span>
+                      )}
+                      {r.bucket === 'STRANDED' && !r.strandedChunk && (
+                        <span className="text-orange-300/90">{questDoabilityRequirementLabels(r).slice(0, 2).join(', ')}</span>
                       )}
                       {r.bucket === 'STRANDED' && r.strandedChunk && (
                         <button onClick={() => showChunkOnMap(r.strandedChunk!.cx, r.strandedChunk!.cy)}

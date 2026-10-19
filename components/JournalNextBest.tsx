@@ -11,6 +11,8 @@ import { questLocations } from '../utils/questLocations';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { computeUnlockImpact } from '../utils/unlockImpact';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../utils/areaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
 
@@ -149,9 +151,10 @@ export const journalNextBestQuestAction = (
   quest: QuestData,
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): JournalNextBestAction | null => {
   if (unlocks.quests.includes(quest.id)) return null;
-  const unmet = questUnmet(quest, unlocks, gameModeId);
+  const unmet = questUnmet(quest, unlocks, gameModeId, areaRoutes);
   return {
     kind: 'quest',
     sub: 'QUESTS',
@@ -163,13 +166,22 @@ export const journalNextBestQuestAction = (
   };
 };
 
-export const selectJournalNextBestActions = (
+/** The most actions the feed shows. */
+export const JOURNAL_NEXT_BEST_LIMIT = 8;
+
+/**
+ * Every quest and diary tier that is ready (nothing unmet) or one thing away,
+ * ranked, with no cap. A quest here with nothing unmet is exactly a quest
+ * isQuestReady calls ready, so the header's count matches the Journal summary.
+ */
+export const journalNextBestCandidates = (
   unlocks: any,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): JournalNextBestAction[] => {
   const out: JournalNextBestAction[] = [];
   for (const quest of Object.values(QUEST_DATA)) {
-    const action = journalNextBestQuestAction(quest, unlocks, gameModeId);
+    const action = journalNextBestQuestAction(quest, unlocks, gameModeId, areaRoutes);
     if (action) out.push(action);
   }
   for (const d of Object.values(DIARY_DATA)) {
@@ -178,7 +190,7 @@ export const selectJournalNextBestActions = (
     if (tasks.length > 0 && tasks.every(task => unlocks.completedTasks.includes(task.id))) {
       continue;
     }
-    const unmet = diaryUnmet(d, unlocks, gameModeId);
+    const unmet = diaryUnmet(d, unlocks, gameModeId, areaRoutes);
     out.push({
       kind: 'diary', sub: 'DIARIES', id: d.id, name: d.id,
       unmet: unmet.length, firstBlocker: unmet[0]?.label,
@@ -190,8 +202,55 @@ export const selectJournalNextBestActions = (
     .sort((a, b) =>
       a.unmet - b.unmet ||
       a.diffRank - b.diffRank ||
-      a.name.localeCompare(b.name))
-    .slice(0, 8);
+      a.name.localeCompare(b.name));
+};
+
+/** The feed itself: the best few of journalNextBestCandidates. */
+export const selectJournalNextBestActions = (
+  unlocks: any,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): JournalNextBestAction[] =>
+  journalNextBestCandidates(unlocks, gameModeId, areaRoutes).slice(0, JOURNAL_NEXT_BEST_LIMIT);
+
+export interface JournalNextBestFeed {
+  /** What the feed shows (at most JOURNAL_NEXT_BEST_LIMIT). */
+  actions: JournalNextBestAction[];
+  /** Every ready quest and miniquest, not only the ones shown. */
+  readyQuests: number;
+  /** Every ready diary tier, not only the ones shown. */
+  readyDiaries: number;
+}
+
+/** The feed and its ready counts, read from one uncapped list. */
+export const journalNextBestFeed = (
+  unlocks: any,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): JournalNextBestFeed => {
+  const all = journalNextBestCandidates(unlocks, gameModeId, areaRoutes);
+  return {
+    actions: all.slice(0, JOURNAL_NEXT_BEST_LIMIT),
+    readyQuests: all.filter(a => a.kind === 'quest' && a.unmet === 0).length,
+    readyDiaries: all.filter(a => a.kind === 'diary' && a.unmet === 0).length,
+  };
+};
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * The feed's header: "7 quests ready", "7 quests ready, 2 diaries",
+ * "2 diaries ready", or "5 close" when nothing is ready. The quest count
+ * includes miniquests, the same number as the Journal summary's.
+ */
+export const journalNextBestHeader = (feed: JournalNextBestFeed): string => {
+  const { readyQuests, readyDiaries, actions } = feed;
+  if (readyQuests > 0) {
+    return `${plural(readyQuests, 'quest', 'quests')} ready`
+      + (readyDiaries > 0 ? `, ${plural(readyDiaries, 'diary', 'diaries')}` : '');
+  }
+  if (readyDiaries > 0) return `${plural(readyDiaries, 'diary', 'diaries')} ready`;
+  return `${actions.length} close`;
 };
 
 /**
@@ -220,14 +279,15 @@ const ClassicJournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ o
   const { unlocks, gameModeId } = useGame();
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:nextbest:open', true);
   const [openItem, setOpenItem] = useState<string | null>(null);
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
 
-  const actions = useMemo(
-    () => selectJournalNextBestActions(unlocks, gameModeId),
-    [unlocks, gameModeId],
+  const feed = useMemo(
+    () => journalNextBestFeed(unlocks, gameModeId, areaRoutes),
+    [unlocks, gameModeId, areaRoutes],
   );
+  const { actions } = feed;
 
   if (actions.length === 0) return null;
-  const ready = actions.filter(a => a.unmet === 0).length;
 
   return (
     <div className="shrink-0 border-b border-white/5 bg-[#161616]">
@@ -235,7 +295,7 @@ const ClassicJournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ o
         {open ? <ChevronDown size={12} className="text-gray-500" /> : <ChevronRight size={12} className="text-gray-500" />}
         <Sparkles size={12} className="text-amber-300" />
         <span className="text-[11px] font-bold uppercase tracking-wider text-amber-200/90">Next best actions</span>
-        <span className="text-[10px] font-mono text-gray-500">{ready > 0 ? `${ready} ready` : `${actions.length} close`}</span>
+        <span className="text-[10px] font-mono text-gray-500">{journalNextBestHeader(feed)}</span>
       </button>
       {open && (
         <div className="px-2 pb-2 flex flex-wrap gap-1.5">

@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react';
 import { useGame } from '../context/GameContext';
-import { DIARY_DATA } from '../data/diaryData';
+import { DIARY_DATA, DIARY_TIER_ORDER, diaryAreaOf } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { diaryUnmet } from '../utils/journalProgress';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 
 type Status = 'done' | 'available' | 'almost' | 'locked';
-const TIERS = ['Easy', 'Medium', 'Hard', 'Elite'] as const;
+const TIERS = DIARY_TIER_ORDER;
 
 const CELL: Record<Status, string> = {
   done: 'bg-emerald-500/80 hover:bg-emerald-400',
@@ -24,21 +25,23 @@ const CELL: Record<Status, string> = {
 export const DiaryHeatmap: React.FC<{ onPick: (diaryId: string) => void }> = ({ onPick }) => {
   const { unlocks, gameModeId } = useGame();
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:diary:heatmap', true);
+  // Owned areas with no route are not ready, as in the Diary list.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
 
   // Diary "areas" are the id prefix (e.g. "Ardougne"), not the continent.
   const { areas, statusOf } = useMemo(() => {
-    const areas = [...new Set(Object.keys(DIARY_DATA).map(id => id.replace(/ (Easy|Medium|Hard|Elite)$/, '')))];
+    const areas = [...new Set(Object.keys(DIARY_DATA).map(diaryAreaOf))];
     const statusOf = (area: string, tier: string): Status | null => {
       const d = DIARY_DATA[`${area} ${tier}`];
       if (!d) return null;
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
       const allDone = tasks.length > 0 && tasks.every(t => unlocks.completedTasks.includes(t.id));
       if (unlocks.diaries.includes(d.id) || allDone) return 'done';
-      const unmet = diaryUnmet(d, unlocks, gameModeId).length;
+      const unmet = diaryUnmet(d, unlocks, gameModeId, areaRoutes).length;
       return unmet === 0 ? 'available' : unmet === 1 ? 'almost' : 'locked';
     };
     return { areas, statusOf };
-  }, [unlocks, gameModeId]);
+  }, [unlocks, gameModeId, areaRoutes]);
 
   return (
     <div className="shrink-0 border-b border-white/5 bg-[#161616]">

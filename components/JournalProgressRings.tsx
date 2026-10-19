@@ -1,7 +1,7 @@
 import React, { Suspense, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
-import { DIARY_DATA } from '../data/diaryData';
+import { diaryTaskProgress } from '../utils/diaryProgress';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import type { UnlockState } from '../types';
 import { useIsOsrsUi } from '../utils/uiStyle';
@@ -10,20 +10,20 @@ import { lazyWithRetry } from '../utils/lazyRetry';
 // OSRS layout only: the Journal window's header strip.
 const OsrsJournalHeader = lazyWithRetry(() => import('./osrs/OsrsJournalHeader'));
 
-/** Completion across the whole journal: quests (and QP), diary tiers, CA tasks. */
+/** Completion across the whole journal: quests (and QP), diary tasks, CA tasks. */
 export const journalRingStats = (unlocks: UnlockState) => {
   const questTotal = Object.keys(QUEST_DATA).length;
   const questDone = unlocks.quests.length;
   const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
-  const diaryTotal = Object.keys(DIARY_DATA).length;
-  const diaryDone = unlocks.diaries.length;
+  // Diary tasks, not tiers: 34 tasks logged with no tier finished is not 0%.
+  const { done: diaryDone, total: diaryTotal } = diaryTaskProgress(unlocks);
   const caTotal = ALL_CA_TASKS.length;
   const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
   return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };
 };
 
 /**
- * Journal hero — three radial completion rings (Quests / Diaries / Combat),
+ * Journal hero — three radial completion rings (Quests / Diary tasks / Combat),
  * an at-a-glance read of overall progress across the whole journal.
  */
 const Ring: React.FC<{ done: number; total: number; color: string; label: string; sub: string }> = ({ done, total, color, label, sub }) => {
@@ -61,7 +61,7 @@ const ClassicJournalProgressRings: React.FC = () => {
   return (
     <div className="shrink-0 flex gap-2 px-2 pt-2">
       <Ring done={stats.questDone} total={stats.questTotal} color="#60a5fa" label="Quests" sub={`${stats.qp} QP`} />
-      <Ring done={stats.diaryDone} total={stats.diaryTotal} color="#4ade80" label="Diaries" sub="tiers complete" />
+      <Ring done={stats.diaryDone} total={stats.diaryTotal} color="#4ade80" label="Diaries" sub="tasks complete" />
       <Ring done={stats.caDone} total={stats.caTotal} color="#f59e0b" label="Combat" sub="achievements" />
     </div>
   );

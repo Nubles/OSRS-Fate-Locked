@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useAreaRoutes } from '../../hooks/useAreaRoutes';
 import { computeUnlockImpact } from '../../utils/unlockImpact';
 import { showChunkOnMap } from '../../utils/chunkLocations';
 import {
-  selectJournalNextBestActions, placeFor, wikiUrl, openJournalAction, planJournalAction,
+  journalNextBestFeed, journalNextBestHeader, placeFor, wikiUrl, openJournalAction, planJournalAction,
   type JournalNextBestAction, type SubTab,
 } from '../JournalNextBest';
 import { JournalIcon } from './OsrsJournalParts';
@@ -89,17 +90,18 @@ export const OsrsJournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = 
   const { unlocks, gameModeId } = useGame();
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:nextbest:open', true);
   const [openItem, setOpenItem] = useState<string | null>(null);
-  const actions = useMemo(() => selectJournalNextBestActions(unlocks, gameModeId), [unlocks, gameModeId]);
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  const feed = useMemo(() => journalNextBestFeed(unlocks, gameModeId, areaRoutes), [unlocks, gameModeId, areaRoutes]);
+  const { actions } = feed;
 
   if (actions.length === 0) return null;
-  const ready = actions.filter(a => a.unmet === 0).length;
 
   return (
     <div className="ojr-nb">
       <button type="button" className="ojr-nb-head" aria-expanded={open} onClick={() => setOpen(o => !o)}>
         <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" style={{ transform: open ? 'none' : 'rotate(-90deg)' }}><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
         Next best actions
-        <span className="ojr-nb-sum">{ready > 0 ? `${ready} ready` : `${actions.length} close`}</span>
+        <span className="ojr-nb-sum">{journalNextBestHeader(feed)}</span>
       </button>
       {open && (
         <div className="ojr-nb-list">

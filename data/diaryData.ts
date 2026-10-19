@@ -11,6 +11,21 @@ export interface DiaryTier {
   requiredRegions: string[]; // Extra regions needed besides the main one
 }
 
+/** The four diary tiers, easiest first, as the game lists them. */
+export const DIARY_TIER_ORDER: readonly DiaryTier['tier'][] = ['Easy', 'Medium', 'Hard', 'Elite'];
+
+/** A tier's place in DIARY_TIER_ORDER (Easy 0 … Elite 3). */
+export const diaryTierRank = (tier: DiaryTier['tier']): number => DIARY_TIER_ORDER.indexOf(tier);
+
+/** The diary's own area, the id without its tier ("Ardougne" for "Ardougne Easy"). */
+export const diaryAreaOf = (id: string): string => id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
+
+/** By diary area, then Easy, Medium, Hard, Elite (not alphabetical, which puts Elite second). */
+export const compareDiaryTiers = (
+  a: Pick<DiaryTier, 'id' | 'tier'>,
+  b: Pick<DiaryTier, 'id' | 'tier'>,
+): number => diaryAreaOf(a.id).localeCompare(diaryAreaOf(b.id)) || diaryTierRank(a.tier) - diaryTierRank(b.tier);
+
 export const DIARY_DATA: Record<string, DiaryTier> = {
   // --- ARDOUGNE ---
   'Ardougne Easy': {
