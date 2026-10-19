@@ -2160,7 +2160,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
 
   return (
-    <div className="h-[600px] w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
+    <div className="h-[min(600px,70vh)] lg:h-[600px] w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
       {/* ── Chunk lens control ─────────────────────────────────────────────── */}
       {!authoring && (
         <div className="absolute top-2 left-2 z-30 w-64 max-w-[70%]">
