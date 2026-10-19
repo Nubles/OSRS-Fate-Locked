@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { useGame } from '../../context/GameContext';
 import { openOsrsProgressionTab, openOsrsScreen, useOsrsNav } from '../../utils/osrsNav';
 import { QUEST_DATA, type QuestData } from '../../data/questData';
-import { DIARY_DATA } from '../../data/diaryData';
+import { DIARY_DATA, DIARY_TIER_ORDER } from '../../data/diaryData';
 import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
 import { CA_DATA } from '../../data/caData';
 import { ALL_CA_TASKS, type CATask } from '../../data/caTasks';
@@ -859,7 +859,7 @@ const MenuItem: React.FC<{ verb: string; target: string; disabled?: boolean; kee
 
 /* ── Diaries: one line per area, the four tiers as columns, as in game. ───── */
 
-const TIERS = ['Easy', 'Medium', 'Hard', 'Elite'] as const;
+const TIERS = DIARY_TIER_ORDER;
 const SHORT: Record<string, string> = { Easy: 'Easy', Medium: 'Med', Hard: 'Hard', Elite: 'Elite' };
 const areaOf = (tierId: string): string => tierId.replace(/ (Easy|Medium|Hard|Elite)$/, '');
 
@@ -980,8 +980,8 @@ const DiaryFilters: React.FC<{ d: ReturnType<typeof useDiaryJournal> }> = ({ d }
       status={d.filterStatus}
       onStatusChange={d.setFilterStatus}
       statusCounts={d.statusCounts}
-      completed={d.unlocks.diaries.length}
-      total={Object.keys(DIARY_DATA).length}
+      completed={d.diaryProgress.done}
+      total={d.diaryProgress.total}
       regions={d.regions}
       activeRegion={d.filterRegion}
       onRegionChange={d.setFilterRegion}

@@ -327,7 +327,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
           const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
           const hasTasks = tasks.length > 0;
-          const tasksCompletedCount = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
+          const tasksCompletedCount = isCompleted ? tasks.length : tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
 
           const allTasksDone = !hasTasks || tasksCompletedCount === tasks.length;
           const isActionable = isCompleted || allTasksDone;

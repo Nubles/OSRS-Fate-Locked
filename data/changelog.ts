@@ -37,6 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-journal-ready-now',
+    title: 'A Journal that opens on what you can do',
+    date: '2026-10-19',
+    sections: {
+      added: [
+        "The classic layout's Journal now opens on Ready now: every quest, diary task and combat task you can tick off, with its Key chance.",
+        'Almost there lists what is one step away and names the missing piece. Quest list, Diaries and Combat hold the full lists.',
+        'Right-click an entry, or hold it on a phone, for Complete, Show on map, the wiki and more. Settings > Journal brings back the old tabs.',
+      ],
+      fixed: [
+        'Every ready quest count now agrees: the summary, the quest filter, Next best actions and the Doable tab.',
+        'Diary tiers are listed Easy, Medium, Hard, Elite, and diary progress counts tasks, so finished tasks show up straight away.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
