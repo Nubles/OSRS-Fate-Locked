@@ -58,7 +58,7 @@ describe('OnlineBackupDriver', () => {
     vi.useRealTimers();
   });
 
-  it('waits for changes to settle, then backs up at most every 15 minutes', async () => {
+  it('waits for changes to settle, then backs up at most every 30 minutes', async () => {
     writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK' });
     const { rerender } = render(<OnlineBackupDriver />);
     await act(async () => { await vi.advanceTimersByTimeAsync(ONLINE_BACKUP_SETTLE_MS - 1); });
@@ -106,7 +106,7 @@ describe('OnlineBackupDriver', () => {
     expect(backupRun).toHaveBeenCalledTimes(1);
   });
 
-  it('sends a waiting change when the page is hidden, at most every 5 minutes', async () => {
+  it('sends a waiting change when the page is hidden, at most every 15 minutes', async () => {
     const hide = async () => {
       Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
       await act(async () => { document.dispatchEvent(new Event('visibilitychange')); await Promise.resolve(); });
@@ -134,9 +134,12 @@ describe('OnlineBackupDriver', () => {
 });
 
 describe('nextUploadDelay', () => {
-  it('lets changes settle for 30 seconds, and keeps 15 minutes between uploads', () => {
-    expect(nextUploadDelay(undefined, 1_000_000)).toBe(ONLINE_BACKUP_SETTLE_MS);
-    expect(nextUploadDelay(1_000_000, 1_000_000)).toBe(ONLINE_BACKUP_INTERVAL_MS);
-    expect(nextUploadDelay(1_000_000, 1_000_000 + ONLINE_BACKUP_INTERVAL_MS)).toBe(ONLINE_BACKUP_SETTLE_MS);
+  it('lets changes settle for 30 seconds, and keeps 30 minutes between uploads', () => {
+    // Each upload is a KV write on the relay's free plan (docs/online-backup.md, Capacity).
+    expect(ONLINE_BACKUP_INTERVAL_MS).toBe(30 * 60_000);
+    expect(ONLINE_BACKUP_HIDDEN_MIN_MS).toBe(15 * 60_000);
+    expect(nextUploadDelay(undefined, 10_000_000)).toBe(ONLINE_BACKUP_SETTLE_MS);
+    expect(nextUploadDelay(10_000_000, 10_000_000)).toBe(ONLINE_BACKUP_INTERVAL_MS);
+    expect(nextUploadDelay(10_000_000, 10_000_000 + ONLINE_BACKUP_INTERVAL_MS)).toBe(ONLINE_BACKUP_SETTLE_MS);
   });
 });
