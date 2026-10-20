@@ -12,8 +12,10 @@ import type { GameState, LogEntry } from '../types';
  *    slots into the existing tamper-evident hash chain / verified bundles.
  *  - No PRNG stream state to persist: the history chain IS the state.
  *
- * A run without a seed (rngSeed undefined) keeps classic Math.random play —
- * existing runs are untouched. Visual-only randomness (particles etc.)
+ * A run without a seed draws from its hidden salt (GameState.rngSalt) the same
+ * way (runDrawFloat), so restoring a backup and repeating an action gives the
+ * same result instead of a fresh one (critique GP-4). Only a state with
+ * neither falls back to Math.random. Visual-only randomness (particles etc.)
  * stays Math.random everywhere; only gameplay outcomes route through here.
  */
 
@@ -72,6 +74,41 @@ export const seededContext = (state: Pick<GameState, 'history' | 'rngVersion'>):
     semanticContexts.set(entry, { previous, context });
   }
   return context;
+};
+
+type DrawState = Pick<GameState, 'history' | 'rngVersion' | 'rngSeed' | 'rngSalt'>;
+
+/**
+ * The run's own draw source. A seeded run keeps exactly its old stream (its
+ * seed and its versioned context). An unseeded run draws from its hidden salt
+ * over the semantic chain, which leaves out ids and times, so the same actions
+ * after a restore give the same draws. The "salt:" prefix is lower case and a
+ * seed is always upper case (normalizeSeed), so the two streams never meet.
+ */
+export const runDrawSource = (state: DrawState): { seed: string; context: string } | null => {
+  if (state.rngSeed) return { seed: state.rngSeed, context: seededContext(state) };
+  if (state.rngSalt) return { seed: `salt:${state.rngSalt}`, context: seededContext({ history: state.history, rngVersion: 2 }) };
+  return null;
+};
+
+/** The run's deterministic draw, or null for a state with neither seed nor salt. */
+export const runDrawFloat = (state: DrawState, purpose: string, index = 0): number | null => {
+  const source = runDrawSource(state);
+  return source === null ? null : drawFloat(source.seed, source.context, purpose, index);
+};
+
+/**
+ * The salt for a run saved before salts existed. Derived from its first
+ * history entry, which never leaves the save, so every copy of the run (other
+ * devices, older backups, a reload before the next save) gets the same one.
+ * A run with no history yet gets a fresh random salt instead.
+ */
+export const legacyRunSalt = (history: readonly LogEntry[]): string | null => {
+  const first = history[0];
+  if (!first || typeof first.id !== 'string') return null;
+  // Fixed length whatever the id's: four 32-bit mixes of the entry's id and time.
+  const words = [0, 1, 2, 3].map(i => hash32(`${i}\u0000${first.id}\u0000${first.timestamp}`).toString(16).padStart(8, '0'));
+  return `legacy-${words.join('')}`;
 };
 
 /** Deterministic die: integer in [1, max]. */

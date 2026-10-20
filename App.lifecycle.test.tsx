@@ -23,6 +23,14 @@ import {
   getPendingSave,
   resetPendingSavesForTest,
 } from './utils/pendingSaves';
+import { runDrawFloat } from './utils/seededRng';
+
+// Every run draws from its seed or hidden salt (runDrawFloat), never
+// Math.random, so a test that needs a given draw sets it here.
+vi.mock('./utils/seededRng', async importOriginal => {
+  const actual = await importOriginal<typeof import('./utils/seededRng')>();
+  return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
@@ -199,6 +207,7 @@ afterEach(() => {
   cleanup();
   resetPendingSavesForTest();
   values.clear();
+  vi.mocked(runDrawFloat).mockReset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   window.history.replaceState(null, '', '/');
@@ -263,7 +272,7 @@ describe('App changelog lifecycle', () => {
     readyState.unlocks.levels.Attack = currentLevel;
     storage.setItem(profileKey, JSON.stringify(readyState));
     storage.setItem(changelogStorageKey, latestChangelogId);
-    vi.spyOn(Math, 'random')
+    vi.mocked(runDrawFloat)
       .mockReturnValueOnce(0.01)
       .mockReturnValue(0.99);
     render(<App />);
