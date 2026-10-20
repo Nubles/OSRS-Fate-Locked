@@ -104,10 +104,12 @@ describe('audited process repairs', () => {
 
   it('keeps the old conversion only for existing seeded runs', () => {
     const dice = (_purpose: string, index?: number, max = 100) => index === 2 ? max : 4;
-    const roll = (version?: 1 | 2) => prepareKeyRollAction({ ...fresh(), rngSeed: 'OLD', rngVersion: version }, DropSource.CLUE_BEGINNER, 5, 1, dice, undefined, undefined, undefined, { kind: 'clue', clueTier: 'Beginner' })!.payload.roll;
+    const roll = (version?: 1 | 2 | 3) => prepareKeyRollAction({ ...fresh(), rngSeed: 'OLD', rngVersion: version }, DropSource.CLUE_BEGINNER, 5, 1, dice, undefined, undefined, undefined, { kind: 'clue', clueTier: 'Beginner' })!.payload.roll;
     expect(roll()).toBe(0.03);
     expect(roll(1)).toBe(0.03);
     expect(roll(2)).toBe(0.04);
+    // Version 3 only changes how a Chaos Key picks; Key rolls stay as in version 2.
+    expect(roll(3)).toBe(0.04);
   });
 
   it('gives two real fresh runs the same multi-roll sequence despite different event IDs', () => {
@@ -125,13 +127,16 @@ describe('audited process repairs', () => {
     expect(seededContext(a)).toBe(seededContext(b));
     const roundtrip = validateAndMigrateSave(persisted(a as ReturnType<typeof fresh>), createFreshState());
     expect(roundtrip.ok).toBe(true);
-    if (roundtrip.ok) { expect(roundtrip.state.rngVersion).toBe(2); expect(seededContext(roundtrip.state)).toBe(seededContext(a)); }
+    if (roundtrip.ok) { expect(roundtrip.state.rngVersion).toBe(3); expect(seededContext(roundtrip.state)).toBe(seededContext(a)); }
     const legacy = { ...a, rngVersion: undefined };
     expect(seededContext(legacy)).toBe(a.history.at(-1)?.hash);
     const legacyRoundtrip = validateAndMigrateSave(persisted(legacy as ReturnType<typeof fresh>), createFreshState());
     expect(legacyRoundtrip.ok).toBe(true);
     if (legacyRoundtrip.ok) expect(legacyRoundtrip.state.rngVersion).toBeUndefined();
     expect(gameReducer(a, { type: 'SET_SEED', payload: 'CHANGED' })).toBe(a);
+    // Version 3 draws against the same semantic history as version 2, and saves accept nothing newer.
+    expect(seededContext({ ...a, rngVersion: 2 })).toBe(seededContext(a));
+    expect(validateAndMigrateSave(persisted({ ...a, rngVersion: 4 } as unknown as ReturnType<typeof fresh>), createFreshState()).ok).toBe(false);
   });
 
   it('restores retired preset rules without returning them to the picker', () => {

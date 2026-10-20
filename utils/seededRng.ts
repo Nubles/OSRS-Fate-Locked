@@ -60,9 +60,25 @@ const semanticValue = (value: unknown): unknown => {
 };
 const semanticContexts = new WeakMap<LogEntry, { previous: string; context: string }>();
 
+/**
+ * The draw version a newly seeded run gets. 1 (or missing): history-hash
+ * context. 2: semantic history context and centred dice. 3: as 2, and a
+ * Chaos Key picks a table before an entry (gameEngine.pickChaosEntry).
+ * Older seeded saves keep their version, so their seed replays unchanged.
+ */
+export const CURRENT_RNG_VERSION = 3 as const;
+
+/** Version 2 and later draw against the semantic history chain. */
+export const usesSemanticContext = (state: Pick<GameState, 'rngVersion'>): boolean =>
+  state.rngVersion === 2 || state.rngVersion === 3;
+
+/** Whether a Chaos Key picks a table first: always unseeded, and on seeded runs from version 3. */
+export const chaosPicksTableFirst = (state: Pick<GameState, 'rngSeed' | 'rngVersion'>): boolean =>
+  !state.rngSeed || state.rngVersion === 3;
+
 /** A separate semantic chain leaves the tamper-evident history untouched. */
 export const seededContext = (state: Pick<GameState, 'history' | 'rngVersion'>): string => {
-  if (state.rngVersion !== 2) return state.history[state.history.length - 1]?.hash ?? 'genesis';
+  if (!usesSemanticContext(state)) return state.history[state.history.length - 1]?.hash ?? 'genesis';
   let context = 'genesis';
   for (const entry of state.history) {
     const cached = semanticContexts.get(entry);

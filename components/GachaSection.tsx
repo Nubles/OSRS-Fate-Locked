@@ -294,7 +294,7 @@ const ClassicGachaSection: React.FC = () => {
                             Chaos Key Available
                             <span className="text-[10px] bg-red-500/20 px-1.5 py-0.5 rounded border border-red-500/30 text-red-300 animate-pulse">WILDCARD</span>
                         </h3>
-                        <p className="text-xs text-red-300/60 font-mono">Unlocks a random entry from all the tables at once.</p>
+                        <p className="text-xs text-red-300/60 font-mono">Fate picks a table, then a random entry in it.</p>
                     </div>
                 </div>
                 <div className="text-2xl font-bold text-red-500 group-hover:scale-110 transition-transform relative z-10 text-shadow-osrs">{chaosKeys}</div>

@@ -6,12 +6,13 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
-import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHANCE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
+import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHANCE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHAOS_PICK_TEXT, CHUNKED_CHAOS_TEXT, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, OLD_SEEDED_CHAOS_TEXT, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
+import { chaosPicksTableFirst } from '../utils/seededRng';
 import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
@@ -108,7 +109,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
 
   // Live rules for the current run — the codex shows the player's actual
   // numbers, not generic defaults.
-  const { gameModeId, customMode } = useGame();
+  const { gameModeId, customMode, rngSeed, rngVersion } = useGame();
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
@@ -630,8 +631,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
-                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most.'}
+                                        {CHAOS_PICK_TEXT}{gameModeId === 'chunked' && ` ${CHUNKED_CHAOS_TEXT}`}
+                                        {!chaosPicksTableFirst({ rngSeed, rngVersion }) && ` ${OLD_SEEDED_CHAOS_TEXT}`}{' '}
                                         Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
                                         every level-up, or the Ritual of Chaos.
                                     </p>

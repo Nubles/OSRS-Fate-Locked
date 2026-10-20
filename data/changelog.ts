@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-chaos-picks-a-table',
+    title: 'Chaos Keys pick a table first',
+    date: '2026-10-19',
+    sections: {
+      balance: [
+        'Chaos Keys now pick a kind of unlock first, so skills and gear come up as often as areas and banks.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',

@@ -25,8 +25,8 @@ const engineOmniChance = (source: DropSource): number => {
 
 type CodexTab = 'core' | 'economy' | 'modes' | 'drops' | 'unlocks' | 'altar';
 
-const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
-  const save = JSON.stringify({ gameModeId });
+const renderCodex = (tab: CodexTab, gameModeId = 'vanilla', seeded: { rngSeed?: string; rngVersion?: 1 | 2 | 3 } = {}) => {
+  const save = JSON.stringify({ gameModeId, ...seeded });
   vi.stubGlobal('localStorage', {
     getItem: () => save,
     setItem: () => undefined,
@@ -199,8 +199,18 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
     expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
-    expect(unlocks).toContain('Every eligible entry is equally likely, so big tables such as Areas and Banks come up most.');
-    expect(renderCodex('unlocks', 'chunked')).toContain('so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
+    const tableFirst = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
+    expect(unlocks).toContain(`${tableFirst} Guaranteed at skill levels`);
+    expect(unlocks).not.toContain('In Chunked, only banks and guilds');
+    expect(renderCodex('unlocks', 'chunked')).toContain(`${tableFirst} In Chunked, only banks and guilds inside your chunks can come up. Guaranteed`);
+    expect(unlocks).not.toContain('keeps its old odds');
+  });
+
+  it('tells a seeded run from before the table-first rule that it keeps its old Chaos odds', () => {
+    const oldOdds = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
+    expect(renderCodex('unlocks', 'vanilla', { rngSeed: 'OLD', rngVersion: 2 })).toContain(oldOdds);
+    expect(renderCodex('unlocks', 'vanilla', { rngSeed: 'OLD' })).toContain(oldOdds);
+    expect(renderCodex('unlocks', 'vanilla', { rngSeed: 'NEW', rngVersion: 3 })).not.toContain(oldOdds);
   });
 
   it('labels the reserve rules as active in Chunked and inactive elsewhere', () => {
