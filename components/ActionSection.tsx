@@ -22,6 +22,8 @@ const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ d
 const VanillaMinigameRolls = lazyWithRetry(() => import('./VanillaMinigameRolls').then(m => ({ default: m.VanillaMinigameRolls })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
 import { useIsOsrsUi } from '../utils/uiStyle';
+// The Slayer cards and their gates (utils/farmGates) load with the Farm Keys panel's Slayer tab.
+const ClassicSlayerCards = lazyWithRetry(() => import('./ClassicSlayerCards'));
 // The OSRS layout's Farm Keys loads only when that layout is on.
 const OsrsFarmKeys = lazyWithRetry(() => import('./osrs/OsrsFarmKeys'));
 
@@ -135,7 +137,7 @@ const ACTIVITY_ROLLS = [
   { name: 'Minigame', subText: 'Pest Control, BA, Castle Wars, Soul Wars…', source: DropSource.ACTIVITY_MINIGAME, image: `${WIKI_IMG}Void_knight_mace.png`, style: TIER_STYLES.STONE },
 ];
 
-type TierStyle = typeof TIER_STYLES.GREEN;
+export type TierStyle = typeof TIER_STYLES.GREEN;
 
 const getTierStyle = (tier: string): TierStyle => {
   const t = tier.toLowerCase();
@@ -150,7 +152,7 @@ const getTierStyle = (tier: string): TierStyle => {
 };
 
 // --- New Suspense Animation Logic ---
-const useRollSuspense = (onClick: (e: any) => void) => {
+export const useRollSuspense = (onClick: (e: any) => void) => {
     const [isRolling, setIsRolling] = useState(false);
 
     const triggerRoll = async (e: React.MouseEvent) => {
@@ -172,7 +174,7 @@ const useRollSuspense = (onClick: (e: any) => void) => {
 };
 
 // --- Rolling Overlay Component ---
-const RollingOverlay = () => (
+export const RollingOverlay = () => (
     <>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center animate-in fade-in duration-200">
             <div className="bg-black/50 p-1.5 rounded-full border border-white/20 mb-0.5 shadow-lg">
@@ -211,19 +213,23 @@ interface SlayerMasterProps {
   image: string;
   style: TierStyle;
   subText: string;
+  /** Why this master gives no tasks yet: the card is greyed out and doesn't roll. */
+  blocked?: string | null;
   onClick: (e: React.MouseEvent) => void;
 }
 
-const SlayerMasterCard: React.FC<SlayerMasterProps> = ({ name, displayRate, bonus, image, style, subText, onClick }) => {
+export const SlayerMasterCard: React.FC<SlayerMasterProps> = ({ name, displayRate, bonus, image, style, subText, blocked, onClick }) => {
   const { isRolling, triggerRoll } = useRollSuspense(onClick);
 
   return (
     <button 
       onClick={triggerRoll}
+      disabled={!!blocked}
+      title={blocked ?? undefined}
       className={`
         relative w-full h-20 overflow-hidden rounded-lg border-2 transition-all duration-200 group text-left
-        ${style.bg} ${style.border} ${style.hover}
-        shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] active:scale-[0.98]
+        ${style.bg} ${style.border} ${blocked ? 'opacity-50 grayscale cursor-not-allowed' : `${style.hover} active:scale-[0.98]`}
+        shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]
         ${isRolling ? 'border-white/50 scale-[0.98] shadow-[0_0_20px_rgba(255,255,255,0.2)]' : ''}
       `}
     >
@@ -243,15 +249,17 @@ const SlayerMasterCard: React.FC<SlayerMasterProps> = ({ name, displayRate, bonu
         </h3>
         <p className="text-[10px] text-gray-400 font-mono mb-1.5">{subText}</p>
         
-        <div className={`px-2 py-0.5 rounded text-[10px] font-bold border ${style.pill} shadow-sm flex items-center gap-1.5`}>
-           <Crosshair size={10} />
-           {displayRate}% Chance
-           <BonusTag bonus={bonus} />
-        </div>
+        {blocked
+          ? <div className="px-2 py-0.5 rounded text-[10px] font-bold border border-white/10 bg-black/40 text-amber-300">{blocked}</div>
+          : <div className={`px-2 py-0.5 rounded text-[10px] font-bold border ${style.pill} shadow-sm flex items-center gap-1.5`}>
+              <Crosshair size={10} />
+              {displayRate}% Chance
+              <BonusTag bonus={bonus} />
+            </div>}
       </div>
 
       {/* Hover Flash */}
-      {!isRolling && (
+      {!isRolling && !blocked && (
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none"></div>
       )}
 
@@ -506,7 +514,7 @@ export const useFarmModel = () => {
       },
       {
         name: "Boss Task",
-        subText: "Boss Slayer / Special",
+        subText: usesActivityKeyReserves(gameModeId) ? "From that boss's Key stash" : "Boss Slayer / Special",
         source: DropSource.SLAYER_BOSS,
         image: "https://oldschool.runescape.wiki/images/Purple_slayer_helmet.png",
         style: TIER_STYLES.AMBER
@@ -588,25 +596,9 @@ const ClassicActionSection: React.FC = () => {
           <div className="text-center text-gray-600 text-xs py-6">{FARM_NO_SLAYER_MASTER}</div>
         )}
         {subTab === 'SLAYER' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {slayers.map((master, i) => (
-              <div
-                key={master.name}
-                className={animationsEnabled ? 'animate-fade-in-up' : ''}
-                style={animationsEnabled ? { animationDelay: `${i * 35}ms` } : undefined}
-              >
-                <SlayerMasterCard
-                  name={master.name}
-                  subText={master.subText}
-                  displayRate={effectiveRate(master.source)}
-                  bonus={bonusFor(master.source)}
-                  image={master.image}
-                  style={master.style}
-                  onClick={(e) => handleRoll(master.source, DROP_RATES[master.source], e)}
-                />
-              </div>
-            ))}
-          </div>
+          <React.Suspense fallback={<div className="h-28" />}>
+            <ClassicSlayerCards slayers={slayers} animationsEnabled={animationsEnabled} effectiveRate={effectiveRate} bonusFor={bonusFor} handleRoll={handleRoll} />
+          </React.Suspense>
         )}
         {subTab === 'CLUES' && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">

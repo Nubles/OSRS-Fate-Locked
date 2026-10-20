@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-19-slayer-gates',
+    title: 'Slayer cards follow your unlocks',
+    date: '2026-10-19',
+    sections: {
+      changed: [
+        'Slayer masters you can’t use yet are greyed out with why. A Boss Task needs Like a Boss, asks which boss, and rolls from that boss’s Key stash.',
+      ],
+    },
+  },
+  {
     id: '2026-10-18-dropped-connection',
     title: 'A dropped connection keeps you in the tracker',
     date: '2026-10-18',
