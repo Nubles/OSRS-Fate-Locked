@@ -49,6 +49,16 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-21-quicker-start-and-journal',
+    title: 'Quicker start and a lighter Journal',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker starts quicker, and the Journal opens faster and only loads icons as you scroll to them.',
+      ],
+    },
+  },
+  {
     id: '2026-10-21-faster-first-visit',
     title: 'The tracker opens faster',
     date: '2026-10-21',

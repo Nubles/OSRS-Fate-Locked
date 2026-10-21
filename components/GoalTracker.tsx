@@ -1,25 +1,64 @@
 
-import React, { useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { RESOURCE_MAP } from '../data/resourceData';
 import { TableType } from '../types';
 import { calculateGoalProgress, GoalProgress } from '../utils/goalLogic';
-import { calculateEngineItemProgress } from '../utils/supplyChain';
 import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
-import { GoalRouteView } from './GoalRouteView';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
+import { importWithRetry, lazyWithRetry } from '../utils/lazyRetry';
+
+// The Resource Engine (its 3,800-item table) and the route planner load only
+// when a pinned goal needs them, not for every run that pins a quest.
+type ResourceEngine = typeof import('../utils/supplyChain');
+const loadResourceEngine = () => importWithRetry(() => import('../utils/supplyChain'));
+const GoalRouteView = lazyWithRetry(() => import('./GoalRouteView').then(m => ({ default: m.GoalRouteView })));
+
+/** The requirement a quest or strategy goal is measured against, if it is one. */
+const goalRequirement = (id: string): ContentRequirement | undefined => {
+  const quest = QUEST_DATA[id];
+  // Quest facts and readiness always come from the canonical journal.
+  if (quest) {
+    return {
+      id: quest.id,
+      category: TableType.QUESTS,
+      regions: enforcedQuestAreas(quest),
+      skills: quest.skills,
+      quests: quest.prereqs,
+      description: `Series: ${quest.series || 'None'}`
+    };
+  }
+  return STRATEGY_DATABASE[id];
+};
+
+/** A pinned goal that is no diary, quest or strategy entry can only be a Resource Engine item. */
+export const goalNeedsResourceEngine = (id: string): boolean => !DIARY_DATA[id] && !goalRequirement(id);
 
 export const GoalTracker: React.FC = () => {
   const gameState = useGame();
   const { pinnedGoals, togglePin, unlocks, gameModeId } = gameState;
   // Which pinned goal has its full route expanded (one at a time keeps it tidy).
   const [routeFor, setRouteFor] = useState<string | null>(null);
+  const needsEngine = pinnedGoals.some(goalNeedsResourceEngine);
+  const [engine, setEngine] = useState<ResourceEngine | null>(null);
+  const [engineError, setEngineError] = useState<unknown>(null);
+  useEffect(() => {
+    if (!needsEngine || engine) return;
+    let live = true;
+    loadResourceEngine().then(
+      module => { if (live) setEngine(module); },
+      error => { if (live) setEngineError(error); },
+    );
+    return () => { live = false; };
+  }, [needsEngine, engine]);
+  // A failed load goes to the error boundary, as a failed tracker chunk did.
+  if (engineError) throw engineError;
 
-  if (pinnedGoals.length === 0) return null;
+  // Wait for the engine so the cards appear together, as before.
+  if (pinnedGoals.length === 0 || (needsEngine && !engine)) return null;
 
   return (
     <div className="mb-4 space-y-2 animate-in slide-in-from-top-2 duration-300">
@@ -31,23 +70,8 @@ export const GoalTracker: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {pinnedGoals.map(id => {
-          let req: ContentRequirement | undefined = STRATEGY_DATABASE[id];
+          const req = goalRequirement(id);
           const diary = DIARY_DATA[id];
-
-          // Quest facts and readiness always come from the canonical journal.
-          if (QUEST_DATA[id]) {
-             const quest = QUEST_DATA[id];
-             if (quest) {
-                 req = {
-                     id: quest.id,
-                     category: TableType.QUESTS,
-                     regions: enforcedQuestAreas(quest),
-                     skills: quest.skills,
-                     quests: quest.prereqs,
-                     description: `Series: ${quest.series || 'None'}`
-                 };
-          }
-          }
 
           // Final fallback: a Resource Engine item. Engine items don't fit
           // ContentRequirement (they're gated by per-source unlock IDs the
@@ -70,8 +94,9 @@ export const GoalTracker: React.FC = () => {
           } else if (req) {
             progress = calculateGoalProgress(req, unlocks, gameModeId);
             description = req.description;
-          } else if (RESOURCE_MAP[id]) {
-            const engineProgress = calculateEngineItemProgress(id, gameState);
+          } else if (engine) {
+            // Not in the engine's table either: no card, as before.
+            const engineProgress = engine.calculateEngineItemProgress(id, gameState);
             if (!engineProgress) return null;
             progress = engineProgress;
             description = 'Resource Engine item';
@@ -131,7 +156,9 @@ export const GoalTracker: React.FC = () => {
       </div>
 
       {/* Expanded "route to goal" planning view for the selected pin. */}
-      {routeFor && pinnedGoals.includes(routeFor) && <GoalRouteView goalId={routeFor} />}
+      {routeFor && pinnedGoals.includes(routeFor) && (
+        <Suspense fallback={null}><GoalRouteView goalId={routeFor} /></Suspense>
+      )}
     </div>
   );
 };
