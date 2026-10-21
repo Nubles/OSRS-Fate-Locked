@@ -151,6 +151,19 @@ a:focus:not(:focus-visible),
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* The Journal's quest list (200+ cards): the browser skips layout and paint
+   for cards far off screen. The height is a first guess for a card not drawn
+   yet; `auto` then keeps each card's real height once drawn. Diary and Combat
+   Achievement cards don't use it: they're few, and a smooth jump to a diary
+   tier landed short while the cards it passed changed size. */
+.journal-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 110px;
+}
+@media (max-width: 719px) {
+  .journal-card { contain-intrinsic-size: auto 200px; }
+}
+
 /* Reduced-motion: only suppress the decorative hover-lift. The app's core
    animations (rolls, reveals, rituals) are controlled by the in-app
    animations toggle, so we deliberately do NOT blanket-disable them here —

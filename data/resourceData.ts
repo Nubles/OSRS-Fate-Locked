@@ -2888,9 +2888,23 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
 // Merge auto-generated SHOP/DROP sources from the OSRS Wiki (see
 // scripts/buildSourceEnrichment.ts) into the curated map above.
-const curatedSources = Object.values(RESOURCE_MAP).flat();
+/** The hand-curated sources, before any wiki enrichment is merged in. */
+export const CURATED_RESOURCE_SOURCES: readonly ResourceSource[] = Object.values(RESOURCE_MAP).flat();
+// Curated sources without inputs, by type and lower-cased name. The first one
+// wins, as a linear find would. Built once: a find per wiki source (about
+// 2,700 of them) took over a second of main thread on a throttled phone.
+const curatedSourceKey = (name: string, type: SourceType) => `${type}\u0000${name.toLowerCase()}`;
+const curatedSourceIndex = new Map<string, ResourceSource>();
+for (const s of CURATED_RESOURCE_SOURCES) {
+  if (s.inputs) continue;
+  const key = curatedSourceKey(s.name, s.type);
+  if (!curatedSourceIndex.has(key)) curatedSourceIndex.set(key, s);
+}
+/** The curated source a wiki source of this name and type borrows its requirements from. */
+export const findCuratedSource = (source: Pick<ResourceSource, 'name' | 'type'>): ResourceSource | undefined =>
+  curatedSourceIndex.get(curatedSourceKey(source.name, source.type));
 export const enrichResourceSource = (source: ResourceSource): ResourceSource => {
-  const known = curatedSources.find(s => s.name.toLowerCase() === source.name.toLowerCase() && s.type === source.type && !s.inputs);
+  const known = findCuratedSource(source);
   // A drop-table name is not sufficient evidence of where/how it is obtained.
   // Keep the route visible, but never turn missing metadata into permission.
   return known ? { ...source, ...known, rarity: source.rarity, requirementsUnverified: true }
