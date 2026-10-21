@@ -17,7 +17,11 @@ import {
   buildCorruptSaveArchive,
   type CorruptSaveEvidence,
 } from '../utils/profileStorage';
-import { profileMirrorMetadataKey } from '../utils/storageRecovery';
+import {
+  isQuotaExceededError,
+  profileMirrorMetadataKey,
+  removeDisposableCaches,
+} from '../utils/storageRecovery';
 import { profileLifecycleMarkKey } from '../utils/lifecycleMark';
 import { serializeCurrent } from '../utils/gamePersistence';
 import {
@@ -143,7 +147,16 @@ const writeStorageVerified = (
   const beforeWrite = checkWriteAuthorization(authorizeWrite);
   if (beforeWrite !== null) return beforeWrite;
   try {
-    window.localStorage.setItem(key, data);
+    try {
+      window.localStorage.setItem(key, data);
+    } catch (error) {
+      // A full browser storage gives up its disposable caches, as saves do.
+      if (!isQuotaExceededError(error)) throw error;
+      removeDisposableCaches(window.localStorage);
+      const afterCleanup = checkWriteAuthorization(authorizeWrite);
+      if (afterCleanup !== null) return afterCleanup;
+      window.localStorage.setItem(key, data);
+    }
     const afterWrite = checkWriteAuthorization(authorizeWrite);
     if (afterWrite !== null) return afterWrite;
     return window.localStorage.getItem(key) === data

@@ -21,7 +21,7 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-10-19-new-player-whats-new');
+    expect(LATEST_CHANGELOG.id).toBe('2026-10-21-new-player-whats-new');
   });
 
   it('announces the pet search and the check before a pet is claimed', () => {
