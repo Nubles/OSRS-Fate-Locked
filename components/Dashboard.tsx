@@ -381,7 +381,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
-    history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle,
+    history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
   } = useGame();
   const levelBoost = achievementBoostFor('Level Up', achievementsClaimed);
   const achievementCatalog = useAchievementCatalog();
@@ -1370,9 +1370,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       {/* Content Area. The classic layout scrolls inside on desktop (lg and
           up) only; on a phone each tab grows and the page scrolls. */}
       <div className={isOsrs ? 'osrs-dash-body flex-1 overflow-hidden' : 'flex-1 lg:overflow-hidden p-3 lg:p-4 bg-[#111]'}>
-          <Suspense fallback={<ModalFallback />}>
-              <GoalTracker />
-          </Suspense>
+          {/* Only a run with pinned goals loads the tracker and its tables. */}
+          {(pinnedGoals?.length ?? 0) > 0 && (
+              <LazyPanel name="Active goals">
+                  <GoalTracker />
+              </LazyPanel>
+          )}
           {/* Keyed by tab so the content gently slides in when you switch. */}
           <div key={activeTab} className={`${isOsrs ? 'h-full' : 'lg:h-full'} relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
