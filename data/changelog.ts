@@ -37,13 +37,33 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-19-phones-scroll-normally',
+    id: '2026-10-21-phones-scroll-normally',
     title: 'The tracker on your phone',
-    date: '2026-10-19',
+    date: '2026-10-21',
     sections: {
       changed: [
         'On a phone the tracker now scrolls like a normal page, with Farm Keys first, so a Slayer roll is one scroll away.',
         'A slim top bar shows your Keys and Fate; the menu button holds everything else. The map and the Rules get the full width.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
       ],
     },
   },
