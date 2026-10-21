@@ -58,6 +58,16 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-21-quest-pause',
+    title: 'Smoother quest completions',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'Completing a quest on a long run no longer freezes the tracker, and Journal jumps no longer hide the quest under the Quests header.',
+      ],
+    },
+  },
+  {
     id: '2026-10-21-quicker-start-and-journal',
     title: 'Quicker start and a lighter Journal',
     date: '2026-10-21',
