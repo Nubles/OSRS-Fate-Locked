@@ -37,12 +37,32 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-19-roll-results-in-words',
+    id: '2026-10-21-roll-results-in-words',
     title: 'Roll results say what you got',
-    date: '2026-10-19',
+    date: '2026-10-21',
     sections: {
       changed: [
         'Roll results now say whether you found a Key, and a miss shows the Fate you gained, like "No Key: +4 Fate (12/50)". Quests show their roll too.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
       ],
     },
   },
