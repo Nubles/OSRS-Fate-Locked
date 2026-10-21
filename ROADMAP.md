@@ -486,7 +486,11 @@ raised to 226 kB on 9 October 2026, when the entry sat at 224.9-225.0 kB and
 builds of the same commit landed either side of 225, so the main-branch
 deploy of #92 failed while its PR passed; raised to 228 kB on 13 October
 2026, when the save-safety checks that recovery needs at startup and the
-crash-report hook put the entry at 226.1 kB). That split came from the build
+crash-report hook put the entry at 226.1 kB; it was then raised step by
+step to 256 kB by 18 October 2026, and lowered to 219 kB on 19 October
+2026, when the Advisor panels, the Activities sub-panels, the RuneLite
+bundle builder and the content service behind the journal routes moved
+behind lazy loads and the entry fell from 254.8 to 216.1 kB). The 225 kB split came from the build
 id stamped into the entry: CI built with a 13-digit timestamp and the deploy
 with the 40-character commit SHA. CI now stamps the SHA too (on a pull
 request, its merge commit's), and a build without `BUILD_ID` stamps a random
