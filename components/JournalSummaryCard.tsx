@@ -192,11 +192,12 @@ export function questsReadyLabel(available: number, miniquests: number): string 
  * the OSRS layout's Journal window, so both always agree.
  */
 export function useJournalSummaryModel() {
-  const { unlocks: liveUnlocks, advisorsEnabled, gameModeId } = useGame();
+  const { unlocks: liveUnlocks, advisorsEnabled, gameModeId, hasSeenOnboarding } = useGame();
   // The counts walk every quest, diary and CA task. Working them out in a
   // follow-up render lets an unlock's reveal draw first instead of waiting.
   const unlocks = useDeferredValue(liveUnlocks);
-  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  // The map's transport data is large; a first visit's onboarding covers this card.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
 
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
