@@ -47,12 +47,8 @@ export const QuestCompleteOverlay: React.FC = () => {
       className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer"
       role="dialog" aria-modal="true" aria-label={`${quest} complete`}
     >
-      <style>{`
-        @keyframes qc-pop { 0%{transform:scale(.7);opacity:0} 60%{transform:scale(1.04)} 100%{transform:scale(1);opacity:1} }
-        @keyframes qc-spark { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
-        @keyframes qc-glow { 0%,100%{opacity:.35} 50%{opacity:.7} }
-      `}</style>
-
+      {/* The qc-* keyframes live in styles.css: adding and removing a <style>
+          here restyled the whole page twice per completed quest. */}
       <div className="relative" style={{ animation: 'qc-pop .5s cubic-bezier(.2,.8,.2,1) both' }}>
         {/* gold glow halo */}
         <div className="absolute inset-0 -m-10 rounded-full bg-amber-400/20 blur-2xl" style={{ animation: 'qc-glow 2s ease-in-out infinite' }} />
