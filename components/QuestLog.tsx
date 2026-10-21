@@ -34,6 +34,7 @@ import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import type { AreaRoutes } from '../utils/areaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { scrollIntoViewSettled } from '../utils/settledScroll';
 import './osrs/osrs-journal.css';
 
 // OSRS layout only: the in-game quest list and quest journal scroll.
@@ -196,7 +197,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
       <div
           data-journal-id={quest.id}
           className={`
-              group relative border rounded-lg p-3 pl-4 overflow-hidden transition-all duration-200
+              journal-card group relative border rounded-lg p-3 pl-4 overflow-hidden transition-all duration-200
               hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/40
               ${isCompleted ? 'bg-green-900/10 border-green-500/20 opacity-60 hover:opacity-100' :
                 isAvailable ? 'bg-blue-900/10 border-blue-500/40 hover:bg-blue-900/20' :
@@ -474,7 +475,8 @@ export const useQuestJournal = (externalSearch = '') => {
       const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
       if (el) {
         el.style.scrollMarginTop = '8px';
-        el.scrollIntoView({ block: 'start', behavior: 'smooth' }); // header in view, not centred
+        // Header in view, not centred. Settled: off-screen cards change size as the jump passes them.
+        scrollIntoViewSettled(el, { block: 'start', behavior: 'smooth' });
       }
       window.setTimeout(() => setHighlightedId(null), 1800);
     }, 50);
