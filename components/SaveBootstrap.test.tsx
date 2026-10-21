@@ -584,6 +584,59 @@ describe('SaveBootstrap', () => {
     expect(screen.queryByText('game mounted')).toBeNull();
   });
 
+  it('gets a player with full browser storage back into their run by downloading the copy', async () => {
+    // A player's report (2026-10-21): their browser storage was full, so the
+    // copy kept before replacing a save failed and both buttons dead-ended.
+    localStorage.clear();
+    const primaryRaw = JSON.stringify({ ...initialState, userNotes: { padding: 'p'.repeat(1_200_000) } });
+    localStorage.setItem('FATE_PROFILE_alpha', primaryRaw);
+    localStorage.setItem('FATE_PROFILE_alpha__backups', 'b'.repeat(3_700_000));
+    expect(() => localStorage.setItem('probe', 'x'.repeat(200_000))).toThrow();
+    const recovered = { ...initialState, runId: 'safe-run', userNotes: { recovered: 'yes' } };
+    const recoveredData = JSON.stringify(recovered);
+    const exportRecovery = vi.fn(async () => ({ ok: true as const }));
+    const decision: Extract<SaveRecoveryDecision, { kind: 'recovery_required' }> = {
+      kind: 'recovery_required',
+      primaryRaw,
+      candidates: [{
+        source: 'checkpoint',
+        data: recoveredData,
+        state: recovered,
+        persistenceRevision: 3,
+        runId: 'safe-run',
+        runRevision: 3,
+        capturedAt: 123,
+        checksum: null,
+      }],
+      cause: 'unconfirmed_primary',
+      maxDurablePersistenceRevision: 3,
+    };
+    const deps = dependencies({
+      resolveSaveRecovery: vi.fn(async () => decision),
+      exportRecovery,
+    });
+    const user = userEvent.setup();
+
+    try {
+      render(
+        <SaveBootstrap dependencies={deps} profileId="alpha" storageKey="FATE_PROFILE_alpha">
+          {result => <div>game mounted {JSON.stringify(result.initialState.userNotes)}</div>}
+        </SaveBootstrap>,
+      );
+
+      await user.click(await screen.findByRole('button', { name: 'Recover latest safe save' }));
+      expect(screen.queryByText(/game mounted/)).toBeNull();
+      expect(exportRecovery).not.toHaveBeenCalled();
+      await user.click(screen.getByRole('button', { name: 'Download copy and recover' }));
+
+      expect(exportRecovery).toHaveBeenCalledOnce();
+      expect(await screen.findByText(/game mounted.*recovered/)).toBeTruthy();
+      expect(localStorage.getItem('FATE_PROFILE_alpha')).toContain('"recovered":"yes"');
+    } finally {
+      localStorage.clear();
+    }
+  });
+
   it('does not download an export after the bootstrap request becomes stale', async () => {
     const decision: Extract<SaveRecoveryDecision, { kind: 'unsupported' }> = {
       kind: 'unsupported',
