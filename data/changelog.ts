@@ -37,12 +37,32 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-19-chaos-picks-a-table',
+    id: '2026-10-21-chaos-picks-a-table',
     title: 'Chaos Keys pick a table first',
-    date: '2026-10-19',
+    date: '2026-10-21',
     sections: {
       balance: [
         'Chaos Keys now pick a kind of unlock first, so skills and gear come up as often as areas and banks.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
       ],
     },
   },
