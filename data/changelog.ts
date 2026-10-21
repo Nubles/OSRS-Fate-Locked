@@ -37,12 +37,32 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-19-real-map-borders',
+    id: '2026-10-21-real-map-borders',
     title: 'The map always shows the real areas',
-    date: '2026-10-19',
+    date: '2026-10-21',
     sections: {
       fixed: [
         'The World map, chunk details and your run card always use the real area borders now, even if this browser once had map edits saved.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
       ],
     },
   },
