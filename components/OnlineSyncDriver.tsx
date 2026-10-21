@@ -2,7 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { relaySync, relayRetryDelayMs } from '../services/relaySync';
 import type { UnlockState } from '../types';
-import { buildBundlePayload, RunChangedError, type RuneliteRunInput } from '../utils/runeliteExport';
+import { importWithRetry } from '../utils/lazyRetry';
+import type { RuneliteRunInput } from '../utils/runeliteExport';
+
+// The bundle builder loads with the first publish, so a tracker that is not
+// paired with RuneLite never downloads it. A failed load is a failed publish:
+// shown as the relay error and tried again on the usual backoff.
+const loadRuneliteExport = () => importWithRetry(() => import('../utils/runeliteExport'));
 
 /**
  * A publish waits until run changes have paused this long… Rolls come a few
@@ -106,9 +112,11 @@ export function OnlineSyncDriver() {
       inFlight = true;
       const retryFailedLoads = explicit;
       explicit = false;
+      let runeliteExport: Awaited<ReturnType<typeof loadRuneliteExport>> | null = null;
       try {
+        runeliteExport = await loadRuneliteExport();
         const [unlocks, run] = latestRun.current;
-        const { compressed, fingerprint } = await buildBundlePayload(unlocks, run, {
+        const { compressed, fingerprint } = await runeliteExport.buildBundlePayload(unlocks, run, {
           requireRulesData: true, retryFailedLoads,
         });
         // An unchanged profile: nothing RuneLite uses differs from what the relay holds.
@@ -118,7 +126,7 @@ export function OnlineSyncDriver() {
       } catch (error) {
         if (isCurrent()) relaySync.reportPushFailure(error);
         // A profile switch overlapped the build: send the new run once it settles.
-        if (error instanceof RunChangedError) schedule.current?.(false);
+        if (runeliteExport && error instanceof runeliteExport.RunChangedError) schedule.current?.(false);
       } finally {
         inFlight = false;
         if (again && !cancelled) {

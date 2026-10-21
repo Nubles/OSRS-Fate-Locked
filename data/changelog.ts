@@ -37,14 +37,34 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-19-lighter-relay',
+    id: '2026-10-21-lighter-relay',
     title: 'Lighter on the shared online relay',
-    date: '2026-10-19',
+    date: '2026-10-21',
     sections: {
       changed: [
         'RuneLite only gets your profile again when something it uses changes, not after every note or setting. Switching to the game still sends it at once.',
         'Online backup now saves a changed run at most every 30 minutes, or every 15 when you switch away. Your save in the browser is unchanged.',
         'Discord shares a run of unlocks together, a few minutes after they happen.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
       ],
     },
   },
