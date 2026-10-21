@@ -4,6 +4,7 @@ import type { GameState, LogEntry } from '../types';
 import { chunkKey, getChunkFrontier } from './chunkAdjacency';
 import { cartographerHint, drawCartographerOffer, liveCartographerOffer } from './cartographerOffer';
 import { drawFloat, seededContext } from './seededRng';
+import { FATE_MARK_BLESSED_FATE } from '../config/economy';
 
 const run = (over: Partial<GameState> = {}): GameState => ({ ...createFreshState(), gameModeId: 'chunked', ...over });
 const keys = (state: GameState) => drawCartographerOffer(state).map(chunkKey);
@@ -80,7 +81,11 @@ describe('the kept Cartographer offer', () => {
     expect(chart(chunked(), offered[0]).unlocks.chunks).toEqual([]);
     const charted = chart(s, offered[1]);
     expect(charted.unlocks.chunks).toEqual([offered[1]]);
-    expect(charted.fatePoints).toBe(0);
+    // The ritual takes all 40 Fate. Fate may then mark the new chunk (1 in 8,
+    // drawn from the history hash, which changes with each test run), and a Blessed
+    // mark gives Fate back.
+    const blessed = charted.fateLand?.marks?.[offered[1]] === 'BLESSED';
+    expect(charted.fatePoints).toBe(blessed ? FATE_MARK_BLESSED_FATE : 0);
     expect(charted.cartographerOffer).toBeUndefined();
   });
 
