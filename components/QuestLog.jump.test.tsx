@@ -69,6 +69,23 @@ describe('quest journal jumps', () => {
     await waitFor(() => expect(scrolled).toContain(card('Priest in Peril')));
   }, JUMP_TIMEOUT);
 
+  it('lands the card below the sticky "Quests (N)" header, not under it', async () => {
+    renderMasterQuestsSearchedFor('Desert Treasure');
+    // jsdom lays nothing out; give the section headers a real height.
+    const rect = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return { height: this.hasAttribute('data-journal-sticky') ? 25 : 0 } as DOMRect;
+    });
+    try {
+      fireEvent.click(within(card('Desert Treasure I')!).getByTitle('Jump to prerequisite: Priest in Peril'));
+      await waitFor(() => expect(scrolled).toContain(card('Priest in Peril')));
+      // The section header is 25 px tall; the card keeps an 8 px gap below it.
+      // (jsdom loads no stylesheet, so the list's own padding counts as 0 here.)
+      expect(card('Priest in Peril')!.style.scrollMarginTop).toBe('33px');
+    } finally {
+      rect.mockRestore();
+    }
+  }, JUMP_TIMEOUT);
+
   it('clears the status, tier and search filters for a quest opened from Next Best', async () => {
     localStorage.setItem('jrnl:quest:filter', JSON.stringify('COMPLETED'));
     const { tier, search } = renderMasterQuestsSearchedFor('Desert Treasure');
