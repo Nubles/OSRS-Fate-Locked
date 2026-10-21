@@ -16,9 +16,15 @@ interface Props {
   size?: number | string;
   className?: string;
   style?: React.CSSProperties;
+  /**
+   * 'lazy' (the default) waits until the icon is near the screen, so a long
+   * list doesn't fetch every icon at once. Use 'eager' where an icon must be
+   * ready before it scrolls into view.
+   */
+  loading?: 'lazy' | 'eager';
 }
 
-export const WikiIcon: React.FC<Props> = ({ file, alt, Fallback, size = 14, className, style }) => {
+export const WikiIcon: React.FC<Props> = ({ file, alt, Fallback, size = 14, className, style, loading = 'lazy' }) => {
   const [failedFile, setFailedFile] = useState<string | null>(null);
   if (failedFile === file) return Fallback ? <Fallback size={size} className={className} />
     : <span role={alt ? 'img' : undefined} aria-label={alt || undefined} aria-hidden={alt ? undefined : true}
@@ -30,6 +36,8 @@ export const WikiIcon: React.FC<Props> = ({ file, alt, Fallback, size = 14, clas
       aria-hidden={alt ? undefined : true}
       width={size}
       height={size}
+      loading={loading}
+      decoding="async"
       className={className}
       style={{ objectFit: 'contain', display: 'inline-block', ...style }}
       onError={() => setFailedFile(file)}
