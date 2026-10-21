@@ -35,6 +35,7 @@ import type { AreaRoutes } from '../utils/areaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { scrollIntoViewSettled } from '../utils/settledScroll';
+import { setJumpScrollMargin } from '../utils/journalJump';
 import './osrs/osrs-journal.css';
 
 // OSRS layout only: the in-game quest list and quest journal scroll.
@@ -474,7 +475,8 @@ export const useQuestJournal = (externalSearch = '') => {
     window.setTimeout(() => {
       const el = document.querySelector<HTMLElement>(`[data-journal-id="${id}"]`);
       if (el) {
-        el.style.scrollMarginTop = '8px';
+        // Land below the section's sticky "Quests (N)" header, not under it.
+        setJumpScrollMargin(el);
         // Header in view, not centred. Settled: off-screen cards change size as the jump passes them.
         scrollIntoViewSettled(el, { block: 'start', behavior: 'smooth' });
       }
@@ -761,8 +763,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
             // SERIES GROUPING VIEW
             <>
                 {seriesGroups.map(([seriesName, quests]) => (
-                    <div key={seriesName}>
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 pb-2 flex items-center gap-2 sticky top-0 bg-[#121212] z-10 border-b border-white/5 mb-2">
+                    <div key={seriesName} data-journal-section>
+                        <h3 data-journal-sticky className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 pb-2 flex items-center gap-2 sticky top-0 bg-[#121212] z-10 border-b border-white/5 mb-2">
                             <Layers size={12} /> {seriesName} ({quests.length})
                         </h3>
                         <div className="space-y-2">
@@ -794,8 +796,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
             // STANDARD MAIN/MINI VIEW
             <>
                 {mainQuests.length > 0 && (
-                    <div>
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 pb-2 flex items-center gap-2 sticky top-0 bg-[#121212] z-10 border-b border-white/5 mb-2">
+                    <div data-journal-section>
+                        <h3 data-journal-sticky className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 pb-2 flex items-center gap-2 sticky top-0 bg-[#121212] z-10 border-b border-white/5 mb-2">
                             <Scroll size={12} /> Quests ({mainQuests.length})
                         </h3>
                         <div className="space-y-2">
@@ -819,8 +821,8 @@ export const QuestLog: React.FC<QuestLogProps> = ({ searchTerm: externalSearch =
                 )}
 
                 {miniquests.length > 0 && (
-                    <div>
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 pb-2 pt-2 flex items-center gap-2 sticky top-0 bg-[#121212] z-10 border-b border-white/5 mb-2">
+                    <div data-journal-section>
+                        <h3 data-journal-sticky className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1 pb-2 pt-2 flex items-center gap-2 sticky top-0 bg-[#121212] z-10 border-b border-white/5 mb-2">
                             <Bookmark size={12} /> Miniquests ({miniquests.length})
                         </h3>
                         <div className="space-y-2">
