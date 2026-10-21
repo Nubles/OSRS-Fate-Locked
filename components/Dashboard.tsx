@@ -382,7 +382,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const game = useGame();
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
-    history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle,
+    history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
   } = game;
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
@@ -1368,9 +1368,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
       {/* Content Area */}
       <div className={isOsrs ? 'osrs-dash-body flex-1 overflow-hidden' : 'flex-1 overflow-hidden p-4 bg-[#111]'}>
-          <Suspense fallback={<ModalFallback />}>
-              <GoalTracker />
-          </Suspense>
+          {/* Only a run with pinned goals loads the tracker and its tables. */}
+          {(pinnedGoals?.length ?? 0) > 0 && (
+              <LazyPanel name="Active goals">
+                  <GoalTracker />
+              </LazyPanel>
+          )}
           {/* Keyed by tab so the content gently slides in when you switch. */}
           <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
