@@ -468,6 +468,18 @@ of `chunked-sailing`).
   full run on CI. Look such a dialog up with `{ timeout: 10_000 }` and give
   the test 25 seconds. A missed one failed a main deploy on 2 October 2026
   (#65).
+- **Quest cards use `content-visibility: auto`** (`.journal-card` in
+  `styles.css`), so cards far off screen hold a guessed height until drawn.
+  A smooth jump drifts as the cards it passes take their real size, so jumps
+  to a quest card go through `utils/settledScroll.ts::scrollIntoViewSettled`.
+  Diary and Combat Achievement cards don't use it: a diary jump landed
+  100 px short with it. In browser automation, Playwright's `getByRole`
+  computes accessibility for the whole page, which draws every skipped card
+  and hides both the speed-up and the drift; click with page JS instead.
+- **The Resource Engine table loads only when needed.** GoalTracker mounts
+  only for runs with pinned goals and imports `utils/supplyChain` only when a
+  pin is a Resource Engine item; the route view loads on its first open.
+  The idle prefetch still warms the Supply Chain calculator after onboarding.
 
 ## 5. Web release handoff
 
