@@ -186,10 +186,13 @@ ${restored ? `${restored}\n` : ''}#OSRS #FateLocked`;
     setIsCapturing(true);
     try {
       // Capture the loaded Wiki artwork, with a bounded wait if a remote image is unavailable.
+      // Wiki icons load lazily, so start any the player hasn't scrolled to yet.
+      const images = Array.from(cardRef.current.querySelectorAll('img'));
+      for (const image of images) image.loading = 'eager';
       await Promise.race([
         Promise.all([
           document.fonts.ready,
-          ...Array.from(cardRef.current.querySelectorAll('img')).map(image => image.decode().catch(() => undefined)),
+          ...images.map(image => image.decode().catch(() => undefined)),
         ]),
         new Promise(resolve => setTimeout(resolve, 5000)),
       ]);

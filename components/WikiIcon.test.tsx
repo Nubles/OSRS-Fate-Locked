@@ -27,6 +27,14 @@ describe('Wiki artwork', () => {
     expect(screen.getByRole('img', { name: 'Combat' }).getAttribute('width')).toBe('32');
   });
 
+  it('loads lazily and decodes off the main thread unless asked to load now', () => {
+    render(<><WikiIcon file="Quest_point_icon.png" alt="" /><WikiIcon file="Stats_icon.png" alt="" loading="eager" /></>);
+    const [lazy, eager] = Array.from(document.querySelectorAll('img'));
+    expect(lazy.getAttribute('loading')).toBe('lazy');
+    expect(lazy.getAttribute('decoding')).toBe('async');
+    expect(eager.getAttribute('loading')).toBe('eager');
+  });
+
   it('preserves accessible descriptions on unavailable named artwork', () => {
     render(<WikiIcon file="Missing.png" alt="Required equipment" />);
     fireEvent.error(screen.getByRole('img', { name: 'Required equipment' }));
