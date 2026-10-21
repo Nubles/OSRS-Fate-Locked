@@ -37,12 +37,32 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-19-keyboard-access',
+    id: '2026-10-21-keyboard-access',
     title: 'Better keyboard and screen-reader support',
-    date: '2026-10-19',
+    date: '2026-10-21',
     sections: {
       fixed: [
         'Windows like Achievements and the Kill Planner keep keyboard focus inside and close with Escape, and screen readers now name the Key counters and icon buttons.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
       ],
     },
   },

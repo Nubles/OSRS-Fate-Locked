@@ -1,5 +1,5 @@
 
-import { lazyWithRetry } from './utils/lazyRetry';
+import { importWithRetry, lazyWithRetry } from './utils/lazyRetry';
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
@@ -113,7 +113,6 @@ import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCi
 import { OSRS_MIN_WIDTH, readUiStyle, setUiStyle, useIsOsrsUi, useIsWideEnoughForOsrs, useUiStyle } from './utils/uiStyle';
 import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
-import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 
@@ -444,7 +443,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
       }
       showToast(FATE_EXPORT_DONE_MESSAGE);
   };
-  const exportRunelite = () => exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded });
+  // The bundle builder (rules, gear and chunk checks) loads on the click, not with the app.
+  const exportRunelite = () => importWithRetry(() => import('./utils/runeliteExport')).then(m => m.exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded }));
   // Accept .fate files and legacy .json files
   const fileInput = <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />;
 
@@ -892,8 +892,9 @@ const GameLayout = () => {
   };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
-  // idle time so opening them is instant instead of a visible fetch delay.
-  useEffect(() => { prefetchHeavyChunks(); }, []);
+  // idle time so opening them is instant instead of a visible fetch delay;
+  // not behind the first-visit onboarding, which opens none of them.
+  useEffect(() => { if (hasSeenOnboarding) prefetchHeavyChunks(); }, [hasSeenOnboarding]);
 
   useEffect(() => relaySync.subscribe(() => {
     if (!runelitePairCode || relaySync.code !== runelitePairCode) return;

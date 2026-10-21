@@ -28,7 +28,6 @@ import { achievementBoostFor } from '../utils/achievementBoosts';
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
 const RegionMap = lazyWithRetry(() => import('./RegionMap').then(m => ({ default: m.RegionMap })));
-import { JournalNextBest } from './JournalNextBest';
 import { JournalProgressRings } from './JournalProgressRings';
 import { EquipmentLab } from './EquipmentLab';
 import { WikiIcon } from './WikiIcon';
@@ -48,9 +47,6 @@ const QuestDoabilityPanel = lazyWithRetry(() => import('./QuestDoabilityPanel').
 const CollectionLog = lazyWithRetry(() => import('./CollectionLog').then(m => ({ default: m.CollectionLog })));
 const SkillDetailModal = lazyWithRetry(() => import('./SkillDetailModal').then(m => ({ default: m.SkillDetailModal })));
 import { PanelErrorBoundary } from './PanelErrorBoundary';
-import { MerchantShopsPanel } from './MerchantShopsPanel';
-import { SlayerReachabilityPanel } from './SlayerReachabilityPanel';
-import { ShortcutsPanel } from './ShortcutsPanel';
 import { ModalFallback, PaneFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -68,9 +64,6 @@ import { bossTier, TIER_LABEL } from '../data/bossKeyTiers';
 import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
 import { withSkillGateQuests } from '../utils/journalStatus';
 import { ActivityReadinessBadge } from './ActivityReadinessBadge';
-import { RegionAdvisorPanel } from './RegionAdvisorPanel';
-import { FrontierAdvisorPanel } from './FrontierAdvisorPanel';
-import { SkillAdvisorPanel } from './SkillAdvisorPanel';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { runeProofAvailability } from '../utils/questRoutes/featureFlag';
 import { useIsOsrsUi } from '../utils/uiStyle';
@@ -105,6 +98,22 @@ const OsrsConfirmOmni = lazyWithRetry(() => import('./osrs/OsrsDashChrome').then
 const OsrsCharTab = lazyWithRetry(() => import('./osrs/OsrsCharTab').then(m => ({ default: m.OsrsCharTab })));
 const OsrsWorldTab = lazyWithRetry(() => import('./osrs/OsrsWorldTab').then(m => ({ default: m.OsrsWorldTab })));
 const OsrsDashActivities = lazyWithRetry(() => import('./osrs/OsrsDashActivities').then(m => ({ default: m.OsrsDashActivities })));
+// Advisors are off by default, and these Activities panels show only on their
+// own category, so neither belongs in the entry chunk every visit downloads.
+const SkillAdvisorPanel = lazyWithRetry(() => import('./advisorPanels').then(m => ({ default: m.SkillAdvisorPanel })));
+const RegionAdvisorPanel = lazyWithRetry(() => import('./advisorPanels').then(m => ({ default: m.RegionAdvisorPanel })));
+const FrontierAdvisorPanel = lazyWithRetry(() => import('./advisorPanels').then(m => ({ default: m.FrontierAdvisorPanel })));
+const JournalNextBest = lazyWithRetry(() => import('./advisorPanels').then(m => ({ default: m.JournalNextBest })));
+const SlayerReachabilityPanel = lazyWithRetry(() => import('./SlayerReachabilityPanel').then(m => ({ default: m.SlayerReachabilityPanel })));
+const ShortcutsPanel = lazyWithRetry(() => import('./ShortcutsPanel').then(m => ({ default: m.ShortcutsPanel })));
+const MerchantShopsPanel = lazyWithRetry(() => import('./MerchantShopsPanel').then(m => ({ default: m.MerchantShopsPanel })));
+
+/** A small on-demand panel: nothing while it loads, and a failure stays inside it. */
+const LazyPanel: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => (
+  <PanelErrorBoundary name={name}>
+    <Suspense fallback={null}>{children}</Suspense>
+  </PanelErrorBoundary>
+);
 
 // --- Constants & Helpers ---
 
@@ -604,7 +613,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             {/* Skill Advisor — ranks which skill to train next (and to what
                 level) by how much quest + diary content the threshold unlocks.
                 Clicking a row flashes the matching skill card below. */}
-            {advisorsEnabled && <SkillAdvisorPanel />}
+            {advisorsEnabled && <LazyPanel name="Skill Advisor"><SkillAdvisorPanel /></LazyPanel>}
 
             <div className="grid grid-cols-3 gap-2">
                 {SKILLS_LIST.map(skill => {
@@ -851,7 +860,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   {/* Region Advisor — shows which locked regions would unlock the most
                       quests + diary tiers, helping ironmen pick the next unlock target.
                       Chunked mode ranks frontier chunks instead — same idea, chunk-sized. */}
-                  {advisorsEnabled && (gameModeId === 'chunked' ? <FrontierAdvisorPanel /> : <RegionAdvisorPanel />)}
+                  {advisorsEnabled && <LazyPanel name="Region Advisor">{gameModeId === 'chunked' ? <FrontierAdvisorPanel /> : <RegionAdvisorPanel />}</LazyPanel>}
 
                   {/* Misthalin Special Card */}
                   <div className="bg-[#1a1a1a] rounded border border-emerald-500/30 p-3 relative overflow-hidden group">
@@ -1069,13 +1078,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               </span>
             </h3>
             {/* Slayer only: which assignable monsters you can actually reach now. */}
-            {selected.id === 'SLAYER' && <SlayerReachabilityPanel />}
+            {selected.id === 'SLAYER' && <LazyPanel name="Slayer reach"><SlayerReachabilityPanel /></LazyPanel>}
             {/* Mobility only: agility shortcuts with level + real chunk location. */}
-            {selected.id === 'MOBILITY' && <ShortcutsPanel />}
+            {selected.id === 'MOBILITY' && <LazyPanel name="Shortcuts"><ShortcutsPanel /></LazyPanel>}
             {renderGridSection(selected.list, selected.unlocked, selected.type, SPECIAL_ICONS, selected.details, selected.nameMap)}
             {/* Merchants only: the real shops behind each category, from the
                 chunk dataset, with per-location lock state. */}
-            {selected.id === 'MERCHANTS' && <MerchantShopsPanel />}
+            {selected.id === 'MERCHANTS' && <LazyPanel name="Shops"><MerchantShopsPanel /></LazyPanel>}
           </div>
         </div>
       );
@@ -1110,7 +1119,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   Doable
               </button>
           </div>
-          {advisorsEnabled && <JournalNextBest onPick={setJournalSubTab} />}
+          {advisorsEnabled && <LazyPanel name="Next best"><JournalNextBest onPick={setJournalSubTab} /></LazyPanel>}
           <div className="flex-1 overflow-hidden p-2 relative">
               <Suspense fallback={<PaneFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
