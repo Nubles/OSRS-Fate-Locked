@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-restore-keeps-your-luck',
+    id: '2026-10-22-restore-keeps-your-luck',
     title: 'Restoring a backup keeps your luck',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       changed: [
         'Restoring a backup no longer re-rolls your luck: the same roll gives the same result, and your run card shows how many times it was restored.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-smoother-level-ups',
+    title: 'Smoother level-ups',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'Levelling up no longer stutters on slower devices, even deep into a long run.',
       ],
     },
   },
