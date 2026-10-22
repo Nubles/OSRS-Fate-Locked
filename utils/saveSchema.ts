@@ -1328,7 +1328,7 @@ const normalizeState = (
   }
   if (own(input, 'rngVersion')) {
     const version = readOwn(input, 'rngVersion');
-    if (version !== 1 && version !== 2) return invalid('invalid_field', 'rngVersion');
+    if (version !== 1 && version !== 2 && version !== 3) return invalid('invalid_field', 'rngVersion');
     state.rngVersion = version;
   }
   // A reveal is an acknowledgement of an existing award, never a new award.

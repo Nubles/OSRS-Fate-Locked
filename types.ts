@@ -304,8 +304,11 @@ export interface GameState {
    * once the run has history. Undefined = classic Math.random play.
    */
   rngSeed?: string;
-  /** Missing/1 preserves legacy history-hash draws; 2 ignores incidental event IDs/time. */
-  rngVersion?: 1 | 2;
+  /**
+   * Missing/1 preserves legacy history-hash draws; 2 ignores incidental event IDs/time;
+   * 3 also makes a Chaos Key pick a table before an entry (utils/seededRng.ts).
+   */
+  rngVersion?: 1 | 2 | 3;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is linked to (Sync & Roll's first fetch); the player can rename it. */
