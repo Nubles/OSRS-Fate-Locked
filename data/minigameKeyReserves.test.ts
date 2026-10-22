@@ -39,8 +39,9 @@ describe('minigame key reserves', () => {
     }
   });
 
-  it('holds 103 Keys across every minigame', () => {
-    expect(VANILLA_MINIGAME_STANDARD_KEY_TOTAL).toBe(103);
+  it('holds 106 Keys across every minigame', () => {
+    // 103, plus 3 for Pete Kayer's Challenges (no Collection Log page).
+    expect(VANILLA_MINIGAME_STANDARD_KEY_TOTAL).toBe(106);
   });
 
   it('pays Fate for a miss only at 5% or more', () => {
