@@ -69,6 +69,16 @@ jobs:
           npm run --silent content:check 2>&1 | tee "$RUNNER_TEMP/check.txt" || status=1
           exit $status
 
+      # A manual run on a curation branch also pins the Wiki revision of every
+      # new or changed quest record (scripts/sync-quest-sources.mjs --refresh),
+      # which can only be fetched from here. The weekly run leaves them alone.
+      - name: Refresh quest sources (manual runs only)
+        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npm run --silent quests:source-refresh 2>&1 | tee "$RUNNER_TEMP/quests.txt"
+
       - name: Run tests (failures are the curation to-do list, not a gate)
         id: tests
         continue-on-error: true
@@ -98,6 +108,11 @@ jobs:
             echo "## Freshness check"
             strip < "$RUNNER_TEMP/check.txt" | grep -E '\[content:check\]|^\s{2}' | grep -v 'wrote docs' || true
             echo ""
+            if [ -f "$RUNNER_TEMP/quests.txt" ]; then
+              echo "## Quest sources"
+              strip < "$RUNNER_TEMP/quests.txt" | tail -5
+              echo ""
+            fi
             echo "## Failing tests"
             strip < "$RUNNER_TEMP/tests.txt" | grep -E '^\s*(FAIL|×)' | sort -u | head -60 || true
           } > "$report"
@@ -108,8 +123,8 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Only the generated data, the status report, the CA evidence and the
-      # report text cross to the job that can write. Never the scratch logs or
+      # Only the generated data, the quest source snapshots, the status report,
+      # the CA evidence and the report text cross to the job that can write. Never the scratch logs or
       # anything else in the workspace.
       - name: Hand the synced files to the push job
         if: steps.report.outputs.changed == 'true'
@@ -119,6 +134,8 @@ jobs:
           path: |
             data/collectionLogData.ts
             data/caTasks.ts
+            data/sources/quest-list.json
+            data/sources/quest-requirement-audit.json
             docs/SYNC_STATUS.md
             docs/sync-evidence/
             sync-report.md
@@ -147,7 +164,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B bot/wiki-content-sync
-          git add data/collectionLogData.ts data/caTasks.ts docs/SYNC_STATUS.md
+          git add data/collectionLogData.ts data/caTasks.ts docs/SYNC_STATUS.md \
+            data/sources/quest-list.json data/sources/quest-requirement-audit.json
           if [ -d docs/sync-evidence ]; then git add docs/sync-evidence; fi
           git commit -F sync-report.md
           git push --force origin bot/wiki-content-sync

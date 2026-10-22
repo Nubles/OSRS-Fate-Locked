@@ -65,6 +65,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Vorkath: ['Rellekka'],
   // Each entrance's chunk, as the map owns it.
   'Tombs of Amascut': ['Sophanem'],
+  'The Fractured Archive': ['Lumbridge'],
   Nex: ['Burthorpe'],
   'General Graardor': ['Burthorpe'],
   'Commander Zilyana': ['Burthorpe'],

@@ -4,6 +4,7 @@
     "Chambers of Xeric": [{ "interior": "Chambers of Xeric" }],
     "Theatre of Blood": [{ "interior": "Theatre of Blood" }],
     "Tombs of Amascut": [{ "interior": "Tombs of Amascut" }],
+    "The Fractured Archive": [{ "npc": "Juna" }],
     "The Gauntlet": [{ "interior": "Gauntlet Lobby" }],
     "The Nightmare": [{ "monster": "The Nightmare" }],
     "Phosani's Nightmare": [{ "monster": "Phosani's Nightmare" }],

@@ -44,6 +44,8 @@ const GOD_WARS_CHAMBER = 'Meet this faction’s kill-count requirement for your 
 export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Bosses & Raids =====================================================
   'Tombs of Amascut': { quests: ['Beneath Cursed Sands'] },
+  // Released 20 October 2026; the Wiki lists While Guthix Sleeps as its only requirement.
+  'The Fractured Archive': { quests: ['While Guthix Sleeps'] },
   'The Gauntlet': { quests: ['Song of the Elves'] },
   'Nex': {
     skills: { Strength: 70, Agility: 70, Ranged: 70, Hitpoints: 70 },

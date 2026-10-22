@@ -25,7 +25,7 @@ const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   CURRENT_CHUNK_SOURCE_COMMIT,
 ]);
 const RUNTIME_QUEST_COUNT = 193;
-const RUNTIME_MINIQUEST_COUNT = 19;
+const RUNTIME_MINIQUEST_COUNT = 20;
 const OFFICIAL_PARSED_QUEST_COUNT = 194;
 const REVIEWED_AT = new Date().toISOString().slice(0, 10);
 const USER_AGENT = 'OSRS-Fate-Locked quest provenance refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
@@ -41,6 +41,7 @@ const WIKI_PAGE_TITLES = {
   'RFD: King Awowogei': 'Recipe for Disaster/Freeing King Awowogei',
   'RFD: Finale': 'Recipe for Disaster/Defeating the Culinaromancer',
   'Vale Totems': 'Vale Totems (miniquest)',
+  'The Fractured Archive': 'The Fractured Archive (miniquest)',
 };
 const RFD_CHUNK_IDS = Object.fromEntries(
   Object.entries(WIKI_PAGE_TITLES).map(([id, pageTitle]) => [pageTitle, id]),

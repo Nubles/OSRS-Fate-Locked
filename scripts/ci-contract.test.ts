@@ -615,6 +615,8 @@ describe('content sync workflow contract', () => {
     expect(workflow).toMatch(/cron: '0 5 \* \* 4'/);
     expect(workflow).toMatch(/^\s{2}workflow_dispatch:/m);
     expect(workflow).toMatch(/- name: Run tests[^\n]*\n\s+id: tests\n\s+continue-on-error: true/);
+    // Quest source pins only move on a manual curation run.
+    expect(workflow).toMatch(/- name: Refresh quest sources \(manual runs only\)\n\s+if: github\.event_name == 'workflow_dispatch'\n/);
   });
 
   it('runs third-party code only in a read-only job without stored credentials', async () => {
@@ -641,7 +643,7 @@ describe('content sync workflow contract', () => {
     expect(activeUses(pushJob)).toEqual([CHECKOUT, DOWNLOAD_ARTIFACT]);
     expect(activeRunCommands(pushJob).filter((command) => /\b(?:npm|npx|node)\b/.test(command))).toEqual([]);
     expect(syncJob).toMatch(
-      /path: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+docs\/SYNC_STATUS\.md\n\s+docs\/sync-evidence\/\n\s+sync-report\.md\n/,
+      /path: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+data\/sources\/quest-list\.json\n\s+data\/sources\/quest-requirement-audit\.json\n\s+docs\/SYNC_STATUS\.md\n\s+docs\/sync-evidence\/\n\s+sync-report\.md\n/,
     );
   });
 });

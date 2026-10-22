@@ -99,6 +99,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Tears of Guthix": ["49,49"],
   "Temple Trekking": ["54,50"],
   "Tempoross": ["47,44"],
+  "The Fractured Archive": ["49,49"],
   "The Gauntlet": ["34,52"],
   "The Hueycoatl": ["23,51"],
   "The Leviathan": ["48,49"],
