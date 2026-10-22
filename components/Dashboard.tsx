@@ -1325,9 +1325,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col lg:flex-row border-b border-white/5 bg-[#161616] shrink-0">
-          {/* Below lg the tabs wrap onto a second row, so none hides off-screen. */}
-          <div data-tour="dashtabs" className="flex flex-1 flex-wrap lg:flex-nowrap overflow-x-auto no-scrollbar">
+      <div className="flex flex-col border-b border-white/5 bg-[#161616] shrink-0">
+          {/* The tabs have the whole row and wrap when it is too narrow, so no
+              tab hides off the edge; the filter has its own row below. */}
+          <div data-tour="dashtabs" className="flex flex-wrap">
               {visibleTabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
@@ -1344,13 +1345,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   )
               })}
           </div>
-          <div className="p-2 border-t lg:border-t-0 lg:border-l border-white/5 relative bg-[#161616] flex items-center gap-2">
+          <div className="p-2 border-t border-white/5 relative bg-[#161616] flex items-center gap-2">
               <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5" />
                   <input 
                     type="text" 
                     placeholder="Filter unlocks..." 
-                    className="bg-black/30 border border-white/10 rounded-full py-1 pl-8 pr-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-white/20 w-full transition-all focus:w-48"
+                    className="bg-black/30 border border-white/10 rounded-full py-1 pl-8 pr-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-white/20 w-full"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
