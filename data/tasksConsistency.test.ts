@@ -137,11 +137,11 @@ describe('Quest data integrity', () => {
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
 
-  it('classifies all 212 journal entries with an explicit kind and access policy', () => {
+  it('classifies all 213 journal entries with an explicit kind and access policy', () => {
     const quests = Object.values(QUEST_DATA);
-    expect(quests).toHaveLength(212);
+    expect(quests).toHaveLength(213);
     expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(193);
-    expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
+    expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(20); // The Fractured Archive, October 2026
     expect(quests.filter(quest =>
       !['quest', 'miniquest'].includes(quest.kind),
     ), 'journal entries with invalid quest kinds').toEqual([]);
