@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-lighter-relay',
+    title: 'Lighter on the shared online relay',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'RuneLite only gets your profile again when something it uses changes, not after every note or setting. Switching to the game still sends it at once.',
+        'Online backup now saves a changed run at most every 30 minutes, or every 15 when you switch away. Your save in the browser is unchanged.',
+        'Discord shares a run of unlocks together, a few minutes after they happen.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
