@@ -237,6 +237,31 @@ describe('App changelog lifecycle', () => {
     expect(await screen.findByRole('dialog', { name: 'Discord notifications' }, { timeout: 10_000 })).toBeTruthy();
   }, 25_000);
 
+  it('lets a phone scroll the page as one document behind a slim header', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+
+    const { container } = render(<App />);
+    await screen.findByRole('button', { name: 'Settings & save tools' });
+
+    // The classic grid is locked to the window only from lg up; below that
+    // the page scrolls and the panels grow to their content.
+    const main = container.querySelector('main');
+    expect(main?.className.split(/\s+/)).toContain('lg:h-[calc(100vh-80px)]');
+    expect(main?.className.split(/\s+/)).not.toContain('h-[calc(100vh-80px)]');
+
+    // Below lg the tools sit behind one menu button; lg and up always shows them.
+    const tools = container.querySelector('#header-tools');
+    expect(tools?.className.split(/\s+/)).toEqual(expect.arrayContaining(['hidden', 'lg:flex']));
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    expect(tools?.className.split(/\s+/)).toContain('flex');
+    expect(tools?.className.split(/\s+/)).not.toContain('hidden');
+    expect(screen.getByRole('button', { name: 'Hide menu' }).getAttribute('aria-expanded')).toBe('true');
+  }, 25_000);
+
   it('offers the save export without claiming it is encrypted', async () => {
     const readyState = JSON.parse(seedOnboardingRun());
     readyState.hasSeenOnboarding = true;
