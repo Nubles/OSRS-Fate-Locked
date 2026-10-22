@@ -51,6 +51,26 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-smoother-level-ups',
+    title: 'Smoother level-ups',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'Levelling up no longer stutters on slower devices, even deep into a long run.',
+      ],
+    },
+  },
+  {
     id: '2026-10-21-quest-pause',
     title: 'Smoother quest completions',
     date: '2026-10-21',
