@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { GameState } from '../types';
 import { MAP_IMAGE } from '../utils/mapCoords';
+import { mapImageIndexForScale } from '../utils/mapImageSize';
 import { CHUNKED_START_KEY, chunkKey, getChunkFrontier } from '../utils/chunkAdjacency';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { CHUNK_PX, spinHopTimes, spinHops, spinWindow, type SpinWindow } from '../utils/fateMap';
@@ -136,14 +137,17 @@ const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, o
     const sx = (win.cx0 - 15) * CHUNK_PX, sy = (65 - win.cyTop) * CHUNK_PX;
     const sw = win.cols * CHUNK_PX, sh = win.rows * CHUNK_PX;
 
-    // The small map draws at once; the full map, when it arrives, sharpens it.
+    // The small map draws at once; a sharper copy, when it arrives, sharpens it.
+    // The canvas already counts device pixels, so the copy is picked at dpr 1.
+    const hiSize = MAP_IMAGE.sizes[mapImageIndexForScale((CELL * dpr) / CHUNK_PX, 1)];
     const load = async (url: string, hi: boolean) => {
       const blob = await (await fetch(url)).blob();
       if (cancelled || (hiRes && !hi)) return;
       if (hi) {
-        const bitmap = await createImageBitmap(blob, sx, sy, sw, sh);
+        const k = hiSize.width / MAP_IMAGE.width;
+        const bitmap = await createImageBitmap(blob, sx * k, sy * k, sw * k, sh * k);
         if (cancelled) return;
-        layers = buildLayers(bitmap, 0, 0, sw, sh, win, dpr);
+        layers = buildLayers(bitmap, 0, 0, sw * k, sh * k, win, dpr);
         hiRes = true;
         bitmap.close?.();
       } else {
@@ -156,7 +160,7 @@ const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, o
       if (!start) { start = performance.now(); raf = requestAnimationFrame(frame); }
     };
     load(MAP_IMAGE.srcLo, false).catch(() => {});
-    load(MAP_IMAGE.src, true).catch(() => {});
+    load(hiSize.src, true).catch(() => {});
     const giveUp = window.setTimeout(() => { if (!layers) finish(); }, LOAD_GIVE_UP);
 
     const cellRect = (col: number, row: number) => [col * CELL, row * CELL, CELL, CELL] as const;

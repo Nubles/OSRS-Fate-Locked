@@ -19,6 +19,16 @@ export const MAP_IMAGE = {
   srcLo: `${import.meta.env.BASE_URL}osrs_world_map_lo.webp`,
   width: 9216,
   height: 6528,
+  /**
+   * The same picture at smaller sizes, smallest first; the last is `src`. Same
+   * aspect ratio, so overlays line up on any of them. Pick one with
+   * utils/mapImageSize.ts; remake them with scripts/gen-map-sizes.py.
+   */
+  sizes: [
+    { width: 2304, src: `${import.meta.env.BASE_URL}osrs_world_map_2304.webp` },
+    { width: 4608, src: `${import.meta.env.BASE_URL}osrs_world_map_4608.webp` },
+    { width: 9216, src: `${import.meta.env.BASE_URL}osrs_world_map.webp` },
+  ],
 } as const;
 
 // tileMinX/tileMinY = game tile at the image's BOTTOM-LEFT pixel;

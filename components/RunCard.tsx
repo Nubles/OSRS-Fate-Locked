@@ -6,6 +6,7 @@ import {
   MAP_IMAGE, MAP_BOUNDS, CHUNK_TILES,
   tileToPixel, ChunkCoord,
 } from '../utils/mapCoords';
+import { mapImageSrcForScale } from '../utils/mapImageSize';
 import { auditHistory, computeRunId } from '../utils/integrity';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
@@ -45,7 +46,8 @@ const drawMiniMap = async (
     };
     img.onload = () => finish();
     img.onerror = () => finish(new Error('Map image could not be loaded'));
-    img.src = MAP_IMAGE.src;
+    // The card's map is only CARD_MAP_W x MAP_OVERSAMPLE px wide: a small copy is plenty.
+    img.src = mapImageSrcForScale((CARD_MAP_W * MAP_OVERSAMPLE) / MAP_IMAGE.width, 1);
     if (img.complete && img.naturalWidth > 0) finish();
   });
 
@@ -65,8 +67,8 @@ const drawMiniMap = async (
     // Multi-pass halving downscale: halving each step lets the browser apply
     // clean bilinear filtering per pass, preserving detail far better than a
     // single-shot drawImage from 6145×4353 → final.
-    let srcW: number = MAP_IMAGE.width;
-    let srcH: number = MAP_IMAGE.height;
+    let srcW: number = img.naturalWidth || MAP_IMAGE.width;
+    let srcH: number = img.naturalHeight || MAP_IMAGE.height;
     let src: CanvasImageSource = img;
     while (srcW > W * 2 && srcH > H * 2) {
       const nextW = Math.round(srcW / 2);

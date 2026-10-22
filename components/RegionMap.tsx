@@ -114,6 +114,7 @@ import {
   pixelToTile,
   tileToChunk,
 } from '../utils/mapCoords';
+import { mapImageIndexForScale } from '../utils/mapImageSize';
 
 const REGION_COORDS: Record<string, { x: number; y: number }> = {
   'Misthalin': { x: 73.41, y: 41.69 },
@@ -282,20 +283,58 @@ interface MapSurfaceProps {
   osrs?: boolean;
   /** OSRS layout: one even-odd path darkening the whole map except unlocked chunks. */
   osrsDark?: string;
+  /** The live pan/zoom (MapContent's transformRef), read to size the map image. */
+  transformRef: React.MutableRefObject<{ scale: number }>;
+  /** MapContent calls this whenever the zoom changes. */
+  onZoomRef: React.MutableRefObject<(() => void) | null>;
 }
 
+/** How long the zoom must hold still before a bigger map image is fetched. */
+const MAP_SIZE_SETTLE_MS = 200;
+
 // Progressive map: a tiny low-res placeholder shows instantly (and sizes the
-// surface), while the full-res image streams in and fades over it on load. The
-// browser caches the full image, so on later mounts onLoad fires immediately.
-const ProgressiveMapImage: React.FC<{ osrs?: boolean }> = ({ osrs = false }) => {
+// surface), while a right-sized copy of the map streams in and fades over it on
+// load. The copy fits how wide the map is drawn on this screen
+// (utils/mapImageSize.ts) and moves up a size when the player zooms in; it
+// never moves down, so zooming back out keeps the sharper copy already loaded.
+const ProgressiveMapImage: React.FC<{
+  osrs?: boolean;
+  transformRef: MapSurfaceProps['transformRef'];
+  onZoomRef: MapSurfaceProps['onZoomRef'];
+}> = ({ osrs = false, transformRef, onZoomRef }) => {
   const [hiLoaded, setHiLoaded] = useState(false);
+  const [sizeIndex, setSizeIndex] = useState(-1);
   const hiRef = useRef<HTMLImageElement>(null);
-  // When the full image is already in cache (every visit after the first), its
-  // load event can fire before React attaches onLoad — leaving the image stuck
-  // transparent so only the blurry placeholder ever shows. Reconcile on mount.
+  useEffect(() => {
+    let current = -1;
+    let timer = 0;
+    // Wait for the view to settle before choosing: the OSRS layout fits the map
+    // just after mounting, and a wheel zoom passes through every size on the
+    // way, so no copy is fetched only to be replaced at once.
+    const choose = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const want = mapImageIndexForScale(transformRef.current.scale);
+        if (want > current) { current = want; setSizeIndex(want); }
+      }, MAP_SIZE_SETTLE_MS);
+    };
+    onZoomRef.current = choose;
+    choose();
+    // Browser zoom changes devicePixelRatio and fires resize.
+    window.addEventListener('resize', choose);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('resize', choose);
+      if (onZoomRef.current === choose) onZoomRef.current = null;
+    };
+  }, [transformRef, onZoomRef]);
+  const hiSrc = sizeIndex >= 0 ? MAP_IMAGE.sizes[sizeIndex].src : null;
+  // When the image is already in cache (every visit after the first), its load
+  // event can fire before React attaches onLoad — leaving the image stuck
+  // transparent so only the blurry placeholder ever shows. Reconcile here.
   useEffect(() => {
     if (hiRef.current?.complete && hiRef.current.naturalWidth > 0) setHiLoaded(true);
-  }, []);
+  }, [hiSrc]);
   return (
     <>
       <img
@@ -304,11 +343,12 @@ const ProgressiveMapImage: React.FC<{ osrs?: boolean }> = ({ osrs = false }) => 
         className={osrs ? 'w-full h-full object-fill pointer-events-none' : 'w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]'}
         draggable={false}
       />
-      <img
+      {hiSrc && <img
         ref={hiRef}
-        src={MAP_IMAGE.src}
+        src={hiSrc}
         alt=""
         aria-hidden
+        data-map-hi
         className={osrs ? 'absolute inset-0 w-full h-full object-fill pointer-events-none' : 'absolute inset-0 w-full h-full object-fill pointer-events-none grayscale-[0.2] transition-opacity duration-500'}
         style={{ opacity: hiLoaded ? (osrs ? 1 : 0.6) : 0 }}
         draggable={false}
@@ -318,14 +358,14 @@ const ProgressiveMapImage: React.FC<{ osrs?: boolean }> = ({ osrs = false }) => 
         // the real HTML attribute.
         {...{ fetchpriority: 'high' }}
         onLoad={() => setHiLoaded(true)}
-      />
+      />}
     </>
   );
 };
 
-const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked, osrs = false, osrsDark }: MapSurfaceProps) => (
+const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked, osrs = false, osrsDark, transformRef, onZoomRef }: MapSurfaceProps) => (
   <>
-    <ProgressiveMapImage osrs={osrs} />
+    <ProgressiveMapImage osrs={osrs} transformRef={transformRef} onZoomRef={onZoomRef} />
 
     <svg
       className="absolute inset-0 pointer-events-none"
@@ -425,10 +465,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // OSRS layout: place-name labels drawn over the map at a constant size,
   // repositioned by applyTransform (no React render while panning).
   const osrsLabelsRef = useRef<HTMLDivElement>(null);
+  // Set by the map image: told when the zoom changes, so it can load a sharper copy.
+  const onZoomRef = useRef<(() => void) | null>(null);
 
   /** Write the pan/zoom transform straight to the surface node (no render). */
   const applyTransform = useCallback((t: { x: number; y: number; scale: number }) => {
+    const zoomed = t.scale !== transformRef.current.scale;
     transformRef.current = t;
+    if (zoomed) onZoomRef.current?.();
     const node = mapContentRef.current;
     if (node) {
       node.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
@@ -1182,12 +1226,25 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         scale: 1,
         logging: false,
         backgroundColor: '#0b0d10',
-        onclone: (doc) => {
+        onclone: async (doc) => {
           const el = doc.getElementById('map-content-inner');
           if (el) {
             el.style.transform = 'none';
             el.style.top = '0';
             el.style.left = '0';
+            // The download is drawn at full size, so it gets the full map image
+            // whichever smaller copy the view had loaded. A new element, so its
+            // currentSrc can't still name the smaller copy, and loaded before
+            // html2canvas reads its size (it draws nothing for a 0x0 image).
+            await Promise.all(Array.from(el.querySelectorAll<HTMLImageElement>('img[data-map-hi]')).map(img => {
+              const full = doc.createElement('img');
+              full.className = img.className;
+              full.style.opacity = osrs ? '1' : '0.6';
+              const loaded = new Promise<void>(resolve => { full.onload = () => resolve(); full.onerror = () => resolve(); });
+              full.src = MAP_IMAGE.src;
+              img.replaceWith(full);
+              return loaded;
+            }));
           }
         }
       });
@@ -1580,6 +1637,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             isChunked={isChunked}
             osrs={osrs}
             osrsDark={osrsDark}
+            transformRef={transformRef}
+            onZoomRef={onZoomRef}
           />
 
           {fateView && !authoring && (

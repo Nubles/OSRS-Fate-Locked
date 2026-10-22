@@ -37,9 +37,9 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-every-tab-in-view',
+    id: '2026-10-22-every-tab-in-view',
     title: 'Every tab in view',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       fixed: [
         'All six dashboard tabs now show, the Key counters say Keys, Omni and Chaos, and clicking off the settings menu just closes it.',
@@ -47,13 +47,23 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
-    id: '2026-10-21-phones-scroll-normally',
+    id: '2026-10-22-phones-scroll-normally',
     title: 'The tracker on your phone',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       changed: [
         'On a phone the tracker now scrolls like a normal page, with Farm Keys first, so a Slayer roll is one scroll away.',
         'A slim top bar shows your Keys and Fate; the menu button holds everything else. The map and the Rules get the full width.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
