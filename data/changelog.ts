@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-roll-results-in-words',
+    title: 'Roll results say what you got',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'Roll results now say whether you found a Key, and a miss shows the Fate you gained, like "No Key: +4 Fate (12/50)". Quests show their roll too.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
