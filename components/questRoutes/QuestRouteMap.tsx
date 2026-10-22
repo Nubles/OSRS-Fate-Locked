@@ -6,6 +6,7 @@ import React, {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { MAP_IMAGE } from '../../utils/mapCoords';
+import { useMapImageSrc } from '../../hooks/useMapImageSrc';
 import type { ChunkKey } from '../../utils/questRoutes/model';
 import {
   createRouteMapGeometry,
@@ -218,6 +219,7 @@ export const QuestRouteMap: React.FC<QuestRouteMapProps> = ({
     [model, viewportSize],
   );
   const [transform, setTransform] = useState<RouteMapTransform>(geometry.fitted);
+  const mapImageSrc = useMapImageSrc(transform.scale);
   const [selectedChunk, setSelectedChunk] = useState<ChunkKey | null>(
     initialChunk(selectableChunks),
   );
@@ -470,7 +472,8 @@ export const QuestRouteMap: React.FC<QuestRouteMapProps> = ({
                 draggable={false}
               />
               <img
-                src={MAP_IMAGE.src}
+                src={mapImageSrc}
+                hidden={!mapImageSrc}
                 alt="OSRS world map"
                 onError={() => setImageFailed(true)}
                 className="absolute inset-0 h-full w-full object-fill"

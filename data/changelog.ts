@@ -37,14 +37,24 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-lighter-relay',
+    id: '2026-10-22-lighter-relay',
     title: 'Lighter on the shared online relay',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       changed: [
         'RuneLite only gets your profile again when something it uses changes, not after every note or setting. Switching to the game still sends it at once.',
         'Online backup now saves a changed run at most every 30 minutes, or every 15 when you switch away. Your save in the browser is unchanged.',
         'Discord shares a run of unlocks together, a few minutes after they happen.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },

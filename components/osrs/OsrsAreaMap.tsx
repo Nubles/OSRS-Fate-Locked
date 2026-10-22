@@ -1,6 +1,7 @@
 import React from 'react';
 import { MAP_IMAGE, type ChunkCoord } from '../../utils/mapCoords';
 import { areaMapCut, chunksForArea } from '../../utils/areaMapCut';
+import { mapImageSrcForScale } from '../../utils/mapImageSize';
 
 /**
  * An area unlock's picture: its piece of the tracker's own world map with the
@@ -26,7 +27,7 @@ export const OsrsAreaMap: React.FC<{
   return (
     <div role="img" aria-label={`${name} on the world map`} style={{
       position: 'relative', width: w, height: h, maxWidth: '100%',
-      backgroundImage: `url(${MAP_IMAGE.src}), url(${MAP_IMAGE.srcLo})`,
+      backgroundImage: `url(${mapImageSrcForScale(s)}), url(${MAP_IMAGE.srcLo})`,
       backgroundSize: `${size}, ${size}`, backgroundPosition: `${pos}, ${pos}`, backgroundRepeat: 'no-repeat',
       border: '2px solid #000', boxShadow: '0 0 0 1px var(--osrs-bevel-hi, #5c5244), 0 0 0 3px #000', backgroundColor: '#0e0c0a',
     }}>

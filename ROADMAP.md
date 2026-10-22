@@ -372,6 +372,15 @@ Follow-ups:
   stack, path}` (8 KiB), always answers 204, stores nothing, and posts to
   the `ERROR_WEBHOOK_URL` Discord webhook secret when set (once per message
   and build in 10 minutes), else only logs.
+- **World map image sizes:** `public/osrs_world_map.webp` (9216 x 6528, 6
+  MB) is the master; `_4608`, `_2304` and the `_lo` placeholder are copies of
+  it made by `python3 scripts/gen-map-sizes.py` (Pillow). Every view picks a
+  copy through `utils/mapImageSize.ts` from how wide it draws the map and the
+  screen's pixel ratio, moving up a size on zoom (windows under 720 px stop
+  at 4608 for iOS memory; "Download map" always uses the full image), so new map code should use
+  `MAP_IMAGE.sizes` through that file, not `MAP_IMAGE.src`. After replacing
+  the master, rerun the script; `utils/mapImageSize.test.ts` fails if a copy
+  is missing or the wrong size.
 - **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
   owns the plugin source, builds, releases, and local detection history. The
   app exports rules bundles but contains no Java plugin or download pipeline.
