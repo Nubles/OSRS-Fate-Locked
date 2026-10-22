@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, ArrowUp, Lock, HelpCircle, SlidersHorizontal } from 'lucide-react';
+import { X, ArrowUp, Lock, HelpCircle, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Activity, Key, Dna, Coins, GraduationCap, Compass } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -143,7 +143,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   ];
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-2 sm:p-4 animate-in fade-in duration-200">
       <div data-osrs-win="rules" className="osrs-wa-win bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
 
         {/* Header */}
@@ -170,9 +170,26 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
         </div>
 
         {/* Main Content Layout */}
-        <div className="osrs-wa-split flex flex-1 overflow-hidden">
+        <div className="osrs-wa-split flex flex-col min-[720px]:flex-row flex-1 overflow-hidden">
+            {/* Narrow screens: the section list is a picker above the text, so
+                the text gets the full width (the sidebar left a phone ~70 px). */}
+            <div className="min-[720px]:hidden shrink-0 px-3 py-2.5 bg-[#161616] border-b border-osrs-border">
+                <div className="relative">
+                    {(() => { const Icon = tabs.find(t => t.id === activeTab)?.icon ?? BookOpen; return <Icon size={16} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-osrs-gold pointer-events-none" />; })()}
+                    <select
+                        value={activeTab}
+                        onChange={(event) => setActiveTab(event.target.value as TabId)}
+                        aria-label="Rules section"
+                        className="w-full appearance-none bg-[#252525] text-osrs-gold text-sm font-bold border border-osrs-gold/20 rounded-lg pl-10 pr-9 py-2.5 shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-osrs-gold/60"
+                    >
+                        {tabs.map(tab => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
+                    </select>
+                    <ChevronDown size={16} aria-hidden="true" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+            </div>
+
             {/* Sidebar Navigation */}
-            <div className="osrs-wa-side w-64 bg-[#161616] border-r border-osrs-border flex flex-col overflow-y-auto custom-scrollbar shrink-0">
+            <div className="osrs-wa-side w-64 bg-[#161616] border-r border-osrs-border hidden min-[720px]:flex flex-col overflow-y-auto custom-scrollbar shrink-0">
                 <div className="p-3 space-y-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
@@ -204,7 +221,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
 
             {/* Scrollable Content Area */}
             <div className="osrs-wa-content flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative">
-                <div className="p-8 max-w-4xl mx-auto">
+                <div className="p-4 sm:p-8 max-w-4xl mx-auto">
                     
                     {activeTab === 'core' && (
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">

@@ -31,8 +31,8 @@ export const FateMapOptions: React.FC<{ osrs?: boolean }> = ({ osrs = false }) =
         }
         const Icon = pref === 'fog' ? Cloud : MapIcon;
         return (
-          <button key={pref} type="button" onClick={() => setFateMapPref(pref, !on)} aria-pressed={on}
-            className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
+          <button key={pref} type="button" role="menuitemcheckbox" onClick={() => setFateMapPref(pref, !on)} aria-checked={on}
+            className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white">
             <Icon size={13} className={on ? 'text-amber-400' : 'text-gray-500'} />
             {label} <span className="ml-auto text-[10px] text-gray-500">{on ? 'on' : 'off'}</span>
           </button>
