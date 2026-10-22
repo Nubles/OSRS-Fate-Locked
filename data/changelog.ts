@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-new-player-whats-new',
+    id: '2026-10-22-new-player-whats-new',
     title: 'A quieter first visit',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       changed: [
         'New players no longer get the full update list right after setting up. What’s New only shows updates that come out after you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
