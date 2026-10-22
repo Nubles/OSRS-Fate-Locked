@@ -4,6 +4,7 @@ import { verifyChain, ensureChain } from '../utils/integrity';
 import { auditHistory, replayInvariants } from '../utils/runAudit';
 import { seededContext, drawDice } from '../utils/seededRng';
 import { resolveModeRules, GAME_MODES } from '../config/gameModes';
+import { FATE_MARK_BLESSED_FATE } from '../config/economy';
 import { validateAndMigrateSave } from '../utils/saveSchema';
 import { DropSource, TableType, type LogEntry } from '../types';
 
@@ -40,7 +41,11 @@ describe('audited process repairs', () => {
 
   it('replays Cartographer spending and a granted chunk', () => {
     const state = gameReducer({ ...failures(40), gameModeId: 'chunked', runId: FIXED_RUN, fateLand: TIED_THREAD, cartographerOffer: ['49,50'] }, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
-    expect(auditHistory(state.history)).toMatchObject({ verdict: 'intact', final: { fatePoints: 0, unlocks: 1 } });
+    // failures() leaves timestamped hashes in the history, so fate's 1-in-8 mark on the new
+    // chunk varies between runs; a Blessed mark gives Fate back after the ritual took all 40.
+    const blessed = state.fateLand?.marks?.['49,50'] === 'BLESSED';
+    expect(state.fatePoints).toBe(blessed ? FATE_MARK_BLESSED_FATE : 0);
+    expect(auditHistory(state.history)).toMatchObject({ verdict: 'intact', final: { fatePoints: state.fatePoints, unlocks: 1 } });
     expect(state.unlocks.chunks).toContain('49,50');
     expect(lastAltar(state.history)?.meta).toMatchObject({ ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '49,50' });
   });
