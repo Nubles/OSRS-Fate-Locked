@@ -1,4 +1,4 @@
-import React, { Suspense, useDeferredValue, useMemo } from 'react';
+import React, { Suspense, useDeferredValue } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -25,6 +25,7 @@ import {
 } from '../utils/caProgress';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { memoizeLast } from '../utils/memoizeLast';
 
 // OSRS layout only: the home page Journal window.
 const OsrsJournalSummary = lazyWithRetry(() => import('./osrs/OsrsJournalSummary'));
@@ -63,6 +64,10 @@ export function analyzeJournalQuestRecommendations(
   unlocks: UnlockState,
   gameModeId?: string,
   areaRoutes?: AreaRoutes | null,
+  /** False skips picking the best quest (best stays null): the counts alone
+   *  need one pass, while the pick re-checks every quest and diary tier for
+   *  each available quest. */
+  rankBest = true,
 ): JournalQuestRecommendationAnalysis {
   // Read with the routes, as the Quest Log is, so a quest in an owned area no
   // route reaches is counted by neither (a player's report, 7 Oct 2026).
@@ -73,6 +78,12 @@ export function analyzeJournalQuestRecommendations(
   const candidates = allQuests.filter(quest => (
     !unlocks.quests.includes(quest.id) && baseQ.get(quest.id)!.eligible
   ));
+  const counts = {
+    available: candidates.length,
+    availableMiniquests: candidates.filter(quest => quest.kind === 'miniquest').length,
+    candidates,
+  };
+  if (!rankBest) return { ...counts, best: null };
   const wasOpen = (questId: string) => {
     const result = baseQ.get(questId);
     return result?.status === 'COMPLETED' || result?.eligible === true;
@@ -100,12 +111,7 @@ export function analyzeJournalQuestRecommendations(
     if (!best || impact > best.impact) best = { name: quest.name, nq, nd, impact };
   }
 
-  return {
-    available: candidates.length,
-    availableMiniquests: candidates.filter(quest => quest.kind === 'miniquest').length,
-    candidates,
-    best,
-  };
+  return { ...counts, best };
 }
 
 /**
@@ -116,9 +122,11 @@ export function analyzeJournalQuestRecommendations(
  */
 export function recommendNextAction(
   unlocks: UnlockState, diaryDoable: number, caLeft: number, gameModeId?: string, areaRoutes?: AreaRoutes | null,
+  /** The best quest, when the caller already analyzed these unlocks. */
+  analyzedBest?: JournalQuestRecommendationAnalysis['best'],
 ): Recommendation {
-  const { best } = analyzeJournalQuestRecommendations(
-    Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes);
+  const best = analyzedBest !== undefined ? analyzedBest : analyzeJournalQuestRecommendations(
+    Object.values(QUEST_DATA), Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes).best;
   // Canonical automatic eligibility is analyzed once by the shared helper.
   if (best && best.impact > 0) {
     const parts: string[] = [];
@@ -187,6 +195,74 @@ export function questsReadyLabel(available: number, miniquests: number): string 
 }
 
 /**
+ * The summary's numbers and recommendation for one unlock state. The best
+ * quest (the slow part: it re-checks every quest and diary tier for each
+ * available quest) is picked only when `rankBest` is on, since only the
+ * advisor shows it; with it off the recommendation simply has no best quest.
+ */
+export function computeJournalSummary(
+  unlocks: UnlockState, gameModeId: string | undefined, areaRoutes: AreaRoutes | null | undefined, rankBest: boolean,
+) {
+  // ── Quests available ─────────────────────────────────────────────────────
+  const allQuests = Object.values(QUEST_DATA);
+  const questAnalysis = analyzeJournalQuestRecommendations(
+    allQuests, Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes, rankBest);
+  const questsAvailable = questAnalysis.available;
+  const questsTotal    = allQuests.length;
+  const questsDone     = unlocks.quests.length;
+
+  // ── Diary tasks doable ───────────────────────────────────────────────────
+  const diaryTasksDoable = countDoableDiaryTasks(
+    ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes);
+  const diaryTasksTotal  = ALL_DIARY_TASKS.length;
+  const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
+    ALL_DIARY_TASKS.some((t) => t.id === id),
+  ).length;
+
+  // ── CA tasks remaining ───────────────────────────────────────────────────
+  const caTiersTotal = CA_TIER_ORDER.length;
+  const caPoints = completedCAPoints(unlocks.completedTasks);
+  const caEarnedTiers = earnedCATiers(caPoints, unlocks.cas);
+  const caTasksTotal = ALL_CA_TASKS.length;
+  const completedTaskIds = new Set(unlocks.completedTasks);
+  const caTasksDone = ALL_CA_TASKS.filter(
+    task => completedTaskIds.has(task.id),
+  ).length;
+  const caTasksLeft = caTasksTotal - caTasksDone;
+  const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
+  const caTasksDoable = doableCATasks(ALL_CA_TASKS, unlocks, gameModeId).length;
+
+  const stats = {
+    quests: {
+      available: questsAvailable, miniquests: questAnalysis.availableMiniquests, done: questsDone, total: questsTotal,
+    },
+    diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
+    ca: {
+      left: caTasksLeft,
+      doable: caTasksDoable,
+      done: caEarnedTiers.length,
+      total: caTiersTotal,
+      tasksDone: caTasksDone,
+      tasksTotal: caTasksTotal,
+      points: caPoints,
+      pointsTotal: CA_DATA.Grandmaster.pointsRequired,
+      nextTier: nextCATier,
+    },
+  };
+
+  // The single best next action, from the same analysis (it used to run it
+  // a second time).
+  const recommendation = recommendNextAction(
+    unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes, questAnalysis.best);
+  return { stats, recommendation };
+}
+
+// The classic card, the OSRS Journal window and the OSRS Journal screen all
+// ask for the same unlocks, so they share one answer; a new unlocks object
+// (any level, quest or unlock) works it out again.
+const journalSummaryFor = memoizeLast(computeJournalSummary);
+
+/**
  * The numbers behind the card: quests, diary tasks and combat achievements,
  * plus the single recommended next action. Shared by the classic card and
  * the OSRS layout's Journal window, so both always agree.
@@ -199,60 +275,7 @@ export function useJournalSummaryModel() {
   // The map's transport data is large; a first visit's onboarding covers this card.
   const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
 
-  const stats = useMemo(() => {
-    // ── Quests available ─────────────────────────────────────────────────────
-    const allQuests = Object.values(QUEST_DATA);
-    const questAnalysis = analyzeJournalQuestRecommendations(
-      allQuests, Object.values(DIARY_DATA), unlocks, gameModeId, areaRoutes);
-    const questsAvailable = questAnalysis.available;
-    const questsTotal    = allQuests.length;
-    const questsDone     = unlocks.quests.length;
-
-    // ── Diary tasks doable ───────────────────────────────────────────────────
-    const diaryTasksDoable = countDoableDiaryTasks(
-      ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes);
-    const diaryTasksTotal  = ALL_DIARY_TASKS.length;
-    const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
-      ALL_DIARY_TASKS.some((t) => t.id === id),
-    ).length;
-
-    // ── CA tasks remaining ───────────────────────────────────────────────────
-    const caTiersTotal = CA_TIER_ORDER.length;
-    const caPoints = completedCAPoints(unlocks.completedTasks);
-    const caEarnedTiers = earnedCATiers(caPoints, unlocks.cas);
-    const caTasksTotal = ALL_CA_TASKS.length;
-    const completedTaskIds = new Set(unlocks.completedTasks);
-    const caTasksDone = ALL_CA_TASKS.filter(
-      task => completedTaskIds.has(task.id),
-    ).length;
-    const caTasksLeft = caTasksTotal - caTasksDone;
-    const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
-    const caTasksDoable = doableCATasks(ALL_CA_TASKS, unlocks, gameModeId).length;
-
-    return {
-      quests: {
-        available: questsAvailable, miniquests: questAnalysis.availableMiniquests, done: questsDone, total: questsTotal,
-      },
-      diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
-      ca: {
-        left: caTasksLeft,
-        doable: caTasksDoable,
-        done: caEarnedTiers.length,
-        total: caTiersTotal,
-        tasksDone: caTasksDone,
-        tasksTotal: caTasksTotal,
-        points: caPoints,
-        pointsTotal: CA_DATA.Grandmaster.pointsRequired,
-        nextTier: nextCATier,
-      },
-    };
-  }, [unlocks, gameModeId, areaRoutes]);
-
-  // The single best next action — computed once per unlocks change.
-  const recommendation = useMemo(
-    () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes),
-    [unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes],
-  );
+  const { stats, recommendation } = journalSummaryFor(unlocks, gameModeId, areaRoutes, advisorsEnabled);
   return { stats, recommendation, advisorsEnabled };
 }
 
