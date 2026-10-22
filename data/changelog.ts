@@ -49,6 +49,16 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-21-smoother-level-ups',
+    title: 'Smoother level-ups',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'Levelling up no longer stutters on slower devices, even deep into a long run.',
+      ],
+    },
+  },
+  {
     id: '2026-10-21-quest-pause',
     title: 'Smoother quest completions',
     date: '2026-10-21',
