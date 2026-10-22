@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gameReducer, initialState, prepareKeyRollAction, type Action } from './GameContext';
 import { TableType, type GameState, type LogEntry } from '../types';
-import { replayInvariants } from '../utils/integrity';
+import { replayInvariants } from '../utils/runAudit';
 import { validateAndMigrateSave } from '../utils/saveSchema';
 import { resolveModeRules } from '../config/gameModes';
 import { SACRIFICE_MIN_ROLLS } from '../config/economy';

@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 import worker from './worker.js';
 import {
+  FEED_POSTS_PER_HOUR,
+  FEED_WINDOW_MS,
   LINK_CODE_TTL_SECONDS,
+  feedForPublish,
   PROGRESS_TTL_SECONDS,
   newLinkCode,
   newUnlocksSince,
@@ -100,6 +103,36 @@ describe('progress snapshots', () => {
     expect(newUnlocksSince(before, after)).toEqual([{ text: 'C', at: 30 }, { text: 'D', at: 40 }]);
     expect(newUnlocksSince(after, after)).toEqual([]);
     expect(newUnlocksSince(null, after)).toEqual([]);
+  });
+});
+
+describe('what a publish may post in #live-unlocks', () => {
+  const NOW = 1_790_000_000_000;
+  const before = snapshot({ recent: [{ text: 'A', at: NOW - 10_000 }] });
+  const after = (overrides: Record<string, unknown> = {}) => snapshot({ recent: [{ text: 'B', at: NOW - 1_000 }, { text: 'A', at: NOW - 10_000 }], ...overrides });
+
+  it('posts new unlocks and counts the post in the hour', () => {
+    const feed = feedForPublish(null, before, after(), NOW);
+    expect(feed.newUnlocks).toEqual([{ text: 'B', at: NOW - 1_000 }]);
+    expect(feed.meta).toEqual({ feedWindow: NOW, feedPosts: 1 });
+  });
+
+  it(`posts at most ${FEED_POSTS_PER_HOUR} times an hour, then starts a new hour`, () => {
+    const full = { writeHash: 'x', feedWindow: NOW - 1_000, feedPosts: FEED_POSTS_PER_HOUR };
+    expect(feedForPublish(full, before, after(), NOW)).toMatchObject({ newUnlocks: [], reason: 'rate', meta: { feedPosts: FEED_POSTS_PER_HOUR } });
+    const later = NOW - 1_000 + FEED_WINDOW_MS;
+    expect(feedForPublish(full, before, after(), later)).toMatchObject({ newUnlocks: [{ text: 'B' }], meta: { feedWindow: later, feedPosts: 1 } });
+  });
+
+  it('posts nothing when the area count leaps, or for an unlock dated in the future', () => {
+    expect(feedForPublish(null, before, after({ areas: { unit: 'areas', unlocked: 88, total: 88 } }), NOW))
+      .toMatchObject({ newUnlocks: [], reason: 'jump' });
+    const future = snapshot({ recent: [{ text: 'Later', at: NOW + 60 * 60 * 1000 }, { text: 'A', at: NOW - 10_000 }] });
+    expect(feedForPublish(null, before, future, NOW).newUnlocks).toEqual([]);
+  });
+
+  it('posts nothing for a first publish, as before', () => {
+    expect(feedForPublish(null, null, after(), NOW)).toMatchObject({ newUnlocks: [], meta: { feedPosts: 0 } });
   });
 });
 
@@ -227,6 +260,16 @@ describe('Fate relay shared progress', () => {
         snapshot: next,
         newUnlocks: [{ text: 'Unlocked Lava Maze', at: 1_790_000_100_000 }],
       });
+    });
+
+    it('still tells the bot about a publish whose area count leapt, but with no unlocks to post', async () => {
+      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
+      await linkRun();
+      const leapt = snapshot({ areas: { unit: 'areas', unlocked: 88, total: 88 }, recent: [{ text: 'Unlocked everything', at: 1_790_000_100_000 }, ...snapshot().recent] });
+      expect((await republish(leapt)).status).toBe(200);
+      expect(sent).toHaveLength(1);
+      expect(JSON.parse(sent[0].init.body as string)).toMatchObject({ snapshot: leapt, newUnlocks: [] });
+      expect(kv.metadata.get(`p:${RUN}`)).toMatchObject({ feedPosts: 0 });
     });
 
     it('sends nothing for an unlinked run, without an events URL, or after /unlink', async () => {

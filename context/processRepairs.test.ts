@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createFreshState, gameReducer, prepareKeyRollAction } from './GameContext';
-import { auditHistory, replayInvariants, verifyChain, ensureChain } from '../utils/integrity';
+import { verifyChain, ensureChain } from '../utils/integrity';
+import { auditHistory, replayInvariants } from '../utils/runAudit';
 import { seededContext, drawDice } from '../utils/seededRng';
 import { resolveModeRules, GAME_MODES } from '../config/gameModes';
 import { FATE_MARK_BLESSED_FATE } from '../config/economy';
@@ -26,7 +27,7 @@ describe('audited process repairs', () => {
       const state = gameReducer(failures(cost, multiplier), { type });
       const report = auditHistory(state.history);
       expect(state.history.at(-1)?.meta?.fateCost).toBe(cost);
-      expect(report.verdict).toBe('verified');
+      expect(report.verdict).toBe('intact');
       expect(report.final).toMatchObject({ fatePoints: state.fatePoints, keys: state.keys, chaosKeys: state.chaosKeys });
     });
 
@@ -34,7 +35,7 @@ describe('audited process repairs', () => {
     let state = gameReducer(failures(30), { type: 'RITUAL_GAMBIT', payload: { won, stake: 30, keysWon: 2 } });
     if (won) for (let i = 0; i < 5; i++) state = gameReducer(state, { type: 'UNLOCK', payload: { table: TableType.SKILLS, item: 'Attack', costType: 'key', cost: 1 } });
     const report = auditHistory(state.history);
-    expect(report.verdict).toBe('verified');
+    expect(report.verdict).toBe('intact');
     expect(report.final).toMatchObject({ keys: state.keys, fatePoints: 0 });
   });
 
@@ -44,16 +45,16 @@ describe('audited process repairs', () => {
     // chunk varies between runs; a Blessed mark gives Fate back after the ritual took all 40.
     const blessed = state.fateLand?.marks?.['49,50'] === 'BLESSED';
     expect(state.fatePoints).toBe(blessed ? FATE_MARK_BLESSED_FATE : 0);
-    expect(auditHistory(state.history)).toMatchObject({ verdict: 'verified', final: { fatePoints: state.fatePoints, unlocks: 1 } });
+    expect(auditHistory(state.history)).toMatchObject({ verdict: 'intact', final: { fatePoints: state.fatePoints, unlocks: 1 } });
     expect(state.unlocks.chunks).toContain('49,50');
     expect(lastAltar(state.history)?.meta).toMatchObject({ ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '49,50' });
   });
 
   it('trusts exact Cartographer metadata without evaluating a missing-details fallback', () => {
     const state = failures(40);
-    const history: LogEntry[] = [...state.history, { id: 'cart', timestamp: 1, type: 'ALTAR', message: 'Cartographer', meta: { ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '46,51' } }];
+    const history: LogEntry[] = ensureChain([...state.history, { id: 'cart', timestamp: 1, type: 'ALTAR', message: 'Cartographer', meta: { ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '46,51' } }]);
     const report = auditHistory(history);
-    expect(report.verdict).toBe('verified');
+    expect(report.verdict).toBe('intact');
     expect(report.violations).toEqual([]);
     expect(report.final).toMatchObject({ fatePoints: 0, unlocks: 1 });
   });
@@ -91,7 +92,7 @@ describe('audited process repairs', () => {
       { id: '2', timestamp: 2, type: 'ROLL_FAIL', message: 'No key', meta: { fatePointsEarned: 40 } },
       { id: '3', timestamp: 3, type: 'ALTAR', message: 'Cartographer charted Falador', details: 'Chose a frontier chunk for 40 Fate — the one decision Fate allows.' },
     ];
-    expect(auditHistory(history)).toMatchObject({ verdict: 'verified', final: { keys: 5, fatePoints: 0, unlocks: 1 } });
+    expect(auditHistory(ensureChain(history))).toMatchObject({ verdict: 'intact', final: { keys: 5, fatePoints: 0, unlocks: 1 } });
   });
 
   it('accepts all valid 0.01–0.09 boss/clue rolls and rejects zero, non-finite and >100', () => {
@@ -100,7 +101,7 @@ describe('audited process repairs', () => {
       const action = prepareKeyRollAction(state, DropSource.CLUE_BEGINNER, 5, 1, (_p, index, max = 100) => index === 2 ? max : i, undefined, undefined, undefined, { kind: 'clue', clueTier: 'Beginner' })!;
       const next = gameReducer(state, action);
       expect(next.history[0].rollValue).toBe(i / 100);
-      expect(auditHistory(next.history).verdict).toBe('verified');
+      expect(auditHistory(next.history).verdict).toBe('intact');
     }
     for (const rollValue of [0, NaN, Infinity, 100.01]) {
       expect(replayInvariants([{ id: 'x', timestamp: 1, type: 'ROLL_FAIL', message: '', rollValue }]).violations.map(v => v.kind)).toContain('ROLL_OUT_OF_RANGE');

@@ -106,3 +106,32 @@ export function newUnlocksSince(previous, next) {
   const seen = previous.recent.reduce((latest, entry) => Math.max(latest, entry.at), 0);
   return next.recent.filter(entry => entry.at > seen).reverse();
 }
+
+/** At most this many publishes an hour may post a run's unlocks in #live-unlocks. */
+export const FEED_POSTS_PER_HOUR = 10;
+export const FEED_WINDOW_MS = 60 * 60 * 1000;
+/** More areas or chunks than this gained since the last publish is not something the feed shows. */
+export const MAX_FEED_AREA_JUMP = 10;
+/** An unlock dated further ahead than this (clock skew) is not posted. */
+const FEED_CLOCK_SKEW_MS = 5 * 60 * 1000;
+
+/**
+ * What a publish may post in the Discord feed, and the feed counter to keep
+ * in the record's metadata (no extra KV write). The summary is self-reported,
+ * so the relay posts only what looks like play: nothing dated in the future,
+ * nothing when the area count leapt, and at most FEED_POSTS_PER_HOUR posts an
+ * hour. The publish itself is never refused, and roles still follow it.
+ */
+export function feedForPublish(previousMetadata, previous, next, now) {
+  const windowStart = Number(previousMetadata?.feedWindow);
+  const inWindow = Number.isFinite(windowStart) && now - windowStart < FEED_WINDOW_MS && now >= windowStart;
+  const posted = inWindow && Number.isInteger(previousMetadata?.feedPosts) ? previousMetadata.feedPosts : 0;
+  const meta = { feedWindow: inWindow ? windowStart : now, feedPosts: posted };
+  const fresh = newUnlocksSince(previous, next).filter(entry => entry.at <= now + FEED_CLOCK_SKEW_MS);
+  if (fresh.length === 0) return { newUnlocks: [], meta, reason: null };
+  const leapt = previous?.areas && next.areas.unit === previous.areas.unit
+    && next.areas.unlocked - previous.areas.unlocked > MAX_FEED_AREA_JUMP;
+  if (leapt) return { newUnlocks: [], meta, reason: 'jump' };
+  if (posted >= FEED_POSTS_PER_HOUR) return { newUnlocks: [], meta, reason: 'rate' };
+  return { newUnlocks: fresh, meta: { ...meta, feedPosts: posted + 1 }, reason: null };
+}

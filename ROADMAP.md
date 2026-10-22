@@ -85,8 +85,10 @@ always-mounted-driver / choke-point conventions.
 4. **Seeded runs / weekly seed** (`utils/seededRng.ts`, seed section in
    GameModePicker, `GameState.rngSeed`). Every gameplay outcome draws
    `hash(seed, newest history hash, purpose, index)` — same seed + same
-   decisions = the same fate, and every roll is recomputable from a
-   verified bundle. Seed is chosen at run start (weekly `FATE-YYYY-WNN`,
+   decisions = the same fate. Nothing yet recomputes a run's draws from
+   its seed and history, so the run check
+   (`auditHistory` in `utils/runAudit.ts`) only replays totals and
+   roll-vs-chance. Seed is chosen at run start (weekly `FATE-YYYY-WNN`,
    custom phrase, or random), locks at the first history entry, travels
    with the save. Unseeded runs keep classic Math.random.
    **New choke point:** ALL gameplay randomness must go through

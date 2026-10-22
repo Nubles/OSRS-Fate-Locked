@@ -7,7 +7,8 @@ import {
   tileToPixel, ChunkCoord,
 } from '../utils/mapCoords';
 import { mapImageSrcForScale } from '../utils/mapImageSize';
-import { auditHistory, computeRunId } from '../utils/integrity';
+import { computeRunId } from '../utils/integrity';
+import { auditHistory } from '../utils/runAudit';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { chunkUnlocked } from '../utils/chunkLocations';
@@ -331,7 +332,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
           {runId ?? 'run-not-started'}
         </div>
         <div className="text-[9px] text-gray-500">
-          Local check only; not external verification
+          Self-reported; checked on this device only
         </div>
         <div className="text-[9px] tracking-[0.2em] text-amber-500/50 uppercase font-semibold">
           fatelocked.ironman
@@ -412,19 +413,24 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
   const [captureError, setCaptureError] = useState<string | null>(null);
 
   const modeRules = resolveModeRules(gameModeId, customMode);
-  const historyAudit = React.useMemo(() => auditHistory(history, modeRules), [history, modeRules]);
+  const historyAudit = React.useMemo(
+    () => auditHistory(history, modeRules, { keys, specialKeys, chaosKeys, fatePoints, unlocks }),
+    [history, modeRules, keys, specialKeys, chaosKeys, fatePoints, unlocks],
+  );
   const runId = React.useMemo(() => computeRunId(history), [history]);
   const firstTs = history[0]?.timestamp ?? Date.now();
-  const integrityOk = history.length > 0 && historyAudit.verdict === 'verified';
+  const integrityOk = history.length > 0 && historyAudit.verdict === 'intact';
   const integrityLabel = history.length === 0 ? 'NO HISTORY'
-    : historyAudit.verdict === 'tampered' ? 'BROKEN HISTORY'
-    : historyAudit.verdict === 'warning' ? 'REPLAY WARNING' : 'HISTORY CHECKED';
+    : historyAudit.verdict === 'tampered' ? 'HISTORY EDITED'
+    : historyAudit.verdict === 'warning' ? "HISTORY DOESN'T ADD UP" : 'HISTORY INTACT';
   const historyDetail = history.length === 0 ? 'No recorded history to check'
     : historyAudit.verdict === 'tampered'
       ? `${historyAudit.chain.brokenAt.length} broken link${historyAudit.chain.brokenAt.length === 1 ? '' : 's'}`
       : historyAudit.verdict === 'warning'
-        ? `${historyAudit.violations.length} replay warning${historyAudit.violations.length === 1 ? '' : 's'}`
-        : 'Local history checks passed';
+        ? `${historyAudit.reasons.length} problem${historyAudit.reasons.length === 1 ? '' : 's'}: ${historyAudit.reasons[0] ?? ''}`
+        : historyAudit.totals.status === 'match'
+          ? 'Self-reported: Keys and unlocks match the history'
+          : 'Self-reported: hash links and rolls check out';
 
   const { unlocked: regionsUnlocked, total: regionsTotal } = runProgress(unlocks, gameModeId);
 
