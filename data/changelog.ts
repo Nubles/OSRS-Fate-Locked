@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-sync-roll-baseline',
+    title: 'Sync & Roll rolls only new levels',
+    date: '2026-10-22',
+    sections: {
+      fixed: [
+        'Linking an account to Sync & Roll no longer pays out levels it already had. Only levels you gain after linking roll.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
