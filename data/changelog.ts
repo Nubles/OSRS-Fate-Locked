@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-key-chance-match',
+    id: '2026-10-22-key-chance-match',
     title: 'Every screen shows the same Key chance',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       fixed: [
         'The OSRS layout now shows the same Key chance as the classic one, including achievement boosts.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
