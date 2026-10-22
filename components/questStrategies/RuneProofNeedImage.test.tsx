@@ -95,7 +95,9 @@ describe('RuneProof requirement artwork', () => {
     expect(x + width).toBeLessThanOrEqual(MAP_IMAGE.width);
     expect(y + height).toBeLessThanOrEqual(MAP_IMAGE.height);
     const source = map.querySelector('image')!;
-    expect(source.getAttribute('href')).toBe(MAP_IMAGE.src);
+    // A 52 px box showing one 192 px chunk: the quarter-size copy is sharp enough at 1x.
+    expect(source.getAttribute('href')).toBe(MAP_IMAGE.sizes[0].src);
+    expect(source.getAttribute('width')).toBe(String(MAP_IMAGE.width));
     fireEvent.error(source);
     expect(screen.queryByRole('img')).toBeNull();
     expectWikiFallback(view.container, 'MapPin');

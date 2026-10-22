@@ -4,6 +4,7 @@ import { BookOpen, MapPin, Package, Sparkles } from '../OsrsIcon';
 import { SLOT_CONFIG } from '../../data/assets';
 import { wikiService } from '../../services/WikiService';
 import { MAP_IMAGE } from '../../utils/mapCoords';
+import { mapImageSrcForScale } from '../../utils/mapImageSize';
 import { chunkRectOnMap } from '../../utils/questRoutes/routeMapGeometry';
 import type { ChunkKey } from '../../utils/questRoutes/model';
 import type { GuideNeed } from '../../utils/questStrategies/guideNeeds';
@@ -20,13 +21,16 @@ function ItemArtwork({ name }: { readonly name: string }) {
     : <Package size={25} aria-hidden />;
 }
 
+/** The artwork box is 52 px square (.rp-need-image in RuneProofCoach.css). */
+const ARTWORK_PX = 52;
+
 function ChunkArtwork({ chunk, label }: { readonly chunk: ChunkKey; readonly label: string }) {
   const [failed, setFailed] = useState(false);
   const rect = chunkRectOnMap(chunk);
   if (!rect || failed) return <MapPin size={25} aria-hidden />;
   return <svg className="rp-need-map" role="img" aria-label={`Map of ${label}`}
     viewBox={`${rect.x} ${rect.y} ${rect.width} ${rect.height}`}>
-    <image href={MAP_IMAGE.src} width={MAP_IMAGE.width} height={MAP_IMAGE.height} onError={() => setFailed(true)} />
+    <image href={mapImageSrcForScale(ARTWORK_PX / rect.width)} width={MAP_IMAGE.width} height={MAP_IMAGE.height} onError={() => setFailed(true)} />
     <rect x={rect.x + 3} y={rect.y + 3} width={rect.width - 6} height={rect.height - 6}
       fill="none" stroke="#f1d39e" strokeWidth={6} />
   </svg>;

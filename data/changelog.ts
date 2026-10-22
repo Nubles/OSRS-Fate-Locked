@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-keep-your-run',
+    id: '2026-10-22-keep-your-run',
     title: 'Your browser keeps your run',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       changed: [
         'The tracker now asks your browser not to clear your run, and Settings shows when it was last backed up outside this browser.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
