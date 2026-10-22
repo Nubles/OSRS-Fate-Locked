@@ -717,15 +717,18 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // the frontier chunks nearest it, and fate's marks.
   const fogPref = useFateMapPref('fog');
   const fogOn = isChunked && fogPref;
+  const marksOn = useFateMapPref('marks');
   const fateView = useMemo(() => {
     if (!isChunked) return null;
     const held = new Set([CHUNKED_START_KEY, ...chunkUnlocks, ...chunkedOpenSea]);
     const frontier = new Set(getChunkFrontier(chunkUnlocks, unlocks).map(chunkKey));
     const thread = fateLand?.thread && !held.has(fateLand.thread) ? fateLand.thread : undefined;
-    return { held, frontier, thread, leaning: threadLeaning([...frontier], thread), marks: fateLand?.marks ?? {} };
+    // A Tangled chunk spares the next draw from the thread's pull: no leaning shown.
+    const leaning = fateLand?.tangled ? [] : threadLeaning([...frontier], thread);
+    return { held, frontier, thread, leaning, marks: marksOn ? fateLand?.marks ?? {} : {} };
     // lensReady: the walk that finds the frontier loads with the chunk data.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isChunked, chunkUnlocks, chunkedOpenSea, unlocks, fateLand, lensReady]);
+  }, [isChunked, chunkUnlocks, chunkedOpenSea, unlocks, fateLand, lensReady, marksOn]);
   /** The map's lines for a chunk fate has touched: its thread, its leaning frontier, its mark. */
   const fateLines = (key: string): string[] => {
     if (!fateView) return [];
@@ -2208,6 +2211,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
               <button type="button" className="osrs-btn" onClick={handleExport} disabled={isExporting} title="Export Map Image">{isExporting ? 'Saving...' : 'Download map'}</button>
               <button type="button" className={`osrs-btn${showGrid ? ' is-on' : ''}`} aria-pressed={showGrid} onClick={() => setShowGrid(g => !g)} title="Toggle chunk grid (64-tile)">Chunk grid</button>
               {isChunked && <button type="button" className={`osrs-btn${fogOn ? ' is-on' : ''}`} aria-pressed={fogOn} onClick={() => setFateMapPref('fog', !fogPref)} title="Fog over land you don't hold">Fog</button>}
+              {isChunked && <button type="button" className={`osrs-btn${marksOn ? ' is-on' : ''}`} aria-pressed={marksOn} onClick={() => setFateMapPref('marks', !marksOn)} title="Fate's omen on each chunk you hold">Omens</button>}
               {canAuthor && <button type="button" className={`osrs-btn${authoring ? ' is-on' : ''}`} aria-pressed={authoring} onClick={() => setAuthoring(a => !a)} title="Toggle chunk authoring mode">Author</button>}
             </span>
           </div>

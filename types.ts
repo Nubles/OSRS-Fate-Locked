@@ -358,7 +358,8 @@ export interface GameState {
   fateLand?: FateLand;
 }
 
-export type FateMark = 'BLESSED' | 'GILDED' | 'CHAOTIC' | 'CURSED';
+/** Fate's omens: four boons (Blessed, Gilded, Fortunate, Chaotic) and four banes. */
+export type FateMark = 'BLESSED' | 'GILDED' | 'FORTUNATE' | 'CHAOTIC' | 'CURSED' | 'WITHERED' | 'CLOUDED' | 'TANGLED';
 
 /** Chunked's Fate's Thread and fate's marks (utils/fateLand.ts). */
 export interface FateLand {
@@ -370,6 +371,8 @@ export interface FateLand {
   marks: Record<string, FateMark>;
   /** Gilded chunks whose free Key roll is still waiting. */
   gilded: string[];
+  /** A Tangled chunk: fate's thread doesn't pull the next Chunks draw. */
+  tangled?: boolean;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

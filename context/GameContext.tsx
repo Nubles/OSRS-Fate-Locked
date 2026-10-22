@@ -3071,8 +3071,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (warded && !usable) return;
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
-      // Chunked: one Chunks draw in six goes toward Fate's Thread (utils/fateLand.ts).
-      if (table === TableType.CHUNKS) pool = leanTowardThread(pool, current.fateLand?.thread, nextFloat('fate-thread-lean'));
+      // Chunked: one Chunks draw in six goes toward Fate's Thread, unless a
+      // Tangled chunk spares this one (utils/fateLand.ts).
+      if (table === TableType.CHUNKS) {
+        const lean = nextFloat('fate-thread-lean');
+        if (!current.fateLand?.tangled) pool = leanTowardThread(pool, current.fateLand?.thread, lean);
+      }
       const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
       if (!selection) {
         showToast(warded
@@ -3881,7 +3885,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
         tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined}
-        chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined} /> : null}
+        chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined}
+        chunkedMarks={state.gameModeId === 'chunked' ? state.fateLand?.marks : undefined} /> : null}
     </GameContext.Provider>
   );
 };

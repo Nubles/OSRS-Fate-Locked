@@ -10,7 +10,7 @@ import {
 import { drawDice } from '../utils/seededRng';
 import { TableType, LogEntry, type FailureFateAward } from '../types';
 import { isRollEntry } from '../utils/logEntry';
-import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
+import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_WITHERED_FATE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
 import { ALL_CHUNKS, CHUNKED_START, chunkKey } from '../utils/chunkAdjacency';
 import { ALL_CA_TASKS } from '../data/caTasks';
@@ -988,10 +988,12 @@ describe('rituals', () => {
     const start = { ...base(), gameModeId: 'chunked', fateLand: TIED_THREAD, fatePoints: 50, cartographerOffer: ['49,50', '51,50'],
       unlocks: { ...initialState.unlocks, chunks: [] } };
     const s = gameReducer(start, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'ignored' } });
-    expect(s.fatePoints).toBe(10);
+    // Every chunk gained draws fate's omen; Blessed and Withered move Fate too.
+    const omen = s.fateLand?.marks['49,50'];
+    expect(s.fatePoints).toBe(10 + (omen === 'BLESSED' ? FATE_MARK_BLESSED_FATE : omen === 'WITHERED' ? -FATE_MARK_WITHERED_FATE : 0));
     expect(s.unlocks.chunks).toContain('49,50');
     // The reducer names the chunk itself: its own name and coordinates.
-    expect(s.history[s.history.length - 1].message).toBe('Cartographer charted Lumbridge (49, 50)');
+    expect(s.history.find(e => e.type === 'ALTAR')?.message).toBe('Cartographer charted Lumbridge (49, 50)');
   });
 
   it('Cartographer refuses a chunk off the frontier, the start chunk, and a run outside Chunked', () => {

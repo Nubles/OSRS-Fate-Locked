@@ -21,7 +21,7 @@ import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBo
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
-import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, FATE_MARK_CURSED_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
 import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
@@ -822,7 +822,7 @@ const normalizeAchievementsClaimed = (value: unknown): Outcome<string[]> => {
   return { ok: true, value: [...seen] };
 };
 
-const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed', 'cursedRollsLeft']);
+const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed', 'cursedRollsLeft', 'fortunateRollsLeft', 'cloudedRollsLeft']);
 
 /** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
 const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
@@ -837,7 +837,7 @@ const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
     if (checked.ok === false) return checked;
     out[key] = checked.value;
   }
-  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS], ['cursedRollsLeft', FATE_MARK_CURSED_ROLLS]] as const) {
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS], ['cursedRollsLeft', FATE_MARK_CURSED_ROLLS], ['fortunateRollsLeft', FATE_MARK_FORTUNATE_ROLLS], ['cloudedRollsLeft', FATE_MARK_CLOUDED_ROLLS]] as const) {
     if (!own(raw, key)) continue;
     const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
     if (checked.ok === false) return checked;
@@ -1448,7 +1448,7 @@ const normalizeState = (
     state.chunkExplore = { from: Math.min(from.value, state.unlocks.chunks?.length ?? 0), done };
   }
   if (own(input, 'fateLand') && readOwn(input, 'fateLand') !== undefined) {
-    const inspected = inspectRecord(readOwn(input, 'fateLand'), new Set(['thread', 'fulfilled', 'marks', 'gilded']), 'invalid_field', 'fateLand');
+    const inspected = inspectRecord(readOwn(input, 'fateLand'), new Set(['thread', 'fulfilled', 'marks', 'gilded', 'tangled']), 'invalid_field', 'fateLand');
     if (inspected.ok === false) return inspected;
     const isChunk = (key: unknown): key is string => typeof key === 'string' && /^\d{1,3},\d{1,3}$/.test(key);
     const thread = readOwn(inspected.value, 'thread');
@@ -1466,7 +1466,9 @@ const normalizeState = (
     const gilded = readOwn(inspected.value, 'gilded');
     if (!Array.isArray(gilded) || !gilded.every(key => isChunk(key) && marks[key as string] === 'GILDED')
       || new Set(gilded).size !== gilded.length) return invalid('invalid_field', 'fateLand.gilded');
-    state.fateLand = { ...(typeof thread === 'string' ? { thread } : {}), fulfilled: fulfilled.value, marks, gilded: [...gilded as string[]] };
+    const tangled = readOwn(inspected.value, 'tangled');
+    if (tangled !== undefined && typeof tangled !== 'boolean') return invalid('invalid_field', 'fateLand.tangled');
+    state.fateLand = { ...(typeof thread === 'string' ? { thread } : {}), fulfilled: fulfilled.value, marks, gilded: [...gilded as string[]], ...(tangled ? { tangled: true } : {}) };
   }
   if (own(input, 'cartographerOffer') && readOwn(input, 'cartographerOffer') !== undefined) {
     const raw = readOwn(input, 'cartographerOffer');

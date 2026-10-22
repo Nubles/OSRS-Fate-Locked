@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Sparkles } from './OsrsIcon';
-import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS } from '../config/economy';
+import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_FORTUNATE_ODDS } from '../config/economy';
 import { DROP_RATES } from '../constants';
 import { DropSource } from '../types';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
@@ -60,7 +60,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
     ? (ready ? mercyShutReason(game, doableQuests) : null)
     : mercyShutReason(game);
 
-  // Fate's Thread and fate's marks (utils/fateLand.ts).
+  // Fate's Thread and the omens still running (utils/fateLand.ts).
   const thread = fateLand?.thread;
   const fulfilled = fateLand?.fulfilled ?? 0;
   const gilded = fateLand?.gilded ?? [];
@@ -69,11 +69,18 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const threadText = thread
     ? `Fate has tied a thread to ${chunkPlaceLabel(thread)}. One Chunks draw in six goes to the frontier chunks nearest it. Gain it and fate grants you a free ritual.${fulfilled > 0 ? ` Threads fulfilled: ${fulfilled}.` : ''}`
     : null;
-  const cursedText = cursed > 0
-    ? `Cursed: your next ${cursed === 1 ? 'Key roll is' : `${cursed} Key rolls are`} ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`
-    : null;
+  const fortunate = rituals?.fortunateRollsLeft ?? 0;
+  const clouded = rituals?.cloudedRollsLeft ?? 0;
+  const rolls = (n: number) => (n === 1 ? 'Key roll is' : `${n} Key rolls are`);
+  const omens: { text: string; bane: boolean }[] = [
+    ...(fortunate > 0 ? [{ text: `Fortunate: your next ${rolls(fortunate)} ${FATE_MARK_FORTUNATE_ODDS}% better.`, bane: false }] : []),
+    ...(cursed > 0 ? [{ text: `Cursed: your next ${rolls(cursed)} ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`, bane: true }] : []),
+    ...(clouded > 0 ? [{ text: `Clouded: your next ${clouded === 1 ? 'Key roll gives' : `${clouded} Key rolls give`} no Fate if ${clouded === 1 ? 'it fails' : 'they fail'}.`, bane: true }] : []),
+    ...(fateLand?.tangled ? [{ text: "Tangled: Fate's Thread doesn't pull your next chunk.", bane: true }] : []),
+  ];
+  const omensShown = omens.length > 0;
 
-  if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0 && !threadText && gilded.length === 0 && !cursedText) return null;
+  if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0 && !threadText && gilded.length === 0 && !omensShown) return null;
   const chance = Math.round(BREAKTHROUGH_CHANCE * 100);
   const exploreChance = DROP_RATES[DropSource.CHUNK_EXPLORE];
   const mercyText = needsQuestCheck && !ready
@@ -114,7 +121,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   if (osrs) {
     return (
       <div className="ofate">
-        {(threadText || gilded.length > 0 || cursedText) && (
+        {(threadText || gilded.length > 0 || omensShown) && (
           <div className="ospend-note ofate-block">
             <div className="ospend-note-words">
               <span className="t">Fate's Thread</span>
@@ -127,7 +134,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
                 <button type="button" className="osrs-btn ofate-btn" disabled={!!pendingUnlock} onClick={e => rollGilded(chunk, e.clientX, e.clientY)}>Roll</button>
               </div>
             ))}
-            {cursedText && <span className="ofate-more">{cursedText}</span>}
+            {omens.map(o => <span key={o.text} className="ofate-more" style={{ color: o.bane ? '#ff3030' : '#0dc10d' }}>{o.text}</span>)}
           </div>
         )}
         {shown.length > 0 && (
@@ -188,7 +195,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
 
   return (
     <div className="pb-3 grid gap-2">
-      {(threadText || gilded.length > 0 || cursedText) && (
+      {(threadText || gilded.length > 0 || omensShown) && (
         <div className="w-full rounded-lg border border-yellow-500/40 bg-yellow-950/20 p-3 grid gap-2">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-widest text-yellow-300">Fate's Thread</h3>
@@ -211,7 +218,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
               ))}
             </ul>
           )}
-          {cursedText && <p className="text-[11px] text-red-300/80">{cursedText}</p>}
+          {omens.map(o => <p key={o.text} className={`text-[11px] ${o.bane ? 'text-red-300/80' : 'text-green-300/80'}`}>{o.text}</p>)}
         </div>
       )}
       {shown.length > 0 && (
