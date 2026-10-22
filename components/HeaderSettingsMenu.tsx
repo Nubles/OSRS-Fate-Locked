@@ -7,6 +7,7 @@ import { FATE_EXPORT_HINT } from '../utils/fateSaveFile';
 import { OSRS_MIN_WIDTH, setUiStyle, useIsWideEnoughForOsrs, useUiStyle } from '../utils/uiStyle';
 import { DropdownMenu } from './DropdownMenu';
 import { FateMapOptions } from './FateMapOptions';
+import { OffDeviceCopyStatus } from './OffDeviceCopyStatus';
 
 interface HeaderSettingsMenuProps {
   anchorRef: React.RefObject<HTMLButtonElement | null>;
@@ -67,6 +68,7 @@ const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
            Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
         </button>
         <div role="separator" className="my-1 border-t border-white/10" />
+        <OffDeviceCopyStatus />
         <button type="button" role="menuitem" onClick={() => pickUtil(() => { onImportSave(); })} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white">
            <Upload size={13} /> Import save
         </button>

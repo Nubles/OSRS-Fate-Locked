@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import { usePersistentStorage, type PersistentStorageStatus } from '../hooks/usePersistentStorage';
-import { shouldNag, snoozeNag, lastExportLabel } from '../utils/backupNag';
+import { shouldNag, snoozeNag } from '../utils/backupNag';
+import { OFF_DEVICE_COPY_LABEL, offDeviceCopyLabel, readOffDeviceCopyAt } from '../utils/persistentStorage';
 import { onlineBackupHoldsReminder, readOnlineBackupRecord } from '../utils/onlineBackupRecord';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from '../utils/fateSaveFile';
 import { showToast } from '../utils/toast';
@@ -76,8 +77,8 @@ export const BackupNagBanner: React.FC = () => {
       <div className="flex flex-wrap items-start gap-3 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-2 text-[12px] text-amber-200/90 animate-in fade-in slide-in-from-top-1 sm:items-center">
         <HardDriveDownload size={14} className="text-amber-400 shrink-0" />
         <span className="min-w-0 flex-1 basis-full sm:basis-auto">
-          Your run only lives in this browser — clearing site data would erase it.
-          Last backup file: <b>{lastExportLabel(storageKey)}</b>.
+          Your run only lives in this browser — clearing site data would erase it.{' '}
+          {OFF_DEVICE_COPY_LABEL}: <b>{offDeviceCopyLabel(readOffDeviceCopyAt(storageKey))}</b>.
           <span className="mt-1 block text-amber-100/75" aria-live="polite">
             {persistenceCopy[persistentStorageStatus]}
           </span>
