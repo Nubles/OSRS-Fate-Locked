@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-slayer-gates',
+    id: '2026-10-22-slayer-gates',
     title: 'Slayer cards follow your unlocks',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       changed: [
         'Slayer masters you can’t use yet are greyed out with why. A Boss Task needs Like a Boss, asks which boss, and rolls from that boss’s Key stash.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
