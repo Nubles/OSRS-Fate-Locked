@@ -559,7 +559,7 @@ const ClassicActionSection: React.FC = () => {
   ];
 
   return (
-    <div className="h-full p-4 flex flex-col gap-3">
+    <div className="lg:h-full p-3 lg:p-4 flex flex-col gap-3">
 
       {/* Sub-tab toggle */}
       <div className="grid grid-cols-2 gap-1 bg-[#161616] border border-white/5 rounded-lg p-1 shrink-0 min-w-0">
@@ -582,13 +582,14 @@ const ClassicActionSection: React.FC = () => {
         })}
       </div>
 
-      {/* Active list — full-width 2-column grid */}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-1 pr-1">
+      {/* Active list — full-width 2-column grid. Scrolls inside the panel on
+          desktop only; on a phone it grows and the page scrolls. */}
+      <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto custom-scrollbar lg:-mr-1 lg:pr-1">
         {subTab === 'SLAYER' && slayers.length === 0 && (
           <div className="text-center text-gray-600 text-xs py-6">{FARM_NO_SLAYER_MASTER}</div>
         )}
         {subTab === 'SLAYER' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
             {slayers.map((master, i) => (
               <div
                 key={master.name}
@@ -609,7 +610,7 @@ const ClassicActionSection: React.FC = () => {
           </div>
         )}
         {subTab === 'CLUES' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
             {CLUE_SCROLLS.map((clue, i) => {
               const baseRate = DROP_RATES[clue.source];
               const displayRate = isVanilla
@@ -728,7 +729,7 @@ const ClassicActionSection: React.FC = () => {
           </React.Suspense>
         )}
         {subTab === 'ACTIVITIES' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
             {!reserves && ACTIVITY_ROLLS.map((a, i) => (
               <div
                 key={a.name}

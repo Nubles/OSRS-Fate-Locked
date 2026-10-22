@@ -232,10 +232,58 @@ describe('App changelog lifecycle', () => {
     expect(invite.querySelector('span')?.className).toContain('hidden sm:inline');
 
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
-    await user.click(screen.getByRole('button', { name: 'Discord notifications' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Discord notifications' }, { timeout: 10_000 }));
     // The dialog loads lazily, which takes a while under a full test run.
     expect(await screen.findByRole('dialog', { name: 'Discord notifications' }, { timeout: 10_000 })).toBeTruthy();
   }, 25_000);
+
+  it('lets a phone scroll the page as one document behind a slim header', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+
+    const { container } = render(<App />);
+    await screen.findByRole('button', { name: 'Settings & save tools' });
+
+    // The classic grid is locked to the window only from lg up; below that
+    // the page scrolls and the panels grow to their content.
+    const main = container.querySelector('main');
+    expect(main?.className.split(/\s+/)).toContain('lg:h-[calc(100vh-80px)]');
+    expect(main?.className.split(/\s+/)).not.toContain('h-[calc(100vh-80px)]');
+
+    // Below lg the tools sit behind one menu button; lg and up always shows them.
+    const tools = container.querySelector('#header-tools');
+    expect(tools?.className.split(/\s+/)).toEqual(expect.arrayContaining(['hidden', 'lg:flex']));
+    await user.click(screen.getByRole('button', { name: 'Menu' }));
+    expect(tools?.className.split(/\s+/)).toContain('flex');
+    expect(tools?.className.split(/\s+/)).not.toContain('hidden');
+    expect(screen.getByRole('button', { name: 'Hide menu' }).getAttribute('aria-expanded')).toBe('true');
+  }, 25_000);
+
+  it('labels every Key counter, shows Chaos at 0, and opens the gear menu over the whole page', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    readyState.chaosKeys = 0;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    const user = userEvent.setup();
+
+    const { container } = render(<App />);
+    const settings = await screen.findByRole('button', { name: 'Settings & save tools' });
+
+    const keys = container.querySelector('header [data-tour="keys"]') as HTMLElement;
+    expect(keys.textContent?.replace(/\s+/g, ' ')).toMatch(/^Keys\s*\d+\s*Omni\s*\d+\s*Chaos\s*0$/);
+
+    await user.click(settings);
+    const menu = await screen.findByRole('menu', { name: 'Settings & save tools' }, { timeout: 10_000 });
+    // On the body, not inside the blurred header that used to trap its dismiss layer.
+    expect(menu.closest('header')).toBeNull();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(settings);
+  }, 15_000);
 
   it('offers the save export without claiming it is encrypted', async () => {
     const readyState = JSON.parse(seedOnboardingRun());
@@ -247,9 +295,9 @@ describe('App changelog lifecycle', () => {
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Settings & save tools' }));
 
-    const exportButton = screen.getByRole('button', { name: 'Export save file (.fate)' });
+    const exportButton = await screen.findByRole('menuitem', { name: 'Export save file (.fate)' }, { timeout: 10_000 });
     expect(exportButton.getAttribute('title')).toContain("isn't encrypted");
-    expect(screen.queryByRole('button', { name: /encrypted/i })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: /encrypted/i })).toBeNull();
   }, 15_000);
   it.each([
     [28, 'Level Up + Chaos Key!'],
@@ -400,10 +448,10 @@ describe('App changelog lifecycle', () => {
     const durableBeforeEviction = storage.getItem(profileKey);
     expect(getPendingSave(profileKey)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
-    const animations = screen.getByRole('button', { name: /Animations/ });
+    const animations = await screen.findByRole('menuitemcheckbox', { name: /Animations/ }, { timeout: 10_000 });
     await user.click(animations);
     const expectedAnimations = !readyState.animationsEnabled;
-    expect(animations.getAttribute('aria-pressed')).toBe(String(expectedAnimations));
+    expect(animations.getAttribute('aria-checked')).toBe(String(expectedAnimations));
 
     const incoming = {
       version: 2,
@@ -464,7 +512,7 @@ describe('App changelog lifecycle', () => {
     await new Promise(resolve => window.setTimeout(resolve, 550));
     expect(getPendingSave(profileKey)).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
-    const animations = screen.getByRole('button', { name: /Animations/ });
+    const animations = await screen.findByRole('menuitemcheckbox', { name: /Animations/ }, { timeout: 10_000 });
     await user.click(animations);
     const expectedAnimations = !readyState.animationsEnabled;
 
@@ -647,9 +695,9 @@ describe('App changelog lifecycle', () => {
       name: 'Settings & save tools',
     });
     await user.click(settings);
-    await user.click(screen.getByRole('button', {
+    await user.click(await screen.findByRole('menuitem', {
       name: 'RuneLite Plugin Guide',
-    }));
+    }, { timeout: 10_000 }));
 
     // The guide loads lazily, which takes a while under a full test run.
     const guideDialog = await screen.findByRole('dialog', {
@@ -700,7 +748,7 @@ describe('App changelog lifecycle', () => {
     await new Promise(resolve => window.setTimeout(resolve, 550));
     failedWriteKey = profileKey;
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
-    await user.click(screen.getByRole('button', { name: /Animations/ }));
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Animations/ }, { timeout: 10_000 }));
 
     const alert = await screen.findByRole('alert', undefined, { timeout: 2_000 });
     expect(alert.textContent).toContain("Progress isn't being saved");
@@ -735,8 +783,8 @@ describe('App changelog lifecycle', () => {
     const conflict = await screen.findByRole('alert');
     expect(conflict.textContent).toContain('This profile is open in another tab');
     await user.click(screen.getByRole('button', { name: 'Settings & save tools' }));
-    await user.click(screen.getByRole('button', { name: /Animations/ }));
-    expect(screen.getByRole('button', { name: /Animations/ }).getAttribute('aria-pressed'))
+    await user.click(await screen.findByRole('menuitemcheckbox', { name: /Animations/ }, { timeout: 10_000 }));
+    expect(screen.getByRole('menuitemcheckbox', { name: /Animations/ }).getAttribute('aria-checked'))
       .toBe(String(!readyState.animationsEnabled));
     await new Promise(resolve => window.setTimeout(resolve, 550));
     expect(JSON.parse(values.get(profileKey)!).animationsEnabled)

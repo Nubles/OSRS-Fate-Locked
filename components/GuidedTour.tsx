@@ -48,8 +48,13 @@ export const GuidedTour: React.FC<{ gameModeId?: string }> = ({ gameModeId }) =>
   const measure = useCallback(() => {
     if (!step || !step.sel) { setRect(null); return; }
     const el = document.querySelector(step.sel) as HTMLElement | null;
-    setRect(el ? el.getBoundingClientRect() : null);
-    el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const box = el?.getBoundingClientRect();
+    // A target hidden on this screen size (a phone keeps the Altar and
+    // Jump to behind the header menu) measures 0x0: centre the card instead
+    // of spotlighting the top-left corner.
+    const shown = !!box && box.width > 0 && box.height > 0;
+    setRect(shown ? box : null);
+    if (shown) el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [step]);
 
   useLayoutEffect(() => { if (active) measure(); }, [active, i, measure]);
