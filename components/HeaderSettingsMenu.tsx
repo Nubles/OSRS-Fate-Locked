@@ -17,6 +17,8 @@ interface HeaderSettingsMenuProps {
   onExportSave: () => void;
   setShowSyncCode: (show: boolean) => void;
   setShowDiscord: (show: boolean) => void;
+  /** Set only on the tracker's old address, while the move is switched on. */
+  onMoveAddress?: () => void;
 }
 
 /**
@@ -24,7 +26,7 @@ interface HeaderSettingsMenuProps {
  * It loads on first open (App.tsx warms it at idle), keeping the entry chunk small.
  */
 const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
-  anchorRef, onClose, onOpenRuneliteGuide, onOpenChangelog, onImportSave, onExportSave, setShowSyncCode, setShowDiscord,
+  anchorRef, onClose, onOpenRuneliteGuide, onOpenChangelog, onImportSave, onExportSave, setShowSyncCode, setShowDiscord, onMoveAddress,
 }) => {
   const uiStyle = useUiStyle();
   const osrsFits = useIsWideEnoughForOsrs();
@@ -79,6 +81,11 @@ const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
         <button type="button" role="menuitem" onClick={() => pickUtil(() => { setShowDiscord(true); })} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-indigo-300">
            <Radio size={13} /> Discord notifications
         </button>
+        {onMoveAddress && (
+          <button type="button" role="menuitem" onClick={() => pickUtil(onMoveAddress)} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-amber-300 hover:bg-white/5 hover:text-amber-200">
+             <Link2 size={13} /> Move to the new address
+          </button>
+        )}
         <div role="separator" className="my-1 border-t border-white/10" />
         <button type="button" role="menuitem" onClick={() => pickUtil(() => { if(window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); })} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
            <RotateCcw size={13} /> Reset all progress

@@ -36,6 +36,8 @@ export interface OsrsHeaderProps {
   onImportSave: () => void;
   onExportSave: () => void;
   onRuneliteExport: () => void;
+  /** Only on the old address once the new one is set (utils/moveRole.ts). */
+  onMoveAddress?: () => void;
 }
 
 /* Small stroked icons in the stone buttons' text colour (orange, white on hover). */
@@ -65,7 +67,7 @@ const useRelayDot = (): { colour: string; label: string } | null => {
 export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain,
   setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog,
-  onImportSave, onExportSave, onRuneliteExport,
+  onImportSave, onExportSave, onRuneliteExport, onMoveAddress,
 }) => {
   const uiStyle = useUiStyle();
   const {
@@ -240,6 +242,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onExportSave)} title={FATE_EXPORT_HINT}>Export save file (.fate)</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => setShowSyncCode(true))}>Sync code (move device)</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => setShowDiscord(true))}>Discord notifications</button>
+                  {onMoveAddress && <button type="button" className="osrs-menu-item" onClick={closeThen(onMoveAddress)}>Move to the new address</button>}
                   <div className="osrs-menu-sep" />
                   <button type="button" className="osrs-menu-item is-danger" onClick={closeThen(() => { if (window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); })}>Reset all progress</button>
                 </div>

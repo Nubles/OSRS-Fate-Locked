@@ -55,6 +55,11 @@ import {
 } from './utils/changelogState';
 import { relaySync } from './services/relaySync';
 import { parseRunelitePairFragment } from './utils/runelitePairing';
+import { moveRole } from './utils/moveRole';
+import { NEW_TRACKER_URL } from './config/trackerAddress';
+
+const ON_OLD_ADDRESS = NEW_TRACKER_URL !== '' && typeof window !== 'undefined' && moveRole(window.location.origin) === 'old';
+const openMoveAddress = () => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:move-address' } }));
 import {
   hasRuneliteGuideQuery,
   removeRuneliteGuideQuery,
@@ -78,6 +83,8 @@ const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner
 const RelayPublishBanner = lazyWithRetry(() => import('./components/RelayPublishBanner'));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
+// The old address's move banner and dialog; only there, and only once the new address is set.
+const MoveAddressDriver = /* @__PURE__ */ lazyWithRetry(() => import('./components/MoveAddressDriver'));
 // The release notes load with the modal; only the latest release's id is
 // needed up front, to decide whether What's New opens.
 const ChangelogModal = lazyWithRetry(() =>
@@ -482,6 +489,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
           setShowGameMode={setShowGameMode} setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord}
           onOpenRuneliteGuide={onOpenRuneliteGuide} onOpenChangelog={onOpenChangelog}
           onImportSave={() => fileInputRef.current?.click()} onExportSave={handleExport} onRuneliteExport={exportRunelite}
+          onMoveAddress={ON_OLD_ADDRESS ? openMoveAddress : undefined}
         />
       </Suspense>
     </>
@@ -627,7 +635,8 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                      <HeaderSettingsMenu anchorRef={settingsTriggerRef} onClose={closeUtilMenu}
                        onOpenRuneliteGuide={onOpenRuneliteGuide} onOpenChangelog={onOpenChangelog}
                        onImportSave={() => fileInputRef.current?.click()} onExportSave={handleExport}
-                       setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord} />
+                       setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord}
+                       onMoveAddress={ON_OLD_ADDRESS ? openMoveAddress : undefined} />
                    </Suspense>
                  )}
              </div>
@@ -1119,6 +1128,7 @@ const GameLayout = () => {
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
+      {ON_OLD_ADDRESS && <Suspense fallback={null}><MoveAddressDriver /></Suspense>}
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as
