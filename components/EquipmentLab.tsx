@@ -78,7 +78,7 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
+      <div className="flex flex-wrap lg:flex-nowrap gap-2 lg:gap-0 justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
         <div className="flex items-center gap-3">
           <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" suspendModals={suspendModals} /></h3>
           {/* Tiers / Gear mode toggle */}
