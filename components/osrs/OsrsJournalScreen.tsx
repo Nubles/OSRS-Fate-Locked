@@ -7,6 +7,7 @@ import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
 import { CA_DATA } from '../../data/caData';
 import { ALL_CA_TASKS, type CATask } from '../../data/caTasks';
 import { DROP_RATES } from '../../config/rules';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { caTaskLockedBoss } from '../../utils/caProgress';
 import { evaluateDiaryTaskEligibility, type EligibilityBlocker } from '../../utils/journalStatus';
 import { isAlmostThere } from '../../utils/journalProgress';
@@ -152,9 +153,15 @@ export const OsrsJournalScreen: React.FC = () => {
 
   /* ── Lists ─────────────────────────────────────────────────────────────── */
 
+  // Lists sort by each source's base rate; the rows and the footer show the
+  // chance the roll is made against, the run's boosts included.
   const questRate = (q: QuestData) => DROP_RATES[q.difficulty] ?? 0;
   const taskRate = (t: DiaryTask) => DROP_RATES[DIARY_DATA[t.tierId]?.difficulty] ?? 0;
   const caRate = (t: CATask) => DROP_RATES[CA_DATA[t.tierId]?.difficulty] ?? 0;
+  const chanceOf = useSourceKeyChance();
+  const questChance = (q: QuestData) => chanceOf(q.difficulty) ?? 0;
+  const taskChance = (t: DiaryTask) => chanceOf(DIARY_DATA[t.tierId]?.difficulty) ?? 0;
+  const caChance = (t: CATask) => chanceOf(CA_DATA[t.tierId]?.difficulty) ?? 0;
 
   const readyQuests = useMemo(() => quest.allQuests
     .filter(q => q.status !== 'COMPLETED' && q.eligibility.eligible)
@@ -240,9 +247,9 @@ export const OsrsJournalScreen: React.FC = () => {
     };
 
     if (tab === 'ready') {
-      const qs = pick(readyQuests, q => questHit(q)).map(([q, h]) => row({ kind: 'quest', id: q.id }, q.name, { keyText: pct(DROP_RATES[q.difficulty]), ...h }));
-      const ds = pick(readyTasks, taskHit).map(([t, h]) => row({ kind: 'task', id: t.id }, t.description, { keyText: pct(taskRate(t)), tip: t.tierId, ...h }));
-      const cs = pick(readyCA, t => caHit(t, false)).map(([t, h]) => row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { keyText: pct(caRate(t)), tip: `${t.tierId} · ${t.monster}`, ...h }));
+      const qs = pick(readyQuests, q => questHit(q)).map(([q, h]) => row({ kind: 'quest', id: q.id }, q.name, { keyText: pct(questChance(q)), ...h }));
+      const ds = pick(readyTasks, taskHit).map(([t, h]) => row({ kind: 'task', id: t.id }, t.description, { keyText: pct(taskChance(t)), tip: t.tierId, ...h }));
+      const cs = pick(readyCA, t => caHit(t, false)).map(([t, h]) => row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { keyText: pct(caChance(t)), tip: `${t.tierId} · ${t.monster}`, ...h }));
       section({ key: 'h-q', title: 'Quests', icon: 'quest', count: String(readyQuests.length) }, readyQuests.length, qs, 'No quest is ready yet.');
       section({ key: 'h-d', title: 'Diary tasks', icon: 'diary', count: String(readyTasks.length) }, readyTasks.length, ds, 'No diary task is doable yet.');
       section({ key: 'h-c', title: 'Combat Achievements', icon: 'ca', count: String(readyCA.length) }, readyCA.length, cs, 'No task at an unlocked boss.');
@@ -312,7 +319,7 @@ export const OsrsJournalScreen: React.FC = () => {
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, query, questStart, readyQuests, readyTasks, readyCA, almostQuests, almostTasks, quest.groupBySeries, quest.seriesGroups,
-    quest.mainQuests, quest.miniquests, diary.sortedDiaries, ca.filteredCAs, ca.totalPoints, openCATier, unlocks, gameModeId, areaRoutes, caTasksOf]);
+    quest.mainQuests, quest.miniquests, diary.sortedDiaries, ca.filteredCAs, ca.totalPoints, openCATier, unlocks, gameModeId, areaRoutes, caTasksOf, chanceOf]);
 
   const navRows = useMemo(() => items.filter((i): i is Extract<Item, { t: 'row' }> => i.t === 'row'), [items]);
   const noMatches = searching && navRows.length === 0;
@@ -499,10 +506,10 @@ export const OsrsJournalScreen: React.FC = () => {
   /* ── Footer numbers ────────────────────────────────────────────────────── */
 
   const readyCount = readyQuests.length + readyTasks.length + readyCA.length;
-  const keysWaiting = (readyQuests.reduce((s, q) => s + questRate(q), 0)
-    + readyTasks.reduce((s, t) => s + taskRate(t), 0)
-    + readyCA.reduce((s, t) => s + caRate(t), 0)) / 100;
-  const keysWaitingText = readyCount === 0 ? 'none yet' : keysWaiting < 1 ? 'under 1 at base chance' : `about ${Math.round(keysWaiting)} at base chance`;
+  const keysWaiting = (readyQuests.reduce((s, q) => s + questChance(q), 0)
+    + readyTasks.reduce((s, t) => s + taskChance(t), 0)
+    + readyCA.reduce((s, t) => s + caChance(t), 0)) / 100;
+  const keysWaitingText = readyCount === 0 ? 'none yet' : keysWaiting < 1 ? 'under 1' : `about ${Math.round(keysWaiting)}`;
 
   const routeCheckFor = (id: string): string | null => {
     if (!doability.isChunked) return null;

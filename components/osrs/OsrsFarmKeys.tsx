@@ -7,7 +7,6 @@ import { useGame } from '../../context/GameContext';
 import { evaluateActivityReadiness } from '../../utils/activityReadiness';
 import { getUtilityActivityReq } from '../../utils/utilityReadiness';
 import { wikiService } from '../../services/WikiService';
-import { LEVEL_ROLL_MAX } from '../../config/economy';
 import {
   BRUTUS_BOSS_NAME,
   CLUE_ONBOARDING_MINIMUMS,
@@ -376,7 +375,7 @@ const OsrsPetClaim: React.FC<{ claimed: readonly number[] | undefined; onClaim: 
 };
 
 // ── Other Key Sources (not on the boards): a small stone button opens them. ─
-const OtherSources: React.FC<{ journalMin: number; journalMax: number; statsIcon: string; collLogIcon: string; onClose: () => void; className: string }> = (p) => (
+const OtherSources: React.FC<{ journalMin: number; journalMax: number; skillRateText: string; collectionRate: number; statsIcon: string; collLogIcon: string; onClose: () => void; className: string }> = (p) => (
   <div className={`osrs-win okf-other ${p.className}`} role="dialog" aria-label="Other Key Sources">
     <div className="okf-other-head">
       <h2 className="okf-wtitle">Other Key Sources</h2>
@@ -385,12 +384,12 @@ const OtherSources: React.FC<{ journalMin: number; journalMax: number; statsIcon
       </button>
     </div>
     <div className="osrs-inner">
-      <div className="okf-other-row" data-examine={`Click unlocked skills in the Dashboard to roll. Chance = Level / 5 (up to ${LEVEL_ROLL_MAX.toFixed(1)}%).`} data-examine-name="Skill Rolling">
+      <div className="okf-other-row" data-examine={`Click unlocked skills in the Dashboard to roll. ${p.skillRateText}.`} data-examine-name="Skill Rolling">
         <img className="osrs-px" src={p.statsIcon} alt="" aria-hidden="true" />
         <div>
           <div className="label">Skill Rolling</div>
           <div className="desc">Click unlocked skills in the <em>Dashboard</em> to roll.</div>
-          <div className="rate">Chance = Level / 5 (up to {LEVEL_ROLL_MAX.toFixed(1)}%)</div>
+          <div className="rate">{p.skillRateText}</div>
         </div>
       </div>
       <div className="okf-other-row" data-examine={`Complete Quests, Diaries and CAs in the Journal Tab. Variable (${p.journalMin}% - ${p.journalMax}%).`} data-examine-name="Journal Activities">
@@ -401,12 +400,12 @@ const OtherSources: React.FC<{ journalMin: number; journalMax: number; statsIcon
           <div className="rate">Variable ({p.journalMin}% - {p.journalMax}%)</div>
         </div>
       </div>
-      <div className="okf-other-row" data-examine={`Log new unique items in the Collection Log Tab to roll. ${DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance.`} data-examine-name="Collection Log">
+      <div className="okf-other-row" data-examine={`Log new unique items in the Collection Log Tab to roll. ${p.collectionRate}% Drop Chance.`} data-examine-name="Collection Log">
         <img src={p.collLogIcon} alt="" aria-hidden="true" />
         <div>
           <div className="label">Collection Log</div>
           <div className="desc">Log new unique items in the <em>Collection Log Tab</em> to roll.</div>
-          <div className="rate">{DROP_RATES[DropSource.COLLECTION_LOG]}% Drop Chance</div>
+          <div className="rate">{p.collectionRate}% Drop Chance</div>
         </div>
       </div>
     </div>
@@ -578,7 +577,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const [pending, setPending] = useState<PendingRoll | null>(null);
   const [otherOpen, setOtherOpen] = useState(false);
   const [minigameQuery, setMinigameQuery] = useState('');
-  const { isVanilla, reserves, boost, bonusFor, effectiveRate, handleRoll } = p;
+  const { isVanilla, reserves, bonusFor, effectiveRate, handleRoll } = p;
   useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
@@ -629,7 +628,8 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const clueCards: CardModel[] = p.clues.map((c) => {
     const baseRate = DROP_RATES[c.source];
     const vanillaRate = effectiveVanillaClueRate(baseRate, p.clueKeysAwarded);
-    const rate = isVanilla ? Math.min(100, vanillaRate + boost(c.source)) : effectiveRate(c.source);
+    const clueContext: KeyRollContext | undefined = isVanilla ? { kind: 'clue', clueTier: c.tier } : undefined;
+    const rate = effectiveRate(c.source, baseRate, clueContext);
     // The subline: the onboarding rate while it applies, else this tier's own
     // tally on the compact list (the wide card already shows it as its stats).
     const onboarding = isVanilla && p.clueKeysAwarded < CLUE_ONBOARDING_MINIMUMS.length && vanillaRate > baseRate;
@@ -643,7 +643,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       name,
       sub: 'Treasure Trails',
       rate,
-      bonus: isVanilla ? boost(c.source) : bonusFor(c.source),
+      bonus: bonusFor(c.source, baseRate, clueContext),
       art: { kind: 'item', src: sprite },
       thumb: { src: sprite, item: true },
       status: ready,
@@ -654,7 +654,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       examine: `Clue scroll (${c.tier.toLowerCase()}). ${rate}% chance of a Key per casket.`,
       onRoll: roll(
         { who: `Clue scroll (${c.tier.toLowerCase()})`, head: sprite, headIsItem: true },
-        c.source, baseRate, isVanilla ? { kind: 'clue', clueTier: c.tier } : undefined,
+        c.source, baseRate, clueContext,
       ),
     };
   });
@@ -667,8 +667,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       const source = bossClass === 'brutus' ? TIER_SOURCE.low : TIER_SOURCE[bossClass];
       const stage = vanillaBossKeyStage(name, bossStandardKeysAwarded?.[name] ?? 0);
       const baseRate = stage.currentRate ?? 0;
-      // Shown with achievement boosts; the roll passes the base rate and the reducer adds them.
-      const rate = stage.currentRate === null ? 0 : Math.min(100, stage.currentRate + boost(source));
+      const bossContext: KeyRollContext = { kind: 'boss', bossName: name, bossClass };
+      // Shown with the run's boosts; the roll passes the base rate and the reducer adds them.
+      const rate = effectiveRate(source, baseRate, bossContext);
       const note = vanillaBossNote(name, unlocks.quests);
       const body = npcBody(name);
       const head = npcHead(name);
@@ -683,7 +684,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         name,
         sub: `${classLabel} boss · stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}`,
         rate: stage.capped ? (stage.rates[stage.rates.length - 1] ?? 0) : rate,
-        bonus: stage.capped ? 0 : boost(source),
+        bonus: stage.capped ? 0 : bonusFor(source, baseRate, bossContext),
         art: body ? { kind: 'body', src: body, big: isBigBody(name) } : { kind: 'wikiName', name },
         thumb: head ? { src: head } : { wikiName: name },
         status: stage.capped
@@ -703,7 +704,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         examine: stage.capped
           ? `${classLabel} boss. All ${stage.cap} Key${stage.cap === 1 ? '' : 's'} paid: kills no longer roll for Keys or Fate.`
           : `${classLabel} boss. Stash of ${stage.cap} Key${stage.cap === 1 ? '' : 's'} at ${rates}. ${rate}% chance of a Key per kill now.`,
-        onRoll: roll({ who: name, head: head ?? KEY_IMG, headIsItem: !head }, source, baseRate, { kind: 'boss', bossName: name, bossClass }),
+        onRoll: roll({ who: name, head: head ?? KEY_IMG, headIsItem: !head }, source, baseRate, bossContext),
       };
     }) : [];
 
@@ -714,15 +715,17 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
     .sort((left, right) => left.localeCompare(right))
     .map((name) => {
       const stage = vanillaMinigameKeyStage(name, p.minigameKeysAwarded?.[name] ?? 0);
-      const rate = stage.currentRate ?? 0;
+      const baseRate = stage.currentRate ?? 0;
+      const minigameContext: KeyRollContext = { kind: 'minigame', minigameName: name };
+      const rate = effectiveRate(DropSource.ACTIVITY_MINIGAME, baseRate, minigameContext);
       const rates = stage.rates.map((r) => `${r}%`).join(', then ');
-      const noFate = !stage.capped && !minigameMissPaysFate(rate);
+      const noFate = !stage.capped && !minigameMissPaysFate(baseRate);
       return {
         id: name,
         name,
         sub: `Minigame · stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}`,
         rate: stage.capped ? (stage.rates[stage.rates.length - 1] ?? 0) : rate,
-        bonus: 0,
+        bonus: stage.capped ? 0 : bonusFor(DropSource.ACTIVITY_MINIGAME, baseRate, minigameContext),
         art: { kind: 'item', src: MINIGAME_IMG },
         thumb: { src: MINIGAME_IMG, item: true },
         status: stage.capped
@@ -741,7 +744,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         examine: stage.capped
           ? `Minigame. All ${stage.cap} Key${stage.cap === 1 ? '' : 's'} paid: games no longer roll for Keys or Fate.`
           : `Minigame. Stash of ${stage.cap} Key${stage.cap === 1 ? '' : 's'} at ${rates}. ${rate}% chance of a Key per game now.`,
-        onRoll: roll({ who: name, head: MINIGAME_IMG, headIsItem: true }, DropSource.ACTIVITY_MINIGAME, rate, { kind: 'minigame', minigameName: name }),
+        onRoll: roll({ who: name, head: MINIGAME_IMG, headIsItem: true }, DropSource.ACTIVITY_MINIGAME, baseRate, minigameContext),
       };
     }) : [];
 
@@ -847,7 +850,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const petClaim = subTab === 'ACTIVITIES'
     ? <OsrsPetClaim claimed={petsClaimed} wide={wide} onClaim={(pet, e) => claimPet(pet, e.clientX, e.clientY)} /> : null;
   const other = otherOpen && (
-    <OtherSources journalMin={p.journalMin} journalMax={p.journalMax} statsIcon={p.statsIcon} collLogIcon={p.collLogIcon}
+    <OtherSources journalMin={p.journalMin} journalMax={p.journalMax} skillRateText={p.skillRateText} collectionRate={p.collectionRate} statsIcon={p.statsIcon} collLogIcon={p.collLogIcon}
       onClose={() => setOtherOpen(false)} className={wide ? 'at-wide' : 'at-compact'} />
   );
   const otherBtn = (

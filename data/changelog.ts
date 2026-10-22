@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-key-chance-match',
+    title: 'Every screen shows the same Key chance',
+    date: '2026-10-22',
+    sections: {
+      fixed: [
+        'The OSRS layout now shows the same Key chance as the classic one, including achievement boosts.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
