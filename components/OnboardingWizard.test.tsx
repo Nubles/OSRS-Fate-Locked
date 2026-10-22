@@ -14,7 +14,10 @@ vi.mock('../context/GameContext', () => ({
   useGame: () => ({ completeOnboarding, history }),
 }));
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  completeOnboarding.mockClear();
+});
 
 const stepTexts = (): string[] => {
   render(<OnboardingWizard />);
@@ -82,5 +85,48 @@ describe('OnboardingWizard finish', () => {
     }
     expect(completeOnboarding).toHaveBeenCalledTimes(1);
     expect(localStorage.getItem(CHANGELOG_STORAGE_KEY)).toBe('2026-09-01-older');
+  });
+});
+
+describe('OnboardingWizard controls', () => {
+  const stepLabel = () => document.body.textContent?.match(/Step (\d) \/ 5/)?.[1];
+
+  it('is a modal dialog named by the step title', () => {
+    render(<OnboardingWizard />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('aria-labelledby')).toBe('onboarding-title');
+    expect(document.getElementById('onboarding-title')?.textContent).toContain('Fate Locked');
+  });
+
+  it('starts on Next, shows Back from step 2, and Back returns to step 1', () => {
+    render(<OnboardingWizard />);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(stepLabel()).toBe('2');
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(stepLabel()).toBe('1');
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    // Focus doesn't fall out of the dialog when the Back button it was on goes away.
+    expect(screen.getByRole('dialog').contains(document.activeElement)).toBe(true);
+    expect(completeOnboarding).not.toHaveBeenCalled();
+  });
+
+  it('Skip intro leaves through the same exit as Start, on to the mode choice', () => {
+    render(<OnboardingWizard />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip intro' }));
+    expect(completeOnboarding).toHaveBeenCalledTimes(1);
+  });
+
+  it('Escape steps back and never closes the intro', () => {
+    render(<OnboardingWizard />);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(stepLabel()).toBe('1');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(stepLabel()).toBe('2');
+    expect(completeOnboarding).not.toHaveBeenCalled();
   });
 });
