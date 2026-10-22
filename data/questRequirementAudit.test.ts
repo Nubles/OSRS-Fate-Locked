@@ -215,12 +215,12 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries).toHaveLength(212);
-    expect(audit.entries).toHaveLength(212);
+    expect(official.entries).toHaveLength(213);
+    expect(audit.entries).toHaveLength(213);
     expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(193);
-    expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
+    expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(20);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(193);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(20);
   });
 
   it('pins schema-2 Chunk Picker provenance to the commits used by the audit entries', () => {
@@ -234,6 +234,8 @@ describe('official quest and miniquest audit coverage', () => {
       'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
       'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
       'fa71ed3b207e6a501444987dee23b875ec27cacd',
+      // The Fractured Archive (miniquest), October 2026.
+      '629e9fee6183773e8df26d7e4bc5db792290ce0b',
     ]);
     expect([...new Set(snapshot.entries.map(entry => entry.chunkSourceCommit))].sort())
       .toEqual([...snapshot.chunkSourceCommits].sort());
@@ -249,6 +251,7 @@ describe('official quest and miniquest audit coverage', () => {
       'ba2fcebf8b26c84c74f8d9ab328a0ede802be926',
       'a9a5c74760eb76dbe39f90d2b04f023fc1de3746',
       'fa71ed3b207e6a501444987dee23b875ec27cacd',
+      '629e9fee6183773e8df26d7e4bc5db792290ce0b',
     ];
     accepted.entries[0].chunkSourceCommit = 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746';
     expect(validateQuestRequirementAudit(QUEST_DATA, official, accepted).errors).toEqual([]);
@@ -358,9 +361,9 @@ describe('official quest and miniquest audit coverage', () => {
       .toEqual(['Desert Treasure I']);
   });
 
-  it('has reviewed evidence and matching requirements for all 19 miniquests', () => {
+  it('has reviewed evidence and matching requirements for all 20 miniquests', () => {
     const rows = audit.entries.filter(entry => entry.kind === 'miniquest');
-    expect(rows).toHaveLength(19);
+    expect(rows).toHaveLength(20);
     expect(rows.flatMap(entry => {
       if (entry.status !== 'unresolved') return [];
       return entry.discrepancy && entry.conservativeReason ? [] : [entry.id];
@@ -373,11 +376,12 @@ describe('official quest and miniquest audit coverage', () => {
     })).toEqual([]);
   });
 
-  it('leaves only the two concrete miniquest evidence conflicts unresolved', () => {
+  it('leaves only the three concrete miniquest evidence conflicts unresolved', () => {
+    // The Fractured Archive is newer than the pinned Chunk Picker export.
     expect(audit.entries
       .filter(entry => entry.kind === 'miniquest' && entry.status === 'unresolved')
       .map(entry => entry.id))
-      .toEqual(['Bear Your Soul', 'The Enchanted Key']);
+      .toEqual(['Bear Your Soul', 'The Enchanted Key', 'The Fractured Archive']);
   });
 
   it('records concrete source gaps for every generated discrepancy category', () => {
