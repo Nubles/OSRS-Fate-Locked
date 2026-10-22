@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-22",
+  "reviewedAt": "2026-10-22",
   "listSource": {
-    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15289823",
-    "revision": 15289823,
-    "revisionTimestamp": "2026-08-07T15:03:30Z"
+    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15366661",
+    "revision": 15366661,
+    "revisionTimestamp": "2026-10-06T09:31:48Z"
   },
   "parsedCounts": {
     "quests": 194,
-    "miniquests": 19
+    "miniquests": 20
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 193/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 193/20 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -91,9 +91,9 @@
       "kind": "miniquest",
       "pageTitle": "Alfred Grimhand's Barcrawl",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Alfred_Grimhand's_Barcrawl&oldid=15237159",
-        "revision": 15237159,
-        "revisionTimestamp": "2026-06-21T16:35:10Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Alfred_Grimhand's_Barcrawl&oldid=15366023",
+        "revision": 15366023,
+        "revisionTimestamp": "2026-10-05T20:29:48Z"
       }
     },
     {
@@ -101,9 +101,9 @@
       "kind": "quest",
       "pageTitle": "Animal Magnetism",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15327014",
-        "revision": 15327014,
-        "revisionTimestamp": "2026-09-01T06:32:15Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15365722",
+        "revision": 15365722,
+        "revisionTimestamp": "2026-10-05T17:09:17Z"
       }
     },
     {
@@ -201,9 +201,9 @@
       "kind": "quest",
       "pageTitle": "Black Knights' Fortress",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Black_Knights'_Fortress&oldid=15350628",
-        "revision": 15350628,
-        "revisionTimestamp": "2026-09-18T22:58:46Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Black_Knights'_Fortress&oldid=15367061",
+        "revision": 15367061,
+        "revisionTimestamp": "2026-10-06T19:25:28Z"
       }
     },
     {
@@ -331,9 +331,9 @@
       "kind": "miniquest",
       "pageTitle": "Daddy's Home",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15233724",
-        "revision": 15233724,
-        "revisionTimestamp": "2026-06-14T23:34:03Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15337234",
+        "revision": 15337234,
+        "revisionTimestamp": "2026-09-09T12:30:37Z"
       }
     },
     {
@@ -371,9 +371,9 @@
       "kind": "quest",
       "pageTitle": "Death to the Dorgeshuun",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_to_the_Dorgeshuun&oldid=15331188",
-        "revision": 15331188,
-        "revisionTimestamp": "2026-09-05T01:23:44Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Death_to_the_Dorgeshuun&oldid=15373692",
+        "revision": 15373692,
+        "revisionTimestamp": "2026-10-16T02:29:43Z"
       }
     },
     {
@@ -391,9 +391,9 @@
       "kind": "quest",
       "pageTitle": "Demon Slayer",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Demon_Slayer&oldid=15309237",
-        "revision": 15309237,
-        "revisionTimestamp": "2026-08-19T19:54:26Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Demon_Slayer&oldid=15369950",
+        "revision": 15369950,
+        "revisionTimestamp": "2026-10-10T12:11:05Z"
       }
     },
     {
@@ -591,9 +591,9 @@
       "kind": "quest",
       "pageTitle": "Fairytale II - Cure a Queen",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_II_-_Cure_a_Queen&oldid=15266901",
-        "revision": 15266901,
-        "revisionTimestamp": "2026-07-18T11:18:07Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Fairytale_II_-_Cure_a_Queen&oldid=15372454",
+        "revision": 15372454,
+        "revisionTimestamp": "2026-10-14T15:37:24Z"
       }
     },
     {
@@ -661,9 +661,9 @@
       "kind": "quest",
       "pageTitle": "Garden of Tranquillity",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Garden_of_Tranquillity&oldid=15264105",
-        "revision": 15264105,
-        "revisionTimestamp": "2026-07-15T12:43:34Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Garden_of_Tranquillity&oldid=15379032",
+        "revision": 15379032,
+        "revisionTimestamp": "2026-10-22T02:33:43Z"
       }
     },
     {
@@ -691,9 +691,9 @@
       "kind": "quest",
       "pageTitle": "Ghosts Ahoy",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15315208",
-        "revision": 15315208,
-        "revisionTimestamp": "2026-08-21T05:12:34Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ghosts_Ahoy&oldid=15360836",
+        "revision": 15360836,
+        "revisionTimestamp": "2026-10-02T22:12:30Z"
       }
     },
     {
@@ -771,9 +771,9 @@
       "kind": "miniquest",
       "pageTitle": "Hopespear's Will",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15262386",
-        "revision": 15262386,
-        "revisionTimestamp": "2026-07-13T10:45:53Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15335611",
+        "revision": 15335611,
+        "revisionTimestamp": "2026-09-08T18:45:54Z"
       }
     },
     {
@@ -791,9 +791,9 @@
       "kind": "quest",
       "pageTitle": "Icthlarin's Little Helper",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15264128",
-        "revision": 15264128,
-        "revisionTimestamp": "2026-07-15T12:54:13Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15365541",
+        "revision": 15365541,
+        "revisionTimestamp": "2026-10-05T16:28:26Z"
       }
     },
     {
@@ -951,9 +951,9 @@
       "kind": "quest",
       "pageTitle": "Making Friends with My Arm",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_Friends_with_My_Arm&oldid=15265992",
-        "revision": 15265992,
-        "revisionTimestamp": "2026-07-17T11:51:06Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Making_Friends_with_My_Arm&oldid=15375040",
+        "revision": 15375040,
+        "revisionTimestamp": "2026-10-18T14:25:48Z"
       }
     },
     {
@@ -991,9 +991,9 @@
       "kind": "quest",
       "pageTitle": "Misthalin Mystery",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Misthalin_Mystery&oldid=15292395",
-        "revision": 15292395,
-        "revisionTimestamp": "2026-08-11T00:20:36Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Misthalin_Mystery&oldid=15367068",
+        "revision": 15367068,
+        "revisionTimestamp": "2026-10-06T19:26:15Z"
       }
     },
     {
@@ -1141,9 +1141,9 @@
       "kind": "quest",
       "pageTitle": "Pirate's Treasure",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15315445",
-        "revision": 15315445,
-        "revisionTimestamp": "2026-08-21T06:41:42Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Pirate's_Treasure&oldid=15367065",
+        "revision": 15367065,
+        "revisionTimestamp": "2026-10-06T19:25:56Z"
       }
     },
     {
@@ -1171,9 +1171,9 @@
       "kind": "quest",
       "pageTitle": "Prince Ali Rescue",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Prince_Ali_Rescue&oldid=15260348",
-        "revision": 15260348,
-        "revisionTimestamp": "2026-07-11T01:55:46Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Prince_Ali_Rescue&oldid=15375277",
+        "revision": 15375277,
+        "revisionTimestamp": "2026-10-18T19:17:36Z"
       }
     },
     {
@@ -1191,9 +1191,9 @@
       "kind": "quest",
       "pageTitle": "Rag and Bone Man I",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_I&oldid=15241026",
-        "revision": 15241026,
-        "revisionTimestamp": "2026-06-27T15:00:01Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_I&oldid=15292348",
+        "revision": 15292348,
+        "revisionTimestamp": "2026-08-10T23:45:33Z"
       }
     },
     {
@@ -1201,9 +1201,9 @@
       "kind": "quest",
       "pageTitle": "Rag and Bone Man II",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
-        "revision": 15273866,
-        "revisionTimestamp": "2026-07-24T09:05:30Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15376448",
+        "revision": 15376448,
+        "revisionTimestamp": "2026-10-20T00:41:53Z"
       }
     },
     {
@@ -1281,9 +1281,9 @@
       "kind": "quest",
       "pageTitle": "Recipe for Disaster/Freeing King Awowogei",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15331685",
-        "revision": 15331685,
-        "revisionTimestamp": "2026-09-05T18:57:43Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_King_Awowogei&oldid=15371864",
+        "revision": 15371864,
+        "revisionTimestamp": "2026-10-13T12:56:30Z"
       }
     },
     {
@@ -1431,9 +1431,9 @@
       "kind": "quest",
       "pageTitle": "Shades of Mort'ton",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shades_of_Mort'ton&oldid=15240980",
-        "revision": 15240980,
-        "revisionTimestamp": "2026-06-27T13:42:48Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Shades_of_Mort'ton&oldid=15292280",
+        "revision": 15292280,
+        "revisionTimestamp": "2026-08-10T23:19:46Z"
       }
     },
     {
@@ -1471,9 +1471,9 @@
       "kind": "quest",
       "pageTitle": "Sheep Shearer",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Shearer&oldid=15271780",
-        "revision": 15271780,
-        "revisionTimestamp": "2026-07-22T07:39:10Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Sheep_Shearer&oldid=15367050",
+        "revision": 15367050,
+        "revisionTimestamp": "2026-10-06T19:23:54Z"
       }
     },
     {
@@ -1691,9 +1691,9 @@
       "kind": "quest",
       "pageTitle": "The Feud",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Feud&oldid=15265909",
-        "revision": 15265909,
-        "revisionTimestamp": "2026-07-17T06:25:01Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Feud&oldid=15376145",
+        "revision": 15376145,
+        "revisionTimestamp": "2026-10-19T17:58:29Z"
       }
     },
     {
@@ -1714,6 +1714,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Forsaken_Tower&oldid=15270136",
         "revision": 15270136,
         "revisionTimestamp": "2026-07-20T12:33:28Z"
+      }
+    },
+    {
+      "id": "The Fractured Archive",
+      "kind": "miniquest",
+      "pageTitle": "The Fractured Archive (miniquest)",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fractured_Archive_(miniquest)&oldid=15379009",
+        "revision": 15379009,
+        "revisionTimestamp": "2026-10-22T01:21:09Z"
       }
     },
     {
@@ -1901,9 +1911,9 @@
       "kind": "quest",
       "pageTitle": "The Restless Ghost",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15331162",
-        "revision": 15331162,
-        "revisionTimestamp": "2026-09-05T00:42:30Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Restless_Ghost&oldid=15367047",
+        "revision": 15367047,
+        "revisionTimestamp": "2026-10-06T19:23:26Z"
       }
     },
     {
@@ -1931,9 +1941,9 @@
       "kind": "quest",
       "pageTitle": "The Tourist Trap",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15350316",
-        "revision": 15350316,
-        "revisionTimestamp": "2026-09-18T12:46:11Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15373730",
+        "revision": 15373730,
+        "revisionTimestamp": "2026-10-16T02:59:56Z"
       }
     },
     {
@@ -1951,9 +1961,9 @@
       "kind": "quest",
       "pageTitle": "Tower of Life",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tower_of_Life&oldid=15350496",
-        "revision": 15350496,
-        "revisionTimestamp": "2026-09-18T19:08:04Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tower_of_Life&oldid=15366014",
+        "revision": 15366014,
+        "revisionTimestamp": "2026-10-05T20:27:08Z"
       }
     },
     {
