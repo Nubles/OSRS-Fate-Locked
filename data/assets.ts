@@ -254,6 +254,7 @@ export const UTILITY_ITEM_IDS: Record<string, number> = {
   'Theatre of Blood': 22473,
   'Thermonuclear Smoke Devil': 12648,
   'Tombs of Amascut': 27352,
+  'The Fractured Archive': 34646, // Orion, its pet
   'TzHaar Fight Cave': 13225,
   'TzHaar-Ket-Rak\'s Challenges': 21291,
   'Vardorvis': 28248,
@@ -337,6 +338,7 @@ export const SPECIAL_ICONS: Record<string, string> = {
   'Brimhaven Agility Arena': 'Agility_arena_ticket.png',
   'Hallowed Sepulchre': 'Hallowed_mark.png',
   'Barracuda Trials': 'Barracuda_trials_icon.png',
+  "Pete Kayer's Challenges": "Pete's_vouchers.png",
   'Shooting Stars': 'Celestial_ring.png',
   'Barbarian Assault': 'Barbarian_Assault_logo.jpg',
   'Bounty Hunter': 'Skull_%28Bounty_Hunter%2C_skulled%29_icon_%285%29.png',
@@ -428,6 +430,7 @@ export const SPECIAL_ICONS: Record<string, string> = {
   'Theatre of Blood': 'Verzik_Vitur.png',
   'Thermonuclear Smoke Devil': 'Thermonuclear_smoke_devil.png',
   'Tombs of Amascut': 'Tombs_of_Amascut.png',
+  'The Fractured Archive': 'The_Fractured_Archive_logo.png',
   'TzHaar Fight Cave': 'Fire_cape.png',
   'TzHaar-Ket-Rak\'s Challenges': 'Tokkul.png',
   'Vardorvis': 'Vardorvis.png',
