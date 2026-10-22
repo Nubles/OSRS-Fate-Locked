@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-chaos-picks-a-table',
+    id: '2026-10-22-chaos-picks-a-table',
     title: 'Chaos Keys pick a table first',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       balance: [
         'Chaos Keys now pick a kind of unlock first, so skills and gear come up as often as areas and banks.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
