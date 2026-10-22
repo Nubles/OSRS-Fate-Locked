@@ -13,6 +13,8 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Chambers of Xeric': 'Kourend & Kebos',
   'Theatre of Blood': 'Morytania',
   'Tombs of Amascut': 'Kharidian Desert',
+  // Entered from the Chasm of Tears, through the Tears of Guthix cave in the Lumbridge Swamp Caves.
+  'The Fractured Archive': 'Misthalin',
   'The Gauntlet': 'Tirannwn',
   'The Nightmare': 'Morytania',
   "Phosani's Nightmare": 'Morytania',
@@ -118,6 +120,7 @@ export const ACTIVITY_REGIONS: Record<string, string> = {
   'Brimhaven Agility Arena': 'Karamja',
   'Hallowed Sepulchre': 'Morytania',
   'Barracuda Trials': 'The Open Seas',
+  "Pete Kayer's Challenges": 'Wilderness',
   'Intelligence Gathering': 'Kourend & Kebos',
   'Archery Competition': 'Kandarin',
 
