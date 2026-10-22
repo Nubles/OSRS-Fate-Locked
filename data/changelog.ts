@@ -47,6 +47,17 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-22-phones-scroll-normally',
+    title: 'The tracker on your phone',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'On a phone the tracker now scrolls like a normal page, with Farm Keys first, so a Slayer roll is one scroll away.',
+        'A slim top bar shows your Keys and Fate; the menu button holds everything else. The map and the Rules get the full width.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-new-content',
     title: 'A new raid and Pete Kayer’s Challenges',
     date: '2026-10-22',
