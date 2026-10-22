@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-chunked-omens',
+    title: 'Chunked beta: an omen on every chunk',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'Every chunk you gain now draws one of fate’s eight omens instead of 1 in 8 getting a mark. Half are boons, half are banes.',
+        'Boons: Blessed (+10 Fate), Gilded (a free 10% Key roll), Fortunate (next 3 rolls 5% better) and Chaotic (10% Chaos Key).',
+        'Banes: Cursed (next 3 rolls 5% worse, double Fate on fails), Withered (−10 Fate), Clouded (no Fate on fails) and Tangled.',
+        'A Tangled chunk means Fate’s Thread doesn’t pull your next chunk. No bane ever takes Keys, chunks or unlocks.',
+        'Fate’s spin now ends on the omen, and the map shows a + or − on each chunk you hold. The Omens button hides them.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-new-content',
     title: 'A new raid and Pete Kayer’s Challenges',
     date: '2026-10-22',

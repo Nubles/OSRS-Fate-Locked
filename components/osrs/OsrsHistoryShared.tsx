@@ -26,7 +26,9 @@ export const look = (e: LogEntry): { tone: Tone; icon: string; dim: boolean; kin
     case 'LEVEL_UP': return { tone: 'level', icon: CHAOS_KEY_ICON, dim: false, kind: 'Level up' };
     case 'XTREME_MILESTONE': return { tone: 'success', icon: CHAOS_KEY_ICON, dim: false, kind: 'Xtreme milestone' };
     case 'COMPENSATION': return { tone: 'void', icon: OMNI_KEY_ICON, dim: false, kind: 'Compensation' };
-    case 'FATE': return { tone: 'void', icon: tableSprite(TableType.CHUNKS), dim: false, kind: e.meta?.fate === 'mark' ? "Fate's mark" : "Fate's Thread" };
+    case 'FATE': return e.meta?.fate === 'mark'
+      ? { tone: e.meta?.omen === 'bane' ? 'fail' : e.meta?.omen === 'boon' ? 'success' : 'void', icon: tableSprite(TableType.CHUNKS), dim: false, kind: "Fate's omen" }
+      : { tone: 'void', icon: tableSprite(TableType.CHUNKS), dim: false, kind: "Fate's Thread" };
     default: return { tone: 'plain', icon: CASKET_ICON, dim: false, kind: e.type };
   }
 };

@@ -145,16 +145,28 @@ export const FATE_THREAD_MAX_STEPS = 4;
  * (play-test 2026-10-18); at 1 in 6 a thread falls about every 10-14 chunks.
  */
 export const FATE_THREAD_LEAN_CHANCE = 1 / 6;
-/** The chance fate marks a chunk the run gains: about one in eight. */
-export const FATE_MARK_CHANCE = 0.125;
+/**
+ * Every chunk a Chunked run gains draws one of fate's eight omens, four boons
+ * and four banes at even odds (utils/fateLand.ts). Each is small because one
+ * lands with every chunk: a play-test of 30 full runs (2026-10-22) gave about
+ * +10 Keys a run and no change to a run's length.
+ */
 /** Fate a Blessed chunk gives, filled up to the pity line at most. */
-export const FATE_MARK_BLESSED_FATE = 25;
+export const FATE_MARK_BLESSED_FATE = 10;
 /** A Chaotic chunk's chance of a Chaos Key. */
 export const FATE_MARK_CHAOS_CHANCE = 0.1;
+/** Key rolls a Fortunate chunk makes better... */
+export const FATE_MARK_FORTUNATE_ROLLS = 3;
+/** ...by this many percentage points. */
+export const FATE_MARK_FORTUNATE_ODDS = 5;
 /** Key rolls a Cursed chunk makes worse... */
 export const FATE_MARK_CURSED_ROLLS = 3;
 /** ...by this many percentage points. Each fail among them gives double Fate. */
 export const FATE_MARK_CURSED_ODDS = 5;
+/** Fate a Withered chunk takes, never below zero. */
+export const FATE_MARK_WITHERED_FATE = 10;
+/** Key rolls a Clouded chunk leaves without Fate when they fail. */
+export const FATE_MARK_CLOUDED_ROLLS = 3;
 
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
@@ -299,7 +311,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once: train a skill it has, fight something there, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
     tiers: [
       { tier: 'Each new thing in a chunk', source: DropSource.CHUNK_EXPLORE, rate: DROP_RATES[DropSource.CHUNK_EXPLORE] },
-      { tier: 'Each Gilded chunk', source: DropSource.FATE_MARK, rate: DROP_RATES[DropSource.FATE_MARK], bonus: `About one chunk in ${Math.round(1 / FATE_MARK_CHANCE)} you gain is marked by fate; a Gilded one gives one free Key roll.` },
+      { tier: 'Each Gilded chunk', source: DropSource.FATE_MARK, rate: DROP_RATES[DropSource.FATE_MARK], bonus: "Every chunk you gain draws one of fate's omens; a Gilded one gives one free Key roll." },
     ],
   },
   {
