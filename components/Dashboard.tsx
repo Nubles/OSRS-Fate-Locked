@@ -763,7 +763,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       );
     }
     return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-4 lg:pb-10">
         {/* Equipment Lab — interactive paper-doll (click a slot for its tier
             ladder + upgrade), a target-loadout planner, and a DPS calculator. */}
         <EquipmentLab onUpgrade={(slot) => handleSpecialUnlock(TableType.EQUIPMENT, slot)} suspendModals={suspendModals} />
@@ -817,7 +817,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   );
 
   const renderWorldTab = () => (
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col lg:h-full lg:overflow-hidden">
           <div className="flex justify-between items-center mb-4 px-2 pt-2 shrink-0">
                <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">{gameModeId === 'chunked' ? 'Chunks' : 'Areas'}</h3>
                <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/10">
@@ -848,7 +848,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   </PanelErrorBoundary>
               </div>
           ) : (
-              <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
+              <div className="space-y-6 lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-4 lg:pb-10">
                   {/* Region Advisor — shows which locked regions would unlock the most
                       quests + diary tiers, helping ironmen pick the next unlock target.
                       Chunked mode ranks frontier chunks instead — same idea, chunk-sized. */}
@@ -1017,7 +1017,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         const q = searchQuery.toLowerCase();
         const matching = categories.filter(c => c.list.some(i => `${i} ${c.nameMap?.[i] ?? i}`.toLowerCase().includes(q)));
         return (
-          <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar pb-10">
+          <div className="space-y-6 lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-4 lg:pb-10">
             {matching.length === 0 && (
               <div className="text-center text-gray-600 text-sm py-10">No activities match "{searchQuery}".</div>
             )}
@@ -1034,7 +1034,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       const selected = categories.find(c => c.id === activityCategory) ?? categories[0];
 
       return (
-        <div className="h-full flex flex-col">
+        <div className="lg:h-full flex flex-col">
           {/* Category selector with live progress */}
           <div className="flex flex-wrap gap-1.5 pb-3 shrink-0">
             {categories.map(c => {
@@ -1062,7 +1062,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
           </div>
 
           {/* Selected category grid */}
-          <div className="flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar pb-10">
+          <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-4 lg:pb-10">
             <h3 className={`${selected.color} font-bold text-sm uppercase tracking-wide border-b border-white/10 pb-2 mb-3 flex items-center justify-between`}>
               {selected.label}
               <span className="text-[10px] font-mono text-gray-500">
@@ -1083,7 +1083,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   };
 
   const renderJournalTab = () => (
-      <div className="h-full flex flex-col">
+      <div className="lg:h-full flex flex-col">
           <JournalProgressRings />
           <div className="flex bg-[#1a1a1a] border-b border-white/10 shrink-0">
               <button 
@@ -1112,7 +1112,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               </button>
           </div>
           {advisorsEnabled && <LazyPanel name="Next best"><JournalNextBest onPick={setJournalSubTab} /></LazyPanel>}
-          <div className="flex-1 overflow-hidden p-2 relative">
+          <div className="lg:flex-1 lg:overflow-hidden p-2 relative">
               <Suspense fallback={<PaneFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
                   {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
@@ -1125,7 +1125,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   return (
     <>
-    <div className={isOsrs ? 'osrs-win osrs-dash-win flex flex-col h-full overflow-hidden relative' : 'bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col h-full overflow-hidden relative'}>
+    <div className={isOsrs ? 'osrs-win osrs-dash-win flex flex-col h-full overflow-hidden relative' : 'bg-osrs-panel border border-osrs-border rounded-lg shadow-lg flex flex-col lg:h-full overflow-hidden relative'}>
       {!suspendModals && pendingSpecial && (
           <VoidReveal itemName={pendingSpecial.item} itemType={pendingSpecial.table} itemImage={pendingSpecial.image} onComplete={finalizeSpecial} animationsEnabled={animationsEnabled}
             tier={pendingSpecial.table === TableType.SKILLS ? (unlocks.skills[pendingSpecial.item] || 0) + 1 : undefined} />
@@ -1325,8 +1325,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row border-b border-white/5 bg-[#161616] shrink-0">
-          <div data-tour="dashtabs" className="flex flex-1 overflow-x-auto no-scrollbar">
+      <div className="flex flex-col lg:flex-row border-b border-white/5 bg-[#161616] shrink-0">
+          {/* Below lg the tabs wrap onto a second row, so none hides off-screen. */}
+          <div data-tour="dashtabs" className="flex flex-1 flex-wrap lg:flex-nowrap overflow-x-auto no-scrollbar">
               {visibleTabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
@@ -1343,7 +1344,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                   )
               })}
           </div>
-          <div className="p-2 border-l border-white/5 relative bg-[#161616] flex items-center gap-2">
+          <div className="p-2 border-t lg:border-t-0 lg:border-l border-white/5 relative bg-[#161616] flex items-center gap-2">
               <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5" />
                   <input 
@@ -1366,8 +1367,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       </div>
       </>)}
 
-      {/* Content Area */}
-      <div className={isOsrs ? 'osrs-dash-body flex-1 overflow-hidden' : 'flex-1 overflow-hidden p-4 bg-[#111]'}>
+      {/* Content Area. The classic layout scrolls inside on desktop (lg and
+          up) only; on a phone each tab grows and the page scrolls. */}
+      <div className={isOsrs ? 'osrs-dash-body flex-1 overflow-hidden' : 'flex-1 lg:overflow-hidden p-3 lg:p-4 bg-[#111]'}>
           {/* Only a run with pinned goals loads the tracker and its tables. */}
           {(pinnedGoals?.length ?? 0) > 0 && (
               <LazyPanel name="Active goals">
@@ -1375,7 +1377,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               </LazyPanel>
           )}
           {/* Keyed by tab so the content gently slides in when you switch. */}
-          <div key={activeTab} className={`h-full relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
+          <div key={activeTab} className={`${isOsrs ? 'h-full' : 'lg:h-full'} relative ${animationsEnabled ? 'animate-fade-in-up' : ''}`}>
             {activeTab === 'CHARACTER' && renderCharacterTab()}
             {activeTab === 'WORLD' && (isOsrs ? (
                 <Suspense fallback={<PaneFallback />}>
@@ -1392,7 +1394,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
             {activeTab === 'ACTIVITIES' && renderActivitiesTab()}
             {activeTab === 'JOURNAL' && !isOsrs && renderJournalTab()}
             {activeTab === 'COLLECTION' && (
-                <div className="h-full p-2">
+                /* The collection grid is a virtual list that needs a definite height. */
+                <div className={isOsrs ? 'h-full p-2' : 'h-[75vh] lg:h-full p-2'}>
                     <Suspense fallback={<PaneFallback />}>
                         <CollectionLog searchTerm={searchQuery} />
                     </Suspense>
