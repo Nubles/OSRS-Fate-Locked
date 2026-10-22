@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-real-map-borders',
+    id: '2026-10-22-real-map-borders',
     title: 'The map always shows the real areas',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       fixed: [
         'The World map, chunk details and your run card always use the real area borders now, even if this browser once had map edits saved.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
