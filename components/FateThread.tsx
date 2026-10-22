@@ -8,6 +8,8 @@ import { Sparkles } from './OsrsIcon';
 
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 interface Props { onClose: () => void; }
 
 interface FNode {
@@ -32,6 +34,8 @@ interface FHub { key: string; label: string; color: string; x: number; y: number
 export const FateThread: React.FC<Props> = ({ onClose }) => {
   const { unlocks, history } = useGame();
   useEscapeKey(onClose, true);
+  // OSRS layout: a stone window on a dark map well, flat dots without glow.
+  const osrs = useIsOsrsUi();
 
   // ---- build the graph ------------------------------------------------------
   const { nodes, hubs, maxR } = useMemo(() => {
@@ -120,10 +124,150 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
   const weave = () => { setWeaveKey(k => k + 1); setWeaving(true); window.setTimeout(() => setWeaving(false), nodes.length * 22 + 1400); };
 
   const [hover, setHover] = useState<FNode | null>(null);
-  const twinkle = nodes.length <= 260; // keep it smooth on huge runs
+  const twinkle = !osrs && nodes.length <= 260; // keep it smooth on huge runs
 
   const total = nodes.length;
   const fmt = (t?: number) => (t ? new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'seeded');
+
+  const summary = `${total} unlock${total !== 1 ? 's' : ''} across ${hubs.length} ${hubs.length === 1 ? 'table' : 'tables'}`;
+  const zoomIn = () => setView(v => ({ ...v, scale: Math.min(v.scale * 1.2, 3) }));
+  const zoomOut = () => setView(v => ({ ...v, scale: Math.max(v.scale * 0.83, 0.2) }));
+
+  const canvas = (
+      <div
+        ref={wrapRef}
+        className={osrs ? 'owb-thread-well relative flex-1 overflow-hidden cursor-grab active:cursor-grabbing select-none' : 'relative flex-1 overflow-hidden cursor-grab active:cursor-grabbing select-none'}
+        onWheel={onWheel} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+        style={osrs ? undefined : { background: 'radial-gradient(circle at 50% 45%, #131322 0%, #06060a 70%)' }}
+      >
+        {total === 0 ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+            {!osrs && <Sparkles className="text-gray-700 mb-3" size={40} />}
+            <p className="text-gray-400 font-bold">No unlocks yet.</p>
+            <p className="text-gray-600 text-xs mt-1 max-w-xs">Each unlock appears here as a star, grouped by table. Replay shows them in the order you unlocked them.</p>
+          </div>
+        ) : (
+          <svg className="w-full h-full" key={weaveKey}>
+            <g transform={`translate(${view.x},${view.y}) scale(${view.scale})`}>
+              {/* threads: core -> hub */}
+              {hubs.map(h => (
+                <line key={'ch' + h.key} x1={0} y1={0} x2={h.x} y2={h.y}
+                  stroke={h.color} strokeOpacity={osrs ? 0.5 : 0.35} strokeWidth={1.4}
+                  strokeDasharray="3 5" style={osrs ? undefined : { animation: 'thread-flow 2.4s linear infinite' }} />
+              ))}
+              {/* threads: hub -> node */}
+              {nodes.map((n, i) => (
+                <line key={'hn' + i} x1={n.hubX} y1={n.hubY} x2={n.x} y2={n.y} stroke={n.color} strokeOpacity={osrs ? 0.3 : 0.14} strokeWidth={0.7} />
+              ))}
+              {/* hubs */}
+              {hubs.map(h => (
+                <g key={'h' + h.key}>
+                  {osrs
+                    ? <circle cx={h.x} cy={h.y} r={6} fill={h.color} stroke="#000" strokeWidth={1.5} />
+                    : <circle cx={h.x} cy={h.y} r={7} fill={h.color} opacity={0.9} style={{ filter: `drop-shadow(0 0 6px ${h.color})` }} />}
+                  {osrs
+                    ? <text className="owb-thread-hub" x={h.x} y={h.y - 9 / view.scale} textAnchor="middle" fill={h.color} style={{ fontSize: `calc(var(--osrs-fs, 16px) / ${view.scale})`, strokeWidth: 3 / view.scale }}>{h.label}</text>
+                    : <text x={h.x} y={h.y - 12} textAnchor="middle" fill={h.color} fontSize={9} fontWeight={700} style={{ textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.85 }}>{h.label}</text>}
+                </g>
+              ))}
+              {/* nodes */}
+              {nodes.map((n, i) => (
+                <circle
+                  key={'n' + i} cx={n.x} cy={n.y} r={hover === n ? 5 : 3.2}
+                  fill={n.color}
+                  stroke={osrs ? (hover === n ? '#fff' : '#000') : undefined}
+                  strokeWidth={osrs ? 1 : undefined}
+                  style={{
+                    filter: osrs ? undefined : `drop-shadow(0 0 ${hover === n ? 8 : 4}px ${n.color})`,
+                    cursor: 'pointer',
+                    transformOrigin: `${n.x}px ${n.y}px`,
+                    animation: weaving
+                      ? `fate-node-in 0.5s ease-out ${n.order * 22}ms both`
+                      : (twinkle ? `fate-twinkle ${2.5 + (i % 5) * 0.4}s ease-in-out ${(i % 7) * 0.2}s infinite` : undefined),
+                  }}
+                  onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(h => (h === n ? null : h))}
+                />
+              ))}
+              {/* core */}
+              {osrs ? (
+                <circle cx={0} cy={0} r={7} fill="var(--osrs-orange, #ff981f)" stroke="#000" strokeWidth={2} />
+              ) : (
+                <>
+                  <circle cx={0} cy={0} r={16} fill="url(#fateCore)" style={{ animation: 'fate-core 3s ease-in-out infinite', transformOrigin: '0px 0px' }} />
+                  <circle cx={0} cy={0} r={5} fill="#fde68a" style={{ filter: 'drop-shadow(0 0 10px #fbbf24)' }} />
+                </>
+              )}
+            </g>
+            {!osrs && (
+              <defs>
+                <radialGradient id="fateCore">
+                  <stop offset="0%" stopColor="#fef9c3" />
+                  <stop offset="45%" stopColor="#f59e0b" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                </radialGradient>
+              </defs>
+            )}
+          </svg>
+        )}
+
+        {/* hover tooltip */}
+        {hover && (osrs ? (
+          <div className="osrs-tooltip owb-thread-tip">
+            <div>{hover.name}</div>
+            <div>{hover.label} · unlocked {fmt(hover.time)}</div>
+          </div>
+        ) : (
+          <div className="absolute bottom-4 left-4 bg-black/80 border border-white/15 rounded-lg px-3 py-2 pointer-events-none backdrop-blur-sm">
+            <div className="text-[11px] font-bold text-white">{hover.name}</div>
+            <div className="text-[9px] uppercase tracking-wide mt-0.5" style={{ color: hover.color }}>{hover.label} · unlocked {fmt(hover.time)}</div>
+          </div>
+        ))}
+
+        {/* legend */}
+        {osrs ? (
+          <div className="osrs-win owb-thread-legend">
+            <div className="owb-thread-legend-title">Tables</div>
+            {hubs.map(h => (
+              <div key={'l' + h.key} className="owb-thread-legend-row">
+                <span className="dot" style={{ background: h.color }} />
+                <span className="name">{h.label}</span>
+                <span className="n">{h.count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="absolute top-3 right-3 flex flex-col gap-1 bg-black/40 rounded-lg p-2 border border-white/10 max-h-[60%] overflow-y-auto custom-scrollbar pointer-events-none">
+            {hubs.map(h => (
+              <div key={'l' + h.key} className="flex items-center gap-1.5 text-[9px] text-gray-400">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: h.color, boxShadow: `0 0 4px ${h.color}` }} />
+                <span className="truncate">{h.label}</span>
+                <span className="text-gray-600 ml-auto pl-2">{h.count}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+  );
+
+  if (osrs) {
+    return (
+      <div className="fixed inset-0 z-[120] owb-thread-backdrop" role="dialog" aria-modal="true" aria-label="Fate Thread">
+        <div className="osrs-win owb-win owb-thread">
+          <OsrsTitleBar title="Fate Thread" onClose={onClose} />
+          <div className="owb-toolbar">
+            <span className="owb-sub">{summary}</span>
+            <span className="owb-toolbar-end">
+              <button type="button" className="osrs-btn" onClick={weave} disabled={!total}>Replay</button>
+              <button type="button" className="osrs-btn owb-sq" onClick={zoomIn} aria-label="Zoom in" title="Zoom in">+</button>
+              <button type="button" className="osrs-btn owb-sq" onClick={zoomOut} aria-label="Zoom out" title="Zoom out">&minus;</button>
+              <button type="button" className="osrs-btn" onClick={fit} aria-label="Fit" title="Fit the thread to the window">Fit</button>
+            </span>
+          </div>
+          <div className="osrs-inner owb-thread-frame">{canvas}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[120] bg-[#06060a] flex flex-col" role="dialog" aria-modal="true" aria-label="Fate Thread">
@@ -138,95 +282,15 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
         </div>
         <div className="flex items-center gap-1.5">
           <button onClick={weave} disabled={!total} className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-400/30 text-amber-200 hover:bg-amber-500/25 disabled:opacity-40 transition-colors"><Play size={12} /> Replay</button>
-          <button onClick={() => setView(v => ({ ...v, scale: Math.min(v.scale * 1.2, 3) }))} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Zoom in"><ZoomIn size={14} /></button>
-          <button onClick={() => setView(v => ({ ...v, scale: Math.max(v.scale * 0.83, 0.2) }))} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Zoom out"><ZoomOut size={14} /></button>
+          <button onClick={zoomIn} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Zoom in"><ZoomIn size={14} /></button>
+          <button onClick={zoomOut} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Zoom out"><ZoomOut size={14} /></button>
           <button onClick={fit} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" aria-label="Fit"><Maximize2 size={14} /></button>
           <button onClick={onClose} className="p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 ml-1" aria-label="Close"><X size={16} /></button>
         </div>
       </div>
 
       {/* canvas */}
-      <div
-        ref={wrapRef}
-        className="relative flex-1 overflow-hidden cursor-grab active:cursor-grabbing select-none"
-        onWheel={onWheel} onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
-        style={{ background: 'radial-gradient(circle at 50% 45%, #131322 0%, #06060a 70%)' }}
-      >
-        {total === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-            <Sparkles className="text-gray-700 mb-3" size={40} />
-            <p className="text-gray-400 font-bold">No unlocks yet.</p>
-            <p className="text-gray-600 text-xs mt-1 max-w-xs">Each unlock appears here as a star, grouped by table. Replay shows them in the order you unlocked them.</p>
-          </div>
-        ) : (
-          <svg className="w-full h-full" key={weaveKey}>
-            <g transform={`translate(${view.x},${view.y}) scale(${view.scale})`}>
-              {/* threads: core -> hub */}
-              {hubs.map(h => (
-                <line key={'ch' + h.key} x1={0} y1={0} x2={h.x} y2={h.y}
-                  stroke={h.color} strokeOpacity={0.35} strokeWidth={1.4}
-                  strokeDasharray="3 5" style={{ animation: 'thread-flow 2.4s linear infinite' }} />
-              ))}
-              {/* threads: hub -> node */}
-              {nodes.map((n, i) => (
-                <line key={'hn' + i} x1={n.hubX} y1={n.hubY} x2={n.x} y2={n.y} stroke={n.color} strokeOpacity={0.14} strokeWidth={0.7} />
-              ))}
-              {/* hubs */}
-              {hubs.map(h => (
-                <g key={'h' + h.key}>
-                  <circle cx={h.x} cy={h.y} r={7} fill={h.color} opacity={0.9} style={{ filter: `drop-shadow(0 0 6px ${h.color})` }} />
-                  <text x={h.x} y={h.y - 12} textAnchor="middle" fill={h.color} fontSize={9} fontWeight={700} style={{ textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.85 }}>{h.label}</text>
-                </g>
-              ))}
-              {/* nodes */}
-              {nodes.map((n, i) => (
-                <circle
-                  key={'n' + i} cx={n.x} cy={n.y} r={hover === n ? 5 : 3.2}
-                  fill={n.color}
-                  style={{
-                    filter: `drop-shadow(0 0 ${hover === n ? 8 : 4}px ${n.color})`,
-                    cursor: 'pointer',
-                    transformOrigin: `${n.x}px ${n.y}px`,
-                    animation: weaving
-                      ? `fate-node-in 0.5s ease-out ${n.order * 22}ms both`
-                      : (twinkle ? `fate-twinkle ${2.5 + (i % 5) * 0.4}s ease-in-out ${(i % 7) * 0.2}s infinite` : undefined),
-                  }}
-                  onMouseEnter={() => setHover(n)} onMouseLeave={() => setHover(h => (h === n ? null : h))}
-                />
-              ))}
-              {/* core */}
-              <circle cx={0} cy={0} r={16} fill="url(#fateCore)" style={{ animation: 'fate-core 3s ease-in-out infinite', transformOrigin: '0px 0px' }} />
-              <circle cx={0} cy={0} r={5} fill="#fde68a" style={{ filter: 'drop-shadow(0 0 10px #fbbf24)' }} />
-            </g>
-            <defs>
-              <radialGradient id="fateCore">
-                <stop offset="0%" stopColor="#fef9c3" />
-                <stop offset="45%" stopColor="#f59e0b" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
-              </radialGradient>
-            </defs>
-          </svg>
-        )}
-
-        {/* hover tooltip */}
-        {hover && (
-          <div className="absolute bottom-4 left-4 bg-black/80 border border-white/15 rounded-lg px-3 py-2 pointer-events-none backdrop-blur-sm">
-            <div className="text-[11px] font-bold text-white">{hover.name}</div>
-            <div className="text-[9px] uppercase tracking-wide mt-0.5" style={{ color: hover.color }}>{hover.label} · unlocked {fmt(hover.time)}</div>
-          </div>
-        )}
-
-        {/* legend */}
-        <div className="absolute top-3 right-3 flex flex-col gap-1 bg-black/40 rounded-lg p-2 border border-white/10 max-h-[60%] overflow-y-auto custom-scrollbar pointer-events-none">
-          {hubs.map(h => (
-            <div key={'l' + h.key} className="flex items-center gap-1.5 text-[9px] text-gray-400">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: h.color, boxShadow: `0 0 4px ${h.color}` }} />
-              <span className="truncate">{h.label}</span>
-              <span className="text-gray-600 ml-auto pl-2">{h.count}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {canvas}
     </div>
   );
 };

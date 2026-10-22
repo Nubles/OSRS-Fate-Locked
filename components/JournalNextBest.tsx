@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, ListChecks, Route, ExternalLink } from 'lucide-react';
 import { Sparkles, Map as MapIcon, Scroll, Navigation, BookOpen, Gift } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
@@ -11,8 +11,13 @@ import { questLocations } from '../utils/questLocations';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { computeUnlockImpact } from '../utils/unlockImpact';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
 
-type SubTab = 'QUESTS' | 'DIARIES' | 'CA';
+// OSRS layout only: the same feed as stone buttons with a Choose Option menu.
+const OsrsJournalNextBest = lazyWithRetry(() => import('./osrs/OsrsJournalNextBest'));
+
+export type SubTab = 'QUESTS' | 'DIARIES' | 'CA';
 
 export interface JournalNextBestAction {
   kind: 'quest' | 'diary';
@@ -33,14 +38,14 @@ const diffRank = (d: DropSource): number => {
   return 1;
 };
 
-const wikiUrl = (a: JournalNextBestAction): string => {
+export const wikiUrl = (a: JournalNextBestAction): string => {
   if (a.kind === 'quest') return `https://oldschool.runescape.wiki/w/${encodeURIComponent(a.name.replace(/ /g, '_'))}`;
   const area = a.id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
   return `https://oldschool.runescape.wiki/w/${encodeURIComponent((area + ' Diary').replace(/ /g, '_'))}`;
 };
 
 /** A representative chunk to jump to for "start on map", or null. */
-const placeFor = (a: JournalNextBestAction, unlocks: any): { cx: number; cy: number } | null => {
+export const placeFor = (a: JournalNextBestAction, unlocks: any): { cx: number; cy: number } | null => {
   if (a.kind === 'quest') {
     const info = questLocations(a.name, unlocks);
     const p = info.startPlaces[0] ?? info.places[0];
@@ -195,7 +200,23 @@ export const selectJournalNextBestActions = (
  * jump to its start on the map, the wiki guide, plan a route, or peek at what
  * it unlocks.
  */
-export const JournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ onPick }) => {
+export const JournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = (props) => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsJournalNextBest {...props} /></Suspense>
+    : <ClassicJournalNextBest {...props} />
+);
+
+/** "Open in the list": switch to the item's sub-tab, then focus it there. */
+export const openJournalAction = (a: JournalNextBestAction, onPick: (sub: SubTab) => void) => {
+  onPick(a.sub);
+  [120, 360].forEach(ms => setTimeout(() => window.dispatchEvent(new CustomEvent('fate:journal-focus', { detail: { id: a.id } })), ms));
+};
+
+/** "Plan a route": hand the goal to the Goal Planner. */
+export const planJournalAction = (a: JournalNextBestAction) =>
+  window.dispatchEvent(new CustomEvent('fate:plan-goal', { detail: { kind: a.kind, id: a.id } }));
+
+const ClassicJournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ onPick }) => {
   const { unlocks, gameModeId } = useGame();
   const [open, setOpen] = useLocalStorage<boolean>('jrnl:nextbest:open', true);
   const [openItem, setOpenItem] = useState<string | null>(null);

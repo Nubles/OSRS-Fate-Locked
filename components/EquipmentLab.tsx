@@ -9,9 +9,13 @@ import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { TIER_LABELS } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
+import { useIsOsrsUi } from '../utils/uiStyle';
 const GearView = lazyWithRetry(() => import('./GearView').then(module => ({ default: module.GearView })));
 import { SectionGuide } from './SectionGuide';
 const DpsCalc = lazyWithRetry(() => import('./DpsCalc').then(module => ({ default: module.DpsCalc })));
+// OSRS layout (utils/uiStyle): the worn-equipment interface. Lazy so the
+// classic entry chunk does not grow.
+const OsrsEquipment = lazyWithRetry(() => import('./osrs/OsrsEquipment').then(module => ({ default: module.OsrsEquipment })));
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -22,7 +26,13 @@ interface Props {
   suspendModals?: boolean;
 }
 
-export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false }) => {
+export const EquipmentLab: React.FC<Props> = (props) => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsEquipment {...props} /></Suspense>
+    : <ClassicEquipmentLab {...props} />
+);
+
+const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false }) => {
   const { unlocks, specialKeys } = useGame();
   const equipment = unlocks.equipment;
 

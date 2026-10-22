@@ -37,14 +37,243 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-15-pete-kayer',
+    id: '2026-10-22-new-content',
     title: 'Pete Kayer’s Challenges can be rolled',
-    date: '2026-10-15',
+    date: '2026-10-22',
     sections: {
       added: [
         'Pete Kayer’s Challenges from the 7 October update is a Minigame you can roll now. It needs Ferox Enclave unlocked.',
         'Like in the game, its rewards need 750 total level.',
         'Your completion total goes up by one to make room for it.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-quest-pause',
+    title: 'Smoother quest completions',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'Completing a quest on a long run no longer freezes the tracker, and Journal jumps no longer hide the quest under the Quests header.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-quicker-start-and-journal',
+    title: 'Quicker start and a lighter Journal',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker starts quicker, and the Journal opens faster and only loads icons as you scroll to them.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-faster-first-visit',
+    title: 'The tracker opens faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The tracker opens faster, and a first visit downloads about half as much before you start.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-save-recovery-full-storage',
+    title: 'Save recovery works when storage is full',
+    date: '2026-10-21',
+    sections: {
+      fixed: [
+        'If your browser’s storage is full, the save recovery screen no longer gets stuck. It offers to download a copy of the old save, then carries on.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-18-dropped-connection',
+    title: 'A dropped connection keeps you in the tracker',
+    date: '2026-10-18',
+    sections: {
+      fixed: [
+        'If your connection drops while a panel loads, the tracker now stays open with a Reload button instead of sending you to "This site can’t be reached".',
+      ],
+    },
+  },
+  {
+    id: '2026-10-18-chunked-fate-draws-the-map',
+    title: 'Chunked beta: fate draws your map',
+    date: '2026-10-18',
+    sections: {
+      added: [
+        'Chunks draws now spin along your border, then fate sketches the chunk it picked like a map clue and fills it in. You can turn the spin off in Settings.',
+        'Land you don’t hold sits under fog on the Chunked map. You can turn the fog off in Settings.',
+        'Fate’s Thread: fate ties a thread to a boss, guild or bank past your border, and 1 Chunks draw in 6 heads its way. Reach it for a free ritual.',
+        'Fate’s marks: about one chunk in eight comes marked Blessed (+25 Fate), Gilded (a free 10% Key roll), Chaotic or Cursed.',
+        'Cursed chunks make your next 3 Key rolls 5% worse, but each fail among them gives double Fate.',
+      ],
+      changed: [
+        'Chunked is now marked as a beta. Its rules may still change while we tune it.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-18-chunked-no-dead-ends',
+    title: 'Chunked runs always find a way out',
+    date: '2026-10-18',
+    sections: {
+      fixed: [
+        'Fate’s Mercy no longer waits on things the game won’t let you do, like Ranged with no weapon or a course above your level.',
+        'If 3 days pass with no new Key, unlock or level, Fate’s Mercy opens anyway, so a stuck run always gets out.',
+        'Fate’s Mercy can draw the patch, guild, shop or gear slot a skill needs, so Herblore, Hunter or Ranged can’t get stuck.',
+      ],
+      balance: [
+        'The guaranteed start-chunk Key every 25 levels is gone. Every Key now comes from fate.',
+        'The Cartographer keeps its 3 chunks until you chart one, and places behind a quest, like Barrows, wait for that quest.',
+        '76 more diary tasks need their exact chunk, and a quest that needs a shop waits until that kind of shop is in your chunks.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-17-chunked-fate',
+    title: 'Chunked gets its own fate rules',
+    date: '2026-10-17',
+    sections: {
+      added: [
+        'Exploring: the first new things you do in a chunk you unlock each roll for a Key, up to 3 per chunk. Chunks you already hold don’t.',
+        'A capped skill gets a 50% Breakthrough roll at its next tier. With nothing left to do, Call on Fate draws a nearby chunk or skill tier.',
+      ],
+      balance: [
+        'Bosses, minigames, banks, guilds, quests, diaries and Slayer masters count only when their exact chunk is yours.',
+        'Bosses and minigames pay a few Keys and then stop, like Vanilla. Levels past a skill’s tier cap no longer roll Keys.',
+      ],
+      fixed: [
+        'Skills Keys only open skills your chunks can really train. The map only offers chunks you can walk or sail to.',
+        'Unlocks, share cards, sync codes and achievements name and count chunks in Chunked runs.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-ritual-results-stay',
+    title: 'Ritual results stay on screen',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "A ritual's result now stays up until you click to continue, so you can read what it did.",
+        "Click (or press Space) once to skip to the result, and again to close it.",
+        "While a Barrows brother powers your rolls, his card on the Void Altar says what his effect does.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-osrs-layout-speed',
+    title: 'Smoother OSRS layout',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "Spending a Key no longer freezes the page for a moment before the unlock shows.",
+        "Unlock models load while Fate is altered, so they're there when the result shows.",
+        "Every skill unlock shows its skillcape, never the skill icon.",
+        "Clue scrolls on Farm Keys sit in the middle of their cards instead of off the top.",
+        "Farm Keys cards keep their pictures level when one card has an extra line.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-osrs-layout',
+    title: 'New OSRS layout',
+    date: '2026-10-16',
+    sections: {
+      added: [
+        "Turn on the OSRS layout in Settings to see the tracker as real game interfaces. The classic layout stays the default, and phones keep it.",
+        "Farm Keys shows each Slayer master and boss, with a gem for its odds, and answers your roll in a dialogue box.",
+        "Skills and gear tiers use one gem ladder, Opal to Zenyte. Keys you earn rise like XP drops.",
+        "Unlocks pop up like a level-up message, and your history sits in a chatbox under the page.",
+        "Right-click anything to Examine it. Pick the 2007 or 2010 interface, a fixed game window, or bigger text.",
+        "Unlock reveals show the game's own 3D models, and OSRS reveals map each area and bank. The OSRS world map previews what an Omni-Key opens.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-equipment-tiers',
+    title: 'Every gear tier is checked now',
+    date: '2026-10-16',
+    sections: {
+      changed: [
+        "Every item in the gear picker has a checked tier now, so the Est. labels are gone.",
+        "Gear with no metal sits with the metal that needs the same level. Level 50 gear like Granite or Infinity is Tier 5, like rune.",
+        "Sets share one tier, so Lunar, Bloodbark and Granite pieces don't scatter across tiers any more.",
+        "Diary rewards match the metal they copy: Varrock armour 4 is adamant, Tier 4. Ardougne cloaks are Tier 1, like a plain cape.",
+        "RuneLite now checks about 1,000 more items against your slot tiers.",
+      ],
+      fixed: [
+        "Gear the Gauntlet, Castle Wars or Theatre of Blood hands you is never locked, and Frog-leather isn't basic Tier 1 leather.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-16-name-changes',
+    title: 'Keep your run after a name change',
+    date: '2026-10-16',
+    sections: {
+      fixed: [
+        "Changed your OSRS name? Open Sync & Roll, press \"Change name\" and type the new one. Your run keeps going.",
+        "RuneLite and hiscore syncing follow the new name, so the plugin works with your run again.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-achievement-rewards',
+    title: 'More achievements, now with rewards',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "There are now over 180 achievements, including ones for Key rolls, Void Altar rituals, pets, Slayer, clues, minigame stashes and unlock tables.",
+        "Every achievement is a title you can wear on your dashboard, and it stays earned even if a Sacrifice takes tiers away.",
+        "Every achievement gives 1 to 25 Fate. The hardest also give a Chaos Key, and the biggest a free ritual picked by fate.",
+        "Achievements raise their activity's Key chance by 0.2% to 0.5% each, from levels to bosses. Vanilla minigame stashes keep their own odds.",
+      ],
+      changed: [
+        "Achievements you'd already earned pay once when you open your run: their free rituals, and their Fate up to 50.",
+        "Apprentice now needs a skill you unlocked with a Key. Hitpoints doesn't count, since every run starts with it.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-minigame-keys',
+    title: 'Minigames hold a few Keys each',
+    date: '2026-10-15',
+    sections: {
+      balance: [
+        "In Vanilla, each minigame you've unlocked now holds 1 to 3 Keys, then stops rolling, like bosses.",
+        'Minigames with no Collection Log page hold 3 Keys, and ones with a big log page hold fewer.',
+        "Short runs roll at low odds and long runs at high odds, so each minigame's first Key takes about an hour.",
+        "Each Key a minigame gives halves the chance of its next one. A miss under 5% doesn't give Fate.",
+        "Rat Pits is off the minigame table, since ironmen can't take part. Mage Arena gives one guaranteed Key, Tears of Guthix one Key at 50%.",
+        'Minigames you haven\'t unlocked no longer roll. Chunked runs keep rolling every minigame at 10%.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-ritual-pictures',
+    title: 'Ritual pictures show up again',
+    date: '2026-10-15',
+    sections: {
+      fixed: [
+        "Ritual animations now show every picture, like the Barrows brother's armour and Tumeken's shadow, instead of leaving blank spaces.",
+      ],
+    },
+  },
+  {
+    id: '2026-10-15-new-rituals',
+    title: 'Six new rituals at the Void Altar',
+    date: '2026-10-15',
+    sections: {
+      added: [
+        "Saradomin's Ward (30 Fate): your next Key on a boss, minigame, guild or bank only lands on one you can use right now. You can cast it again 25 rolls later.",
+        'Tears of Guthix (10 Fate): your next 10 failed rolls give double Fate, until a roll lands. Once per dry spell.',
+        "Zamorak's Pact (free): +15% odds on your next 3 rolls, then Zamorak takes the next 40 Fate you'd earn.",
+        "Amascut's Invocations (10 Fate): pick handicaps for your next 3 rolls, and each one raises your Omni-Key chance.",
+        'Barrows Chest (20 Fate): fate picks a brother, and his set effect powers your next 3 rolls.',
+        'Sacrifice (25 Fate): give up the top tier of 3 random skills or gear slots for an Omni-Key. Opens after 200 rolls, 3 uses per run.',
       ],
     },
   },

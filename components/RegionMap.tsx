@@ -7,6 +7,7 @@ import { Lock, Unlock, ZoomIn, ZoomOut, Move, Loader2, Download, Grid3x3, Paintb
 import { ChunkActivityPanel } from './ChunkActivityPanel';
 import { WikiIcon } from './WikiIcon';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { OSRS_MAP_LABELS } from '../data/osrsMapLabels';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { exportRuneliteBundle } from '../utils/runeliteExport';
 import type { GameModeRules } from '../config/gameModes';
@@ -16,14 +17,30 @@ import { chunkContentService, type OverlayPoint } from '../services/ChunkContent
 import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
-import { CHUNKED_START, isChunkUnlocked, isFrontierChunk } from '../utils/chunkAdjacency';
+import { CHUNKED_START, CHUNKED_START_KEY, getChunkFrontier, isChunkUnlocked } from '../utils/chunkAdjacency';
+import { threadLeaning } from '../utils/fateLand';
+import { THREAD_GOLD, THREAD_LEANING_LINE, markLine, threadLines } from '../utils/fateMap';
+import { setFateMapPref, useFateMapPref } from '../utils/fateMapPrefsHook';
+import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
+import { FateLandLayer } from './FateLandLayer';
+import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail } from '../utils/chunkMapState';
+import { canNavigateOcean, OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
 import { displayAreaName, visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { previewOmniArea } from '../utils/omniAreaPreview';
+import { mapAuthoringAvailable } from '../utils/mapAuthoring';
 
 type LensTone = 'good' | 'warn' | 'bad';
 const TONE_FILL: Record<LensTone, string> = { good: 'rgba(16,185,129,0.30)', warn: 'rgba(245,158,11,0.10)', bad: 'rgba(239,68,68,0.22)' };
 const TONE_STROKE: Record<LensTone, string> = { good: '#34d399', warn: '#f59e0b', bad: '#f87171' };
+// OSRS layout: the same lens tones in the game's green / yellow / red.
+// Omni-Key purple, as on the World list's Omni-Key legend.
+const OMNI_FILL = 'rgba(199,125,255,0.30)';
+const OMNI_STROKE = 'rgba(199,125,255,0.95)';
+const OMNI_KEY_SRC = `${import.meta.env.BASE_URL}osrs-ui/items/omni_key.png`;
+const OSRS_TONE_FILL: Record<LensTone, string> = { good: 'rgba(13,193,13,0.28)', warn: 'rgba(255,255,0,0.10)', bad: 'rgba(255,48,48,0.25)' };
+const OSRS_TONE_STROKE: Record<LensTone, string> = { good: '#0dc10d', warn: '#ffff00', bad: '#ff3030' };
 
 // Map marker overlays (stars/implings/crop circles/crime/clues). Keyed by the
 // picker's category name; anything unlisted falls back to sky blue.
@@ -199,6 +216,19 @@ const FRONTIER_FILL = 'rgba(245, 158, 11, 0.35)';
 /** The Frontier Advisor's top picks — "hope for these" tint (cyan). */
 const HOT_FRONTIER_FILL = 'rgba(34, 211, 238, 0.45)';
 const ACTIVE_STROKE = 'rgba(250, 204, 21, 0.9)';
+// Chunked mode only — owned chunks no route from the start chunk reaches.
+const CUT_OFF_FILL = 'rgba(168, 85, 247, 0.40)';
+// Chunked mode only — the sea, once the run sails it from a coast it reaches.
+const SEA_OPEN_FILL = 'rgba(56, 189, 248, 0.18)';
+// OSRS layout (World board): unlocked chunks show the map as it is, locked
+// chunks are darkened, chunked mode's frontier is a faint orange/yellow wash.
+const OSRS_DARK_FILL = 'rgba(6, 5, 4, 0.58)';
+const OSRS_FRONTIER_FILL = 'rgba(255, 152, 31, 0.16)';
+const OSRS_HOT_FRONTIER_FILL = 'rgba(255, 255, 0, 0.24)';
+const OSRS_CUT_OFF_FILL = 'rgba(255, 0, 0, 0.30)';
+const OSRS_GRID_LINE_COLOR = 'rgba(140, 170, 210, 0.42)';
+/** Height of the OSRS footer bar under the map, plus the gap above it. */
+const OSRS_FOOT_H = 38;
 
 // ── Sub-area authoring layer ───────────────────────────────────────────────
 // The map has two paintable layers: continents (REGION_CHUNKS, the broad
@@ -248,12 +278,16 @@ interface MapSurfaceProps {
   regionUnlocks: string[];
   chunkUnlocks: string[];
   isChunked: boolean;
+  /** OSRS layout: full-colour map, no continent lock pins, darker grid. */
+  osrs?: boolean;
+  /** OSRS layout: one even-odd path darkening the whole map except unlocked chunks. */
+  osrsDark?: string;
 }
 
 // Progressive map: a tiny low-res placeholder shows instantly (and sizes the
 // surface), while the full-res image streams in and fades over it on load. The
 // browser caches the full image, so on later mounts onLoad fires immediately.
-const ProgressiveMapImage: React.FC = () => {
+const ProgressiveMapImage: React.FC<{ osrs?: boolean }> = ({ osrs = false }) => {
   const [hiLoaded, setHiLoaded] = useState(false);
   const hiRef = useRef<HTMLImageElement>(null);
   // When the full image is already in cache (every visit after the first), its
@@ -267,7 +301,7 @@ const ProgressiveMapImage: React.FC = () => {
       <img
         src={MAP_IMAGE.srcLo}
         alt="OSRS World Map"
-        className="w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]"
+        className={osrs ? 'w-full h-full object-fill pointer-events-none' : 'w-full h-full object-fill pointer-events-none opacity-60 grayscale-[0.2]'}
         draggable={false}
       />
       <img
@@ -275,8 +309,8 @@ const ProgressiveMapImage: React.FC = () => {
         src={MAP_IMAGE.src}
         alt=""
         aria-hidden
-        className="absolute inset-0 w-full h-full object-fill pointer-events-none grayscale-[0.2] transition-opacity duration-500"
-        style={{ opacity: hiLoaded ? 0.6 : 0 }}
+        className={osrs ? 'absolute inset-0 w-full h-full object-fill pointer-events-none' : 'absolute inset-0 w-full h-full object-fill pointer-events-none grayscale-[0.2] transition-opacity duration-500'}
+        style={{ opacity: hiLoaded ? (osrs ? 1 : 0.6) : 0 }}
         draggable={false}
         decoding="async"
         // Lowercase on purpose: this React version's DOM doesn't know the
@@ -289,9 +323,9 @@ const ProgressiveMapImage: React.FC = () => {
   );
 };
 
-const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked }: MapSurfaceProps) => (
+const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectKind, regionUnlocks, chunkUnlocks, isChunked, osrs = false, osrsDark }: MapSurfaceProps) => (
   <>
-    <ProgressiveMapImage />
+    <ProgressiveMapImage osrs={osrs} />
 
     <svg
       className="absolute inset-0 pointer-events-none"
@@ -299,6 +333,7 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
       height={MAP_IMAGE.height}
       viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
     >
+      {osrs && osrsDark && <path d={osrsDark} fill={OSRS_DARK_FILL} fillRule="evenodd" />}
       <g>
         {chunkRects.map(r => (
           <rect
@@ -329,18 +364,18 @@ const MapSurface = React.memo(({ chunkRects, gridLines, showGrid, rectBox, rectK
       })()}
 
       {showGrid && (
-        <g stroke={GRID_LINE_COLOR} strokeWidth={1}>
+        <g stroke={osrs ? OSRS_GRID_LINE_COLOR : GRID_LINE_COLOR} strokeWidth={1}>
           {gridLines.verticals.map(v => (
-            <line key={`v${v.x}`} x1={v.x} x2={v.x} y1={v.y1} y2={v.y2} />
+            <line key={`v${v.x}`} x1={v.x} x2={v.x} y1={v.y1} y2={v.y2} vectorEffect={osrs ? 'non-scaling-stroke' : undefined} />
           ))}
           {gridLines.horizontals.map(h => (
-            <line key={`h${h.y}`} x1={h.x1} x2={h.x2} y1={h.y} y2={h.y} />
+            <line key={`h${h.y}`} x1={h.x1} x2={h.x2} y1={h.y} y2={h.y} vectorEffect={osrs ? 'non-scaling-stroke' : undefined} />
           ))}
         </g>
       )}
     </svg>
 
-    {Object.entries(REGION_COORDS).map(([region, coords]) => {
+    {!osrs && Object.entries(REGION_COORDS).map(([region, coords]) => {
       const isMisthalin = region === 'Misthalin';
       const isUnlocked = isChunked
         ? isNamedAreaReachableViaChunks(region, chunkUnlocks)
@@ -384,9 +419,12 @@ interface GameSnapshot {
   bossStandardKeysAwarded?: Record<string, number>;
 }
 
-const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot }) => {
+const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGameSnapshot, osrs = false, osrsSideFooter, onOmniUnlockArea }: { regionUnlocks: string[]; chunkUnlocks: string[]; isChunked: boolean; getGameSnapshot: () => GameSnapshot; osrs?: boolean; osrsSideFooter?: React.MutableRefObject<React.ReactNode>; onOmniUnlockArea?: React.MutableRefObject<((area: string) => void) | undefined> }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapContentRef = useRef<HTMLDivElement>(null);
+  // OSRS layout: place-name labels drawn over the map at a constant size,
+  // repositioned by applyTransform (no React render while panning).
+  const osrsLabelsRef = useRef<HTMLDivElement>(null);
 
   /** Write the pan/zoom transform straight to the surface node (no render). */
   const applyTransform = useCallback((t: { x: number; y: number; scale: number }) => {
@@ -398,6 +436,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       // (map-pin behaviour) instead of ballooning/vanishing with zoom. The
       // marker <circle>s read this inherited CSS var for their radius.
       node.style.setProperty('--marker-r', `${MARKER_SCREEN_R / t.scale}px`);
+      node.style.setProperty('--osrs-map-s', String(t.scale));
+    }
+    const labels = osrsLabelsRef.current;
+    if (labels) {
+      for (const el of Array.from(labels.children) as HTMLElement[]) {
+        el.style.left = `${t.x + Number(el.dataset.px) * t.scale}px`;
+        el.style.top = `${t.y + Number(el.dataset.py) * t.scale}px`;
+      }
     }
   }, []);
 
@@ -471,7 +517,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // Highlight every chunk that holds a chosen resource / monster (e.g. "Coal
   // rocks", "Yew tree"), or the best training node for a skill — unlocked chunks
   // brighter, locked ones dim, with a jump-to-match.
-  const { unlocks } = useGame();
+  const { unlocks, specialKeys, gameModeId, customMode, fateLand } = useGame();
   const [lensReady, setLensReady] = useState(chunkContentService.ready);
   useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
   const [lensInput, setLensInput] = useState('');
@@ -593,20 +639,77 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     return chunkContentService.tagList().filter(t => t.includes(q) && !HIDDEN_TAGS.has(t)).slice(0, 5);
   }, [lensInput, lensReady, lens]);
 
+  // The run's routes from its start, as RuneLite's "Not ready" and the
+  // Reachability lens use them. Chunked mode paints the owned chunks they
+  // don't reach, and the sea they do, without the lens; it needs the map data.
+  const runReachability = useMemo(() => {
+    if (!lensReady) return null;
+    const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
+    return travelReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
+  }, [lensReady, unlocks, isChunked]);
+  const chunkedCutOff = useMemo(() => {
+    const cut = new Set<string>();
+    if (!isChunked || !runReachability) return cut;
+    for (const id of runReachability.stranded) {
+      const n = +id; const key = `${Math.floor(n / 256)},${n % 256}`;
+      // The sea is drawn open or not at all (chunkedOpenSea), never as cut-off land.
+      if (!OCEAN_CHUNK_KEYS.has(key)) cut.add(key);
+    }
+    return cut;
+  }, [isChunked, runReachability]);
+  /** The sea chunks a Chunked run sails, as "cx,cy": all of them once a route reaches a coast. */
+  const chunkedOpenSea = useMemo(() => {
+    const open: string[] = [];
+    if (!isChunked || !runReachability || !canNavigateOcean(unlocks)) return open;
+    for (const key of OCEAN_CHUNK_KEYS) {
+      const [cx, cy] = key.split(',').map(Number);
+      if (runReachability.reachable.has(String(cx * 256 + cy))) open.push(key);
+    }
+    return open;
+  }, [isChunked, runReachability, unlocks]);
+
+  // Chunked: fate's hand on the map (components/FateLandLayer.tsx). Fog over
+  // the land the run neither holds nor has on its frontier, Fate's Thread and
+  // the frontier chunks nearest it, and fate's marks.
+  const fogPref = useFateMapPref('fog');
+  const fogOn = isChunked && fogPref;
+  const fateView = useMemo(() => {
+    if (!isChunked) return null;
+    const held = new Set([CHUNKED_START_KEY, ...chunkUnlocks, ...chunkedOpenSea]);
+    const frontier = new Set(getChunkFrontier(chunkUnlocks, unlocks).map(chunkKey));
+    const thread = fateLand?.thread && !held.has(fateLand.thread) ? fateLand.thread : undefined;
+    return { held, frontier, thread, leaning: threadLeaning([...frontier], thread), marks: fateLand?.marks ?? {} };
+    // lensReady: the walk that finds the frontier loads with the chunk data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isChunked, chunkUnlocks, chunkedOpenSea, unlocks, fateLand, lensReady]);
+  /** The map's lines for a chunk fate has touched: its thread, its leaning frontier, its mark. */
+  const fateLines = (key: string): string[] => {
+    if (!fateView) return [];
+    const lines: string[] = key === fateView.thread ? threadLines(chunkPlaceLabel(key))
+      : fateView.leaning.includes(key) ? [THREAD_LEANING_LINE] : [];
+    const mark = fateView.marks[key];
+    return mark ? [...lines, markLine(mark)] : lines;
+  };
+
   const lensResult = useMemo(() => {
     if (!lens || !lensReady) return null;
 
     // Reachability mode: paint your OWNED chunks by whether they connect to home.
     if (lens.kind === 'reach') {
-      const gate = entryBlockedGate(chunkContentService.questSections(), new Set(unlocks.quests as string[]), new Set(Object.keys(QUEST_DATA)));
-      const res = travelReachability(chunkContentService.connectGraph(), unlocks, isChunked ? CHUNKED_START : chunkForPlace('Lumbridge'), gate, isChunked ? 'chunked' : undefined);
+      const res = runReachability!;
       const chunks: { cx: number; cy: number; tone: LensTone }[] = [];
       for (const id of res.reachable) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'good' }); }
-      for (const id of res.stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }
+      // Chunked runs own the sea once they can sail; until a route reaches a
+      // coast it is left out here rather than painted as hundreds of stranded chunks.
+      const stranded = [...res.stranded].filter(id => {
+        const n = +id;
+        return !isChunked || !OCEAN_CHUNK_KEYS.has(`${Math.floor(n / 256)},${n % 256}`);
+      });
+      for (const id of stranded) { const n = +id; chunks.push({ cx: Math.floor(n / 256), cy: n % 256, tone: 'bad' }); }
       return {
-        chunks, primary: res.reachable.size, total: res.ownedCount,
+        chunks, primary: res.reachable.size, total: res.reachable.size + stranded.length,
         primaryLabel: 'reachable', totalLabel: 'owned',
-        detail: res.stranded.size > 0 ? `${res.stranded.size} stranded (owned but no route from Lumbridge)` : 'Every owned chunk is reachable.',
+        detail: reachLensDetail(stranded.length, isChunked),
         mode: 'reach' as const,
       };
     }
@@ -640,7 +743,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       chunks, primary: chunks.filter(c => c.tone === 'good').length, total: chunks.length,
       primaryLabel: 'unlocked', totalLabel: 'total', detail, mode: 'find' as const,
     };
-  }, [lens, lensReady, unlocks, isChunked]);
+  }, [lens, lensReady, unlocks, isChunked, runReachability]);
 
   const visibleLensChunks = useMemo(
     () => (lensResult ? (onlyUnlocked && lensResult.mode === 'find' ? lensResult.chunks.filter(c => c.tone === 'good') : lensResult.chunks) : []),
@@ -707,6 +810,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   useEffect(() => () => { if (hoverRaf.current != null) cancelAnimationFrame(hoverRaf.current); }, []);
 
   const [authoring, setAuthoring] = useState(false);
+  const [canAuthor] = useState(mapAuthoringAvailable);
   const [activeRegion, setActiveRegion] = useState<string>(CONTINENT_NAMES[0] ?? '');
   const [soloView, setSoloView] = useState(false);
   // Seed-versioned drafts: untouched drafts auto-resync to new shipped data;
@@ -816,6 +920,32 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     for (const [sub, chunks] of Object.entries(subDraft)) for (const c of chunks) m[chunkKey(c)] = sub;
     return m;
   }, [subDraft]);
+  // ── Omni-Key preview (OSRS layout) ─────────────────────────────────────────
+  // With an Omni-Key in hand, hovering an area paints the chunks spending the
+  // Key on it would open; clicking pins it, and the side panel offers the
+  // unlock, which goes through Dashboard's Omni-Key confirmation.
+  const canOmni = osrs && !isChunked && specialKeys > 0 && !!onOmniUnlockArea;
+  const [omniOn, setOmniOn] = useState(false);
+  const [omniPick, setOmniPick] = useState<string | null>(null);
+  useEffect(() => { if (!canOmni) { setOmniOn(false); setOmniPick(null); } }, [canOmni]);
+  const omniHoverKey = omniOn && !authoring && hoverTile ? chunkKey(tileToChunk(hoverTile)) : null;
+  const omniArea = omniOn ? (omniPick ?? (omniHoverKey ? chunkSubArea[omniHoverKey] ?? null : null)) : null;
+  const omniPreview = useMemo(
+    () => (omniArea ? previewOmniArea(omniArea, unlocks, gameModeId ?? 'vanilla', customMode) : null),
+    [omniArea, unlocks, gameModeId, customMode],
+  );
+  // The pinned area was unlocked (or became unavailable): let go of it.
+  useEffect(() => { if (omniPick && omniPreview && !omniPreview.eligible && omniPreview.area === omniPick) setOmniPick(null); }, [omniPick, omniPreview]);
+  const omniRects = useMemo(() => {
+    if (!omniPreview?.eligible) return [];
+    const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+    const chunkPy = CHUNK_TILES * (MAP_IMAGE.height / (MAP_BOUNDS.tileMaxY - MAP_BOUNDS.tileMinY));
+    return omniPreview.chunks.map(c => {
+      const { px, py } = tileToPixel({ tx: c.cx * CHUNK_TILES, ty: (c.cy + 1) * CHUNK_TILES });
+      return { key: `${c.cx},${c.cy}`, x: px, y: py, w: chunkPx, h: chunkPy };
+    });
+  }, [omniPreview]);
+
   const chunkOnMap = (chunk: ChunkCoord) =>
     Object.values(draftChunks).some(list => list.some(c => c.cx === chunk.cx && c.cy === chunk.cy));
 
@@ -1021,6 +1151,10 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     if (authoring) {
       pushHistory();
       addChunkToActive(chunk);
+    } else if (omniOn) {
+      // Omni-Key preview: a click pins (or lets go of) the chunk's area.
+      const area = chunkSubArea[chunkKey(chunk)] ?? null;
+      setOmniPick(prev => (prev === area ? null : area));
     } else {
       // Open the activity panel for the clicked chunk ("what can I play here?").
       setSelectedChunk(prev => (prev && prev.cx === chunk.cx && prev.cy === chunk.cy ? null : chunk));
@@ -1245,19 +1379,28 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           // Chunked mode ignores named-region unlock state entirely — the
           // real unlock unit is the individual chunk (see utils/chunkAdjacency.ts).
           const key = chunkKey({ cx, cy });
-          if (isChunkUnlocked(key, chunkUnlocks)) fill = UNLOCKED_FILL;
-          else if (isFrontierChunk(key, chunkUnlocks, unlocks)) fill = hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
-          else fill = LOCKED_FILL;
+          const state = chunkMapState(key, chunkUnlocks, unlocks, chunkedCutOff);
+          if (state === 'owned') fill = osrs ? 'transparent' : UNLOCKED_FILL;
+          else if (state === 'cut-off') fill = osrs ? OSRS_CUT_OFF_FILL : CUT_OFF_FILL;
+          else if (state === 'frontier') fill = osrs ? (hotFrontier.has(key) ? OSRS_HOT_FRONTIER_FILL : OSRS_FRONTIER_FILL) : hotFrontier.has(key) ? HOT_FRONTIER_FILL : FRONTIER_FILL;
+          else fill = osrs || fogOn ? 'transparent' : LOCKED_FILL;
         } else {
           const unlocked = subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
-          fill = unlocked ? UNLOCKED_FILL : LOCKED_FILL;
+          // OSRS: the map stays as drawn; osrsDark darkens what is not unlocked.
+          fill = osrs ? 'transparent' : unlocked ? UNLOCKED_FILL : LOCKED_FILL;
         }
         const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
         rects.push({ key: `${region}:${cx},${cy}`, region, x: px, y: py, w: chunkPx, h: chunkPy, fill, isActive });
       }
     }
+    // The sea is no region's land, so the loop above never draws it.
+    if (!authoring && !osrs) for (const key of chunkedOpenSea) {
+      const [cx, cy] = key.split(',').map(Number);
+      const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+      rects.push({ key: `sea:${key}`, region: 'The Open Seas', x: px, y: py, w: chunkPx, h: chunkPy, fill: SEA_OPEN_FILL, isActive: false });
+    }
     return rects;
-  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier]);
+  }, [draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, authoring, authorLevel, activeRegion, activeSubArea, soloView, hotFrontier, osrs, unlocks, chunkedCutOff, chunkedOpenSea, fogOn]);
 
   const activeChunkCount = authorLevel === 'SUBAREA'
     ? (subDraft[activeSubArea]?.length ?? 0)
@@ -1266,6 +1409,755 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     ? Object.values(subDraft).filter(arr => arr.length > 0).length
     : Object.values(draftChunks).filter(arr => arr.length > 0).length;
   const hoverChunk = hoverTile ? tileToChunk(hoverTile) : null;
+
+  // ── OSRS layout (World board) ────────────────────────────────────────────
+  // One even-odd path darkens the whole map, with a hole per unlocked chunk.
+  const osrsDark = useMemo(() => {
+    if (!osrs) return undefined;
+    const size = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+    const seen = new Set<string>();
+    let d = `M0 0H${MAP_IMAGE.width}V${MAP_IMAGE.height}H0Z`;
+    for (const [region, chunks] of Object.entries(draftChunks)) {
+      const continentUnlocked = isRegionUnlocked(region, regionUnlocks);
+      for (const c of chunks) {
+        const key = chunkKey(c);
+        if (seen.has(key)) continue;
+        const subArea = chunkSubArea[key];
+        const unlocked = isChunked
+          ? isChunkUnlocked(key, chunkUnlocks)
+          : subArea ? isRegionUnlocked(subArea, regionUnlocks) : continentUnlocked;
+        if (!unlocked) continue;
+        seen.add(key);
+        const { px, py } = tileToPixel({ tx: c.cx * CHUNK_TILES, ty: (c.cy + 1) * CHUNK_TILES });
+        d += `M${px} ${py}h${size}v${size}h${-size}Z`;
+      }
+    }
+    // A Chunked run's sea shows as the map draws it once the run sails it.
+    for (const key of chunkedOpenSea) {
+      if (seen.has(key)) continue;
+      const [cx, cy] = key.split(',').map(Number);
+      const { px, py } = tileToPixel({ tx: cx * CHUNK_TILES, ty: (cy + 1) * CHUNK_TILES });
+      d += `M${px} ${py}h${size}v${size}h${-size}Z`;
+    }
+    return d;
+  }, [osrs, draftChunks, chunkSubArea, regionUnlocks, chunkUnlocks, isChunked, chunkedOpenSea]);
+
+  // Chunk → its region, for the hover tooltip's place name.
+  const osrsChunkRegion = useMemo(() => {
+    const m: Record<string, string> = {};
+    if (!osrs) return m;
+    for (const [region, chunks] of Object.entries(draftChunks)) for (const c of chunks) m[chunkKey(c)] ??= region;
+    return m;
+  }, [osrs, draftChunks]);
+
+  // Place-name labels, each on its place; white when that area is unlocked,
+  // tan when it is not.
+  const osrsLabels = useMemo(() => {
+    if (!osrs) return [];
+    return OSRS_MAP_LABELS.map(({ area, label, tile }) => {
+      const { px, py } = tileToPixel({ tx: tile[0], ty: tile[1] });
+      const owned = isChunked ? isNamedAreaReachableViaChunks(area, chunkUnlocks) : isRegionUnlocked(area, regionUnlocks);
+      return { key: area, label: label ?? area, px, py, owned };
+    });
+  }, [osrs, regionUnlocks, chunkUnlocks, isChunked]);
+
+  // The map box keeps the board's 896:608 shape at full width, shrinking in
+  // height when the window is short; the footer sits right under it.
+  const osrsWellRef = useRef<HTMLDivElement>(null);
+  const [osrsBox, setOsrsBox] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    if (!osrs) return;
+    const well = osrsWellRef.current;
+    if (!well) return;
+    const measure = () => {
+      const r = well.getBoundingClientRect();
+      if (!r.width) return;
+      const h = Math.max(160, Math.min(Math.round(r.width * 608 / 896), Math.floor(r.height) - OSRS_FOOT_H));
+      setOsrsBox(prev => (prev && prev.w === Math.round(r.width) && prev.h === h ? prev : { w: Math.round(r.width), h }));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(well);
+    return () => ro.disconnect();
+  }, [osrs]);
+  // First fit: the board's view of the mainland (chunks 31-58 across, rows
+  // 44-62), unless a deep link already moved the map.
+  const osrsFitted = useRef(false);
+  useEffect(() => {
+    if (!osrs || !osrsBox || osrsFitted.current) return;
+    osrsFitted.current = true;
+    if (selectedChunk) { applyTransform(transformRef.current); return; }
+    const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+    const scale = Math.min(osrsBox.w / (28 * chunkPx), osrsBox.h / (19 * chunkPx));
+    const { px, py } = tileToPixel({ tx: 31 * CHUNK_TILES, ty: 63 * CHUNK_TILES });
+    const x = -px * scale + (osrsBox.w - 28 * chunkPx * scale) / 2;
+    const y = -py * scale + (osrsBox.h - 19 * chunkPx * scale) / 2;
+    applyTransform({ x, y, scale });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [osrs, osrsBox, applyTransform]);
+  // Labels mount after the first transform; place them now.
+  useEffect(() => { if (osrs) applyTransform(transformRef.current); }, [osrs, osrsLabels, osrsBox, applyTransform]);
+
+  const hoverCard = (
+      hoverMarker && createPortal(
+        <div
+          className="fixed z-[100] pointer-events-none bg-[#0b0b0b]/95 border border-white/15 rounded-md shadow-xl px-2 py-1.5 max-w-[220px]"
+          style={{ left: hoverMarker.x + 14, top: hoverMarker.y + 14 }}
+        >
+          {hoverMarker.star ? (
+            <div className="text-[10px] text-gray-300 leading-snug">
+              <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-1"><WikiIcon file="Stardust_175.png" alt="" Fallback={Target} size={14} /> {hoverMarker.star.site}</div>
+              <div>Size <span className="text-gray-100 font-mono">T{hoverMarker.star.tier}</span> · {hoverMarker.star.worlds} world{hoverMarker.star.worlds === 1 ? '' : 's'}</div>
+              <div className="text-gray-400">{hoverMarker.star.landIn > 0 ? `lands in ~${hoverMarker.star.landIn} min` : 'landing now / active'}</div>
+              <div className="mt-1 pt-1 border-t border-white/10 text-gray-500 uppercase tracking-wide text-[8px]">Worlds</div>
+              <div className="flex flex-wrap gap-0.5 mt-0.5 max-w-[200px]">
+                {hoverMarker.star.worldList.slice(0, 24).map(w => (
+                  <span key={w} className="font-mono text-[9px] px-1 rounded bg-amber-500/15 text-amber-200">{w}</span>
+                ))}
+                {hoverMarker.star.worldList.length > 24 && (
+                  <span className="font-mono text-[9px] text-gray-500">+{hoverMarker.star.worldList.length - 24}</span>
+                )}
+              </div>
+            </div>
+          ) : hoverMarker.tier ? (
+            <div className="flex items-start gap-2">
+              <img src={CLUE_SCROLL_IMG[hoverMarker.tier]} alt="" className="w-7 h-7 shrink-0 mt-0.5" style={{ imageRendering: 'pixelated' }} />
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold" style={{ color: overlayColor(`${CLUE_PREFIX}${hoverMarker.tier}`) }}>{hoverMarker.tier} clue</div>
+                {hoverMarker.hint && <div className="text-[10px] text-gray-300 leading-snug italic">“{hoverMarker.hint}”</div>}
+              </div>
+            </div>
+          ) : hoverMarker.cat === 'Shooting Stars' ? (
+            <div className="text-[10px] text-gray-300">
+              <span className="font-semibold text-sky-300">Shooting star landing site</span>
+              <div className="text-gray-500">{activeStarKey ? 'Click another to move the active marker.' : 'Click to flag it as the active star.'}</div>
+            </div>
+          ) : (
+            <div className="text-[11px] font-semibold text-gray-200">{hoverMarker.cat}</div>
+          )}
+        </div>,
+        document.body,
+      )
+  );
+
+  const mapLayer = (
+      <div
+        ref={containerRef}
+        className={`w-full h-full ${authoring ? 'cursor-crosshair' : 'cursor-move'}`}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+        onMouseLeave={() => { onMouseUp(); setHoverTile(null); }}
+      >
+        <div
+          ref={mapContentRef}
+          id="map-content-inner"
+          style={{
+            // Initial value only — drags/zooms write to the node directly
+            // via applyTransform (see transformRef above).
+            transform: `translate(${transformRef.current.x}px, ${transformRef.current.y}px) scale(${transformRef.current.scale})`,
+            transformOrigin: '0 0',
+            width: `${MAP_IMAGE.width}px`,
+            height: `${MAP_IMAGE.height}px`,
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            willChange: 'transform',
+            ['--marker-r' as string]: `${MARKER_SCREEN_R / transformRef.current.scale}px`,
+            ['--osrs-map-s' as string]: String(transformRef.current.scale),
+          } as React.CSSProperties}
+        >
+          <MapSurface
+            chunkRects={chunkRects}
+            gridLines={gridLines}
+            showGrid={showGrid}
+            rectBox={rectBox}
+            rectKind={rectMode.current}
+            regionUnlocks={regionUnlocks}
+            chunkUnlocks={chunkUnlocks}
+            isChunked={isChunked}
+            osrs={osrs}
+            osrsDark={osrsDark}
+          />
+
+          {fateView && !authoring && (
+            <FateLandLayer osrs={osrs} fog={fogOn} held={fateView.held} frontier={fateView.frontier}
+              thread={fateView.thread} leaning={fateView.leaning} marks={fateView.marks} />
+          )}
+
+          {/* Chunk-lens highlight overlay — inside the transformed layer so the
+              glow pans & zooms with the map. Unlocked matches bright, locked dim. */}
+          {highlightRects.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+            >
+              {highlightRects.map(r => (
+                <rect
+                  key={r.key}
+                  x={r.x} y={r.y} width={r.w} height={r.h}
+                  fill={osrs ? OSRS_TONE_FILL[r.tone] : TONE_FILL[r.tone]}
+                  stroke={osrs ? OSRS_TONE_STROKE[r.tone] : TONE_STROKE[r.tone]}
+                  strokeWidth={r.tone === 'good' ? 9 : r.tone === 'bad' ? 8 : 5}
+                  strokeDasharray={r.tone === 'warn' ? '16 12' : undefined}
+                  className={r.tone === 'good' ? 'lens-pulse' : ''}
+                />
+              ))}
+            </svg>
+          )}
+
+          {/* Omni-Key preview: the chunks an Omni-Key on the area would open. */}
+          {omniRects.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+              data-testid="omni-preview"
+            >
+              {omniRects.map(r => (
+                <rect key={r.key} x={r.x} y={r.y} width={r.w} height={r.h}
+                  fill={OMNI_FILL} stroke={OMNI_STROKE} strokeWidth={omniPick ? 8 : 6} />
+              ))}
+            </svg>
+          )}
+
+          {/* Map marker overlays (stars/implings/crop circles/crime/clues) —
+              inside the transformed layer so they pan & zoom with the map.
+              Owned-chunk markers bright, others dimmed. The <svg> stays
+              click-through; only the circles capture hover/click so map
+              dragging through the gaps still works. */}
+          {overlayMarkers.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+            >
+              {overlayMarkers.map(m => {
+                const active = m.star && activeStarKey === m.key;
+                return (
+                  <circle
+                    key={m.key}
+                    cx={m.x} cy={m.y}
+                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'auto', cursor: m.star ? 'pointer' : 'help' }}
+                    fill={m.color}
+                    fillOpacity={m.owned ? 0.9 : 0.25}
+                    stroke={active ? '#facc15' : '#000'}
+                    strokeOpacity={active ? 1 : 0.55}
+                    strokeWidth={active ? 3 : 1.5}
+                    vectorEffect="non-scaling-stroke"
+                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: m.cat, tier: m.tier, hint: m.hint })}
+                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
+                    onMouseLeave={() => setHoverMarker(null)}
+                    onClick={(e) => { if (m.star) { e.stopPropagation(); setActiveStarKey(k => (k === m.key ? null : m.key)); } }}
+                  />
+                );
+              })}
+              {/* Gold pulsing ring on the manually-flagged active shooting star. */}
+              {(() => {
+                const s = overlayMarkers.find(m => m.key === activeStarKey);
+                if (!s) return null;
+                return (
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'calc(var(--marker-r, 30px) * 2.2)', pointerEvents: 'none' }}
+                    fill="none" stroke="#facc15" strokeWidth={3} strokeOpacity={0.9}
+                    vectorEffect="non-scaling-stroke" className="lens-pulse"
+                  />
+                );
+              })()}
+            </svg>
+          )}
+
+          {/* Live active shooting stars (from the crowdsourced feed) — gold
+              pulsing rings at sites that currently have a star, hoverable for
+              world / tier / landing-time details. */}
+          {liveStarMarkers.length > 0 && (
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width={MAP_IMAGE.width}
+              height={MAP_IMAGE.height}
+              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
+            >
+              {liveStarMarkers.map(s => {
+                const onEnter = (e: React.MouseEvent) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, worldList: s.worldList, tier: s.tier, landIn: s.landIn } });
+                return (
+                <g key={s.key}>
+                  {/* Transparent hit area covering the whole glow, so hovering the
+                      ring (not just the centre dot) shows the world list. */}
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'all', cursor: 'help' }}
+                    fill="none"
+                    onMouseEnter={onEnter}
+                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
+                    onMouseLeave={() => setHoverMarker(null)}
+                  />
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'none' }}
+                    fill="none" stroke="#facc15" strokeWidth={3} strokeOpacity={0.85}
+                    vectorEffect="non-scaling-stroke" className="lens-pulse"
+                  />
+                  <circle
+                    cx={s.x} cy={s.y}
+                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'none' }}
+                    fill="#facc15" fillOpacity={0.95} stroke="#000" strokeOpacity={0.6} strokeWidth={1.5}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                </g>
+              );})}
+            </svg>
+          )}
+
+          {/* Gold spotlight on the selected chunk (panel open / deep link) —
+              lives inside the transformed layer so it pans & zooms with the
+              map. Sibling of MapSurface so selection never re-renders the
+              memoized 700-element surface. */}
+          {selectedChunk && !authoring && (() => {
+            const { px, py } = tileToPixel({
+              tx: selectedChunk.cx * CHUNK_TILES,
+              ty: (selectedChunk.cy + 1) * CHUNK_TILES,
+            });
+            const size = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+            return (
+              <div
+                className={osrs ? 'absolute pointer-events-none' : 'absolute pointer-events-none rounded-sm border-[5px] border-yellow-400 animate-pulse'}
+                style={osrs ? {
+                  left: px, top: py, width: size, height: size, boxSizing: 'border-box',
+                  border: 'calc(2px / var(--osrs-map-s, 0.15)) solid #ffff00',
+                } : {
+                  left: px,
+                  top: py,
+                  width: size,
+                  height: size,
+                  boxShadow: '0 0 28px 6px rgba(250, 204, 21, 0.55), inset 0 0 22px rgba(250, 204, 21, 0.35)',
+                }}
+              />
+            );
+          })()}
+        </div>
+      </div>
+  );
+
+  const authoringPanel = (
+        authoring && (
+          <div className="bg-black/90 border border-white/20 rounded-md shadow-lg p-3 flex flex-col gap-2 w-[260px]">
+            {/* Layer toggle: paint broad continent blocks, or the named
+                sub-areas inside them (Falador, Port Sarim, …). */}
+            <div className="flex bg-[#0b0d10] border border-white/20 rounded p-0.5 gap-0.5">
+              {(['REGION', 'SUBAREA'] as const).map(lvl => (
+                <button
+                  key={lvl}
+                  onClick={() => setAuthorLevel(lvl)}
+                  className={`flex-1 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${authorLevel === lvl ? 'bg-amber-600/80 text-black' : 'text-gray-400 hover:text-gray-200'}`}
+                  title={lvl === 'REGION' ? 'Paint continent blocks (REGION_CHUNKS)' : 'Paint named sub-areas like Falador (SUB_AREA_CHUNKS)'}
+                >
+                  {lvl === 'REGION' ? 'Regions' : 'Sub-areas'}
+                </button>
+              ))}
+            </div>
+
+            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+              Active {authorLevel === 'SUBAREA' ? 'Sub-area' : 'Region'}
+            </label>
+            {authorLevel === 'SUBAREA' ? (
+              <select
+                value={activeSubArea}
+                onChange={e => setActiveSubArea(e.target.value)}
+                className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
+              >
+                {['Misthalin', ...Object.keys(REGION_GROUPS)].map(cont => (
+                  <optgroup key={cont} label={cont}>
+                    {(cont === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[cont]).map(name => {
+                      const count = subDraft[name]?.length ?? 0;
+                      return (
+                        <option key={name} value={name}>
+                          {displayAreaName(name)}{count ? ` (${count})` : ''}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                ))}
+              </select>
+            ) : (
+              <select
+                value={activeRegion}
+                onChange={e => setActiveRegion(e.target.value)}
+                className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
+              >
+                {CONTINENT_NAMES.map(name => {
+                  const count = draftChunks[name]?.length ?? 0;
+                  return (
+                    <option key={name} value={name}>
+                      {displayAreaName(name)}{count ? ` (${count})` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+
+            <div className="text-[10px] text-gray-400 leading-relaxed mt-1">
+              click = add · right-click = remove · shift+drag = paint · <b className="text-amber-300/80">alt+drag = box fill</b> · alt+right-drag = box erase · <b className="text-amber-300/80">⌘/Ctrl+Z undo</b>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={undo}
+                disabled={undoStack.length === 0}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
+                title="Undo (⌘/Ctrl+Z)"
+              >
+                <Undo2 size={12} /> Undo{undoStack.length ? ` (${undoStack.length})` : ''}
+              </button>
+              <button
+                onClick={redo}
+                disabled={redoStack.length === 0}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
+                title="Redo (⌘/Ctrl+Y)"
+              >
+                <Redo2 size={12} /> Redo
+              </button>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setSoloView(s => !s)}
+                className={`flex-1 px-2 py-1 rounded text-[11px] border flex items-center justify-center gap-1 ${soloView ? 'bg-emerald-900/80 border-emerald-500/60 text-emerald-200' : 'bg-black/60 border-white/20 text-gray-300 hover:bg-white/10'}`}
+                title="Show only the active region"
+              >
+                {soloView ? <Eye size={12} /> : <EyeOff size={12} />}
+                Solo
+              </button>
+              <button
+                onClick={clearActiveRegion}
+                disabled={activeChunkCount === 0}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-red-900/40 hover:text-red-200 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
+                title="Remove all chunks for the active region"
+              >
+                <Trash2 size={12} />
+                Clear
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={exportDraftToClipboard}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-emerald-900/70 border-emerald-500/50 text-emerald-100 hover:bg-emerald-800/80 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'Copy SUB_AREA_CHUNKS as TS literal (paste into data/subAreaChunks.ts)' : 'Copy REGION_CHUNKS as TS literal'}
+              >
+                <ClipboardCopy size={12} />
+                TS
+              </button>
+              <button
+                onClick={exportDraftJson}
+                disabled={authorLevel === 'SUBAREA'}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-sky-900/70 border-sky-500/50 text-sky-100 hover:bg-sky-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'JSON export works at the Regions level' : 'Download draft as JSON file'}
+              >
+                <FileDown size={12} />
+                JSON
+              </button>
+              <button
+                onClick={exportRuneLiteBundle}
+                disabled={authorLevel === 'SUBAREA'}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-amber-900/70 border-amber-500/50 text-amber-100 hover:bg-amber-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'RuneLite export works at the Regions level' : 'Export bundle for RuneLite plugin (chunks + unlocks + offset)'}
+              >
+                <Radio size={12} />
+                RL
+              </button>
+              <button
+                onClick={() => importFileRef.current?.click()}
+                disabled={authorLevel === 'SUBAREA'}
+                className="flex-1 px-2 py-1 rounded text-[11px] border bg-indigo-900/70 border-indigo-500/50 text-indigo-100 hover:bg-indigo-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
+                title={authorLevel === 'SUBAREA' ? 'JSON import works at the Regions level' : 'Import draft from JSON file'}
+              >
+                <FileUp size={12} />
+                Load
+              </button>
+              <button
+                onClick={clearDraft}
+                className="px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-400 hover:bg-red-900/40 hover:text-red-200"
+                title="Reset this layer to the shipped baseline"
+              >
+                Wipe
+              </button>
+            </div>
+            <input
+              ref={importFileRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+
+            <div className="text-[10px] text-gray-500 pt-1 border-t border-white/10">
+              {activeChunkCount} chunks in "{authorLevel === 'SUBAREA' ? activeSubArea : activeRegion}" · {totalRegionsWithChunks} {authorLevel === 'SUBAREA' ? 'sub-areas' : 'regions'} total
+            </div>
+          </div>
+        )
+  );
+
+  const chunkPanel = (
+      selectedChunk && !authoring && (() => {
+        const region = Object.entries(draftChunks).find(([, list]) =>
+          list.some(c => c.cx === selectedChunk.cx && c.cy === selectedChunk.cy),
+        )?.[0] ?? null;
+        const subArea = chunkSubArea[`${selectedChunk.cx},${selectedChunk.cy}`] ?? null;
+        const unlocked = isChunked
+          ? isChunkUnlocked(chunkKey(selectedChunk), chunkUnlocks)
+          : subArea
+            ? isRegionUnlocked(subArea, regionUnlocks)
+            : region ? isRegionUnlocked(region, regionUnlocks) : false;
+        const wholeAreaOwnershipMixed = isChunked || (
+          region != null
+          && hasMixedAreaOwnership(
+            draftChunks[region] ?? [],
+            region,
+            chunkSubArea,
+            regionUnlocks,
+          )
+        );
+
+        return (
+          <ChunkActivityPanel
+            chunk={selectedChunk}
+            region={region}
+            subArea={subArea}
+            regionChunks={region ? draftChunks[region] : []}
+            unlocked={unlocked}
+            wholeAreaOwnershipMixed={wholeAreaOwnershipMixed}
+            onClose={() => setSelectedChunk(null)}
+          />
+        );
+      })()
+  );
+
+  if (osrs) {
+    // ── OSRS layout: the World board. Regions side panel (search, legend,
+    // reachability / banks, overlays, Map/List), the map in a black frame
+    // with place names and a yellow chunk tooltip, and a footer bar.
+    const t = transformRef.current;
+    const hoverKey = hoverChunk ? chunkKey(hoverChunk) : null;
+    const hoverName = hoverKey ? (chunkSubArea[hoverKey] ?? osrsChunkRegion[hoverKey]) : undefined;
+    let tip: { x: number; y: number; flip: boolean; lines: string[] } | null = null;
+    if (hoverChunk && hoverKey && hoverName && osrsBox && !authoring) {
+      const region = osrsChunkRegion[hoverKey];
+      const sub = chunkSubArea[hoverKey];
+      const unlocked = isChunked
+        ? isChunkUnlocked(hoverKey, chunkUnlocks)
+        : sub ? isRegionUnlocked(sub, regionUnlocks) : region ? isRegionUnlocked(region, regionUnlocks) : false;
+      const lines = [`${displayAreaName(hoverName)}: ${unlocked ? 'unlocked' : 'locked'}`];
+      if (omniOn && !omniPick && omniPreview && omniPreview.area === sub) {
+        lines.push(omniPreview.eligible
+          ? `Omni-Key opens ${omniPreview.chunks.length} chunk${omniPreview.chunks.length === 1 ? '' : 's'}. Click to choose it.`
+          : `Omni-Key: ${omniPreview.reason}`);
+      } else if (!unlocked && !isChunked) lines.push('Roll the Areas table to unlock');
+      else if (isChunked && chunkMapStateLine(chunkMapState(hoverKey, chunkUnlocks, unlocks, chunkedCutOff))) {
+        lines.push(chunkMapStateLine(chunkMapState(hoverKey, chunkUnlocks, unlocks, chunkedCutOff))!);
+      } else if (lensReady) {
+        const content = chunkContentService.contentFor(hoverChunk.cx, hoverChunk.cy);
+        const bits: string[] = [];
+        if (chunkContentService.hasBank(hoverChunk.cx, hoverChunk.cy)) bits.push('Bank');
+        if (content?.shops.length) bits.push(`${content.shops.length} shop${content.shops.length === 1 ? '' : 's'}`);
+        if (content?.monsters.length) bits.push(`${content.monsters.length} monster${content.monsters.length === 1 ? '' : 's'}`);
+        const quests = content ? Object.keys(content.quests).length : 0;
+        if (quests) bits.push(`${quests} quest${quests === 1 ? '' : 's'}`);
+        if (bits.length) lines.push(bits.join(' · '));
+      }
+      if (isChunked) lines.push(...fateLines(hoverKey));
+      const chunkPx = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
+      const { px, py } = tileToPixel({ tx: (hoverChunk.cx + 1) * CHUNK_TILES, ty: (hoverChunk.cy + 1) * CHUNK_TILES });
+      const right = t.x + px * t.scale;
+      // Flip left when the tip (about 6px a character in RS) would run off the
+      // map on the right and there is more room on the left.
+      const tipW = Math.max(200, 12 + 6 * Math.max(...lines.map(l => l.length)));
+      const flip = right + tipW > osrsBox.w && right - chunkPx * t.scale > osrsBox.w - right;
+      tip = { x: flip ? right - chunkPx * t.scale - 2 : right + 2, y: Math.max(0, t.y + py * t.scale), flip, lines };
+    }
+    const lensSuggestOpen = lensSuggestions.length > 0 || lensItemSuggestions.length > 0 || lensTagSuggestions.length > 0;
+    const reachOn = lens?.kind === 'reach';
+    const banksOn = lens?.kind === 'category' && lens.key === 'bank';
+    const unlockedCount = isChunked ? chunkedUnlockedCount(chunkUnlocks) : regionUnlocks.length;
+    return (
+      <div className="owm-root">
+        <aside className="osrs-inner owm-side" aria-label={isChunked ? 'Chunks' : 'Regions'}>
+          <span className="owm-h">{isChunked ? 'Chunks' : 'Regions'}</span>
+          <div className="owm-searchwrap">
+            <label className="owm-search">
+              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="#c8b897" strokeWidth="2" /></svg>
+              <input value={lensInput} onChange={(e) => setLensInput(e.target.value)}
+                placeholder={lens ? lens.label : 'Coal, yews, a monster...'} aria-label="Highlight on the map" />
+              {lens && <button type="button" className="owm-x" onClick={clearLens} title="Clear" aria-label="Clear highlight">x</button>}
+            </label>
+            {lensSuggestOpen && (
+              <div className="owm-suggest" role="listbox" aria-label="Highlight suggestions">
+                {lensTagSuggestions.map(tg => (
+                  <button key={'tag:' + tg} type="button" onClick={() => pickLens('category', tg, `${tg.charAt(0).toUpperCase()}${tg.slice(1)}`)} title={`Highlight every chunk with ${tg}`}>
+                    <span className="owm-sg-name" style={{ textTransform: 'capitalize' }}>{tg}</span><span className="owm-sg-meta">category {chunkContentService.tagChunks(tg).length}</span>
+                  </button>
+                ))}
+                {lensSuggestions.map(sg => (
+                  <button key={sg.kind + sg.name} type="button" onClick={() => pickLens('entity', sg.name, sg.name)}>
+                    <span className="owm-sg-name">{sg.name}</span><span className="owm-sg-meta">{sg.kind} {sg.locations.length}</span>
+                  </button>
+                ))}
+                {lensItemSuggestions.map(it => (
+                  <button key={'item:' + it.name} type="button" onClick={() => pickLens('drop', it.name, it.name)} title="Highlight chunks whose monsters drop this item">
+                    <span className="owm-sg-name" style={{ color: '#ff981f' }}>{it.name}</span><span className="owm-sg-meta">drop {it.sources}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {lens && lensResult && (
+            <div className="owm-lens">
+              {lens.kind !== 'entity' && <span style={{ color: '#ffffff' }}>{lens.label}</span>}
+              {lensResult.detail && <span className="owm-small owm-tan">{lensResult.detail}</span>}
+              <span className="owm-small owm-tan"><span style={{ color: '#0dc10d' }}>{lensResult.primary}</span> {lensResult.primaryLabel} · <span style={{ color: '#ffff00' }}>{lensResult.total}</span> {lensResult.totalLabel}</span>
+              {lensResult.mode === 'find' && (
+                <label className="owm-check"><input className="owm-box" type="checkbox" checked={onlyUnlocked} onChange={(e) => setOnlyUnlocked(e.target.checked)} />Only unlocked</label>
+              )}
+              {visibleLensChunks.length > 0 ? (
+                <span style={{ display: 'flex', gap: 3 }}>
+                  <button type="button" className="osrs-btn" style={{ flex: 1, height: 22 }} onClick={() => jumpToMatch(-1)} aria-label="Previous match">&lt;</button>
+                  <button type="button" className="osrs-btn" style={{ flex: 3, height: 22 }} onClick={() => jumpToMatch(1)}>Next match</button>
+                </span>
+              ) : <span className="owm-small owm-muted">No matching chunks.</span>}
+            </div>
+          )}
+          <div className="owm-legend">
+            <span><i className="owm-sw" style={{ background: '#6f9a3c' }} />Unlocked<b>{unlockedCount}</b></span>
+            {isChunked && <span><i className="owm-sw" style={{ background: '#a8641c' }} />Frontier</span>}
+            {fateView?.thread && <span title={threadLines(chunkPlaceLabel(fateView.thread)).join(' ')}><i className="owm-sw" style={{ background: THREAD_GOLD }} />Fate's Thread</span>}
+            {isChunked && chunkedCutOff.size > 0 && <span><i className="owm-sw" style={{ background: '#8a1f14' }} />Cut off<b>{chunkedCutOff.size}</b></span>}
+            <span><i className="owm-sw" style={{ background: '#2a1d14' }} />Locked</span>
+          </div>
+          <label className="owm-check" title="Paint your unlocked chunks by whether they connect to your start">
+            <input className="owm-box" type="checkbox" checked={reachOn} onChange={(e) => (e.target.checked ? pickLens('reach', 'reach', 'Reachability') : clearLens())} />Reachability
+          </label>
+          <label className="owm-check" title="Highlight every chunk with a bank">
+            <input className="owm-box" type="checkbox" checked={banksOn} disabled={!lensReady} onChange={(e) => (e.target.checked ? pickLens('category', 'bank', 'Bank') : clearLens())} />Banks
+          </label>
+          {canOmni && (
+            <div className="owm-omni" data-testid="omni-panel">
+              <label className="owm-check" title="Show the chunks an Omni-Key would open">
+                <input className="owm-box" type="checkbox" checked={omniOn}
+                  onChange={(e) => { setOmniOn(e.target.checked); setOmniPick(null); }} />
+                <img className="osrs-px" src={OMNI_KEY_SRC} alt="" aria-hidden="true" width={18} height={16} />
+                Omni-Key areas <b className="owm-omni-count">{specialKeys}</b>
+              </label>
+              {omniOn && (omniPick && omniPreview ? (
+                <div className="owm-omni-pick">
+                  <span className="owm-omni-name">{displayAreaName(omniPick)}</span>
+                  <span className="owm-small owm-tan">{omniPreview.eligible
+                    ? `${omniPreview.chunks.length} chunk${omniPreview.chunks.length === 1 ? '' : 's'} would unlock.`
+                    : omniPreview.reason}</span>
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    <button type="button" className="osrs-btn owm-omni-go" style={{ flex: 3, height: 24 }} disabled={!omniPreview.eligible}
+                      onClick={() => onOmniUnlockArea?.current?.(omniPick)} title={`Unlock ${displayAreaName(omniPick)} with an Omni-Key`}
+                      aria-label={`Unlock ${displayAreaName(omniPick)} with an Omni-Key`}>
+                      <img className="osrs-px" src={OMNI_KEY_SRC} alt="" aria-hidden="true" width={18} height={16} />Unlock
+                    </button>
+                    <button type="button" className="osrs-btn" style={{ flex: 1, height: 24 }} onClick={() => setOmniPick(null)}>Clear</button>
+                  </div>
+                </div>
+              ) : (
+                <span className="owm-small owm-muted">Hover an area to see the chunks an Omni-Key opens. Click it to choose.</span>
+              ))}
+            </div>
+          )}
+          <span className="owm-h" style={{ marginTop: 4 }}>Overlays</span>
+          <div className="owm-overlays">
+            {overlayCategories.map(cat => {
+              const count = overlaysData[cat]?.length ?? 0;
+              const label = cat.startsWith(CLUE_PREFIX) ? `${cat.slice(CLUE_PREFIX.length)} clues` : cat;
+              const on = overlayCats.has(cat);
+              return (
+                <label key={cat} className="owm-check" title={`${label}: ${count} marker${count === 1 ? '' : 's'}`}>
+                  <input className="owm-box" type="checkbox" checked={on} onChange={() => toggleOverlay(cat)}
+                    style={on ? { background: overlayColor(cat) } : undefined} />
+                  <span className="owm-ov-name">{label}</span><span className="owm-count">{count}</span>
+                </label>
+              );
+            })}
+            {overlayCategories.length > 0 && (
+              <>
+                <label className="owm-check" title="Only show markers in chunks you have unlocked">
+                  <input className="owm-box" type="checkbox" checked={overlayOwnedOnly} onChange={(e) => setOverlayOwnedOnly(e.target.checked)} />Unlocked chunks only
+                </label>
+                <label className="owm-check" title="Show live active shooting stars from the crowdsourced feed">
+                  <input className="owm-box" type="checkbox" checked={liveStarsOn} onChange={() => {
+                    if (!liveStarsOn && !getStarFeedUrl()) {
+                      const v = window.prompt('Live star feed URL (your Cloudflare Worker proxying starminers /data2):', '');
+                      if (v && v.trim()) { try { localStorage.setItem('fate_star_feed', v.trim()); } catch { /* ignore */ } } else { return; }
+                    }
+                    setLiveStarsOn(v => !v);
+                  }} />Live stars
+                  {liveStarsOn && (
+                    <input className="owm-world" value={starWorld} onChange={(e) => setStarWorld(e.target.value.replace(/[^0-9]/g, ''))} placeholder="world" aria-label="Star world" onClick={(e) => e.stopPropagation()} />
+                  )}
+                </label>
+                {liveStarsOn && (
+                  <span className="owm-small owm-tan">
+                    {liveStarErr === 'no-feed'
+                      ? 'No feed URL set. Toggle off and on to enter your proxy.'
+                      : liveStarErr
+                        ? <span style={{ color: '#ff3030' }}>Feed error: {liveStarErr}</span>
+                        : `${liveStarMarkers.length} site${liveStarMarkers.length === 1 ? '' : 's'} active${starWorld ? ` on world ${starWorld}` : ''}`}
+                  </span>
+                )}
+              </>
+            )}
+            {!lensReady && <span className="owm-small owm-muted">Loading map data...</span>}
+          </div>
+          <div className="owm-viewbtns">{osrsSideFooter?.current}</div>
+        </aside>
+
+        <div className="owm-main" ref={osrsWellRef}>
+          <div className="owm-mapbox" style={{ height: osrsBox?.h ?? 0 }}>
+            {mapLayer}
+            <div ref={osrsLabelsRef} className="owm-labels" aria-hidden="true">
+              {osrsLabels.map(l => (
+                <span key={l.key} data-px={l.px} data-py={l.py} style={{ color: l.owned ? '#ffffff' : '#b8ab92' }}>{l.label}</span>
+              ))}
+            </div>
+            {tip && (
+              <div className="owm-tip" style={{ left: tip.x, top: tip.y, transform: tip.flip ? 'translateX(-100%)' : undefined }}>
+                {tip.lines.map((ln, i) => <span key={i}>{ln}</span>)}
+              </div>
+            )}
+            {authoring && <div className="owm-author">{authoringPanel}</div>}
+            {chunkPanel}
+          </div>
+          <div className="owm-foot">
+            <span className="owm-foot-text" title="Drag to pan, scroll to zoom">
+              {toast ?? 'Darkened chunks are locked. Hover a chunk for what it holds.'}
+            </span>
+            {hoverChunk && <span className="owm-muted" style={{ flexShrink: 0 }}>chunk ({hoverChunk.cx}, {hoverChunk.cy})</span>}
+            <span className="owm-foot-btns">
+              <button type="button" className="osrs-btn owm-zoom" aria-label="Zoom out" title="Zoom out"
+                onClick={() => applyTransform({ ...transformRef.current, scale: Math.max(transformRef.current.scale - 0.1, 0.1) })}>-</button>
+              <button type="button" className="osrs-btn owm-zoom" aria-label="Zoom in" title="Zoom in"
+                onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.1, 5) })}>+</button>
+              <button type="button" className="osrs-btn" onClick={handleExport} disabled={isExporting} title="Export Map Image">{isExporting ? 'Saving...' : 'Download map'}</button>
+              <button type="button" className={`osrs-btn${showGrid ? ' is-on' : ''}`} aria-pressed={showGrid} onClick={() => setShowGrid(g => !g)} title="Toggle chunk grid (64-tile)">Chunk grid</button>
+              {isChunked && <button type="button" className={`osrs-btn${fogOn ? ' is-on' : ''}`} aria-pressed={fogOn} onClick={() => setFateMapPref('fog', !fogPref)} title="Fog over land you don't hold">Fog</button>}
+              {canAuthor && <button type="button" className={`osrs-btn${authoring ? ' is-on' : ''}`} aria-pressed={authoring} onClick={() => setAuthoring(a => !a)} title="Toggle chunk authoring mode">Author</button>}
+            </span>
+          </div>
+        </div>
+        {hoverCard}
+      </div>
+    );
+  }
+
 
   return (
     <div className="h-[600px] w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
@@ -1459,224 +2351,12 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           info. Portaled to <body> so its position:fixed resolves against the
           viewport, not a transformed ancestor (the tab wrapper's animation
           transform would otherwise offset it off-screen). */}
-      {hoverMarker && createPortal(
-        <div
-          className="fixed z-[100] pointer-events-none bg-[#0b0b0b]/95 border border-white/15 rounded-md shadow-xl px-2 py-1.5 max-w-[220px]"
-          style={{ left: hoverMarker.x + 14, top: hoverMarker.y + 14 }}
-        >
-          {hoverMarker.star ? (
-            <div className="text-[10px] text-gray-300 leading-snug">
-              <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-1"><WikiIcon file="Stardust_175.png" alt="" Fallback={Target} size={14} /> {hoverMarker.star.site}</div>
-              <div>Size <span className="text-gray-100 font-mono">T{hoverMarker.star.tier}</span> · {hoverMarker.star.worlds} world{hoverMarker.star.worlds === 1 ? '' : 's'}</div>
-              <div className="text-gray-400">{hoverMarker.star.landIn > 0 ? `lands in ~${hoverMarker.star.landIn} min` : 'landing now / active'}</div>
-              <div className="mt-1 pt-1 border-t border-white/10 text-gray-500 uppercase tracking-wide text-[8px]">Worlds</div>
-              <div className="flex flex-wrap gap-0.5 mt-0.5 max-w-[200px]">
-                {hoverMarker.star.worldList.slice(0, 24).map(w => (
-                  <span key={w} className="font-mono text-[9px] px-1 rounded bg-amber-500/15 text-amber-200">{w}</span>
-                ))}
-                {hoverMarker.star.worldList.length > 24 && (
-                  <span className="font-mono text-[9px] text-gray-500">+{hoverMarker.star.worldList.length - 24}</span>
-                )}
-              </div>
-            </div>
-          ) : hoverMarker.tier ? (
-            <div className="flex items-start gap-2">
-              <img src={CLUE_SCROLL_IMG[hoverMarker.tier]} alt="" className="w-7 h-7 shrink-0 mt-0.5" style={{ imageRendering: 'pixelated' }} />
-              <div className="min-w-0">
-                <div className="text-[11px] font-semibold" style={{ color: overlayColor(`${CLUE_PREFIX}${hoverMarker.tier}`) }}>{hoverMarker.tier} clue</div>
-                {hoverMarker.hint && <div className="text-[10px] text-gray-300 leading-snug italic">“{hoverMarker.hint}”</div>}
-              </div>
-            </div>
-          ) : hoverMarker.cat === 'Shooting Stars' ? (
-            <div className="text-[10px] text-gray-300">
-              <span className="font-semibold text-sky-300">Shooting star landing site</span>
-              <div className="text-gray-500">{activeStarKey ? 'Click another to move the active marker.' : 'Click to flag it as the active star.'}</div>
-            </div>
-          ) : (
-            <div className="text-[11px] font-semibold text-gray-200">{hoverMarker.cat}</div>
-          )}
-        </div>,
-        document.body,
-      )}
+      {hoverCard}
 
-      <div
-        ref={containerRef}
-        className={`w-full h-full ${authoring ? 'cursor-crosshair' : 'cursor-move'}`}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onClick={onClick}
-        onContextMenu={onContextMenu}
-        onMouseLeave={() => { onMouseUp(); setHoverTile(null); }}
-      >
-        <div
-          ref={mapContentRef}
-          id="map-content-inner"
-          style={{
-            // Initial value only — drags/zooms write to the node directly
-            // via applyTransform (see transformRef above).
-            transform: `translate(${transformRef.current.x}px, ${transformRef.current.y}px) scale(${transformRef.current.scale})`,
-            transformOrigin: '0 0',
-            width: `${MAP_IMAGE.width}px`,
-            height: `${MAP_IMAGE.height}px`,
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            willChange: 'transform',
-            ['--marker-r' as string]: `${MARKER_SCREEN_R / transformRef.current.scale}px`,
-          } as React.CSSProperties}
-        >
-          <MapSurface
-            chunkRects={chunkRects}
-            gridLines={gridLines}
-            showGrid={showGrid}
-            rectBox={rectBox}
-            rectKind={rectMode.current}
-            regionUnlocks={regionUnlocks}
-            chunkUnlocks={chunkUnlocks}
-            isChunked={isChunked}
-          />
+      {mapLayer}
 
-          {/* Chunk-lens highlight overlay — inside the transformed layer so the
-              glow pans & zooms with the map. Unlocked matches bright, locked dim. */}
-          {highlightRects.length > 0 && (
-            <svg
-              className="absolute inset-0 pointer-events-none"
-              width={MAP_IMAGE.width}
-              height={MAP_IMAGE.height}
-              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
-            >
-              {highlightRects.map(r => (
-                <rect
-                  key={r.key}
-                  x={r.x} y={r.y} width={r.w} height={r.h}
-                  fill={TONE_FILL[r.tone]}
-                  stroke={TONE_STROKE[r.tone]}
-                  strokeWidth={r.tone === 'good' ? 9 : r.tone === 'bad' ? 8 : 5}
-                  strokeDasharray={r.tone === 'warn' ? '16 12' : undefined}
-                  className={r.tone === 'good' ? 'lens-pulse' : ''}
-                />
-              ))}
-            </svg>
-          )}
-
-          {/* Map marker overlays (stars/implings/crop circles/crime/clues) —
-              inside the transformed layer so they pan & zoom with the map.
-              Owned-chunk markers bright, others dimmed. The <svg> stays
-              click-through; only the circles capture hover/click so map
-              dragging through the gaps still works. */}
-          {overlayMarkers.length > 0 && (
-            <svg
-              className="absolute inset-0 pointer-events-none"
-              width={MAP_IMAGE.width}
-              height={MAP_IMAGE.height}
-              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
-            >
-              {overlayMarkers.map(m => {
-                const active = m.star && activeStarKey === m.key;
-                return (
-                  <circle
-                    key={m.key}
-                    cx={m.x} cy={m.y}
-                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'auto', cursor: m.star ? 'pointer' : 'help' }}
-                    fill={m.color}
-                    fillOpacity={m.owned ? 0.9 : 0.25}
-                    stroke={active ? '#facc15' : '#000'}
-                    strokeOpacity={active ? 1 : 0.55}
-                    strokeWidth={active ? 3 : 1.5}
-                    vectorEffect="non-scaling-stroke"
-                    onMouseEnter={(e) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: m.cat, tier: m.tier, hint: m.hint })}
-                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
-                    onMouseLeave={() => setHoverMarker(null)}
-                    onClick={(e) => { if (m.star) { e.stopPropagation(); setActiveStarKey(k => (k === m.key ? null : m.key)); } }}
-                  />
-                );
-              })}
-              {/* Gold pulsing ring on the manually-flagged active shooting star. */}
-              {(() => {
-                const s = overlayMarkers.find(m => m.key === activeStarKey);
-                if (!s) return null;
-                return (
-                  <circle
-                    cx={s.x} cy={s.y}
-                    style={{ r: 'calc(var(--marker-r, 30px) * 2.2)', pointerEvents: 'none' }}
-                    fill="none" stroke="#facc15" strokeWidth={3} strokeOpacity={0.9}
-                    vectorEffect="non-scaling-stroke" className="lens-pulse"
-                  />
-                );
-              })()}
-            </svg>
-          )}
-
-          {/* Live active shooting stars (from the crowdsourced feed) — gold
-              pulsing rings at sites that currently have a star, hoverable for
-              world / tier / landing-time details. */}
-          {liveStarMarkers.length > 0 && (
-            <svg
-              className="absolute inset-0 pointer-events-none"
-              width={MAP_IMAGE.width}
-              height={MAP_IMAGE.height}
-              viewBox={`0 0 ${MAP_IMAGE.width} ${MAP_IMAGE.height}`}
-            >
-              {liveStarMarkers.map(s => {
-                const onEnter = (e: React.MouseEvent) => setHoverMarker({ x: e.clientX, y: e.clientY, cat: 'live-star', star: { site: s.site, worlds: s.worlds, worldList: s.worldList, tier: s.tier, landIn: s.landIn } });
-                return (
-                <g key={s.key}>
-                  {/* Transparent hit area covering the whole glow, so hovering the
-                      ring (not just the centre dot) shows the world list. */}
-                  <circle
-                    cx={s.x} cy={s.y}
-                    style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'all', cursor: 'help' }}
-                    fill="none"
-                    onMouseEnter={onEnter}
-                    onMouseMove={(e) => setHoverMarker(h => (h ? { ...h, x: e.clientX, y: e.clientY } : h))}
-                    onMouseLeave={() => setHoverMarker(null)}
-                  />
-                  <circle
-                    cx={s.x} cy={s.y}
-                    style={{ r: 'calc(var(--marker-r, 30px) * 2.4)', pointerEvents: 'none' }}
-                    fill="none" stroke="#facc15" strokeWidth={3} strokeOpacity={0.85}
-                    vectorEffect="non-scaling-stroke" className="lens-pulse"
-                  />
-                  <circle
-                    cx={s.x} cy={s.y}
-                    style={{ r: 'var(--marker-r, 30px)', pointerEvents: 'none' }}
-                    fill="#facc15" fillOpacity={0.95} stroke="#000" strokeOpacity={0.6} strokeWidth={1.5}
-                    vectorEffect="non-scaling-stroke"
-                  />
-                </g>
-              );})}
-            </svg>
-          )}
-
-          {/* Gold spotlight on the selected chunk (panel open / deep link) —
-              lives inside the transformed layer so it pans & zooms with the
-              map. Sibling of MapSurface so selection never re-renders the
-              memoized 700-element surface. */}
-          {selectedChunk && !authoring && (() => {
-            const { px, py } = tileToPixel({
-              tx: selectedChunk.cx * CHUNK_TILES,
-              ty: (selectedChunk.cy + 1) * CHUNK_TILES,
-            });
-            const size = CHUNK_TILES * (MAP_IMAGE.width / (MAP_BOUNDS.tileMaxX - MAP_BOUNDS.tileMinX));
-            return (
-              <div
-                className="absolute pointer-events-none rounded-sm border-[5px] border-yellow-400 animate-pulse"
-                style={{
-                  left: px,
-                  top: py,
-                  width: size,
-                  height: size,
-                  boxShadow: '0 0 28px 6px rgba(250, 204, 21, 0.55), inset 0 0 22px rgba(250, 204, 21, 0.35)',
-                }}
-              />
-            );
-          })()}
-        </div>
-      </div>
-
-      {/* Authoring toolbar (top-right) */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
+      {/* Authoring toolbar (top-right): maintainers only. */}
+      {canAuthor && <div className="absolute top-4 right-4 z-20 flex flex-col gap-2 items-end">
         <button
           onClick={() => setAuthoring(a => !a)}
           className={`px-3 py-1.5 rounded border text-xs font-semibold shadow-lg flex items-center gap-1.5 transition-colors ${authoring ? 'bg-amber-500/90 border-amber-300 text-black' : 'bg-black/80 border-white/20 text-white hover:bg-white/10'}`}
@@ -1686,163 +2366,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           {authoring ? 'Authoring ON' : 'Authoring OFF'}
         </button>
 
-        {authoring && (
-          <div className="bg-black/90 border border-white/20 rounded-md shadow-lg p-3 flex flex-col gap-2 w-[260px]">
-            {/* Layer toggle: paint broad continent blocks, or the named
-                sub-areas inside them (Falador, Port Sarim, …). */}
-            <div className="flex bg-[#0b0d10] border border-white/20 rounded p-0.5 gap-0.5">
-              {(['REGION', 'SUBAREA'] as const).map(lvl => (
-                <button
-                  key={lvl}
-                  onClick={() => setAuthorLevel(lvl)}
-                  className={`flex-1 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-colors ${authorLevel === lvl ? 'bg-amber-600/80 text-black' : 'text-gray-400 hover:text-gray-200'}`}
-                  title={lvl === 'REGION' ? 'Paint continent blocks (REGION_CHUNKS)' : 'Paint named sub-areas like Falador (SUB_AREA_CHUNKS)'}
-                >
-                  {lvl === 'REGION' ? 'Regions' : 'Sub-areas'}
-                </button>
-              ))}
-            </div>
-
-            <label className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
-              Active {authorLevel === 'SUBAREA' ? 'Sub-area' : 'Region'}
-            </label>
-            {authorLevel === 'SUBAREA' ? (
-              <select
-                value={activeSubArea}
-                onChange={e => setActiveSubArea(e.target.value)}
-                className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
-              >
-                {['Misthalin', ...Object.keys(REGION_GROUPS)].map(cont => (
-                  <optgroup key={cont} label={cont}>
-                    {(cont === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[cont]).map(name => {
-                      const count = subDraft[name]?.length ?? 0;
-                      return (
-                        <option key={name} value={name}>
-                          {displayAreaName(name)}{count ? ` (${count})` : ''}
-                        </option>
-                      );
-                    })}
-                  </optgroup>
-                ))}
-              </select>
-            ) : (
-              <select
-                value={activeRegion}
-                onChange={e => setActiveRegion(e.target.value)}
-                className="bg-[#0b0d10] border border-white/20 rounded px-2 py-1 text-xs text-white"
-              >
-                {CONTINENT_NAMES.map(name => {
-                  const count = draftChunks[name]?.length ?? 0;
-                  return (
-                    <option key={name} value={name}>
-                      {displayAreaName(name)}{count ? ` (${count})` : ''}
-                    </option>
-                  );
-                })}
-              </select>
-            )}
-
-            <div className="text-[10px] text-gray-400 leading-relaxed mt-1">
-              click = add · right-click = remove · shift+drag = paint · <b className="text-amber-300/80">alt+drag = box fill</b> · alt+right-drag = box erase · <b className="text-amber-300/80">⌘/Ctrl+Z undo</b>
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={undo}
-                disabled={undoStack.length === 0}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
-                title="Undo (⌘/Ctrl+Z)"
-              >
-                <Undo2 size={12} /> Undo{undoStack.length ? ` (${undoStack.length})` : ''}
-              </button>
-              <button
-                onClick={redo}
-                disabled={redoStack.length === 0}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
-                title="Redo (⌘/Ctrl+Y)"
-              >
-                <Redo2 size={12} /> Redo
-              </button>
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setSoloView(s => !s)}
-                className={`flex-1 px-2 py-1 rounded text-[11px] border flex items-center justify-center gap-1 ${soloView ? 'bg-emerald-900/80 border-emerald-500/60 text-emerald-200' : 'bg-black/60 border-white/20 text-gray-300 hover:bg-white/10'}`}
-                title="Show only the active region"
-              >
-                {soloView ? <Eye size={12} /> : <EyeOff size={12} />}
-                Solo
-              </button>
-              <button
-                onClick={clearActiveRegion}
-                disabled={activeChunkCount === 0}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-300 hover:bg-red-900/40 hover:text-red-200 disabled:opacity-40 disabled:hover:bg-black/60 flex items-center justify-center gap-1"
-                title="Remove all chunks for the active region"
-              >
-                <Trash2 size={12} />
-                Clear
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={exportDraftToClipboard}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-emerald-900/70 border-emerald-500/50 text-emerald-100 hover:bg-emerald-800/80 flex items-center justify-center gap-1"
-                title={authorLevel === 'SUBAREA' ? 'Copy SUB_AREA_CHUNKS as TS literal (paste into data/subAreaChunks.ts)' : 'Copy REGION_CHUNKS as TS literal'}
-              >
-                <ClipboardCopy size={12} />
-                TS
-              </button>
-              <button
-                onClick={exportDraftJson}
-                disabled={authorLevel === 'SUBAREA'}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-sky-900/70 border-sky-500/50 text-sky-100 hover:bg-sky-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
-                title={authorLevel === 'SUBAREA' ? 'JSON export works at the Regions level' : 'Download draft as JSON file'}
-              >
-                <FileDown size={12} />
-                JSON
-              </button>
-              <button
-                onClick={exportRuneLiteBundle}
-                disabled={authorLevel === 'SUBAREA'}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-amber-900/70 border-amber-500/50 text-amber-100 hover:bg-amber-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
-                title={authorLevel === 'SUBAREA' ? 'RuneLite export works at the Regions level' : 'Export bundle for RuneLite plugin (chunks + unlocks + offset)'}
-              >
-                <Radio size={12} />
-                RL
-              </button>
-              <button
-                onClick={() => importFileRef.current?.click()}
-                disabled={authorLevel === 'SUBAREA'}
-                className="flex-1 px-2 py-1 rounded text-[11px] border bg-indigo-900/70 border-indigo-500/50 text-indigo-100 hover:bg-indigo-800/80 disabled:opacity-40 flex items-center justify-center gap-1"
-                title={authorLevel === 'SUBAREA' ? 'JSON import works at the Regions level' : 'Import draft from JSON file'}
-              >
-                <FileUp size={12} />
-                Load
-              </button>
-              <button
-                onClick={clearDraft}
-                className="px-2 py-1 rounded text-[11px] border bg-black/60 border-white/20 text-gray-400 hover:bg-red-900/40 hover:text-red-200"
-                title="Reset this layer to the shipped baseline"
-              >
-                Wipe
-              </button>
-            </div>
-            <input
-              ref={importFileRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={handleImportFile}
-            />
-
-            <div className="text-[10px] text-gray-500 pt-1 border-t border-white/10">
-              {activeChunkCount} chunks in "{authorLevel === 'SUBAREA' ? activeSubArea : activeRegion}" · {totalRegionsWithChunks} {authorLevel === 'SUBAREA' ? 'sub-areas' : 'regions'} total
-            </div>
-          </div>
-        )}
-      </div>
+        {authoringPanel}
+      </div>}
 
       {/* Navigation controls (bottom-right) */}
       <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-20">
@@ -1861,6 +2386,15 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         >
           <Grid3x3 size={20} />
         </button>
+        {isChunked && (
+          <button
+            onClick={() => setFateMapPref('fog', !fogPref)}
+            className={`p-2 border rounded text-white shadow-lg active:scale-95 transition-transform ${fogOn ? 'bg-emerald-900/80 border-emerald-500/60' : 'bg-black/80 border-white/20 hover:bg-white/10'}`}
+            title="Fog over land you don't hold" aria-pressed={fogOn}
+          >
+            {fogOn ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
         <button
           onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.5, 5) })}
           className="p-2 bg-black/80 border border-white/20 rounded hover:bg-white/10 text-white shadow-lg active:scale-95 transition-transform"
@@ -1886,6 +2420,11 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
             tile ({Math.round(hoverTile.tx)}, {Math.round(hoverTile.ty)}) · chunk ({hoverChunk.cx}, {hoverChunk.cy})
           </div>
         )}
+        {hoverChunk && fateLines(chunkKey(hoverChunk)).length > 0 && (
+          <div className="bg-black/85 px-3 py-1.5 rounded border border-amber-400/40 text-[11px] text-amber-200 shadow-lg max-w-[320px] flex flex-col gap-0.5">
+            {fateLines(chunkKey(hoverChunk)).map(line => <span key={line}>{line}</span>)}
+          </div>
+        )}
         {toast && (
           <div className="bg-emerald-900/90 border border-emerald-500/60 px-3 py-1.5 rounded text-[11px] font-mono text-emerald-200 shadow-lg">
             {toast}
@@ -1895,43 +2434,22 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
       {/* Chunk activity panel: click any chunk (outside authoring) to see what
           that chunk — or its whole area — offers, gated by the run's unlocks. */}
-      {selectedChunk && !authoring && (() => {
-        const region = Object.entries(draftChunks).find(([, list]) =>
-          list.some(c => c.cx === selectedChunk.cx && c.cy === selectedChunk.cy),
-        )?.[0] ?? null;
-        const subArea = chunkSubArea[`${selectedChunk.cx},${selectedChunk.cy}`] ?? null;
-        const unlocked = isChunked
-          ? isChunkUnlocked(chunkKey(selectedChunk), chunkUnlocks)
-          : subArea
-            ? isRegionUnlocked(subArea, regionUnlocks)
-            : region ? isRegionUnlocked(region, regionUnlocks) : false;
-        const wholeAreaOwnershipMixed = isChunked || (
-          region != null
-          && hasMixedAreaOwnership(
-            draftChunks[region] ?? [],
-            region,
-            chunkSubArea,
-            regionUnlocks,
-          )
-        );
-
-        return (
-          <ChunkActivityPanel
-            chunk={selectedChunk}
-            region={region}
-            subArea={subArea}
-            regionChunks={region ? draftChunks[region] : []}
-            unlocked={unlocked}
-            wholeAreaOwnershipMixed={wholeAreaOwnershipMixed}
-            onClose={() => setSelectedChunk(null)}
-          />
-        );
-      })()}
+      {chunkPanel}
     </div>
   );
-}, (prev, next) => prev.regionUnlocks === next.regionUnlocks && prev.chunkUnlocks === next.chunkUnlocks && prev.isChunked === next.isChunked);
+}, (prev, next) => prev.regionUnlocks === next.regionUnlocks && prev.chunkUnlocks === next.chunkUnlocks && prev.isChunked === next.isChunked && prev.osrs === next.osrs);
 
-export const RegionMap: React.FC = () => {
+/**
+ * `osrs` draws the World board instead of the classic map card: the Regions
+ * side panel, the framed map and its footer. Only the OSRS World tab passes
+ * it; `osrsSideFooter` holds that tab's Map / List buttons for the panel.
+ */
+export const RegionMap: React.FC<{
+  osrs?: boolean;
+  osrsSideFooter?: React.MutableRefObject<React.ReactNode>;
+  /** OSRS World tab: spend an Omni-Key on an area (Dashboard confirms first). */
+  onOmniUnlockArea?: React.MutableRefObject<((area: string) => void) | undefined>;
+}> = ({ osrs = false, osrsSideFooter, onOmniUnlockArea }) => {
   const { unlocks, runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId, customMode, bossStandardKeysAwarded } = useGame();
   const visibleRegionUnlocks = useMemo(
     () => visibleAreaUnlocks(unlocks.regions),
@@ -1942,5 +2460,5 @@ export const RegionMap: React.FC = () => {
   const snapRef = useRef<GameSnapshot>({ runId, runRevision, keys: 0, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [] as string[], gameModeId: gameModeId ?? 'vanilla' });
   snapRef.current = { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals: pinnedGoals ?? [], linkedAccount, equipment: unlocks.equipment, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded };
   const getGameSnapshot = useCallback(() => snapRef.current, []);
-  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} />;
+  return <MapContent regionUnlocks={visibleRegionUnlocks} chunkUnlocks={unlocks.chunks ?? []} isChunked={gameModeId === 'chunked'} getGameSnapshot={getGameSnapshot} osrs={osrs} osrsSideFooter={osrsSideFooter} onOmniUnlockArea={onOmniUnlockArea} />;
 };

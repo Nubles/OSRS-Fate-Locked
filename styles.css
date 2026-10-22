@@ -151,6 +151,30 @@ a:focus:not(:focus-visible),
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* The Journal's quest list (200+ cards): the browser skips style, layout and
+   paint for cards far off screen. That also keeps completing a quest quick:
+   the finished card moves in the list, and sibling rules (the space-y/divide
+   utilities, "* + *") make the browser restyle every card after it, a 1-2 s
+   freeze on a long run when they were all drawn. The height is a first guess
+   for a card not drawn yet; `auto` then keeps each card's real height once
+   drawn. Diary and Combat Achievement cards don't use it: they're few, and a
+   smooth jump to a diary tier landed short while the cards it passed changed
+   size. */
+.journal-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 110px;
+}
+@media (max-width: 719px) {
+  .journal-card { contain-intrinsic-size: auto 200px; }
+}
+
+/* Quest-complete celebration (QuestCompleteOverlay). Kept here, not in a
+   <style> the overlay mounts: adding or removing a stylesheet makes the
+   browser restyle the whole page. */
+@keyframes qc-pop { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.04); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes qc-spark { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+@keyframes qc-glow { 0%, 100% { opacity: .35; } 50% { opacity: .7; } }
+
 /* Reduced-motion: only suppress the decorative hover-lift. The app's core
    animations (rolls, reveals, rituals) are controlled by the in-app
    animations toggle, so we deliberately do NOT blanket-disable them here —

@@ -3,12 +3,12 @@
  *
  * Chunked rolls are random-adjacent, so the player never *chooses* a chunk —
  * but knowing what the frontier is worth still matters: which rollable chunks
- * would give a first foothold in a new named area (opening its quests/diaries
- * via isNamedAreaReachableViaChunks) or reach an exact quest/diary location,
- * and which are just empty tiles. Both reuse the exact impact engine the
- * Region Advisor runs on (computeUnlockImpact is chunk-aware via gameModeId);
- * chunk-local content (bank/shops/monsters) is layered on as a tie-breaker so
- * a bank chunk ranks above bare wilderness even when neither opens a new area.
+ * would make a quest or diary tier doable (computeUnlockImpact, through the
+ * Journal's exact-chunk checks) or a skill trainable (chunkedTrainingTiers,
+ * as Skills Keys roll), and which are just empty tiles. A first chunk of a
+ * named area earns nothing by itself: in Chunked, content counts only in the
+ * chunk it is in. Chunk-local content (bank/shops/monsters) is layered on as
+ * a tie-breaker so a bank chunk ranks above bare wilderness.
  *
  * Pure function — content comes in through the optional lookup callbacks so
  * the lazily-fetched ChunkContentService stays out of this module.
@@ -17,6 +17,7 @@
 import { getChunkFrontier, chunkKey, chunkLabel, chunkSubArea, chunkRegion } from './chunkAdjacency';
 import { isNamedAreaReachableViaChunks } from './reachability';
 import { computeUnlockImpact, prepareUnlockImpactContext, type PreparedUnlockImpactContext } from './unlockImpact';
+import { chunkedFrontier } from './journalStatus';
 import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 
@@ -31,8 +32,8 @@ const LOCATION_CHUNK_KEYS: ReadonlySet<string> = new Set(
     .flatMap(location => location.chunkOptions.map(chunkKey)),
 );
 
-/** Sort bonus per new named area a chunk gives a first foothold in. */
-const FOOTHOLD_BONUS = 3;
+/** Sort bonus per skill a chunk makes trainable: as much as a diary tier and a half. */
+const SKILL_BONUS = 3;
 
 export interface FrontierContent {
   monsters: number;
@@ -47,6 +48,8 @@ export interface RankedFrontierChunk {
   label: string;
   /** Named areas this chunk would give a FIRST foothold in (sub-area and/or continent). */
   newAreas: string[];
+  /** Skills this chunk would make trainable at the run's tiers, so a Skills Key can roll them. */
+  newSkills: string[];
   newQuestNames: string[];
   newDiaryIds: string[];
   cascadeQuestNames: string[];
@@ -55,15 +58,9 @@ export interface RankedFrontierChunk {
   score: number;
   cascadeScore: number;
   content?: FrontierContent;
-  /** Small chunk-local bonus for ranking ties: at most 2.5, below one foothold's bonus. */
+  /** Small chunk-local bonus for ranking ties: at most 2.5, below one new skill's bonus. */
   contentScore: number;
-  /**
-   * What the row actually sorts by: cascade impact + content + a flat bonus
-   * per new-area foothold. The bonus exists because the impact engine only
-   * counts quests/diaries, but a first foothold also opens area-gated content
-   * it can't see (merchants, resources, slayer reach) — without it, "opens
-   * Al Kharid" ranks below any bank tile.
-   */
+  /** What the row sorts by: cascade impact + content + a flat bonus per new trainable skill. */
   sortScore: number;
 }
 
@@ -85,6 +82,10 @@ export function rankFrontierChunks(
   const chunks: string[] = unlocks.chunks ?? [];
   // Every simulation starts from the same snapshot, so its statuses are shared.
   let context: PreparedUnlockImpactContext | undefined;
+  // Once the chunk content is in (utils/chunkedContentChecks.ts), only the
+  // chunks the Journal's checks read can open anything, only diary tiers held
+  // back by places and quests alone are simulated, and new skills are known.
+  const frontier = chunkedFrontier(unlocks);
 
   return getChunkFrontier(chunks, unlocks)
     .map((c): RankedFrontierChunk => {
@@ -97,9 +98,10 @@ export function rankFrontierChunks(
       const newAreas = [chunkSubArea(key), chunkRegion(key)]
         .filter((n): n is string => !!n && !isNamedAreaReachableViaChunks(n, chunks));
 
-      const impact = newAreas.length > 0 || LOCATION_CHUNK_KEYS.has(key)
+      const impact = newAreas.length > 0 || LOCATION_CHUNK_KEYS.has(key) || frontier?.contentChunks.has(key)
         ? computeUnlockImpact(unlocks, { ...unlocks, chunks: [...chunks, key] }, gameModeId, {
             context: context ??= prepareUnlockImpactContext(unlocks, gameModeId),
+            diaryIds: frontier?.diaryIds,
           })
         : null;
 
@@ -113,9 +115,10 @@ export function rankFrontierChunks(
             hasBank: bank,
           }
         : undefined;
+      const newSkills = frontier?.newSkills(key) ?? [];
       // Banks and shops are worth more than yet-another-monster. At most 10,
-      // quartered to 2.5 so content alone never outranks a genuine new-area
-      // foothold (FOOTHOLD_BONUS).
+      // quartered to 2.5 so content alone never outranks a new trainable
+      // skill (SKILL_BONUS).
       const contentScore = content
         ? ((content.hasBank ? 3 : 0)
           + Math.min(content.shops, 3)
@@ -128,6 +131,7 @@ export function rankFrontierChunks(
         key,
         label: chunkLabel(key),
         newAreas,
+        newSkills,
         newQuestNames: impact?.directQuestNames ?? [],
         newDiaryIds: impact?.directDiaryIds ?? [],
         cascadeQuestNames: impact?.cascadeQuestNames ?? [],
@@ -136,7 +140,7 @@ export function rankFrontierChunks(
         cascadeScore,
         content,
         contentScore,
-        sortScore: cascadeScore + contentScore + newAreas.length * FOOTHOLD_BONUS,
+        sortScore: cascadeScore + contentScore + newSkills.length * SKILL_BONUS,
       };
     })
     .sort(

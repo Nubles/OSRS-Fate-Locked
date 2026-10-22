@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, useDeferredValue, useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -12,13 +12,22 @@ import type { AreaRoutes } from '../utils/areaRoutes';
 import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import {
-  countDoableDiaryTasks, evaluateQuestEligibility, evaluateDiaryTierEligibility,
+  countDoableDiaryTasks, evaluateDiaryTaskEligibility, evaluateQuestEligibility, evaluateDiaryTierEligibility,
 } from '../utils/journalStatus';
+import { canonicalBossId } from '../utils/contentIdentity';
+import { getActivityAccess } from '../utils/activityAccess';
+import type { DiaryTask } from '../data/diaryTasks';
+import type { CATask } from '../data/caTasks';
 import {
   CA_TIER_ORDER,
   completedCAPoints,
   earnedCATiers,
 } from '../utils/caProgress';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+
+// OSRS layout only: the home page Journal window.
+const OsrsJournalSummary = lazyWithRetry(() => import('./osrs/OsrsJournalSummary'));
 
 /**
  * Compact "what can I do right now?" summary card for the Dashboard CHARACTER
@@ -135,6 +144,39 @@ export function recommendNextAction(
   return { tab: null, headline: `Everything's done!`, detail: `All journal content completed` };
 }
 
+/**
+ * The diary tasks doable right now, as a list: the tasks countDoableDiaryTasks
+ * counts (in a tier not yet complete, not done, every requirement met).
+ */
+export function doableDiaryTasks<T extends DiaryTask>(
+  tasks: readonly T[], unlocks: UnlockState, gameModeId?: string, areaRoutes?: AreaRoutes | null,
+): T[] {
+  return tasks.filter(task => !unlocks.diaries.includes(task.tierId)
+    && !unlocks.completedTasks.includes(task.id)
+    && evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes).eligible);
+}
+
+/**
+ * Combat Achievement tasks doable now: not done, and fought at a boss the run
+ * has unlocked (the opposite of caTaskLockedBoss). In Chunked the boss must
+ * also be in the run's chunks (getActivityAccess). Tasks at a monster that is
+ * not a boss carry no unlock to check, so they are not counted.
+ */
+export function doableCATasks<T extends Pick<CATask, 'id' | 'monster'>>(
+  tasks: readonly T[], unlocks: Pick<UnlockState, 'completedTasks' | 'bosses'>, gameModeId?: string,
+): T[] {
+  const done = new Set(unlocks.completedTasks);
+  const reachable = new Map<string, boolean>();
+  return tasks.filter(task => {
+    if (done.has(task.id)) return false;
+    const boss = canonicalBossId(task.monster);
+    if (!boss || !unlocks.bosses.includes(boss)) return false;
+    if (gameModeId !== 'chunked') return true;
+    if (!reachable.has(boss)) reachable.set(boss, getActivityAccess(boss, unlocks as UnlockState, gameModeId).eligible);
+    return reachable.get(boss)!;
+  });
+}
+
 /** "6 quests and 3 miniquests", as the Quest Log lists them under two headings. */
 export function questsReadyLabel(available: number, miniquests: number): string {
   const quests = available - miniquests;
@@ -144,9 +186,18 @@ export function questsReadyLabel(available: number, miniquests: number): string 
   return `${plural(quests, 'quest')} and ${plural(miniquests, 'miniquest')}`;
 }
 
-export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
-  const { unlocks, advisorsEnabled, gameModeId } = useGame();
-  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+/**
+ * The numbers behind the card: quests, diary tasks and combat achievements,
+ * plus the single recommended next action. Shared by the classic card and
+ * the OSRS layout's Journal window, so both always agree.
+ */
+export function useJournalSummaryModel() {
+  const { unlocks: liveUnlocks, advisorsEnabled, gameModeId, hasSeenOnboarding } = useGame();
+  // The counts walk every quest, diary and CA task. Working them out in a
+  // follow-up render lets an unlock's reveal draw first instead of waiting.
+  const unlocks = useDeferredValue(liveUnlocks);
+  // The map's transport data is large; a first visit's onboarding covers this card.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
 
   const stats = useMemo(() => {
     // ── Quests available ─────────────────────────────────────────────────────
@@ -176,6 +227,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     ).length;
     const caTasksLeft = caTasksTotal - caTasksDone;
     const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
+    const caTasksDoable = doableCATasks(ALL_CA_TASKS, unlocks, gameModeId).length;
 
     return {
       quests: {
@@ -184,6 +236,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       diaries: { doable: diaryTasksDoable, done: diaryTasksDone, total: diaryTasksTotal },
       ca: {
         left: caTasksLeft,
+        doable: caTasksDoable,
         done: caEarnedTiers.length,
         total: caTiersTotal,
         tasksDone: caTasksDone,
@@ -200,6 +253,42 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
     () => recommendNextAction(unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes),
     [unlocks, stats.diaries.doable, stats.ca.left, gameModeId, areaRoutes],
   );
+  return { stats, recommendation, advisorsEnabled };
+}
+
+export type JournalSummaryModel = ReturnType<typeof useJournalSummaryModel>;
+
+/** "6 quests and 1 miniquest ready to complete", or the empty state. */
+export const journalSummaryQuestSub = (stats: JournalSummaryModel['stats']): string =>
+  stats.quests.available > 0
+    ? `${questsReadyLabel(stats.quests.available, stats.quests.miniquests)} ready to complete`
+    : 'None available yet';
+
+export const journalSummaryDiarySub = (stats: JournalSummaryModel['stats']): string =>
+  stats.diaries.doable > 0
+    ? `${stats.diaries.doable} task${stats.diaries.doable !== 1 ? 's' : ''} doable now`
+    : 'No new tasks accessible yet';
+
+export const journalSummaryCASub = (stats: JournalSummaryModel['stats']): string =>
+  stats.ca.nextTier
+    ? `${CA_DATA[stats.ca.nextTier].pointsRequired - stats.ca.points} points to ${stats.ca.nextTier}`
+    : 'All reward tiers earned!';
+
+/** "12/41 pts": points toward the next reward tier (all of them once every tier is earned). */
+export const caPointsLabel = (stats: JournalSummaryModel['stats']): string => {
+  const goal = stats.ca.nextTier ? CA_DATA[stats.ca.nextTier].pointsRequired : stats.ca.pointsTotal;
+  return `${stats.ca.points.toLocaleString()}/${goal.toLocaleString()} pts`;
+};
+
+/** The home page Journal summary: the OSRS Journal window, or the classic card. */
+export const JournalSummaryCard: React.FC<Props> = (props) => (
+  useIsOsrsUi()
+    ? <Suspense fallback={<ClassicJournalSummaryCard {...props} />}><OsrsJournalSummary {...props} /></Suspense>
+    : <ClassicJournalSummaryCard {...props} />
+);
+
+const ClassicJournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
+  const { stats, recommendation, advisorsEnabled } = useJournalSummaryModel();
 
   const rows: Array<{
     key: 'QUESTS' | 'DIARIES' | 'CA';
@@ -221,9 +310,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       barColor: 'bg-blue-500/50',
       badgeColor: 'bg-blue-900/40 text-blue-300 border-blue-500/30',
       headline: `${stats.quests.done}/${stats.quests.total} done`,
-      sub: stats.quests.available > 0
-        ? `${questsReadyLabel(stats.quests.available, stats.quests.miniquests)} ready to complete`
-        : 'None available yet',
+      sub: journalSummaryQuestSub(stats),
       pct: Math.round((stats.quests.done / stats.quests.total) * 100),
       badgeValue: stats.quests.available,
     },
@@ -235,9 +322,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       barColor: 'bg-green-500/50',
       badgeColor: 'bg-green-900/40 text-green-300 border-green-500/30',
       headline: `${stats.diaries.done}/${stats.diaries.total} tasks done`,
-      sub: stats.diaries.doable > 0
-        ? `${stats.diaries.doable} task${stats.diaries.doable !== 1 ? 's' : ''} doable now`
-        : 'No new tasks accessible yet',
+      sub: journalSummaryDiarySub(stats),
       pct: Math.round((stats.diaries.done / stats.diaries.total) * 100),
       badgeValue: stats.diaries.doable,
     },
@@ -249,9 +334,7 @@ export const JournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       barColor: 'bg-red-500/50',
       badgeColor: 'bg-red-900/40 text-red-300 border-red-500/30',
       headline: `${stats.ca.points}/${stats.ca.pointsTotal} points · ${stats.ca.done}/${stats.ca.total} rewards`,
-      sub: stats.ca.nextTier
-        ? `${CA_DATA[stats.ca.nextTier].pointsRequired - stats.ca.points} points to ${stats.ca.nextTier}`
-        : 'All reward tiers earned!',
+      sub: journalSummaryCASub(stats),
       pct: Math.round((stats.ca.points / stats.ca.pointsTotal) * 100),
       badgeValue: stats.ca.left,
     },

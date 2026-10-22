@@ -88,6 +88,18 @@ describe('evaluateActivityReadiness', () => {
     )).toEqual({ status: 'READY' });
   });
 
+  it('needs the entrance chunk itself in chunked mode, not any chunk of the area', () => {
+    const req = getActivityReq('Giant Mole');
+    // 47,52 is Falador, but the mole hole is in 46,51.
+    expect(evaluateActivityReadiness(true, req, unlocked({ chunks: ['47,52'] }), 'chunked')).toMatchObject({
+      status: 'NOT_READY',
+      blockers: [{ kind: 'area', label: 'Falador (46, 51)' }],
+    });
+    expect(evaluateActivityReadiness(true, req, unlocked({ chunks: ['46,51'] }), 'chunked').status).not.toBe('NOT_READY');
+    // Vanilla keeps the named area.
+    expect(evaluateActivityReadiness(true, req, unlocked({ regions: ['Falador'] }), 'vanilla').status).not.toBe('NOT_READY');
+  });
+
   it('enforces Soul Wars combat 40, total level 500, and tutorial confirmation', () => {
     const req = getActivityReq('Soul Wars');
 

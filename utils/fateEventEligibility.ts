@@ -1,7 +1,9 @@
 import { DROP_RATES } from '../config/rules';
+import { usesActivityKeyReserves } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
-import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
+import { MINIGAME_KEY_RESERVES } from '../data/minigameKeyReserves';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE, type BossTier } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
@@ -30,6 +32,7 @@ import {
   type CompletionAttestation,
 } from './journalCompletion';
 import { skillLevelKeyChance } from './keyRoll';
+import { chunkedCATaskBlocker, levelPastTierCap, levelRolledAt, tierCap } from './chunkedFate';
 
 const normalize = (value: string): string =>
   value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('en-GB');
@@ -83,6 +86,10 @@ for (const tab of Object.values(COLLECTION_LOG_DATA)) {
 // card as a low-tier kill with its own Vanilla key reserve.
 const BOSS_INDEX = new Map(
   [...Object.keys(BOSS_TIERS), BRUTUS_BOSS_NAME].map((name) => [normalize(name), name]),
+);
+
+const MINIGAME_INDEX = new Map(
+  Object.keys(MINIGAME_KEY_RESERVES).map((name) => [normalize(name), name]),
 );
 
 const SLAYER_SOURCES = [
@@ -234,10 +241,18 @@ function classifySkill(event: FateEventEnvelope, state: GameState): EventClassif
   // A locked skill cannot be levelled, and a level already recorded rolls once.
   if ((state.unlocks.skills[skill] ?? 0) <= 0) return blocked('Unlock this skill before its levels can roll.');
   if ((level as number) <= (state.unlocks.levels[skill] ?? 1)) return blocked('This level is already recorded.');
+  // Chunked: as with the manual button, a level past the tier cap rolls nothing.
+  const recorded = state.unlocks.levels[skill] ?? 1;
+  if (levelPastTierCap(state.gameModeId, state.unlocks, skill, recorded + 1)) {
+    return blocked(`${skill} has reached its tier cap of level ${tierCap(state.unlocks.skills[skill] ?? 0)}. In Chunked, levels past the cap roll no Keys until its next tier opens.`);
+  }
   const target = `${skill} Level ${level}`;
+  // A jump across the cap rolls at the capped level's odds, as the manual
+  // levels up to the cap would; the ones past it roll nothing.
+  const rolledAt = levelRolledAt(state.gameModeId, state.unlocks, skill, level as number);
   return {
     state: 'READY',
-    intent: { source: target, threshold: skillLevelKeyChance(level as number), failureFate: failureFateForSkillLevel(level as number), target },
+    intent: { source: target, threshold: skillLevelKeyChance(rolledAt), failureFate: failureFateForSkillLevel(rolledAt), target },
     progress: { kind: 'SKILL_LEVEL', skill, level: level as number },
   };
 }
@@ -283,6 +298,8 @@ function classifyCombatAchievement(event: FateEventEnvelope, state: GameState): 
   if (!source) return { state: 'BLOCKED', reason: 'Combat task tier is not supported.' };
   const decision = caTaskCompletionDecision(task, state.unlocks.completedTasks);
   if (decision.ok === false) return blocked(decision.reason);
+  const outsideChunks = chunkedCATaskBlocker(task, state.unlocks, state.gameModeId);
+  if (outsideChunks) return blocked(outsideChunks);
   return ready(source, task.name ?? task.description, { kind: 'CA_TASK', taskId: task.id });
 }
 
@@ -344,15 +361,29 @@ function classifyBoss(event: FateEventEnvelope, state: GameState): EventClassifi
   if (event.eventType !== expectedType) {
     return needsConfirmation('The detected encounter type does not match this activity.');
   }
-  if (state.gameModeId !== 'vanilla') return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
-  // Vanilla's Bossing list rolls only unlocked bosses (Brutus is always
-  // there), each from its own key reserve.
+  if (!usesActivityKeyReserves(state.gameModeId)) return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' });
+  // Vanilla's and Chunked's Bossing lists roll only unlocked bosses (Brutus
+  // is always there), each from its own key reserve.
   if (!isBrutus && !state.unlocks.bosses.includes(bossName)) return blocked('Unlock this boss before its kills can roll.');
   const stage = vanillaBossKeyStage(bossName, state.bossStandardKeysAwarded?.[bossName] ?? 0);
   if (stage.currentRate === null) return blocked('This boss has no Standard Keys left to award.');
   return ready(TIER_SOURCE[tier], bossName, { kind: 'NONE' }, {
     threshold: stage.currentRate,
     context: { kind: 'boss', bossName, bossClass: isBrutus ? 'brutus' : tier },
+  });
+}
+
+function classifyMinigame(label: string, state: GameState): EventClassification {
+  if (!usesActivityKeyReserves(state.gameModeId)) return ready(DropSource.ACTIVITY_MINIGAME, label, { kind: 'NONE' });
+  // Vanilla's and Chunked's Activities lists roll only unlocked minigames, each from its own key reserve.
+  const name = MINIGAME_INDEX.get(normalize(label));
+  if (!name) return needsConfirmation('Minigame is not in the current rules.');
+  if (!state.unlocks.minigames.includes(name)) return blocked('Unlock this minigame before it can roll.');
+  const stage = vanillaMinigameKeyStage(name, state.minigameStandardKeysAwarded?.[name] ?? 0);
+  if (stage.currentRate === null) return blocked('This minigame has no Standard Keys left to award.');
+  return ready(DropSource.ACTIVITY_MINIGAME, name, { kind: 'NONE' }, {
+    threshold: stage.currentRate,
+    context: { kind: 'minigame', minigameName: name },
   });
 }
 
@@ -471,7 +502,7 @@ export function classifyFateEventCandidate(
   }
   if (event.eventType === 'MINIGAME_COMPLETION') {
     return event.canonicalLabel && target === event.canonicalLabel
-      ? ready(DropSource.ACTIVITY_MINIGAME, target, { kind: 'NONE' })
+      ? classifyMinigame(target, state)
       : needsConfirmation('Confirm the completed minigame.');
   }
   if (event.eventType === 'BOSS_KILL' || event.eventType === 'RAID_COMPLETION') {

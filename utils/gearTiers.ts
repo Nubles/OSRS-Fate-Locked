@@ -33,6 +33,13 @@ const NAMED_TIERS: [RegExp, number][] = [
   // family, even when their name contains a god, metal or high-end weapon.
   [/^(?:armadyl pendant|dark bow tie|dragon necklace|robe of elidinis \((?:top|bottom)\)|rune satchel|steel coffin|ring of 3rd age|zenyte (?:amulet|bracelet|necklace|ring))$/, 1],
   [/^(?:bronze|iron|steel|mithril|adamant|rune|dragon) (?:dragon mask|staff of collection)$/, 1],
+  // Gauntlet equipment is made inside the Gauntlet and lost on leaving it, so it
+  // never restricts. Its names would otherwise match the T8 crystal armour rule.
+  [/^(?:crystal|corrupted) (?:helm|body|legs|bow|halberd|staff) \((?:basic|attuned|perfected)\)$/, 1],
+  // Leather in the name, but not leather armour: wield levels set these.
+  [/^frog-leather (?:body|chaps|boots)$|^hard leather shield$/, 2], // 25 Defence and Ranged; 20 Ranged
+  [/^corrupted morrigan's leather (?:body|chaps) \(bh\)$/, 3], // 20 Defence
+  [/^morrigan's leather (?:body|chaps) \((?:bh|deadman mode)\)$/, 8], // 78 Defence
   [/^collection log \(|^crate of (?:adamantite ore|mithril ore|steel bars|xerician fabrics)$| max hood$|^(?:demonic pacts|raging echoes|shattered relics|trailblazer(?: reloaded)?|twisted) (?:bronze|iron|steel|mithril|adamant|rune|dragon) trophy$/, 1],
 
   // Basic elemental staves have the same magic accuracy and no equip-level
@@ -165,7 +172,9 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/infernal cape/, 9],
   [/fire (max )?cape/, 8],
   [/imbued .*cape|(saradomin|guthix|zamorak) cape|god cape/, 8],
-  [/(ardougne cloak|mythical cape|cape of accomplishment)/, 6],
+  [/(mythical cape|cape of accomplishment)/, 6],
+  // Diary cloaks carry tiny bonuses (+2 to +6), like a plain cape.
+  [/^ardougne cloak [1-4]$/, 1],
   // hands
   [/barrows gloves/, 7],
   [/ferocious gloves/, 9],
@@ -365,3 +374,16 @@ export const anchoredTier = (
   }
   return Math.min(tierMax, Math.max(1, list[list.length - 1].tier));
 };
+
+/** OSRS wield levels for the combat skills that set an item's Fate tier. */
+export type WieldLevels = Partial<Record<'attack' | 'strength' | 'defence' | 'ranged' | 'magic', number>>;
+
+/**
+ * Reviewed placements for gear the material ladder can't name
+ * (data/equipmentReview.ts). `wieldLevels` are OSRS Wiki facts; `placed`
+ * are Fate choices for items whose wield level doesn't decide their tier.
+ */
+export interface EquipmentReview {
+  wieldLevels: Record<string, WieldLevels>;
+  placed: Record<string, number>;
+}

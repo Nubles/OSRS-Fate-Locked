@@ -64,3 +64,24 @@ describe('Spend Keys Areas card', () => {
     expect(card('Areas').textContent).toContain(`0/${REGIONS_LIST.length}`);
   });
 });
+
+describe('Spend Keys Chunks card', () => {
+  it('counts the start chunk out of every land chunk, as the share card does', async () => {
+    const chunks = ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'];
+    await renderWith({ ...createFreshState().unlocks, regions: [], chunks }, 'chunked');
+
+    // Once read 8/622 here and 9/623 on the share map card.
+    const { runProgress } = await import('../utils/runProgress');
+    const shared = runProgress({ ...createFreshState().unlocks, chunks }, 'chunked');
+    expect(card('Chunks').textContent).toContain(`${shared.unlocked}/${shared.total}`);
+    expect(card('Chunks').textContent).toContain('9/623');
+  });
+});
+
+describe('Spend Keys has no start-chunk milestone line', () => {
+  it('shows no start-chunk Key countdown on the start chunk', async () => {
+    await renderWith({ ...createFreshState().unlocks, regions: [], chunks: [] }, 'chunked');
+    expect(screen.queryByTestId('start-chunk-milestone')).toBeNull();
+    expect(document.body.textContent).not.toMatch(/to a Key|guaranteed Key/);
+  });
+});

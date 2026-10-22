@@ -6,6 +6,7 @@
  * Landing coordinates use the reviewed Chunk Picker records.
  */
 export const CHUNK_BOAT_LANDINGS = [
+  { from: '47,50', to: '44,52', label: 'Monk of Entrana — Entrana', source: 'https://oldschool.runescape.wiki/w/Monk_of_Entrana?oldid=15258509' },
   { from: '52,53', to: '58,59', label: 'Digsite barge — Museum Camp', source: 'https://oldschool.runescape.wiki/w/Fossil_Island?oldid=15341450' },
   { from: '57,54', to: '57,46', label: "Bill Teach — Mos Le'Harmless", source: 'https://oldschool.runescape.wiki/w/Bill_Teach?oldid=15297848' },
   { from: '57,46', to: '59,44', label: 'Brother Tranquility — Harmony Island', source: 'https://oldschool.runescape.wiki/w/Brother_Tranquility?oldid=15196274' },

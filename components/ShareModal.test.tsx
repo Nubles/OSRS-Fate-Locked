@@ -13,6 +13,7 @@ import {
 import { ShareModal } from './ShareModal';
 import type { LogEntry } from '../types';
 import { computeRunId } from '../utils/integrity';
+import { UI_STYLE_KEY } from '../utils/uiStyle';
 
 const mockGame = vi.hoisted(() => ({
   current: {
@@ -105,6 +106,26 @@ describe('ShareModal region summary', () => {
     expect(summary).not.toContain("Heroes' Guild");
   });
 
+  it("measures a Chunked run's World Mastery in owned chunks per region, Misthalin included", async () => {
+    // The review's mid run: 8 chunks around Lumbridge and Al Kharid once read
+    // "Islands & Others 20%, Kharidian Desert 7%" with no Misthalin.
+    mockGame.current.gameModeId = 'chunked';
+    mockGame.current.unlocks.chunks = ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'];
+    try {
+      const view = render(<ShareModal onClose={vi.fn()} />);
+      const world = document.querySelector('.owb-card-world')!;
+      expect(world.textContent).toContain('Misthalin6/32 chunks');
+      expect(world.textContent).toContain('Kharidian Desert3/44 chunks');
+      expect(world.textContent).not.toContain('Islands & Others');
+
+      fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+      expect(writeText.mock.calls[0][0]).toContain('Chunks: 9 Unlocked');
+    } finally {
+      mockGame.current.gameModeId = 'vanilla';
+    }
+  });
+
   it('uses the generated bank pool size in the copied summary', async () => {
     mockGame.current.unlocks.banks = ['5678', '6454'];
     const view = render(<ShareModal onClose={vi.fn()} />);
@@ -192,5 +213,27 @@ describe('ShareModal region summary', () => {
     fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(view.getByText(expected)).toBeTruthy();
+  });
+});
+
+describe('ShareModal in the OSRS layout', () => {
+  afterEach(() => {
+    cleanup();
+    localStorage.removeItem(UI_STYLE_KEY);
+  });
+
+  it('opens on the OSRS card in a stone window and keeps the other themes', () => {
+    localStorage.setItem(UI_STYLE_KEY, 'osrs');
+    const onClose = vi.fn();
+    const view = render(<ShareModal onClose={onClose} />);
+    expect(view.getByRole('heading', { name: 'Share Run' })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Stats card' }).getAttribute('aria-pressed')).toBe('true');
+    expect(view.getByRole('button', { name: 'OSRS' }).getAttribute('aria-pressed')).toBe('true');
+    expect(document.getElementById('status-card')?.dataset.cardTheme).toBe('osrs');
+    fireEvent.click(view.getByRole('button', { name: 'Gilded' }));
+    expect(document.getElementById('status-card')?.dataset.cardTheme).toBeUndefined();
+    expect(view.getByRole('button', { name: 'Copy Summary' })).toBeTruthy();
+    fireEvent.click(view.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

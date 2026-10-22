@@ -4,6 +4,7 @@ import { HelpCircle, X } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SKILLS_LIST } from '../data/items';
 import { DROP_RATES } from '../config/rules';
+import { BREAKTHROUGH_CHANCE, CHUNK_EXPLORE_ROLLS } from '../config/economy';
 import { DropSource } from '../types';
 
 /**
@@ -33,6 +34,16 @@ export const GUIDES: Record<string, Guide> = {
       'See the areas you’ve unlocked, lit up on the world map.',
       'Pan and zoom the map; hover for tile and chunk coordinates.',
       'The list view counts the areas you hold in each region.',
+    ],
+  },
+  // Chunked's World tab: the player owns map chunks, not named areas.
+  WORLD_CHUNKED: {
+    title: 'World',
+    blurb: 'Where you can go, on the OSRS world map.',
+    bullets: [
+      'See the chunks you own, lit up on the world map; the chunks next to them can be rolled next.',
+      'Pan and zoom the map; hover for tile and chunk coordinates, and click a chunk to see what it holds.',
+      'The list view shows each region’s named areas you have a chunk in.',
     ],
   },
   ACTIVITIES: {
@@ -92,6 +103,9 @@ export const GUIDES: Record<string, Guide> = {
       'Pick a table and spend a Key: it unlocks a random locked entry from that table.',
       'Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.',
       'Spend Fate Points on rituals at the Void Altar.',
+      `Chunked: each chunk you unlock pays up to ${CHUNK_EXPLORE_ROLLS} Key rolls for new things you first do there.`,
+      `Chunked: a skill at its tier cap (tier × 10) gets one ${BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier. Levels past the cap roll nothing.`,
+      'Chunked: Fate\'s Mercy draws a free chunk or skill tier once you have no Keys, too little Fate for a ritual, and nothing left to train, roll or quest. Rules → Key Economy has the exact list.',
     ],
   },
   LOG: {
@@ -119,6 +133,8 @@ export const GUIDES: Record<string, Guide> = {
       'Failed rolls build Fate; your next successful roll resets it to 0, so spend it first.',
       'Clarity rolls your next Key roll twice and keeps the better. Greed tries to double your next Key. Chaos buys a Chaos Key. Transmutation trades 5 Keys for an Omni-Key.',
       'The Void Gambit stakes all your Fate on a coin flip. In Chunked, the Cartographer lets you choose your next chunk.',
+      "Saradomin, Guthix and Zamorak each have a ritual, but the gods don't share: only one can be active at a time.",
+      'Invocations and the Barrows Chest power your next few rolls, and Sacrifice trades 3 top tiers for an Omni-Key once a run has 200 rolls.',
     ],
   },
   ACHIEVEMENTS: {
@@ -126,8 +142,10 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Milestones that reward you for how your run unfolds.',
     bullets: [
       'Browse locked and unlocked achievements across categories.',
-      'They unlock by themselves as you reach gear, skill, area and luck milestones.',
-      'Track your overall completion at a glance.',
+      'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
+      'Each one is a title you can wear. Each also gives Fate (1 to 5 for first steps, up to 25 for the hardest), and the biggest a free random ritual.',
+      'Achievements for levels, quests, diaries, Combat Achievements, the collection log, Slayer, clues, bosses and minigames also raise that activity\'s Key chance: 0.2% for first steps, 0.3% or 0.5% for bigger ones. Vanilla minigame stashes keep their own odds.',
+      'Achievements earned before rewards arrived pay once: their free rituals, and their Fate up to the pity line.',
     ],
   },
   FORECAST: {
@@ -233,6 +251,10 @@ export const GUIDES: Record<string, Guide> = {
     ],
   },
 };
+
+/** The guide a dashboard tab shows in this mode: Chunked has its own World guide. */
+export const guideIdFor = (tab: string, gameModeId: string | undefined): string =>
+  gameModeId === 'chunked' && GUIDES[`${tab}_CHUNKED`] ? `${tab}_CHUNKED` : tab;
 
 interface Props { id: string; className?: string; suspendModals?: boolean }
 

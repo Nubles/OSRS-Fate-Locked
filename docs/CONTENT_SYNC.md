@@ -146,6 +146,14 @@ equipment from ownership. Add a reviewed quest-progress gate only when quest
 completion is known to satisfy or block that exact milestone; arbitrary
 quest-prefixed text stays unresolved.
 
+Achievement Diary tasks keep the export's own chunks for them
+(`challenges.Diary[*].Chunks`) in `diaryChunks`, keyed like the chunks' diary
+codes ("Kourend & Kebos|EA2"). The transform expands `[+]` groups
+(`codeItems.chunksPlus`) and turns a named interior or location into its
+entrances; a name with none (a player-owned house) is recorded in the ledger as
+`diary-place-partly-resolved` or `unresolved`. Chunked mode reads them only for
+tasks no chunk carries the code of (`utils/chunkedContentChecks.ts::buildDiaryIndex`).
+
 `chunks:sync` also regenerates the ocean navigation registry. Water is excluded
 from paid land rolls; Sailing and Pandemonium open connected water and reviewed
 boat landings. Actual quest and entity requirements still apply after a roll.

@@ -128,7 +128,9 @@ describe('second audit permission regressions', () => {
       itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
     });
     expect(manifest.chunks['50,50'].entry).toBe('ALLOWED');
-    expect(manifest.chunks['50,50'].categories.QUESTS!.find(row => row.name === "Cook's Assistant")?.status).toBe('ALLOWED');
+    // Cook's Assistant starts here, but a fresh run has no milk source in its
+    // chunks yet (Chunked counts content only in owned chunks).
+    expect(manifest.chunks['50,50'].categories.QUESTS!.find(row => row.name === "Cook's Assistant")?.status).toBe('LOCKED');
     // The app-authored v4 snapshot must survive bundling, less the fields no
     // installed reader uses; legacy chunk ownership remains a distinct,
     // explicitly present field even when empty.

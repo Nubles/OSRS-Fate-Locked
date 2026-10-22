@@ -17,6 +17,8 @@ import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { withSkillGateQuests } from './journalStatus';
 import { isAreaReachable } from './reachability';
+import { chunkUnlocked, SOURCE_TYPE_KINDS } from './chunkLocations';
+import { chunkContentService } from '../services/ChunkContentService';
 import { effectiveSkillLevel } from './slayerReach';
 import { classifyShop } from './shopClassification';
 import { MERCHANT_SERVICES } from '../data/merchantServices';
@@ -161,6 +163,15 @@ const hasTypedUnlock = (
   }
 };
 
+/** Where the chunk content puts a source (Chunked only, once the content is in), else null. */
+const chunkedSourceChunks = (source: ResourceSource, ctx: AvailabilityContext): readonly { cx: number; cy: number }[] | null => {
+  if (ctx.gameState.gameModeId !== 'chunked' || !chunkContentService.ready) return null;
+  if (source.regions.includes('Any')) return null;
+  const kinds = SOURCE_TYPE_KINDS[source.type];
+  const hit = kinds ? chunkContentService.entityLocations(source.name, kinds) : null;
+  return hit?.locations.length ? hit.locations : null;
+};
+
 /**
  * Analyze a single source against the context. Returns {isAvailable, missing}
  * for the detail UI; the missing array is only populated when needed (short-
@@ -183,9 +194,14 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     if (!fail(`Confirm: ${check}`)) return result(false);
   }
 
-  // 1. Region
+  // 1. Region. Chunked: a source the chunk content can place counts only in
+  // a chunk the run has; one it can't place keeps its named areas.
   let hasRegion = false;
-  for (const authoredRegion of source.regions) {
+  const placed = chunkedSourceChunks(source, ctx);
+  if (placed) {
+    if (!placed.some(({ cx, cy }) => chunkUnlocked(cx, cy, ctx.gameState.unlocks, 'chunked'))
+      && !fail(`Not in your chunks: ${source.name}`)) return result(false);
+  } else for (const authoredRegion of source.regions) {
     // Resource source geography is ownership metadata rather than a map-pin
     // instruction, so aliases intentionally resolve to their canonical owner.
     const r = canonicalAreaName(authoredRegion);
@@ -194,7 +210,7 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     }
 
   }
-  if (!hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return result(false);
+  if (!placed && !hasRegion && !fail(`Region: ${source.regions.join(' or ')}`)) return result(false);
 
   // 2. Skills
   const requiredSkills = { ...source.skills };

@@ -61,6 +61,7 @@ const defaultsFixture = (): GameState => ({
   specialKeys: 0,
   chaosKeys: 0,
   bossStandardKeysAwarded: {},
+  minigameStandardKeysAwarded: {},
   clueStandardKeysAwarded: 0,
   fatePoints: 0,
   fateCompensation: {
@@ -97,6 +98,7 @@ const fullStateFixture = (): GameState => ({
   specialKeys: 2,
   chaosKeys: 3,
   bossStandardKeysAwarded: { Zulrah: 1 },
+  minigameStandardKeysAwarded: { 'Pest Control': 1 },
   clueStandardKeysAwarded: 2,
   fatePoints: 41,
   fateCompensation: {
@@ -809,6 +811,24 @@ describe('save schema compatibility', () => {
     expectRejected(malformed, 'invalid_number', 'bossStandardKeysAwarded.Zulrah');
   });
 
+  it('starts every minigame reserve full for a save made before minigame reserves', () => {
+    const older = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    delete older.minigameStandardKeysAwarded;
+    const accepted = expectAccepted(validateAndMigrateSave(older, defaultsFixture()));
+    expect(accepted.state.minigameStandardKeysAwarded).toEqual({});
+  });
+
+  it('rejects a minigame counter beyond its reserve and drops a minigame that left the list', () => {
+    const over = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    over.minigameStandardKeysAwarded = { 'Castle Wars': 2 };
+    expectRejected(over, 'invalid_number', 'minigameStandardKeysAwarded.Castle Wars');
+
+    const retired = clone(fullStateFixture()) as unknown as Record<string, unknown>;
+    retired.minigameStandardKeysAwarded = { 'Old Minigame': 1, 'Pest Control': 2 };
+    const accepted = expectAccepted(validateAndMigrateSave(retired, defaultsFixture()));
+    expect(accepted.state.minigameStandardKeysAwarded).toEqual({ 'Pest Control': 2 });
+  });
+
   it('rejects unknown and inherited boss counters in a strict v3 export', () => {
     const unknown = clone(fullStateFixture()) as unknown as Record<string, unknown>;
     unknown.version = 3;
@@ -1301,5 +1321,20 @@ describe('persisted Collection Log identity metadata', () => {
     Object.defineProperty(collectionLogIdentity, 'quarantinedIds', { enumerable: true, get: () => { accessed = true; return []; } });
     expect(validateAndMigrateSave(candidate({ collectionLogIdentity }), defaultsFixture()).ok).toBe(false);
     expect(accessed).toBe(false);
+  });
+});
+
+describe('the kept Cartographer offer', () => {
+  it('round-trips, and a save without one loads with none', () => {
+    const kept = expectAccepted(validateAndMigrateSave(candidate({ cartographerOffer: ['49,50', '51,50'] }), defaultsFixture()));
+    expect(kept.state.cartographerOffer).toEqual(['49,50', '51,50']);
+    const none = expectAccepted(validateAndMigrateSave(candidate({}), defaultsFixture()));
+    expect(none.state.cartographerOffer).toBeUndefined();
+  });
+
+  it('rejects an offer that is not up to 3 distinct chunk keys', () => {
+    for (const bad of ['49,50', ['49,50', '49,50'], ['a,b'], ['1,1', '1,2', '1,3', '1,4'], [7]]) {
+      expectRejected(candidate({ cartographerOffer: bad }), 'invalid_field', 'cartographerOffer');
+    }
   });
 });

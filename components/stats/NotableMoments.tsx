@@ -87,10 +87,10 @@ export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => 
       >
         <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {facts.map(fact => (
-            <div key={fact.label} className="flex gap-3 rounded-lg border border-white/[0.06] bg-black/20 p-3">
-              <span aria-hidden="true" className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${fact.tint}`}>{fact.icon}</span>
+            <div key={fact.label} className="osrs-wa-well flex gap-3 rounded-lg border border-white/[0.06] bg-black/20 p-3">
+              <span aria-hidden="true" className={`osrs-wa-ico grid h-9 w-9 shrink-0 place-items-center rounded-lg ${fact.tint}`}>{fact.icon}</span>
               <div className="min-w-0">
-                <dt className="text-[10px] font-bold uppercase tracking-wider text-gray-500">{fact.label}</dt>
+                <dt className="osrs-wa-label text-[10px] font-bold uppercase tracking-wider text-gray-500">{fact.label}</dt>
                 {fact.value === null
                   ? <dd className="mt-1 text-sm italic text-gray-500">{fact.unavailable}</dd>
                   : <dd className="mt-0.5">

@@ -5,13 +5,14 @@ import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Ac
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
-import { GAME_MODES, getGameMode, resolveModeRules } from '../config/gameModes';
-import { andList, CHUNKED_MILESTONE_INTERVAL, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, ritualEffect, type Ritual } from '../config/economy';
+import { BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
+import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHANCE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
+import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
   onClose: () => void;
@@ -40,6 +41,12 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   GAMBIT:       { icon: Skull,    color: 'text-fuchsia-400', border: 'border-fuchsia-500/30' },
   CARTOGRAPHER: { icon: Map,      color: 'text-emerald-400', border: 'border-emerald-500/30' },
   TRANSMUTE: { icon: Sparkles, color: 'text-purple-400', border: 'border-purple-500/30' },
+  WARD:        { icon: Shield,   color: 'text-sky-300',     border: 'border-sky-400/30' },
+  TEARS:       { icon: Activity, color: 'text-cyan-400',    border: 'border-cyan-500/30' },
+  PACT:        { icon: Zap,      color: 'text-red-500',     border: 'border-red-600/30' },
+  INVOCATIONS: { icon: Scroll,   color: 'text-amber-300',   border: 'border-amber-400/30' },
+  BARROWS:     { icon: Package,  color: 'text-stone-300',   border: 'border-stone-400/30' },
+  SACRIFICE:   { icon: Key,      color: 'text-rose-400',    border: 'border-rose-500/30' },
 };
 
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
@@ -53,8 +60,11 @@ export const describeVanillaRandomAccessPolicy = (
   const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
   const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
   const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
+  // Chunked counts content only in the exact chunk it sits in, and filters
+  // banks and guilds the same way (utils/gameEngine.ts isRandomUnlockEligible).
+  const chunkedTables = andList([...policy.filteredTables.map(table => table.toLowerCase()), 'banks', 'guilds']);
   const randomAccess = hasLocationFilter
-    ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own.`
+    ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`
     : '';
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
@@ -74,6 +84,23 @@ export const describeVanillaRandomAccessPolicy = (
   return [randomAccess, emptyPool, omni].filter(Boolean).join(' ');
 };
 
+/**
+ * Chunked's own fate rules, with the exact conditions the code checks
+ * (utils/chunkedFate.ts, utils/chunkExplore.ts): the tier cap, exploring,
+ * Breakthrough and Fate's Mercy.
+ */
+export const ChunkedFateRules: React.FC<{ chaosCost: number; cartographerCost: number }> = ({ chaosCost, cartographerCost }) => (
+  <div className="bg-emerald-950/20 p-4 rounded-xl border border-emerald-500/30 text-sm text-gray-300 space-y-2">
+    <h3 className="font-bold text-emerald-300">Chunked only: tier caps, exploring, Breakthrough, Fate's Mercy, Fate's Thread and fate's marks</h3>
+    <p><b className="text-gray-100">Tier cap.</b> A skill's tier opens its training methods up to tier × 10, its cap (tier 10 opens all of them, to 99). As in Vanilla you may keep levelling past the cap with those methods, but in Chunked a level past the cap rolls no Key and no Chaos Key until its next tier opens.</p>
+    <p><b className="text-gray-100">Exploring.</b> Each chunk you unlock pays one {DROP_RATES[DropSource.CHUNK_EXPLORE]}% Key roll for each new thing you first do there: train a skill it has, fight something, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to {CHUNK_EXPLORE_ROLLS} per chunk; your start chunk pays none.</p>
+    <p><b className="text-gray-100">Breakthrough.</b> A skill at or past its tier cap, when your chunks give you a way to train it at its next tier, gets one free {BREAKTHROUGH_CHANCE * 100}% roll to open that tier. Each tier rolls once, win or lose; a Key can still open it after a loss. Hitpoints starts at level 10, the cap of tier 1, so it gets its Breakthrough once you have a combat style to train it with.</p>
+    <p><b className="text-gray-100">Fate's Mercy.</b> It opens only when all of these hold: you have no Keys, Omni-Keys or Chaos Keys; you have less than {chaosCost} Fate (the Ritual of Chaos; the Cartographer costs {cartographerCost}) and no free Chaos ritual waiting, nor a free Cartographer while a frontier chunk is left to chart; no skill your chunks can train is below its tier cap; no Breakthrough or exploring roll is waiting; and no quest in your chunks is doable now. Those last three are the tracker's best guess at what you can still do, so if 3 days pass with no new Key, unlock or level, Mercy opens anyway. Then fate draws one frontier chunk or trainable skill tier, from what a Key could roll, or, once none is left, the Farming patch type, guild, merchant or gear slot that keeps a skill from training, and nothing is spent. The Keys screen says what keeps it shut.</p>
+    <p><b className="text-gray-100">Fate's Thread.</b> Fate ties a thread to an unheld chunk {FATE_THREAD_MIN_STEPS} to {FATE_THREAD_MAX_STEPS} chunks past your border: a boss, minigame, guild or bank where there is one. One Chunks draw in {Math.round(1 / FATE_THREAD_LEAN_CHANCE)} goes to the frontier chunks nearest the thread; the rest draw from your whole frontier. When you gain the thread's chunk, by any means, fate is fulfilled: you get a free ritual fate picks, and fate ties a new thread.</p>
+    <p><b className="text-gray-100">Fate's marks.</b> Each chunk you gain has a 1 in {Math.round(1 / FATE_MARK_CHANCE)} chance to be marked. <b className="text-gray-100">Blessed</b>: +{FATE_MARK_BLESSED_FATE} Fate, up to the pity line. <b className="text-gray-100">Gilded</b>: a free {DROP_RATES[DropSource.FATE_MARK]}% Key roll, waiting on the Keys screen. <b className="text-gray-100">Chaotic</b>: a {FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key. <b className="text-gray-100">Cursed</b>: your next {FATE_MARK_CURSED_ROLLS} Key rolls are {FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.</p>
+  </div>
+);
+
 export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initialTab = 'core' }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
@@ -86,9 +113,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
   const ritualText = (id: Ritual['id']) => ritualEffect(id, rules.ritualCostMultiplier);
-  const vanillaPolicyLabel = gameModeId === 'vanilla'
-    ? 'Vanilla-only rules'
-    : 'Vanilla-only (not active for this run)';
+  const vanillaPolicyLabel = usesActivityKeyReserves(gameModeId)
+    ? 'Vanilla and Chunked rules'
+    : 'Vanilla and Chunked only (not active for this run)';
 
   // Chunked mode unlocks individual map chunks, not named regions — swap the
   // "Areas" entry for the real table/count/blurb so the Codex matches what
@@ -115,18 +142,18 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   ];
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
-        
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Rules" tabIndex={-1} className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div data-osrs-win="rules" className="osrs-wa-win bg-[#121212] border border-osrs-border w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh]">
+
         {/* Header */}
-        <div className="bg-[#1a1a1a] p-4 border-b border-osrs-border flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-3">
-             <div className="bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
+        <div className="osrs-wa-head bg-[#1a1a1a] p-4 border-b border-osrs-border flex justify-between items-center shrink-0">
+          <div className="osrs-wa-htext flex items-center gap-3">
+             <div className="osrs-wa-hicon bg-osrs-gold/10 p-2 rounded-lg border border-osrs-gold/20">
                 <HelpCircle className="w-5 h-5 text-osrs-gold" />
              </div>
-            <h2 className="text-xl font-bold text-gray-100 tracking-wide">Rules</h2>
+            <h2 className="osrs-wa-title text-xl font-bold text-gray-100 tracking-wide">Rules</h2>
             <span
-              className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
+              className="osrs-wa-sub osrs-wa-mode text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-amber-900/40 px-2 py-1 rounded border border-amber-500/30"
               title={activeMode.description}
             >
               {activeMode.name} Mode
@@ -135,16 +162,16 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
           <button 
             onClick={onClose}
             aria-label="Close the Rules"
-            className="p-2 hover:bg-white/10 rounded-full transition-colors group"
+            className="osrs-wa-close p-2 hover:bg-white/10 rounded-full transition-colors group"
           >
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
           </button>
         </div>
 
         {/* Main Content Layout */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="osrs-wa-split flex flex-1 overflow-hidden">
             {/* Sidebar Navigation */}
-            <div className="w-64 bg-[#161616] border-r border-osrs-border flex flex-col overflow-y-auto custom-scrollbar shrink-0">
+            <div className="osrs-wa-side w-64 bg-[#161616] border-r border-osrs-border flex flex-col overflow-y-auto custom-scrollbar shrink-0">
                 <div className="p-3 space-y-1">
                     {tabs.map(tab => {
                         const Icon = tab.icon;
@@ -153,8 +180,9 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                data-osrs-on={isActive ? 'true' : undefined}
                                 className={`
-                                    w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200
+                                    osrs-wa-btn osrs-wa-nav w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200
                                     ${isActive 
                                         ? 'bg-[#252525] text-osrs-gold border border-osrs-gold/20 shadow-md translate-x-1' 
                                         : 'text-gray-400 hover:bg-[#202020] hover:text-gray-200 border border-transparent'}
@@ -174,7 +202,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
             </div>
 
             {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative">
+            <div className="osrs-wa-content flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative">
                 <div className="p-8 max-w-4xl mx-auto">
                     
                     {activeTab === 'core' && (
@@ -257,7 +285,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         A successful roll has a <span className="text-white font-bold">{rules.omniChanceBase}% chance</span> in your mode to give a bonus Omni-Key as well as the Key.
                                         <br/><br/>
                                         Spend one to <span className="text-white font-bold">pick exactly what you unlock</span>, instead of a random entry.
-                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
+                                        {gameModeId === 'chunked' && ` ${CHUNKED_OMNI_LAND_TEXT}`}
                                     </p>
                                 </div>
                             </div>
@@ -274,8 +302,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30 text-sm text-gray-300">
-                                <b className="text-amber-300">Vanilla bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
+                                <b className="text-amber-300">In Vanilla and Chunked, bosses pay {VANILLA_BOSS_STANDARD_KEY_TOTAL} Keys in all, then stop.</b> Each boss pays 1 to 3 Keys at falling odds (see RNG &amp; Drop Rates); after that, its kills no longer roll.
                             </div>
+
+                            <ChunkedFateRules cartographerCost={ritualCost('CARTOGRAPHER')} chaosCost={ritualCost('CHAOS')} />
 
                             {/* The loop */}
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
@@ -349,7 +379,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         {RITUALS.map(r => (
                                             <li key={r.id} className="flex justify-between gap-2">
                                                 <span>{r.name}{r.chunkedOnly ? ' (Chunked only)' : ''}</span>
-                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : `${ritualCost(r.id)} Fate`}</span>
+                                                <span className="font-mono text-gray-300 shrink-0">{r.keyCost ? `${r.keyCost} Keys` : r.stakesAllFate ? `All Fate (min ${ritualCost(r.id)})` : r.fateCost === 0 ? 'Free, pay later' : `${ritualCost(r.id)} Fate`}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -396,8 +426,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
-                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, next to land you hold. Every boss kill rolls, with no limit. While you hold only your start chunk, every {CHUNKED_MILESTONE_INTERVAL} total levels gives a guaranteed Key.</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left. Fate's Thread leans your Chunks draws toward a place fate picks, and fate marks about one chunk in eight (see Key Economy).</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
@@ -408,11 +438,12 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     return (
                                         <div key={mode.id} className={`bg-[#222] p-5 rounded-xl border ${isActive ? 'border-amber-500/60' : 'border-white/5'}`}>
                                             <div className="flex items-center justify-between mb-1">
-                                                <h4 className="font-bold text-white text-lg">{mode.name}</h4>
+                                                <h4 className="font-bold text-white text-lg flex items-center gap-2">{mode.name}{mode.beta && <span className="text-[9px] font-normal uppercase tracking-wider bg-amber-900/60 text-amber-300 px-1.5 py-0.5 rounded">Beta</span>}</h4>
                                                 {isActive && <span className="text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">Your run</span>}
                                             </div>
                                             <p className="text-xs text-amber-300/70 mb-2">{mode.tagline}</p>
                                             <p className="text-xs text-gray-400 leading-relaxed">{mode.description}</p>
+                                            {mode.beta && <p className="text-xs text-amber-300/70 mt-2">{BETA_MODE_NOTE}</p>}
                                         </div>
                                     );
                                 })}
@@ -430,11 +461,13 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                              </div>
 
                             <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
-                                <h3 className="font-bold text-amber-300 mb-2">Vanilla: Keys per boss</h3>
+                                <h3 className="font-bold text-amber-300 mb-2">Vanilla and Chunked: Keys per boss</h3>
                                 <ul className="text-sm text-gray-300 space-y-1">
                                     {Object.entries(VANILLA_BOSS_KEY_RATES).map(([bossClass, rates]) => <li key={bossClass}>{formatVanillaBossSchedule(bossClass, rates)}</li>)}
                                 </ul>
-                                <p className="text-xs text-gray-400 mt-3">Each boss pays its Keys in order, at these odds, then its kills stop rolling. Your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
+                                <h3 className="font-bold text-amber-300 mt-4 mb-2">Vanilla and Chunked: Keys per minigame</h3>
+                                <p className="text-sm text-gray-300">Each unlocked minigame holds 1 to 3 Keys: 3 with no Collection Log page, fewer when its log already pays a few. The first Key's chance per run is the run's length in minutes ÷ 60, so it takes about an hour of play, and each Key halves the next one's chance. A miss under {MINIGAME_MISS_FATE_MIN_RATE}% gives no Fate. Mage Arena pays one guaranteed Key, and Tears of Guthix one Key at 50% a visit. Farm Keys → Activities shows each minigame's odds.</p>
+                                <p className="text-xs text-gray-400 mt-3">Each boss and each unlocked minigame pays its Keys in order, at these odds, then it stops rolling. In Vanilla, your first three clue Keys, from any tier, roll at no less than <b>{CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`).join(' → ')}</b>; after that each tier uses its normal rate.</p>
                             </div>
 
                             <div className="bg-[#222] rounded-xl border border-white/5 overflow-hidden">
@@ -553,7 +586,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                             <h3 className={`${ui.color} font-bold text-lg mb-2`}>{r.name}</h3>
                                             <p className="text-sm text-gray-300 mb-4">{r.tagline}{r.chunkedOnly ? ' (Chunked mode only)' : ''}</p>
                                             <div className="text-xs font-mono bg-black/40 p-3 rounded border border-white/5 text-gray-400">
-                                                Cost: <span className="text-white font-bold">{r.fateCost ? `${ritualCost(r.id)} Fate Points` : `${r.keyCost} Keys`}</span>
+                                                Cost: <span className="text-white font-bold">{r.keyCost ? `${r.keyCost} Keys` : r.fateCost === 0 ? 'Free now, pay later' : `${ritualCost(r.id)} Fate Points`}</span>
                                                 <br/>
                                                 Effect: {ritualText(r.id)}
                                             </div>
@@ -591,14 +624,14 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Click a locked entry on the Dashboard to <b>pick exactly</b> what you unlock. You get them as a
                                         bonus on successful rolls, or for {getRitual('TRANSMUTE').keyCost} Keys at the Void Altar.
-                                        {gameModeId === 'chunked' && ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.'}
+                                        {gameModeId === 'chunked' && ` ${CHUNKED_OMNI_LAND_TEXT}`}
                                     </p>
                                 </div>
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
                                         Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
-                                        equally likely, so big tables such as {gameModeId === 'chunked' ? 'Banks' : 'Areas and Banks'} come up most.
+                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most.'}
                                         Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
                                         every level-up, or the Ritual of Chaos.
                                     </p>
@@ -721,6 +754,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                     </tbody>
                                 </table>
                             </div>
+                            <p className="text-sm text-gray-400">Gear with no metal sits with the metal that needs the same level to wear, so level 50 Granite is Tier 5 like rune. Gear an activity hands you and takes back, like the Gauntlet's, is never locked.</p>
                         </div>
                     )}
 

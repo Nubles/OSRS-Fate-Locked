@@ -75,6 +75,8 @@ export const FAILURE_FATE_BY_SOURCE: Partial<Record<DropSource, FailureFateAward
   [DropSource.ACTIVITY_MINIGAME]: 1,
   [DropSource.PET]: 1,
   [DropSource.COLLECTION_LOG]: 1,
+  [DropSource.CHUNK_EXPLORE]: 1,
+  [DropSource.FATE_MARK]: 1,
 };
 
 /** Conservative fallback protects custom and future sources from being over-valued. */
@@ -106,21 +108,59 @@ export const isSkillChaosMilestone = (level: number): boolean =>
 // Crafting/Prayer/Thieving/Farming), not a freebie.
 export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guaranteed keys
 
-// Chunked mode is the same anti-softlock problem, worse: the frontier can be
-// a single ~64x64-tile chunk with barely any trainable resources at all (vs.
-// Xtreme's whole 6-chunk Lumbridge). Same deterministic-key mechanic, gated
-// on gameModeId === 'chunked' && unlocks.chunks.length === 0 (still on the
-// free start chunk, nothing rolled yet), but a tighter interval since the
-// training footprint is so much smaller. A new run's first key comes at total
-// 50; runs that chose Chunked before SET_GAME_MODE counted the start (the
-// 24 September 2026 release) were paid their first key on the first level-up.
-export const CHUNKED_MILESTONE_INTERVAL = 25; // total-level gap between guaranteed keys
+// Chunked had the same milestone (a Key every 25 total levels on the start
+// chunk) until October 2026. It was removed: a guaranteed Key whose table the
+// player picks is not fate's pick, and Fate's Mercy now covers a dry start.
+
+// Chunked Breakthrough: when a skill reaches the cap of its tier (tier × 10;
+// levels past it are logged but roll nothing in Chunked) and the run's chunks
+// can train its next tier, fate rolls once (per skill, per tier) to open that
+// tier. Fate's Mercy: when a Chunked run has no Keys of any kind, too little
+// Fate for the Ritual of Chaos or the Cartographer, every skill its chunks can
+// train capped, no Breakthrough or exploring roll waiting and no quest doable,
+// fate draws one random neighbouring chunk or trainable skill tier
+// (utils/chunkedFate.ts). Nothing is guaranteed and the player never
+// picks what opens. October 2026 simulation (200 runs from Lumbridge Castle):
+// no run stuck, with Mercy needed about 14 times over an 80-chunk run.
+export const BREAKTHROUGH_CHANCE = 0.5;
+
+// Exploring (Alex picked "Every chunk pays", 2026-10-17): each chunk a Chunked
+// run unlocks gives a Key roll for each new thing done there for the first
+// time (training a skill it has, fighting its monsters, its Slayer master or
+// herb patch), up to this many rolls per chunk, at DROP_RATES' Exploring rate.
+// October 2026 simulation (100 runs, 1,000 hours, with Vanilla's boss and
+// minigame Key limits): about 16% slower than Vanilla to 100 quests and diary
+// tasks, with waits between unlocks no longer than before.
+export const CHUNK_EXPLORE_ROLLS = 3;
+
+// Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; Alex, 2026-10-18).
+/** Fate ties its thread to a chunk this many frontiers past the run's land, at least... */
+export const FATE_THREAD_MIN_STEPS = 2;
+/** ...and at most. */
+export const FATE_THREAD_MAX_STEPS = 4;
+/**
+ * The share of Chunks draws fate gives to the frontier chunks nearest its
+ * thread. A fixed share, not a weight: two doubled chunks on a border of 100
+ * or more barely moved the draw, so mid-game threads took about 50 chunks
+ * (play-test 2026-10-18); at 1 in 6 a thread falls about every 10-14 chunks.
+ */
+export const FATE_THREAD_LEAN_CHANCE = 1 / 6;
+/** The chance fate marks a chunk the run gains: about one in eight. */
+export const FATE_MARK_CHANCE = 0.125;
+/** Fate a Blessed chunk gives, filled up to the pity line at most. */
+export const FATE_MARK_BLESSED_FATE = 25;
+/** A Chaotic chunk's chance of a Chaos Key. */
+export const FATE_MARK_CHAOS_CHANCE = 0.1;
+/** Key rolls a Cursed chunk makes worse... */
+export const FATE_MARK_CURSED_ROLLS = 3;
+/** ...by this many percentage points. Each fail among them gives double Fate. */
+export const FATE_MARK_CURSED_ODDS = 5;
 
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
   | 'Quests' | 'Achievement Diaries' | 'Combat Achievements'
   | 'Clue Scrolls' | 'Slayer Tasks' | 'Collection Log' | 'Level Ups'
-  | 'Bosses' | 'Activities' | 'Pets';
+  | 'Bosses' | 'Activities' | 'Pets' | 'Exploring';
 
 export interface EarnTier {
   /** Display label for the tier / Slayer master. */
@@ -226,7 +266,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Bosses',
     icon: `${WIKI}Boss.png`,
     where: 'Farm Keys → Bossing: pick the boss you killed and roll.',
-    blurb: 'In Vanilla, each boss pays a few Keys at falling odds, then stops: the list above shows how many. In Chunked, every kill rolls at its tier’s rate.',
+    blurb: 'In Vanilla and Chunked, each boss pays a few Keys at falling odds, then stops: the list above shows how many. In other modes, every kill rolls at its tier’s rate.',
     tiers: [
       { tier: 'Low boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
       { tier: 'Mid boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
@@ -238,7 +278,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Activities',
     icon: `${WIKI}Minigames.png`,
     where: 'Farm Keys → Activities: roll each time you finish one.',
-    blurb: 'Every finished minigame rolls, with no limit.',
+    blurb: 'In Vanilla and Chunked, each unlocked minigame pays 1 to 3 Keys, then stops. Short runs roll at low odds, long runs at high odds, and each Key halves the next one\'s chance. In other modes, every finished minigame rolls, with no limit.',
     tiers: [
       { tier: 'Minigame', source: DropSource.ACTIVITY_MINIGAME, rate: DROP_RATES[DropSource.ACTIVITY_MINIGAME] },
     ],
@@ -250,6 +290,16 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     blurb: 'Each new pet gives an Omni-Key, once per pet.',
     tiers: [
       { tier: 'Each new pet', source: DropSource.PET, rate: DROP_RATES[DropSource.PET], rateLabel: 'Omni-Key', bonus: 'An Omni-Key instead of a Key, once per pet. Claiming one isn’t a roll: Fate and rituals stay as they are.' },
+    ],
+  },
+  {
+    category: 'Exploring',
+    icon: `${WIKI}World_map_icon.png`,
+    where: 'Chunked only. Spend Keys: tick what you did in a chunk you unlocked.',
+    blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once: train a skill it has, fight something there, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
+    tiers: [
+      { tier: 'Each new thing in a chunk', source: DropSource.CHUNK_EXPLORE, rate: DROP_RATES[DropSource.CHUNK_EXPLORE] },
+      { tier: 'Each Gilded chunk', source: DropSource.FATE_MARK, rate: DROP_RATES[DropSource.FATE_MARK], bonus: `About one chunk in ${Math.round(1 / FATE_MARK_CHANCE)} you gain is marked by fate; a Gilded one gives one free Key roll.` },
     ],
   },
   {
@@ -265,7 +315,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     category: 'Level Ups',
     icon: `${WIKI}Stats_icon.png`,
     where: 'Character tab: click an unlocked skill to log a level.',
-    blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys.',
+    blurb: 'Every level you gain rolls once, and higher levels roll better. Level-ups also give Chaos Keys. In Chunked, a level past the skill\'s tier cap (tier × 10) rolls nothing until its next tier opens.',
     dynamic: true,
     tiers: [
       {
@@ -307,6 +357,9 @@ export interface KeyTypeInfo {
   spend: string;
 }
 
+/** Where land comes from in Chunked, since an Omni-Key can't pick it (the UNLOCK reducer refuses). */
+export const CHUNKED_OMNI_LAND_TEXT = "In Chunked an Omni-Key can't pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate's Mercy.";
+
 export const KEY_TYPES: KeyTypeInfo[] = [
   {
     id: 'standard',
@@ -318,7 +371,6 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
       'A Pity Key when Fate Points hit your mode’s threshold.',
       'A won Void Gambit.',
-      `Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`,
       `The ${STARTING_KEYS} every run starts with.`,
     ],
     spend: 'Spend it on a table you choose to unlock a random entry from it.',
@@ -334,7 +386,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       'Each new pet: an Omni-Key instead of a Key, once per pet.',
       'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
     ],
-    spend: 'Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.',
+    spend: `Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. ${CHUNKED_OMNI_LAND_TEXT}`,
   },
   {
     id: 'chaos',
@@ -347,7 +399,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so big tables such as Banks come up most.',
+    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.',
   },
 ];
 
@@ -393,7 +445,8 @@ export const UNLOCK_KEY_COST = 1;
 // Transmute), a stake-it-all coin flip (Gambit), and Chunked mode's only
 // agency valve (Cartographer, priced just under the pity key).
 export interface Ritual {
-  id: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER';
+  id: 'LUCK' | 'GREED' | 'CHAOS' | 'TRANSMUTE' | 'GAMBIT' | 'CARTOGRAPHER'
+    | 'WARD' | 'TEARS' | 'PACT' | 'INVOCATIONS' | 'BARROWS' | 'SACRIFICE';
   name: string;
   tagline: string;
   /** Base cost before the mode multiplier (fate costs are scaled, key costs are not). */
@@ -404,6 +457,8 @@ export interface Ritual {
   stakesAllFate?: boolean;
   /** Only offered in Chunked mode (needs a chunk frontier to choose from). */
   chunkedOnly?: boolean;
+  /** The god behind it. The gods don't share: one god ritual is active at a time. */
+  god?: 'Saradomin' | 'Guthix' | 'Zamorak';
 }
 
 /**
@@ -423,11 +478,74 @@ export const RITUALS: Ritual[] = [
   { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
   { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Choose your next chunk.', fateCost: 40, chunkedOnly: true,
-    effect: 'See up to 3 random frontier chunks and choose which one unlocks. The only way to choose land in Chunked.' },
+    effect: 'Fate draws up to 3 frontier chunks and keeps them until you chart one; choose which of them unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
+  { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
+    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach. You can cast it again 25 rolls later.' },
+  { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
+    effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
+  { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
+    effect: 'Your next 3 rolls get +15% odds. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
+  { id: 'INVOCATIONS',  name: "Amascut's Invocations",   tagline: 'Take handicaps for Omni-Keys.', fateCost: 10,
+    effect: 'Pick handicaps for your next 3 rolls. Each one raises the Omni-Key chance on those rolls.' },
+  { id: 'BARROWS',      name: 'Barrows Chest',           tagline: 'A brother powers your next rolls.', fateCost: 20,
+    effect: 'Fate picks a Barrows brother at random, and his set effect powers your next 3 rolls.' },
+  { id: 'SACRIFICE',    name: 'Sacrifice',               tagline: 'Give up three tiers for an Omni-Key.', fateCost: 25,
+    effect: 'Fate takes back the top tier of 3 random skills or gear slots, and you get an Omni-Key. 3 uses per run.' },
 ];
 
 export const getRitual = (id: Ritual['id']): Ritual => RITUALS.find(r => r.id === id)!;
+
+/** Rolls a god ritual or the Barrows Chest lasts for, where it counts rolls. */
+export const PACT_ROLLS = 3;
+export const PACT_ODDS_BONUS = 15;
+export const PACT_DEBT = 40;
+export const TEARS_FAILS = 10;
+/** Rolls after casting Saradomin's Ward before it can be cast again. */
+export const WARD_COOLDOWN_ROLLS = 25;
+export const INVOCATION_ROLLS = 3;
+export const BARROWS_ROLLS = 3;
+export const SACRIFICE_TIERS = 3;
+export const SACRIFICE_USES_PER_RUN = 3;
+export const SACRIFICE_MIN_ROLLS = 200;
+
+/** Amascut's Invocations: each handicap adds to the Omni-Key chance; all four together add a bonus. */
+export interface Invocation {
+  id: 'WALK_THE_PATH' | 'OVERLY_DRAINING' | 'BLOOD_PRICE' | 'HARDCORE';
+  name: string;
+  handicap: string;
+  omniBonus: number;
+  /** Fate you must still have after paying for the ritual to pick this one. */
+  minFateLeft?: number;
+}
+/** Blood Price takes up to this much per fail. */
+export const BLOOD_PRICE_FATE = 5;
+export const INVOCATIONS: Invocation[] = [
+  { id: 'WALK_THE_PATH',   name: 'Walk the Path',   handicap: 'Fails give no Fate',       omniBonus: 1 },
+  { id: 'OVERLY_DRAINING', name: 'Overly Draining', handicap: '-5% odds',                 omniBonus: 1 },
+  { id: 'BLOOD_PRICE',     name: 'Blood Price',     handicap: `Each fail costs ${BLOOD_PRICE_FATE} Fate`, omniBonus: 1,
+    // Enough for every roll, so the price can't be dodged with an empty bar.
+    minFateLeft: BLOOD_PRICE_FATE * INVOCATION_ROLLS },
+  { id: 'HARDCORE',        name: 'Hardcore',        handicap: 'Your first fail ends them', omniBonus: 1 },
+];
+export const ALL_INVOCATIONS_OMNI_BONUS = 5;
+/** Whether a handicap can be picked with this much Fate left after paying for the ritual. */
+export const invocationAllowed = (inv: Invocation, fateLeft: number): boolean => fateLeft >= (inv.minFateLeft ?? 0);
+export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
+  ids.length === INVOCATIONS.length
+    ? ALL_INVOCATIONS_OMNI_BONUS
+    : INVOCATIONS.filter(i => ids.includes(i.id)).reduce((sum, i) => sum + i.omniBonus, 0);
+
+/** The Barrows brothers and the set effect each puts on your next rolls. */
+export interface BarrowsBrother { id: 'AHRIM' | 'DHAROK' | 'GUTHAN' | 'KARIL' | 'TORAG' | 'VERAC'; name: string; effect: string }
+export const BARROWS_BROTHERS: BarrowsBrother[] = [
+  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds' },
+  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (up to +25%)' },
+  { id: 'GUTHAN', name: 'Guthan the Infested', effect: 'Every fail heals 8 Fate back' },
+  { id: 'KARIL',  name: 'Karil the Tainted',   effect: 'Every success has a 50% chance of a second Key' },
+  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, and the 20 Fate comes back if all 3 fail' },
+  { id: 'VERAC',  name: 'Verac the Defiled',   effect: 'Every fail has a 15% chance to become a success' },
+];
 
 /**
  * A ritual's Fate cost under the run's ritualCostMultiplier — for the Gambit,
@@ -459,5 +577,8 @@ export {
   VANILLA_BOSS_STANDARD_KEY_TOTAL,
   vanillaBossKeySchedule,
   vanillaBossKeyStage,
+  MINIGAME_MISS_FATE_MIN_RATE,
+  VANILLA_MINIGAME_STANDARD_KEY_TOTAL,
+  vanillaMinigameKeyStage,
 } from './vanillaKeyEconomy';
 export type { KeyRollContext, VanillaBossClass } from './vanillaKeyEconomy';

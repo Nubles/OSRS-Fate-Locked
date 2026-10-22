@@ -16,6 +16,7 @@ import {
 } from '../utils/caProgress';
 import { DropSource, UnlockState } from '../types';
 import { countDoableDiaryTasks } from '../utils/journalStatus';
+import { useIsOsrsUi } from '../utils/uiStyle';
 
 /**
  * Collapsible "insights" band for each Journal sub-tab: the at-a-glance
@@ -26,7 +27,17 @@ import { countDoableDiaryTasks } from '../utils/journalStatus';
 
 const Bar: React.FC<{ label: string; done: number; total: number; color: string; suffix?: string }> =
   ({ label, done, total, color, suffix }) => {
+    const isOsrs = useIsOsrsUi();
     const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+    if (isOsrs) {
+      // OSRS layout: the in-game progress bar, green done over red to go.
+      return (
+        <div className="min-w-0">
+          <div className="ojr-bar-lbl"><span>{label}</span><span>{done}/{total}{suffix ?? ''}</span></div>
+          <div className="ojr-pbar"><div style={{ width: `${pct}%` }} /></div>
+        </div>
+      );
+    }
     return (
       <div className="min-w-0">
         <div className="flex justify-between text-[9px] mb-0.5">
@@ -43,6 +54,19 @@ const Bar: React.FC<{ label: string; done: number; total: number; color: string;
 const Shell: React.FC<{ storageKey: string; title: string; icon: React.ReactNode; summary: string; children: React.ReactNode }> =
   ({ storageKey, title, icon, summary, children }) => {
     const [open, setOpen] = useLocalStorage<boolean>(storageKey, true);
+    const isOsrs = useIsOsrsUi();
+    if (isOsrs) {
+      return (
+        <div className="ojr-ins">
+          <button type="button" className="ojr-ins-head" aria-expanded={open} onClick={() => setOpen(o => !o)}>
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 10 10" style={{ transform: open ? 'none' : 'rotate(-90deg)' }}><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+            {title}
+            <span className="ojr-ins-sum">{summary}</span>
+          </button>
+          {open && <div className="ojr-ins-wrap">{children}</div>}
+        </div>
+      );
+    }
     return (
       <div className="border-b border-white/10 bg-[#171717] shrink-0">
         <button

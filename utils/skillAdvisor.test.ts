@@ -7,7 +7,7 @@ vi.mock('./journalStatus', async () => {
 import { MISTHALIN_AREAS, REGIONS_LIST, SKILLS_LIST } from '../constants';
 import { BOSSES_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
-import { rankSkillBottlenecks } from './skillAdvisor';
+import { rankSkillBottlenecks, rankSkillBottlenecksCached } from './skillAdvisor';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DIARY_DATA } from '../data/diaryData';
 import * as journalStatus from './journalStatus';
@@ -283,5 +283,21 @@ describe('rankSkillBottlenecks', () => {
     // Canonical eligibility is also used for the 48-tier blocker prefilter;
     // those fixed baseline passes must not become a per-threshold rescan.
     expect(statusSpy.mock.calls.length).toBeLessThanOrEqual(108);
+  });
+});
+
+describe('rankSkillBottlenecksCached', () => {
+  it('answers the same ranking for the same unlocks and works it out again for new ones', () => {
+    const base = lowSkills({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 2 : 99])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, skill === 'Mining' ? 19 : 99])),
+      chunks: ['42,54'],
+    });
+    const first = rankSkillBottlenecksCached(base, 'chunked');
+    expect(first).toEqual(rankSkillBottlenecks(base, 'chunked'));
+    expect(rankSkillBottlenecksCached(base, 'chunked')).toBe(first);
+
+    const next = { ...base, chunks: ['41,54'] };
+    expect(rankSkillBottlenecksCached(next, 'chunked')).toEqual(rankSkillBottlenecks(next, 'chunked'));
   });
 });

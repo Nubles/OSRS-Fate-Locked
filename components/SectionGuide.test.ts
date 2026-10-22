@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GUIDES } from './SectionGuide';
+import { GUIDES, guideIdFor } from './SectionGuide';
 import { FEATURE_GATES } from '../utils/featureGates';
 
 const guideText = (id: string): string => [GUIDES[id].blurb, ...GUIDES[id].bullets].join(' ');
@@ -37,5 +37,16 @@ describe('help popovers', () => {
     expect(guideText('VOID_ALTAR')).not.toMatch(/high-risk|spice|softened gamble|converters/);
     expect(guideText('VOID_ALTAR')).toContain('your next successful roll resets it to 0');
     expect(guideText('VOID_ALTAR')).toContain('Clarity rolls your next Key roll twice and keeps the better.');
+  });
+});
+
+describe('World guide in Chunked', () => {
+  it('talks about owned chunks in Chunked and keeps the area guide elsewhere', () => {
+    expect(guideIdFor('WORLD', 'chunked')).toBe('WORLD_CHUNKED');
+    expect(guideIdFor('WORLD', 'vanilla')).toBe('WORLD');
+    expect(guideIdFor('SPEND', 'chunked')).toBe('SPEND');
+    expect(guideText('WORLD_CHUNKED')).toContain('See the chunks you own');
+    expect(guideText('WORLD_CHUNKED')).not.toContain('the areas you’ve unlocked');
+    expect(guideText('WORLD')).toContain('See the areas you’ve unlocked');
   });
 });

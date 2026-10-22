@@ -4,7 +4,8 @@ import { Landmark } from '../OsrsIcon';
 import type { ChunkEntrance } from '../../services/ChunkContentService';
 import { WikiLink } from '../WikiLink';
 
-export type ChunkInfoBankState = 'present' | 'available' | 'locked' | 'requirements' | null;
+/** 'chunk-locked': Chunked, the bank is unlocked but its chunk isn't owned yet. */
+export type ChunkInfoBankState = 'present' | 'available' | 'locked' | 'chunk-locked' | 'requirements' | null;
 
 interface Props {
   previewLocked: boolean;
@@ -17,6 +18,11 @@ interface Props {
 
 const rowClass = 'flex items-start gap-2 py-1.5 text-[10px] text-gray-300';
 const detailClass = 'mt-0.5 block text-[9px] text-gray-500';
+
+// Requirements that read like a lock but aren't one, with what players ask about them.
+const REQUIREMENT_NOTES: Record<string, string> = {
+  'Brass key': 'The key is reusable and lies inside the dungeon, north of the Hill Giants. The Edgeville trapdoor needs no key.',
+};
 
 export const ChunkInfoAccessCard: React.FC<Props> = ({
   previewLocked,
@@ -86,6 +92,9 @@ export const ChunkInfoAccessCard: React.FC<Props> = ({
                 Also requires {entrance.requirements.join(', ')}
               </span>
             )}
+            {entrance.requirements.filter(req => REQUIREMENT_NOTES[req]).map(req => (
+              <span key={req} className={detailClass}>{REQUIREMENT_NOTES[req]}</span>
+            ))}
           </span>
         </div>
       ))}
@@ -94,11 +103,13 @@ export const ChunkInfoAccessCard: React.FC<Props> = ({
         <div className={rowClass}>
           <Landmark
             size={11}
-            className={`mt-px shrink-0 ${bankState === 'locked' ? 'text-rose-300' : bankState === 'requirements' ? 'text-amber-300' : 'text-emerald-300'}`}
+            className={`mt-px shrink-0 ${bankState === 'locked' ? 'text-rose-300' : bankState === 'requirements' || bankState === 'chunk-locked' ? 'text-amber-300' : 'text-emerald-300'}`}
           />
           <span>
             {bankState === 'locked'
               ? 'Bank needs its own unlock'
+              : bankState === 'chunk-locked'
+                ? 'Bank unlocked; unlock this chunk to use it'
               : bankState === 'requirements'
                 ? 'Bank access requirements'
                 : bankState === 'available'

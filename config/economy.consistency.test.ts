@@ -7,7 +7,7 @@ import {
   VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
   FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
   failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS, CHUNKED_MILESTONE_INTERVAL,
+  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
 } from './economy';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
@@ -74,7 +74,7 @@ describe('economy ↔ engine consistency', () => {
     expect(earn).toContain('Any successful roll, wherever you log it');
     expect(earn).not.toContain('Farm Key');
     expect(earn).toContain('A won Void Gambit.');
-    expect(earn).toContain(`Chunked: a guaranteed Key every ${CHUNKED_MILESTONE_INTERVAL} total levels while you hold only your start chunk.`);
+    expect(earn).not.toMatch(/guaranteed Key every|total levels/); // Chunked's start-chunk Key is retired
     expect(earn).toContain(`The ${STARTING_KEYS} every run starts with.`);
   });
 
@@ -133,15 +133,17 @@ describe('economy ↔ engine consistency', () => {
     expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
     expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
     // A Chaos Key draws once from every eligible entry of every table, so a
-    // table's share is its size: on a fresh run Banks is among the biggest.
+    // table's share is its size: on a fresh Vanilla run Banks is among the biggest.
     const tableSizes = (mode: string) => {
       const sizes = new Map<TableType, number>();
       for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
       return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
     };
     expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
-    expect(tableSizes('chunked')[0]).toBe(TableType.BANKS);
-    expect(chaos.spend).toContain('Every eligible entry is equally likely, so big tables such as Banks come up most.');
+    // Chunked only offers banks in owned chunks, so a fresh run's biggest table is Merchants.
+    expect(tableSizes('chunked')[0]).toBe(TableType.MERCHANTS);
+    expect(tableSizes('chunked').slice(0, 5)).not.toContain(TableType.BANKS);
+    expect(chaos.spend).toContain('Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
@@ -200,9 +202,20 @@ describe('economy ↔ engine consistency', () => {
     expect(equip?.tiers).toBe(EQUIPMENT_TIER_MAX);
   });
 
-  it('defines all six Void Altar rituals with a cost', () => {
-    expect(RITUALS.map(r => r.id).sort()).toEqual(['CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'LUCK', 'TRANSMUTE']);
-    for (const r of RITUALS) expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+  it('defines every Void Altar ritual with a cost, except the Pact that is paid later', () => {
+    expect(RITUALS.map(r => r.id).sort()).toEqual([
+      'BARROWS', 'CARTOGRAPHER', 'CHAOS', 'GAMBIT', 'GREED', 'INVOCATIONS', 'LUCK', 'PACT', 'SACRIFICE', 'TEARS', 'TRANSMUTE', 'WARD',
+    ]);
+    for (const r of RITUALS) {
+      if (r.id === 'PACT') expect(r.fateCost).toBe(0);
+      else expect((r.fateCost ?? 0) + (r.keyCost ?? 0)).toBeGreaterThan(0);
+    }
+  });
+
+  it('gives only the three god rituals a god', () => {
+    expect(RITUALS.filter(r => r.god).map(r => [r.id, r.god])).toEqual([
+      ['WARD', 'Saradomin'], ['TEARS', 'Guthix'], ['PACT', 'Zamorak'],
+    ]);
   });
 
   it("scales Fate ritual prices, including the Gambit's minimum stake, by the mode", () => {
@@ -257,7 +270,7 @@ describe('economy ↔ engine consistency', () => {
     const bosses = EARN_METHODS.find(m => m.category === 'Bosses')!;
     const text = [bosses.blurb, ...bosses.tiers.map(t => t.bonus ?? '')].join(' ');
     expect(text).not.toMatch(/repeatable/i);
-    expect(bosses.blurb).toMatch(/^In Vanilla, each boss pays a few Keys at falling odds, then stops/);
+    expect(bosses.blurb).toMatch(/^In Vanilla and Chunked, each boss pays a few Keys at falling odds, then stops/);
     // The schedule behind "a few Keys": every boss's runs out after 1 to 3.
     for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeLessThanOrEqual(3);
   });
@@ -273,6 +286,7 @@ describe('economy ↔ engine consistency', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
       'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
+      + 'In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold. '
       + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "
       + "An Omni-Key can still pick one you can't reach yet, with a warning.",
     );

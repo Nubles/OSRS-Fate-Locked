@@ -47,10 +47,10 @@
     },
     "challenges": {
       "source": 14777,
-      "imported": 219,
-      "normalized": 0,
-      "excluded": 14558,
-      "unresolved": 0
+      "imported": 265,
+      "normalized": 303,
+      "excluded": 14206,
+      "unresolved": 3
     },
     "drops": {
       "source": 874,
@@ -16708,25 +16708,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EA2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EA4"
+      ]
     },
     {
       "category": "challenges",
@@ -16740,9 +16746,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EA6"
+      ]
     },
     {
       "category": "challenges",
@@ -16756,9 +16764,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EA8"
+      ]
     },
     {
       "category": "challenges",
@@ -16780,9 +16790,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EL1"
+      ]
     },
     {
       "category": "challenges",
@@ -16804,9 +16816,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EL4"
+      ]
     },
     {
       "category": "challenges",
@@ -16820,25 +16834,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EL6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Elite|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EL7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Elite|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Ardougne|EL8"
+      ]
     },
     {
       "category": "challenges",
@@ -16852,65 +16872,82 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-partly-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD10"
+      ],
+      "detail": "No entrance for Player-owned house"
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD5"
+      ]
     },
     {
       "category": "challenges",
@@ -16924,25 +16961,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -16956,17 +16999,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD10"
+      ]
     },
     {
       "category": "challenges",
@@ -16980,41 +17027,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD5"
+      ]
     },
     {
       "category": "challenges",
@@ -17028,25 +17085,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Ardougne Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Ardougne|MD9"
+      ]
     },
     {
       "category": "challenges",
@@ -22364,25 +22427,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EA2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EA3"
+      ]
     },
     {
       "category": "challenges",
@@ -22412,25 +22481,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EA8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -22444,49 +22519,60 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Desert|EL1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Elite|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EL2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "unresolved",
+      "reason": "named-location-unmappable",
+      "targetKeys": [],
+      "detail": "No entrance for Player-owned house"
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EL5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|EL6"
+      ]
     },
     {
       "category": "challenges",
@@ -22508,9 +22594,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Desert|HD10"
+      ]
     },
     {
       "category": "challenges",
@@ -22524,9 +22612,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|HD3"
+      ]
     },
     {
       "category": "challenges",
@@ -22540,25 +22630,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|HD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|HD7"
+      ]
     },
     {
       "category": "challenges",
@@ -22572,9 +22668,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Desert|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -22588,33 +22686,42 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-partly-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD11"
+      ],
+      "detail": "No entrance for Player-owned house"
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD12"
+      ]
     },
     {
       "category": "challenges",
@@ -22644,17 +22751,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD6"
+      ]
     },
     {
       "category": "challenges",
@@ -22668,17 +22779,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Desert Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Desert|MD9"
+      ]
     },
     {
       "category": "challenges",
@@ -22708,17 +22823,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EA2"
+      ]
     },
     {
       "category": "challenges",
@@ -22740,33 +22859,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Easy|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EA5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EA6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EA8"
+      ]
     },
     {
       "category": "challenges",
@@ -22788,9 +22915,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EL1"
+      ]
     },
     {
       "category": "challenges",
@@ -22804,33 +22933,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EL4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EL5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|EL6"
+      ]
     },
     {
       "category": "challenges",
@@ -22844,25 +22981,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD11"
+      ]
     },
     {
       "category": "challenges",
@@ -22892,25 +23035,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD7"
+      ]
     },
     {
       "category": "challenges",
@@ -22924,9 +23073,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -22940,57 +23091,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD13"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 14",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD14"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD2"
+      ]
     },
     {
       "category": "challenges",
@@ -23004,9 +23169,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD4"
+      ]
     },
     {
       "category": "challenges",
@@ -23020,25 +23187,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Falador Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Falador|MD8"
+      ]
     },
     {
       "category": "challenges",
@@ -23308,17 +23481,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA10"
+      ]
     },
     {
       "category": "challenges",
@@ -23332,17 +23509,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA4"
+      ]
     },
     {
       "category": "challenges",
@@ -23356,33 +23537,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -23412,17 +23601,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EL4"
+      ]
     },
     {
       "category": "challenges",
@@ -23436,9 +23629,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|EL6"
+      ]
     },
     {
       "category": "challenges",
@@ -23452,9 +23647,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Fremennik|HD1"
+      ]
     },
     {
       "category": "challenges",
@@ -23468,17 +23665,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|HD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|HD4"
+      ]
     },
     {
       "category": "challenges",
@@ -23492,25 +23693,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|HD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|HD8"
+      ]
     },
     {
       "category": "challenges",
@@ -23540,33 +23747,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|MD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|MD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|MD5"
+      ]
     },
     {
       "category": "challenges",
@@ -23580,25 +23795,30 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "unresolved",
+      "reason": "named-location-unmappable",
+      "targetKeys": [],
+      "detail": "No entrance for Player-owned house"
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|MD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Fremennik Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Fremennik|MD9"
+      ]
     },
     {
       "category": "challenges",
@@ -23612,9 +23832,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EA1"
+      ]
     },
     {
       "category": "challenges",
@@ -23644,25 +23866,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EA4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Easy|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EA5"
+      ]
     },
     {
       "category": "challenges",
@@ -23708,57 +23936,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Elite|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|EL7"
+      ]
     },
     {
       "category": "challenges",
@@ -23772,65 +24014,81 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD6"
+      ]
     },
     {
       "category": "challenges",
@@ -23852,9 +24110,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -23868,113 +24128,141 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD13"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 14",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD14"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kandarin Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kandarin|MD9"
+      ]
     },
     {
       "category": "challenges",
@@ -23988,17 +24276,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA10"
+      ]
     },
     {
       "category": "challenges",
@@ -24012,57 +24304,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -24076,41 +24382,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EL1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Elite|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EL2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EL4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|EL5"
+      ]
     },
     {
       "category": "challenges",
@@ -24124,25 +24440,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|HD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Hard|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|HD2"
+      ]
     },
     {
       "category": "challenges",
@@ -24156,9 +24478,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|HD4"
+      ]
     },
     {
       "category": "challenges",
@@ -24180,9 +24504,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|HD7"
+      ]
     },
     {
       "category": "challenges",
@@ -24212,9 +24538,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD1"
+      ]
     },
     {
       "category": "challenges",
@@ -24236,17 +24564,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD13"
+      ]
     },
     {
       "category": "challenges",
@@ -24260,57 +24592,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 15",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD15"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 16",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD16"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 17",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD17"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 18",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD18"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 19",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD19"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD3"
+      ]
     },
     {
       "category": "challenges",
@@ -24324,9 +24670,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD5"
+      ]
     },
     {
       "category": "challenges",
@@ -24340,25 +24688,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Karamja Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Karamja|MD9"
+      ]
     },
     {
       "category": "challenges",
@@ -24372,49 +24726,61 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA3"
+      ]
     },
     {
       "category": "challenges",
@@ -24436,17 +24802,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA7"
+      ]
     },
     {
       "category": "challenges",
@@ -24460,9 +24830,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -24492,9 +24864,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EL3"
+      ]
     },
     {
       "category": "challenges",
@@ -24508,9 +24882,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EL5"
+      ]
     },
     {
       "category": "challenges",
@@ -24524,17 +24900,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Elite|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EL7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Elite|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|EL8"
+      ]
     },
     {
       "category": "challenges",
@@ -24548,33 +24928,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD3"
+      ]
     },
     {
       "category": "challenges",
@@ -24596,33 +24984,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -24636,9 +25032,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD1"
+      ]
     },
     {
       "category": "challenges",
@@ -24652,25 +25050,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD13"
+      ]
     },
     {
       "category": "challenges",
@@ -24684,9 +25088,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD3"
+      ]
     },
     {
       "category": "challenges",
@@ -24700,9 +25106,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD5"
+      ]
     },
     {
       "category": "challenges",
@@ -24724,9 +25132,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Kourend and Kebos Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Kourend & Kebos|MD8"
+      ]
     },
     {
       "category": "challenges",
@@ -24748,41 +25158,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA2"
+      ]
     },
     {
       "category": "challenges",
@@ -24796,9 +25216,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA4"
+      ]
     },
     {
       "category": "challenges",
@@ -24812,33 +25234,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -24860,41 +25290,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Elite|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EL2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EL4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EL5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|EL6"
+      ]
     },
     {
       "category": "challenges",
@@ -24908,25 +25348,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD11"
+      ]
     },
     {
       "category": "challenges",
@@ -24940,57 +25386,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -25004,9 +25464,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD1"
+      ]
     },
     {
       "category": "challenges",
@@ -25020,17 +25482,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD12"
+      ]
     },
     {
       "category": "challenges",
@@ -25052,41 +25518,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Lumbridge and Draynor Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Lumbridge & Draynor|MD8"
+      ]
     },
     {
       "category": "challenges",
@@ -25108,33 +25584,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA2"
+      ]
     },
     {
       "category": "challenges",
@@ -25148,9 +25632,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA4"
+      ]
     },
     {
       "category": "challenges",
@@ -25164,9 +25650,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA6"
+      ]
     },
     {
       "category": "challenges",
@@ -25180,9 +25668,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Morytania|EA8"
+      ]
     },
     {
       "category": "challenges",
@@ -25204,9 +25694,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EL1"
+      ]
     },
     {
       "category": "challenges",
@@ -25220,33 +25712,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Morytania|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EL4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Morytania|EL5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|EL6"
+      ]
     },
     {
       "category": "challenges",
@@ -25260,17 +25760,22 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-partly-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|HD1"
+      ],
+      "detail": "No entrance for Player-owned house"
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|HD10"
+      ]
     },
     {
       "category": "challenges",
@@ -25284,25 +25789,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Morytania|HD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|HD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|HD5"
+      ]
     },
     {
       "category": "challenges",
@@ -25316,9 +25827,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|HD7"
+      ]
     },
     {
       "category": "challenges",
@@ -25356,25 +25869,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD2"
+      ]
     },
     {
       "category": "challenges",
@@ -25388,9 +25907,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD4"
+      ]
     },
     {
       "category": "challenges",
@@ -25404,25 +25925,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Morytania Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Morytania|MD8"
+      ]
     },
     {
       "category": "challenges",
@@ -28884,9 +29411,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA10"
+      ]
     },
     {
       "category": "challenges",
@@ -28900,25 +29429,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA13"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 14",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA14"
+      ]
     },
     {
       "category": "challenges",
@@ -28932,25 +29467,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA5"
+      ]
     },
     {
       "category": "challenges",
@@ -28964,9 +29505,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA7"
+      ]
     },
     {
       "category": "challenges",
@@ -28980,9 +29523,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -28996,41 +29541,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EL1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Elite|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EL2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EL4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Elite|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|EL5"
+      ]
     },
     {
       "category": "challenges",
@@ -29068,57 +29623,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -29140,41 +29709,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD13"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD2"
+      ]
     },
     {
       "category": "challenges",
@@ -29188,41 +29767,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Varrock Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Varrock|MD8"
+      ]
     },
     {
       "category": "challenges",
@@ -29244,49 +29833,61 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA4"
+      ]
     },
     {
       "category": "challenges",
@@ -29308,17 +29909,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EA8"
+      ]
     },
     {
       "category": "challenges",
@@ -29340,9 +29945,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Elite|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EL1"
+      ]
     },
     {
       "category": "challenges",
@@ -29356,9 +29963,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|EL3"
+      ]
     },
     {
       "category": "challenges",
@@ -29412,25 +30021,30 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "unresolved",
+      "reason": "named-location-unmappable",
+      "targetKeys": [],
+      "detail": "No entrance for Player-owned house"
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD12"
+      ]
     },
     {
       "category": "challenges",
@@ -29444,17 +30058,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD3"
+      ]
     },
     {
       "category": "challenges",
@@ -29468,33 +30086,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|HD8"
+      ]
     },
     {
       "category": "challenges",
@@ -29516,25 +30142,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD11"
+      ]
     },
     {
       "category": "challenges",
@@ -29548,17 +30180,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 13",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD13"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD2"
+      ]
     },
     {
       "category": "challenges",
@@ -29572,33 +30208,41 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD7"
+      ]
     },
     {
       "category": "challenges",
@@ -29612,9 +30256,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Western Provinces Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Western Provinces|MD9"
+      ]
     },
     {
       "category": "challenges",
@@ -29628,57 +30274,71 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA10"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 11",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA11"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 12",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA12"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA4"
+      ]
     },
     {
       "category": "challenges",
@@ -29700,25 +30360,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA7"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Easy|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EA9"
+      ]
     },
     {
       "category": "challenges",
@@ -29740,25 +30406,31 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Elite|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EL2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Elite|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EL3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Elite|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EL4"
+      ]
     },
     {
       "category": "challenges",
@@ -29772,17 +30444,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Elite|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EL6"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Elite|~ Task 7",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|EL7"
+      ]
     },
     {
       "category": "challenges",
@@ -29796,17 +30472,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Hard|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|HD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Hard|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|HD10"
+      ]
     },
     {
       "category": "challenges",
@@ -29828,9 +30508,11 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Hard|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|HD4"
+      ]
     },
     {
       "category": "challenges",
@@ -29860,17 +30542,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Hard|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|HD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Hard|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|HD9"
+      ]
     },
     {
       "category": "challenges",
@@ -29884,17 +30570,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 1",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD1"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 10",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "imported",
+      "reason": "base-record",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD10"
+      ]
     },
     {
       "category": "challenges",
@@ -29908,41 +30598,51 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 2",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD2"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 3",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD3"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 4",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD4"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 5",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD5"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 6",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD6"
+      ]
     },
     {
       "category": "challenges",
@@ -29956,17 +30656,21 @@
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 8",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD8"
+      ]
     },
     {
       "category": "challenges",
       "sourceKey": "Diary/~|Wilderness Diary#Medium|~ Task 9",
       "terminal": true,
-      "disposition": "excluded",
-      "reason": "non-walkable-content",
-      "targetKeys": []
+      "disposition": "normalized",
+      "reason": "diary-place-resolved",
+      "targetKeys": [
+        "diaryChunks/Wilderness|MD9"
+      ]
     },
     {
       "category": "challenges",

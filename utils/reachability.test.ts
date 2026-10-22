@@ -61,6 +61,14 @@ describe('isNamedAreaReachableViaChunks', () => {
 });
 
 describe('isAreaReachable', () => {
+  it('sees a region added to the same regions array after an earlier check', () => {
+    const regions: string[] = [];
+    const unlocks = { ...baseUnlocks, regions };
+    expect(isAreaReachable('Taverley', unlocks, 'vanilla')).toBe(false);
+    regions.push('Taverley');
+    expect(isAreaReachable('Taverley', unlocks, 'vanilla')).toBe(true);
+  });
+
   it('treats a continent as reachable only after every tracked child area is unlocked', () => {
     const wildernessAreas = REGION_GROUPS.Wilderness;
 

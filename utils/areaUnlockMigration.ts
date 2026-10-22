@@ -1,15 +1,17 @@
 import type { GameState } from '../types';
 import { TableType } from '../types';
-import { RETIRED_BOSSES } from '../data/items';
+import { RETIRED_BOSSES, RETIRED_MINIGAMES } from '../data/items';
 
 /**
  * Unlocks that left their table: a run that owned one gets back what it paid,
  * once, in the currency it paid with. Tutorial Island can't be returned to;
  * Galvek is fought once, inside Dragon Slayer II (owner decision B3, 2 October 2026).
+ * Ironmen can't take part in Rat Pits (owner decision, 15 October 2026).
  */
-const RETIRED_UNLOCKS: ReadonlyArray<{ table: TableType; item: string; key: 'regions' | 'bosses' }> = [
+const RETIRED_UNLOCKS: ReadonlyArray<{ table: TableType; item: string; key: 'regions' | 'bosses' | 'minigames' }> = [
   { table: TableType.REGIONS, item: 'Tutorial Island', key: 'regions' },
   ...RETIRED_BOSSES.map(item => ({ table: TableType.BOSSES, item, key: 'bosses' as const })),
+  ...RETIRED_MINIGAMES.map(item => ({ table: TableType.MINIGAMES, item, key: 'minigames' as const })),
 ];
 
 /** Called only on validated save data. Never rewrite the integrity history. */

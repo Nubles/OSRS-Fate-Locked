@@ -126,13 +126,13 @@ export function computeUnlockImpact(
     ? context.allDiaries
     : context.allDiaries.filter(diary => selectedDiaryIds.has(diary.id));
 
-  const directQuestNames = allQuests
+  const directQuests = allQuests
     .filter(q => {
       if (baseCompletedQuestIds.has(q.id) || baseAvailableIds.has(q.id)) return false;
       const eligibility = evaluateQuestEligibility(q, simulatedUnlocks, gameModeId);
       return eligibility.status === 'AVAILABLE' && eligibility.eligible;
-    })
-    .map((q) => q.name);
+    });
+  const directQuestNames = directQuests.map((q) => q.name);
 
   const directDiaryIds = allDiaries
     .filter(
@@ -146,8 +146,10 @@ export function computeUnlockImpact(
   // Seed the completed set with whatever the simulation already "did".
   // Greedily complete only quests the canonical eligibility evaluator says are automatic.
   const initialCompletedQuestIds = new Set<string>(simulatedUnlocks.quests);
-  const completed = new Set(initialCompletedQuestIds);
-  let changed = true;
+  // The first pass over the simulated snapshot finds exactly the direct
+  // quests, so start from them instead of evaluating every quest again.
+  const completed = new Set([...initialCompletedQuestIds, ...directQuests.map(q => q.id)]);
+  let changed = directQuests.length > 0;
   while (changed) {
     changed = false;
     const snap = { ...simulatedUnlocks, quests: Array.from(completed) };
