@@ -28,8 +28,7 @@ import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
-import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
-import { RESET_CONFIRM_MESSAGE } from './utils/backups';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from './utils/fateSaveFile';
 import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
@@ -100,7 +99,7 @@ const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m 
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
-const FateMapOptions = lazyWithRetry(() => import('./components/FateMapOptions'));
+const HeaderSettingsMenu = lazyWithRetry(() => import('./components/HeaderSettingsMenu'));
 const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
 const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
@@ -109,8 +108,8 @@ const RunelitePluginGuide = lazyWithRetry(() =>
   })),
 );
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
-import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle, Menu, X } from 'lucide-react';
-import { OSRS_MIN_WIDTH, readUiStyle, setUiStyle, useIsOsrsUi, useIsWideEnoughForOsrs, useUiStyle } from './utils/uiStyle';
+import { BarChart3, HelpCircle, Search, Database, SlidersHorizontal, Radio, Settings, MessageCircle, Menu, X } from 'lucide-react';
+import { readUiStyle, setUiStyle, useIsOsrsUi } from './utils/uiStyle';
 import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { BookOpen } from './components/OsrsIcon';
@@ -304,6 +303,29 @@ const ToastNotification = () => {
   );
 };
 
+// The header's Key counters: a short word over each count, so a new player
+// can tell Keys from Omni-Keys without a tooltip. Chaos always shows, dim at 0.
+// Below sm the word replaces the key art so all three fit the phone bar.
+const KEY_TONES = {
+  keys: { chip: 'bg-amber-500/10 border-amber-500/20', label: 'text-amber-300/80', num: 'text-amber-100', pulse: false },
+  omni: { chip: 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]', label: 'text-purple-300/80', num: 'text-purple-200', pulse: true },
+  chaos: { chip: 'bg-red-500/20 border-red-500/40', label: 'text-red-300/80', num: 'text-red-100', pulse: true },
+};
+const KeyCount = ({ label, value, lit, file, Fallback, tone, title }: {
+  label: string; value: number; lit: boolean; file: string; Fallback: React.ComponentProps<typeof WikiIcon>['Fallback'];
+  tone: typeof KEY_TONES.keys; title: string;
+}) => (
+  <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${lit ? tone.chip : 'bg-white/5 border-white/10'}`} title={title}>
+    <span className="hidden sm:inline-flex" aria-hidden="true">
+      <WikiIcon file={file} alt="" Fallback={Fallback} size={17} className={lit ? (tone.pulse ? 'animate-pulse drop-shadow' : 'drop-shadow') : 'opacity-50 grayscale'} />
+    </span>
+    <span className="flex flex-col items-center sm:items-start gap-0.5">
+      <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${lit ? tone.label : 'text-gray-400'}`}>{label}</span>
+      <span className={`font-bold text-lg leading-none ${lit ? tone.num : 'text-gray-500'}`}><PopOnChange value={value} /></span>
+    </span>
+  </div>
+);
+
 interface HeaderProps {
   setShowAltar: (show: boolean) => void;
   setShowStats: (show: boolean) => void;
@@ -319,10 +341,8 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
-  const uiStyle = useUiStyle();
-  const osrsFits = useIsWideEnoughForOsrs();
   const osrsHeader = useIsOsrsUi();
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, importSave, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
   const { storageKeyForActiveProfile } = useProfiles();
@@ -336,6 +356,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   activeProfileKeyRef.current = storageKeyForActiveProfile;
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
+  const closeUtilMenu = useCallback(() => setShowUtilMenu(false), []);
   // Below lg the header is one slim bar (Keys, Fate, a menu button); the
   // menu button shows the profile and the tool buttons. lg and up always shows them.
   const [showHeaderTools, setShowHeaderTools] = useState(false);
@@ -497,21 +518,13 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
             </div>
             <div className="hidden lg:block w-px h-8 bg-white/5"></div>
             <div data-tour="keys" className="flex items-center gap-1.5 lg:gap-3 justify-center shrink-0">
-                <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[44px] lg:min-w-[60px] justify-center" title="Keys: spend one on a table in Spend Keys for a random unlock">
-                   <WikiIcon file="Crystal_key.png" alt="Keys" Fallback={Key} size={17} className="drop-shadow" />
-                   <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
-                </div>
-                <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`}>
-                   <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-Keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
-                   <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} /></span>
-                </div>
-                {chaosKeys > 0 && (
-                  <div className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-1 lg:py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[44px] lg:min-w-[60px] justify-center" title="Chaos Keys: each one unlocks a random entry from all the tables at once">
-                     <WikiIcon file="Sinister_key.png" alt="Chaos Keys" Fallback={Dna} size={17} className="animate-pulse drop-shadow" />
-                     <span className="font-bold text-red-100 text-lg leading-none"><PopOnChange value={chaosKeys} /></span>
-                  </div>
-                )}
-            </div>
+                <KeyCount label="Keys" value={keys} lit file="Crystal_key.png" Fallback={Key} tone={KEY_TONES.keys}
+                  title="Keys: spend one on a table in Spend Keys for a random unlock" />
+                <KeyCount label="Omni" value={specialKeys} lit={specialKeys > 0} file="Enhanced_crystal_key.png" Fallback={Sparkles} tone={KEY_TONES.omni}
+                  title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} />
+                <KeyCount label="Chaos" value={chaosKeys} lit={chaosKeys > 0} file="Sinister_key.png" Fallback={Dna} tone={KEY_TONES.chaos}
+                  title="Chaos Keys: each one unlocks a random entry from all the tables at once" />
+          </div>
           </div>
 
           <button
@@ -604,61 +617,18 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                    title="Settings & save tools"
                    aria-label="Settings & save tools"
+                   aria-haspopup="menu"
                    aria-expanded={showUtilMenu}
                  >
                     <Settings size={14} />
                  </button>
                  {showUtilMenu && (
-                   <>
-                     <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
-                     <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
-                        <button type="button" onClick={() => {
-                          setShowUtilMenu(false);
-                          onOpenRuneliteGuide(settingsTriggerRef.current);
-                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
-                          <BookOpen size={13} className="text-amber-300" />
-                          RuneLite Plugin Guide
-                        </button>
-                        <button type="button" onClick={() => {
-                          setShowUtilMenu(false);
-                          onOpenChangelog(settingsTriggerRef.current);
-                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
-                          <ScrollText size={13} className="text-amber-300" />
-                          What's New
-                        </button>
-                        <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
-                           {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
-                           Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
-                        </button>
-                        {gameModeId === 'chunked' && <Suspense fallback={null}><FateMapOptions /></Suspense>}
-                        <button onClick={() => { setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs'); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={uiStyle === 'osrs'} title={osrsFits ? undefined : `The OSRS layout shows on windows at least ${OSRS_MIN_WIDTH} pixels wide`}>
-                           <SlidersHorizontal size={13} className={uiStyle === 'osrs' ? 'text-amber-400' : 'text-gray-500'} />
-                           OSRS layout <span className="ml-auto text-[10px] text-gray-500">{uiStyle === 'osrs' ? (osrsFits ? 'on' : 'on, wide screens') : 'off'}</span>
-                        </button>
-                        <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
-                           <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
-                           Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
-                        </button>
-                        <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
-                           <Upload size={13} /> Import save
-                        </button>
-                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} title={FATE_EXPORT_HINT} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
-                           <Download size={13} /> Export save file (.fate)
-                        </button>
-                        <button onClick={() => { setShowUtilMenu(false); setShowSyncCode(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-cyan-300">
-                           <Link2 size={13} /> Sync code (move device)
-                        </button>
-                        <button onClick={() => { setShowUtilMenu(false); setShowDiscord(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-indigo-300">
-                           <Radio size={13} /> Discord notifications
-                        </button>
-                        <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
-                           <RotateCcw size={13} /> Reset all progress
-                        </button>
-                     </div>
-                   </>
+                   <Suspense fallback={null}>
+                     <HeaderSettingsMenu anchorRef={settingsTriggerRef} onClose={closeUtilMenu}
+                       onOpenRuneliteGuide={onOpenRuneliteGuide} onOpenChangelog={onOpenChangelog}
+                       onImportSave={() => fileInputRef.current?.click()} onExportSave={handleExport}
+                       setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord} />
+                   </Suspense>
                  )}
              </div>
           </div>
