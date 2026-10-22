@@ -45,6 +45,16 @@ beforeEach(() => vi.unstubAllGlobals());
 afterEach(() => vi.unstubAllGlobals());
 
 describe('ReferenceModal Core Rules', () => {
+  it('gives narrow screens a section picker above full-width text, and wide screens the sidebar', () => {
+    const core = renderCodex('core');
+    expect(core).toContain('aria-label="Rules section"');
+    for (const label of ['Core Rules', 'Key Economy', 'Game Modes', 'RNG &amp; Drop Rates', 'The Void Altar', 'Unlock Systems', 'Equipment Tiers', 'Storage']) {
+      expect(core).toContain(`>${label}</option>`);
+    }
+    expect(core).toMatch(/<option value="core" selected="">Core Rules<\/option>/);
+    expect(core).toMatch(/class="osrs-wa-side [^"]*\bhidden min-\[720px\]:flex\b/);
+  });
+
   it('says how many Keys a new run starts with', () => {
     expect(renderCodex('core')).toContain(`You start with ${STARTING_KEYS} Keys`);
   });

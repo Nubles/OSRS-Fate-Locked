@@ -30,7 +30,7 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
   const pct = total > 0 ? done / total : 0;
   const r = 22, circ = 2 * Math.PI * r;
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-black/30 border border-white/5 flex-1 min-w-0">
+    <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3 px-2 sm:px-3 py-2 rounded-lg bg-black/30 border border-white/5 flex-1 min-w-0">
       <svg width="52" height="52" viewBox="0 0 52 52" className="shrink-0 -rotate-90">
         <circle cx="26" cy="26" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
         <circle cx="26" cy="26" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round"
@@ -38,7 +38,7 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
         <text x="26" y="26" transform="rotate(90 26 26)" textAnchor="middle" dominantBaseline="central"
           className="fill-white font-bold" style={{ fontSize: 11 }}>{Math.round(pct * 100)}%</text>
       </svg>
-      <div className="min-w-0">
+      <div className="min-w-0 w-full sm:w-auto">
         <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 truncate">{label}</div>
         <div className="text-sm font-bold text-white leading-tight">{done}<span className="text-[11px] text-gray-500 font-normal"> / {total}</span></div>
         <div className="text-[9px] text-gray-500 truncate">{sub}</div>
