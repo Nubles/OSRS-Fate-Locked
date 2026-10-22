@@ -165,10 +165,11 @@ function assertExistingSnapshotsForRefresh(official, audit) {
 
   const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
   const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
-  if (miniquestCount !== RUNTIME_MINIQUEST_COUNT
+  // The baseline may be one miniquest short while a new one is being added.
+  if (![RUNTIME_MINIQUEST_COUNT - 1, RUNTIME_MINIQUEST_COUNT].includes(miniquestCount)
     || ![191, 192, RUNTIME_QUEST_COUNT].includes(questCount)
     || official.entries.length !== questCount + miniquestCount) {
-    errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
+    errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT - 1} or ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
   }
 
   const declaredChunkSourceCommits = audit.schemaVersion === 1

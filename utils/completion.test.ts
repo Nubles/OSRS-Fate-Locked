@@ -7,7 +7,7 @@ describe('canonical area completion accounting', () => {
   it('pins physical-overlap area count in the global denominator', () => {
     expect(REGIONS_LIST).toHaveLength(178);
     expect(REGIONS_LIST).not.toContain('Elf Camp');
-    expect(COMPLETION_DENOMINATOR).toBe(972); // Rat Pits and Spice Pouch retired (7 October 2026); Pete Kayer's Challenges added to Minigames
+    expect(COMPLETION_DENOMINATOR).toBe(973); // Rat Pits and Spice Pouch retired (7 October 2026); Pete Kayer's Challenges and The Fractured Archive added (October 2026)
   });
 
   it('does not award completion for pending overlap refund markers', () => {

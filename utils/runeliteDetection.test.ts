@@ -11,7 +11,7 @@ describe('rulesDetection', () => {
     expect(bosses.find((boss) => boss.key === 'Dagannoth Kings'))
       .toEqual({ key: 'Dagannoth Kings', raid: false, killCounts: ['Dagannoth Rex', 'Dagannoth Prime', 'Dagannoth Supreme'] });
     expect(bosses.filter((boss) => boss.raid).map((boss) => boss.key))
-      .toEqual(['Chambers of Xeric', 'Theatre of Blood', 'Tombs of Amascut']);
+      .toEqual(['Chambers of Xeric', 'The Fractured Archive', 'Theatre of Blood', 'Tombs of Amascut']);
   });
 
   it('lists every quest by the app id, with its name', () => {

@@ -173,7 +173,7 @@ full and RuneLite-lite outputs, then review the ledger diff before committing.
 ### Quest and miniquest evidence
 
 `data/sources/quest-list.json` is the reviewed official inventory: 193 runtime
-quests and 19 miniquests, for 212 runtime Journal entries. The official list
+quests and 20 miniquests, for 213 runtime Journal entries. The official list
 contains 194 parsed quest rows because Recipe for Disaster remains one official
 row while the runtime keeps its existing parent-step expansion.
 `data/sources/quest-requirement-audit.json` records one matching source and

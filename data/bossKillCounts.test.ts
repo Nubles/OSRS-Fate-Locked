@@ -52,8 +52,8 @@ describe('boss kill-count names', () => {
     }
   });
 
-  it('marks the three raids, which roll as raid completions', () => {
+  it('marks the four raids, which roll as raid completions', () => {
     expect(Object.keys(BOSS_KILL_COUNTS).filter(isRaidKey).sort())
-      .toEqual(['Chambers of Xeric', 'Theatre of Blood', 'Tombs of Amascut']);
+      .toEqual(['Chambers of Xeric', 'The Fractured Archive', 'Theatre of Blood', 'Tombs of Amascut']);
   });
 });
