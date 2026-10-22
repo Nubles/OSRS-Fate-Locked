@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "reviewedAt": "2026-09-22",
   "listSource": {
-    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15289823",
-    "revision": 15289823,
-    "revisionTimestamp": "2026-08-07T15:03:30Z"
+    "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15366661",
+    "revision": 15366661,
+    "revisionTimestamp": "2026-10-06T09:31:48Z"
   },
   "parsedCounts": {
     "quests": 194,
-    "miniquests": 19
+    "miniquests": 20
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 193/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 193/20 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -1714,6 +1714,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Forsaken_Tower&oldid=15270136",
         "revision": 15270136,
         "revisionTimestamp": "2026-07-20T12:33:28Z"
+      }
+    },
+    {
+      "id": "The Fractured Archive",
+      "kind": "miniquest",
+      "pageTitle": "The Fractured Archive (miniquest)",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fractured_Archive_(miniquest)&oldid=15379009",
+        "revision": 15379009,
+        "revisionTimestamp": "2026-10-22T01:21:09Z"
       }
     },
     {

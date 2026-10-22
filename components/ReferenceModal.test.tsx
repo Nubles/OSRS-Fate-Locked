@@ -194,7 +194,7 @@ describe('ReferenceModal Vanilla policy', () => {
     const drops = renderCodex('drops');
     const unlocks = renderCodex('unlocks');
 
-    expect(economy).toContain('In Vanilla and Chunked, bosses pay 116 Keys in all, then stop.');
+    expect(economy).toContain('In Vanilla and Chunked, bosses pay 119 Keys in all, then stop.');
     expect(economy).not.toMatch(/safety-reserve|onboarding minimums/);
     expect(drops).toContain('In Vanilla, your first three clue Keys, from any tier, roll at no less than');
     expect(drops).toContain('Brutus: 10% (1 Key)');
