@@ -689,6 +689,11 @@ describe('App changelog lifecycle', () => {
   }, 15_000);
 
   it('opens the RuneLite guide from the persistent settings menu', async () => {
+    // A finished onboarding: the wizard is a modal with its own focus trap, so
+    // while it is open, closing the guide rightly lands focus back inside it.
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
     storage.setItem(changelogStorageKey, latestChangelogId);
     const user = userEvent.setup();
     render(<App />);
@@ -713,6 +718,11 @@ describe('App changelog lifecycle', () => {
   }, 25_000);
 
   it('opens the RuneLite guide from the command palette and returns focus to Jump to', async () => {
+    // A finished onboarding: the wizard is a modal with its own focus trap, so
+    // while it is open, closing the guide rightly lands focus back inside it.
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
     storage.setItem(changelogStorageKey, latestChangelogId);
     const user = userEvent.setup();
     render(<App />);
