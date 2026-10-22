@@ -47,6 +47,16 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-22-every-tab-in-view',
+    title: 'Every tab in view',
+    date: '2026-10-22',
+    sections: {
+      fixed: [
+        'All six dashboard tabs now show, the Key counters say Keys, Omni and Chaos, and clicking off the settings menu just closes it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-phones-scroll-normally',
     title: 'The tracker on your phone',
     date: '2026-10-22',
