@@ -61,19 +61,26 @@ function canonicalValue(value) {
   return value;
 }
 
-function questRequirementFingerprint(quest) {
+// Must match questRequirementFingerprint in data/questRequirementAudit.ts
+// (scripts/sync-quest-sources.test.ts checks both agree on every quest), or a
+// refresh treats unchanged quests as changed and resets their reviewed rows.
+export function questRequirementFingerprint(quest) {
   return JSON.stringify({
     kind: quest.kind,
     accessPolicy: quest.accessPolicy,
     regions: canonicalValue(quest.regions),
     locations: canonicalValue(quest.locations),
     skills: canonicalValue(quest.skills),
+    equipmentRequirements: canonicalValue(quest.equipmentRequirements),
+    preparationRequirements: canonicalValue(quest.preparationRequirements),
     combatLevel: quest.combatLevel,
     prereqs: canonicalValue(quest.prereqs),
     oneOf: canonicalValue(quest.oneOf),
     manualRequirements: canonicalValue(quest.manualRequirements),
     questProgress: canonicalValue(quest.questProgress),
     skillAlternatives: canonicalValue(quest.skillAlternatives),
+    merchants: canonicalValue(quest.merchants),
+    mobility: canonicalValue(quest.mobility),
     points: quest.points,
   });
 }
