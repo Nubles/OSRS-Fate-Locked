@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-osrs-layout-default',
+    title: 'The OSRS layout for new visitors',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'New visitors on a computer now start in the OSRS-style layout. You can switch any time in Settings.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
