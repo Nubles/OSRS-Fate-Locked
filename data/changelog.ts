@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-set-level',
+    id: '2026-10-22-set-level',
     title: 'Log many levels at once',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       added: [
         'Click a skill’s icon and type the level you reached: every level in between still rolls, with one summary instead of a popup per level.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
