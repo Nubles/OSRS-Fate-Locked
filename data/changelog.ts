@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-real-map-borders',
+    title: 'The map always shows the real areas',
+    date: '2026-10-22',
+    sections: {
+      fixed: [
+        'The World map, chunk details and your run card always use the real area borders now, even if this browser once had map edits saved.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
