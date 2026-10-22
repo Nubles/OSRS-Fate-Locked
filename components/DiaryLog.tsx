@@ -345,6 +345,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
               <div 
                 className="p-3 flex justify-between items-start gap-4 cursor-pointer hover:bg-white/5"
                 onClick={() => setExpandedId(isExpanded && !isSearching ? null : diary.id)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setExpandedId(isExpanded && !isSearching ? null : diary.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={`${diary.id} diary`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -422,6 +433,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           isActionable ? 'bg-black/40 text-gray-600 border-gray-700 hover:border-gray-500 hover:text-gray-400' : 
                           'bg-black/20 text-gray-700 border-gray-800 cursor-not-allowed opacity-50'}`}
                     title={isCompleted ? "Completed" : isActionable ? "Complete Full Section" : "Complete all tasks first"}
+                    aria-label={isCompleted ? `${diary.id} diary: completed` : isActionable ? `Complete ${diary.id} diary` : `${diary.id} diary: complete all tasks first`}
                     >
                     {isCompleted ? <CheckCircle2 size={18} /> : isActionable ? <Sparkles size={16} /> : <Lock size={14} />}
                     </button>

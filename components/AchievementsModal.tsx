@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { X, Lock, CheckCircle2 } from 'lucide-react';
 import { Trophy } from './OsrsIcon';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
@@ -7,6 +7,7 @@ import {
   evaluateAchievements, EvaluatedAchievement, AchievementCategory, fateDue, rewardLabel, ritualName,
 } from '../utils/achievements';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { SectionGuide } from './SectionGuide';
 import './osrs/osrs-windows-a.css';
 import { activeBoosts } from '../utils/achievementBoosts';
@@ -28,6 +29,8 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
     unlocks, gameModeId, customMode, history, petsClaimed, achievementTitle, setAchievementTitle, freeRituals, achievementsClaimed, runId,
   } = useGame();
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const all = useMemo(
     () => evaluateAchievements({ unlocks, gameModeId, customMode, history, petsClaimed, claimed: achievementsClaimed }),
@@ -63,6 +66,8 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
     <div
       className="osrs-wa-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={onClose}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Achievements"
@@ -126,6 +131,7 @@ export const AchievementsModal: React.FC<Props> = ({ onClose }) => {
               <button
                 key={c}
                 onClick={() => setFilter(c)}
+                aria-pressed={isActive}
                 data-osrs-on={isActive ? 'true' : undefined}
                 className={`osrs-wa-btn osrs-wa-chip px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-colors ${
                   isActive

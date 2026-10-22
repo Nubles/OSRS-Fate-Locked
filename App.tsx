@@ -315,7 +315,8 @@ const KeyCount = ({ label, value, lit, file, Fallback, tone, title }: {
   label: string; value: number; lit: boolean; file: string; Fallback: React.ComponentProps<typeof WikiIcon>['Fallback'];
   tone: typeof KEY_TONES.keys; title: string;
 }) => (
-  <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${lit ? tone.chip : 'bg-white/5 border-white/10'}`} title={title}>
+  <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${lit ? tone.chip : 'bg-white/5 border-white/10'}`} title={title}
+    role="img" aria-label={`${title.split(':')[0]}: ${value}`}>
     <span className="hidden sm:inline-flex" aria-hidden="true">
       <WikiIcon file={file} alt="" Fallback={Fallback} size={17} className={lit ? (tone.pulse ? 'animate-pulse drop-shadow' : 'drop-shadow') : 'opacity-50 grayscale'} />
     </span>
@@ -708,26 +709,29 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
       </div>
       </> : <>
       {/* Tabs */}
-      <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
+      <div role="tablist" className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
+          type="button" role="tab" aria-selected={activeTab === 'FARM'}
           data-tour="farm"
           onClick={() => setActiveTab('FARM')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'FARM' ? 'bg-[#252525] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Slayer_icon.png" alt="Farm Keys" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
+          <WikiIcon file="Slayer_icon.png" alt="" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
         </button>
         <button
+          type="button" role="tab" aria-selected={activeTab === 'SPEND'}
           data-tour="spend"
           onClick={() => setActiveTab('SPEND')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'SPEND' ? 'bg-[#252525] text-osrs-gold border-b-2 border-osrs-gold' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Mystery_box.png" alt="Spend Keys" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
+          <WikiIcon file="Mystery_box.png" alt="" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
         </button>
         {showLogTab && <button
+          type="button" role="tab" aria-selected={activeTab === 'LOG'}
           onClick={() => setActiveTab('LOG')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'LOG' ? 'bg-[#252525] text-blue-400 border-b-2 border-blue-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Watch.png" alt="History" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
+          <WikiIcon file="Watch.png" alt="" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
         </button>}
       </div>
 

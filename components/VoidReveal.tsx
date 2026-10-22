@@ -8,6 +8,7 @@ import { orientationFor } from '../data/entityModels';
 import { useModelFor } from '../hooks/useModelFor';
 import { categoryColor, categoryRarity, rarityRank } from '../utils/rarity';
 import { tableDisplayName } from '../utils/tableDisplay';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface VoidRevealProps {
   itemName: string;
@@ -60,6 +61,8 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
   const [copied, setCopied] = useState(false);
   const [rouletteIndex, setRouletteIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Declared before the mount focus below so it records the opener first.
+  useFocusTrap(containerRef);
   const displayItemType = tableDisplayName(itemType);
 
   const rouletteIcons = [
@@ -321,6 +324,9 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
     <div 
         ref={containerRef}
         tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Unlock reveal"
         className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md overflow-y-auto outline-none"
     >
       

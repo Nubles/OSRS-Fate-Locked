@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-keyboard-access',
+    title: 'Better keyboard and screen-reader support',
+    date: '2026-10-22',
+    sections: {
+      fixed: [
+        'Windows like Achievements and the Kill Planner keep keyboard focus inside and close with Escape, and screen readers now name the Key counters and icon buttons.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',

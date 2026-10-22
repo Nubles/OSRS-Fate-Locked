@@ -216,6 +216,17 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                     <div
                         className="p-4 flex justify-between items-start cursor-pointer"
                         onClick={() => setExpandedId(isExpanded && !isSearching ? null : ca.id)}
+                        onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget) return;
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                setExpandedId(isExpanded && !isSearching ? null : ca.id);
+                            }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isExpanded}
+                        aria-label={`${ca.id} Tier, ${totalPoints}/${ca.pointsRequired} cumulative points`}
                     >
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -265,6 +276,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                       isActionable ? 'bg-black/40 text-gray-600 border-gray-700 hover:border-gray-500 hover:text-gray-400' :
                                       'bg-black/20 text-gray-700 border-gray-800 cursor-not-allowed opacity-50'}`}
                                 title={isRecorded ? "Reward tier recorded" : isActionable ? "Record earned reward tier" : `Requires ${ca.pointsRequired} cumulative points`}
+                                aria-label={isRecorded ? `${ca.id} reward tier recorded` : isActionable ? `Record ${ca.id} reward tier` : `${ca.id} reward tier requires ${ca.pointsRequired} cumulative points`}
                             >
                                 {isRecorded ? <CheckCircle2 size={20} /> : isActionable ? <Sparkles size={18} /> : <Lock size={16} />}
                             </button>

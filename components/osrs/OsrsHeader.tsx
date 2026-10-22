@@ -121,15 +121,15 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
 
       {/* Key stacks, with the XP drops rising past them */}
       <div data-tour="keys" style={{ position: 'relative', display: 'flex', gap: 4, marginLeft: 6, flexShrink: 0 }}>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Keys: ${keys}. Spend one on a table in Spend Keys for a random unlock.`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Keys: ${keys}. Spend one on a table in Spend Keys for a random unlock.`} role="img" aria-label={`Keys: ${keys}`}>
           <img className="osrs-px" src={sprite('key.png')} alt="Keys" width={36} height={32} />
           <span className="osrs-stack">{keys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} role="img" aria-label={`Omni-Keys: ${specialKeys}`}>
           <img className="osrs-px" src={sprite('omni_key.png')} alt="Omni-Keys" width={36} height={32} />
           <span className="osrs-stack">{specialKeys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. Each one unlocks a random entry from all the tables at once.`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. Each one unlocks a random entry from all the tables at once.`} role="img" aria-label={`Chaos Keys: ${chaosKeys}`}>
           <img className="osrs-px" src={sprite('chaos_key.png')} alt="Chaos Keys" width={36} height={32} />
           <span className="osrs-stack">{chaosKeys}</span>
         </div>
