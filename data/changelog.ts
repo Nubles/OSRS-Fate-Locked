@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-new-player-whats-new',
+    title: 'A quieter first visit',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'New players no longer get the full update list right after setting up. What’s New only shows updates that come out after you start.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
