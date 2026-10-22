@@ -128,7 +128,7 @@ describe('ReferenceModal Smart Play', () => {
     expect(economy).toContain('Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: 8 on Clarity before a big roll, or 25 on a Chaos Key.');
     expect(economy).toContain('Any successful roll resets them to 0, so spend them at the Void Altar before that.');
     expect(economy).not.toMatch(/banks Fate|save toward a Chaos Key|fuel for the Void Altar/);
-    expect(economy).toContain(`Konar ${DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel ${DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks ${DROP_RATES[DropSource.SLAYER_BOSS]}%`);
+    expect(economy).toContain(`Konar ${DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel ${DROP_RATES[DropSource.SLAYER_DURADEL]}%; a boss task rolls from its boss’s Key stash)`);
     expect(economy).toContain(`a guaranteed Key and a ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll.`);
     expect(economy).toContain(`Raids give ${engineOmniChance(DropSource.RAID)}%, Elite diaries ${engineOmniChance(DropSource.DIARY_ELITE)}% and high-tier bosses ${engineOmniChance(DropSource.BOSS_HIGH)}%.`);
   });

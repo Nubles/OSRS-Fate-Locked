@@ -8,7 +8,8 @@ import {
   prepareCATaskCompletionActions,
 } from './GameContext';
 import { drawDice } from '../utils/seededRng';
-import { TableType, LogEntry, type FailureFateAward } from '../types';
+import { DropSource, TableType, LogEntry, type FailureFateAward } from '../types';
+import { DROP_RATES } from '../config/rules';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
@@ -1539,5 +1540,33 @@ describe('Chunked Combat Achievement tasks roll only at a boss in the run\'s chu
     expect(owned.prepared.result).toEqual({ ok: true });
     expect(owned.next.keys).toBe(1);
     expect(complete(run('vanilla')).next.keys).toBe(1);
+  });
+});
+
+// --- Boss tasks draw from the boss's stash (critique GP-10) -------------------
+
+describe('Boss Task roll (Vanilla)', () => {
+  const vorkath = { kind: 'boss' as const, bossName: 'Vorkath', bossClass: 'mid' as const };
+  const vanilla = () => ({ ...base(), gameModeId: 'vanilla' });
+
+  it('rolls at the boss’s next-Key odds, not the old flat 80%, on the kill’s own dice', () => {
+    const draws: string[] = [];
+    const action = prepareKeyRollAction(
+      { ...vanilla(), bossStandardKeysAwarded: { Vorkath: 1 } },
+      DropSource.SLAYER_BOSS, DROP_RATES[DropSource.SLAYER_BOSS], 3,
+      (purpose, index = 0, max = 100) => { draws.push(purpose); return index === 0 ? 9_000 : max; },
+      undefined, undefined, undefined, vorkath,
+    );
+    // Vorkath's stash: 30%, then 15%.
+    expect(action?.payload).toMatchObject({ source: DropSource.SLAYER_BOSS, baseThreshold: 15, success: false, context: vorkath });
+    expect(draws[0]).toBe('roll:boss:Vorkath:1');
+  });
+
+  it('takes its Key from the boss’s stash, and a spent stash doesn’t roll', () => {
+    const next = gameReducer(vanilla(), roll({ success: true, source: DropSource.SLAYER_BOSS, context: vorkath }));
+    expect(next.bossStandardKeysAwarded?.Vorkath).toBe(1);
+    expect(next.history.at(-1)).toMatchObject({ source: DropSource.SLAYER_BOSS, meta: { bossName: 'Vorkath', remainingReserve: 1 } });
+    const spent = { ...vanilla(), bossStandardKeysAwarded: { Vorkath: 2 } };
+    expect(prepareKeyRollAction(spent, DropSource.SLAYER_BOSS, 80, 3, () => 1, undefined, undefined, undefined, vorkath)).toBeNull();
   });
 });

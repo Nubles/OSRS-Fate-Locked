@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-slayer-gates',
+    title: 'Slayer cards follow your unlocks',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'Slayer masters you can’t use yet are greyed out with why. A Boss Task needs Like a Boss, asks which boss, and rolls from that boss’s Key stash.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
