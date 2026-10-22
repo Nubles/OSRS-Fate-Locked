@@ -27,7 +27,6 @@ const UPLOAD_PAGES_ARTIFACT = 'actions/upload-pages-artifact@56afc609e74202658d3
 const DEPLOY_PAGES = 'actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e';
 const UPLOAD_ARTIFACT = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02';
 const DOWNLOAD_ARTIFACT = 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';
-const CREATE_PULL_REQUEST = 'peter-evans/create-pull-request@c5a7806660adbe173f04e3e038b0ccdcd758773c';
 const WORKFLOWS = ['ci.yml', 'deploy.yml', 'sync-content.yml', 'discord-release.yml', 'discord-whats-new.yml', 'relay-kv-usage.yml'];
 const shardedTestCommand = `npm test -- --shard=\${{ matrix.shard }}/${TEST_SHARDS}`;
 
@@ -596,40 +595,41 @@ describe('release documentation contract', () => {
 });
 
 describe('content sync workflow contract', () => {
-  it('dispatches CI on the sync pull request it opens with GITHUB_TOKEN', async () => {
+  it('only ever pushes the bot branch, never main, and opens no pull request', async () => {
     const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
-    const openPrJob = yamlBlock(yamlBlock(workflow, 'jobs'), 'open-pr', 2);
 
-    // Pull requests opened with GITHUB_TOKEN start no workflows, so the sync
-    // must dispatch CI itself, on the branch its pull request uses.
-    expect(openPrJob).toMatch(/^\s{6}actions:\s*write\s*$/m);
-    expect(openPrJob).toMatch(new RegExp(`- name: Open or update the sync PR\\n\\s+id: cpr\\n\\s+if: success\\(\\)\\n\\s+uses: ${escapeRegExp(CREATE_PULL_REQUEST)}\\n`));
-    expect(openPrJob).toMatch(/^\s+branch: bot\/wiki-content-sync\s*$/m);
-    expect(openPrJob).toMatch(
-      /- name: Run CI on the sync PR\n\s+if: success\(\) && \(steps\.cpr\.outputs\.pull-request-operation == 'created' \|\| steps\.cpr\.outputs\.pull-request-operation == 'updated'\)\n\s+env:\n\s+GH_TOKEN: \$\{\{ github\.token \}\}/,
-    );
-    expect(activeRunCommands(workflow).at(-1)).toBe(
-      'gh workflow run ci.yml --repo "${{ github.repository }}" --ref bot/wiki-content-sync',
-    );
-    expect(yamlBlock(await readRepositoryFile('.github/workflows/ci.yml'), 'on'))
-      .toMatch(/^\s{2}workflow_dispatch:\s*$/m);
+    // The weekly Claude routine opens the one draft pull request; this
+    // workflow only leaves the Wiki's answers on bot/wiki-content-sync.
+    expect(workflow).not.toMatch(/create-pull-request|gh pr create|gh workflow run/);
+    const pushes = activeRunCommands(workflow).filter(command => /git push/.test(command));
+    expect(pushes.length).toBeGreaterThan(0);
+    for (const command of pushes) {
+      expect(command).toMatch(/bot\/wiki-content-sync/);
+      expect(command).not.toMatch(/\bmain\b/);
+    }
+  });
+
+  it('runs the morning after the Wednesday game update and lets tests report instead of gate', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+
+    expect(workflow).toMatch(/cron: '0 5 \* \* 4'/);
+    expect(workflow).toMatch(/^\s{2}workflow_dispatch:/m);
+    expect(workflow).toMatch(/- name: Run tests[^\n]*\n\s+id: tests\n\s+continue-on-error: true/);
+    // Quest source pins only move on a manual curation run.
+    expect(workflow).toMatch(/- name: Refresh quest sources \(manual runs only\)\n\s+if: github\.event_name == 'workflow_dispatch'\n/);
   });
 
   it('runs third-party code only in a read-only job without stored credentials', async () => {
     const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
     const jobsBlock = yamlBlock(workflow, 'jobs');
     const syncJob = yamlBlock(jobsBlock, 'sync', 2);
-    const openPrJob = yamlBlock(jobsBlock, 'open-pr', 2);
+    const pushJob = yamlBlock(jobsBlock, 'push-branch', 2);
 
     // Workflow default and the sync job: read-only.
     expect(yamlBlock(workflow, 'permissions').trim()).toBe('permissions:\n  contents: read');
     expect(yamlBlock(syncJob, 'permissions', 4).trim()).toBe('permissions:\n      contents: read');
     // The sync job installs from the lockfile and keeps no git token on disk.
-    expect(activeRunCommands(syncJob).slice(0, 3)).toEqual([
-      'npm ci --no-audit --no-fund',
-      'npm run content:sync | tee sync-output.txt',
-      'npm test',
-    ]);
+    expect(activeRunCommands(syncJob)[0]).toBe('npm ci --no-audit --no-fund');
     expectNoNpmInstall(activeRunCommands(workflow));
     expect(syncJob).toMatch(
       new RegExp(`- name: Checkout\\n\\s+uses: ${escapeRegExp(CHECKOUT)}\\n\\s+with:\\n\\s+persist-credentials: false`),
@@ -637,18 +637,13 @@ describe('content sync workflow contract', () => {
     expect(activeUses(syncJob)).toEqual([CHECKOUT, SETUP_NODE, UPLOAD_ARTIFACT]);
 
     // Only the job that runs no npm code may write, and it gets only the
-    // generated files and the PR text from the sync job.
-    expect(openPrJob).toMatch(/^\s{4}needs:\s*sync\s*$/m);
-    expect(yamlBlock(openPrJob, 'permissions', 4).trim()).toBe(
-      'permissions:\n      contents: write\n      pull-requests: write\n      actions: write',
-    );
-    expect(activeUses(openPrJob)).toEqual([CHECKOUT, DOWNLOAD_ARTIFACT, CREATE_PULL_REQUEST]);
-    expect(activeRunCommands(openPrJob).filter((command) => /\b(?:npm|npx|node)\b/.test(command))).toEqual([]);
+    // generated files, the CA evidence and the report from the sync job.
+    expect(pushJob).toMatch(/^\s{4}needs:\s*sync\s*$/m);
+    expect(yamlBlock(pushJob, 'permissions', 4).trim()).toBe('permissions:\n      contents: write');
+    expect(activeUses(pushJob)).toEqual([CHECKOUT, DOWNLOAD_ARTIFACT]);
+    expect(activeRunCommands(pushJob).filter((command) => /\b(?:npm|npx|node)\b/.test(command))).toEqual([]);
     expect(syncJob).toMatch(
-      /path: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+docs\/SYNC_STATUS\.md\n\s+pr-body\.md\n/,
-    );
-    expect(openPrJob).toMatch(
-      /add-paths: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+docs\/SYNC_STATUS\.md\n/,
+      /path: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+data\/sources\/quest-list\.json\n\s+data\/sources\/quest-requirement-audit\.json\n\s+docs\/SYNC_STATUS\.md\n\s+docs\/sync-evidence\/\n\s+sync-report\.md\n/,
     );
   });
 });

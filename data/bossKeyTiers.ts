@@ -18,6 +18,7 @@ export const BOSS_TIERS: Record<string, BossTier> = {
   'Chambers of Xeric': 'raid',
   'Theatre of Blood': 'raid',
   'Tombs of Amascut': 'raid',
+  'The Fractured Archive': 'raid',
 
   // ── High (endgame solo/duo, DT2, Inferno, wave survival) ────────────────────
   'The Gauntlet': 'high',

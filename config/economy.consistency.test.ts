@@ -276,7 +276,7 @@ describe('economy ↔ engine consistency', () => {
   });
 
   it('keeps the finite Vanilla boss reserve and every boss schedule aligned', () => {
-    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(116);
+    expect(VANILLA_BOSS_STANDARD_KEY_TOTAL).toBe(119); // 116, plus 3 for The Fractured Archive (October 2026)
     expect(BOSSES_LIST).not.toContain(BRUTUS_BOSS_NAME);
     for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeGreaterThan(0);
     expect(vanillaBossKeySchedule('The Mad Angel')).toEqual([30, 15]);

@@ -49,6 +49,20 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-22-new-content',
+    title: 'A new raid and Pete Kayer’s Challenges',
+    date: '2026-10-22',
+    sections: {
+      added: [
+        'The Fractured Archive, the raid from 20 October, is a raid boss you can roll. It needs While Guthix Sleeps.',
+        'Its miniquest is in the Journal, and its Collection Log page tracks all 17 items, including the pet Orion.',
+        'Pete Kayer’s Challenges from the 7 October update is a Minigame you can roll now. It needs Ferox Enclave unlocked.',
+        'Like in the game, its rewards need 750 total level.',
+        'Your completion total goes up by two to make room for them.',
+      ],
+    },
+  },
+  {
     id: '2026-10-21-lighter-world-map',
     title: 'The world map loads faster',
     date: '2026-10-21',
