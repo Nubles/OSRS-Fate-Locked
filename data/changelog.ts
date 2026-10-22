@@ -51,6 +51,37 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-22-intro-back-and-skip',
+    title: 'Go back or skip the intro',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'The intro for a new run now has Back and Skip intro buttons. Skipping takes you straight to picking your game mode.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-22-every-tab-in-view',
+    title: 'Every tab in view',
+    date: '2026-10-22',
+    sections: {
+      fixed: [
+        'All six dashboard tabs now show, the Key counters say Keys, Omni and Chaos, and clicking off the settings menu just closes it.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-22-phones-scroll-normally',
+    title: 'The tracker on your phone',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'On a phone the tracker now scrolls like a normal page, with Farm Keys first, so a Slayer roll is one scroll away.',
+        'A slim top bar shows your Keys and Fate; the menu button holds everything else. The map and the Rules get the full width.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-new-content',
     title: 'A new raid and Pete Kayer’s Challenges',
     date: '2026-10-22',
