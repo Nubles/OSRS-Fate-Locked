@@ -249,7 +249,7 @@ const ClassicGachaSection: React.FC = () => {
   const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
 
   return (
-    <div className="h-full flex flex-col relative p-4">
+    <div className="lg:h-full flex flex-col relative p-3 lg:p-4">
       {/* Omni-Key hint — these aren't rolled here; they're spent by clicking a
           locked item directly in the Progression Dashboard. */}
       {specialKeys > 0 && (

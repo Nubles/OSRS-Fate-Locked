@@ -322,7 +322,7 @@ const ClassicCollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         </div>
       )}
       {/* Top Bar */}
-      <div className="flex justify-between items-center p-2 bg-[#3e3529] border-b-2 border-[#5a5245] shadow-md shrink-0">
+      <div className="flex flex-wrap lg:flex-nowrap gap-2 lg:gap-0 justify-between items-center p-2 bg-[#3e3529] border-b-2 border-[#5a5245] shadow-md shrink-0">
         <h2 className="text-[#ff981f] text-shadow font-bold px-2 text-sm uppercase tracking-wider">Collection Log</h2>
         
         {/* Wealth Ticker */}
