@@ -13,6 +13,7 @@ import { skillGatherNote } from '../utils/skillGatherNote';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { SetLevelControl } from './SetLevelControl';
 
 // OSRS layout (utils/uiStyle): the skill guide window. Its own chunk, so the
 // classic modal's chunk does not grow.
@@ -159,6 +160,8 @@ const ClassicSkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
             <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
           </button>
         </div>
+
+        <SetLevelControl skill={skill} variant="classic" />
 
         {/* Tabs */}
         <div className="shrink-0 flex gap-1 px-4 pt-3 bg-[#1a1a1a] border-b border-white/5">

@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-set-level',
+    title: 'Log many levels at once',
+    date: '2026-10-22',
+    sections: {
+      added: [
+        'Click a skill’s icon and type the level you reached: every level in between still rolls, with one summary instead of a popup per level.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
