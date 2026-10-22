@@ -40,6 +40,14 @@ import {
   useGame,
 } from './GameContext';
 import { SaveRecoveryGuard } from '../components/SaveRecoveryGuard';
+import { runDrawFloat } from '../utils/seededRng';
+
+// Every run draws from its seed or hidden salt (runDrawFloat), never
+// Math.random, so a test that needs a given draw sets it here.
+vi.mock('../utils/seededRng', async importOriginal => {
+  const actual = await importOriginal<typeof import('../utils/seededRng')>();
+  return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
 
 
 type Game = ReturnType<typeof useGame>;
@@ -192,6 +200,7 @@ afterEach(() => {
   cleanup();
   resetPendingSavesForTest();
   vi.useRealTimers();
+  vi.mocked(runDrawFloat).mockReset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -2134,7 +2143,7 @@ describe('level-up feedback integration', () => {
       },
     };
     localStorage.setItem(storageKey, serializeCurrent(seeded));
-    const random = vi.spyOn(Math, 'random')
+    const random = vi.mocked(runDrawFloat)
       .mockReturnValueOnce(0.01)
       .mockReturnValue(0.99);
     let current: Game | undefined;
@@ -2164,7 +2173,7 @@ describe('level-up feedback integration', () => {
       },
     };
     localStorage.setItem(storageKey, serializeCurrent(seeded));
-    const random = vi.spyOn(Math, 'random').mockReturnValue(0.01);
+    const random = vi.mocked(runDrawFloat).mockReturnValue(0.01);
     let current: Game | undefined;
 
     render(
@@ -2335,7 +2344,7 @@ describe('quest completion integration', () => {
   });
 
   it('completes a valid quest with exactly one roll and makes its repeat a full-state no-op', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    vi.mocked(runDrawFloat).mockReturnValue(0.999);
     const current = renderStoredGame('valid-quest-completion', {
       unlocks: { regions: ['Asgarnia', 'Rimmington'] },
     });
@@ -2363,7 +2372,7 @@ describe('quest completion integration', () => {
   });
 
   it('completes a valid miniquest with exactly one roll and makes its repeat a full-state no-op', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    vi.mocked(runDrawFloat).mockReturnValue(0.999);
     const current = renderStoredGame('valid-miniquest-completion', {
       unlocks: { regions: ['Hosidius', 'Arceuus'] },
     });

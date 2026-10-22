@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-22-restore-keeps-your-luck',
+    title: 'Restoring a backup keeps your luck',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'Restoring a backup no longer re-rolls your luck: the same roll gives the same result, and your run card shows how many times it was restored.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
