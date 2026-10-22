@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-sync-roll-baseline',
+    id: '2026-10-22-sync-roll-baseline',
     title: 'Sync & Roll rolls only new levels',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       fixed: [
         'Linking an account to Sync & Roll no longer pays out levels it already had. Only levels you gain after linking roll.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },
