@@ -4,7 +4,8 @@
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
     "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
-    "fa71ed3b207e6a501444987dee23b875ec27cacd"
+    "fa71ed3b207e6a501444987dee23b875ec27cacd",
+    "629e9fee6183773e8df26d7e4bc5db792290ce0b"
   ],
   "entries": [
     {
@@ -7633,6 +7634,33 @@
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
       }
+    },
+    {
+      "id": "The Fractured Archive",
+      "kind": "miniquest",
+      "status": "unresolved",
+      "reviewedAt": "2026-10-22",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fractured_Archive_(miniquest)&oldid=15379009",
+        "revision": 15379009,
+        "revisionTimestamp": "2026-10-22T01:21:09Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-swamp-caves\",\"label\":\"Lumbridge Swamp Caves\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[\"While Guthix Sleeps\"],\"points\":0}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15379009 lists no required items."
+        ],
+        "travel": [
+          "Wiki revision 15379009 starts the miniquest near the entrance of the Ancient Guthixian Temple and recommends a Guthixian temple teleport. The Fractured Archive raid page reaches the Chasm of Tears through the Tears of Guthix cave in the Lumbridge Swamp Caves."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "The Fractured Archive uses the locations policy with the Lumbridge Swamp Caves location (49,49 or 50,50) and runtime regions [Misthalin]. It was released on 20 October 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The stable Wiki revision starts it near the Ancient Guthixian Temple in the Chasm of Tears, which the Wiki reaches through the Tears of Guthix cave in the Lumbridge Swamp Caves, so the runtime uses the same location as Tears of Guthix.",
+      "conservativeReason": "Keeping The Fractured Archive's current locations policy requirements (the Lumbridge Swamp Caves location and While Guthix Sleeps) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the Chasm of Tears content is pinned and reviewed."
     },
     {
       "id": "The Fremennik Exiles",
