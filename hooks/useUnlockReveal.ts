@@ -40,9 +40,14 @@ export function getUnlockRevealTransition(
   const completedQuests = current.quests.filter(
     questId => !previous.quests.includes(questId),
   );
-  const newRegions = visibleAreaUnlocks(current.regions).filter(
-    region => !visibleAreaUnlocks(previous.regions).includes(region),
-  );
+  // A level-up keeps the same regions list, so there is nothing to compare;
+  // otherwise the earlier visible areas are worked out once, not per region.
+  const previousRegions = current.regions === previous.regions
+    ? null
+    : new Set(visibleAreaUnlocks(previous.regions));
+  const newRegions = previousRegions === null
+    ? []
+    : visibleAreaUnlocks(current.regions).filter(region => !previousRegions.has(region));
   const newBosses = current.bosses.filter(
     boss => !previous.bosses.includes(boss),
   );
