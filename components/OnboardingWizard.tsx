@@ -1,11 +1,14 @@
 
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { STARTING_KEYS } from '../config/economy';
 import { DEFAULT_MODE_ID, getGameMode } from '../config/gameModes';
 import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
 import { Dices, Skull, Shield, Sparkles, Key, Dna, Zap } from './OsrsIcon';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { onboardingCanGoBack, onboardingCanSkip, onboardingStepAfter, type OnboardingAction } from '../utils/onboardingSteps';
 
 // Onboarding comes before the mode choice, and every mode a player can pick
 // shares this threshold (config/gameModes.ts; pinned in the onboarding test).
@@ -335,6 +338,8 @@ const AltarVisual: React.FC = () => {
 export const OnboardingWizard: React.FC = () => {
   const { completeOnboarding } = useGame();
   const [step, setStep] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const STEPS = [
     {
@@ -381,16 +386,33 @@ export const OnboardingWizard: React.FC = () => {
 
   const currentStep = STEPS[step];
 
-  const handleNext = () => {
-    if (step < STEPS.length - 1) {
-      setStep(s => s + 1);
+  const nextRef = useRef<HTMLButtonElement>(null);
+  const handleNext = (action: OnboardingAction = 'next') => {
+    const next = onboardingStepAfter(step, STEPS.length, action);
+    if (next !== 'finish') {
+      setStep(next);
     } else {
       completeOnboarding();
     }
   };
+  // Escape steps back like Back does; on the first step it does nothing, so
+  // the intro is never thrown away by a stray key press.
+  useEscapeKey(() => handleNext('escape'));
+
+  // Start on Next so Enter walks the intro, and keep focus in the dialog when
+  // the button that had it goes away (Back on the first step).
+  const focusedOnce = useRef(false);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const active = document.activeElement;
+    if (!focusedOnce.current || !dialog || active === dialog || !dialog.contains(active)) {
+      nextRef.current?.focus();
+    }
+    focusedOnce.current = true;
+  }, [step]);
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-500">
+    <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="onboarding-title" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-in fade-in duration-500">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -421,12 +443,20 @@ export const OnboardingWizard: React.FC = () => {
 
         {/* Right: Content & Controls */}
         <div className="w-full md:w-1/2 min-h-0 p-6 md:p-12 flex flex-col justify-center relative z-10">
+            {onboardingCanSkip(step, STEPS.length) && (
+                <button
+                    onClick={() => handleNext('skip')}
+                    className="absolute top-5 right-6 md:top-8 md:right-12 text-xs font-bold uppercase tracking-[0.2em] text-gray-500 hover:text-white transition-colors"
+                >
+                    Skip intro
+                </button>
+            )}
             <div className="mb-auto min-h-0 overflow-y-auto">
                 <span className={`text-xs font-bold uppercase tracking-[0.2em] ${currentStep.color} mb-2 block`}>
                     Step {step + 1} / {STEPS.length}
                 </span>
                 
-                <h1 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">
+                <h1 id="onboarding-title" className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">
                     {currentStep.title}
                 </h1>
                 <h2 className="text-lg md:text-xl text-gray-500 font-light mb-4 md:mb-6">
@@ -438,9 +468,18 @@ export const OnboardingWizard: React.FC = () => {
                 </p>
             </div>
 
-            <div className="mt-6 md:mt-12 shrink-0 flex justify-end">
+            <div className="mt-6 md:mt-12 shrink-0 flex justify-end gap-3">
+                {onboardingCanGoBack(step) && (
+                    <button
+                        onClick={() => handleNext('back')}
+                        className="px-6 py-4 text-gray-400 font-black uppercase tracking-widest rounded-lg border border-white/10 hover:text-white hover:border-white/30 transition-all"
+                    >
+                        Back
+                    </button>
+                )}
                 <button 
-                    onClick={handleNext}
+                    ref={nextRef}
+                    onClick={() => handleNext()}
                     className="group px-8 py-4 bg-white text-black font-black uppercase tracking-widest rounded-lg hover:bg-gray-200 transition-all flex items-center gap-3 shadow-lg hover:shadow-white/20"
                 >
                     {step === STEPS.length - 1 ? "Start" : "Next"}
