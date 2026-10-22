@@ -49,7 +49,7 @@ import {
   applyValidatedReplacement,
   prepareReplacement,
   replacementStaleResult,
-  serializeCurrent as serializeGameState,
+  serializeCurrent as serializeGameStateUncached,
   SaveAuthorizationError,
   SaveOwnershipConflictError,
   saveAuthorizationFailureResult,
@@ -57,6 +57,7 @@ import {
   type ImportResult,
 } from '../utils/gamePersistence';
 import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { memoizeLast } from '../utils/memoizeLast';
 import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
 import { checksumSave } from '../utils/saveIntegrity';
@@ -131,6 +132,12 @@ import type { SaveBootstrapResult } from '../components/SaveBootstrap';
 
 // --- Types ---
 const SAVE_DEBOUNCE_MS = 500;
+
+// One action used to turn the whole save into JSON about ten times (the save
+// effect, its debounced flush, the flush's check, the lifecycle stage, ...),
+// all for the same state object. State is replaced, never edited in place, so
+// the bytes of the last state serialized are reused until a new state comes.
+const serializeGameState = memoizeLast(serializeGameStateUncached);
 const RECOVERY_CHECKPOINT_INTERVAL_MS = 5 * 60 * 1000;
 
 export const writeReplacementNow = (
@@ -2532,9 +2539,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     pushBackup(storageKey, data, reason, authorizeOwnedWrite), [authorizeOwnedWrite, storageKey]);
 
   const intervalCheckpointRef = useRef<{ data: string; capturedAt: number } | null>(null);
-  const intervalCheckpointBaselineRef = useRef<string | null>(
-    persistedSnapshotRef.current === null ? null : serializeGameState(state),
-  );
+  // useRef's argument is evaluated on every render, so the baseline is set
+  // once here rather than passed in, which re-serialized the save each render.
+  const intervalCheckpointBaselineRef = useRef<string | null | undefined>(undefined);
+  if (intervalCheckpointBaselineRef.current === undefined) {
+    intervalCheckpointBaselineRef.current = persistedSnapshotRef.current === null ? null : serializeGameState(state);
+  }
   const intervalCheckpointQueueRef = useRef<Promise<void>>(Promise.resolve());
   const sessionStartCapturedAtRef = useRef(Date.now());
   const maybeCreateIntervalCheckpoint = useCallback((data: string): Promise<void> => {
