@@ -53,6 +53,9 @@ export const MINIGAME_KEY_RESERVES: Record<string, MinigameReserveSpec> = {
   'Mess': { minutes: 2.5, clogSlots: 0 },
   'Nightmare Zone': { minutes: 180, clogSlots: 0 },
   'Pest Control': { minutes: 5, clogSlots: 10 },
+  // Pete's Penultimate or Final Challenge is a single PvP-style fight; the Wiki
+  // gives no duration yet, so 3 minutes is an estimate. No Collection Log page.
+  "Pete Kayer's Challenges": { minutes: 3, clogSlots: 0 },
   'Pyramid Plunder': { minutes: 5, clogSlots: 0 },
   "Rogues' Den": { minutes: 3, clogSlots: 5 },
   "Shades of Mort'ton": { minutes: 15, clogSlots: 14 },

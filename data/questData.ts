@@ -2101,6 +2101,19 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Auburnvale'],
     skills: { 'Fletching': 20 }, prereqs: ['Children of the Sun'], points: 0,
     difficulty: DropSource.QUEST_NOVICE
+  },
+  'The Fractured Archive': {
+    kind: 'miniquest', accessPolicy: 'locations',
+    id: 'The Fractured Archive', name: 'The Fractured Archive',
+    regions: ['Misthalin'],
+    // Starts near the Ancient Guthixian Temple in the Chasm of Tears, reached
+    // through the Tears of Guthix cave in the Lumbridge Swamp Caves.
+    locations: [{
+      id: 'lumbridge-swamp-caves', label: 'Lumbridge Swamp Caves', standardAreas: ['Lumbridge'],
+      chunkOptions: [{ cx: 49, cy: 49 }, { cx: 50, cy: 50 }]
+    }],
+    skills: {}, prereqs: ['While Guthix Sleeps'], points: 0,
+    difficulty: DropSource.QUEST_GRANDMASTER
   }
 };
 /** Canonical quest-point-cape membership: quests award points; optional miniquests do not. */
