@@ -37,12 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-21-keyboard-access',
+    id: '2026-10-22-keyboard-access',
     title: 'Better keyboard and screen-reader support',
-    date: '2026-10-21',
+    date: '2026-10-22',
     sections: {
       fixed: [
         'Windows like Achievements and the Kill Planner keep keyboard focus inside and close with Escape, and screen readers now name the Key counters and icon buttons.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-21-lighter-world-map',
+    title: 'The world map loads faster',
+    date: '2026-10-21',
+    sections: {
+      changed: [
+        'The world map loads much faster, especially on phones. It downloads a smaller picture first and only gets the full-size one when you zoom right in.',
       ],
     },
   },

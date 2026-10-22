@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { MAP_IMAGE } from '../../utils/mapCoords';
+import { useMapImageSrc } from '../../hooks/useMapImageSrc';
 import type { ChunkKey } from '../../utils/questRoutes/model';
 import { formatQuestChunk } from '../../utils/questStrategies/chunkLabels';
 import {
@@ -54,6 +55,7 @@ export function RuneProofTemporaryMap({
     [chunk, viewportSize],
   );
   const targetRect = chunkRectOnMap(chunk);
+  const mapImageSrc = useMapImageSrc(geometry.fitted.scale);
   const underlyingDialog = returnFocusTarget?.closest<HTMLElement>('[role="dialog"]') ?? null;
 
   useEffect(() => {
@@ -181,7 +183,8 @@ export function RuneProofTemporaryMap({
                   draggable={false}
                 />
                 <img
-                  src={MAP_IMAGE.src}
+                  src={mapImageSrc}
+                  hidden={!mapImageSrc}
                   alt="OSRS world map"
                   onError={() => setImageFailed(true)}
                   className="absolute inset-0 h-full w-full object-fill"
