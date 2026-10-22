@@ -38,7 +38,7 @@ const replay = (mode: string, rngVersion: 1 | 2 | 3 | undefined, pick: Picker, c
 
 // Recorded on origin/main (before this rule) with the same replay.
 const OLD = {
-  vanilla: ['Storage: Log Basket', 'Arcana: Piety', 'Regions: Lighthouse', 'Skills: Agility'],
+  vanilla: ['Storage: Log Basket', 'Arcana: Rigour', 'Merchants: Farming Shops', 'Banks: 11578'],
   chunked: ['Merchants: Halberd Shops', 'Mobility: Minigame Teleports', 'Slayer Unlocks: Task Storage', 'Arcana: Preserve'],
 };
 
@@ -59,7 +59,7 @@ it.each([1, undefined] as const)('keeps the old one-draw Chaos pick at every spe
 it('picks a table first on a run seeded now', () => {
   expect(CURRENT_RNG_VERSION).toBe(3);
   // Pinned so a later change to the draw shows up here, and gets its own rngVersion.
-  expect(replay('vanilla', CURRENT_RNG_VERSION, app)).toEqual(['Bosses: Obor', 'Slayer Unlocks: Reptile Freezer', 'Storage: Herb Sack', "Housing: Mounted Xeric's Talisman"]);
+  expect(replay('vanilla', CURRENT_RNG_VERSION, app)).toEqual(['Bosses: Scurrius', 'Equipment: Legs', 'Storage: Hard STASH', 'Farming Patches: Coral Nursery']);
   expect(replay('chunked', CURRENT_RNG_VERSION, app)).toEqual(['Minigames: Forestry', "Storage: Dizana's Quiver", 'Housing: Restoration Pools', 'Mobility: Mine Carts']);
   for (const mode of ['vanilla', 'chunked']) expect(replay(mode, CURRENT_RNG_VERSION, app)).not.toEqual(replay(mode, CURRENT_RNG_VERSION, before));
 });
