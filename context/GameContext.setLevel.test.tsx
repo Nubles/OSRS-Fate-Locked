@@ -9,7 +9,7 @@
 import React from 'react';
 import 'fake-indexeddb/auto';
 import { act, cleanup, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameProvider, createFreshState, useGame } from './GameContext';
 import type { GameState } from '../types';
 import { resetPendingSavesForTest } from '../utils/pendingSaves';
@@ -17,6 +17,8 @@ import { WRITER_LEASE_ARBITRATION_MS } from '../utils/profileWriterLease';
 import { serializeCurrent } from '../utils/gamePersistence';
 import type { LevelBatchSummary } from '../utils/setLevel';
 import { formatLevelBatchSummary } from '../utils/setLevelText';
+import { loadWalkSections } from '../utils/walkSections';
+import { loadRunRoutes } from '../utils/chunkEntry';
 
 let current: ReturnType<typeof useGame>;
 let renders = 0;
@@ -25,6 +27,11 @@ const settle = async () => {
   await act(async () => { await vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS + 1); });
   await act(async () => { await vi.advanceTimersByTimeAsync(550); });
 };
+
+// Chunked frontiers (and so fate's thread) read walking data the app loads in
+// the background. Load it first, so both plays see the same map whenever the
+// background load would have landed.
+beforeAll(() => Promise.all([loadWalkSections(), loadRunRoutes()]));
 
 beforeEach(() => {
   vi.useFakeTimers();
