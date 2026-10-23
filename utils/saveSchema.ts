@@ -5,7 +5,7 @@ import { CHUNK_SKILL_FACTS } from '../data/chunkSkillNodes';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
-import type { CollectionLogIdentity, FateCompensationState, FateMark, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, UnlockState } from '../types';
+import type { CollectionLogIdentity, FateCompensationState, FateMark, FateSite, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, UnlockState } from '../types';
 import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { getPoolAndStateKey } from './gameEngine';
@@ -21,11 +21,16 @@ import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBo
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
-import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ROLLS, FATE_SEAL_BOON_FACTOR, FATE_SITE_COUNT, FATE_WAYSTONE_DRAWS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
 import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
-import { FATE_MARKS } from './fateLand';
+import { FATE_MARKS, FATE_SITES } from './fateLand';
+import { REGION_CHUNKS } from '../data/regionChunks';
+
+/** The regions a Chunked run's seals name (utils/fateLand.ts). */
+const REGION_NAMES: ReadonlySet<string> = new Set(Object.keys(REGION_CHUNKS));
+
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -837,7 +842,7 @@ const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
     if (checked.ok === false) return checked;
     out[key] = checked.value;
   }
-  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS], ['cursedRollsLeft', FATE_MARK_CURSED_ROLLS], ['fortunateRollsLeft', FATE_MARK_FORTUNATE_ROLLS], ['cloudedRollsLeft', FATE_MARK_CLOUDED_ROLLS]] as const) {
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS], ['cursedRollsLeft', FATE_MARK_CURSED_ROLLS], ['fortunateRollsLeft', FATE_MARK_FORTUNATE_ROLLS * FATE_SEAL_BOON_FACTOR], ['cloudedRollsLeft', FATE_MARK_CLOUDED_ROLLS]] as const) {
     if (!own(raw, key)) continue;
     const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
     if (checked.ok === false) return checked;
@@ -1448,7 +1453,7 @@ const normalizeState = (
     state.chunkExplore = { from: Math.min(from.value, state.unlocks.chunks?.length ?? 0), done };
   }
   if (own(input, 'fateLand') && readOwn(input, 'fateLand') !== undefined) {
-    const inspected = inspectRecord(readOwn(input, 'fateLand'), new Set(['thread', 'fulfilled', 'marks', 'gilded', 'tangled']), 'invalid_field', 'fateLand');
+    const inspected = inspectRecord(readOwn(input, 'fateLand'), new Set(['thread', 'fulfilled', 'marks', 'gilded', 'tangled', 'sites', 'seals', 'pull']), 'invalid_field', 'fateLand');
     if (inspected.ok === false) return inspected;
     const isChunk = (key: unknown): key is string => typeof key === 'string' && /^\d{1,3},\d{1,3}$/.test(key);
     const thread = readOwn(inspected.value, 'thread');
@@ -1463,12 +1468,47 @@ const normalizeState = (
       if (!isChunk(chunk) || !FATE_MARKS.includes(mark as FateMark)) return invalid('invalid_field', pathOf('fateLand.marks', chunk));
       marks[chunk] = mark as FateMark;
     }
+    // A chunk that broke a region's seal can hold FATE_SEAL_BOON_FACTOR free Gilded rolls.
     const gilded = readOwn(inspected.value, 'gilded');
     if (!Array.isArray(gilded) || !gilded.every(key => isChunk(key) && marks[key as string] === 'GILDED')
-      || new Set(gilded).size !== gilded.length) return invalid('invalid_field', 'fateLand.gilded');
+      || gilded.some(key => gilded.filter(k => k === key).length > FATE_SEAL_BOON_FACTOR)) return invalid('invalid_field', 'fateLand.gilded');
     const tangled = readOwn(inspected.value, 'tangled');
     if (tangled !== undefined && typeof tangled !== 'boolean') return invalid('invalid_field', 'fateLand.tangled');
-    state.fateLand = { ...(typeof thread === 'string' ? { thread } : {}), fulfilled: fulfilled.value, marks, gilded: [...gilded as string[]], ...(tangled ? { tangled: true } : {}) };
+    let sites: Record<string, FateSite> | undefined;
+    if (readOwn(inspected.value, 'sites') !== undefined) {
+      const sitesRecord = inspectRecord(readOwn(inspected.value, 'sites'), null, 'invalid_field', 'fateLand.sites');
+      if (sitesRecord.ok === false) return sitesRecord;
+      const names = Object.getOwnPropertyNames(sitesRecord.value);
+      if (names.length > FATE_SITE_COUNT) return invalid('invalid_field', 'fateLand.sites');
+      sites = {};
+      for (const chunk of names) {
+        const site = readOwn(sitesRecord.value, chunk);
+        if (!isChunk(chunk) || !FATE_SITES.includes(site as FateSite)) return invalid('invalid_field', pathOf('fateLand.sites', chunk));
+        sites[chunk] = site as FateSite;
+      }
+    }
+    let seals: Record<string, string> | undefined;
+    if (readOwn(inspected.value, 'seals') !== undefined) {
+      const sealsRecord = inspectRecord(readOwn(inspected.value, 'seals'), null, 'invalid_field', 'fateLand.seals');
+      if (sealsRecord.ok === false) return sealsRecord;
+      seals = {};
+      for (const region of Object.getOwnPropertyNames(sealsRecord.value)) {
+        const chunk = readOwn(sealsRecord.value, region);
+        if (!REGION_NAMES.has(region) || (chunk !== '' && !isChunk(chunk))) return invalid('invalid_field', pathOf('fateLand.seals', region));
+        seals[region] = chunk as string;
+      }
+    }
+    const pull = readOwn(inspected.value, 'pull');
+    let pullValue = 0;
+    if (pull !== undefined) {
+      const bounded = boundedInteger(pull, 'fateLand.pull', 0, FATE_WAYSTONE_DRAWS);
+      if (bounded.ok === false) return bounded;
+      pullValue = bounded.value;
+    }
+    state.fateLand = {
+      ...(typeof thread === 'string' ? { thread } : {}), fulfilled: fulfilled.value, marks, gilded: [...gilded as string[]], ...(tangled ? { tangled: true } : {}),
+      ...(sites ? { sites } : {}), ...(seals ? { seals } : {}), ...(pullValue > 0 ? { pull: pullValue } : {}),
+    };
   }
   if (own(input, 'cartographerOffer') && readOwn(input, 'cartographerOffer') !== undefined) {
     const raw = readOwn(input, 'cartographerOffer');

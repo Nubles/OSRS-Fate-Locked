@@ -167,6 +167,17 @@ export const FATE_MARK_CURSED_ODDS = 5;
 export const FATE_MARK_WITHERED_FATE = 10;
 /** Key rolls a Clouded chunk leaves without Fate when they fail. */
 export const FATE_MARK_CLOUDED_ROLLS = 3;
+/**
+ * Fated sites and region seals (utils/fateLand.ts; Alex, 2026-10-22). Fate
+ * hides this many sites in a run's fog when the run starts...
+ */
+export const FATE_SITE_COUNT = 16;
+/** ...and shows one as a mark in the fog once it is this many chunks from the run's land. */
+export const FATE_SITE_SIGHT = 2;
+/** A Waystone makes this many Chunks Key draws lean toward Fate's Thread. */
+export const FATE_WAYSTONE_DRAWS = 3;
+/** The chunk that breaks a region's seal always draws a boon, this many times as strong. */
+export const FATE_SEAL_BOON_FACTOR = 2;
 
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =

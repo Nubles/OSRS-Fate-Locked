@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CHUNK_PX, chunkBox, fogPath, fogState, markLine, outlineEdges, spinHopTimes, spinHops, spinWindow, THREAD_LEANING_LINE, threadLine, threadStart,
+  CHUNK_PX, FATE_MARK_EFFECTS, OMEN_BANE, SEAL_BOON_EFFECTS, SITE_EFFECTS, chunkBox, fogPath, fogState, markLine, outlineEdges, spinHopTimes, spinHops, spinWindow, THREAD_LEANING_LINE, threadLine, threadStart,
 } from './fateMap';
+import { fateBeats, sealEdges, sightedSites } from './fateSiteMap';
 
 describe('the fate map geometry', () => {
   it('puts a chunk at ((cx-15)*192, (65-cy)*192) on the world map image', () => {
@@ -94,5 +95,36 @@ describe('the Chunks Key spin', () => {
     expect(t[9]).toBe(1500);
     for (let i = 2; i < t.length; i++) expect(t[i] - t[i - 1]).toBeGreaterThanOrEqual(t[i - 1] - t[i - 2]);
     expect(spinHopTimes(1, 1500)).toEqual([0]);
+  });
+});
+
+describe('Fated sites and seals on the map', () => {
+  it('sees a hidden site only within 2 chunks of held land, and never one already held', () => {
+    const sites = { '52,50': 'SHRINE', '53,50': 'HOARD', '50,51': 'RIFT' } as const;
+    const held = new Set(['50,50', '51,50', '50,51']);
+    expect(sightedSites(sites, held)).toEqual(['52,50', '53,50']);
+    expect(sightedSites(sites, new Set(['50,50']))).toEqual(['50,51', '52,50']);
+    expect(sightedSites(undefined, held)).toEqual([]);
+  });
+
+  it('dots the edges between held land and a region still sealed', () => {
+    const regions: Record<string, string> = { '50,50': 'Misthalin', '51,50': 'Kharidian Desert', '50,51': 'Misthalin', '49,50': 'Misthalin' };
+    const regionOf = (key: string) => regions[key];
+    const { x, y } = chunkBox('50,50');
+    expect(sealEdges(new Set(['50,50']), regionOf, { Misthalin: '' })).toEqual([[x + CHUNK_PX, y, x + CHUNK_PX, y + CHUNK_PX]]);
+    expect(sealEdges(new Set(['50,50']), regionOf, { Misthalin: '', 'Kharidian Desert': '51,50' })).toEqual([]);
+    expect(sealEdges(new Set(['50,50']), regionOf, undefined)).toEqual([]);
+  });
+
+  it("ends fate's spin on the seal, the site and the omen, a broken seal's boon doubled", () => {
+    const land = { fulfilled: 0, gilded: [], marks: { '51,50': 'BLESSED' as const, '49,50': 'CURSED' as const },
+      sites: { '51,50': 'HOARD' as const }, seals: { Misthalin: '', 'Kharidian Desert': '51,50' } };
+    expect(fateBeats('51,50', land).map(b => b.text)).toEqual([
+      'The seal of Kharidian Desert breaks.',
+      `Fated site: Hoard. ${SITE_EFFECTS.HOARD}`,
+      `Fate's gift: Blessed, doubled. ${SEAL_BOON_EFFECTS.BLESSED}`,
+    ]);
+    expect(fateBeats('49,50', land)).toEqual([{ text: `A bane: Cursed. ${FATE_MARK_EFFECTS.CURSED}`, color: OMEN_BANE }]);
+    expect(fateBeats('49,50', undefined)).toEqual([]);
   });
 });

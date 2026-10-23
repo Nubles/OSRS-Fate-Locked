@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-23-chunked-sites-seals',
+    title: 'Chunked beta: Fated sites and region seals',
+    date: '2026-10-23',
+    sections: {
+      added: [
+        'Fate now hides 16 sites in your fog. A ? shows when one is 2 chunks away, but only a draw can land on it.',
+        'Shrine: a free ritual. Hoard: a Chaos Key. Rift: fate draws a second chunk for free. Waystone: your next 3 Chunks draws lean toward Fate’s Thread.',
+        'Every region but Misthalin starts sealed. Your first chunk in a region breaks its seal, and its omen is always a boon, twice as strong.',
+        'The map dots the border of regions still sealed and shows the sites you’ve found. The Sites button hides them.',
+        'Broken seals and found sites show in #live-unlocks too.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-chunked-omens',
     title: 'Chunked beta: an omen on every chunk',
     date: '2026-10-22',

@@ -361,6 +361,9 @@ export interface GameState {
 /** Fate's omens: four boons (Blessed, Gilded, Fortunate, Chaotic) and four banes. */
 export type FateMark = 'BLESSED' | 'GILDED' | 'FORTUNATE' | 'CHAOTIC' | 'CURSED' | 'WITHERED' | 'CLOUDED' | 'TANGLED';
 
+/** Fated sites fate hides in a Chunked run's fog: a free ritual, a Chaos Key, a second chunk, or the thread's pull. */
+export type FateSite = 'SHRINE' | 'HOARD' | 'RIFT' | 'WAYSTONE';
+
 /** Chunked's Fate's Thread and fate's marks (utils/fateLand.ts). */
 export interface FateLand {
   /** The chunk fate tied its thread to; absent while there's nowhere to tie one. */
@@ -373,6 +376,12 @@ export interface FateLand {
   gilded: string[];
   /** A Tangled chunk: fate's thread doesn't pull the next Chunks draw. */
   tangled?: boolean;
+  /** Fated sites, by chunk key: placed once per run, hidden until the run is near. */
+  sites?: Record<string, FateSite>;
+  /** Regions whose seal is broken, each with the chunk that broke it ('' for land held before seals). */
+  seals?: Record<string, string>;
+  /** A Waystone: this many more Chunks Key draws all lean toward Fate's Thread. */
+  pull?: number;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */
