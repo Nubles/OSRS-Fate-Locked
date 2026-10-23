@@ -71,4 +71,20 @@ describe('OnlineBackupPrompt', () => {
     render(<OnlineBackupPrompt />);
     expect(screen.queryByRole('region', { name: 'Online backup' })).toBeNull();
   });
+  it('says when uploads are paused, and Choose opens the Online backup tab', async () => {
+    writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK', lastRunId: 'run-1', held: 'other-run' });
+    const opened = vi.fn();
+    const onNav = (event: Event) => opened((event as CustomEvent<{ target: string }>).detail.target);
+    window.addEventListener('fate:nav', onNav);
+    render(<OnlineBackupPrompt />);
+
+    expect(screen.getByRole('region', { name: 'Online backup paused' }).textContent)
+      .toMatch(/would replace your online backup of a different run/);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Choose' }));
+    expect(opened).toHaveBeenCalledWith('open:online-backup');
+    window.removeEventListener('fate:nav', onNav);
+
+    act(() => { writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK', lastRunId: 'run-2' }); });
+    expect(screen.queryByRole('region', { name: 'Online backup paused' })).toBeNull();
+  });
 });

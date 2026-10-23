@@ -2081,6 +2081,35 @@ describe('run identity and revision', () => {
     expect(noOp.runRevision).toBe(8);
   });
 
+  it('moves a bound run to its new name only from the name it is bound to', () => {
+    const bound = {
+      ...migrateSaveForTest({ history: [] }),
+      linkedAccount: 'Old Name',
+      runRevision: 3,
+      lastEvent: null,
+    };
+    const renamed = gameReducerForTest(bound, {
+      type: 'RENAME_LINKED_ACCOUNT',
+      payload: { from: 'old  name', to: ' New Name ' },
+    });
+    expect(renamed.linkedAccount).toBe('New Name');
+    expect(renamed.runRevision).toBe(4);
+
+    // A check made against a name the run no longer has changes nothing.
+    const stale = gameReducerForTest(renamed, {
+      type: 'RENAME_LINKED_ACCOUNT',
+      payload: { from: 'Old Name', to: 'Third Name' },
+    });
+    expect(stale).toBe(renamed);
+
+    // An unbound run binds through Sync & Roll's first fetch, not a rename.
+    const unbound = { ...bound, linkedAccount: undefined };
+    expect(gameReducerForTest(unbound, {
+      type: 'RENAME_LINKED_ACCOUNT',
+      payload: { from: '', to: 'New Name' },
+    })).toBe(unbound);
+  });
+
   it('creates an RFC 4122 id through the random-byte fallback', () => {
     const id = newRunIdForTest({
       getRandomValues(bytes: Uint8Array) {

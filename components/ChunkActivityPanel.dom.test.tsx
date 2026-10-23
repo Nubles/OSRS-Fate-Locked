@@ -336,6 +336,14 @@ describe('ChunkActivityPanel activity accordions', () => {
     expect(screen.getByTitle('Needs Slayer 15 \u2014 you have 1')).toBeTruthy();
     expect(screen.getByText('Yew tree').closest('div')?.getAttribute('title'))
       .toBe('Needs Woodcutting 60 \u2014 you have 40');
+    // Skill needs read as the skill's icon and level, not abbreviated words.
+    const yewBadge = screen.getByText('Yew tree').closest('div')!;
+    expect(yewBadge.textContent).not.toContain('Wood ');
+    expect(yewBadge.querySelector('img.chunk-skill-icon')?.getAttribute('src')).toMatch(/osrs-ui\/skills\/small\/woodcutting\.png$/);
+    expect(yewBadge.textContent).toContain('Needs Woodcutting 60');
+    const banshee = screen.getByTitle('Needs Slayer 15 \u2014 you have 1');
+    expect(banshee.querySelector('img.chunk-skill-icon')?.getAttribute('src')).toMatch(/slayer\.png$/);
+    expect(banshee.textContent).toBe('Needs Slayer 15');
   });
   it('groups quest, combat, and gathering rows while preserving locked labels', async () => {
     mocks.state.content = {

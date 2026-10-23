@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useDeferredValue, useMemo } from 'react';
 import { Dumbbell } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { rankSkillBottlenecks } from '../utils/skillAdvisor';
+import { rankSkillBottlenecksCached } from '../utils/skillAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';
 
 /**
@@ -13,8 +13,12 @@ import { AdvisorList, AdvisorItem } from './AdvisorList';
  */
 
 export const SkillAdvisorPanel: React.FC = () => {
-  const { unlocks, gameModeId } = useGame();
-  const ranked = useMemo(() => rankSkillBottlenecks(unlocks, gameModeId), [unlocks, gameModeId]);
+  const { unlocks: liveUnlocks, gameModeId } = useGame();
+  // The ranking re-checks every quest and diary tier for each skill's next
+  // threshold. Working it out in a follow-up render lets a level-up's new
+  // level draw first instead of waiting for it.
+  const unlocks = useDeferredValue(liveUnlocks);
+  const ranked = useMemo(() => rankSkillBottlenecksCached(unlocks, gameModeId), [unlocks, gameModeId]);
 
   // Scroll the matching skill card into view + flash a highlight ring.
   const scrollToSkill = (id: string) => {

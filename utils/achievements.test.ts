@@ -7,11 +7,16 @@ import {
 } from '../constants';
 import { BANK_IDS } from '../data/banks';
 import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
 import {
-  ACHIEVEMENTS, evaluateAchievements, earnedIds, completionPercent,
+  ACHIEVEMENTS, evaluateAchievements as evaluateRun, earnedIds as earnedRunIds, completionPercent, runStats,
 } from './achievements';
-import { UnlockState } from '../types';
+import { LogEntry, UnlockState } from '../types';
+import { PETS } from '../data/pets';
 import { setStartArea } from './freeAreas';
+
+const evaluateAchievements = (unlocks: UnlockState, gameModeId?: string) => evaluateRun({ unlocks, gameModeId });
+const earnedIds = (unlocks: UnlockState) => earnedRunIds({ unlocks });
 
 function emptyUnlocks(over: Partial<UnlockState> = {}): UnlockState {
   return {
@@ -56,9 +61,8 @@ describe('achievements engine', () => {
     for (const a of ACHIEVEMENTS) {
       expect(ids.has(a.id)).toBe(false);
       ids.add(a.id);
-      const { target } = a.progress(emptyUnlocks());
-      expect(target).toBeGreaterThan(0);
     }
+    for (const a of evaluateAchievements(emptyUnlocks())) expect(a.target).toBeGreaterThan(0);
   });
 
   it('a fresh run earns nothing', () => {
@@ -144,13 +148,22 @@ describe('area achievements by mode', () => {
   const regionAchievement = (unlocks: UnlockState, mode: string, id: string) =>
     evaluateAchievements(unlocks, mode).find((a) => a.id === id);
 
-  it("counts the areas a Chunked run's chunks reach", () => {
-    // One chunk each in Falador, Port Sarim, Rimmington, Taverley and Burthorpe.
-    const unlocks = emptyUnlocks({ chunks: ['46,51', '46,49', '45,50', '45,53', '45,55'] });
+  it("counts a Chunked run's unlocked chunks, in chunk wording", () => {
+    // The review's mid run: 8 chunks, all in Misthalin and the Kharidian Desert,
+    // once read "Unlock your first area" and World Tour 2/178.
+    const unlocks = emptyUnlocks({ chunks: ['49,50', '49,49', '50,49', '48,50', '50,51', '51,50', '52,50', '51,49'] });
 
-    expect(regionAchievement(unlocks, 'chunked', 'regions-1')?.earned).toBe(true);
-    expect(regionAchievement(unlocks, 'chunked', 'regions-5')?.earned).toBe(true);
-    expect(regionAchievement(unlocks, 'chunked', 'regions-178')?.earned).toBe(false);
+    expect(regionAchievement(unlocks, 'chunked', 'regions-1')).toMatchObject({ earned: true, description: 'Unlock your first chunk' });
+    expect(regionAchievement(unlocks, 'chunked', 'regions-5')).toMatchObject({ current: 8, earned: true, description: 'Unlock 5 chunks' });
+    expect(regionAchievement(unlocks, 'chunked', 'regions-10')).toMatchObject({ current: 8, target: 10, earned: false });
+    expect(regionAchievement(unlocks, 'chunked', 'regions-178'))
+      .toMatchObject({ current: 8, target: 622, earned: false, description: 'Unlock every chunk' });
+  });
+
+  it('keeps the area wording and count outside Chunked', () => {
+    const unlocks = emptyUnlocks({ regions: ['Falador', 'Port Sarim'], chunks: ['49,50'] });
+    expect(regionAchievement(unlocks, 'vanilla', 'regions-1')).toMatchObject({ earned: true, description: 'Unlock your first area' });
+    expect(regionAchievement(unlocks, 'vanilla', 'regions-5')).toMatchObject({ current: 2, description: 'Unlock 5 areas' });
   });
 
   it('gives a fresh Chunked run no area achievement for its free start chunk', () => {
@@ -167,6 +180,183 @@ describe('area achievements by mode', () => {
         .toMatchObject({ current: REGIONS_LIST.length + 8, earned: true });
     } finally {
       setStartArea(undefined);
+    }
+  });
+});
+
+describe('achievements read from the run', () => {
+  const entry = (type: LogEntry['type'], over: Partial<LogEntry> = {}): LogEntry =>
+    ({ id: `${type}-${Math.random()}`, timestamp: 0, type, message: '', ...over });
+  const win = (meta: Record<string, unknown> = {}) => entry('ROLL_SUCCESS', { meta: { standardKeysAwarded: 1, ...meta } });
+  const miss = () => entry('ROLL_FAIL');
+  const find = (run: Parameters<typeof evaluateRun>[0], id: string) => evaluateRun(run).find((a) => a.id === id);
+
+  it('does not give Apprentice for the Hitpoints every run starts with', () => {
+    const start = emptyUnlocks({ skills: { ...emptyUnlocks().skills, Hitpoints: 1 } });
+    expect(earnedIds(start).has('skills-start-1')).toBe(false);
+    expect(earnedIds(emptyUnlocks({ skills: { ...start.skills, Attack: 1 } })).has('skills-start-1')).toBe(true);
+  });
+
+  it('counts rolls, Keys won, streaks and the luckiest win from the history', () => {
+    const history = [miss(), win({ successProbability: 0.008 }), win({ rewardKind: 'greed', standardKeysAwarded: 2 }), miss(), miss(),
+      entry('ROLL_OMNI', { meta: { standardKeysAwarded: 1 } }), entry('PITY')];
+    const stats = runStats(history);
+    expect(stats).toMatchObject({
+      rolls: 7, keysWon: 4, longestWinStreak: 2, longestMissStreak: 2, luckiestWin: 0.008,
+      omniRolls: 1, pityKeys: 1, greedDoubled: true,
+    });
+    const run = { unlocks: emptyUnlocks(), history };
+    expect(find(run, 'roll-1pct')?.earned).toBe(true);
+    expect(find(run, 'win-streak-2')?.earned).toBe(true);
+    expect(find(run, 'win-streak-3')?.earned).toBe(false);
+    expect(find(run, 'ritual-greed')?.earned).toBe(true);
+  });
+
+  it('reads rituals from old Altar entries that only have a message', () => {
+    const history = [
+      entry('ALTAR', { message: 'Void Gambit WON — 1 Key!' }),
+      ...Array.from({ length: 8 }, () => entry('ALTAR', { message: 'Void Gambit lost.' })),
+      entry('ALTAR', { message: 'Ritual of Chaos', meta: { ritual: 'CHAOS', chaosKeysAwarded: 1 } }),
+      entry('ALTAR', { message: 'Void Gambit WON: 3 Keys!', meta: { ritual: 'GAMBIT', keysAwarded: 3 } }),
+    ];
+    const stats = runStats(history);
+    expect([...stats.rituals].sort()).toEqual(['CHAOS', 'GAMBIT']);
+    expect(stats).toMatchObject({ gambitWins: 2, biggestGambitWin: 3, longestGambitLosingRun: 8, chaosKeys: 1 });
+    const run = { unlocks: emptyUnlocks(), history };
+    expect(find(run, 'ritual-gambit-3')?.earned).toBe(true);
+    expect(find(run, 'gambit-losses-8')?.earned).toBe(true);
+    expect(find(run, 'gambit-losses-8')?.hidden).toBe(true);
+  });
+
+  it('reads the god rituals, the Barrows Chest, the Invocations and the Pact debt', () => {
+    const altar = (ritual: string, meta: Record<string, unknown> = {}) => entry('ALTAR', { message: ritual, meta: { ritual, ...meta } });
+    const brothers = ['AHRIM', 'DHAROK', 'GUTHAN', 'KARIL', 'TORAG'];
+    const history = [
+      altar('TEARS'),
+      altar('PACT'),
+      ...Array.from({ length: 20 }, () => entry('ROLL_FAIL', { meta: { debtPaid: 2 } })),
+      altar('INVOCATIONS', { invocations: ['WALK_THE_PATH', 'OVERLY_DRAINING', 'BLOOD_PRICE'] }),
+      ...brothers.map((brother) => altar('BARROWS', { brother })),
+      entry('UNLOCK', { message: 'Unlocked Castle Wars', meta: { ward: true } }),
+    ];
+    const run = { unlocks: emptyUnlocks(), history };
+    expect(runStats(history)).toMatchObject({ wardKeys: 1, pactDebtPaid: 40, allInvocations: false });
+    expect(find(run, 'ritual-ward')?.earned).toBe(true);
+    expect(find(run, 'ritual-tears')?.earned).toBe(true);
+    expect(find(run, 'ritual-pact')?.earned).toBe(true);
+    expect(find(run, 'ritual-invocations')?.earned).toBe(false);
+    expect(find(run, 'ritual-barrows')).toMatchObject({ earned: false, current: 5, target: 6 });
+
+    const more = [...history, altar('BARROWS', { brother: 'VERAC' }),
+      altar('INVOCATIONS', { invocations: ['WALK_THE_PATH', 'OVERLY_DRAINING', 'BLOOD_PRICE', 'HARDCORE'] })];
+    expect(find({ ...run, history: more }, 'ritual-barrows')?.earned).toBe(true);
+    expect(find({ ...run, history: more }, 'ritual-invocations')?.earned).toBe(true);
+  });
+
+  it("doesn't count a win Verac hit through as a lucky one", () => {
+    const history = [win({ roll: 60, threshold: 1, successProbability: 0.01 })];
+    expect(runStats(history).luckiestWin).toBe(1);
+    expect(find({ unlocks: emptyUnlocks(), history }, 'roll-1pct')?.earned).toBe(false);
+  });
+
+  it('keeps a settled achievement earned after the run drops below it', () => {
+    const run = { unlocks: emptyUnlocks(), claimed: ['skills-start-1'] };
+    expect(find(run, 'skills-start-1')).toMatchObject({ earned: true, pct: 100 });
+    expect(find({ unlocks: emptyUnlocks() }, 'skills-start-1')?.earned).toBe(false);
+  });
+
+  it('leaves Sacrifice out of Void Priest', () => {
+    const offered = ['LUCK', 'GREED', 'CHAOS', 'GAMBIT', 'TRANSMUTE', 'WARD', 'TEARS', 'PACT', 'INVOCATIONS', 'BARROWS'];
+    const history = offered.map((ritual) => entry('ALTAR', { message: ritual, meta: { ritual } }));
+    expect(find({ unlocks: emptyUnlocks(), gameModeId: 'vanilla', history }, 'ritual-every'))
+      .toMatchObject({ earned: true, target: offered.length });
+  });
+
+  it('offers the Cartographer only in Chunked, and Void Priest asks for each ritual the mode offers', () => {
+    const vanilla = evaluateRun({ unlocks: emptyUnlocks(), gameModeId: 'vanilla' });
+    const chunked = evaluateRun({ unlocks: emptyUnlocks(), gameModeId: 'chunked' });
+    expect(vanilla.some((a) => a.id === 'ritual-cartographer')).toBe(false);
+    expect(chunked.some((a) => a.id === 'ritual-cartographer')).toBe(true);
+    expect(chunked.find((a) => a.id === 'ritual-every')!.target)
+      .toBe(vanilla.find((a) => a.id === 'ritual-every')!.target + 1);
+  });
+
+  it('counts Slayer tasks and clue scrolls from the run\'s rolls', () => {
+    const roll = (i: number, source: string | undefined, type: LogEntry['type'] = 'ROLL_FAIL'): LogEntry =>
+      ({ id: `r${i}`, timestamp: i, type, message: 'Roll', ...(source ? { source } : {}) });
+    const history: LogEntry[] = [
+      ...Array.from({ length: 50 }, (_, i) => roll(i, 'Slayer (Konar)')),
+      roll(50, 'Slayer (Boss Task)', 'ROLL_SUCCESS'),
+      ...Array.from({ length: 25 }, (_, i) => roll(100 + i, 'Clue Scroll (Hard)')),
+      roll(200, 'Quest (Novice)'),
+      roll(201, undefined),
+    ];
+    expect(runStats(history)).toMatchObject({ slayerTasks: 51, clues: 25 });
+    const earned = new Set(evaluateRun({ unlocks: emptyUnlocks(), history }).filter((a) => a.earned).map((a) => a.id));
+    expect(earned.has('slayer-tasks-50')).toBe(true);
+    expect(earned.has('slayer-tasks-200')).toBe(false);
+    expect(earned.has('clues-25')).toBe(true);
+    expect(earned.has('clues-100')).toBe(false);
+  });
+
+  it('counts minigame runs, and Vanilla and Chunked minigames whose Key reserve is empty', () => {
+    const run = (i: number, meta?: LogEntry['meta']): LogEntry =>
+      ({ id: `m${i}`, timestamp: i, type: 'ROLL_FAIL', message: 'Roll', source: 'Activity (Minigame)', ...(meta ? { meta } : {}) });
+    const history: LogEntry[] = [
+      ...Array.from({ length: 24 }, (_, i) => run(i)),
+      run(30, { minigameName: 'Castle Wars', exhausted: true }),
+      run(31, { minigameName: 'Pest Control', exhausted: false }),
+    ];
+    expect(runStats(history)).toMatchObject({ minigameRuns: 26 });
+    expect([...runStats(history).minigameReservesEmptied]).toEqual(['Castle Wars']);
+    const ids = (gameModeId: string) => new Set(evaluateRun({ unlocks: emptyUnlocks(), history, gameModeId }).filter((a) => a.earned).map((a) => a.id));
+    expect(ids('vanilla').has('minigame-runs-25')).toBe(true);
+    expect(ids('vanilla').has('minigame-reserves-1')).toBe(true);
+    expect(ids('vanilla').has('minigame-reserves-10')).toBe(false);
+    expect(ids('chunked').has('minigame-reserves-1')).toBe(true);
+    expect(ids('xtreme').has('minigame-reserves-1')).toBe(false);
+  });
+
+  it('counts gear tiers, diary tasks and tiers, and CA tasks', () => {
+    const easy = Object.values(DIARY_DATA).filter((d) => d.tier === 'Easy').map((d) => d.id);
+    const ardougne = ['Ardougne Easy', 'Ardougne Medium', 'Ardougne Hard', 'Ardougne Elite'];
+    const unlocks = emptyUnlocks({
+      equipment: Object.fromEntries(EQUIPMENT_SLOTS.map((s) => [s, 3])),
+      diaries: [...new Set([...easy, ...ardougne])],
+      completedTasks: [...Array.from({ length: 50 }, (_, i) => `ca_${i}`), 'ard_easy_1'],
+    });
+    const earned = earnedIds(unlocks);
+    for (const id of ['equip-tiers-25', 'equip-tier3-all', 'diary-easy-all', 'diary-region-all', 'diary-tasks-25', 'ca-tasks-50']) {
+      expect(earned.has(id), id).toBe(true);
+    }
+    for (const id of ['equip-tiers-50', 'equip-tier5-all', 'diary-medium-all', 'ca-tasks-150']) expect(earned.has(id), id).toBe(false);
+  });
+
+  it('counts each unlock table against what the mode can roll', () => {
+    const maxed = maxedUnlocks();
+    const evaluated = evaluateAchievements(maxed, 'vanilla');
+    for (const key of ['mobility', 'arcana', 'housing', 'merchants', 'storage', 'guilds', 'farming', 'slayer-unlocks', 'banks']) {
+      expect(evaluated.find((a) => a.id === `${key}-first`)?.earned).toBe(true);
+      expect(evaluated.find((a) => a.id === `${key}-all`)?.earned).toBe(true);
+    }
+    const one = evaluateAchievements(emptyUnlocks({ mobility: [MOBILITY_LIST[0]] }), 'vanilla');
+    expect(one.find((a) => a.id === 'mobility-first')?.earned).toBe(true);
+    expect(one.find((a) => a.id === 'mobility-all')).toMatchObject({ current: 1, target: MOBILITY_LIST.length, earned: false });
+  });
+
+  it('counts pets once each', () => {
+    const run = { unlocks: emptyUnlocks(), petsClaimed: [PETS[0].id, PETS[0].id, PETS[1].id] };
+    expect(find(run, 'pets-1')?.current).toBe(2);
+    expect(find(run, 'pets-all')?.target).toBe(PETS.length);
+  });
+
+  it('gives every achievement a title, and Fate only as 10, 15 or 25 (or a roll of 1 to 5)', () => {
+    const titles = new Set<string>();
+    for (const a of ACHIEVEMENTS) {
+      expect(titles.has(a.title)).toBe(false);
+      titles.add(a.title);
+      expect([0, 10, 15, 25]).toContain(a.fate);
+      if (a.freeRituals > 0) expect(a.fate).toBe(25);
     }
   });
 });

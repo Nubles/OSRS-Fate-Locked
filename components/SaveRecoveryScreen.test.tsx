@@ -167,6 +167,19 @@ describe('SaveRecoveryScreen', () => {
     expect(screen.getByText('5 keys · 2 visible regions · 2 events')).toBeTruthy();
   });
 
+  it('counts a Chunked checkpoint in chunks, the start chunk included', () => {
+    const chunked = (revision: number, chunks: string[]) => {
+      const base = candidate(revision);
+      return { ...base, state: { ...base.state, gameModeId: 'chunked', unlocks: { ...base.state.unlocks, regions: [], chunks } } };
+    };
+    render(<SaveRecoveryScreen decision={corruptDecision({
+      candidates: [chunked(4, ['49,50', '51,50', '50,49']), chunked(2, [])],
+    })} {...actions()} />);
+
+    expect(screen.getByText('7 keys · 4 chunks · 4 events')).toBeTruthy();
+    expect(screen.queryByText(/visible region/)).toBeNull();
+  });
+
   it('supports keyboard activation of the recovery action', async () => {
     const current = actions();
     const user = userEvent.setup();
@@ -224,6 +237,83 @@ describe('SaveRecoveryScreen', () => {
     expect(screen.getByRole('alert').textContent).toContain('Recovery evidence could not be archived.');
     expect(current.onRecover).not.toHaveBeenCalled();
     expect(current.writePrimary).not.toHaveBeenCalled();
+  });
+
+  it('downloads a copy and recovers when the browser has no room to keep one', async () => {
+    const current = actions();
+    const order: string[] = [];
+    current.archiveCorruptEvidence.mockImplementation(async () => {
+      order.push('archive');
+      return { ok: false as const, message: 'No room.', canDownloadInstead: true as const };
+    });
+    current.onExportRecovery.mockImplementation(() => {
+      order.push('download');
+      return { ok: true as const };
+    });
+    current.onRecover.mockImplementation(() => { order.push('recover'); });
+    const user = userEvent.setup();
+    render(<SaveRecoveryScreen decision={corruptDecision({ cause: 'unconfirmed_primary' })} {...current} />);
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+
+    expect(current.onRecover).not.toHaveBeenCalled();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('alertdialog', { name: 'No room to keep a copy in this browser' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Download copy and recover' }));
+
+    expect(order).toEqual(['archive', 'download', 'recover']);
+    expect(current.onRecover).toHaveBeenCalledWith(expect.objectContaining({ persistenceRevision: 4 }));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+  });
+
+  it('downloads a copy and starts over when the browser has no room to keep one', async () => {
+    const current = actions();
+    current.archiveCorruptEvidence.mockResolvedValue({
+      ok: false as const, message: 'No room.', canDownloadInstead: true as const,
+    });
+    const user = userEvent.setup();
+    render(<SaveRecoveryScreen decision={corruptDecision()} {...current} />);
+
+    await user.click(screen.getByRole('button', { name: 'Start a new run' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm start a new run' }));
+    expect(current.onStartFresh).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Download copy and start over' }));
+
+    expect(current.onExportRecovery).toHaveBeenCalledOnce();
+    expect(current.archiveCorruptEvidence).toHaveBeenCalledOnce();
+    expect(current.onStartFresh).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the save when the copy cannot be downloaded either', async () => {
+    const current = actions();
+    current.archiveCorruptEvidence.mockResolvedValue({
+      ok: false as const, message: 'No room.', canDownloadInstead: true as const,
+    });
+    current.onExportRecovery.mockReturnValue({ ok: false as const, message: 'Recovery export failed.' });
+    const user = userEvent.setup();
+    render(<SaveRecoveryScreen decision={corruptDecision()} {...current} />);
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+    await user.click(screen.getByRole('button', { name: 'Download copy and recover' }));
+
+    expect(screen.getByRole('alert').textContent).toContain('Recovery export failed.');
+    expect(current.onRecover).not.toHaveBeenCalled();
+  });
+
+  it('can cancel the download offer without changing anything', async () => {
+    const current = actions();
+    current.archiveCorruptEvidence.mockResolvedValue({
+      ok: false as const, message: 'No room.', canDownloadInstead: true as const,
+    });
+    const user = userEvent.setup();
+    render(<SaveRecoveryScreen decision={corruptDecision()} {...current} />);
+
+    await user.click(screen.getByRole('button', { name: 'Recover latest safe save' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    expect(current.onExportRecovery).not.toHaveBeenCalled();
+    expect(current.onRecover).not.toHaveBeenCalled();
   });
 
   it('archives evidence before confirming a recovery replacement', async () => {

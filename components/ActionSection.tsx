@@ -1,21 +1,29 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { DropSource } from '../types';
-import { DROP_RATES, BOSSES_LIST } from '../constants';
+import { DROP_RATES, BOSSES_LIST, MINIGAMES_LIST } from '../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, BossTier } from '../data/bossKeyTiers';
 import { useGame } from '../context/GameContext';
 import { BookOpen, ScrollText, Dices } from './OsrsIcon';
 import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
-import { resolveModeRules } from '../config/gameModes';
+import { resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
 import { getActiveRegionBonuses } from '../config/regionModifiers';
+import { achievementBoostFor } from '../utils/achievementBoosts';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, effectiveVanillaClueRate, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { BossKeyProgress, ClueKeyProgress } from './VanillaKeyProgress';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { farmPlaceReachable } from '../utils/activityAccess';
+import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS } from '../data/activityChunks';
 // The pet card and the pet names load when the Activities tab opens.
 const PetClaimCard = lazyWithRetry(() => import('./PetClaimCard').then(m => ({ default: m.PetClaimCard })));
+// Vanilla's per-minigame cards load when the Activities tab opens.
+const VanillaMinigameRolls = lazyWithRetry(() => import('./VanillaMinigameRolls').then(m => ({ default: m.VanillaMinigameRolls })));
 import { VANILLA_BOSS_SEARCH_PLACEHOLDER, vanillaBossNote, vanillaBossSearchEmptyMessage } from './vanillaBossSearchCopy';
+import { useIsOsrsUi } from '../utils/uiStyle';
+// The OSRS layout's Farm Keys loads only when that layout is on.
+const OsrsFarmKeys = lazyWithRetry(() => import('./osrs/OsrsFarmKeys'));
 
 // OSRS Wiki Icon URLs
 const WIKI_IMG = 'https://oldschool.runescape.wiki/images/';
@@ -26,6 +34,13 @@ const OSRS_ICONS = {
   CLUE: 'https://oldschool.runescape.wiki/images/Clue_scroll_%28master%29.png',
   BOSS: 'https://oldschool.runescape.wiki/images/Combat_icon.png',
   ACTIVITY: 'https://oldschool.runescape.wiki/images/Minigames.png',
+};
+
+// Local sprites for the OSRS layout (public/osrs-ui).
+const OSRS_UI_ICONS = {
+  SLAYER: `${import.meta.env.BASE_URL}osrs-ui/skills/slayer.png`,
+  STATS: `${import.meta.env.BASE_URL}osrs-ui/skills/overall.png`,
+  CLUE: `${import.meta.env.BASE_URL}osrs-ui/items/19835.png`,
 };
 
 // Live min/max of the journal (one-time) faucets, so the "Other Key Sources"
@@ -56,7 +71,7 @@ const WikiIcon = ({ name, fallbackSrc, className }: { name: string, fallbackSrc?
 };
 
 // Unified OSRS Difficulty Tier Styles
-const TIER_STYLES = {
+export const TIER_STYLES = {
   STONE: {
     bg: 'bg-[#2a2620]',
     border: 'border-[#4a453d]',
@@ -330,14 +345,15 @@ const BossRollCard: React.FC<{ name: string; displayRate: number; bonus: number;
   );
 };
 
-const VanillaBossRollCard: React.FC<{
+export const VanillaBossRollCard: React.FC<{
   name: string;
   displayRate: number;
   style: TierStyle;
   stage: ReturnType<typeof vanillaBossKeyStage>;
   note?: string;
+  cappedText?: string;
   onClick: (e: React.MouseEvent) => void;
-}> = ({ name, displayRate, style, stage, note, onClick }) => {
+}> = ({ name, displayRate, style, stage, note, cappedText, onClick }) => {
   const { isRolling, triggerRoll } = useRollSuspense(onClick);
   const capped = stage.capped;
 
@@ -350,7 +366,7 @@ const VanillaBossRollCard: React.FC<{
       <div className="min-w-0 flex-1">
         <span className={`block text-xs font-semibold truncate ${style.text}`}>{name}</span>
         {note && <span className="block text-[10px] text-amber-300/90">{note}</span>}
-        <BossKeyProgress stage={stage} />
+        <BossKeyProgress stage={stage} cappedText={cappedText} />
       </div>
       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${style.pill}`}>
         {capped ? 'CAPPED' : `${displayRate}%`}
@@ -379,10 +395,18 @@ const InfoChip: React.FC<{
 
 type FarmSubTab = 'SLAYER' | 'CLUES' | 'BOSSING' | 'ACTIVITIES';
 
-export const ActionSection: React.FC = () => {
-  const { rollForKey, claimPet, petsClaimed, unlocks, gameModeId, customMode, animationsEnabled, bossStandardKeysAwarded, clueStandardKeysAwarded } = useGame();
-  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
-  const [bossQuery, setBossQuery] = useState('');
+/** Chunked: the Slayer list when no master stands in a chunk the run owns. */
+export const FARM_NO_SLAYER_MASTER = 'No Slayer master stands in a chunk you own yet.';
+/** Chunked: the boss list before any boss is unlocked or Brutus's chunk is owned. */
+export const FARM_NO_BOSS = 'Unlock a boss from the Bosses table to roll its Keys here.';
+
+/**
+ * Every Farm Keys source, rate and roll handler, shared by the classic cards
+ * and the OSRS layout (compact panel and wide Keys screen) so all of them read
+ * the same rules.
+ */
+export const useFarmModel = () => {
+  const { rollForKey, unlocks, gameModeId, customMode, clueStandardKeysAwarded, minigameStandardKeysAwarded, achievementsClaimed } = useGame();
 
   // When the run's mode enables region passives, rolls are boosted. rollForKey
   // applies the bonus internally, so handleRoll still passes the BASE rate —
@@ -391,18 +415,25 @@ export const ActionSection: React.FC = () => {
   const regionBonus = mode.regionModifiers
     ? getActiveRegionBonuses(unlocks.regions).successBonus
     : 0;
+  // Activity milestone achievements raise their own activity's rolls too.
+  const boost = (source: string) => achievementBoostFor(source, achievementsClaimed);
+  const bonusFor = (source: string) => regionBonus + boost(source);
   const effectiveRate = (source: string) =>
-    Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + regionBonus));
+    Math.max(1, Math.min(100, (DROP_RATES[source] ?? 0) + bonusFor(source)));
 
-  const handleRoll = (source: string, chance: number, e: React.MouseEvent, context?: KeyRollContext) => {
+  const handleRoll = (source: string, chance: number, e: { clientX: number; clientY: number }, context?: KeyRollContext) => {
     rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
   };
 
   const isVanilla = gameModeId === 'vanilla';
+  // Bosses and minigames pay from Key reserves in Vanilla and Chunked.
+  const reserves = usesActivityKeyReserves(gameModeId);
+  // Chunked: Brutus shows only when the run owns his arena's chunk.
   const vanillaBosses = [
-    BRUTUS_BOSS_NAME,
+    ...(farmPlaceReachable(ACTIVITY_CHUNKS[BRUTUS_BOSS_NAME], unlocks, gameModeId) ? [BRUTUS_BOSS_NAME] : []),
     ...unlocks.bosses.filter(name => BOSSES_LIST.includes(name)),
   ];
+  const vanillaMinigames = unlocks.minigames.filter(name => MINIGAMES_LIST.includes(name));
   const clueKeysAwarded = clueStandardKeysAwarded ?? 0;
 
   const slayers = useMemo(() => {
@@ -480,18 +511,55 @@ export const ActionSection: React.FC = () => {
         image: "https://oldschool.runescape.wiki/images/Purple_slayer_helmet.png",
         style: TIER_STYLES.AMBER
       }
-    ];
-  }, [unlocks.quests]);
+    ].filter(card => farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS[card.name], unlocks, gameModeId));
+  }, [unlocks, gameModeId]);
+
+  return {
+    slayers,
+    clues: CLUE_SCROLLS,
+    activities: ACTIVITY_ROLLS,
+    isVanilla,
+    reserves,
+    vanillaBosses,
+    clueKeysAwarded,
+    vanillaMinigames,
+    minigameKeysAwarded: minigameStandardKeysAwarded,
+    regionBonus,
+    boost,
+    bonusFor,
+    effectiveRate,
+    handleRoll,
+    journalMin: JOURNAL_MIN,
+    journalMax: JOURNAL_MAX,
+    tabIcons: { SLAYER: OSRS_UI_ICONS.SLAYER, CLUES: OSRS_UI_ICONS.CLUE, BOSSING: OSRS_ICONS.BOSS, ACTIVITIES: OSRS_ICONS.ACTIVITY },
+    statsIcon: OSRS_UI_ICONS.STATS,
+    collLogIcon: OSRS_ICONS.COLL_LOG,
+  };
+};
+export type FarmModel = ReturnType<typeof useFarmModel>;
+
+/** Farm Keys: the classic cards, or the OSRS layout's panel when that layout is on. */
+export const ActionSection: React.FC = () => (
+  useIsOsrsUi()
+    ? <React.Suspense fallback={null}><OsrsFarmKeys /></React.Suspense>
+    : <ClassicActionSection />
+);
+
+const ClassicActionSection: React.FC = () => {
+  const { claimPet, petsClaimed, unlocks, animationsEnabled, bossStandardKeysAwarded } = useGame();
+  const [subTab, setSubTab] = useState<FarmSubTab>('SLAYER');
+  const [bossQuery, setBossQuery] = useState('');
+  const { slayers, isVanilla, reserves, vanillaBosses, vanillaMinigames, minigameKeysAwarded, clueKeysAwarded, boost, bonusFor, effectiveRate, handleRoll } = useFarmModel();
 
   const tabs: { id: FarmSubTab; label: string; icon: string; count: number }[] = [
     { id: 'SLAYER', label: 'Slayer', icon: OSRS_ICONS.SLAYER, count: slayers.length },
     { id: 'CLUES', label: 'Clues', icon: OSRS_ICONS.CLUE, count: CLUE_SCROLLS.length },
-    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: isVanilla ? vanillaBosses.length : BOSSES_LIST.length },
-    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: ACTIVITY_ROLLS.length + 1 },
+    { id: 'BOSSING', label: 'Bossing', icon: OSRS_ICONS.BOSS, count: reserves ? vanillaBosses.length : BOSSES_LIST.length },
+    { id: 'ACTIVITIES', label: 'Activities', icon: OSRS_ICONS.ACTIVITY, count: (reserves ? vanillaMinigames.length : ACTIVITY_ROLLS.length) + 1 },
   ];
 
   return (
-    <div className="h-full p-4 flex flex-col gap-3">
+    <div className="lg:h-full p-3 lg:p-4 flex flex-col gap-3">
 
       {/* Sub-tab toggle */}
       <div className="grid grid-cols-2 gap-1 bg-[#161616] border border-white/5 rounded-lg p-1 shrink-0 min-w-0">
@@ -514,10 +582,14 @@ export const ActionSection: React.FC = () => {
         })}
       </div>
 
-      {/* Active list — full-width 2-column grid */}
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar -mr-1 pr-1">
+      {/* Active list — full-width 2-column grid. Scrolls inside the panel on
+          desktop only; on a phone it grows and the page scrolls. */}
+      <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto custom-scrollbar lg:-mr-1 lg:pr-1">
+        {subTab === 'SLAYER' && slayers.length === 0 && (
+          <div className="text-center text-gray-600 text-xs py-6">{FARM_NO_SLAYER_MASTER}</div>
+        )}
         {subTab === 'SLAYER' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
             {slayers.map((master, i) => (
               <div
                 key={master.name}
@@ -528,7 +600,7 @@ export const ActionSection: React.FC = () => {
                   name={master.name}
                   subText={master.subText}
                   displayRate={effectiveRate(master.source)}
-                  bonus={regionBonus}
+                  bonus={bonusFor(master.source)}
                   image={master.image}
                   style={master.style}
                   onClick={(e) => handleRoll(master.source, DROP_RATES[master.source], e)}
@@ -538,11 +610,11 @@ export const ActionSection: React.FC = () => {
           </div>
         )}
         {subTab === 'CLUES' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
             {CLUE_SCROLLS.map((clue, i) => {
               const baseRate = DROP_RATES[clue.source];
               const displayRate = isVanilla
-                ? effectiveVanillaClueRate(baseRate, clueKeysAwarded)
+                ? Math.min(100, effectiveVanillaClueRate(baseRate, clueKeysAwarded) + boost(clue.source))
                 : effectiveRate(clue.source);
 
               return (
@@ -554,7 +626,7 @@ export const ActionSection: React.FC = () => {
                   <ClueScrollCard
                     tier={clue.tier}
                     displayRate={displayRate}
-                    bonus={isVanilla ? 0 : regionBonus}
+                    bonus={isVanilla ? boost(clue.source) : bonusFor(clue.source)}
                     itemId={clue.itemId}
                     onClick={(e) => handleRoll(
                       clue.source,
@@ -569,7 +641,7 @@ export const ActionSection: React.FC = () => {
             })}
           </div>
         )}
-        {subTab === 'BOSSING' && isVanilla && (
+        {subTab === 'BOSSING' && reserves && (
           <div>
             <input
               value={bossQuery}
@@ -589,7 +661,7 @@ export const ActionSection: React.FC = () => {
                     <VanillaBossRollCard
                       key={name}
                       name={name}
-                      displayRate={stage.currentRate ?? 0}
+                      displayRate={stage.currentRate === null ? 0 : Math.min(100, stage.currentRate + boost(source))}
                       style={bossClass === 'brutus' ? TIER_STYLE.low : TIER_STYLE[bossClass]}
                       stage={stage}
                       note={vanillaBossNote(name, unlocks.quests)}
@@ -603,11 +675,11 @@ export const ActionSection: React.FC = () => {
                 })}
             </div>
             {vanillaBosses.filter(name => name.toLowerCase().includes(bossQuery.trim().toLowerCase())).length === 0 && (
-              <div className="text-center text-gray-600 text-xs py-6">{vanillaBossSearchEmptyMessage(bossQuery)}</div>
+              <div className="text-center text-gray-600 text-xs py-6">{vanillaBosses.length === 0 ? FARM_NO_BOSS : vanillaBossSearchEmptyMessage(bossQuery)}</div>
             )}
           </div>
         )}
-        {subTab === 'BOSSING' && !isVanilla && (
+        {subTab === 'BOSSING' && !reserves && (
           <div>
             <input
               value={bossQuery}
@@ -633,7 +705,7 @@ export const ActionSection: React.FC = () => {
                         key={name}
                         name={name}
                         displayRate={effectiveRate(source)}
-                        bonus={regionBonus}
+                        bonus={bonusFor(source)}
                         style={style}
                         onClick={(e) => handleRoll(source, DROP_RATES[source], e)}
                       />
@@ -647,9 +719,18 @@ export const ActionSection: React.FC = () => {
             )}
           </div>
         )}
+        {subTab === 'ACTIVITIES' && reserves && (
+          <React.Suspense fallback={<div className="h-28 mb-3" />}>
+            <VanillaMinigameRolls
+              minigames={vanillaMinigames}
+              awarded={minigameKeysAwarded}
+              onRoll={(context, rate, e) => handleRoll(DropSource.ACTIVITY_MINIGAME, rate, e, context)}
+            />
+          </React.Suspense>
+        )}
         {subTab === 'ACTIVITIES' && (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-            {ACTIVITY_ROLLS.map((a, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
+            {!reserves && ACTIVITY_ROLLS.map((a, i) => (
               <div
                 key={a.name}
                 className={animationsEnabled ? 'animate-fade-in-up' : ''}
@@ -659,7 +740,7 @@ export const ActionSection: React.FC = () => {
                   name={a.name}
                   subText={a.subText}
                   displayRate={effectiveRate(a.source)}
-                  bonus={regionBonus}
+                  bonus={bonusFor(a.source)}
                   image={a.image}
                   style={a.style}
                   onClick={(e) => handleRoll(a.source, DROP_RATES[a.source], e)}

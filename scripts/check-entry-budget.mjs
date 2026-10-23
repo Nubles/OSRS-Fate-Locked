@@ -11,7 +11,20 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-export const ENTRY_GZIP_BUDGET_KB = 226;
+// 232: the Void Altar's newer rituals live in the reducer (2026-10-15); their activity checks load lazily.
+// 233: achievement rewards (free rituals, back pay) settle in the reducer; Vanilla minigame Key reserves load with the save.
+// 234: activity Key boosts from achievements apply in every Key roll, so their small table loads with the game.
+// 236: both of the above together with main's minigame reserves (235.5 on 2026-10-15).
+// 241: the OSRS layout's switch, frame and shared Farm Keys model joined main's rewards (240.4 on 2026-10-15).
+// 242: caches in the reachability, quest points and Skill Advisor checks that stop an unlock freezing the page (240.9 on 2026-10-16).
+// 247: Chunked's fate rules (Breakthrough, Fate's Mercy, exploring rolls) and the chunk skill table its Key pool reads, about 3.2 kB of it (246.5 on 2026-10-17).
+// 250: the Chunked review's fixes: exact-chunk checks for bosses, minigames, guilds, banks and Slayer masters, Mercy's Fate and quest checks, the tier-cap rule, free-draw reveals and chunk labels, and the Journal's exact-chunk hook (249.3 on 2026-10-17).
+// 251: plus the walk-based Chunked frontier and sea reach, and the skill-training facts (courses, patches, altars, ports, quest gates) (250.1 on 2026-10-17).
+// 253: the Chunked audit's fixes: exact levels and services in the chunk skill rows, entry-quest gates for places, the kept Cartographer offer, Mercy's patch and guild draws and its quiet-spell way out (252.5 on 2026-10-18).
+// 255: Chunked's Fate's Thread and fate's marks in the game engine, which every save runs through (254.2 on 2026-10-18).
+// 256: the build check behind chunk-error reloads, so a dropped connection doesn't reload onto the browser's error page (254.8 on 2026-10-18).
+// 219: advisors, the Activities sub-panels, the RuneLite bundle builder and the content service behind the journal routes load on demand (216.1 on 2026-10-19); about 3 kB of headroom, so growth shows.
+export const ENTRY_GZIP_BUDGET_KB = 219;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

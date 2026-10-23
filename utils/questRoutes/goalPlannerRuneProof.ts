@@ -130,9 +130,11 @@ export const materializeQuestRouteSnapshot = (
   account: RuneProofAccountSnapshot,
   contentService: RuneProofContentService,
   chunkDataVersion: number,
-  walkthrough: QuestWalkthroughDefinition,
+  // Without one, the snapshot holds only what the item analysis reads
+  // (analyzeQuestPreparation), as Chunked doability asks for it.
+  walkthrough?: QuestWalkthroughDefinition,
 ): QuestRouteAnalysisSnapshot => {
-  const catalogue = walkthrough.requirementsReview ?? reviewedQuestRequirements(questId);
+  const catalogue = walkthrough?.requirementsReview ?? reviewedQuestRequirements(questId);
   if (!catalogue) throw new Error(`RuneProof has no reviewed item catalogue for ${questId}.`);
 
   const pending = catalogue.items.flatMap(requirement => [
@@ -235,7 +237,7 @@ export const materializeQuestRouteSnapshot = (
     });
   }));
 
-  collectWalkthroughEntityRequests(walkthrough).forEach(({ name, kind }) => {
+  if (walkthrough) collectWalkthroughEntityRequests(walkthrough).forEach(({ name, kind }) => {
     const hit = exactEntityHit(name, kind);
     if (hit !== null) appendEntityHit(hit);
   });

@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Download, ShieldAlert } from 'lucide-react';
 import { useMemo, useRef, useState, type FC } from 'react';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import { chunkTotals } from '../utils/runProgress';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { SaveWriteAuthorization } from '../utils/profileWriterLease';
 import type { ValidatedRecoveryCandidate, SaveRecoveryDecision } from '../utils/saveRecovery';
@@ -8,7 +9,9 @@ import type { ValidatedRecoveryCandidate, SaveRecoveryDecision } from '../utils/
 export type RecoveryActionResult =
   | void
   | { ok: true; persistenceRevision?: number }
-  | { ok: false; message: string };
+  | { ok: false; message: string; canDownloadInstead?: true };
+
+type ActionOutcome = { ok: true } | { ok: false; message: string; canDownloadInstead?: true };
 
 export type RecoveryAction = () => RecoveryActionResult | Promise<RecoveryActionResult>;
 
@@ -35,7 +38,7 @@ const failureResult = (message: string): { ok: false; message: string } => ({ ok
 
 const safeFailureMessage = (_error: unknown, fallback: string): string => fallback;
 
-const actionResult = async (action: RecoveryAction | undefined): Promise<{ ok: true } | { ok: false; message: string }> => {
+const actionResult = async (action: RecoveryAction | undefined): Promise<ActionOutcome> => {
   if (!action) return { ok: true };
   try {
     const result = await action();
@@ -81,10 +84,13 @@ const formatCapturedAt = (capturedAt: number | null): string => {
 };
 
 const candidateSummary = (candidate: ValidatedRecoveryCandidate): string => {
-  const regions = visibleAreaUnlocks(candidate.state.unlocks?.regions ?? []).length;
   const events = Array.isArray(candidate.state.history) ? candidate.state.history.length : 0;
   const keys = Number.isFinite(candidate.state.keys) ? candidate.state.keys : 0;
-  return `${keys} keys · ${regions} visible region${regions === 1 ? '' : 's'} · ${events} event${events === 1 ? '' : 's'}`;
+  // Chunked runs hold chunks, not named areas: count those instead.
+  const territory = candidate.state.gameModeId === 'chunked'
+    ? (n => `${n} chunk${n === 1 ? '' : 's'}`)(chunkTotals(candidate.state.unlocks).unlocked)
+    : (n => `${n} visible region${n === 1 ? '' : 's'}`)(visibleAreaUnlocks(candidate.state.unlocks?.regions ?? []).length);
+  return `${keys} keys · ${territory} · ${events} event${events === 1 ? '' : 's'}`;
 };
 
 const sourceLabel = (candidate: ValidatedRecoveryCandidate): string => {
@@ -102,6 +108,10 @@ const recoveryCauseCopy = (cause: Extract<SaveRecoveryDecision, { kind: 'recover
       return 'The browser contains saved evidence from more than one run. Choose the checkpoint that belongs to the run you want to continue.';
     case 'unsequenced_primary':
       return 'The current save cannot be ordered safely against the recovery journal. Choose a verified checkpoint before continuing.';
+    case 'unconfirmed_primary':
+      return 'The browser save changed after the tracker last saved it, and the tracker can’t confirm it made that change. Another page on the same website may have rewritten it. Your last confirmed save is selected below; nothing is replaced until you choose.';
+    case 'foreign_primary':
+      return 'The browser save was rewritten by a different app on the same website. Your last save from this tracker is selected below; the other app’s copy is kept until you choose.';
     case 'corrupt_primary':
     default:
       return 'The current browser save failed validation. Your verified recovery checkpoints remain untouched until you choose an action.';
@@ -137,86 +147,72 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
   const [confirmingFresh, setConfirmingFresh] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [downloadFirst, setDownloadFirst] = useState<'recover' | 'fresh' | null>(null);
   const freshDialogRef = useRef<HTMLDivElement>(null);
   const freshTriggerRef = useRef<HTMLButtonElement>(null);
   const freshReturnFocusRef = useRef<HTMLElement | null>(null);
   useFocusTrap(freshDialogRef, confirmingFresh, freshReturnFocusRef.current);
+  const downloadDialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(downloadDialogRef, downloadFirst !== null);
 
   const selected = candidates[selectedIndex] ?? null;
   const freshAction = onStartFresh ?? startFresh;
   const exportAction = onExportRecovery ?? onExport ?? exportRecovery;
   const archiveAction = archiveCorruptEvidence ?? archiveCorrupt;
 
-  const runRecovery = async () => {
-    if (!recoveryActionsEnabled || busy || selected === null || !onRecover) return;
+  // Recovering or starting over replaces the browser save, so a copy of it is
+  // kept first. When the browser has no room for that copy, the player
+  // downloads it instead and carries on; skipArchive is that second pass.
+  const runReplacement = async (kind: 'recover' | 'fresh', skipArchive: boolean) => {
+    const replace: RecoveryAction | undefined = kind === 'recover'
+      ? (selected !== null && onRecover ? () => onRecover(selected) : undefined)
+      : freshAction;
+    if (!recoveryActionsEnabled || busy || !replace) return;
     setBusy(true);
     setError(null);
+    const finish = (message: string | null) => {
+      if (message !== null) setError(message);
+      setBusy(false);
+    };
     const initialAuthorization = authorizationResult(authorizeWrite);
-    if (initialAuthorization.ok === false) {
-      setError(initialAuthorization.message);
-      setBusy(false);
-      return;
-    }
-    const archived = await actionResult(archiveAction);
-    if (archived.ok === false) {
-      setError(archived.message);
-      setBusy(false);
-      return;
+    if (initialAuthorization.ok === false) return finish(initialAuthorization.message);
+    if (skipArchive) {
+      const downloaded = await actionResult(exportAction);
+      if (downloaded.ok === false) return finish(downloaded.message);
+    } else {
+      const archived = await actionResult(archiveAction);
+      if (archived.ok === false) {
+        if (archived.canDownloadInstead && exportAction) {
+          setConfirmingFresh(false);
+          setDownloadFirst(kind);
+          return finish(null);
+        }
+        return finish(archived.message);
+      }
     }
     const postArchiveAuthorization = authorizationResult(authorizeWrite);
-    if (postArchiveAuthorization.ok === false) {
-      setError(postArchiveAuthorization.message);
-      setBusy(false);
-      return;
-    }
-    const result = await (async () => {
+    if (postArchiveAuthorization.ok === false) return finish(postArchiveAuthorization.message);
+    const result = await (async (): Promise<ActionOutcome> => {
       try {
-        const outcome = await onRecover(selected);
+        const outcome = await replace();
         if (outcome && 'ok' in outcome && outcome.ok === false) return outcome;
-        return { ok: true as const };
+        return { ok: true };
       } catch (cause) {
-        return failureResult(safeFailureMessage(cause, 'The safe checkpoint could not be loaded.'));
+        return failureResult(safeFailureMessage(cause, kind === 'recover'
+          ? 'The safe checkpoint could not be loaded.'
+          : 'The requested recovery action could not be completed.'));
       }
     })();
-    if (result.ok === false) setError(result.message);
-    else {
-      const finalAuthorization = authorizationResult(authorizeWrite);
-      if (finalAuthorization.ok === false) setError(finalAuthorization.message);
-    }
-    setBusy(false);
+    if (result.ok === false) return finish(result.message);
+    const finalAuthorization = authorizationResult(authorizeWrite);
+    if (finalAuthorization.ok === false) return finish(finalAuthorization.message);
+    setDownloadFirst(null);
+    if (kind === 'fresh') setConfirmingFresh(false);
+    finish(null);
   };
 
-  const runFresh = async () => {
-    if (!recoveryActionsEnabled || busy || !freshAction) return;
-    setBusy(true);
-    setError(null);
-    const initialAuthorization = authorizationResult(authorizeWrite);
-    if (initialAuthorization.ok === false) {
-      setError(initialAuthorization.message);
-      setBusy(false);
-      return;
-    }
-    const archived = await actionResult(archiveAction);
-    if (archived.ok === false) {
-      setError(archived.message);
-      setBusy(false);
-      return;
-    }
-    const postArchiveAuthorization = authorizationResult(authorizeWrite);
-    if (postArchiveAuthorization.ok === false) {
-      setError(postArchiveAuthorization.message);
-      setBusy(false);
-      return;
-    }
-    const result = await actionResult(freshAction);
-    if (result.ok === false) setError(result.message);
-    else {
-      const finalAuthorization = authorizationResult(authorizeWrite);
-      if (finalAuthorization.ok === false) setError(finalAuthorization.message);
-      else setConfirmingFresh(false);
-    }
-    setBusy(false);
-  };
+  const runRecovery = () => runReplacement('recover', false);
+  const runFresh = () => runReplacement('fresh', false);
 
   const runExport = async () => {
     if (busy) return;
@@ -395,6 +391,44 @@ export const SaveRecoveryScreen: FC<SaveRecoveryScreenProps> = ({
                 <Download size={16} aria-hidden="true" />
                 Export recovery file
               </button>
+            </div>
+          )}
+
+          {downloadFirst !== null && (
+            <div
+              ref={downloadDialogRef}
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="download-first-title"
+              aria-describedby="download-first-description"
+              className="rounded-lg border border-amber-400/30 bg-amber-950/30 p-4"
+              tabIndex={-1}
+            >
+              <h2 id="download-first-title" className="text-sm font-bold text-amber-100">No room to keep a copy in this browser</h2>
+              <p id="download-first-description" className="mt-1 text-sm text-amber-100/80">
+                This browser’s storage is full, so the tracker can’t keep a copy of the save it is about to replace. Download the copy to your computer instead, and the tracker will carry on.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => { void runReplacement(downloadFirst, true); }}
+                  disabled={!recoveryActionsEnabled || busy}
+                  className={classNames.primary}
+                >
+                  <Download size={16} aria-hidden="true" />
+                  {busy
+                    ? 'Downloading…'
+                    : downloadFirst === 'recover' ? 'Download copy and recover' : 'Download copy and start over'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDownloadFirst(null)}
+                  disabled={busy}
+                  className={classNames.secondary}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 

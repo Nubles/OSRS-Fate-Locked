@@ -1,5 +1,7 @@
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
+import { lazyWithRetry } from '../utils/lazyRetry';
+import { useIsOsrsUi } from '../utils/uiStyle';
 import { useGame } from '../context/GameContext';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { Search, CheckCircle2, Lock, ListFilter, TrendingUp } from 'lucide-react';
@@ -100,7 +102,11 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
   );
 };
 
-export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' }) => {
+/**
+ * Everything the Collection Log shows and does, shared by the classic log and
+ * the OSRS layout so both read the same items, counts and click handler.
+ */
+export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefault?: boolean }) => {
   const { unlocks: savedUnlocks, collectionLogIdentity, logCollectionItem, rollForKey } = useGame();
   const identityReview = useMemo(() => collectionIdentityReview(savedUnlocks.collectionLog, collectionLogIdentity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, collectionLogIdentity), [savedUnlocks.collectionLog, collectionLogIdentity]);
   const unlocks = useMemo(() => ({ ...savedUnlocks, collectionLog: Object.fromEntries(Object.entries(savedUnlocks.collectionLog).filter(([id]) => !identityReview.blockedIds.has(Number(id)))) }), [savedUnlocks, identityReview]);
@@ -112,9 +118,6 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   const [vaultValue, setVaultValue] = useState(0);
   const [mostValuable, setMostValuable] = useState<{name: string, value: number} | null>(null);
   
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-
   // Check for new Wiki entries without minting save identities at runtime.
   const [syncVersion, setSyncVersion] = useState(0);
   useEffect(() => {
@@ -160,25 +163,6 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
       if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
       return num.toLocaleString();
   };
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerSize({
-        width: containerRef.current.offsetWidth,
-        height: containerRef.current.offsetHeight
-      });
-    }
-    const observer = new ResizeObserver(entries => {
-      if (entries[0]) {
-        setContainerSize({
-          width: entries[0].contentRect.width,
-          height: entries[0].contentRect.height
-        });
-      }
-    });
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   const currentTabContent = COLLECTION_LOG_DATA[activeTab];
   
@@ -279,9 +263,53 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   // Reachable %: how much of the log is even obtainable given current unlocks
   // (boss/minigame sources), and which unlocks would open the most new slots.
   const reach = useMemo(() => collogReachability(unlocks), [unlocks, syncVersion]);
-  const [showReach, setShowReach] = useState(false);
+  const [showReach, setShowReach] = useState(opts?.showReachDefault ?? false);
 
   const pendingReviewCount = collectionLogSync.pendingAdditions.length;
+
+  return {
+    unlocks, identityReview, activeTab, setActiveTab, activePage, setActivePage, viewMode, setViewMode,
+    vaultValue, mostValuable, formatNumber, currentTabContent, handleItemClick, filteredPages, allSearchItems,
+    activeItems, itemData, globalStats, reach, showReach, setShowReach, pendingReviewCount,
+  };
+};
+
+const OsrsCollection = lazyWithRetry(() => import('./osrs/OsrsCollection'));
+
+/** The Collection Log: the classic grid, or the OSRS collection log interface when that layout is on. */
+export const CollectionLog: React.FC<CollectionLogProps> = (props) => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsCollection {...props} /></Suspense>
+    : <ClassicCollectionLog {...props} />
+);
+
+const ClassicCollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' }) => {
+  const {
+    unlocks, activeTab, setActiveTab, activePage, setActivePage, viewMode, setViewMode,
+    vaultValue, mostValuable, formatNumber, currentTabContent, filteredPages, allSearchItems,
+    activeItems, itemData, globalStats, reach, showReach, setShowReach, pendingReviewCount, identityReview,
+  } = useCollectionLogModel(searchTerm);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerSize({
+        width: containerRef.current.offsetWidth,
+        height: containerRef.current.offsetHeight
+      });
+    }
+    const observer = new ResizeObserver(entries => {
+      if (entries[0]) {
+        setContainerSize({
+          width: entries[0].contentRect.width,
+          height: entries[0].contentRect.height
+        });
+      }
+    });
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-[#3e3529] border-2 border-[#5a5245] rounded-lg overflow-hidden font-sans shadow-2xl relative text-[#ff981f]">
@@ -294,7 +322,7 @@ export const CollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         </div>
       )}
       {/* Top Bar */}
-      <div className="flex justify-between items-center p-2 bg-[#3e3529] border-b-2 border-[#5a5245] shadow-md shrink-0">
+      <div className="flex flex-wrap lg:flex-nowrap gap-2 lg:gap-0 justify-between items-center p-2 bg-[#3e3529] border-b-2 border-[#5a5245] shadow-md shrink-0">
         <h2 className="text-[#ff981f] text-shadow font-bold px-2 text-sm uppercase tracking-wider">Collection Log</h2>
         
         {/* Wealth Ticker */}

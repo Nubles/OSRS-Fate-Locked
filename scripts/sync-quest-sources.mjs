@@ -25,7 +25,7 @@ const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   CURRENT_CHUNK_SOURCE_COMMIT,
 ]);
 const RUNTIME_QUEST_COUNT = 193;
-const RUNTIME_MINIQUEST_COUNT = 19;
+const RUNTIME_MINIQUEST_COUNT = 20;
 const OFFICIAL_PARSED_QUEST_COUNT = 194;
 const REVIEWED_AT = new Date().toISOString().slice(0, 10);
 const USER_AGENT = 'OSRS-Fate-Locked quest provenance refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
@@ -41,6 +41,7 @@ const WIKI_PAGE_TITLES = {
   'RFD: King Awowogei': 'Recipe for Disaster/Freeing King Awowogei',
   'RFD: Finale': 'Recipe for Disaster/Defeating the Culinaromancer',
   'Vale Totems': 'Vale Totems (miniquest)',
+  'The Fractured Archive': 'The Fractured Archive (miniquest)',
 };
 const RFD_CHUNK_IDS = Object.fromEntries(
   Object.entries(WIKI_PAGE_TITLES).map(([id, pageTitle]) => [pageTitle, id]),
@@ -60,19 +61,26 @@ function canonicalValue(value) {
   return value;
 }
 
-function questRequirementFingerprint(quest) {
+// Must match questRequirementFingerprint in data/questRequirementAudit.ts
+// (scripts/sync-quest-sources.test.ts checks both agree on every quest), or a
+// refresh treats unchanged quests as changed and resets their reviewed rows.
+export function questRequirementFingerprint(quest) {
   return JSON.stringify({
     kind: quest.kind,
     accessPolicy: quest.accessPolicy,
     regions: canonicalValue(quest.regions),
     locations: canonicalValue(quest.locations),
     skills: canonicalValue(quest.skills),
+    equipmentRequirements: canonicalValue(quest.equipmentRequirements),
+    preparationRequirements: canonicalValue(quest.preparationRequirements),
     combatLevel: quest.combatLevel,
     prereqs: canonicalValue(quest.prereqs),
     oneOf: canonicalValue(quest.oneOf),
     manualRequirements: canonicalValue(quest.manualRequirements),
     questProgress: canonicalValue(quest.questProgress),
     skillAlternatives: canonicalValue(quest.skillAlternatives),
+    merchants: canonicalValue(quest.merchants),
+    mobility: canonicalValue(quest.mobility),
     points: quest.points,
   });
 }
@@ -164,10 +172,11 @@ function assertExistingSnapshotsForRefresh(official, audit) {
 
   const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
   const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
-  if (miniquestCount !== RUNTIME_MINIQUEST_COUNT
+  // The baseline may be one miniquest short while a new one is being added.
+  if (![RUNTIME_MINIQUEST_COUNT - 1, RUNTIME_MINIQUEST_COUNT].includes(miniquestCount)
     || ![191, 192, RUNTIME_QUEST_COUNT].includes(questCount)
     || official.entries.length !== questCount + miniquestCount) {
-    errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
+    errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT - 1} or ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
   }
 
   const declaredChunkSourceCommits = audit.schemaVersion === 1
@@ -644,15 +653,63 @@ async function refresh() {
   }
 }
 
-const args = process.argv.slice(2);
-if (args.length > 1 || args.some(arg => arg !== '--check' && arg !== '--refresh')) {
-  throw new Error('Usage: node scripts/sync-quest-sources.mjs [--check|--refresh]');
+/**
+ * Network-backed, read-only drift check used by the weekly freshness report
+ * (scripts/check-content-sync.mjs). Compares the live Quests/List page with
+ * the runtime quest data by page title and writes nothing.
+ */
+export async function questListDrift() {
+  const runtime = readRuntimeQuestData();
+  const parse = await wikiRequest({
+    action: 'parse',
+    page: WIKI_LIST_TITLE,
+    prop: 'text|revid',
+  }, 'official quest list parse');
+  const listHtml = parse.parse?.text;
+  if (typeof listHtml !== 'string') {
+    throw new Error('official quest list parse returned no HTML');
+  }
+  const liveRows = parseOfficialRows(listHtml, runtime);
+  const liveTitles = new Set(liveRows.map(row => row.pageTitle.toLocaleLowerCase()));
+  const runtimeTitles = new Set(['recipe for disaster']);
+  for (const quest of Object.values(runtime)) {
+    for (const name of [quest.id, quest.name, WIKI_PAGE_TITLES[quest.id]]) {
+      if (name) runtimeTitles.add(name.toLocaleLowerCase());
+    }
+  }
+  return {
+    listRevision: parse.parse?.revid ?? null,
+    liveCounts: {
+      quests: liveRows.filter(row => row.kind === 'quest').length,
+      miniquests: liveRows.filter(row => row.kind === 'miniquest').length,
+    },
+    liveOnly: liveRows
+      .filter(row => !runtimeTitles.has(row.pageTitle.toLocaleLowerCase()))
+      .map(row => ({ pageTitle: row.pageTitle, kind: row.kind }))
+      .sort((left, right) => left.pageTitle.localeCompare(right.pageTitle)),
+    runtimeMissing: Object.values(runtime)
+      .filter(quest => !String(quest.id).startsWith('RFD: '))
+      .filter(quest => ![quest.id, quest.name, WIKI_PAGE_TITLES[quest.id]]
+        .some(name => name && liveTitles.has(name.toLocaleLowerCase())))
+      .map(quest => quest.id)
+      .sort(),
+  };
 }
-if (args.includes('--refresh')) {
-  await refresh();
-} else {
-  assertSnapshots(
-    readJson(OFFICIAL_PATH, 'quest-list snapshot'),
-    readJson(AUDIT_PATH, 'quest-requirement-audit snapshot'),
-  );
+
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  const args = process.argv.slice(2);
+  if (args.length > 1 || args.some(arg => arg !== '--check' && arg !== '--refresh' && arg !== '--drift')) {
+    throw new Error('Usage: node scripts/sync-quest-sources.mjs [--check|--refresh|--drift]');
+  }
+  if (args.includes('--refresh')) {
+    await refresh();
+  } else if (args.includes('--drift')) {
+    console.log(JSON.stringify(await questListDrift(), null, 2));
+  } else {
+    assertSnapshots(
+      readJson(OFFICIAL_PATH, 'quest-list snapshot'),
+      readJson(AUDIT_PATH, 'quest-requirement-audit snapshot'),
+    );
+  }
 }

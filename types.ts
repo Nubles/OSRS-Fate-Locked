@@ -1,6 +1,7 @@
 
 import type { GameModeRules } from './config/gameModes';
 import type { KeyRollContext } from './config/vanillaKeyEconomy';
+import type { RitualState } from './utils/ritualEffects';
 
 export enum DropSource {
   QUEST_NOVICE = 'Quest (Novice)',
@@ -48,6 +49,8 @@ export enum DropSource {
   RAID = 'Raid',
   ACTIVITY_MINIGAME = 'Activity (Minigame)',
   PET = 'Pet Drop',
+  CHUNK_EXPLORE = 'Exploring (Chunked)',
+  FATE_MARK = 'Gilded chunk (Chunked)',
 
   CUSTOM = 'Custom',
 }
@@ -118,7 +121,7 @@ export interface LogEntry {
   // outcomes; the bare 'ROLL' literal was a footgun (consumers filtered for
   // it expecting all rolls and got nothing). Use isRollEntry() in utils
   // instead of comparing to 'ROLL'.
-  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET';
+  type: 'UNLOCK' | 'PITY' | 'ALTAR' | 'ROLL_SUCCESS' | 'ROLL_FAIL' | 'ROLL_OMNI' | 'LEVEL_UP' | 'XTREME_MILESTONE' | 'COMPENSATION' | 'PET' | 'ACHIEVEMENT' | 'FATE';
   source?: string;
   result?: 'SUCCESS' | 'FAIL';
   rollValue?: number;
@@ -223,7 +226,8 @@ export interface PendingUnlock {
   id: string;
   table: TableType;
   item: string;
-  costType: 'key' | 'chaosKey';
+  /** 'mercy' and 'breakthrough' are Chunked's free fate draws: cost 0, nothing spent. */
+  costType: 'key' | 'chaosKey' | 'mercy' | 'breakthrough';
   cost: number;
 }
 
@@ -259,6 +263,8 @@ export interface GameState {
   chaosKeys: number;
   /** Vanilla boss standard keys already awarded, by canonical boss name. */
   bossStandardKeysAwarded?: Record<string, number>;
+  /** Vanilla minigame standard keys already awarded, by minigame name. */
+  minigameStandardKeysAwarded?: Record<string, number>;
   /** Vanilla clue standard keys already awarded across every clue tier. */
   clueStandardKeysAwarded?: number;
   fatePoints: number;
@@ -271,6 +277,8 @@ export interface GameState {
   /** Standard Keys the run gave up in the pet compensation: the next ones it earns pay these first. */
   keysOwed?: number;
   activeBuff: 'NONE' | 'LUCK' | 'GREED';
+  /** The newer Void Altar rituals still running (Ward, Tears, Pact, Invocations, Barrows, Mimic) and Sacrifices used. */
+  rituals?: RitualState;
   unlocks: UnlockState;
   history: LogEntry[];
   animationsEnabled?: boolean;
@@ -300,7 +308,7 @@ export interface GameState {
   rngVersion?: 1 | 2;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
-  /** OSRS account this run is bound to (Auto-Roll). Set once, then permanent. */
+  /** OSRS account this run is linked to (Sync & Roll's first fetch); the player can rename it. */
   linkedAccount?: string;
   /**
    * Xtreme Start anti-softlock insurance: how many 50-total-level milestones
@@ -311,8 +319,60 @@ export interface GameState {
    * key economy for any other mode.
    */
   xtremeMilestoneClaimed?: number;
-  /** Same insurance as xtremeMilestoneClaimed, for the 'chunked' mode — see CHUNKED_MILESTONE_INTERVAL. */
+  /** Retired: Chunked's start-chunk milestone counter (removed October 2026). Kept so old saves load; nothing reads it. */
   chunkedMilestoneClaimed?: number;
+  /**
+   * Achievement ids whose reward is settled (paid, or already earned when
+   * rewards arrived). Absent on a run from before achievement rewards: its
+   * first settlement records what it has earned so far and pays nothing.
+   */
+  achievementsClaimed?: string[];
+  /** The earned achievement the player shows as their title. */
+  achievementTitle?: string;
+  /** Free rituals from achievements, by ritual id (one entry each); a cast uses one before any Fate. */
+  freeRituals?: string[];
+  /**
+   * Chunked Breakthroughs already rolled: skill -> the tier its last roll was
+   * for (utils/chunkedFate.ts). One roll per skill per tier, won or lost.
+   */
+  chunkedBreakthroughs?: Record<string, number>;
+  /**
+   * Chunked exploring rolls (utils/chunkExplore.ts): `from` is how many chunks
+   * the run held when it met the rule (older chunks pay nothing), and `done`
+   * lists the things already rolled in each chunk, by chunk key.
+   */
+  chunkExplore?: { from: number; done: Record<string, string[]> };
+  /**
+   * The Ritual of the Cartographer's offer (chunk keys), drawn by fate when
+   * the Altar's chooser first opens and kept until the ritual charts one, or
+   * until none is on the frontier any more (utils/cartographerOffer.ts).
+   */
+  cartographerOffer?: string[];
+  /**
+   * When a Chunked run last gained a Key, an unlock or a level (set by
+   * gameReducer). Fate's Mercy opens after MERCY_QUIET_MS without one, even
+   * while the tracker thinks something is still left to do (utils/chunkedFate.ts).
+   */
+  chunkedProgressAt?: number;
+  /** Chunked: Fate's Thread and the marks fate left on the run's chunks (utils/fateLand.ts). */
+  fateLand?: FateLand;
+}
+
+/** Fate's omens: four boons (Blessed, Gilded, Fortunate, Chaotic) and four banes. */
+export type FateMark = 'BLESSED' | 'GILDED' | 'FORTUNATE' | 'CHAOTIC' | 'CURSED' | 'WITHERED' | 'CLOUDED' | 'TANGLED';
+
+/** Chunked's Fate's Thread and fate's marks (utils/fateLand.ts). */
+export interface FateLand {
+  /** The chunk fate tied its thread to; absent while there's nowhere to tie one. */
+  thread?: string;
+  /** How many threads fate has seen fulfilled. */
+  fulfilled: number;
+  /** The mark fate left on each chunk it marked, by chunk key. */
+  marks: Record<string, FateMark>;
+  /** Gilded chunks whose free Key roll is still waiting. */
+  gilded: string[];
+  /** A Tangled chunk: fate's thread doesn't pull the next Chunks draw. */
+  tangled?: boolean;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

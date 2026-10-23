@@ -3,10 +3,16 @@ import { createFreshState, gameReducer, prepareKeyRollAction } from './GameConte
 import { auditHistory, replayInvariants, verifyChain, ensureChain } from '../utils/integrity';
 import { seededContext, drawDice } from '../utils/seededRng';
 import { resolveModeRules, GAME_MODES } from '../config/gameModes';
+import { FATE_MARK_BLESSED_FATE } from '../config/economy';
 import { validateAndMigrateSave } from '../utils/saveSchema';
 import { DropSource, TableType, type LogEntry } from '../types';
 
 const fresh = () => ({ ...createFreshState(), lastEvent: null });
+// A fixed run id keeps fate's seeded marks on a Chunked fixture the same on every test run.
+const FIXED_RUN = '0b7e9d2c-3f4a-4e1b-8c6d-5a9f0e1d2c3b';
+// A thread already tied, so fate's first-action thread entry stays out of these histories.
+const TIED_THREAD = { thread: '62,40', fulfilled: 0, marks: {}, gilded: [] };
+const lastAltar = (history: LogEntry[]) => history.filter(e => e.type === 'ALTAR').at(-1);
 const persisted = (state: ReturnType<typeof fresh>) => { const { lastEvent, ...save } = state; return JSON.parse(JSON.stringify(save)); };
 const failures = (n: number, customMultiplier = 1) => {
   let state = { ...fresh(), gameModeId: 'custom', customMode: { ...resolveModeRules('vanilla'), ritualCostMultiplier: customMultiplier } };
@@ -33,10 +39,14 @@ describe('audited process repairs', () => {
   });
 
   it('replays Cartographer spending and a granted chunk', () => {
-    const state = gameReducer({ ...failures(40), gameModeId: 'chunked' }, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '46,51', label: 'Falador' } });
-    expect(auditHistory(state.history)).toMatchObject({ verdict: 'verified', final: { fatePoints: 0, unlocks: 1 } });
-    expect(state.unlocks.chunks).toContain('46,51');
-    expect(state.history.at(-1)?.meta).toMatchObject({ ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '46,51' });
+    const state = gameReducer({ ...failures(40), gameModeId: 'chunked', runId: FIXED_RUN, fateLand: TIED_THREAD, cartographerOffer: ['49,50'] }, { type: 'RITUAL_CARTOGRAPHER', payload: { chunkKey: '49,50', label: 'x' } });
+    // failures() leaves timestamped hashes in the history, so fate's 1-in-8 mark on the new
+    // chunk varies between runs; a Blessed mark gives Fate back after the ritual took all 40.
+    const blessed = state.fateLand?.marks?.['49,50'] === 'BLESSED';
+    expect(state.fatePoints).toBe(blessed ? FATE_MARK_BLESSED_FATE : 0);
+    expect(auditHistory(state.history)).toMatchObject({ verdict: 'verified', final: { fatePoints: state.fatePoints, unlocks: 1 } });
+    expect(state.unlocks.chunks).toContain('49,50');
+    expect(lastAltar(state.history)?.meta).toMatchObject({ ritual: 'CARTOGRAPHER', fateCost: 40, chunk: '49,50' });
   });
 
   it('trusts exact Cartographer metadata without evaluating a missing-details fallback', () => {
@@ -59,12 +69,15 @@ describe('audited process repairs', () => {
   });
 
   it('replays a Cartographer chart of Chaos Temple as Cartographer, not a Ritual of Chaos', () => {
-    const start = { ...fresh(), gameModeId: 'chunked', fatePoints: 40 };
+    // A run whose land reaches up to Varrock Ditch, so Chaos Temple is on its frontier.
+    const base = fresh();
+    const start = { ...base, gameModeId: 'chunked', runId: FIXED_RUN, fatePoints: 40, fateLand: TIED_THREAD, cartographerOffer: ['50,56'],
+      unlocks: { ...base.unlocks, chunks: ['50,51', '50,52', '50,53', '50,54', '50,55'] } };
     const charted = gameReducer(start, {
       type: 'RITUAL_CARTOGRAPHER',
       payload: { chunkKey: '50,56', label: 'Chaos Temple (50, 56)' },
     });
-    expect(charted.history.at(-1)?.message).toMatch(/Chaos/);
+    expect(lastAltar(charted.history)?.message).toMatch(/Chaos/);
 
     // Replay counts the chart as an unlock and awards no Chaos Key.
     const audit = auditHistory(charted.history);

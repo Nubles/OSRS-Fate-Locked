@@ -251,12 +251,12 @@ describe('planForTarget — quests', () => {
 describe('planForTarget — Chunked area steps', () => {
   const chunkedUnlocks = () => maxedUnlocks({ chunks: [] });
 
-  it('plans an area as any one of its chunks, not an Areas unlock', () => {
+  it('plans an area as chunks to roll toward, not an Areas unlock', () => {
     const plan = planForTarget('region', 'Falador', chunkedUnlocks(), 'chunked')!;
 
     expect(plan.regionSteps).toEqual([expect.objectContaining({
       kind: 'region', id: 'Falador', unlockTable: TableType.CHUNKS,
-      detail: 'Unlock any chunk in this area',
+      detail: 'Roll chunks toward this area',
     })]);
     const chunks = plan.regionSteps[0].relatedIds!;
     expect(chunks.length).toBeGreaterThan(0);

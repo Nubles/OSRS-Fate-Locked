@@ -60,7 +60,7 @@ describe('vanilla activity access declarations', () => {
     }
     expect(ACTIVITY_ACCESS_AREAS['The Mad Angel']).toEqual(['Wyrmscraig']);
 
-    for (const activity of ['Mimic', 'Shooting Stars', 'Mahogany Homes', 'Forestry', 'Rat Pits']) {
+    for (const activity of ['Mimic', 'Shooting Stars', 'Mahogany Homes', 'Forestry']) {
       expect(NO_HARD_LOCATION_GATE.has(activity), `${activity} should remain a location-neutral activity`).toBe(true);
     }
   });

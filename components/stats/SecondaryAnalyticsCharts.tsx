@@ -36,7 +36,7 @@ const longDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long
 const monthName = new Intl.DateTimeFormat('en-GB', { month: 'short' });
 const AXIS_TICK = { fontSize: 10, fill: '#8b8b8b' };
 const GRID_STROKE = 'rgba(255,255,255,0.06)';
-const TOOLTIP_CLASS = 'rounded-lg border border-white/15 bg-[#141414]/95 p-3 text-xs text-gray-300 shadow-xl backdrop-blur';
+const TOOLTIP_CLASS = 'osrs-wa-tip rounded-lg border border-white/15 bg-[#141414]/95 p-3 text-xs text-gray-300 shadow-xl backdrop-blur';
 
 const formatLocalDate = (value: string): string => {
   const date = parseLocalDay(value);
@@ -186,7 +186,7 @@ export const SecondaryAnalyticsCharts: React.FC<SecondaryAnalyticsChartsProps> =
     }
     return labelled;
   }, [calendar]);
-  const navButton = 'grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-gray-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30';
+  const navButton = 'osrs-wa-btn osrs-wa-sq grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-gray-300 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-30';
 
   return (
     <section data-analytics-grid aria-label="Secondary analytics charts" className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">

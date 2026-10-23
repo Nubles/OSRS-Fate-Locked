@@ -9,6 +9,7 @@
 // Same module specifiers the lazy() call sites use, so they resolve to the
 // exact same chunks (no duplicate fetch).
 const IMPORTERS: Array<() => Promise<unknown>> = [
+  () => import('../components/HeaderSettingsMenu'), // the classic gear menu, small and opened by click
   () => import('../components/RegionMap'),
   () => import('../components/StatsModal'),
   () => import('../components/StatsChartsView'), // pulls recharts in advance
@@ -19,10 +20,25 @@ const IMPORTERS: Array<() => Promise<unknown>> = [
   () => import('../components/RitualAnimation'),
 ];
 
+interface ConnectionHints { saveData?: boolean; effectiveType?: string }
+
+/**
+ * Whether idle prefetching is worth it on this connection: not when the
+ * player asked the browser to save data, and not on a 2G-class link, where
+ * these chunks would compete with what the player actually opens.
+ */
+export function prefetchAllowed(connection: ConnectionHints | undefined): boolean {
+  if (!connection) return true;
+  if (connection.saveData) return false;
+  return connection.effectiveType !== '2g' && connection.effectiveType !== 'slow-2g';
+}
+
 let started = false;
 
+/** Call once onboarding is done: a first visit downloads only what it shows. */
 export function prefetchHeavyChunks(): void {
   if (started || typeof window === 'undefined') return;
+  if (!prefetchAllowed((navigator as Navigator & { connection?: ConnectionHints }).connection)) return;
   started = true;
 
   const schedule: (cb: () => void) => void =

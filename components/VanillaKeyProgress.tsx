@@ -7,9 +7,13 @@ import {
 
 type BossKeyProgressProps = {
   stage: ReturnType<typeof vanillaBossKeyStage>;
+  /** What an emptied reserve still rolls for; minigames pass their own. */
+  cappedText?: string;
 };
 
-export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage }) => (
+const BOSS_CAPPED_TEXT = 'This boss no longer rolls for Keys or Fate. Its Combat Achievements, Collection Log items and pet still roll.';
+
+export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage, cappedText = BOSS_CAPPED_TEXT }) => (
   <div className="mt-1.5 text-[9px] font-mono leading-snug text-gray-400">
     <div className="flex items-center justify-between gap-2">
       <span>{stage.awarded} of {stage.cap} Keys paid</span>
@@ -20,7 +24,7 @@ export const BossKeyProgress: React.FC<BossKeyProgressProps> = ({ stage }) => (
       )}
     </div>
     {stage.capped ? (
-      <p className="mt-0.5 text-gray-500">This boss no longer rolls for Keys or Fate. Its Combat Achievements, Collection Log items and pet still roll.</p>
+      <p className="mt-0.5 text-gray-500">{cappedText}</p>
     ) : stage.nextRate !== null ? (
       <p className="mt-0.5 text-gray-500">{stage.nextRate}% next</p>
     ) : null}

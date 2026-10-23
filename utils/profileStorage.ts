@@ -1,8 +1,11 @@
 import { writerLeaseKey } from './profileWriterLease';
 import {
+  isQuotaExceededError,
   profileCorruptArchiveKey,
   profileMirrorMetadataKey,
+  removeDisposableCaches,
 } from './storageRecovery';
+import { profileLifecycleMarkKey } from './lifecycleMark';
 import { checksumSave } from './saveIntegrity';
 import { MAX_SAVE_BYTES } from './saveSchema';
 import type { SaveWriteAuthorization } from './profileWriterLease';
@@ -58,7 +61,21 @@ export interface CorruptSaveArchiveOptions {
 
 export type CorruptSaveArchiveResult =
   | { ok: true }
-  | { ok: false; message: string };
+  | {
+    ok: false;
+    message: string;
+    /**
+     * The browser couldn't hold the copy (usually full storage). Recovery
+     * then offers to download the copy instead, so it never dead-ends.
+     */
+    canDownloadInstead?: true;
+  };
+
+const archiveWriteFailure: CorruptSaveArchiveResult = {
+  ok: false,
+  message: 'There isn’t room in this browser to keep a copy of the save being replaced.',
+  canDownloadInstead: true,
+};
 
 const byteLength = (value: string): number => new TextEncoder().encode(value).byteLength;
 
@@ -122,9 +139,12 @@ export const buildCorruptSaveArchive = async (
   };
 };
 
-/** Write and read back the bounded archive before any replacement is allowed. */
+/**
+ * Write and read back the bounded archive before any replacement is allowed.
+ * A full browser storage first gives up the disposable caches, as saves do.
+ */
 export const archiveCorruptSave = async (
-  storage: Pick<Storage, 'getItem' | 'setItem'>,
+  storage: Pick<Storage, 'getItem' | 'setItem'> & Partial<Pick<Storage, 'removeItem'>>,
   storageKey: string,
   evidence: CorruptSaveEvidence,
   options: CorruptSaveArchiveOptions = {},
@@ -137,13 +157,19 @@ export const archiveCorruptSave = async (
     if (postBuildAuthorization !== null) return postBuildAuthorization;
     const serialized = JSON.stringify(archive);
     const key = profileCorruptArchiveKey(storageKey);
-    storage.setItem(key, serialized);
-    if (storage.getItem(key) !== serialized) {
-      return { ok: false, message: 'Corrupt save evidence could not be archived.' };
+    try {
+      storage.setItem(key, serialized);
+    } catch (error) {
+      if (!isQuotaExceededError(error) || storage.removeItem === undefined) throw error;
+      removeDisposableCaches(storage as Pick<Storage, 'removeItem'>);
+      const afterCleanup = checkArchiveAuthorization(options.authorizeWrite);
+      if (afterCleanup !== null) return afterCleanup;
+      storage.setItem(key, serialized);
     }
+    if (storage.getItem(key) !== serialized) return archiveWriteFailure;
     return { ok: true };
   } catch {
-    return { ok: false, message: 'Corrupt save evidence could not be archived.' };
+    return archiveWriteFailure;
   }
 };
 
@@ -160,6 +186,7 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileFeatureSeenKey(profileId),
     writerLeaseKey(storageKey),
     profileMirrorMetadataKey(storageKey),
+    profileLifecycleMarkKey(storageKey),
     profileCorruptArchiveKey(storageKey),
   ];
 };

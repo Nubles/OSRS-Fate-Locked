@@ -9,6 +9,7 @@
 // Hard gates use structured fields; notes are descriptive only.
 
 import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
+import { ACTIVITY_CHUNKS } from './activityChunks';
 import type { QuestProgressRequirement } from './questProgress';
 
 export interface ActivityReq {
@@ -18,6 +19,8 @@ export interface ActivityReq {
   quests?: string[];
   /** Named areas that must be reachable in the selected game mode. */
   requiredAreas?: string[];
+  /** Chunked mode only: the entrance chunks ("cx,cy"), one of which must be owned. Replaces requiredAreas there. */
+  requiredChunks?: string[];
   /** Minimum real OSRS combat level. */
   combatLevel?: number;
   /** Minimum real OSRS total level. */
@@ -41,6 +44,8 @@ const GOD_WARS_CHAMBER = 'Meet this faction’s kill-count requirement for your 
 export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ===== Bosses & Raids =====================================================
   'Tombs of Amascut': { quests: ['Beneath Cursed Sands'] },
+  // Released 20 October 2026; the Wiki lists While Guthix Sleeps as its only requirement.
+  'The Fractured Archive': { quests: ['While Guthix Sleeps'] },
   'The Gauntlet': { quests: ['Song of the Elves'] },
   'Nex': {
     skills: { Strength: 70, Agility: 70, Ranged: 70, Hitpoints: 70 },
@@ -176,9 +181,15 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
   // Either way in is enough: a crop circle at 17 Hunter, or Zanaris's wheat-field portal.
   'Impetuous Impulses': { oneOf: [{ skills: { Hunter: 17 } }, { manualRequirements: ['Completed Lost City, for the portal in Zanaris'] }] },
-  'Rat Pits': { quests: ['Ratcatchers'] },
   'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
+  // Anyone can take the challenges; claiming the rewards needs 750 total level.
+  // The Easy Wilderness Diary requirement was removed on 14 October 2026
+  // (Update:More Gathering Efficiencies).
+  "Pete Kayer's Challenges": {
+    totalLevel: 750,
+    note: 'Pete Kayer at Ferox Enclave. 750 total level is needed to claim rewards.',
+  },
   'Blast Furnace': { note: '60 Smithing to use free; under 60, pay a fee.' },
   'Nightmare Zone': {
     manualRequirements: ['Completed at least five quests with bosses eligible for Nightmare Zone'],
@@ -337,9 +348,11 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 export const getActivityReq = (item: string): ActivityReq | undefined => {
   const requirement = ACTIVITY_REQUIREMENTS[item];
   const requiredAreas = ACTIVITY_ACCESS_AREAS[item];
+  const requiredChunks = Object.prototype.hasOwnProperty.call(ACTIVITY_CHUNKS, item) ? ACTIVITY_CHUNKS[item] : undefined;
   if (!requirement && !requiredAreas) return undefined;
   return {
     ...requirement,
     ...(requiredAreas ? { requiredAreas: [...requiredAreas] } : {}),
+    ...(requiredChunks ? { requiredChunks: [...requiredChunks] } : {}),
   };
 };

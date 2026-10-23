@@ -1,8 +1,26 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_CA_TASKS } from '../data/caTasks';
+import type { UnlockState } from '../types';
+import { useIsOsrsUi } from '../utils/uiStyle';
+import { lazyWithRetry } from '../utils/lazyRetry';
+
+// OSRS layout only: the Journal window's header strip.
+const OsrsJournalHeader = lazyWithRetry(() => import('./osrs/OsrsJournalHeader'));
+
+/** Completion across the whole journal: quests (and QP), diary tiers, CA tasks. */
+export const journalRingStats = (unlocks: UnlockState) => {
+  const questTotal = Object.keys(QUEST_DATA).length;
+  const questDone = unlocks.quests.length;
+  const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
+  const diaryTotal = Object.keys(DIARY_DATA).length;
+  const diaryDone = unlocks.diaries.length;
+  const caTotal = ALL_CA_TASKS.length;
+  const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
+  return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };
+};
 
 /**
  * Journal hero — three radial completion rings (Quests / Diaries / Combat),
@@ -12,7 +30,7 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
   const pct = total > 0 ? done / total : 0;
   const r = 22, circ = 2 * Math.PI * r;
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-black/30 border border-white/5 flex-1 min-w-0">
+    <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-1 sm:gap-3 px-2 sm:px-3 py-2 rounded-lg bg-black/30 border border-white/5 flex-1 min-w-0">
       <svg width="52" height="52" viewBox="0 0 52 52" className="shrink-0 -rotate-90">
         <circle cx="26" cy="26" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5" />
         <circle cx="26" cy="26" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round"
@@ -20,7 +38,7 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
         <text x="26" y="26" transform="rotate(90 26 26)" textAnchor="middle" dominantBaseline="central"
           className="fill-white font-bold" style={{ fontSize: 11 }}>{Math.round(pct * 100)}%</text>
       </svg>
-      <div className="min-w-0">
+      <div className="min-w-0 w-full sm:w-auto">
         <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400 truncate">{label}</div>
         <div className="text-sm font-bold text-white leading-tight">{done}<span className="text-[11px] text-gray-500 font-normal"> / {total}</span></div>
         <div className="text-[9px] text-gray-500 truncate">{sub}</div>
@@ -29,18 +47,16 @@ const Ring: React.FC<{ done: number; total: number; color: string; label: string
   );
 };
 
-export const JournalProgressRings: React.FC = () => {
+/** The Journal tab's completion header: OSRS header strip, or the classic rings. */
+export const JournalProgressRings: React.FC = () => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsJournalHeader /></Suspense>
+    : <ClassicJournalProgressRings />
+);
+
+const ClassicJournalProgressRings: React.FC = () => {
   const { unlocks } = useGame();
-  const stats = useMemo(() => {
-    const questTotal = Object.keys(QUEST_DATA).length;
-    const questDone = unlocks.quests.length;
-    const qp = unlocks.quests.reduce((a, id) => a + (QUEST_DATA[id]?.points ?? 0), 0);
-    const diaryTotal = Object.keys(DIARY_DATA).length;
-    const diaryDone = unlocks.diaries.length;
-    const caTotal = ALL_CA_TASKS.length;
-    const caDone = ALL_CA_TASKS.filter(t => unlocks.completedTasks.includes(t.id)).length;
-    return { questTotal, questDone, qp, diaryTotal, diaryDone, caTotal, caDone };
-  }, [unlocks]);
+  const stats = useMemo(() => journalRingStats(unlocks), [unlocks]);
 
   return (
     <div className="shrink-0 flex gap-2 px-2 pt-2">

@@ -1,6 +1,6 @@
 
-import { lazyWithRetry } from './utils/lazyRetry';
-import React, { useState, useRef, useEffect, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
+import { importWithRetry, lazyWithRetry } from './utils/lazyRetry';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect, useReducer, Component, ErrorInfo, ReactNode, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { GameProvider, useGame } from './context/GameContext';
 import { usePortalHost } from './hooks/usePortalHost';
@@ -28,8 +28,7 @@ import { ProfileRecoveryBanner } from './components/ProfileRecoveryBanner';
 import { SaveRecoveryGuard } from './components/SaveRecoveryGuard';
 import { SaveBootstrap } from './components/SaveBootstrap';
 import { DiscordSyncDriver } from './components/DiscordSyncDriver';
-import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE, FATE_EXPORT_HINT } from './utils/fateSaveFile';
-import { RESET_CONFIRM_MESSAGE } from './utils/backups';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from './utils/fateSaveFile';
 import { isOwnershipConflictBlock } from './utils/profileWriterLease';
 import { useFeatureGates } from './hooks/useFeatureGates';
 import { flashElement } from './utils/flash';
@@ -38,10 +37,11 @@ import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 import { UpdateBanner } from './components/UpdateBanner';
 import { ModalFallback } from './components/LoadingFallback';
 import { JournalSummaryCard } from './components/JournalSummaryCard';
-import { isChunkLoadError, reloadOnceForChunkError } from './utils/chunkLoadError';
+import { isChunkLoadError, reloadIfNewBuild } from './utils/chunkLoadError';
+import { reportError } from './utils/errorBeacon';
 import { useEscapeKey } from './hooks/useEscapeKey';
 import { resolveModeRules } from './config/gameModes';
-import { RITUALS, type Ritual } from './config/economy';
+import { CHUNKED_OMNI_LAND_TEXT, RITUALS, type Ritual } from './config/economy';
 import { showToast } from './utils/toast';
 import { importUiDecision, isCurrentImportRequest } from './utils/gamePersistence';
 import { prefetchHeavyChunks } from './utils/prefetch';
@@ -75,6 +75,7 @@ const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackup
 const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
+const RelayPublishBanner = lazyWithRetry(() => import('./components/RelayPublishBanner'));
 const ModelGallery = lazyWithRetry(() => import('./components/ModelGallery').then(m => ({ default: m.ModelGallery })));
 const DiscordSettingsModal = lazyWithRetry(() => import('./components/DiscordSettingsModal'));
 // The release notes load with the modal; only the latest release's id is
@@ -96,15 +97,21 @@ const RitualAnimation = lazyWithRetry(() => import('./components/RitualAnimation
 const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
+// The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
+const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
+const HeaderSettingsMenu = lazyWithRetry(() => import('./components/HeaderSettingsMenu'));
+const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
+const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
   import('./components/runelite-guide/RunelitePluginGuide').then(module => ({
     default: module.RunelitePluginGuide,
   })),
 );
 import { deobfuscateFateSave, MAX_FATE_FILE_BYTES } from './utils/encryption';
-import { Download, Upload, RotateCcw, BarChart3, HelpCircle, PlayCircle, PauseCircle, Search, Database, SlidersHorizontal, Link2, Radio, Settings, MessageCircle } from 'lucide-react';
+import { BarChart3, HelpCircle, Search, Database, SlidersHorizontal, Radio, Settings, MessageCircle, Menu, X } from 'lucide-react';
+import { readUiStyle, setUiStyle, useIsOsrsUi } from './utils/uiStyle';
+import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
-import { exportRuneliteBundle } from './utils/runeliteExport';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 
@@ -123,9 +130,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Application error:', error, errorInfo);
+    // Before the reload below: a chunk error is reported only when the last
+    // reload didn't fix it (utils/errorBeacon.ts).
+    reportError('boundary', error);
     // Stale chunk from a superseded deploy — retrying in-app can't fix it,
-    // so reload once to pick up the current build.
-    if (isChunkLoadError(error)) reloadOnceForChunkError();
+    // so reload once to pick up the current build. A dropped connection
+    // stays on the Reload screen below instead of the browser's error page.
+    if (isChunkLoadError(error)) void reloadIfNewBuild();
   }
 
   render() {
@@ -134,8 +145,8 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
         return (
           <div className="min-h-screen bg-[#161616] flex items-center justify-center p-8">
             <div className="bg-[#1e1e1e] border border-amber-500/30 rounded-xl p-8 max-w-lg text-center">
-              <h1 className="text-2xl font-bold text-amber-400 mb-2">Updating…</h1>
-              <p className="text-gray-400 mb-4">The tracker couldn't load its code. This is usually a new version or a network blip.</p>
+              <h1 className="text-2xl font-bold text-amber-400 mb-2">Couldn't load the tracker</h1>
+              <p className="text-gray-400 mb-4">Your connection may have dropped for a moment. Your save data is safe.</p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-6 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-bold transition-colors"
@@ -165,6 +176,20 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
             >
               Reload Application
             </button>
+            {readUiStyle() === 'osrs' && (
+              /* A crash in the OSRS layout would come straight back after a
+                 reload (the choice is saved), and its only switch is in the
+                 header that just crashed. */
+              <button
+                onClick={() => {
+                  setUiStyle('classic');
+                  window.location.reload();
+                }}
+                className="block mx-auto mt-3 text-sm text-gray-400 hover:text-white underline"
+              >
+                Switch to the classic layout and reload
+              </button>
+            )}
           </div>
         </div>
       );
@@ -278,6 +303,29 @@ const ToastNotification = () => {
   );
 };
 
+// The header's Key counters: a short word over each count, so a new player
+// can tell Keys from Omni-Keys without a tooltip. Chaos always shows, dim at 0.
+// Below sm the word replaces the key art so all three fit the phone bar.
+const KEY_TONES = {
+  keys: { chip: 'bg-amber-500/10 border-amber-500/20', label: 'text-amber-300/80', num: 'text-amber-100', pulse: false },
+  omni: { chip: 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]', label: 'text-purple-300/80', num: 'text-purple-200', pulse: true },
+  chaos: { chip: 'bg-red-500/20 border-red-500/40', label: 'text-red-300/80', num: 'text-red-100', pulse: true },
+};
+const KeyCount = ({ label, value, lit, file, Fallback, tone, title }: {
+  label: string; value: number; lit: boolean; file: string; Fallback: React.ComponentProps<typeof WikiIcon>['Fallback'];
+  tone: typeof KEY_TONES.keys; title: string;
+}) => (
+  <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${lit ? tone.chip : 'bg-white/5 border-white/10'}`} title={title}>
+    <span className="hidden sm:inline-flex" aria-hidden="true">
+      <WikiIcon file={file} alt="" Fallback={Fallback} size={17} className={lit ? (tone.pulse ? 'animate-pulse drop-shadow' : 'drop-shadow') : 'opacity-50 grayscale'} />
+    </span>
+    <span className="flex flex-col items-center sm:items-start gap-0.5">
+      <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${lit ? tone.label : 'text-gray-400'}`}>{label}</span>
+      <span className={`font-bold text-lg leading-none ${lit ? tone.num : 'text-gray-500'}`}><PopOnChange value={value} /></span>
+    </span>
+  </div>
+);
+
 interface HeaderProps {
   setShowAltar: (show: boolean) => void;
   setShowStats: (show: boolean) => void;
@@ -293,7 +341,8 @@ interface HeaderProps {
 }
 
 const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, setShowStrategy, setShowSupplyChain, setShowGameMode, setShowSyncCode, setShowDiscord, onOpenRuneliteGuide, onOpenChangelog }: HeaderProps) => {
-  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, importSave, resetGame, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
+  const osrsHeader = useIsOsrsUi();
+  const { keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, importSave, getExportData, gameModeId, customMode, unlocks, pinnedGoals, linkedAccount, runId, runRevision, bossStandardKeysAwarded } = useGame();
   // Progressive disclosure — advanced tools stay hidden until the run earns them.
   const gates = useFeatureGates();
   const { storageKeyForActiveProfile } = useProfiles();
@@ -307,6 +356,10 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
   activeProfileKeyRef.current = storageKeyForActiveProfile;
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const [showUtilMenu, setShowUtilMenu] = useState(false);
+  const closeUtilMenu = useCallback(() => setShowUtilMenu(false), []);
+  // Below lg the header is one slim bar (Keys, Fate, a menu button); the
+  // menu button shows the profile and the tool buttons. lg and up always shows them.
+  const [showHeaderTools, setShowHeaderTools] = useState(false);
 
   useEffect(() => {
     fileReadRequestRef.current += 1;
@@ -414,59 +467,81 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
       }
       showToast(FATE_EXPORT_DONE_MESSAGE);
   };
+  // The bundle builder (rules, gear and chunk checks) loads on the click, not with the app.
+  const exportRunelite = () => importWithRetry(() => import('./utils/runeliteExport')).then(m => m.exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded }));
+  // Accept .fate files and legacy .json files
+  const fileInput = <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />;
+
+  if (osrsHeader) return (
+    <>
+      {fileInput}
+      <Suspense fallback={<div style={{ height: 64 }} />}>
+        <OsrsHeader
+          setShowAltar={setShowAltar} setShowStats={setShowStats} setShowReference={setShowReference}
+          setShowOracle={setShowOracle} setShowStrategy={setShowStrategy} setShowSupplyChain={setShowSupplyChain}
+          setShowGameMode={setShowGameMode} setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord}
+          onOpenRuneliteGuide={onOpenRuneliteGuide} onOpenChangelog={onOpenChangelog}
+          onImportSave={() => fileInputRef.current?.click()} onExportSave={handleExport} onRuneliteExport={exportRunelite}
+        />
+      </Suspense>
+    </>
+  );
 
   return (
       <header className="bg-[#1e1e1e] border-b border-white/10 sticky top-0 z-50 shadow-xl backdrop-blur-md bg-opacity-95">
-        <div className="max-w-[1600px] mx-auto px-4 py-2 flex flex-col xl:flex-row items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-3 lg:px-4 py-2 flex flex-row flex-wrap lg:flex-nowrap lg:flex-col xl:flex-row items-center justify-between gap-2 lg:gap-4">
 
-          {/* Logo Section */}
+          {/* Logo Section. Below lg only the key badge shows; the profile moves into the menu. */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-900 rounded-lg flex items-center justify-center border border-amber-500/50 shadow-inner">
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-amber-600 to-amber-900 rounded-lg flex items-center justify-center border border-amber-500/50 shadow-inner">
               <WikiIcon file="Crystal_key.png" alt="Fate Locked" Fallback={Key} size={24} className="drop-shadow-md" />
             </div>
-            <div>
+            <div className="sr-only lg:not-sr-only">
               <h1 className="text-lg font-black text-gray-100 tracking-tight uppercase leading-none">Fate Locked Ironman</h1>
               <p className="text-[10px] text-gray-500 font-mono mt-0.5 tracking-wide">Ironman challenge tracker</p>
             </div>
-            <ProfileSwitcher />
+            <div className="hidden lg:block"><ProfileSwitcher /></div>
           </div>
 
           {/* Resources Bar */}
-          <div className="flex flex-col md:flex-row items-center gap-3 md:gap-6 bg-black/20 p-1.5 pr-4 rounded-xl border border-white/5 w-full xl:w-auto shadow-inner">
-            <div className="w-full md:w-48 lg:w-64 px-2" title={pityRules.pityEnabled
+          <div className="flex flex-row items-center gap-2 lg:gap-6 bg-black/20 p-1 pr-1.5 lg:p-1.5 lg:pr-4 rounded-xl border border-white/5 flex-1 min-w-0 lg:flex-initial lg:min-w-[auto] lg:w-full xl:w-auto shadow-inner">
+            <div className="flex-1 min-w-0 lg:flex-initial lg:min-w-[auto] lg:w-64 px-1.5 lg:px-2" title={pityRules.pityEnabled
                 ? `Fate Points: failed rolls build these, and at ${pityRules.pityThreshold} you get a guaranteed Pity Key. You can also spend them on rituals at the Altar.`
                 : 'Fate Points: failed rolls build these. Spend them on rituals at the Altar.'}>
                <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
-                  <span className={nearPity ? "text-red-400 animate-pulse" : "text-gray-500"}>Fate Points</span>
+                  <span className={nearPity ? "text-red-400 animate-pulse" : "text-gray-500"}>Fate<span className="hidden sm:inline"> Points</span></span>
                   <span className="text-gray-400">{pityRules.pityEnabled ? `${fatePoints}/${pityRules.pityThreshold}` : `${fatePoints} Fate`}</span>
                </div>
                <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
                  <div className={`relative h-full overflow-hidden transition-all duration-500 ${animationsEnabled ? 'progress-sheen' : ''} ${nearPity ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : 'bg-amber-600'}`} style={{ width: `${Math.min(100, (fatePoints / pityCap) * 100)}%` }} />
                       </div>
             </div>
-            <div className="hidden md:block w-px h-8 bg-white/5"></div>
-            <div data-tour="keys" className="flex items-center gap-3 justify-center">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg min-w-[60px] justify-center" title="Keys: spend one on a table in Spend Keys for a random unlock">
-                   <WikiIcon file="Crystal_key.png" alt="Keys" Fallback={Key} size={17} className="drop-shadow" />
-                   <span className="font-bold text-amber-100 text-lg leading-none"><PopOnChange value={keys} /></span>
-                </div>
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors min-w-[60px] justify-center ${specialKeys > 0 ? 'bg-purple-500/20 border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10 opacity-50'}`} title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ' In Chunked, land only comes from Chunk unlocks and the Ritual of the Cartographer.' : ''}`}>
-                   <WikiIcon file="Enhanced_crystal_key.png" alt="Omni-Keys" Fallback={Sparkles} size={18} className={specialKeys > 0 ? 'animate-pulse' : 'opacity-50 grayscale'} />
-                   <span className={`font-bold text-lg leading-none ${specialKeys > 0 ? 'text-purple-200' : 'text-gray-500'}`}><PopOnChange value={specialKeys} /></span>
-                </div>
-                {chaosKeys > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 border border-red-500/40 rounded-lg animate-in fade-in slide-in-from-right-4 min-w-[60px] justify-center" title="Chaos Keys: each one unlocks a random entry from all the tables at once">
-                     <WikiIcon file="Sinister_key.png" alt="Chaos Keys" Fallback={Dna} size={17} className="animate-pulse drop-shadow" />
-                     <span className="font-bold text-red-100 text-lg leading-none"><PopOnChange value={chaosKeys} /></span>
-                  </div>
-                )}
-            </div>
+            <div className="hidden lg:block w-px h-8 bg-white/5"></div>
+            <div data-tour="keys" className="flex items-center gap-1.5 lg:gap-3 justify-center shrink-0">
+                <KeyCount label="Keys" value={keys} lit file="Crystal_key.png" Fallback={Key} tone={KEY_TONES.keys}
+                  title="Keys: spend one on a table in Spend Keys for a random unlock" />
+                <KeyCount label="Omni" value={specialKeys} lit={specialKeys > 0} file="Enhanced_crystal_key.png" Fallback={Sparkles} tone={KEY_TONES.omni}
+                  title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} />
+                <KeyCount label="Chaos" value={chaosKeys} lit={chaosKeys > 0} file="Sinister_key.png" Fallback={Dna} tone={KEY_TONES.chaos}
+                  title="Chaos Keys: each one unlocks a random entry from all the tables at once" />
+          </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-wrap items-center justify-center gap-2 min-w-0 max-w-full">
-             {/* Accept .fate files and legacy .json files */}
-             <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />
+          <button
+            type="button"
+            onClick={() => setShowHeaderTools((v) => !v)}
+            className={`lg:hidden h-9 w-9 shrink-0 flex items-center justify-center bg-[#252525] border rounded-lg transition-colors ${showHeaderTools ? 'text-white border-white/25' : 'text-gray-300 border-white/10'}`}
+            aria-label={showHeaderTools ? 'Hide menu' : 'Menu'}
+            aria-expanded={showHeaderTools}
+            aria-controls="header-tools"
+          >
+            {showHeaderTools ? <X size={16} /> : <Menu size={16} />}
+          </button>
+
+          {/* Controls (below lg: behind the menu button) */}
+          <div id="header-tools" className={`${showHeaderTools ? 'flex' : 'hidden'} lg:flex w-full lg:w-auto flex-wrap items-center justify-center gap-2 min-w-0 max-w-full pb-1 lg:pb-0`}>
+             {fileInput}
+             {showHeaderTools && <div className="lg:hidden w-full flex justify-center"><ProfileSwitcher /></div>}
 
              {gates.has('tool:altar') && <button
                 data-tour="altar"
@@ -493,7 +568,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              </button>
 
              <button
-               onClick={() => exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded })}
+               onClick={exportRunelite}
                className="h-8 px-2.5 rounded-lg border border-amber-500/40 bg-amber-900/30 hover:bg-amber-800/40 text-amber-200 hover:text-amber-100 flex items-center gap-2 transition-colors"
                title="Export your run for the RuneLite plugin (copies to clipboard + downloads). Then use 'Import from clipboard' in the plugin."
              >
@@ -542,56 +617,18 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                    className={`h-8 w-8 flex items-center justify-center bg-[#252525] border border-white/10 rounded-lg transition-colors ${showUtilMenu ? 'text-white border-white/25' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                    title="Settings & save tools"
                    aria-label="Settings & save tools"
+                   aria-haspopup="menu"
                    aria-expanded={showUtilMenu}
                  >
                     <Settings size={14} />
                  </button>
                  {showUtilMenu && (
-                   <>
-                     <div className="fixed inset-0 z-[90]" onClick={() => setShowUtilMenu(false)} />
-                     <div className="absolute right-0 top-9 z-[91] w-56 bg-[#1c1c1c] border border-white/15 rounded-lg shadow-2xl py-1.5 text-[12px]">
-                        <button type="button" onClick={() => {
-                          setShowUtilMenu(false);
-                          onOpenRuneliteGuide(settingsTriggerRef.current);
-                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
-                          <BookOpen size={13} className="text-amber-300" />
-                          RuneLite Plugin Guide
-                        </button>
-                        <button type="button" onClick={() => {
-                          setShowUtilMenu(false);
-                          onOpenChangelog(settingsTriggerRef.current);
-                        }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-amber-300">
-                          <ScrollText size={13} className="text-amber-300" />
-                          What's New
-                        </button>
-                        <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { toggleAnimations(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={animationsEnabled}>
-                           {animationsEnabled ? <PlayCircle size={13} className="text-green-400" /> : <PauseCircle size={13} className="text-gray-500" />}
-                           Animations <span className="ml-auto text-[10px] text-gray-500">{animationsEnabled ? 'on' : 'off'}</span>
-                        </button>
-                        <button onClick={() => { toggleAdvisors(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white" aria-pressed={advisorsEnabled}>
-                           <Lightbulb size={13} className={advisorsEnabled ? 'text-amber-400' : 'text-gray-500'} />
-                           Advisor panels <span className="ml-auto text-[10px] text-gray-500">{advisorsEnabled ? 'on' : 'off'}</span>
-                        </button>
-                        <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); fileInputRef.current?.click(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
-                           <Upload size={13} /> Import save
-                        </button>
-                        <button onClick={() => { setShowUtilMenu(false); handleExport(); }} title={FATE_EXPORT_HINT} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-white">
-                           <Download size={13} /> Export save file (.fate)
-                        </button>
-                        <button onClick={() => { setShowUtilMenu(false); setShowSyncCode(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-cyan-300">
-                           <Link2 size={13} /> Sync code (move device)
-                        </button>
-                        <button onClick={() => { setShowUtilMenu(false); setShowDiscord(true); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-gray-300 hover:bg-white/5 hover:text-indigo-300">
-                           <Radio size={13} /> Discord notifications
-                        </button>
-                        <div className="my-1 border-t border-white/10" />
-                        <button onClick={() => { setShowUtilMenu(false); if(window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
-                           <RotateCcw size={13} /> Reset all progress
-                        </button>
-                     </div>
-                   </>
+                   <Suspense fallback={null}>
+                     <HeaderSettingsMenu anchorRef={settingsTriggerRef} onClose={closeUtilMenu}
+                       onOpenRuneliteGuide={onOpenRuneliteGuide} onOpenChangelog={onOpenChangelog}
+                       onImportSave={() => fileInputRef.current?.click()} onExportSave={handleExport}
+                       setShowSyncCode={setShowSyncCode} setShowDiscord={setShowDiscord} />
+                   </Suspense>
                  )}
              </div>
           </div>
@@ -601,8 +638,23 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 };
 
 // --- New Control Panel Component ---
+const PANEL_TO_KEYS_TAB: Record<'FARM' | 'SPEND' | 'LOG', OsrsKeysTab> = { FARM: 'farm', SPEND: 'spend', LOG: 'history' };
+const KEYS_TAB_TO_PANEL: Record<OsrsKeysTab, 'FARM' | 'SPEND' | 'LOG'> = { farm: 'FARM', spend: 'SPEND', history: 'LOG' };
+
 const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = false }) => {
-  const [activeTab, setActiveTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  const [classicTab, setClassicTab] = useState<'FARM' | 'SPEND' | 'LOG'>('FARM');
+  const isOsrs = useIsOsrsUi();
+  // OSRS layout: this panel's tab and the wide Keys screen's tab are one choice
+  // (utils/osrsNav.ts), so opening the Keys screen lands on the same tab and
+  // closing it brings the choice back here. The nav store is the only source
+  // of truth there; two effects syncing two copies could chase each other
+  // when they disagreed on mount.
+  const { keysTab } = useOsrsNav();
+  const activeTab = isOsrs ? KEYS_TAB_TO_PANEL[keysTab] : classicTab;
+  const setActiveTab = useCallback((tab: 'FARM' | 'SPEND' | 'LOG') => {
+    setClassicTab(tab);
+    setOsrsKeysTab(PANEL_TO_KEYS_TAB[tab]);
+  }, []);
   // History reveals with the first logged event (progressive disclosure).
   const gates = useFeatureGates();
   const showLogTab = gates.has('ctrl:LOG') || activeTab === 'LOG';
@@ -629,7 +681,32 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
   }, []);
 
   return (
-    <div ref={panelRef} className="flex flex-col h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl">
+    <div ref={panelRef} className={isOsrs ? 'osrs-win flex flex-col h-full overflow-hidden p-1 gap-1' : 'flex flex-col lg:h-full bg-[#1b1b1b] border border-[#333] rounded-lg overflow-hidden shadow-xl'}>
+      {isOsrs ? <>
+      {/* OSRS layout: the Main board's tab strip, plus a small control that
+          opens the wide Keys screen on the same tab. The panel guide sits
+          beside it (the board has no row for it). */}
+      <div className="flex shrink-0 items-end" style={{ gap: 3, padding: '2px 2px 0', borderBottom: '1px solid var(--osrs-rule, #5c5244)' }}>
+        <div role="tablist" className="flex" style={{ flex: 1, minWidth: 0, gap: 3 }}>
+          <button type="button" role="tab" data-tour="farm" aria-selected={activeTab === 'FARM'} onClick={() => setActiveTab('FARM')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Farm Keys</button>
+          <button type="button" role="tab" data-tour="spend" aria-selected={activeTab === 'SPEND'} onClick={() => setActiveTab('SPEND')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>Spend Keys</button>
+          {showLogTab && <button type="button" role="tab" aria-selected={activeTab === 'LOG'} onClick={() => setActiveTab('LOG')} className="osrs-tab" style={{ flex: 1, textAlign: 'center' }}>History</button>}
+        </div>
+        <span className="osrs-keys-guide flex items-center justify-center" style={{ width: 22, height: 26, marginBottom: 1 }}>
+          <SectionGuide id={activeTab} suspendModals={suspendModals} />
+        </span>
+        <button
+          type="button"
+          className="osrs-btn"
+          onClick={() => openOsrsScreen('keys', PANEL_TO_KEYS_TAB[activeTab])}
+          title={`Open the full ${activeTab === 'FARM' ? 'Farm Keys' : activeTab === 'SPEND' ? 'Spend Keys' : 'History'} window`}
+          aria-label={`Open the full ${activeTab === 'FARM' ? 'Farm Keys' : activeTab === 'SPEND' ? 'Spend Keys' : 'History'} window`}
+          style={{ width: 26, height: 26, padding: 0, marginBottom: 2, flexShrink: 0 }}
+        >
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M7 1h4v4M11 1L6.5 5.5M5 11H1V7M1 11l4.5-4.5" fill="none" stroke="currentColor" strokeWidth="2" /></svg>
+        </button>
+      </div>
+      </> : <>
       {/* Tabs */}
       <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
@@ -659,16 +736,18 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
         <span>{GUIDES[activeTab]?.title}</span>
         <SectionGuide id={activeTab} suspendModals={suspendModals} />
       </div>
+      </>}
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-        <div className={activeTab === 'FARM' ? 'block' : 'hidden'}>
+      {/* Content. The OSRS layout's compact Keys views fill a definite height and scroll inside themselves. */}
+      <div className={isOsrs ? 'flex-1 min-h-0 overflow-hidden' : 'flex-1 lg:overflow-y-auto custom-scrollbar p-1'}>
+        <div className={activeTab === 'FARM' ? (isOsrs ? 'block h-full' : 'block') : 'hidden'}>
            <ActionSection />
         </div>
-        <div className={activeTab === 'SPEND' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'SPEND' ? (isOsrs ? 'block h-full' : 'block') : 'hidden'}>
            <GachaSection />
         </div>
-        <div className={activeTab === 'LOG' ? 'block h-full' : 'hidden'}>
+        {/* History draws a virtual list that needs a definite height: below lg it gets most of the screen. */}
+        <div className={activeTab === 'LOG' ? (isOsrs ? 'block h-full' : 'block h-[75vh] lg:h-full') : 'hidden'}>
            {logVisited && (
              <Suspense fallback={<ModalFallback />}>
                <LogViewer />
@@ -690,6 +769,7 @@ const GameLayout = () => {
   } = useGame();
   // A pending offer from a balance change keeps What's New open until it's settled.
   const hasPendingOffer = fateCompensation.status === 'pending' || petCompensation.status === 'pending';
+  const isOsrs = useIsOsrsUi();
   const {
     recentlyCreatedId,
     activeProfileId,
@@ -795,8 +875,9 @@ const GameLayout = () => {
   };
 
   // Warm the heavy lazy chunks (map, stats+charts, resource engine, …) during
-  // idle time so opening them is instant instead of a visible fetch delay.
-  useEffect(() => { prefetchHeavyChunks(); }, []);
+  // idle time so opening them is instant instead of a visible fetch delay;
+  // not behind the first-visit onboarding, which opens none of them.
+  useEffect(() => { if (hasSeenOnboarding) prefetchHeavyChunks(); }, [hasSeenOnboarding]);
 
   useEffect(() => relaySync.subscribe(() => {
     if (!runelitePairCode || relaySync.code !== runelitePairCode) return;
@@ -995,8 +1076,46 @@ const GameLayout = () => {
   }, shouldEnableUnderlyingModalEscape(anyModalOpen, topLevelGuideOpen));
   const modalRenderPolicy = resolveChangelogModalRenderPolicy(topLevelGuideOpen);
 
+  // Shared between the classic grid and the OSRS frame (same components, same props).
+  const headerEl = (
+    <Header
+      setShowAltar={setShowAltar}
+      setShowStats={setShowStats}
+      setShowReference={setShowReference}
+      setShowOracle={setShowOracle}
+      setShowStrategy={setShowStrategy}
+      setShowSupplyChain={setShowSupplyChain}
+      setShowGameMode={setShowGameMode}
+      setShowSyncCode={setShowSyncCode}
+      setShowDiscord={setShowDiscord}
+      onOpenRuneliteGuide={openRuneliteGuide}
+      onOpenChangelog={openChangelog}
+    />
+  );
+  const journalCardEl = (
+    <PanelErrorBoundary name="Journal summary">
+      <JournalSummaryCard
+        onNavClick={(tab) =>
+          window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
+        }
+      />
+    </PanelErrorBoundary>
+  );
+  const controlPanelEl = (
+    <PanelErrorBoundary name="Control panel">
+      <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
+    </PanelErrorBoundary>
+  );
+  const dashboardEl = (
+    <PanelErrorBoundary name="Dashboard">
+      <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
+    </PanelErrorBoundary>
+  );
+
   return (
-    <div className="min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative">
+    <div className={isOsrs
+      ? 'osrs-shell min-h-screen bg-osrs-bg text-osrs-text font-sans selection:bg-osrs-gold selection:text-black relative'
+      : 'min-h-screen bg-osrs-bg text-osrs-text pb-6 font-sans selection:bg-osrs-gold selection:text-black relative'}>
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
@@ -1005,6 +1124,8 @@ const GameLayout = () => {
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
+      {/* OSRS layout: right-click menu (Examine), mounted once. */}
+      {isOsrs && <Suspense fallback={null}><OsrsContextMenu /></Suspense>}
 
 
       {/* Shared notification stacks: every toast/reveal portals into one of
@@ -1059,26 +1180,14 @@ const GameLayout = () => {
         )}
       </Suspense>
 
-      <Header
-        setShowAltar={setShowAltar}
-        setShowStats={setShowStats}
-        setShowReference={setShowReference}
-        setShowOracle={setShowOracle}
-        setShowStrategy={setShowStrategy}
-        setShowSupplyChain={setShowSupplyChain}
-        setShowGameMode={setShowGameMode}
-        setShowSyncCode={setShowSyncCode}
-        setShowDiscord={setShowDiscord}
-        onOpenRuneliteGuide={openRuneliteGuide}
-        onOpenChangelog={openChangelog}
-      />
+      {!isOsrs && headerEl}
 
-      <ProfileRecoveryBanner />
+      {!isOsrs && <ProfileRecoveryBanner />}
 
-      <SaveConflictBanner />
+      {!isOsrs && <SaveConflictBanner />}
 
       {/* Compact durability status for ordinary saves and degraded recovery. */}
-      {!dualStorageFailure && (
+      {!isOsrs && !dualStorageFailure && (
         <SaveDurabilityStatus
           snapshot={effectiveDurability}
           retrySave={retrySave}
@@ -1086,13 +1195,16 @@ const GameLayout = () => {
         />
       )}
 
-      <SaveFailureBanner />
+      {!isOsrs && <SaveFailureBanner />}
+
+      {/* Says when the RuneLite profile couldn't be sent, and when it's tried again. */}
+      {!isOsrs && <Suspense fallback={null}><RelayPublishBanner /></Suspense>}
 
       <Suspense fallback={null}>
         {/* Global ⌘K command palette — navigates via fate:nav events. */}
         {modalRenderPolicy.renderGlobalDialogOverlays && <CommandPalette />}
         {/* Replayable spotlight tour — start via fate:start-tour. */}
-        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour />}
+        {modalRenderPolicy.renderGlobalDialogOverlays && <GuidedTour gameModeId={gameModeId} />}
         {/* Quest-complete celebration with the wiki reward scroll. */}
         {modalRenderPolicy.renderGlobalDialogOverlays && <QuestCompleteOverlay />}
       </Suspense>
@@ -1133,53 +1245,65 @@ const GameLayout = () => {
       )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
-      <CoachStrip />
+      {!isOsrs && <CoachStrip />}
 
       {/* Asks once per run whether to turn on online backup. */}
-      <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><OnlineBackupPrompt /></Suspense>}
       {/* Dismissible "export a .fate backup" reminder for unbacked-up runs. */}
-      <Suspense fallback={null}><BackupNagBanner /></Suspense>
+      {!isOsrs && <Suspense fallback={null}><BackupNagBanner /></Suspense>}
       {/* Posts new unlocks to the profile's Discord webhook (if configured). */}
       <DiscordSyncDriver />
       {/* Keeps the run's shared progress current for the Discord bot's /progress (if sharing is on). */}
       <Suspense fallback={null}><ProgressShareDriver /></Suspense>
 
       {/* Main Command Center Layout */}
-      <main className="max-w-[1600px] mx-auto px-4 py-4 h-[calc(100vh-80px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+      {isOsrs ? (
+        /* The OSRS layout: header, parchment line, one screen, docked chatbox,
+           all inside the window (components/osrs/OsrsShellFrame.tsx). */
+        <Suspense fallback={null}>
+          <OsrsShellFrame
+            header={headerEl}
+            criticalBanners={<><ProfileRecoveryBanner /><SaveConflictBanner /><SaveFailureBanner /></>}
+            journalCard={journalCardEl}
+            keysPanel={controlPanelEl}
+            progression={dashboardEl}
+            durability={effectiveDurability}
+            showDurability={!dualStorageFailure}
+            retrySave={retrySave}
+            exportBackup={exportBackup}
+          />
+        </Suspense>
+      ) : (
+      /* Desktop (lg and up) locks the grid to the window and each panel
+         scrolls inside itself. Below lg the page scrolls as one document:
+         panels grow to their content, with no small scroll wells. */
+      <main className="max-w-[1600px] mx-auto px-3 py-3 lg:px-4 lg:py-4 lg:h-[calc(100vh-80px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-full">
 
           {/* LEFT: Journal summary + Interaction & Control (35%).
               The journal summary lives here (rather than inside a Dashboard tab)
               so it stays visible across every tab switch. Clicking a row fires a
               `navigate-journal` event the Dashboard listens for. */}
-          <div className="lg:col-span-4 h-full min-h-[500px] flex flex-col gap-4">
-            <div className="shrink-0">
-              <PanelErrorBoundary name="Journal summary">
-                <JournalSummaryCard
-                  onNavClick={(tab) =>
-                    window.dispatchEvent(new CustomEvent('navigate-journal', { detail: { tab } }))
-                  }
-                />
-              </PanelErrorBoundary>
+          <div className="lg:col-span-4 lg:h-full lg:min-h-[500px] flex flex-col gap-4">
+            {/* On a phone Farm Keys comes first: rolling after a task is the core action. */}
+            <div className="shrink-0 order-2 lg:order-none">
+              {journalCardEl}
             </div>
-            <div className="flex-1 min-h-0">
-              <PanelErrorBoundary name="Control panel">
-                <ControlPanel suspendModals={modalRenderPolicy.suspendDashboardModals} />
-              </PanelErrorBoundary>
+            <div className="lg:flex-1 lg:min-h-0">
+              {controlPanelEl}
             </div>
           </div>
 
           {/* RIGHT: Dashboard Visualization (65%) */}
-          <div className="lg:col-span-8 h-full min-h-[500px] flex flex-col gap-4">
-             <div className="flex-1 overflow-hidden h-full">
-               <PanelErrorBoundary name="Dashboard">
-                 <Dashboard suspendModals={modalRenderPolicy.suspendDashboardModals} />
-               </PanelErrorBoundary>
+          <div className="lg:col-span-8 lg:h-full lg:min-h-[500px] flex flex-col gap-4">
+             <div className="lg:flex-1 lg:overflow-hidden lg:h-full">
+               {dashboardEl}
              </div>
           </div>
 
         </div>
       </main>
+      )}
     </div>
   );
 };

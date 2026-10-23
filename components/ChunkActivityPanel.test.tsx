@@ -3,6 +3,7 @@ import { QUEST_DATA } from '../data/questData';
 import type { UnlockState } from '../types';
 import { evaluateQuestEligibility, getQuestStatus } from '../utils/journalStatus';
 import {
+  chunkBankState,
   chunkQuestOverviewItem,
   chunkQuestPresentation,
   chunkQuestStatusLabel,
@@ -126,3 +127,20 @@ describe('chunk activity quest row helpers', () => {
     expect(chunkQuestStatusLabel('locked', 'locked')).toBe('Locked');
   });
 });
+
+describe('chunkBankState', () => {
+  const state = (over: Partial<Parameters<typeof chunkBankState>[0]> = {}) =>
+    chunkBankState({ bankUnlocked: true, chunkOwned: true, requirementsMet: true, bankLocks: true, ...over });
+
+  it('does not call a rolled bank in an unowned Chunked chunk available (map review 4)', () => {
+    expect(state({ chunkOwned: false })).toBe('chunk-locked');
+    expect(state()).toBe('available');
+  });
+
+  it('keeps the other bank states', () => {
+    expect(state({ bankUnlocked: false, chunkOwned: false })).toBe('locked');
+    expect(state({ requirementsMet: false })).toBe('requirements');
+    expect(state({ bankLocks: false })).toBe('present');
+  });
+});
+

@@ -25,6 +25,15 @@ describe('SkillRollOdds', () => {
     }
   });
 
+  it('adds the run\'s level-up boost from achievements', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" boost={2} />,
+    );
+
+    expect(html).toContain('10.4% Key');
+    expect(html).toContain('Your achievements add 2% to the Key chance.');
+  });
+
   it('shows the maximum eligible chance at level 98', () => {
     const html = renderToStaticMarkup(
       <SkillRollOdds currentLevel={98} isUnlocked descriptionId="attack-key-roll-description" />,
@@ -63,5 +72,13 @@ describe('SkillRollOdds', () => {
     expect(html).not.toContain('sr-only');
     expect(html).not.toContain('title=');
     expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
+  });
+  it('says a Chunked level past the tier cap rolls nothing', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={10} isUnlocked descriptionId="wc" pastCap={10} />,
+    );
+    expect(html).toContain('Next Lv 11 · no roll');
+    expect(html).toContain('levels past the cap roll no Keys');
+    expect(html).not.toContain('% Key');
   });
 });

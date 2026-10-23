@@ -19,18 +19,20 @@ const expectedKeys = (profileId: string): string[] => {
     `fate_features_seen_v1_${profileId}`,
     `${base}__writer`,
     `${base}__mirrorMeta`,
+    `${base}__lifecycleMark`,
     `${base}__corruptArchive`,
   ];
 };
 
 describe('profile-owned storage registry', () => {
-  it('lists the exact ten owned keys in stable order', () => {
+  it('lists the exact owned keys in stable order', () => {
     expect(profileOwnedKeys('target')).toEqual(expectedKeys('target'));
   });
 
   it('owns mirror metadata and corrupt evidence with the profile', () => {
     expect(profileOwnedKeys('alpha')).toEqual(expect.arrayContaining([
       'FATE_PROFILE_alpha__mirrorMeta',
+      'FATE_PROFILE_alpha__lifecycleMark',
       'FATE_PROFILE_alpha__corruptArchive',
     ]));
   });
@@ -179,8 +181,46 @@ describe('corrupt-save archive', () => {
 
     expect(result).toEqual({
       ok: false,
-      message: 'Corrupt save evidence could not be archived.',
+      message: 'There isn’t room in this browser to keep a copy of the save being replaced.',
+      canDownloadInstead: true,
     });
+  });
+
+  it('frees the disposable caches and retries once when browser storage is full', async () => {
+    const values = new Map<string, string>([['fate_osrs_prices_v1', 'cached prices']]);
+    const quota = () => new DOMException('full', 'QuotaExceededError');
+    const result = await archiveCorruptSave(
+      {
+        getItem: key => values.get(key) ?? null,
+        setItem: (key, value) => {
+          if (values.has('fate_osrs_prices_v1')) throw quota();
+          values.set(key, value);
+        },
+        removeItem: key => { values.delete(key); },
+      },
+      'FATE_PROFILE_alpha',
+      { primary: 'old save', mirrorMetadata: null },
+      { now: () => 1 },
+    );
+
+    expect(result).toEqual({ ok: true });
+    expect(values.has('fate_osrs_prices_v1')).toBe(false);
+    expect(JSON.parse(values.get('FATE_PROFILE_alpha__corruptArchive') ?? '').primary).toBe('old save');
+  });
+
+  it('offers a download instead when full storage still has no room after the caches go', async () => {
+    const result = await archiveCorruptSave(
+      {
+        getItem: () => null,
+        setItem: () => { throw new DOMException('full', 'QuotaExceededError'); },
+        removeItem: () => undefined,
+      },
+      'FATE_PROFILE_alpha',
+      { primary: 'old save', mirrorMetadata: null },
+      { now: () => 1 },
+    );
+
+    expect(result).toMatchObject({ ok: false, canDownloadInstead: true });
   });
 
   it('reauthorizes after asynchronous archive construction before writing evidence', async () => {

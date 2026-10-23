@@ -70,7 +70,7 @@ always-mounted-driver / choke-point conventions.
    banner under the header nags when a run with 10+ events has no .fate
    export in 7 days; Export downloads in place, dismiss snoozes 7 days.
    Only real file downloads call `markExported` — sync codes don't count
-   (24h relay TTL is not durable storage).
+   (relay copies expire and are not durable storage).
 
 3. **Discord webhook announcements** (`utils/discordWebhook.ts`,
    `components/DiscordSyncDriver.tsx`, `components/DiscordSettingsModal.tsx`,
@@ -117,7 +117,9 @@ accepted.
 ### P0 — RuneProof Wave 1 release candidate (in progress)
 
 **Current testing scope (maintainer direction, 23 September 2026): Vanilla only.**
-Chunked mode is experimental and is not currently official. Use Vanilla for
+Chunked mode is a playable mode in the picker with its own fate rules (PR #120,
+October 2026: Key reserves, exploring, Breakthrough, Fate's Mercy), but this
+release candidate's verification scope stays Vanilla. Use Vanilla for
 ongoing feature verification and release evidence; earlier Chunked test results
 do not establish Vanilla readiness. The local preview now uses the separate
 `Vanilla Preview` profile, preserving the earlier profile. Cook's Assistant and
@@ -281,8 +283,9 @@ not visual acceptance, and visual acceptance is not permission to publish.
 
 ## 2b. Bank unlocks (shipped — web side) & follow-ups
 
-The bank pool contains 127 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock.
-All 128 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 127 physical entries are keyed by
+The bank pool contains 125 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock
+(`BANK_IDS.length` is 126, the count the Spend card and Codex show).
+All 126 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 125 physical entries are keyed by
 canonical chunk id cx*256+cy, while the virtual Forestry unlock is tracked separately,
 mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
 `node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).
@@ -342,14 +345,37 @@ Follow-ups:
   `GET /r/:code` and optional ETag caching. The plugin does not write to the
   relay, and the browser receives no import receipt. Disconnect marks the
   code gone, which the plugin's `GET` then reports (`404 {"gone":true}`).
-  Full contract in `docs/online-relay.md`. Deployed at
-  `fate-relay.fatelocked.workers.dev`; redeploy with `wrangler deploy` from
-  `workers/fate-relay/` (KV id is committed in wrangler.toml).
-- **Legacy relay compatibility only:** the Worker temporarily retains
-  `/r/:code/state`, `/r/:code/events`, `/r/:code/acks`, and
-  `/r/:code/suggest` for older installed clients. They are not part of the
-  current Hub candidate's connection and must not be presented as current
-  product behavior.
+  A profile lasts 30 days after the last publish. A failed publish is
+  retried after 15 s, 1 min, then every 5 min, and `RelayPublishBanner`
+  says so. Full contract in `docs/online-relay.md`. Deployed at
+  `fate-relay.fatelocked.workers.dev`; redeploy with
+  `npx wrangler@latest deploy` from `workers/fate-relay/` (KV id and rate
+  limit bindings are committed in wrangler.toml; steps for the latest
+  changes in `workers/fate-relay/DEPLOY-NOTES.md`).
+- **Relay abuse limits:** every route id must have the exact shape its
+  client makes (pairing code: 32 hex digits; backup id: 32 bytes base64url;
+  run id: 16 bytes base64url), and a profile must be `FLGZ:` gzip or a JSON
+  object, a backup a `FLBK1.` envelope; anything else is `400` before KV.
+  Writes are limited per IP (30 a minute; record-creating writes 4 a
+  minute; error reports 10 a minute) by Workers Rate Limiting bindings. The
+  limits slow abuse but don't protect the free plan's 1,000 KV writes a day;
+  only Workers Paid does. See "Abuse limits" in `docs/online-relay.md`.
+- **Legacy relay resources removed:** `/r/:code/state`, `/events`, `/acks`
+  and `/suggest` answer 404. No app, plugin `main` or Plugin Hub build
+  (`0ae842d`) requested them.
+- **Error reports:** `POST /e` on the relay takes `{build, kind, message,
+  stack, path}` (8 KiB), always answers 204, stores nothing, and posts to
+  the `ERROR_WEBHOOK_URL` Discord webhook secret when set (once per message
+  and build in 10 minutes), else only logs.
+- **World map image sizes:** `public/osrs_world_map.webp` (9216 x 6528, 6
+  MB) is the master; `_4608`, `_2304` and the `_lo` placeholder are copies of
+  it made by `python3 scripts/gen-map-sizes.py` (Pillow). Every view picks a
+  copy through `utils/mapImageSize.ts` from how wide it draws the map and the
+  screen's pixel ratio, moving up a size on zoom (windows under 720 px stop
+  at 4608 for iOS memory; "Download map" always uses the full image), so new map code should use
+  `MAP_IMAGE.sizes` through that file, not `MAP_IMAGE.src`. After replacing
+  the master, rerun the script; `utils/mapImageSize.test.ts` fails if a copy
+  is missing or the wrong size.
 - **Plugin boundary:** [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
   owns the plugin source, builds, releases, and local detection history. The
   app exports rules bundles but contains no Java plugin or download pipeline.
@@ -449,6 +475,18 @@ of `chunked-sailing`).
   full run on CI. Look such a dialog up with `{ timeout: 10_000 }` and give
   the test 25 seconds. A missed one failed a main deploy on 2 October 2026
   (#65).
+- **Quest cards use `content-visibility: auto`** (`.journal-card` in
+  `styles.css`), so cards far off screen hold a guessed height until drawn.
+  A smooth jump drifts as the cards it passes take their real size, so jumps
+  to a quest card go through `utils/settledScroll.ts::scrollIntoViewSettled`.
+  Diary and Combat Achievement cards don't use it: a diary jump landed
+  100 px short with it. In browser automation, Playwright's `getByRole`
+  computes accessibility for the whole page, which draws every skipped card
+  and hides both the speed-up and the drift; click with page JS instead.
+- **The Resource Engine table loads only when needed.** GoalTracker mounts
+  only for runs with pinned goals and imports `utils/supplyChain` only when a
+  pin is a Resource Engine item; the route view loads on its first open.
+  The idle prefetch still warms the Supply Chain calculator after onboarding.
 
 ## 5. Web release handoff
 
@@ -460,12 +498,23 @@ setting after the workflow first appears.
 
 Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
-in `scripts/check-entry-budget.mjs` (225 kB; about 217 kB after the 24 Sept
+in `scripts/check-entry-budget.mjs` (231 kB; about 217 kB after the 24 Sept
 2026 review moved on-demand screens and the release notes out of it, and
 about 224 kB in October 2026, after online backup and Paste from RuneLite;
 raised to 226 kB on 9 October 2026, when the entry sat at 224.9-225.0 kB and
 builds of the same commit landed either side of 225, so the main-branch
-deploy of #92 failed while its PR passed). An
+deploy of #92 failed while its PR passed; raised to 228 kB on 13 October
+2026, when the save-safety checks that recovery needs at startup and the
+crash-report hook put the entry at 226.1 kB; it was then raised step by
+step to 256 kB by 18 October 2026, and lowered to 219 kB on 19 October
+2026, when the Advisor panels, the Activities sub-panels, the RuneLite
+bundle builder and the content service behind the journal routes moved
+behind lazy loads and the entry fell from 254.8 to 216.1 kB). The 225 kB split came from the build
+id stamped into the entry: CI built with a 13-digit timestamp and the deploy
+with the 40-character commit SHA. CI now stamps the SHA too (on a pull
+request, its merge commit's), and a build without `BUILD_ID` stamps a random
+40-character hex id. The id's own digits still move the gzip size by up to
+about 20 bytes between builds, but no longer by a fixed 32. An
 overrun usually means something that should load through `lazyWithRetry` was
 imported eagerly. Inspect the built file for content markers rather than
 relying only on the import graph, and raise the budget only on purpose.

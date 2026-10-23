@@ -8,6 +8,7 @@ import { TableType } from '../types';
 import { randomUnlockPool, randomUnlockTables } from '../utils/gameEngine';
 import { chanceWithin, keyVelocity, forecastTarget, keysToTarget, rangeShare } from '../utils/fateForecast';
 import { tableDisplayName } from '../utils/tableDisplay';
+import './osrs/osrs-windows-a.css';
 
 interface Props {
   onClose: () => void;
@@ -73,32 +74,33 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="Fate Forecast"
     >
       <div
-        className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[80vh] flex flex-col overflow-hidden"
+        data-osrs-win="forecast"
+        className="osrs-wa-win bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[80vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
-          <div className="p-2 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/30 text-fuchsia-300">
+        <div className="osrs-wa-head flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
+          <div className="osrs-wa-hicon p-2 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/30 text-fuchsia-300">
             <Sparkles size={18} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Fate Forecast <SectionGuide id="FORECAST" /></h2>
-            <p className="text-[11px] text-gray-500 mt-1">How many Keys, and how long, until you draw something specific from each category.</p>
+          <div className="osrs-wa-htext flex-1 min-w-0">
+            <h2 className="osrs-wa-title text-base font-bold text-white leading-none flex items-center gap-1.5">Fate Forecast <SectionGuide id="FORECAST" /></h2>
+            <p className="osrs-wa-sub text-[11px] text-gray-500 mt-1">How many Keys, and how long, until you draw something specific from each category.</p>
           </div>
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1a1a1a] border border-white/10" title="Keys earned per day, from your history">
+          <div className="osrs-wa-hchip hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1a1a1a] border border-white/10" title="Keys earned per day, from your history">
             <Gauge size={13} className="text-emerald-400" />
             <span className="text-[11px] text-gray-300">
               {velocity.ok ? <>~{velocity.keysPerDay.toFixed(1)} <span className="text-gray-500">Keys/day</span></> : <span className="text-gray-500">pace: n/a</span>}
             </span>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors" aria-label="Close"><X size={18} /></button>
+          <button onClick={onClose} className="osrs-wa-close p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors" aria-label="Close"><X size={18} /></button>
         </div>
 
         {categories.length === 0 ? (
@@ -107,10 +109,10 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
             <p className="text-[13px]">No eligible unlocks in these categories right now. Check remaining unlocks and location requirements.</p>
           </div>
         ) : (
-          <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2">
+          <div className="osrs-wa-split flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2">
             {/* Category board */}
-            <div className="flex flex-col min-h-0 border-r border-white/10">
-              <div className="px-3 py-2 text-[9px] uppercase tracking-widest text-gray-500 border-b border-white/5 shrink-0">
+            <div className="osrs-wa-side flex flex-col min-h-0 border-r border-white/10">
+              <div className="osrs-wa-listhead px-3 py-2 text-[9px] uppercase tracking-widest text-gray-500 border-b border-white/5 shrink-0">
                 Category · Keys for one, half the time
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -120,7 +122,8 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                     <button
                       key={c.table}
                       onClick={() => setSelected(c.table)}
-                      className={`w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
+                      data-osrs-on={isActive ? 'true' : undefined}
+                      className={`osrs-wa-row w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
                         isActive ? 'bg-fuchsia-950/40 border border-fuchsia-500/40' : 'border border-transparent hover:bg-white/5'
                       }`}
                     >
@@ -140,7 +143,7 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
             </div>
 
             {/* Detail */}
-            <div className="flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
+            <div className="osrs-wa-content flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
               {active?.table === TableType.CHUNKS && <p className="text-sm text-gray-300">There are {active.remaining} adjacent chunks eligible now. Your next Chunk unlock has a 1 in {active.remaining} chance for each. The frontier changes after every roll, so a fixed waiting-time estimate would be misleading.</p>}
               {active && forecast && (
                 <div className="space-y-4 animate-in fade-in duration-200">
@@ -165,12 +168,12 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
                       A {percent(rangeShare(forecast.keys))} chance within <span className="text-gray-300 font-semibold">{forecast.keys.p10}–{forecast.keys.p90}</span> Keys
                       {forecast.days && <> · ≈ <span className="text-emerald-300 font-semibold">{fmtDays(forecast.days.p50)}</span> at your pace</>}
                     </div>
-                    <div className="relative h-2 mt-3 rounded-full bg-black/50 border border-white/5 overflow-hidden">
+                    <div className="osrs-wa-meter relative h-2 mt-3 rounded-full bg-black/50 border border-white/5 overflow-hidden">
                       <div
-                        className="absolute h-full bg-fuchsia-500/30"
+                        className="osrs-wa-meter-fill osrs-wa-range absolute h-full bg-fuchsia-500/30"
                         style={{ left: `${(forecast.keys.p10 / forecast.keys.remaining) * 100}%`, width: `${((forecast.keys.p90 - forecast.keys.p10) / forecast.keys.remaining) * 100}%` }}
                       />
-                      <div className="absolute top-0 h-full w-0.5 bg-fuchsia-300" style={{ left: `${(forecast.keys.p50 / forecast.keys.remaining) * 100}%` }} />
+                      <div className="osrs-wa-meter-tick absolute top-0 h-full w-0.5 bg-fuchsia-300" style={{ left: `${(forecast.keys.p50 / forecast.keys.remaining) * 100}%` }} />
                     </div>
                     <p className="text-[9px] text-gray-600 mt-2">Estimates apply to the currently eligible pool and assume no location changes or other spending. Ineligible entries have a 0% chance on the next roll.</p>
                   </div>

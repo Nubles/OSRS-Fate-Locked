@@ -36,7 +36,7 @@ describe('second audit permission regressions', () => {
     const row = () => buildChunkPermissionSnapshot(service.contentFor(loc.cx, loc.cy)!, loc,
       { unlocks: state, gameModeId: 'vanilla', contentService: service })
       .categories.QUESTS!.find(row => row.name === 'The Restless Ghost')!;
-    expect(row()).toMatchObject({ status: 'NOT_READY', detail: expect.stringMatching(/Neck.*T1.*ghostspeak/) });
+    expect(row()).toMatchObject({ status: 'NOT_READY', detail: expect.stringMatching(/Neck T1/) });
     state.equipment.Neck = 1;
     expect(row().status).toBe('ALLOWED');
   });
@@ -128,7 +128,9 @@ describe('second audit permission regressions', () => {
       itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
     });
     expect(manifest.chunks['50,50'].entry).toBe('ALLOWED');
-    expect(manifest.chunks['50,50'].categories.QUESTS!.find(row => row.name === "Cook's Assistant")?.status).toBe('ALLOWED');
+    // Cook's Assistant starts here, but a fresh run has no milk source in its
+    // chunks yet (Chunked counts content only in owned chunks).
+    expect(manifest.chunks['50,50'].categories.QUESTS!.find(row => row.name === "Cook's Assistant")?.status).toBe('LOCKED');
     // The app-authored v4 snapshot must survive bundling, less the fields no
     // installed reader uses; legacy chunk ownership remains a distinct,
     // explicitly present field even when empty.

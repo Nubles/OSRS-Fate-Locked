@@ -4,11 +4,10 @@ import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
-import { travelReachability } from '../utils/travelReach';
-import { CHUNKED_START } from '../utils/chunkAdjacency';
+import { cachedChunkedQuestReach } from '../utils/chunkedQuestReach';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
-import { questLocations } from '../utils/questLocations';
-import { questChunkStatus, doabilityBucket, DoabilityBucket, entryBlockedGate, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
+import { chunkAreaLabelAt } from '../utils/chunkPlaceLabel';
+import { questChunkStatus, doabilityBucket, DoabilityBucket, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
   evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
@@ -50,7 +49,7 @@ export interface QuestDoabilityEvaluation {
   otherRequirements: string[];
 }
 
-interface Row extends QuestDoabilityEvaluation {
+export interface Row extends QuestDoabilityEvaluation {
   strandedChunk: { cx: number; cy: number; label: string } | null;
 }
 
@@ -152,8 +151,10 @@ export const evaluateQuestDoability = (
   } else if (!isChunked) {
     bucket = reqsMet ? 'DOABLE' : 'REQS';
   } else {
+    // A catalogue quest with no place at all (Learning the Ropes, on
+    // Tutorial Island) reads as the Journal reads it, not as missing data.
     bucket = doabilityBucket(
-      false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest),
+      false, reqsMet, chunk, hasCanonicalQuestLocationEvidence(quest) || !!QUEST_DATA[quest.id],
     );
   }
 
@@ -197,7 +198,52 @@ export const questDoabilityRequirementLabels = (
   ...row.manualChecks.map(check => `Confirm: ${check}`),
   ...row.otherRequirements,
 ];
-export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
+/**
+ * Every quest's Chunked doability, walked from the free start chunk. Needs
+ * chunkContentService to be ready. Fate's Mercy reads it too: it stays shut
+ * while a quest here is doable.
+ */
+export const chunkedQuestRows = (
+  unlocks: UnlockState, gameModeId: string, areaRoutes?: AreaRoutes | null,
+): Row[] => {
+  // Walk from the free start chunk the map and RuneLite export use, gated on
+  // per-chunk quest-entry requirements (questSections), so a quest whose step
+  // sits behind an un-done quest reads correctly. The Journal walks the same.
+  const reach = cachedChunkedQuestReach(chunkContentService.connectGraph(), chunkContentService.questSections(), unlocks);
+  const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
+  return Object.values(QUEST_DATA).map((q) => {
+    const hit = chunkContentService.entityLocations(q.id, ['quest']);
+    let reachable = reach.reachable;
+    const extra = (hit?.locations ?? []).map(({ cx, cy }) => String(cx * 256 + cy))
+      .filter(id => !reachable.has(id) && reach.reaches(q.id, id));
+    if (extra.length) reachable = new Set([...reachable, ...extra]);
+    const chunk = hit ? questChunkStatus(hit.locations, reachable as Set<string>, isUnlocked) : null;
+    const chunkLockedAreas = chunk?.access === 'LOCKED'
+      ? chunk.blockers.filter(blocker => blocker.access === 'LOCKED').map(blocker => chunkAreaLabelAt(blocker.cx, blocker.cy))
+      : [];
+    const evaluation = evaluateQuestDoability(
+      q, unlocks, chunk, chunkLockedAreas, gameModeId, areaRoutes,
+    );
+    const strandedFirst = evaluation.bucket === 'STRANDED'
+      ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
+      : null;
+    const strandedChunk = strandedFirst
+      ? {
+          cx: strandedFirst.cx,
+          cy: strandedFirst.cy,
+          label: placeOf(strandedFirst.cx, strandedFirst.cy).label,
+        }
+      : null;
+
+    return { ...evaluation, strandedChunk };
+  });
+};
+
+/**
+ * Every quest's doability bucket (by chunk reachability in Chunked mode, by
+ * area unlocks otherwise), shared by this panel and the OSRS Journal window.
+ */
+export const useQuestDoabilityRows = () => {
   const { unlocks, gameModeId } = useGame();
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const isChunked = gameModeId === 'chunked';
@@ -205,7 +251,6 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
   useEffect(() => {
     if (isChunked && !ready) chunkContentService.init().then(() => setReady(true));
   }, [isChunked, ready]);
-  const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const rows = useMemo<Row[]>(() => {
     if (!isChunked) {
@@ -215,38 +260,19 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
       }));
     }
     if (!ready) return [];
-    // Gate reachability on per-chunk quest-entry requirements (questSections),
-    // so a quest whose step sits behind an un-done quest reads correctly.
-    const completed = new Set<string>(unlocks.quests as string[]);
-    const known = new Set<string>(Object.keys(QUEST_DATA));
-    const gate = entryBlockedGate(chunkContentService.questSections(), completed, known);
-    // Walk from the free start chunk the map and RuneLite export use; the
-    // Lumbridge place chunk is only corner-adjacent to it and starts locked.
-    const reach = travelReachability(chunkContentService.connectGraph(), unlocks, CHUNKED_START, gate, gameModeId);
-    const isUnlocked = (cx: number, cy: number) => chunkUnlocked(cx, cy, unlocks, gameModeId);
-    return Object.values(QUEST_DATA).map((q) => {
-      const hit = chunkContentService.entityLocations(q.id, ['quest']);
-      const chunk = hit ? questChunkStatus(hit.locations, reach.reachable, isUnlocked) : null;
-      const chunkLockedAreas = chunk?.access === 'LOCKED'
-        ? questLocations(q.id, unlocks, gameModeId).lockedPlaces.map(place => place.label)
-        : [];
-      const evaluation = evaluateQuestDoability(
-        q, unlocks, chunk, chunkLockedAreas, gameModeId, areaRoutes,
-      );
-      const strandedFirst = evaluation.bucket === 'STRANDED'
-        ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
-        : null;
-      const strandedChunk = strandedFirst
-        ? {
-            cx: strandedFirst.cx,
-            cy: strandedFirst.cy,
-            label: placeOf(strandedFirst.cx, strandedFirst.cy).label,
-          }
-        : null;
-
-      return { ...evaluation, strandedChunk };
-    });
+    return chunkedQuestRows(unlocks, gameModeId, areaRoutes);
   }, [ready, unlocks, gameModeId, isChunked, areaRoutes]);
+
+  return { rows, isChunked, ready };
+};
+
+export type QuestDoabilityRow = Row;
+export const QUEST_DOABILITY_BUCKET_LABEL = (bucket: DoabilityBucket, isChunked: boolean): string =>
+  !isChunked && bucket === 'REQS' ? 'Requirements remaining' : BUCKET_META[bucket].label;
+
+export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
+  const { rows, isChunked, ready } = useQuestDoabilityRows();
+  const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const filtered = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();

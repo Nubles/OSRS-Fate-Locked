@@ -1,4 +1,5 @@
 import { TableType } from '../types';
+import { usesActivityKeyReserves } from '../config/gameModes';
 
 /**
  * Vanilla-mode hard geographic gates for activities.
@@ -64,6 +65,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Vorkath: ['Rellekka'],
   // Each entrance's chunk, as the map owns it.
   'Tombs of Amascut': ['Sophanem'],
+  'The Fractured Archive': ['Lumbridge'],
   Nex: ['Burthorpe'],
   'General Graardor': ['Burthorpe'],
   'Commander Zilyana': ['Burthorpe'],
@@ -87,6 +89,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   // Captain Ginea runs it from the Shayzien encampment, 23,56 (accuracy audit G1).
   'Intelligence Gathering': ['Shayzien'],
   'Last Man Standing': ['Ferox Enclave'],
+  "Pete Kayer's Challenges": ['Ferox Enclave'],
   'Mage Arena': ['Mage Arena'],
   'Nightmare Zone': ['Yanille'],
   'Pest Control': ["Void Knights' Outpost"],
@@ -131,9 +134,31 @@ export const NO_HARD_LOCATION_GATE = new Set<string>([
   'Impetuous Impulses', // no tracked named-area gate (multiple crop-circle entrances)
   'Mahogany Homes', // no tracked named-area gate (distributed contracts)
   'Forestry', // no tracked named-area gate (world event)
-  'Rat Pits', // no tracked named-area gate (multiple venues)
   'Barracuda Trials', // no tracked named-area gate (untracked Sailing destinations)
 ]);
+
+/**
+ * Chunked mode places each activity by the chunks it is entered from
+ * (data/activityChunks.ts, generated from the chunk data). These have no single
+ * entrance, so each follows its own rule instead.
+ */
+export type ChunkedActivityRule =
+  | { kind: 'anywhere'; reason: string }
+  | { kind: 'sailing'; reason: string }
+  | { kind: 'not-random'; needs: string; reason: string };
+
+export const CHUNKED_ACTIVITY_RULES: Readonly<Record<string, ChunkedActivityRule>> = {
+  Forestry: { kind: 'anywhere', reason: 'A world event that comes to any group of trees.' },
+  'Barracuda Trials': {
+    kind: 'sailing',
+    reason: 'Raced at sea in your own boat, so it counts once the run can sail (Sailing and Pandemonium).',
+  },
+  Mimic: {
+    kind: 'not-random',
+    needs: 'a Mimic casket from an Elite or Master clue',
+    reason: 'Fought from a casket out of an Elite or Master clue, which no chunk holds and the tracker does not follow, so random Keys skip it. An Omni-Key can still pick it.',
+  },
+};
 
 /** Policy metadata consumed by vanilla random-unlock and omni-direct flows. */
 export interface VanillaRandomAccessPolicy {
@@ -176,7 +201,7 @@ export const validateEmptyRandomPoolHandling = (
   cost: 'key' | 'chaosKey',
   policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): void => {
-  if (modeId === 'vanilla' && policy.randomCosts.includes(cost)) {
+  if (usesActivityKeyReserves(modeId) && policy.randomCosts.includes(cost)) {
     validateVanillaRandomAccessPolicy(policy);
   }
 };

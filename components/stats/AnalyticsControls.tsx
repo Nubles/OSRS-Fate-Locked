@@ -19,7 +19,7 @@ const parseScope = (value: string): AnalyticsScope => {
   return { kind: 'source', value: value.slice('source:'.length) };
 };
 
-const selectClass = 'rounded-lg border border-white/10 bg-[#202020] px-3 py-1.5 text-sm text-gray-200 hover:border-white/20 focus:border-amber-400/60 focus:outline-none';
+const selectClass = 'osrs-wa-select rounded-lg border border-white/10 bg-[#202020] px-3 py-1.5 text-sm text-gray-200 hover:border-white/20 focus:border-amber-400/60 focus:outline-none';
 
 /** One badge for data quality, with the full count table behind it. */
 const DataQuality: React.FC<{ coverage: AnalyticsCoverage }> = ({ coverage }) => {
@@ -47,7 +47,8 @@ const DataQuality: React.FC<{ coverage: AnalyticsCoverage }> = ({ coverage }) =>
     <details className="group relative">
       <summary
         aria-live="polite"
-        className={`flex cursor-pointer list-none items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold [&::-webkit-details-marker]:hidden ${clean
+        data-osrs-clean={clean ? 'true' : 'false'}
+        className={`osrs-wa-quality flex cursor-pointer list-none items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold [&::-webkit-details-marker]:hidden ${clean
           ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-300'
           : 'border-amber-400/30 bg-amber-400/10 text-amber-200'}`}
       >
@@ -55,7 +56,7 @@ const DataQuality: React.FC<{ coverage: AnalyticsCoverage }> = ({ coverage }) =>
         {coverage.attempts === 0 ? 'No rolls selected' : clean ? `All ${plural(coverage.attempts, 'roll')} verified` : plural(notes.length, 'data note')}
         <ChevronDown size={12} aria-hidden="true" className="transition-transform group-open:rotate-180" />
       </summary>
-      <div className="absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#1c1c1c] p-4 text-xs text-gray-300 shadow-2xl">
+      <div className="osrs-wa-pop absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 bg-[#1c1c1c] p-4 text-xs text-gray-300 shadow-2xl">
         {clean
           ? <p>Every selected roll has a verified outcome and exact odds.</p>
           : <ul className="list-disc space-y-1 pl-4">{notes.map(note => <li key={note}>{note}</li>)}</ul>}
@@ -73,7 +74,7 @@ export const AnalyticsControls: React.FC<AnalyticsControlsProps> = ({ query, onC
   const exactOnly = !query.includeLegacyEstimates;
   const filtersActive = query.range !== 'all' || query.scope.kind !== 'all' || exactOnly;
   return (
-    <section aria-label="Analytics filters" className="border-b border-white/5 bg-[#151515] px-5 py-3">
+    <section aria-label="Analytics filters" className="osrs-wa-filters border-b border-white/5 bg-[#151515] px-5 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
           Range
@@ -91,7 +92,7 @@ export const AnalyticsControls: React.FC<AnalyticsControlsProps> = ({ query, onC
         </label>
         <label
           title="Leave out rolls from older saves whose odds were estimated"
-          className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${exactOnly || exactOnlyAvailable ? 'cursor-pointer border-white/10 text-gray-200 hover:border-white/20' : 'border-white/5 text-gray-600'}`}
+          className={`osrs-wa-checkbtn flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${exactOnly || exactOnlyAvailable ? 'cursor-pointer border-white/10 text-gray-200 hover:border-white/20' : 'border-white/5 text-gray-600'}`}
         >
           <input type="checkbox" aria-label="Exact odds only" className="accent-amber-400" checked={exactOnly} disabled={!exactOnly && !exactOnlyAvailable} onChange={event => onChange({ ...query, includeLegacyEstimates: !event.target.checked })} />
           Exact odds only
@@ -101,7 +102,7 @@ export const AnalyticsControls: React.FC<AnalyticsControlsProps> = ({ query, onC
             type="button"
             aria-label="Reset filters"
             onClick={() => onChange(defaultResetQuery(query))}
-            className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-sm font-bold text-amber-200 hover:bg-amber-400/20"
+            className="osrs-wa-btn rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-1.5 text-sm font-bold text-amber-200 hover:bg-amber-400/20"
           >
             Reset filters
           </button>

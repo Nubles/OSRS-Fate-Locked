@@ -1,8 +1,12 @@
+// First, so it reports errors thrown while the modules below load.
+import './utils/errorBeacon';
 import { lazyWithRetry } from './utils/lazyRetry';
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles.css';
+import './components/osrs/osrs-skin.css';
+import { applyUiStyle } from './utils/uiStyle';
 // NOTE: deliberately no `vite:preloadError` handler here. Calling
 // event.preventDefault() makes Vite SWALLOW the failure — the dynamic import
 // then resolves with an undefined module and call sites crash with a mangled
@@ -16,16 +20,29 @@ import './styles.css';
 const StreamOverlay = lazyWithRetry(() => import('./components/StreamOverlay'));
 const isOverlay = window.location.hash.startsWith('#/overlay');
 
+// Set <html data-ui> before the first paint so the OSRS skin never flashes.
+applyUiStyle();
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    {isOverlay
-      ? <Suspense fallback={null}><StreamOverlay /></Suspense>
-      : <App />}
-  </React.StrictMode>
-);
+const start = () => {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      {isOverlay
+        ? <Suspense fallback={null}><StreamOverlay /></Suspense>
+        : <App />}
+    </React.StrictMode>
+  );
+};
+
+// The private preview build carries its own copies of wiki images; the live
+// build drops this branch at compile time.
+if (import.meta.env.VITE_PREVIEW_IMAGE_PACK === '1') {
+  import('./utils/previewImagePack').then(m => m.installPreviewImagePack()).catch(() => {}).finally(start);
+} else {
+  start();
+}

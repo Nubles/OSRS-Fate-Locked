@@ -1,16 +1,18 @@
 
 import { UnlockState, TableType } from '../types';
+import { usesActivityKeyReserves } from '../config/gameModes';
 import { SKILLS_LIST, EQUIPMENT_SLOTS, MOBILITY_LIST, ARCANA_LIST, POH_LIST, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, isFrontierChunk } from './chunkAdjacency';
 import { BANK_IDS } from '../data/banks';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
-import { getActivityAccess } from './activityAccess';
+import { chunkedBankOwned, getActivityAccess, randomKeyActivityAccess } from './activityAccess';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { bankLocksActive, isAreaReachable } from './reachability';
 import { unlockableAreas } from './freeAreas';
 import type { GameModeRules } from '../config/gameModes';
 import { ROLLABLE_POH_ITEMS, ROLLABLE_STORAGE_ITEMS } from '../data/items';
+import { chunkedSkillRollable } from './chunkedSkillPool';
 
 /** The same tables and eligible entries drive rolls and their displayed odds. */
 export const randomUnlockTables = (mode?: string, custom?: GameModeRules): TableType[] => [
@@ -81,7 +83,10 @@ export interface RandomUnlockCandidate {
 
 /**
  * Applies the Vanilla exact-area policy only to random boss and minigame
- * unlocks. All other modes and tables retain their existing validity rules.
+ * unlocks, and Chunked's trainable-skill rule to random Skills unlocks. In
+ * Chunked, random Bosses, Minigames, Guilds and Banks also land only on places
+ * whose own chunk is owned. All other modes and tables retain their existing
+ * validity rules.
  */
 export const isRandomUnlockEligible = (
     table: TableType,
@@ -92,11 +97,16 @@ export const isRandomUnlockEligible = (
     policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
     if (!isValidUnlock(table, item, unlocks)) return false;
-    if (modeId !== 'vanilla') return true;
+    // Chunked: random Skills rolls only land on skills the run's chunks can train.
+    if (modeId === 'chunked' && table === TableType.SKILLS) return chunkedSkillRollable(item, unlocks);
+    if (!usesActivityKeyReserves(modeId)) return true;
     if (!policy.randomCosts.includes(randomCost)) return true;
+    // Chunked: a random bank or guild counts only in a chunk the run owns.
+    if (modeId === 'chunked' && table === TableType.BANKS) return chunkedBankOwned(item, unlocks);
+    if (modeId === 'chunked' && table === TableType.GUILDS) return randomKeyActivityAccess(item, unlocks, modeId).eligible;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
-    return getActivityAccess(item, unlocks, modeId).eligible;
+    return randomKeyActivityAccess(item, unlocks, modeId).eligible;
 };
 
 /** Whether an Omni direct selection may be confirmed under the shared Vanilla policy. */
@@ -107,7 +117,7 @@ export const isOmniDirectUnlockAvailable = (
     modeId: string,
     policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY,
 ): boolean => {
-    if (modeId !== 'vanilla') return true;
+    if (!usesActivityKeyReserves(modeId)) return true;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography || policy.omniDirect.allowsLocationIneligible) return true;
     return getActivityAccess(item, unlocks, modeId).eligible;

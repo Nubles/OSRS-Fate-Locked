@@ -79,4 +79,12 @@ describe('getUnlockRevealTransition', () => {
 
     expect(getUnlockRevealTransition(previous, current)).toBeNull();
   });
+
+  it('reveals nothing on a level-up, and still names only the newly visible areas', () => {
+    const previous = unlocks({ regions: ['Falador'], skills: { Attack: 3 }, levels: { Attack: 20 } });
+    const levelUp = { ...previous, levels: { Attack: 21 } };
+    expect(getUnlockRevealTransition(previous, levelUp)).toBeNull();
+    const withVarrock = { ...previous, regions: ['Falador', 'Varrock'] };
+    expect(getUnlockRevealTransition(previous, withVarrock)?.newRegions).toEqual(['Varrock']);
+  });
 });

@@ -224,12 +224,14 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
       expect(new TextEncoder().encode(body).byteLength).toBeLessThan(256 * 1024 - 16 * 1024);
       const worker = (await import('../workers/fate-relay/worker.js')).default;
       const put = vi.fn(async (_key: string, _value: string, _options?: unknown) => {});
-      const response = await worker.fetch(new Request('https://relay.test/r/catalogue-size', {
+      // A pairing code in RuneLite's form, the only one the relay accepts.
+      const code = 'ca7a1065e5121e00ca7a1065e5121e00';
+      const response = await worker.fetch(new Request(`https://relay.test/r/${code}`, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body,
       }), { RELAY: { get: async () => null, put } });
       expect(response.status).toBe(200);
       // The profile record, then the code's owner record (a token hash).
-      expect(put.mock.calls.map(([key]) => key)).toEqual(['r:catalogue-size', 'own:r:catalogue-size']);
+      expect(put.mock.calls.map(([key]) => key)).toEqual([`r:${code}`, `own:r:${code}`]);
     } finally {
       vi.unstubAllGlobals();
       vi.resetModules();

@@ -1,6 +1,9 @@
 import type React from 'react';
 import type { LucideProps } from 'lucide-react';
-import { Trophy, BookOpen, Dumbbell, MapPin, Shield, Map, Swords, Skull, Gamepad2, Library, Crown, Star, Sparkles, Flame } from './OsrsIcon';
+import {
+  Trophy, BookOpen, Dumbbell, MapPin, Shield, Map, Swords, Skull, Gamepad2, Library, Crown, Star, Sparkles, Flame,
+  Key, Gift, Wand2, Heart, Navigation, Zap, Home, ShoppingBag, Package, Users, Sprout, Landmark,
+} from './OsrsIcon';
 import type { AchievementIcon } from '../utils/achievements';
 
 /**
@@ -24,4 +27,17 @@ export const ACHIEVEMENT_ICON: Record<AchievementIcon, React.ComponentType<Lucid
   map: Map,
   sparkles: Sparkles,
   flame: Flame,
+  key: Key,
+  chaos: Gift,
+  altar: Wand2,
+  pet: Heart,
+  mobility: Navigation,
+  arcana: Zap,
+  housing: Home,
+  merchant: ShoppingBag,
+  storage: Package,
+  guild: Users,
+  farming: Sprout,
+  slayer: Skull,
+  bank: Landmark,
 };

@@ -30,10 +30,10 @@ export function RollInboxDriver() {
   stateRef.current = game;
 
   useEffect(() => {
-    // Current RuneLite builds keep observations local and only read the
-    // app-authored profile from the relay. Retain classification for rows
-    // migrated from older browser sessions, but never poll or acknowledge the
-    // legacy /events and /acks resources.
+    // RuneLite keeps observations local and only reads the app-authored
+    // profile from the relay. Retain classification for rows migrated from
+    // older browser sessions; the relay has no event or acknowledgement
+    // resources any more.
     const current = stateRef.current;
     for (const row of store.list()) {
       if (TERMINAL.has(row.state)) continue;

@@ -9,9 +9,13 @@ import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { TIER_LABELS } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
+import { useIsOsrsUi } from '../utils/uiStyle';
 const GearView = lazyWithRetry(() => import('./GearView').then(module => ({ default: module.GearView })));
 import { SectionGuide } from './SectionGuide';
 const DpsCalc = lazyWithRetry(() => import('./DpsCalc').then(module => ({ default: module.DpsCalc })));
+// OSRS layout (utils/uiStyle): the worn-equipment interface. Lazy so the
+// classic entry chunk does not grow.
+const OsrsEquipment = lazyWithRetry(() => import('./osrs/OsrsEquipment').then(module => ({ default: module.OsrsEquipment })));
 
 const slotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -22,7 +26,13 @@ interface Props {
   suspendModals?: boolean;
 }
 
-export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false }) => {
+export const EquipmentLab: React.FC<Props> = (props) => (
+  useIsOsrsUi()
+    ? <Suspense fallback={null}><OsrsEquipment {...props} /></Suspense>
+    : <ClassicEquipmentLab {...props} />
+);
+
+const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false }) => {
   const { unlocks, specialKeys } = useGame();
   const equipment = unlocks.equipment;
 
@@ -67,7 +77,7 @@ export const EquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
+      <div className="flex flex-wrap lg:flex-nowrap gap-2 lg:gap-0 justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
         <div className="flex items-center gap-3">
           <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" suspendModals={suspendModals} /></h3>
           {/* Tiers / Gear mode toggle */}

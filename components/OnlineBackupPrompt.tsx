@@ -34,9 +34,29 @@ export const OnlineBackupPrompt: React.FC = () => {
     return () => window.removeEventListener(ONLINE_BACKUP_EVENT, onChange);
   }, [storageKey]);
 
+  const setUp = () => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:online-backup' } }));
+
+  // Uploads wait for the player: the choice itself is on the Online backup tab.
+  if (record.code && record.held) {
+    return (
+      <div className="max-w-[1600px] mx-auto px-4 pt-3">
+        <div role="region" aria-label="Online backup paused"
+          className="flex flex-wrap items-center gap-3 bg-amber-950/40 border border-amber-500/30 rounded-lg px-3 py-2 text-[12px] text-amber-100/90 animate-in fade-in slide-in-from-top-1">
+          <Landmark size={16} aria-hidden className="shrink-0" />
+          <span className="min-w-0 flex-1 basis-full sm:basis-auto">
+            Online backup is paused: backing up this run would replace your online backup of {record.held === 'other-run' ? 'a different run' : 'a longer run'}.
+          </span>
+          <button type="button" onClick={setUp}
+            className="shrink-0 px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-500 text-white font-bold">
+            Choose
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (record.code || record.promptAnsweredAt || history.length < ONLINE_BACKUP_PROMPT_MIN_HISTORY) return null;
 
-  const setUp = () => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:online-backup' } }));
   const notNow = () => writeOnlineBackupRecord(storageKey, { ...readOnlineBackupRecord(storageKey), promptAnsweredAt: Date.now() });
 
   return (
