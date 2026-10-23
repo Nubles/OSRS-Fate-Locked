@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import type { FateMark, GameState } from '../types';
+import type { FateLand, GameState } from '../types';
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { mapImageIndexForScale } from '../utils/mapImageSize';
 import { CHUNKED_START_KEY, chunkKey, getChunkFrontier } from '../utils/chunkAdjacency';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
-import { CHUNK_PX, FATE_MARK_EFFECTS, MARK_NAME, isBaneMark, omenColor, spinHopTimes, spinHops, spinWindow, type SpinWindow } from '../utils/fateMap';
+import { CHUNK_PX, spinHopTimes, spinHops, spinWindow, type SpinWindow } from '../utils/fateMap';
+import { fateBeats } from '../utils/fateSiteMap';
 import { dimPixels, dissolvePixels, fogPixels, inkNoise, sketchPixels } from '../utils/fateSketch';
 import { useRevealHost } from './osrs/OsrsKeysState';
 
@@ -26,8 +27,8 @@ interface Props {
   osrs: boolean;
   /** OSRS: draw inside the Spend Keys board's reveal window when it is open. */
   docked?: boolean;
-  /** The omen fate drew on the chunk, shown once its colour fills in. */
-  omen?: FateMark;
+  /** The run's fate: the seal, site and omen of the chunk show once its colour fills in. */
+  land?: FateLand;
   onDone: () => void;
 }
 
@@ -40,8 +41,9 @@ const SKETCH_MS = 800;
 const COLOUR_AT = SKETCH_AT + SKETCH_MS + 350;
 const COLOUR_MS = 700;
 const END = COLOUR_AT + COLOUR_MS + 650;
-/** Extra time to read the chunk's omen before the reveal. */
+/** Extra time to read the chunk's omen before the reveal, and for each further line. */
 const OMEN_HOLD = 1100;
+const BEAT_HOLD = 900;
 /** Without even the small map after this long, skip the spin rather than hold up the reveal. */
 const LOAD_GIVE_UP = 2500;
 
@@ -76,7 +78,8 @@ const buildLayers = (src: CanvasImageSource, sx: number, sy: number, sw: number,
   };
 };
 
-const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, omen, onDone }) => {
+const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, land, onDone }) => {
+  const beats = useMemo(() => fateBeats(chunk, land), [chunk, land]);
   const host = useRevealHost();
   const inDock = osrs && docked && !!host;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -274,8 +277,8 @@ const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, o
       }
 
       if (!wasLanded && t >= LAND) { wasLanded = true; setLanded(true); }
-      if (omen && !wasOmen && t >= COLOUR_AT + COLOUR_MS) { wasOmen = true; setOmenShown(true); }
-      if (t >= (omen ? END + OMEN_HOLD : END)) { finish(); return; }
+      if (beats.length > 0 && !wasOmen && t >= COLOUR_AT + COLOUR_MS) { wasOmen = true; setOmenShown(true); }
+      if (t >= (beats.length > 0 ? END + OMEN_HOLD + BEAT_HOLD * (beats.length - 1) : END)) { finish(); return; }
       raf = requestAnimationFrame(frame);
     }
 
@@ -288,8 +291,8 @@ const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, o
   }, [plan]);
 
   const caption = landed ? `Fate drew ${place}.` : 'Fate spins along your border...';
-  // The second beat: once the chunk is in colour, the omen fate drew on it.
-  const omenText = omen && omenShown ? `${isBaneMark(omen) ? 'A bane' : 'A boon'}: ${MARK_NAME[omen]}. ${FATE_MARK_EFFECTS[omen]}` : null;
+  // The second beat: once the chunk is in colour, what fate did with it.
+  const shown = omenShown ? beats : [];
   const map = (
     <canvas ref={canvasRef} role="img" aria-label={`The world map around ${place}`}
       style={{ display: 'block', width: plan.win.cols * CELL, maxWidth: '100%', height: 'auto', aspectRatio: `${plan.win.cols} / ${plan.win.rows}` }} />
@@ -305,7 +308,7 @@ const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, o
         <div className="osrs-inner ospend-rv-body" style={{ minHeight: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: '12px 8px', background: '#120e0b' }}>
           <div style={{ border: '2px solid #000', boxShadow: '0 0 0 1px var(--osrs-bevel-hi, #5c5244), 0 0 0 3px #000', background: '#0e0c0a', maxWidth: '100%' }}>{map}</div>
           <span aria-live="polite" style={{ font: "16px 'RSBold', sans-serif", color: landed ? '#ffff00' : '#c77dff', textAlign: 'center', ...sh }}>{caption}</span>
-          {omenText && <span aria-live="polite" data-omen={omen} style={{ font: "16px 'RS', sans-serif", color: omenColor(omen!), textAlign: 'center', ...sh }}>{omenText}</span>}
+          {shown.map(beat => <span key={beat.text} aria-live="polite" data-beat style={{ font: "16px 'RS', sans-serif", color: beat.color, textAlign: 'center', ...sh }}>{beat.text}</span>)}
           <span style={{ font: "16px 'RSSmall', 'RS', sans-serif", color: 'var(--osrs-tan, #c8b897)', ...sh }}>Click or press Space to skip</span>
         </div>
       </>
@@ -337,7 +340,7 @@ const FateDrawsMap: React.FC<Props> = ({ chunk, unlocks, osrs, docked = false, o
         {/* A clue-scroll map: parchment frame around the piece of the world. */}
         <div style={{ padding: 8, background: '#b8995e', border: '2px solid #3b2a14', boxShadow: 'inset 0 0 0 2px #d9c18a, inset 0 0 0 6px #8a6a38, 0 10px 40px rgba(0,0,0,.6)', maxWidth: '100%' }}>{map}</div>
         <div aria-live="polite" className={`text-base font-semibold ${landed ? 'text-yellow-300' : 'text-purple-300'}`}>{caption}</div>
-        {omenText && <div aria-live="polite" data-omen={omen} className={`text-sm text-center max-w-md ${isBaneMark(omen!) ? 'text-red-300' : 'text-green-300'}`}>{omenText}</div>}
+        {shown.map(beat => <div key={beat.text} aria-live="polite" data-beat className="text-sm text-center max-w-md" style={{ color: beat.color }}>{beat.text}</div>)}
         <div className="text-[11px] text-gray-500">Click or press Space to skip</div>
       </div>
     </div>

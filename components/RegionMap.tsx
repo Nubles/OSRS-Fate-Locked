@@ -17,9 +17,10 @@ import { chunkContentService, type OverlayPoint } from '../services/ChunkContent
 import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
-import { CHUNKED_START, CHUNKED_START_KEY, getChunkFrontier, isChunkUnlocked } from '../utils/chunkAdjacency';
+import { CHUNKED_START, CHUNKED_START_KEY, chunkRegion, getChunkFrontier, isChunkUnlocked } from '../utils/chunkAdjacency';
 import { threadLeaning } from '../utils/fateLand';
-import { THREAD_GOLD, THREAD_LEANING_LINE, markLine, threadLines } from '../utils/fateMap';
+import { THREAD_GOLD, THREAD_LEANING_LINE, markLine, sealLine, siteLine, threadLines } from '../utils/fateMap';
+import { sealEdges, sightedSites } from '../utils/fateSiteMap';
 import { setFateMapPref, useFateMapPref } from '../utils/fateMapPrefsHook';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { FateLandLayer } from './FateLandLayer';
@@ -718,6 +719,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   const fogPref = useFateMapPref('fog');
   const fogOn = isChunked && fogPref;
   const marksOn = useFateMapPref('marks');
+  const sitesOn = useFateMapPref('sites');
   const fateView = useMemo(() => {
     if (!isChunked) return null;
     const held = new Set([CHUNKED_START_KEY, ...chunkUnlocks, ...chunkedOpenSea]);
@@ -725,17 +727,37 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const thread = fateLand?.thread && !held.has(fateLand.thread) ? fateLand.thread : undefined;
     // A Tangled chunk spares the next draw from the thread's pull: no leaning shown.
     const leaning = fateLand?.tangled ? [] : threadLeaning([...frontier], thread);
-    return { held, frontier, thread, leaning, marks: marksOn ? fateLand?.marks ?? {} : {} };
+    // Fated sites the run holds, the hidden ones it is near, and its seals.
+    const found = Object.fromEntries(Object.entries(fateLand?.sites ?? {}).filter(([key]) => held.has(key)));
+    const sealedBy = Object.entries(fateLand?.seals ?? {}).filter(([, key]) => key !== '' && held.has(key));
+    return {
+      held, frontier, thread, leaning, marks: marksOn ? fateLand?.marks ?? {} : {},
+      sites: sitesOn ? found : {},
+      sighted: sitesOn ? sightedSites(fateLand?.sites, held) : [],
+      sealed: sitesOn ? sealedBy.map(([, key]) => key) : [],
+      sealEdges: sitesOn ? sealEdges(held, chunkRegion, fateLand?.seals) : [],
+      sealOf: Object.fromEntries(sealedBy.map(([region, key]) => [key, region])) as Record<string, string>,
+    };
     // lensReady: the walk that finds the frontier loads with the chunk data.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isChunked, chunkUnlocks, chunkedOpenSea, unlocks, fateLand, lensReady, marksOn]);
+  }, [isChunked, chunkUnlocks, chunkedOpenSea, unlocks, fateLand, lensReady, marksOn, sitesOn]);
   /** The map's lines for a chunk fate has touched: its thread, its leaning frontier, its mark. */
   const fateLines = (key: string): string[] => {
     if (!fateView) return [];
     const lines: string[] = key === fateView.thread ? threadLines(chunkPlaceLabel(key))
       : fateView.leaning.includes(key) ? [THREAD_LEANING_LINE] : [];
+    const site = fateView.sites[key];
+    if (site) lines.push(siteLine(site));
+    if (fateView.sighted.includes(key)) lines.push('Fate hides a site here. Only a draw can find it.');
+    const region = fateView.sealOf[key];
+    if (region && fateView.sealed.includes(key)) lines.push(sealLine(region).replace('breaks', 'was broken here'));
     const mark = fateView.marks[key];
-    return mark ? [...lines, markLine(mark)] : lines;
+    if (mark) lines.push(markLine(mark));
+    const next = chunkRegion(key);
+    if (fateView.sealEdges.length > 0 && fateView.frontier.has(key) && next && fateLand?.seals && !(next in fateLand.seals)) {
+      lines.push(`Drawing this chunk breaks the seal of ${next}.`);
+    }
+    return lines;
   };
 
   const lensResult = useMemo(() => {
@@ -1646,7 +1668,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
           {fateView && !authoring && (
             <FateLandLayer osrs={osrs} fog={fogOn} held={fateView.held} frontier={fateView.frontier}
-              thread={fateView.thread} leaning={fateView.leaning} marks={fateView.marks} />
+              thread={fateView.thread} leaning={fateView.leaning} marks={fateView.marks}
+              sites={fateView.sites} sighted={fateView.sighted} sealed={fateView.sealed} sealEdges={fateView.sealEdges} />
           )}
 
           {/* Chunk-lens highlight overlay — inside the transformed layer so the
@@ -2212,6 +2235,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
               <button type="button" className={`osrs-btn${showGrid ? ' is-on' : ''}`} aria-pressed={showGrid} onClick={() => setShowGrid(g => !g)} title="Toggle chunk grid (64-tile)">Chunk grid</button>
               {isChunked && <button type="button" className={`osrs-btn${fogOn ? ' is-on' : ''}`} aria-pressed={fogOn} onClick={() => setFateMapPref('fog', !fogPref)} title="Fog over land you don't hold">Fog</button>}
               {isChunked && <button type="button" className={`osrs-btn${marksOn ? ' is-on' : ''}`} aria-pressed={marksOn} onClick={() => setFateMapPref('marks', !marksOn)} title="Fate's omen on each chunk you hold">Omens</button>}
+              {isChunked && <button type="button" className={`osrs-btn${sitesOn ? ' is-on' : ''}`} aria-pressed={sitesOn} onClick={() => setFateMapPref('sites', !sitesOn)} title="Fated sites and the borders of regions still sealed">Sites</button>}
               {canAuthor && <button type="button" className={`osrs-btn${authoring ? ' is-on' : ''}`} aria-pressed={authoring} onClick={() => setAuthoring(a => !a)} title="Toggle chunk authoring mode">Author</button>}
             </span>
           </div>
