@@ -417,7 +417,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Lost City': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Lost City', name: 'Lost City',
-    equipmentRequirements: [{ slot: 'Weapon', tier: 2, reason: 'Wield the dramen staff to enter Zanaris' }],
+    equipmentRequirements: [{ slot: 'Weapon', tier: 1, reason: 'Wield the dramen staff to enter Zanaris' }],
     regions: ['Lumbridge', 'Zanaris', 'Entrana'],
     skills: { 'Crafting': 31, 'Woodcutting': 36 }, prereqs: [], points: 3,
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -446,6 +446,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Taverley', 'Port Sarim', 'Entrana', 'Varrock', 'Brimhaven'],
     locations: [LOCATIONS.lavaMazeEntrance],
     skills: { 'Quest Points': 55, 'Cooking': 53, 'Fishing': 53, 'Herblore': 25, 'Mining': 50 }, prereqs: ['Shield of Arrav', 'Lost City', 'Merlin\'s Crystal', 'Dragon Slayer I'], points: 1,
+    // Slots checked on the Wiki (23 Oct): ice gloves.
+    equipmentRequirements: [
+      { slot: 'Gloves', tier: 1, reason: 'Wear the ice gloves to pick up the fire feather' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Scorpion Catcher': {
@@ -530,7 +534,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { 'Attack': 20 }, prereqs: ['Merlin\'s Crystal'], points: 2, series: 'Camelot',
     // Items checked on the Wiki: Excalibur (wielded).
     equipmentRequirements: [
-      { slot: 'Weapon', tier: 1, reason: 'Wield Excalibur for the killing blow on the Black Knight Titan (20 Attack, quest item)' },
+      { slot: 'Weapon', tier: 3, reason: 'Wield Excalibur (20 Attack) for the killing blow on the Black Knight Titan' },
     ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -565,6 +569,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Sheep Herder', name: 'Sheep Herder',
     regions: ['East Ardougne'],
     skills: {}, prereqs: [], points: 4,
+    // Slots checked on the Wiki (23 Oct): plague suit and cattleprod.
+    equipmentRequirements: [
+      { slot: 'Body', tier: 1, reason: 'Wear the plague jacket in the sheep enclosure' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the plague trousers in the sheep enclosure' },
+      { slot: 'Weapon', tier: 1, reason: 'Wield the cattleprod to herd the sheep' },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Plague City': {
@@ -640,6 +650,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Shilo Village', name: 'Shilo Village',
     regions: ['Shilo Village', 'Tai Bwo Wannai'],
     skills: { 'Crafting': 20, 'Agility': 32, 'Smithing': 4 }, prereqs: ['Jungle Potion'], points: 2,
+    // Slots checked on the Wiki (23 Oct): Beads of the Dead.
+    equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: "Wear the Beads of the Dead to enter Rashiliyia's tomb" },
+    ],
     // Items checked on the Wiki: Bronze wire.
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -648,6 +662,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Underground Pass', name: 'Underground Pass',
     regions: ['East Ardougne', 'West Ardougne'],
     skills: { 'Ranged': 25 }, prereqs: ['Biohazard'], points: 5, series: 'Elf',
+    // Slots checked on the Wiki (23 Oct): Klank's gauntlets (the Zamorak robes need Body and Legs, which Biohazard already needs).
+    equipmentRequirements: [
+      { slot: 'Gloves', tier: 2, reason: "Wear Klank's gauntlets to take Iban's dove" },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Observatory Quest': {
@@ -839,6 +857,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Troll Stronghold', name: 'Troll Stronghold',
     regions: ['Burthorpe'],
     skills: { 'Agility': 15 }, prereqs: ['Death Plateau'], points: 1, series: 'Troll',
+    // Slots checked on the Wiki (23 Oct): climbing boots.
+    equipmentRequirements: [
+      { slot: 'Boots', tier: 1, reason: 'Wear climbing boots to climb the rocks to the arena' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Tai Bwo Wannai Trio': {
@@ -958,6 +980,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Troll Romance', name: 'Troll Romance',
     regions: ['Burthorpe', 'Warriors\' Guild', 'Mountain Camp'],
     skills: { 'Agility': 28, 'Smithing': 15 }, prereqs: ['Troll Stronghold'], points: 2,
+    // Slots checked on the Wiki (23 Oct): sled.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield the sled to ride down the mountain' },
+    ],
     // Items checked on the Wiki: Iron bar; Maple logs; Bucket of wax.
     oneOf: [
       { skills: { 'Mining': 15, 'Woodcutting': 45 }, regions: ['Catherby', "Seers' Village"] },
@@ -989,6 +1015,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Canifis', 'Fenkenstrain\'s Castle', 'Haunted Woods'],
     skills: { 'Crafting': 20, 'Thieving': 25, 'Smithing': 4 }, prereqs: ["Priest in Peril"],
     manualRequirements: ["Started The Restless Ghost"], points: 2,
+    // Slots checked on the Wiki (23 Oct): ghostspeak amulet.
+    equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet to talk to the Gardener Ghost' },
+    ],
     // Items checked on the Wiki: 3 bronze wire; Silver bar.
     oneOf: [
       { skills: { 'Mining': 20, 'Smithing': 20 } },
@@ -1309,6 +1339,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Varrock', 'East Ardougne', 'Pollnivneach', 'Keldagrim', 'Port Sarim'],
     manualRequirements: ['Started The Giant Dwarf to access Keldagrim'],
     skills: {}, prereqs: ['Icthlarin\'s Little Helper'], points: 2,
+    // Slots checked on the Wiki (23 Oct): catspeak amulet.
+    equipmentRequirements: [
+      { slot: 'Neck', tier: 1, reason: "Wear the catspeak amulet for Smokin' Joe (not needed after Dragon Slayer II)" },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Spirits of the Elid': {
@@ -1322,6 +1356,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'genie-cave', label: "Genie's cave", standardAreas: ['Nardah'], chunkOptions: [{ cx: 52, cy: 45 }] },
     ],
     skills: { 'Magic': 33, 'Ranged': 37, 'Mining': 37, 'Thieving': 37 }, prereqs: [], points: 2,
+    // Slots checked on the Wiki (23 Oct): robes of Elidinis.
+    equipmentRequirements: [
+      { slot: 'Body', tier: 1, reason: 'Wear the robe of Elidinis top to open the shrine door' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the robe of Elidinis bottom to open the shrine door' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Devious Minds': {
@@ -1526,6 +1565,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     prereqs: ['In Search of the Myreque'],
     points: 2,
     series: 'Myreque',
+    // Slots checked on the Wiki (23 Oct): silver weapon.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: "Wield a silver weapon (or any weapon with Efaritay's aid) to fight the vampyres" },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Soul\'s Bane': {
@@ -1792,6 +1835,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'ice-troll-lands', label: 'Ice troll lands north of Neitiznot', standardAreas: ['Neitiznot'], chunkOptions: [{ cx: 36, cy: 60 }] },
     ],
     skills: { 'Construction': 20 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
+    // Slots checked on the Wiki (23 Oct): jester costume.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear the jester hat to entertain the Burgher' },
+      { slot: 'Body', tier: 1, reason: 'Wear the jester top to entertain the Burgher' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the jester tights to entertain the Burgher' },
+      { slot: 'Boots', tier: 1, reason: 'Wear the jester boots to entertain the Burgher' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Tower of Life': {
@@ -1859,6 +1909,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Another Slice of H.A.M.', name: 'Another Slice of H.A.M.',
     regions: ['Lumbridge', 'Goblin Village'],
     skills: { 'Attack': 15, 'Prayer': 25 }, prereqs: ['Death to the Dorgeshuun', 'The Dig Site', 'The Giant Dwarf'], points: 1, series: 'Dorgeshuun',
+    // Slots checked on the Wiki (23 Oct): ancient mace.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 2, reason: 'Wield the ancient mace (15 Attack) to use its special attack on Sigmund' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Dream Mentor': {
@@ -1994,6 +2048,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Tale of the Righteous', name: 'Tale of the Righteous',
     regions: ['Mount Quidamortem', 'Shayzien', 'Arceuus'],
     skills: { 'Strength': 16, 'Mining': 10 }, prereqs: ['Client of Kourend'], points: 1, series: 'Great Kourend',
+    // Slots checked on the Wiki (23 Oct): melee weapon.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Wield a melee weapon to attack the south-side device' },
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'A Taste of Hope': {
@@ -2001,6 +2059,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'A Taste of Hope', name: 'A Taste of Hope',
     regions: ['Meiyerditch', 'Ver Sinhaza'],
     skills: { 'Crafting': 48, 'Agility': 45, 'Attack': 40, 'Herblore': 40, 'Slayer': 38, 'Magic': 27 }, prereqs: ['Darkness of Hallowvale'], points: 1, series: 'Myreque',
+    // Slots checked on the Wiki (23 Oct): Ivandis flail.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 5, reason: 'Wield the Ivandis flail (40 Attack) to harm Ranis Drakan' },
+    ],
     // Items checked on the Wiki: Lvl-2 Enchant on the emerald sickle.
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -2091,6 +2153,13 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Paterdomus', 'Burgh de Rott', 'Meiyerditch', 'Darkmeyer', 'Slepe', 'Icyene Graveyard', 'Haunted Woods'],
     skills: { 'Agility': 52, 'Attack': 50, 'Crafting': 56, 'Fletching': 60, 'Magic': 49, 'Slayer': 50, 'Woodcutting': 62 },
     prereqs: ['A Taste of Hope', 'Vampyre Slayer'], points: 2, series: 'Myreque',
+    // Slots checked on the Wiki (23 Oct): flails and vyre noble disguise.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 5, reason: 'Wield the Ivandis and blisterwood flails (50 Attack) to harm the vampyres' },
+      { slot: 'Body', tier: 1, reason: 'Wear the vyre noble top as a disguise in Darkmeyer' },
+      { slot: 'Legs', tier: 1, reason: 'Wear the vyre noble legs as a disguise in Darkmeyer' },
+      { slot: 'Boots', tier: 1, reason: 'Wear the vyre noble shoes as a disguise in Darkmeyer' },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'A Porcine of Interest': {
@@ -2396,6 +2465,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'zemouregals-fortress', label: "Zemouregal's Fortress", standardAreas: ['Mountain Camp'], chunkOptions: [{ cx: 44, cy: 60 }] },
     ],
     skills: { 'Agility': 61, 'Ranged': 62, 'Strength': 58, 'Thieving': 62, 'Mining': 64, 'Slayer': 37 }, prereqs: ['Defender of Varrock', 'Troll Romance'], points: 2, series: 'Mahjarrat',
+    // Slots checked on the Wiki (23 Oct): insulated boots, crossbow and mith grapple.
+    equipmentRequirements: [
+      { slot: 'Boots', tier: 1, reason: 'Wear insulated boots in the sewer pipe' },
+      { slot: 'Weapon', tier: 1, reason: 'Equip a crossbow to fire the grapple' },
+      { slot: 'Ammo', tier: 3, reason: 'Equip the mith grapple' },
+    ],
     // Items checked on the Wiki: Insulated boots; Mith grapple; Ring of life.
     merchants: ['Slayer Equipment'],
     oneOf: [
@@ -2505,6 +2580,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Troubled Tortugans', name: 'Troubled Tortugans',
     regions: ['Remote Island', 'The Summer Shore', 'The Great Conch', 'The Little Pearl'],
     skills: { 'Slayer': 51, 'Construction': 48, 'Sailing': 45, 'Hunter': 45, 'Woodcutting': 40, 'Crafting': 34 }, prereqs: ['Pandemonium'], points: 1, series: 'Tortugan',
+    // Slots checked on the Wiki (23 Oct): Tortugan shield.
+    equipmentRequirements: [
+      { slot: 'Cape', tier: 1, reason: 'Wear the Tortugan shield (cape slot) for the shellbane gryphon fight' },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'The Red Reef': {
