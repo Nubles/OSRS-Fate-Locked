@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-23-roll-rings',
+    title: 'Roll rings turn again',
+    date: '2026-10-23',
+    sections: {
+      fixed: [
+        'In the OSRS layout, the rings now turn while Fate is altered and the loot beam rises, even with Windows animation effects turned off.',
+        'Key and Fate drops by the orbs show up again on those PCs too.',
+        'They follow the Animations switch in Settings, like the rest of the roll reveals.',
+      ],
+    },
+  },
+  {
     id: '2026-10-23-skill-info-button',
     title: 'Skill odds behind a small i',
     date: '2026-10-23',
