@@ -8,6 +8,7 @@ import { DISCORD_INVITE_URL } from '../../constants';
 import { RESET_CONFIRM_MESSAGE } from '../../utils/backups';
 import { FATE_EXPORT_HINT } from '../../utils/fateSaveFile';
 import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
+import { setSkillOddsHover, useSkillOddsHover } from '../../utils/skillOddsPref';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
@@ -68,6 +69,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   onImportSave, onExportSave, onRuneliteExport,
 }) => {
   const uiStyle = useUiStyle();
+  const skillOddsHover = useSkillOddsHover();
   const {
     keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations,
     advisorsEnabled, toggleAdvisors, resetGame, gameModeId, customMode, linkedAccount,
@@ -235,6 +237,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={() => setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs')} aria-pressed={uiStyle === 'osrs'}>OSRS layout {onOff(uiStyle === 'osrs')}</button>
                   {uiStyle === 'osrs' && <Suspense fallback={null}><OsrsInterfaceOptions /></Suspense>}
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAdvisors()} aria-pressed={advisorsEnabled}>Advisor panels {onOff(advisorsEnabled)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => setSkillOddsHover(!skillOddsHover)} aria-pressed={skillOddsHover} title="On: a skill's roll odds show when you hover it. Off: they open from the small i in its corner.">Skill odds on hover {onOff(skillOddsHover)}</button>
                   <div className="osrs-menu-sep" />
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onImportSave)}>Import save</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onExportSave)} title={FATE_EXPORT_HINT}>Export save file (.fate)</button>

@@ -14,9 +14,19 @@ interface Props {
   boost?: number;
   /** Chunked: the skill's tier cap when the next level is past it, so it rolls nothing. */
   pastCap?: number;
+  /**
+   * The Settings option for the older look: the explanation shows over the
+   * whole card on hover or keyboard focus. Off, it stays for screen readers
+   * and the card's info button (SkillInfoButton) shows the odds instead.
+   */
+  hoverBox?: boolean;
 }
 
-export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descriptionId, boost = 0, pastCap }) => {
+// Fills the card (so nothing is cut off) and shows on hover or keyboard focus
+// only, so it doesn't stay up after a mouse click.
+const HOVER_BOX = 'pointer-events-none absolute inset-1 z-40 flex items-center whitespace-normal rounded border border-blue-400/30 bg-slate-950/95 px-2 py-1 text-[9px] leading-tight text-blue-100 shadow-lg invisible opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100';
+
+export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descriptionId, boost = 0, pastCap, hoverBox = false }) => {
   if (!isUnlocked || currentLevel >= 99) return null;
 
   const nextLevel = currentLevel + 1;
@@ -24,11 +34,7 @@ export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descr
     return (
       <div className="pointer-events-auto text-[8px] text-gray-400 mt-0.5 leading-none whitespace-nowrap">
         Next Lv {nextLevel} &middot; no roll
-        <span
-          id={descriptionId}
-          role="tooltip"
-          className="pointer-events-none absolute inset-x-2 bottom-2 z-40 whitespace-normal rounded border border-blue-400/30 bg-slate-950/95 px-2 py-1 text-[9px] leading-tight text-blue-100 shadow-lg invisible opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
-        >
+        <span id={descriptionId} role={hoverBox ? 'tooltip' : undefined} className={hoverBox ? HOVER_BOX : 'sr-only'}>
           {chunkedPastCapText(pastCap)}
         </span>
       </div>
@@ -41,11 +47,7 @@ export const SkillRollOdds: React.FC<Props> = ({ currentLevel, isUnlocked, descr
       className="pointer-events-auto text-[8px] text-blue-300/80 mt-0.5 leading-none whitespace-nowrap"
     >
       Next Lv {nextLevel} &middot; {chance} Key
-      <span
-        id={descriptionId}
-        role="tooltip"
-        className="pointer-events-none absolute inset-x-2 bottom-2 z-40 whitespace-normal rounded border border-blue-400/30 bg-slate-950/95 px-2 py-1 text-[9px] leading-tight text-blue-100 shadow-lg invisible opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-visible:visible group-focus-visible:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
-      >
+      <span id={descriptionId} role={hoverBox ? 'tooltip' : undefined} className={hoverBox ? HOVER_BOX : 'sr-only'}>
         {isSkillChaosMilestone(nextLevel)
           ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
           : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}

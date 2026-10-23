@@ -1,0 +1,17 @@
+/* The odds box a skill's info button opens (components/SkillInfoBox.tsx). */
+.skill-info-classic-box {
+  z-index: 200; width: 210px; padding: 7px 9px; pointer-events: auto;
+  background: #151515; border: 1px solid rgba(255, 255, 255, .1); border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .55); color: #d1d5db; font-size: 10px; line-height: 1.35;
+}
+.skill-info-classic-head { font-weight: 700; color: #e5e7eb; font-size: 11px; margin-bottom: 4px; }
+.skill-info-classic-head span { font-weight: 400; color: #9ca3af; }
+.skill-info-classic-box dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 0; }
+.skill-info-classic-box dt { color: #6b7280; }
+.skill-info-classic-box dd { margin: 0; color: #93c5fd; }
+
+.osrs-skill-info-box {
+  z-index: 200; max-width: 260px; padding: 1px 4px; pointer-events: auto;
+  background: #ffffa0; border: 1px solid #000; color: #000; text-shadow: none;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; line-height: var(--osrs-lh, 18px); white-space: nowrap;
+}

@@ -37,6 +37,22 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-23-skill-info-button',
+    title: 'Skill odds behind a small i',
+    date: '2026-10-23',
+    sections: {
+      changed: [
+        'Each skill you can level now has a small i in its corner. Point at it or tap it to see that skill\'s Key and Chaos Key odds.',
+        'The odds open beside the skill, so the skill stays in view while you click it to level up.',
+        'Like the old box over the whole skill? Turn on Skill odds on hover in Settings.',
+      ],
+      fixed: [
+        'The old hover box no longer stays stuck over a skill after you click it, and its first line isn\'t cut off.',
+        'In the OSRS layout, the skill odds now include your achievement bonus.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-chunked-omens',
     title: 'Chunked beta: an omen on every chunk',
     date: '2026-10-22',
