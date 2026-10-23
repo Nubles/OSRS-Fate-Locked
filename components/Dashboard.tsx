@@ -22,6 +22,8 @@ import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { SkillRollOdds } from './SkillRollOdds';
+import { SkillInfoButton } from './SkillInfoButton';
+import { useSkillOddsHover } from '../utils/skillOddsPref';
 import { levelPastTierCap, tierCap } from '../utils/chunkedFate';
 import { achievementBoostFor } from '../utils/achievementBoosts';
 // RegionMap is the single heaviest component in the app (map surface,
@@ -384,6 +386,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
   } = useGame();
   const levelBoost = achievementBoostFor('Level Up', achievementsClaimed);
+  const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
   const runeProofMode = runeProofAvailability((import.meta as any).env ?? {});
@@ -635,6 +638,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     const isMainActionable = canUnlockStart || canLevel;
                     const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
                     const tierColorText = isUnlocked ? 'text-gray-200' : 'text-gray-500';
+                    const pastCap = levelPastTierCap(gameModeId, unlocks, skill, level + 1) ? tierCap(tier) : undefined;
+                    const showInfo = canLevel && !skillOddsHover;
 
                     if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
 
@@ -704,15 +709,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
                                     <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} boost={levelBoost}
-                                        pastCap={levelPastTierCap(gameModeId, unlocks, skill, level + 1) ? tierCap(tier) : undefined} />
+                                        pastCap={pastCap} hoverBox={skillOddsHover} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Segmented Progress Bar */}
-                            <div className="flex gap-px w-full h-1.5 mt-auto bg-black/50 rounded-sm overflow-hidden border border-white/5 pointer-events-none">
+                            {/* Segmented Progress Bar (leaves room for the info button) */}
+                            <div className={`flex gap-px h-1.5 mt-auto bg-black/50 rounded-sm overflow-hidden border border-white/5 pointer-events-none ${showInfo ? 'w-[calc(100%-1.25rem)]' : 'w-full'}`}>
                                 {Array.from({ length: 10 }).map((_, i) => {
                                     const isActive = tier > i;
                                     const colorClass = isActive ? TIER_COLORS[Math.min(tier - 1, 9)] : 'bg-[#1a1a1a]';
@@ -724,6 +729,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                     );
                                 })}
                             </div>
+
+                            {/* Roll odds, opened from the corner so the card stays in view while levelling */}
+                            {showInfo && (
+                                <span className="absolute right-1.5 bottom-1 z-20 flex">
+                                    <SkillInfoButton skill={skill} level={level} tier={tier} boost={levelBoost} pastCap={pastCap} variant="classic" />
+                                </span>
+                            )}
                             
                             {/* Hover Overlay for Main Action */}
                             {isMainActionable && (

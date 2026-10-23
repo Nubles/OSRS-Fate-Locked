@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { SkillRollOdds } from './SkillRollOdds';
+import { SkillOddsDetails } from './SkillInfoBox';
 import { SKILL_CHAOS_MILESTONES } from '../config/economy';
 
 describe('SkillRollOdds', () => {
@@ -51,7 +52,18 @@ describe('SkillRollOdds', () => {
       <SkillRollOdds currentLevel={99} isUnlocked descriptionId="attack-key-roll-description" />,
     )).toBe('');
   });
-  it('reveals one visible Chaos explanation from parent hover or keyboard focus', () => {
+  it('keeps the Chaos explanation for screen readers only by default', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" />,
+    );
+
+    expect(html).toContain('id="attack-key-roll-description"');
+    expect(html).toContain('sr-only');
+    expect(html).not.toContain('role="tooltip"');
+    expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
+  });
+
+  it('with the hover box turned on, shows it from parent hover or keyboard focus but not after a click', () => {
     const descriptionId = 'attack-key-roll-description';
     const html = renderToStaticMarkup(
       <div className="group" role="button" tabIndex={0} aria-describedby={descriptionId}>
@@ -59,6 +71,7 @@ describe('SkillRollOdds', () => {
           currentLevel={41}
           isUnlocked
           descriptionId={descriptionId}
+          hoverBox
         />
       </div>,
     );
@@ -68,7 +81,10 @@ describe('SkillRollOdds', () => {
     expect(html).toContain('role="tooltip"');
     expect(html).toContain('group-hover:opacity-100');
     expect(html).toContain('group-focus-visible:opacity-100');
-    expect(html).toContain('group-focus-within:opacity-100');
+    // focus-within would keep it up after a mouse click focuses the card.
+    expect(html).not.toContain('group-focus-within');
+    // It fills the card, so its first line isn't cut off.
+    expect(html).toContain('inset-1');
     expect(html).not.toContain('sr-only');
     expect(html).not.toContain('title=');
     expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
@@ -82,3 +98,38 @@ describe('SkillRollOdds', () => {
     expect(html).not.toContain('% Key');
   });
 });
+
+describe('SkillOddsDetails', () => {
+  it('lists the Key chance with the achievement share, the Chaos Key odds and the tier reach', () => {
+    const html = renderToStaticMarkup(
+      <SkillOddsDetails skill="Hitpoints" level={53} tier={6} boost={1.3} variant="classic" />,
+    );
+    expect(html).toContain('Hitpoints');
+    expect(html).toContain('Next Lv 54');
+    expect(html).toContain('12.1%');
+    expect(html).toContain('+1.3%');
+    expect(html).toContain('2% chance');
+    expect(html).toContain('level 60');
+    expect(html).toContain('up to level 60');
+  });
+
+  it('names a guaranteed Chaos Key on a milestone level and leaves out the next one', () => {
+    const html = renderToStaticMarkup(
+      <SkillOddsDetails skill="Attack" level={49} tier={5} variant="osrs" />,
+    );
+    expect(html).toContain('Attack: next level 50');
+    expect(html).toContain('Chaos Key: guaranteed, plus 2% for another');
+    expect(html).not.toContain('Next free Chaos');
+    expect(html).not.toContain('From achievements');
+  });
+
+  it('says a Chunked level past the tier cap rolls nothing', () => {
+    const html = renderToStaticMarkup(
+      <SkillOddsDetails skill="Woodcutting" level={10} tier={1} pastCap={10} variant="osrs" />,
+    );
+    expect(html).toContain('Key chance: no roll');
+    expect(html).toContain("past this tier&#x27;s cap of level 10");
+    expect(html).not.toContain('Chaos Key');
+  });
+});
+
