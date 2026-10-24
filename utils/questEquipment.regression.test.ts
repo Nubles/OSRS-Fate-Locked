@@ -96,6 +96,7 @@ describe('mandatory quest equipment readiness', () => {
     ['Tale of the Righteous', { Weapon: 1 }],
     ['Troll Romance', { Weapon: 1 }],
     ['In Aid of the Myreque', { Weapon: 1 }],
+    ['A Porcine of Interest', { Head: 1 }],
   ] as const)('needs the slots %s makes you wear or wield', (id, slots) => {
     const required = Object.fromEntries((QUEST_DATA[id].equipmentRequirements ?? []).map(req => [req.slot, req.tier]));
     expect(required).toEqual(slots);

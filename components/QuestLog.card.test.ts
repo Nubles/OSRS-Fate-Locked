@@ -34,6 +34,8 @@ describe('QuestCard geography integration', () => {
     };
     const quest = {
       ...QUEST_DATA['A Porcine of Interest'],
+      // Only the geography gates are under test here, not the goggles' Head slot.
+      equipmentRequirements: undefined,
       status: eligibility.status,
       eligibility,
     };

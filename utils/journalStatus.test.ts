@@ -379,8 +379,8 @@ describe('reported quest access', () => {
 
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
-    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'] });
-    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'] });
+    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'], equipment: { Head: 1 } });
+    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'], equipment: { Head: 1 } });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
   });
@@ -447,7 +447,7 @@ describe('reported quest access', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
       id: 'alternative-location', name: 'Alternative location',
-      accessPolicy: 'regions',
+      accessPolicy: 'regions', equipmentRequirements: undefined,
       regions: [], locations: [], skills: {}, prereqs: [],
       oneOf: [{ locations: [{
         id: 'test-crossing', label: 'Test crossing',
@@ -465,7 +465,7 @@ describe('reported quest access', () => {
   it('treats an empty alternative list as no alternative requirement', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
-      accessPolicy: 'regions',
+      accessPolicy: 'regions', equipmentRequirements: undefined,
       regions: ['Misthalin'],
       locations: [],
       oneOf: [],

@@ -110,6 +110,7 @@ describe('journal completion decisions', () => {
         regions: ['Misthalin', 'Draynor Village', 'Port Sarim'],
         skills: { Slayer: 1 },
         levels: { Slayer: 1 },
+        equipment: { Head: 1 },
       }),
       'vanilla',
     );
@@ -216,6 +217,7 @@ describe('journal completion decisions', () => {
       regions: ['Misthalin', 'Draynor Village', 'Falador'],
       skills: { Slayer: 1 },
       levels: { Slayer: 1 },
+      equipment: { Head: 1 },
     });
 
     expect(questCompletionDecision(quest, available, 'vanilla')).toEqual({ ok: true });

@@ -2173,6 +2173,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "spria", label: "Spria in north Draynor", standardAreas: ["Draynor Village"], chunkOptions: [{ cx: 48, cy: 51 }] },
     ],
     skills: {}, prereqs: [], points: 1,
+    // Slots checked in game (24 Oct, player report): the reinforced goggles are worn in the sourhog cave.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear the reinforced goggles in the sourhog cave' },
+    ],
     difficulty: DropSource.QUEST_NOVICE
   },
   'Getting Ahead': {

@@ -52,6 +52,8 @@ const porcineOnlyUnlocks = (chunks: string[]) => ({
   ...maxedChunkedUnlocks(chunks),
   quests: Object.keys(QUEST_DATA).filter(id => id !== 'A Porcine of Interest'),
   diaries: Object.keys(DIARY_DATA),
+  // The reinforced goggles are worn in the sourhog cave.
+  equipment: { Head: 1 },
 });
 
 const maxedQuestUnlocks = (
