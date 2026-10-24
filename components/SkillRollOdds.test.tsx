@@ -55,7 +55,7 @@ describe('SkillRollOdds', () => {
   });
   it('keeps the Chaos explanation for screen readers only by default', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" />,
+      <SkillRollOdds currentLevel={41} chance={skillLevelKeyChance(41 + 1)} isUnlocked descriptionId="attack-key-roll-description" />,
     );
 
     expect(html).toContain('id="attack-key-roll-description"');
@@ -101,9 +101,9 @@ describe('SkillRollOdds', () => {
 });
 
 describe('SkillOddsDetails', () => {
-  it('lists the Key chance with the achievement share, the Chaos Key odds and the tier reach', () => {
+  it("lists the Key chance with the boosts' share, the Chaos Key odds and the tier reach", () => {
     const html = renderToStaticMarkup(
-      <SkillOddsDetails skill="Hitpoints" level={53} tier={6} boost={1.3} variant="classic" />,
+      <SkillOddsDetails skill="Hitpoints" level={53} tier={6} chance={skillLevelKeyChance(54) + 1.3} variant="classic" />,
     );
     expect(html).toContain('Hitpoints');
     expect(html).toContain('Next Lv 54');
@@ -116,17 +116,17 @@ describe('SkillOddsDetails', () => {
 
   it('names a guaranteed Chaos Key on a milestone level and leaves out the next one', () => {
     const html = renderToStaticMarkup(
-      <SkillOddsDetails skill="Attack" level={49} tier={5} variant="osrs" />,
+      <SkillOddsDetails skill="Attack" level={49} tier={5} chance={skillLevelKeyChance(50)} variant="osrs" />,
     );
     expect(html).toContain('Attack: next level 50');
     expect(html).toContain('Chaos Key: guaranteed, plus 2% for another');
     expect(html).not.toContain('Next free Chaos');
-    expect(html).not.toContain('From achievements');
+    expect(html).not.toContain('From your boosts');
   });
 
   it('says a Chunked level past the tier cap rolls nothing', () => {
     const html = renderToStaticMarkup(
-      <SkillOddsDetails skill="Woodcutting" level={10} tier={1} pastCap={10} variant="osrs" />,
+      <SkillOddsDetails skill="Woodcutting" level={10} tier={1} chance={null} pastCap={10} variant="osrs" />,
     );
     expect(html).toContain('Key chance: no roll');
     expect(html).toContain("past this tier&#x27;s cap of level 10");

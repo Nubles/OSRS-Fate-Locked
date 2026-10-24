@@ -152,7 +152,7 @@ describe('no screen works out a Key chance on its own', () => {
       .filter(([, text]) => /\b(skillLevelKeyChance|achievementBoostFor|getActiveRegionBonuses|rollRitualPlan)\b/
         .test(text.replace(/^\s*import .*$/gm, '')))
       .map(([path]) => path.split('/').pop());
-    // SkillRollOdds names a level's base chance beside its boosted one.
-    expect(offenders).toEqual(['SkillRollOdds.tsx']);
+    // SkillRollOdds and the skill info box name a level's base chance beside its boosted one.
+    expect(offenders.sort()).toEqual(['SkillInfoBox.tsx', 'SkillRollOdds.tsx']);
   });
 });
