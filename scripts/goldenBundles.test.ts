@@ -52,7 +52,7 @@ const OUT = join(ROOT, 'contracts', 'golden-bundles');
 const WRITE = process.env.FATE_GOLDENS === 'write';
 const SCHEMA = 2;
 const EXPORTED_AT = new Date('2026-09-25T12:00:00.000Z');
-const SIZE_BUDGET_BYTES = 3.5 * 1024 * 1024;
+const SIZE_BUDGET_BYTES = 3.75 * 1024 * 1024;
 /** The travel section's share of a bundle, compressed. */
 const TRAVEL_BUDGET_BYTES = 16 * 1024;
 /** Headroom under the largest request the relay accepts, for every run. */

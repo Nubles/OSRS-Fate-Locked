@@ -124,7 +124,17 @@ describe('classifyFateEvent', () => {
     expect(classifyFateEvent(event('QUEST', "Cook's Assistant"), withUnlocks({ quests: ["Cook's Assistant"] })))
       .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I'), state()))
-      .toEqual({ state: 'BLOCKED', reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, Quest Points 32' });
+      .toEqual({
+        state: 'BLOCKED',
+        reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, '
+          + 'Smithing 34 + Bars & Inns + Clothes Shops or Smithing 34 + Bars & Inns + Silk Shops'
+          + ' or Smithing 34 + Thieving 20 + Bars & Inns or Civitas illa Fortis + Smithing 34 + Bars & Inns'
+          + ' or Smithing 34 + General Stores or Sawmill Operators + Bars & Inns + Clothes Shops'
+          + ' or Sawmill Operators + Bars & Inns + Silk Shops or Thieving 20 + Sawmill Operators + Bars & Inns'
+          + ' or Civitas illa Fortis + Sawmill Operators + Bars & Inns or Sawmill Operators + General Stores'
+          + ', Quest Points 32, Crafting 8, '
+          + "Shield T1: Equip the anti-dragon shield against Elvarg's dragonfire",
+      });
 
     // Manual checks wait for the player's review, which then confirms them.
     const sheep = event('QUEST', 'Sheep Shearer');

@@ -7,11 +7,14 @@ import type {
   Shortcut,
 } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
+import type { QuestData } from '../data/questData';
 import { resourceReqFor, resourceUsable } from './chunkResources';
 import { placeOf } from './chunkLocations';
 import { chunkEntry, chunkEntryReason } from './chunkEntry';
 import { OCEAN_CHUNK_KEYS } from './oceanAccess';
-import { evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
+import {
+  evaluateQuestEligibility, meetsSkillRequirement, questRequirementOptionLabel, type EligibilityBlocker,
+} from './journalStatus';
 import { farmingPatchFor } from './farmingPatches';
 import { isBankReachable } from './reachability';
 import { canonicalBossId, resolveQuest } from './contentIdentity';
@@ -82,6 +85,24 @@ function withEntry(
   return status;
 }
 
+const QUEST_REASON_MAX_CHARS = 120;
+
+/**
+ * A quest blocker as the plugin shows it. The plugin repeats a quest's reasons
+ * on every chunk the quest touches and the relay caps a bundle's size, so a
+ * worn item names only its slot and tier, and a long list of item routes
+ * gives only its count. The tracker's Quests tab shows both in full.
+ */
+const questReason = (quest: QuestData, blocker: EligibilityBlocker): string => {
+  if (blocker.kind === 'equipment') return `${blocker.slot} T${blocker.tier}`;
+  const options = quest.oneOf ?? [];
+  if (options.length > 1 && blocker.label.length > QUEST_REASON_MAX_CHARS
+    && blocker.label === options.map(questRequirementOptionLabel).join(' or ')) {
+    return `One of ${options.length} routes (see the tracker)`;
+  }
+  return blocker.label;
+};
+
 function questStatus(
   name: string,
   context: ChunkPermissionContext,
@@ -91,7 +112,7 @@ function questStatus(
   const result = evaluateQuestEligibility(quest, context.unlocks, context.gameModeId);
   if (result.eligible) return { status: 'ALLOWED', reasons: [] };
   return { status: result.status === 'LOCKED_REGION' ? 'LOCKED' : result.machineEligible ? 'UNKNOWN' : 'NOT_READY',
-    reasons: [...result.blockers.map(blocker => blocker.label), ...result.manualChecks] };
+    reasons: [...result.blockers.map(blocker => questReason(quest, blocker)), ...result.manualChecks] };
 }
 
 /**

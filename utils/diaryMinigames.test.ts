@@ -34,6 +34,8 @@ const REVIEWED: Record<string, string> = {
   // Banisoch's entrance to Brimhaven Dungeon takes trading sticks (the place review, 4 October 2026).
   kar_hard_10: 'Tai Bwo Wannai Cleanup',
   kar_med_1: 'Brimhaven Agility Arena',
+  // 10 October 2026 item audit: gem machetes also cost trading sticks, which only the Cleanup gives.
+  kar_med_11: 'Tai Bwo Wannai Cleanup',
   kar_med_19: 'Tai Bwo Wannai Cleanup',
   kar_med_5: 'Tai Bwo Wannai Cleanup',
   // 2 October 2026: loot counts too. Only the Hardwood Grove and gem rock routes use the Cleanup.
@@ -52,6 +54,18 @@ const REVIEWED: Record<string, string> = {
   west_med_7: 'Gnome Restaurant',
   western_easy_5: 'Gnome Ball',
   western_med_6: 'Pest Control',
+  // 13 October 2026 item recheck: Temple Trekking and Volcanic Mine rewards are one route to an item.
+  ard_hard_12: 'Temple Trekking',
+  kan_med_7: 'Temple Trekking',
+  kan_hard_11: 'Volcanic Mine',
+  kan_elite_5: 'Volcanic Mine',
+  kar_hard_4: 'Temple Trekking',
+  kar_elite_1: 'Temple Trekking',
+  lum_hard_3: 'Temple Trekking',
+  mor_med_11: 'Temple Trekking',
+  var_elite_4: 'Volcanic Mine',
+  west_easy_6: 'Temple Trekking',
+  west_elite_1: 'Temple Trekking',
 };
 
 const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
@@ -77,7 +91,7 @@ describe('diary tasks played in a minigame', () => {
   it('tag exactly the reviewed tasks, each with a minigame the tracker unlocks', () => {
     const tagged = Object.fromEntries(ALL_DIARY_TASKS
       .filter(row => row.minigames?.length || row.oneOf?.some(option => option.minigames?.length))
-      .map(row => [row.id, [...(row.minigames ?? []), ...(row.oneOf ?? []).flatMap(option => option.minigames ?? [])].join(', ')]));
+      .map(row => [row.id, [...new Set([...(row.minigames ?? []), ...(row.oneOf ?? []).flatMap(option => option.minigames ?? [])])].join(', ')]));
 
     expect(tagged).toEqual(REVIEWED);
     for (const minigame of Object.values(REVIEWED)) expect(MINIGAMES_LIST).toContain(minigame);
