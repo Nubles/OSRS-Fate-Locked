@@ -284,7 +284,7 @@ describe('Chunked banks and Farm places', () => {
     const start = makeUnlocks();
     const owned = BANK_IDS.filter(bank => chunkedBankOwned(bank, start));
     expect(owned.filter(bank => bankChunkKey(bank) !== undefined)).toEqual(['12850']);
-    expect(owned.filter(bank => bankChunkKey(bank) === undefined)).toHaveLength(BANK_IDS.length - 125);
+    expect(owned.filter(bank => bankChunkKey(bank) === undefined)).toHaveLength(BANK_IDS.length - 124);
   });
 
   it('offers Brutus and Slayer masters in Chunked only from their own chunk', () => {

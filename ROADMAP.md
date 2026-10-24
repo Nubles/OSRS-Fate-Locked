@@ -283,9 +283,9 @@ not visual acceptance, and visual acceptance is not permission to publish.
 
 ## 2b. Bank unlocks (shipped — web side) & follow-ups
 
-The bank pool contains 125 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock
-(`BANK_IDS.length` is 126, the count the Spend card and Codex show).
-All 126 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 125 physical entries are keyed by
+The bank pool contains 124 physical canonical bank/deposit chunks plus 1 virtual Forestry unlock
+(`BANK_IDS.length` is 125, the count the Spend card and Codex show).
+All 125 are individual `TableType.BANKS` entries in `unlocks.banks[]`: the 124 physical entries are keyed by
 canonical chunk id cx*256+cy, while the virtual Forestry unlock is tracked separately,
 mirroring the STORAGE table pattern. Data: `data/banks.ts` (regen with
 `node scripts/gen-banks.mjs` from public/chunk-content.json's `banks`).

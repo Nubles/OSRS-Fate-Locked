@@ -49,6 +49,18 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-10-24-falador-west-bank',
+    title: 'One unlock for the Falador west bank',
+    date: '2026-10-24',
+    sections: {
+      fixed: [
+        'The deposit box inside the Falador west bank is now part of West Falador, so one Banks unlock opens the booths and the box.',
+        'Owned the old Falador west deposit box unlock? You now own West Falador. Owned both? You get 1 Key back.',
+        'There are now 125 Banks to unlock instead of 126.',
+      ],
+    },
+  },
+  {
     id: '2026-10-23-roll-rings',
     title: 'Roll rings turn again',
     date: '2026-10-23',
