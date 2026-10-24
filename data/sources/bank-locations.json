@@ -18,6 +18,7 @@
     { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" },
     { "title": "Forestry event", "revision": 14430593, "url": "https://oldschool.runescape.wiki/w/Forestry_event" },
     { "title": "Motherlode Mine", "revision": 15359659, "url": "https://oldschool.runescape.wiki/w/Motherlode_Mine" },
+    { "title": "Falador west bank", "revision": 15211880, "url": "https://oldschool.runescape.wiki/w/Falador_west_bank" },
     { "title": "Farming Guild", "revision": 15274002, "url": "https://oldschool.runescape.wiki/w/Farming_Guild" }
   ],
   "locations": [
@@ -97,6 +98,7 @@
   ],
   "merges": [
     { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },
-    { "id": "12085", "into": "12084", "reason": "Asgarnian Road holds no bank: its chunk only leads into the Dwarven Mine, whose Motherlode Mine bank chest is listed under East Falador (12084).", "wiki": ["https://oldschool.runescape.wiki/w/Motherlode_Mine"] }
+    { "id": "12085", "into": "12084", "reason": "Asgarnian Road holds no bank: its chunk only leads into the Dwarven Mine, whose Motherlode Mine bank chest is listed under East Falador (12084).", "wiki": ["https://oldschool.runescape.wiki/w/Motherlode_Mine"] },
+    { "id": "11572", "into": "11828", "reason": "Falador West Wall holds no bank of its own: its deposit box is the Falador west bank's, inside the bank's west wall, where the chunk line runs.", "wiki": ["https://oldschool.runescape.wiki/w/Falador_west_bank"] }
   ]
 }
