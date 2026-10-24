@@ -14,6 +14,8 @@ import {
 import { actualCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
 import { UnlockState } from '../types';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../utils/areaRoutes';
 
 interface Props { searchTerm?: string }
 
@@ -57,8 +59,11 @@ export const evaluateQuestDoability = (
   chunk: QuestChunkStatus | null,
   chunkLockedAreas: string[] = [],
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): QuestDoabilityEvaluation => {
-  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId);
+  // The same routes as the Quests tab, so an owned area no route reaches
+  // never reads as doable here while the Quests tab calls it locked.
+  const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
   const completed = eligibility.status === 'COMPLETED';
   const isChunked = gameModeId === 'chunked';
   // Known catalogue entries may intentionally have no area gate (the tutorial).
@@ -132,7 +137,8 @@ export const evaluateQuestDoability = (
     ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
     : '';
   const canonicalRegionBlockers = eligibility.blockers
-    .filter(blocker => blocker.kind === 'region')
+    .filter(blocker => blocker.kind === 'region'
+      || (blocker.kind === 'alternative' && blocker.travel !== undefined))
     .map(blocker => blocker.label === alternativeLabel
       ? 'One of: ' + blocker.label
       : blocker.label);
@@ -197,7 +203,9 @@ export const questDoabilityRequirementLabels = (
  * chunkContentService to be ready. Fate's Mercy reads it too: it stays shut
  * while a quest here is doable.
  */
-export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[] => {
+export const chunkedQuestRows = (
+  unlocks: UnlockState, gameModeId: string, areaRoutes?: AreaRoutes | null,
+): Row[] => {
   // Walk from the free start chunk the map and RuneLite export use, gated on
   // per-chunk quest-entry requirements (questSections), so a quest whose step
   // sits behind an un-done quest reads correctly. The Journal walks the same.
@@ -214,7 +222,7 @@ export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[
       ? chunk.blockers.filter(blocker => blocker.access === 'LOCKED').map(blocker => chunkAreaLabelAt(blocker.cx, blocker.cy))
       : [];
     const evaluation = evaluateQuestDoability(
-      q, unlocks, chunk, chunkLockedAreas, gameModeId,
+      q, unlocks, chunk, chunkLockedAreas, gameModeId, areaRoutes,
     );
     const strandedFirst = evaluation.bucket === 'STRANDED'
       ? chunk?.blockers.find(blocker => blocker.access === 'STRANDED')
@@ -237,6 +245,7 @@ export const chunkedQuestRows = (unlocks: UnlockState, gameModeId: string): Row[
  */
 export const useQuestDoabilityRows = () => {
   const { unlocks, gameModeId } = useGame();
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const isChunked = gameModeId === 'chunked';
   const [ready, setReady] = useState(() => isChunked && chunkContentService.ready);
   useEffect(() => {
@@ -246,13 +255,13 @@ export const useQuestDoabilityRows = () => {
   const rows = useMemo<Row[]>(() => {
     if (!isChunked) {
       return Object.values(QUEST_DATA).map(quest => ({
-        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId),
+        ...evaluateQuestDoability(quest, unlocks, null, [], gameModeId, areaRoutes),
         strandedChunk: null,
       }));
     }
     if (!ready) return [];
-    return chunkedQuestRows(unlocks, gameModeId);
-  }, [ready, unlocks, gameModeId, isChunked]);
+    return chunkedQuestRows(unlocks, gameModeId, areaRoutes);
+  }, [ready, unlocks, gameModeId, isChunked, areaRoutes]);
 
   return { rows, isChunked, ready };
 };

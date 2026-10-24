@@ -52,6 +52,8 @@ const porcineOnlyUnlocks = (chunks: string[]) => ({
   ...maxedChunkedUnlocks(chunks),
   quests: Object.keys(QUEST_DATA).filter(id => id !== 'A Porcine of Interest'),
   diaries: Object.keys(DIARY_DATA),
+  // The reinforced goggles are worn in the sourhog cave.
+  equipment: { Head: 1 },
 });
 
 const maxedQuestUnlocks = (
@@ -124,7 +126,9 @@ describe('cross-surface quest eligibility contract', () => {
       label: "Witch's Potion after Rimmington",
       id: "Witch's Potion",
       gameModeId: 'chunked',
-      unlocks: maxedQuestUnlocks("Witch's Potion", { chunks: ['46,50'] }),
+      unlocks: maxedQuestUnlocks("Witch's Potion", {
+        chunks: ['46,50'], merchants: ['Magic Shops'],
+      }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
       firstBlocker: undefined,
@@ -189,6 +193,7 @@ describe('cross-surface quest eligibility contract', () => {
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('Mountain Daughter', {
         regions: ['Mountain Camp', 'Rellekka', 'Taverley'],
+        equipment: { Gloves: 1 },
       }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
@@ -428,7 +433,8 @@ describe('deterministic current content baseline', () => {
     });
     expect(questRequirementFields('Dream Mentor')).toEqual({
       regions: ['Lunar Isle'], locations: undefined, skills: {}, combatLevel: 85,
-      prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"], oneOf: undefined,
+      prereqs: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      oneOf: [{ skills: { Runecraft: 40 } }, { merchants: ['Magic Shops'] }],
       manualRequirements: undefined,
     });
     expect(questRequirementFields('Ethically Acquired Antiquities')).toEqual({
@@ -445,7 +451,17 @@ describe('deterministic current content baseline', () => {
         Slayer: 37,
       },
       combatLevel: undefined, prereqs: ['Defender of Varrock', 'Troll Romance'],
-      oneOf: undefined, manualRequirements: undefined,
+      // 10 October 2026 item audit: the mith grapple is made, or dropped in the Ancient Cavern.
+      // 13 October 2026 recheck: the ring of life also comes from The Lost Tribe.
+      oneOf: [
+        { skills: { Fletching: 59, Smithing: 59, Magic: 57, Crafting: 43 } },
+        { skills: { Firemaking: 35, Magic: 57, Crafting: 43 }, quests: ['Barbarian Training'] },
+        { skills: { Fletching: 59, Smithing: 59, Hunter: 65 } },
+        { skills: { Firemaking: 35, Hunter: 65 }, quests: ['Barbarian Training'] },
+        { skills: { Fletching: 59, Smithing: 59 }, quests: ['The Lost Tribe'] },
+        { skills: { Firemaking: 35 }, quests: ['The Lost Tribe', 'Barbarian Training'] },
+      ],
+      manualRequirements: undefined,
     });
     expect(questRequirementFields('The Final Dawn')).toEqual({
       regions: ['Tlati Rainforest', 'Civitas illa Fortis', 'Ralos\' Rise'], locations: ['crypt-of-tonali'],
@@ -455,9 +471,11 @@ describe('deterministic current content baseline', () => {
     });
     expect(questRequirementFields('Shadows of Custodia')).toEqual({
       regions: ['Auburnvale'], locations: undefined,
+      // 10 October 2026 item audit: four maple logs.
       skills: { Slayer: 54, Fishing: 45, Construction: 41, Hunter: 36 },
       combatLevel: undefined, prereqs: ['Children of the Sun'],
-      oneOf: undefined, manualRequirements: undefined,
+      oneOf: [{ skills: { Woodcutting: 45 } }, { skills: { Firemaking: 50 }, regions: ['Wintertodt Camp'] }],
+      manualRequirements: undefined,
     });
     expect(questRequirementFields('Scrambled!')).toEqual({
       regions: ['Varlamore'], locations: ['tal-teklan-dock', 'tal-teok', 'tal-teklan', 'tlati-rainforest', 'dragon-nest'],
@@ -472,7 +490,8 @@ describe('deterministic current content baseline', () => {
     expect(questRequirementFields('Prying Times')).toEqual({
       regions: ['The Open Seas'], locations: ['the-pandemonium', 'port-sarim-docks', 'thurgos-hut'],
       skills: { Smithing: 30, Sailing: 12 }, combatLevel: undefined,
-      prereqs: ['Pandemonium', "The Knight's Sword"], oneOf: undefined,
+      prereqs: ['Pandemonium', "The Knight's Sword"],
+      oneOf: [{ skills: { Cooking: 10 } }, { merchants: ['Food Shops'] }],
       manualRequirements: ['One open Sailing task slot'],
     });
     expect(questRequirementFields('Current Affairs')).toEqual({

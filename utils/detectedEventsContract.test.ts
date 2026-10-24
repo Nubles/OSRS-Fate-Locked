@@ -31,7 +31,7 @@ interface ContractEvent {
 interface ContractCase {
   id: string;
   about: string;
-  given?: Partial<Pick<UnlockState, 'quests' | 'skills' | 'levels'>>;
+  given?: Partial<Pick<UnlockState, 'quests' | 'skills' | 'levels' | 'regions' | 'merchants'>>;
   signals: { kind: string }[];
   events: ContractEvent[];
 }
@@ -62,6 +62,8 @@ function run(given: ContractCase['given'] = {}): GameState {
       skills: { ...Object.fromEntries(SKILLS_LIST.map((skill) => [skill, 1])), ...given.skills },
       levels: { ...unlocks.levels, ...given.levels },
       quests: [...unlocks.quests, ...(given.quests ?? [])],
+      regions: [...unlocks.regions, ...(given.regions ?? [])],
+      merchants: [...unlocks.merchants, ...(given.merchants ?? [])],
       bosses: [...Object.keys(BOSS_TIERS)],
     },
   };

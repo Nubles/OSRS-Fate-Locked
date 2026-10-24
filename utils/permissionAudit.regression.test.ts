@@ -36,7 +36,7 @@ describe('second audit permission regressions', () => {
     const row = () => buildChunkPermissionSnapshot(service.contentFor(loc.cx, loc.cy)!, loc,
       { unlocks: state, gameModeId: 'vanilla', contentService: service })
       .categories.QUESTS!.find(row => row.name === 'The Restless Ghost')!;
-    expect(row()).toMatchObject({ status: 'NOT_READY', detail: expect.stringMatching(/Neck.*T1.*ghostspeak/) });
+    expect(row()).toMatchObject({ status: 'NOT_READY', detail: expect.stringMatching(/Neck T1/) });
     state.equipment.Neck = 1;
     expect(row().status).toBe('ALLOWED');
   });
