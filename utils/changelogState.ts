@@ -29,6 +29,28 @@ export const shouldShowChangelog = (
   }
 };
 
+/**
+ * Whether What's New has news for this run: a release the player hasn't seen
+ * yet, on a run that has history. A run with no history is a brand-new player
+ * (or a just-made profile): every entry predates them, so nothing is news.
+ * The seen marker is the id of the last release they saw, or null for none.
+ */
+export const hasUnseenReleaseForRun = (
+  seenReleaseId: string | null,
+  latestReleaseId: string,
+  historyLength: number,
+): boolean => historyLength > 0 && seenReleaseId !== latestReleaseId;
+
+export const readSeenChangelog = (
+  storage: ChangelogStorage | undefined = browserStorage(),
+): string | null => {
+  try {
+    return storage?.getItem(CHANGELOG_STORAGE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export const markChangelogSeen = (
   releaseId: string,
   storage: ChangelogStorage | undefined = browserStorage(),

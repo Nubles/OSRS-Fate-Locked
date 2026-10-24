@@ -17,6 +17,20 @@ html[data-ui="osrs"] .osrs-char-sksub {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 html[data-ui="osrs"] .osrs-dash-skill:hover .osrs-dash-note { opacity: 1; }
+/* The "i" in a cell's corner that opens its roll odds (components/SkillInfoButton.tsx). */
+html[data-ui="osrs"] .osrs-skill-info {
+  all: unset; box-sizing: border-box; cursor: pointer; flex-shrink: 0;
+  width: 15px; height: 15px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--osrs-btn, #4a4033); border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi, #6b5f4d), inset -1px -1px 0 var(--osrs-btn-lo, #2b241b);
+  color: var(--osrs-orange, #ff981f); font: 16px/1 'RS', sans-serif; text-shadow: 1px 1px 0 #000; padding-bottom: 2px;
+}
+html[data-ui="osrs"] .osrs-skill-info:hover, html[data-ui="osrs"] .osrs-skill-info[aria-expanded="true"] { color: #fff; }
+html[data-ui="osrs"] .osrs-skill-info:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
+html[data-ui="osrs"] .osrs-skill-info-slot { position: absolute; right: 3px; bottom: 3px; display: flex; }
+/* Keep the bar and the tier line clear of the button. */
+html[data-ui="osrs"] .osrs-dash-skill:has(.osrs-skill-info-slot) .osrs-char-notches,
+html[data-ui="osrs"] .osrs-dash-skill:has(.osrs-skill-info-slot) .osrs-char-sksub { margin-right: 16px; }
 /* Total level sits in the footer; on a short panel it moves up to the title row. */
 html[data-ui="osrs"] .osrs-char-headtotal { display: none; margin-right: auto; font: 16px 'RSBold', sans-serif; color: var(--osrs-yellow, #ff0); text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 

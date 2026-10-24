@@ -8,11 +8,13 @@ type Props = {
   /** The run's unlocked minigames. */
   minigames: readonly string[];
   awarded: Readonly<Record<string, number>> | undefined;
+  /** The chance the roll is made against (useFarmModel's effectiveRate, from utils/keyChance.ts). */
+  chanceFor: (context: KeyRollContext, rate: number) => number;
   onRoll: (context: KeyRollContext, rate: number, e: React.MouseEvent) => void;
 };
 
 /** Vanilla's Activities cards: each unlocked minigame rolls from its own Key reserve. */
-export const VanillaMinigameRolls: React.FC<Props> = ({ minigames, awarded, onRoll }) => {
+export const VanillaMinigameRolls: React.FC<Props> = ({ minigames, awarded, chanceFor, onRoll }) => {
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
   const matches = minigames
@@ -33,6 +35,7 @@ export const VanillaMinigameRolls: React.FC<Props> = ({ minigames, awarded, onRo
           {matches.map(name => {
             const stage = vanillaMinigameKeyStage(name, awarded?.[name] ?? 0);
             const rate = stage.currentRate ?? 0;
+            const context: KeyRollContext = { kind: 'minigame', minigameName: name };
             const note = !stage.capped && !minigameMissPaysFate(rate)
               ? `Misses give no Fate under ${MINIGAME_MISS_FATE_MIN_RATE}%.`
               : undefined;
@@ -40,12 +43,12 @@ export const VanillaMinigameRolls: React.FC<Props> = ({ minigames, awarded, onRo
               <VanillaBossRollCard
                 key={name}
                 name={name}
-                displayRate={rate}
+                displayRate={chanceFor(context, rate)}
                 style={TIER_STYLES.BLUE}
                 stage={stage}
                 note={note}
                 cappedText={MINIGAME_CAPPED_TEXT}
-                onClick={(e) => onRoll({ kind: 'minigame', minigameName: name }, rate, e)}
+                onClick={(e) => onRoll(context, rate, e)}
               />
             );
           })}

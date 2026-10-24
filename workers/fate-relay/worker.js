@@ -22,6 +22,7 @@ import {
   MAX_PROGRESS_BYTES,
   PROGRESS_MIN_INTERVAL_MS,
   PROGRESS_TTL_SECONDS,
+  PROGRESS_UNCHANGED_REFRESH_MS,
   newLinkCode,
   feedForPublish,
   normalizeLinkCode,
@@ -35,7 +36,12 @@ import { MAX_ERROR_BYTES, errorReport, firstInWindow, forwardError } from './err
  */
 const PROFILE_TTL_SECONDS = 30 * 86400;
 const OWNER_TTL_SECONDS = 90 * 86400;
-const OWNER_REFRESH_MS = 86400 * 1000;
+/**
+ * A publish refreshes the owner record at most this often: each refresh is a
+ * KV write, and a week still leaves a code held at least 83 days after its
+ * last publish.
+ */
+const OWNER_REFRESH_MS = 7 * 86400 * 1000;
 // Versions count seconds from this instant. Never change it: clients hold
 // versions across deploys and accept only a higher one.
 const RELAY_VERSION_EPOCH_MS = Date.UTC(2026, 0, 1);
@@ -180,7 +186,8 @@ async function tokenHash(token) {
 /**
  * Who may write `key`. A separate owner record holds a SHA-256 hash of the
  * write token (never the token) for 90 days after the last refresh, so a code
- * stays claimed after its 30-day data record expires. Records written before
+ * stays claimed after its 30-day data record expires; publishes refresh it
+ * at most once a week. Records written before
  * owner records existed are adopted on their owner's next write. `claim` marks
  * a write that takes a code nobody holds.
  */
@@ -196,8 +203,8 @@ async function authorizeWrite(env, key, existing, presented) {
 }
 
 /**
- * Refresh the owner record after the data write, at most once a day to spare
- * KV writes. Best-effort: if it fails, the data record still holds the token
+ * Refresh the owner record after the data write, at most once a week
+ * (OWNER_REFRESH_MS) to spare KV writes. Best-effort: if it fails, the data record still holds the token
  * and the next write adopts it.
  */
 async function recordOwner(env, key, owner) {
@@ -334,6 +341,13 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
     return json({ code, expiresAt: Date.now() + LINK_CODE_TTL_SECONDS * 1000 }, headers);
   }
 
+  // The summary the relay already holds (a reload, or a change the summary
+  // doesn't show): no KV write, and nothing new for the bot. It is stored
+  // again once a month, so a run shared but unchanged doesn't expire.
+  if (unchangedProgress(existing, snapshot, Date.now())) {
+    return json({ updatedAt: existing.metadata.updatedAt, unchanged: true }, headers);
+  }
+
   const sinceLast = Date.now() - (existing.metadata?.updatedAt ?? 0);
   if (sinceLast < PROGRESS_MIN_INTERVAL_MS) {
     return json({ updatedAt: existing.metadata.updatedAt }, headers, 429,
@@ -355,6 +369,21 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   });
   await inBackground(ctx, notifyDiscordBot(env, id, feed.newUnlocks, snapshot, updatedAt));
   return json({ updatedAt }, headers);
+}
+
+/**
+ * Whether a progress publish would store exactly the summary the record holds,
+ * stored under PROGRESS_UNCHANGED_REFRESH_MS ago. The relay stores the
+ * summary validProgressSnapshot builds, whose fields are always in one order,
+ * so the stored text is compared as it is: no extra KV read, no parsing.
+ */
+function unchangedProgress(existing, snapshot, now) {
+  const updatedAt = existing.metadata?.updatedAt;
+  return typeof existing.value === 'string'
+    && Number.isFinite(updatedAt)
+    && now >= updatedAt
+    && now - updatedAt < PROGRESS_UNCHANGED_REFRESH_MS
+    && existing.value === JSON.stringify(snapshot);
 }
 
 /** Run `work` after the response when the runtime allows it, else before. */

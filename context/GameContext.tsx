@@ -7,16 +7,15 @@ import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { usesActivityKeyReserves, resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
-import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { exploreBlocker, withExploreStart } from '../utils/chunkExplore';
 import { leanTowardThread, withFateLand } from '../utils/fateLand';
-import { achievementBoostFor } from '../utils/achievementBoosts';
+import { keyRollOdds } from '../utils/keyChance';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
-  afterRoll, applyOddsBonus, castBarrows, castInvocations, castPact, castTears, failFate,
-  pickSacrifice, ritualAvailability, rollRitualActive, rollRitualPlan, sacrificeCandidates, tidyRituals, wardApplies,
+  afterRoll, castBarrows, castInvocations, castPact, castTears, failFate,
+  pickSacrifice, ritualAvailability, rollRitualActive, sacrificeCandidates, tidyRituals, wardApplies,
   type RitualState, type SacrificeTier,
 } from '../utils/ritualEffects';
 import { tableDisplayName } from '../utils/tableDisplay';
@@ -31,9 +30,10 @@ import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
 import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
 import { loadWalkSections } from '../utils/walkSections';
-import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
+import { UNLOCK_COST, randomUnlockPool, pickRandomUnlock, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
-import { drawFloat, seededContext } from '../utils/seededRng';
+import { CURRENT_RNG_VERSION, chaosPicksTableFirst, drawFloat, runDrawFloat, seededContext, usesSemanticContext } from '../utils/seededRng';
+import { levelsToLog, summarizeLevelBatch, type LevelBatchSummary } from '../utils/setLevel';
 import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
@@ -43,7 +43,6 @@ import {
   type BackupMeta,
 } from '../utils/backups';
 import {
-  applyPreparedReplacement,
   applyValidatedReplacementAsync,
   applyValidatedReplacement,
   prepareReplacement,
@@ -55,7 +54,8 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave, type SaveValidationResult } from '../utils/saveSchema';
+import { readRestoreCounts, rememberRun, stampRestoreCount, writeRestoreCounts, type RestoreKind } from '../utils/restoreCount';
 import { memoizeLast } from '../utils/memoizeLast';
 import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
@@ -82,6 +82,7 @@ import {
 } from '../utils/petCompensation';
 import { isPetId } from '../data/petIds';
 import { normalizeAccountName } from '../utils/accountName';
+import { pendingBaseline, planDetectedLevel, recordBaseline, skillBaseline } from '../utils/syncBaseline';
 import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
   canEarnDiaryTier,
@@ -99,11 +100,10 @@ import {
 import {
   formatKeyPercent,
   formatKeyRollValue,
-  normalizePercent,
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, isKnownVanillaMinigame, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
+import { isKnownVanillaMinigame, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -193,7 +193,11 @@ const completionFailure = (reason: string): CompletionResult => {
   return { ok: false, reason };
 };
 
-type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
+type RollEventMeta = {
+  roll: number; baseThreshold: number; threshold: number;
+  /** Fate before and after the roll, and the pity line (null with pity off): what the result toast says (utils/rollOutcomeText.ts). */
+  fateBefore?: number; fateAfter?: number; pityThreshold?: number | null;
+};
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = {
   type: Ritual['id']; won?: boolean; stake?: number; keysWon?: number; chunk?: string;
@@ -270,6 +274,14 @@ interface GameContextType extends GameState {
   /** Chunked: a Gilded chunk's free Key roll (utils/fateLand.ts). */
   rollGilded: (chunk: string, x?: number, y?: number) => void;
   levelUpSkill: (skill: string) => void;
+  /**
+   * Set level: log every level from the skill's current level up to `level`,
+   * each rolled exactly as one levelUpSkill click would (same actions, same
+   * nextFloat draws in the same order), committed at once with no per-level
+   * popup. Returns what the levels brought, or null when nothing was logged
+   * (utils/setLevel.ts levelsToLog; utils/setLevelText.ts says why).
+   */
+  setSkillLevel: (skill: string, level: number) => LevelBatchSummary | null;
   toggleAnimations: () => void;
   toggleAdvisors: () => void;
   toggleRevealAll: () => void;
@@ -293,7 +305,8 @@ interface GameContextType extends GameState {
   /**
    * Gameplay RNG choke point. On a seeded run this derives from
    * (rngSeed, versioned history context, purpose, index) — deterministic and
-   * replayable; on an unseeded run it's Math.random. EVERY gameplay outcome
+   * replayable; an unseeded run draws the same way from its hidden salt
+   * (GameState.rngSalt), so a restore cannot re-roll. EVERY gameplay outcome
    * (rolls, table picks, gambles) must draw through here, never Math.random
    * directly — that's what makes seeded runs raceable and verifiable.
    * Visual-only randomness (particles, animation jitter) is exempt.
@@ -322,6 +335,10 @@ interface GameContextType extends GameState {
   setLinkedAccount: (account: string) => void;
   /** Change the linked character's name, as after an OSRS name change. */
   renameLinkedAccount: (from: string, to: string) => void;
+  /** Record a successful hiscores reading of the linked name as its Sync & Roll baseline (utils/syncBaseline.ts). */
+  recordSyncBaseline: (account: string, levels: Record<string, number | null>) => void;
+  /** Record a skill's baseline level without a roll, before Sync & Roll rolls the levels above it. False when refused. */
+  catchUpSyncLevel: (skill: string, level: number) => boolean;
   /** Rival Ghost controls. */
   setRival: (rival: RivalState) => void;
   clearRival: () => void;
@@ -362,6 +379,7 @@ export const initialState: GameState = {
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
   runId: newRunId(),
+  rngSalt: newRunId(),
   runRevision: 0,
   keys: STARTING_KEYS,
   specialKeys: 0,
@@ -401,6 +419,8 @@ export const createFreshState = (): GameState => ({
   userNotes: {},
   loadout: {},
   runId: newRunId(),
+  // The run's hidden salt: its draws without a seed (see GameState.rngSalt).
+  rngSalt: newRunId(),
   runRevision: 0,
   // A new run is paid for every achievement it earns (see GameState).
   achievementsClaimed: [],
@@ -523,6 +543,8 @@ export type Action =
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
   | { type: 'SET_LINKED_ACCOUNT'; payload: string }
   | { type: 'RENAME_LINKED_ACCOUNT'; payload: { from: string; to: string } }
+  | { type: 'RECORD_SYNC_BASELINE'; payload: { account: string; levels: Record<string, number | null> } }
+  | { type: 'SYNC_CATCH_UP_LEVEL'; payload: { skill: string; level: number } }
   | { type: 'SET_RIVAL'; payload: RivalState }
   | { type: 'CLEAR_RIVAL' }
   | { type: 'ACK_RIVAL'; payload: number }
@@ -575,49 +597,19 @@ export function prepareKeyRollAction(
   meta?: DetectedGameEventMeta,
   context?: KeyRollContext,
 ): RollResultAction | null {
-  const vanillaBossContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'boss'
-    ? context
-    : null;
-  const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
-    ? context
-    : null;
-  const recordedBossAwarded = vanillaBossContext
-    ? state.bossStandardKeysAwarded?.[vanillaBossContext.bossName] ?? 0
-    : 0;
-  const bossStage = vanillaBossContext
-    ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
-    : null;
-  const vanillaMinigameContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'minigame'
-    ? context
-    : null;
-  // A minigame that left the table (Rat Pits) has nothing left to pay.
-  if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return null;
-  const minigameStage = vanillaMinigameContext
-    ? vanillaMinigameKeyStage(
-      vanillaMinigameContext.minigameName,
-      state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
-    )
-    : null;
-  // A boss or a minigame: both pay from a fixed Key reserve.
-  const reserveStage = bossStage ?? minigameStage;
-
-  // Do not advance seeded RNG (or consume a buff) after a boss or minigame reserve ends.
-  if (reserveStage?.capped) return null;
+  // The odds come from utils/keyChance.ts, the same function every screen
+  // that shows a Key chance reads (utils/keyChance.test.ts pins them).
+  // Null: a boss or minigame reserve that has run out, or a minigame that
+  // left the table (Rat Pits). Do not advance seeded RNG (or consume a buff).
+  const odds = keyRollOdds(state, source, threshold, context);
+  if (!odds) return null;
+  const {
+    bossContext: vanillaBossContext, clueContext: vanillaClueContext, minigameContext: vanillaMinigameContext,
+    bossStage, minigameStage, clueAwarded, successBonus, omniBonus, plan,
+  } = odds;
 
   const mode = resolveModeRules(state.gameModeId, state.customMode);
-  let successBonus = 0;
-  let omniBonus = 0;
-  if (mode.regionModifiers) {
-    const bonuses = getActiveRegionBonuses(state.unlocks.regions);
-    successBonus = bonuses.successBonus;
-    omniBonus = bonuses.omniBonus;
-  }
-  // Activity milestones the run has earned raise that activity's own rolls,
-  // apart from Vanilla minigame reserves, which keep their own pace.
-  if (!vanillaMinigameContext) successBonus += achievementBoostFor(source, state.achievementsClaimed);
-
-  const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
-  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
+  const isVanillaContext = odds.exact;
   const rollPurpose = vanillaBossContext
     ? `roll:boss:${vanillaBossContext.bossName}:${bossStage!.awarded}`
     : vanillaMinigameContext
@@ -628,15 +620,14 @@ export function prepareKeyRollAction(
 
   // Integer dice must land inside their float bin, not on its rounding edge.
   // Keep the old conversion for existing seeded histories to preserve their stream.
-  const dieOffset = state.rngSeed && state.rngVersion !== 2 ? 1 : 0.5;
+  const dieOffset = state.rngSeed && !usesSemanticContext(state) ? 1 : 0.5;
   let roll: number;
   let baseThreshold: number;
   let effectiveThreshold: number;
   let success: boolean;
   if (isVanillaContext) {
-    baseThreshold = reserveStage?.currentRate
-      ?? effectiveVanillaClueRate(threshold, clueAwarded);
-    effectiveThreshold = normalizePercent(Math.max(0, Math.min(100, baseThreshold + successBonus)));
+    baseThreshold = odds.baseThreshold;
+    effectiveThreshold = odds.boostedThreshold;
     const exactRoll = (index: number) => resolveKeyRoll(
       (nextDice(rollPurpose, index, 10_000) - dieOffset) / 10_000,
       effectiveThreshold,
@@ -665,9 +656,8 @@ export function prepareKeyRollAction(
 
   // The run's rituals (Pact, Invocations, Barrows): odds first, then Verac's
   // hit-through on a miss. Extra dice are drawn only while a ritual asks.
-  const plan = rollRitualPlan(state.rituals, state.fatePoints);
   if (plan.oddsBonus !== 0) {
-    effectiveThreshold = normalizePercent(applyOddsBonus(effectiveThreshold, plan.oddsBonus));
+    effectiveThreshold = odds.threshold;
     success = roll <= effectiveThreshold;
   }
   let hitThrough = false;
@@ -734,18 +724,25 @@ export const prepareDetectedEventAcceptanceAction = (
   meta: DetectedGameEventMeta,
   expected: DetectedEventIdentity,
 ): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
-  const currentSkillLevel = progress.kind === 'SKILL_LEVEL'
-    ? state.unlocks.levels[progress.skill] ?? 1
-    : 0;
-  const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
-    ? Array.from({ length: Math.min(99, progress.level) - currentSkillLevel }, (_, index) => currentSkillLevel + index + 1)
+  // Sync & Roll's baseline (utils/syncBaseline.ts): Chaos milestones count only
+  // levels above the run's and the baseline's. Otherwise the manual level-up's
+  // rules, as before (no milestone or 2% chance past the Chunked tier cap).
+  const detectedLevel = progress.kind === 'SKILL_LEVEL'
+    ? planDetectedLevel({
+      tracker: state.unlocks.levels[progress.skill] ?? 1,
+      level: progress.level,
+      baseline: skillBaseline(state.syncBaseline, state.linkedAccount, progress.skill),
+    })
+    : null;
+  const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && detectedLevel?.hold === null
+    ? Array.from({ length: Math.max(0, Math.min(99, progress.level) - detectedLevel.from) }, (_, index) => detectedLevel.from + index + 1)
       // Chunked: a milestone past the tier cap pays nothing, as a manual level-up there.
       .filter(level => isSkillChaosMilestone(level) && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, level)).length
     : 0;
   // The 2% Chaos chance rolls once, as a manual level-up's does, and not for
   // a level past the Chunked tier cap (LEVEL_UP's rule).
-  const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
-    && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, currentSkillLevel + 1)
+  const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && detectedLevel?.hold === null
+    && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, detectedLevel.from + 1)
     && nextDice('detected-skill-chaos', 0, 100) <= 2
     ? 1
     : 0;
@@ -838,6 +835,39 @@ export const prepareLevelUpActions = (
       nextDice,
     ),
   };
+};
+
+/**
+ * One level-up, as a click on the skill logs it: draw the Chaos roll, decide
+ * the Key roll against the run before the level, apply the level, then the
+ * roll with the level's meta. levelUpSkill commits each action as it goes;
+ * setSkillLevel runs this step once per level and commits once at the end.
+ */
+export const stepLevelUp = (
+  getState: () => GameState & { lastEvent: GameEvent | null },
+  skill: string,
+  nextFloat: (purpose: string) => number,
+  nextDice: DiceRoller,
+  commit: (action: TransitionAction) => GameState & { lastEvent: GameEvent | null },
+): void => {
+  const levelBefore = getState().unlocks.levels[skill] || 1;
+  // Level 99 is the cap; a level-up that changes nothing earns no roll.
+  if (levelBefore >= 99) return;
+  // Pre-compute RNG outside reducer to maintain reducer purity
+  const chaosRoll = nextFloat('levelup');
+  const prepared = prepareLevelUpActions(getState(), skill, chaosRoll, nextDice);
+  const levelState = commit(prepared.levelAction);
+  if ((levelState.unlocks.levels[skill] || 1) === levelBefore || !prepared.rewardAction) return;
+  const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
+    ? levelState.lastEvent.meta
+    : undefined;
+  commit({
+    ...prepared.rewardAction,
+    payload: {
+      ...prepared.rewardAction.payload,
+      meta: { ...prepared.rewardAction.payload.meta, ...levelUpMeta },
+    },
+  });
 };
 
 // Wrap the raw reducer so any history entries appended during a dispatch
@@ -1171,7 +1201,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // Like the game mode, the seed is part of the run's identity — it can
       // be chosen or changed only while the run has no history.
       if (state.history.length > 0) return state;
-      return { ...state, rngSeed: action.payload || undefined, rngVersion: 2 };
+      return { ...state, rngSeed: action.payload || undefined, rngVersion: CURRENT_RNG_VERSION };
     }
 
     case 'ACCEPT_DETECTED_EVENT': {
@@ -1497,6 +1527,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         });
         newState.lastEvent = { id: generateId(), type: 'ROLL_FAIL', x, y, meta: eventMeta };
       }
+      // The result toast and the quest overlay say what Fate the roll left.
+      if (newState.lastEvent?.meta) {
+        newState.lastEvent = {
+          ...newState.lastEvent,
+          meta: {
+            ...newState.lastEvent.meta,
+            fateBefore: state.fatePoints,
+            fateAfter: newState.fatePoints,
+            pityThreshold: rollRules.pityEnabled ? rollRules.pityThreshold : null,
+          } as GameEventMeta,
+        };
+      }
 
       return { ...newState, history: newHistory };
     }
@@ -1514,9 +1556,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
-      // Saradomin's Ward: a random spend on a place (or a Chaos Key) must have been drawn
+      // Saradomin's Ward: a random spend on a place (or a Chunked Chaos Key) must have been drawn
       // from what the run can use now. rollUnlock filters the draw and marks it.
-      const warded = !!action.payload.revealId && state.rituals?.ward === true && costType !== 'specialKey' && wardApplies(costType, table);
+      const warded = !!action.payload.revealId && state.rituals?.ward === true && costType !== 'specialKey' && wardApplies(costType, table, state.gameModeId);
       if (warded && action.payload.ward !== true) return state;
       // Direct (Omni) unlocks must be paid for and still unlockable, or two
       // quick confirmations could spend one Omni-key twice.
@@ -1970,8 +2012,46 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'SET_LINKED_ACCOUNT': {
       // Link the run to one OSRS account on the first fetch; RENAME_LINKED_ACCOUNT changes it.
+      // The baseline waits for that fetch's reading (RECORD_SYNC_BASELINE).
       if (state.linkedAccount) return state;
-      return { ...state, linkedAccount: action.payload };
+      return { ...state, linkedAccount: action.payload, syncBaseline: pendingBaseline(action.payload) };
+    }
+
+    case 'RECORD_SYNC_BASELINE': {
+      // A successful hiscores reading of the linked name: the levels it already
+      // had become the baseline Sync & Roll never rolls (utils/syncBaseline.ts).
+      const syncBaseline = recordBaseline(state.syncBaseline, state.linkedAccount, action.payload.account, action.payload.levels, now);
+      return syncBaseline === state.syncBaseline ? state : { ...state, syncBaseline };
+    }
+
+    case 'SYNC_CATCH_UP_LEVEL': {
+      // Before Sync & Roll rolls a skill's first level above the baseline, the
+      // run records the baseline level itself, without a roll: the account
+      // already had it. Only up to the baseline.
+      const { skill, level } = action.payload;
+      const current = state.unlocks.levels[skill] ?? 1;
+      const tier = state.unlocks.skills[skill] ?? 0;
+      const baseline = skillBaseline(state.syncBaseline, state.linkedAccount, skill);
+      if (typeof baseline !== 'number' || tier < 1) return state;
+      if (!Number.isSafeInteger(level) || level <= current || level > baseline) return state;
+      const levels = { ...state.unlocks.levels, [skill]: level };
+      const totalLevel = Object.values(levels).reduce((a, b) => a + b, 0);
+      return {
+        ...state,
+        unlocks: { ...state.unlocks, levels },
+        // Levels the account already had never count toward a start-area milestone Key.
+        ...(state.gameModeId === 'xtreme'
+          ? { xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL)) }
+          : {}),
+        history: [...state.history, {
+          id: generateId(),
+          timestamp: now,
+          type: 'LEVEL_UP',
+          message: `${skill} Level ${level}: already had`,
+          details: 'Had when the run was linked: no roll. Only new levels roll.',
+          meta: { skill, level, totalLevel, syncBaseline: baseline, chaosKeysAwarded: 0, chaosKeyAwarded: false },
+        }],
+      };
     }
 
     case 'RENAME_LINKED_ACCOUNT': {
@@ -1982,7 +2062,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const next = to.trim();
       if (!state.linkedAccount || !next) return state;
       if (normalizeAccountName(state.linkedAccount) !== normalizeAccountName(from)) return state;
-      return { ...state, linkedAccount: next };
+      // A new name takes a new baseline from its first reading: Sync & Roll
+      // can't tell one character's hiscores from another's.
+      if (normalizeAccountName(state.linkedAccount) === normalizeAccountName(next)) return { ...state, linkedAccount: next };
+      return { ...state, linkedAccount: next, syncBaseline: pendingBaseline(next) };
     }
 
     case 'LOG_ITEM': {
@@ -3022,13 +3105,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   // Gameplay RNG choke point (see GameContextType.nextFloat). Reads through
   // stateRef so one render's callbacks always draw against the latest chain
   // tip; the tip changes with every appended history entry, which is what
-  // keeps successive draws independent on a seeded run.
-  const nextFloat = useCallback((purpose: string, index = 0): number => {
-    const s = stateRef.current;
-    if (!s.rngSeed) return Math.random();
-    const tip = seededContext(s);
-    return drawFloat(s.rngSeed, tip, purpose, index);
-  }, []);
+  // keeps successive draws independent. A seeded run draws from its seed, any
+  // other run from its hidden salt (runDrawFloat), so a restored backup gives
+  // the same result for the same action. Math.random is left only for a state
+  // that has neither.
+  const nextFloat = useCallback((purpose: string, index = 0): number =>
+    runDrawFloat(stateRef.current, purpose, index) ?? Math.random(), []);
   const nextDice = useCallback((purpose: string, index = 0, max = 100): number =>
     Math.floor(nextFloat(purpose, index) * max) + 1, [nextFloat]);
   const setSeed = useCallback((seed: string) =>
@@ -3067,17 +3149,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         return;
       }
       // Saradomin's Ward: fate still picks, but only from what the run can use right now.
-      const warded = current.rituals?.ward === true && wardApplies(costType, table);
+      const warded = current.rituals?.ward === true && wardApplies(costType, table, current.gameModeId);
       if (warded && !usable) return;
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
-      // Chunked: one Chunks draw in six goes toward Fate's Thread (utils/fateLand.ts).
-      if (table === TableType.CHUNKS) pool = leanTowardThread(pool, current.fateLand?.thread, nextFloat('fate-thread-lean'));
-      const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
+      // Chunked: one Chunks draw in six goes toward Fate's Thread, unless a
+      // Tangled chunk spares this one (utils/fateLand.ts).
+      if (table === TableType.CHUNKS) {
+        const lean = nextFloat('fate-thread-lean');
+        if (!current.fateLand?.tangled) pool = leanTowardThread(pool, current.fateLand?.thread, lean);
+      }
+      // A Chaos Key picks a table, then an entry in it (utils/gameEngine.ts).
+      const selection = pickRandomUnlock(pool, costType, chaosPicksTableFirst(current), nextFloat);
       if (!selection) {
         showToast(warded
           ? "Saradomin's Ward finds nothing here you can use yet. Your Key is safe: try another category."
-          : 'No eligible unlocks remain. Open more locations or choose another category.');
+          : 'Nothing left to unlock here. Choose another category.');
         return;
       }
       const next = commitAction({ type: 'UNLOCK', payload: { ...selection, costType, cost: UNLOCK_COST, revealId: generateId(), ...(warded ? { ward: true } : {}) } });
@@ -3086,7 +3173,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       else flushCurrentSave();
     };
     const current = stateRef.current;
-    if (current.rituals?.ward !== true || !wardApplies(costType, table)) { draw(); return; }
+    if (current.rituals?.ward !== true || !wardApplies(costType, table, current.gameModeId)) { draw(); return; }
     // The Ward's activity checks load with the first warded spend, not with the app.
     import('../utils/ritualWard').then(({ wardUsable }) => {
       if (!mountedRef.current) return;
@@ -3206,25 +3293,32 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   }, [commitAction]);
 
   const levelUpSkill = useCallback((skill: string) => {
-    const levelBefore = stateRef.current.unlocks.levels[skill] || 1;
-    // Level 99 is the cap; a level-up that changes nothing earns no roll.
-    if (levelBefore >= 99) return;
-    // Pre-compute RNG outside reducer to maintain reducer purity
-    const chaosRoll = nextFloat('levelup');
-    const prepared = prepareLevelUpActions(stateRef.current, skill, chaosRoll, nextDice);
-    const levelState = commitAction(prepared.levelAction);
-    if ((levelState.unlocks.levels[skill] || 1) === levelBefore || !prepared.rewardAction) return;
-    const levelUpMeta = levelState.lastEvent?.type === 'LEVEL_UP'
-      ? levelState.lastEvent.meta
-      : undefined;
-    commitAction({
-      ...prepared.rewardAction,
-      payload: {
-        ...prepared.rewardAction.payload,
-        meta: { ...prepared.rewardAction.payload.meta, ...levelUpMeta },
-      },
-    });
+    stepLevelUp(() => stateRef.current, skill, nextFloat, nextDice, commitAction);
   }, [commitAction, nextDice, nextFloat]);
+
+  const setSkillLevel = useCallback((skill: string, level: number): LevelBatchSummary | null => {
+    const before = stateRef.current;
+    const count = levelsToLog(before.unlocks.levels[skill] || 1, before.unlocks.skills[skill] || 0, level);
+    if (count === 0) return null;
+    // Each level runs the click's own step against stateRef, so nextFloat and
+    // nextDice draw from the same chain tips in the same order as N clicks.
+    // Nothing reaches React until the last level: one commit, one render,
+    // one save, and no popup or animation per level.
+    let after = before;
+    try {
+      const reduceOnly = (action: TransitionAction) => (stateRef.current = gameReducer(stateRef.current, action));
+      for (let i = 0; i < count; i++) stepLevelUp(() => stateRef.current, skill, nextFloat, nextDice, reduceOnly);
+      after = stateRef.current;
+    } finally {
+      stateRef.current = before;
+    }
+    if (after === before) return null;
+    const committed = { ...after, lastEvent: null };
+    stateMutationRef.current += 1;
+    stateRef.current = committed;
+    dispatch({ type: 'COMMIT_STATE', payload: committed });
+    return summarizeLevelBatch(before, committed, skill);
+  }, [nextDice, nextFloat]);
 
   const acceptDetectedEvent = useCallback((
     progress: DetectedProgress,
@@ -3268,6 +3362,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({
 
   const renameLinkedAccount = useCallback((from: string, to: string) => {
     commitAction({ type: 'RENAME_LINKED_ACCOUNT', payload: { from, to } });
+  }, [commitAction]);
+
+  const recordSyncBaseline = useCallback((account: string, levels: Record<string, number | null>) => {
+    commitAction({ type: 'RECORD_SYNC_BASELINE', payload: { account, levels } });
+  }, [commitAction]);
+
+  const catchUpSyncLevel = useCallback((skill: string, level: number): boolean => {
+    const current = stateRef.current;
+    return commitAction({ type: 'SYNC_CATCH_UP_LEVEL', payload: { skill, level } }) !== current;
   }, [commitAction]);
 
   const setRival = useCallback((rival: RivalState) =>
@@ -3486,13 +3589,26 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     return checkpoint;
   }, [coordinator, pushOwnedBackup]);
 
+  // Every import and restore carries the run's restore count, merged with
+  // this profile's own count, which the replacement cannot roll back
+  // (utils/restoreCount.ts). The profile's count is written once it lands.
+  const stampReplacement = useCallback((prepared: SaveValidationResult, kind: RestoreKind) => {
+    const stamped = stampRestoreCount(prepared, stateRef.current, readRestoreCounts(localStorage, storageKey), kind);
+    const settle = (result: ImportResult): ImportResult => {
+      if (result.ok) writeRestoreCounts(localStorage, storageKey, stamped.counts);
+      return result;
+    };
+    return { prepared: stamped.prepared, settle };
+  }, [storageKey]);
+
   const importSave = useCallback(async (data: unknown): Promise<ImportResult> => {
     const authorization = authorizeOwnedWrite();
     if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
     const isCurrent = beginReplacement();
+    const { prepared, settle } = stampReplacement(prepareReplacement(data, stateRef.current, createFreshState()), 'import');
     if (coordinator !== null) {
-      return applyValidatedReplacementAsync(
-        prepareReplacement(data, stateRef.current, createFreshState()),
+      return settle(await applyValidatedReplacementAsync(
+        prepared,
         {
           current: stateRef.current,
           createCheckpoint: createCoordinatedCheckpoint,
@@ -3501,18 +3617,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           replace: replaceState,
           isCurrent,
         },
-      );
+      ));
     }
     if (!isCurrent()) return replacementStaleResult();
-    const result = applyPreparedReplacement(data, {
+    return settle(applyValidatedReplacement(prepared, {
       current: stateRef.current,
-      defaults: createFreshState(),
       writeBackup: current => pushOwnedBackup(current, 'Before import'),
       writeReplacement,
       replace: replaceState,
-    });
-    return result;
-  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, writeCoordinatedReplacement, writeReplacement]);
+    }));
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, stampReplacement, writeCoordinatedReplacement, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult | Promise<BackupWriteResult> => {
     const data = serializeCurrent();
@@ -3579,9 +3693,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
+    const { prepared, settle } = stampReplacement(parseAndMigrateSave(data, createFreshState()), 'restore');
     if (coordinator !== null) {
-      return applyValidatedReplacementAsync(
-        parseAndMigrateSave(data, createFreshState()),
+      return settle(await applyValidatedReplacementAsync(
+        prepared,
         {
           current: stateRef.current,
           createCheckpoint: createCoordinatedCheckpoint,
@@ -3590,21 +3705,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           replace: replaceState,
           isCurrent,
         },
-      );
+      ));
     }
     if (!isCurrent()) return replacementStaleResult();
-    const result = applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
+    return settle(applyValidatedReplacement(prepared, {
       current: stateRef.current,
       writeBackup: current => pushOwnedBackup(current, 'Before restore'),
       writeReplacement,
       replace: replaceState,
-    });
-    return result;
-  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
+    }));
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, stampReplacement, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
   const resetGame = useCallback(async (): Promise<void> => {
     // Auto-snapshot so an accidental reset is recoverable.
     const isCurrent = beginReplacement();
+    // Remember the run being reset, so importing it again counts as a restore.
+    writeRestoreCounts(localStorage, storageKey, rememberRun(readRestoreCounts(localStorage, storageKey), stateRef.current));
     if (coordinator !== null) {
       const replacement = createFreshState();
       const backup = await createCoordinatedCheckpoint(
@@ -3630,7 +3746,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     pushOwnedBackup(serializeCurrent(), 'Before reset');
     setStateReplacements(count => count + 1);
     commitAction({ type: 'RESET' });
-  }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, writeCoordinatedReplacement]);
+  }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, storageKey, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const saveNote = useCallback((id: string, text: string) =>
     commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);
@@ -3759,6 +3875,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     exploreChunk,
     rollGilded,
     levelUpSkill,
+    setSkillLevel,
     toggleAnimations,
     toggleAdvisors,
     toggleRevealAll,
@@ -3789,6 +3906,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setLoadoutSlot,
     setLinkedAccount,
     renameLinkedAccount,
+    recordSyncBaseline,
+    catchUpSyncLevel,
     setRival,
     clearRival,
     ackRival
@@ -3819,6 +3938,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     exploreChunk,
     rollGilded,
     levelUpSkill,
+    setSkillLevel,
     toggleAnimations,
     toggleAdvisors,
     toggleRevealAll,
@@ -3849,6 +3969,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setLoadoutSlot,
     setLinkedAccount,
     renameLinkedAccount,
+    recordSyncBaseline,
+    catchUpSyncLevel,
     setRival,
     clearRival,
     ackRival
@@ -3881,7 +4003,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
         tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined}
-        chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined} /> : null}
+        chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined}
+        chunkedMarks={state.gameModeId === 'chunked' ? state.fateLand?.marks : undefined} /> : null}
     </GameContext.Provider>
   );
 };

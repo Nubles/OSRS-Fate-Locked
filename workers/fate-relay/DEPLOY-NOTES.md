@@ -60,3 +60,34 @@ the rules are up to date.
 
 `npx wrangler@latest rollback` restores the previous version. Records written
 by the new version stay readable by the old one.
+
+---
+
+# Fewer KV writes (October 2026)
+
+Two relay changes spare the free plan's 1,000 KV writes a day. Neither needs
+a new binding, secret or `wrangler.toml` change; deploy with the next
+`npx wrangler@latest deploy` from `workers/fate-relay/`. Until then the old
+relay keeps working with the new tracker, and the tracker's own savings
+(unchanged profiles not re-sent, longer waits between publishes and
+backups) work without it.
+
+- A shared-progress publish of the summary the relay already holds (after a
+  reload, say) writes nothing and answers `{ updatedAt, unchanged: true }`;
+  the bot hears nothing new. A summary unchanged for 30 days is stored
+  again, so it doesn't expire.
+- A RuneLite publish refreshes the code's owner record at most once a week
+  instead of once a day (the record still lasts 90 days).
+
+The hourly usage alert is a GitHub Actions workflow, not part of the relay:
+it needs no deploy, only the `CLOUDFLARE_ANALYTICS_TOKEN` repository secret
+(docs/online-relay.md, "Daily KV quota").
+
+Checking it (writes nothing):
+
+```sh
+curl.exe -s -o NUL -w "%{http_code}\n" https://fate-relay.fatelocked.workers.dev/r/ABCD
+# 400, as before
+```
+
+Rolling back: `npx wrangler@latest rollback`; records stay readable by both.

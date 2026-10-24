@@ -9,6 +9,12 @@ export const PROGRESS_TTL_SECONDS = 90 * 86400;
 export const MAX_PROGRESS_BYTES = 8 * 1024;
 /** One publish a minute per run: each is a KV write. */
 export const PROGRESS_MIN_INTERVAL_MS = 60 * 1000;
+/**
+ * A publish of the summary the relay already holds writes nothing, unless
+ * the stored one is this old: then it is stored again, so a shared run that
+ * hasn't changed lasts its 90 days from the last time it was opened.
+ */
+export const PROGRESS_UNCHANGED_REFRESH_MS = 30 * 86400 * 1000;
 export const LINK_CODE_TTL_SECONDS = 10 * 60;
 export const LINK_CODE_LENGTH = 8;
 // No I, L, O or U, so a code read aloud or retyped is hard to get wrong.

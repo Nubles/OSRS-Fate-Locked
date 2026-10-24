@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { drawFloat, drawDice, weeklySeed, randomSeed, normalizeSeed } from './seededRng';
+import { drawFloat, drawDice, weeklySeed, randomSeed, normalizeSeed, legacyRunSalt, runDrawFloat, runDrawSource, seededContext } from './seededRng';
+import type { LogEntry } from '../types';
 
 describe('drawFloat determinism', () => {
   it('same inputs → same output', () => {
@@ -58,5 +59,61 @@ describe('seed helpers', () => {
     expect(randomSeed()).toMatch(/^FATE-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/);
     expect(normalizeSeed('  hello world  ')).toBe('HELLO WORLD');
     expect(normalizeSeed('x'.repeat(100)).length).toBe(64);
+  });
+});
+
+// An old seeded save's history, as saved before runs had salts.
+const OLD_SEEDED_HISTORY = [
+  { id: 'e1', timestamp: 1752000000000, type: 'ROLL_FAIL', message: 'Rolled for a Key', hash: '9f1c2a7b', prevHash: 'GENESIS' },
+  { id: 'e2', timestamp: 1752000060000, type: 'UNLOCK', message: 'Unlocked Attack', meta: { item: 'Attack', category: 'Skills', cost: 1 }, hash: '4d0e8c11', prevHash: '9f1c2a7b' },
+] as unknown as LogEntry[];
+
+describe('a run draws from its seed, or else its hidden salt (critique GP-4)', () => {
+  // Numbers taken from main before salts existed: a seeded run's stream must not move.
+  it.each([
+    [undefined, 'roll', 0, 0.764468627050519],
+    [undefined, 'roll', 1, 0.12908822251483798],
+    [undefined, 'gacha', 0, 0.7847057357430458],
+    [undefined, 'levelup', 1, 0.5418581953272223],
+    [2, 'roll', 0, 0.8309968309476972],
+    [2, 'gacha', 1, 0.6621690322645009],
+    [2, 'levelup', 0, 0.0009004829917103052],
+  ] as const)('replays an old seeded save (rngVersion %s) bit for bit: %s #%i', (rngVersion, purpose, index, expected) => {
+    const state = { history: OLD_SEEDED_HISTORY, rngVersion, rngSeed: 'FATE-2026-W30' };
+    expect(runDrawFloat(state, purpose, index)).toBe(expected);
+    // A salt never touches a seeded run.
+    expect(runDrawFloat({ ...state, rngSalt: 'any-salt' }, purpose, index)).toBe(expected);
+  });
+
+  it('draws an unseeded run from its salt over the semantic chain, so ids and times do not matter', () => {
+    const restored = { history: OLD_SEEDED_HISTORY, rngSalt: 'run-salt' };
+    const sameActionsLater = {
+      history: OLD_SEEDED_HISTORY.map((entry, i) => ({ ...entry, id: `other-${i}`, timestamp: entry.timestamp + 86_400_000, hash: `h${i}` })),
+      rngSalt: 'run-salt',
+    };
+    expect(runDrawFloat(restored, 'gacha')).toBe(runDrawFloat(sameActionsLater, 'gacha'));
+    expect(runDrawSource(restored)).toEqual({
+      seed: 'salt:run-salt',
+      context: seededContext({ history: OLD_SEEDED_HISTORY, rngVersion: 2 }),
+    });
+    expect(runDrawFloat({ ...restored, rngSalt: 'another-run' }, 'gacha')).not.toBe(runDrawFloat(restored, 'gacha'));
+    // A different action before the draw is a different context.
+    expect(runDrawFloat({ ...restored, history: OLD_SEEDED_HISTORY.slice(0, 1) }, 'gacha')).not.toBe(runDrawFloat(restored, 'gacha'));
+  });
+
+  it('keeps salted and seeded streams apart, and leaves a state with neither to the caller', () => {
+    // Seeds are upper-cased; the salt stream's prefix is lower case.
+    expect(runDrawSource({ history: [], rngSalt: 'x' })?.seed).toBe('salt:x');
+    expect(normalizeSeed('salt:x')).not.toBe('salt:x');
+    expect(runDrawFloat({ history: [] }, 'roll')).toBeNull();
+  });
+
+  it('gives a run saved before salts the same fixed-length salt from its first entry, every time', () => {
+    const salt = legacyRunSalt(OLD_SEEDED_HISTORY);
+    expect(salt).toMatch(/^legacy-[0-9a-f]{32}$/);
+    expect(legacyRunSalt(OLD_SEEDED_HISTORY.map(entry => ({ ...entry })))).toBe(salt);
+    expect(legacyRunSalt([{ ...OLD_SEEDED_HISTORY[0], id: 'x'.repeat(512) }])).toMatch(/^legacy-[0-9a-f]{32}$/);
+    expect(legacyRunSalt([{ ...OLD_SEEDED_HISTORY[0], id: 'other' }])).not.toBe(salt);
+    expect(legacyRunSalt([])).toBeNull();
   });
 });

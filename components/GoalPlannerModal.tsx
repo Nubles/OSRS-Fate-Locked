@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Search, X, CheckCircle2, Circle, ArrowRight, Route, Lock, AlertCircle, RefreshCw, RotateCcw } from 'lucide-react';
 import { Target, MapPin, BookOpen, Award, Compass, Shield, Gamepad2, Swords, Flag, Sprout, Home, Skull } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -13,6 +13,7 @@ import { isAreaReachable } from '../utils/reachability';
 import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { DIARY_DATA } from '../data/diaryData';
 import { SectionGuide } from './SectionGuide';
 import { useIsOsrsUi } from '../utils/uiStyle';
@@ -450,6 +451,8 @@ export const GoalPlannerModal: React.FC<Props> = ({
     onOpenWorldChunk?.(cx, cy);
   }, [cancelRuneProofRequest, onClose, onOpenWorldChunk]);
   useEscapeKey(handleClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
   useEffect(() => {
     const root = document.documentElement;
     const previousRootOverflow = root.style.overflow;
@@ -893,6 +896,8 @@ export const GoalPlannerModal: React.FC<Props> = ({
     <div
       className="osrs-wa-overlay fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={handleClose}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label={runeProofEnabled ? 'RuneProof' : 'Goal Planner'}

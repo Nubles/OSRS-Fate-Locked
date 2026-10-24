@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   CHANGELOG_STORAGE_KEY, ChangelogStorage,
-  changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain,
+  changelogVisibilityReducer, hasUnseenReleaseForRun, markChangelogSeen,
+  mayAutoOpenChangelogAgain, readSeenChangelog,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
   shouldEnableUnderlyingModalEscape,
   shouldRenderUnderlyingModals, shouldShowChangelog,
@@ -20,6 +21,53 @@ class MemoryStorage implements ChangelogStorage {
   getItem(key: string) { return this.values.get(key) ?? null; }
   setItem(key: string, value: string) { this.values.set(key, value); }
 }
+
+describe('What\'s New for a brand-new player', () => {
+  const LATEST = '2026-10-18-latest';
+
+  it('has no news for a run with no history, whatever the seen marker says', () => {
+    expect(hasUnseenReleaseForRun(null, LATEST, 0)).toBe(false);
+    expect(hasUnseenReleaseForRun('2026-09-01-older', LATEST, 0)).toBe(false);
+    expect(hasUnseenReleaseForRun(LATEST, LATEST, 0)).toBe(false);
+  });
+
+  it('still has news for a returning player with an older or missing marker', () => {
+    expect(hasUnseenReleaseForRun('2026-09-01-older', LATEST, 1)).toBe(true);
+    expect(hasUnseenReleaseForRun('2026-09-01-older', LATEST, 250)).toBe(true);
+    expect(hasUnseenReleaseForRun(null, LATEST, 12)).toBe(true);
+  });
+
+  it('has no news once the latest entry was seen', () => {
+    expect(hasUnseenReleaseForRun(LATEST, LATEST, 40)).toBe(false);
+  });
+
+  it('marking seen at the end of onboarding keeps the first roll from bringing it back', () => {
+    const storage = new MemoryStorage();
+    expect(readSeenChangelog(storage)).toBeNull();
+    markChangelogSeen(LATEST, storage);
+    expect(hasUnseenReleaseForRun(readSeenChangelog(storage), LATEST, 1)).toBe(false);
+    // The next release is news again.
+    expect(hasUnseenReleaseForRun(readSeenChangelog(storage), '2026-11-01-next', 1)).toBe(true);
+  });
+
+  it('never auto-opens What\'s New right after onboarding on a fresh profile', () => {
+    expect(shouldAutoOpenChangelog({
+      hasSeenOnboarding: true,
+      releaseIsUnseen: hasUnseenReleaseForRun(null, LATEST, 0),
+      startupHash: '',
+      hasPendingGameModePrompt: false,
+    })).toBe(false);
+  });
+
+  it('reads blocked storage as nothing seen', () => {
+    const blocked: ChangelogStorage = {
+      getItem: () => { throw new Error('blocked'); },
+      setItem: () => { throw new Error('blocked'); },
+    };
+    expect(readSeenChangelog(blocked)).toBeNull();
+    expect(readSeenChangelog(undefined)).toBeNull();
+  });
+});
 
 describe('changelog state', () => {
   it('shows once, then shows a later release', () => {

@@ -7,6 +7,14 @@ import { GameProvider, createFreshState, useGame } from './GameContext';
 import { TableType } from '../types';
 import { resetPendingSavesForTest } from '../utils/pendingSaves';
 import { WRITER_LEASE_ARBITRATION_MS } from '../utils/profileWriterLease';
+import { runDrawFloat } from '../utils/seededRng';
+
+// Every run draws from its seed or hidden salt (runDrawFloat), never
+// Math.random, so a test that needs a given draw sets it here.
+vi.mock('../utils/seededRng', async importOriginal => {
+  const actual = await importOriginal<typeof import('../utils/seededRng')>();
+  return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
 
 let current: ReturnType<typeof useGame>;
 const Capture = () => { current = useGame(); return <div>{current.pendingUnlock?.item ?? 'No reveal'}</div>; };
@@ -22,7 +30,7 @@ beforeEach(() => {
     setItem: (k: string, v: string) => { values.set(k, v); }, removeItem: (k: string) => values.delete(k) });
   resetPendingSavesForTest();
 });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); resetPendingSavesForTest(); });
+afterEach(() => { cleanup(); vi.mocked(runDrawFloat).mockReset(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); resetPendingSavesForTest(); });
 
 it.each([undefined, 'repeatable-seed'])('saves the selection, cost and award before reveal; reload and double acknowledgement do not reroll (%s)', async seed => {
   localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), keys: 3, rngSeed: seed }));
@@ -54,7 +62,7 @@ it('does not expose a failed-save result and retries that same transaction', asy
     if (key === 'roll-audit') throw new DOMException('Full', 'QuotaExceededError');
     return write(key, value);
   });
-  vi.spyOn(Math, 'random').mockReturnValue(0.1);
+  vi.mocked(runDrawFloat).mockReturnValue(0.1);
   act(() => current.rollUnlock(TableType.EQUIPMENT));
   expect(screen.getByRole('status').textContent).toContain('waiting to be saved');
   const selected = current.pendingUnlock!;
@@ -118,7 +126,7 @@ it.each([
 ] as const)('pays a won %s Gambit of %i Fate 1 Key per minimum stake: %i', async (mode, fate, keys) => {
   localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), keys: 0, fatePoints: fate, gameModeId: mode, gameModeLocked: true }));
   mount(); await settle();
-  vi.spyOn(Math, 'random').mockReturnValue(0);
+  vi.mocked(runDrawFloat).mockReturnValue(0);
   act(() => current.performGambit());
   expect(current.keys).toBe(keys);
   expect(current.history.find(e => e.meta?.ritual === 'GAMBIT')?.meta?.keysAwarded).toBe(keys);

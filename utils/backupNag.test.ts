@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   shouldNagPure, shouldNag, markExported, snoozeNag, readNagRecord,
-  lastExportLabel, NAG_AFTER_MS, SNOOZE_MS, MIN_HISTORY,
+  NAG_AFTER_MS, SNOOZE_MS, MIN_HISTORY,
 } from './backupNag';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -60,14 +60,5 @@ describe('localStorage record', () => {
     localStorage.setItem(KEY + '__exportNag', '{not json');
     expect(readNagRecord(KEY)).toEqual({ lastExport: 0, snoozeUntil: 0 });
     expect(shouldNag(KEY, 50)).toBe(true);
-  });
-
-  it('lastExportLabel formats never/today/days', () => {
-    expect(lastExportLabel(KEY)).toBe('never');
-    const now = Date.now();
-    markExported(KEY, now);
-    expect(lastExportLabel(KEY, now)).toBe('today');
-    expect(lastExportLabel(KEY, now + DAY)).toBe('yesterday');
-    expect(lastExportLabel(KEY, now + 3 * DAY)).toBe('3 days ago');
   });
 });

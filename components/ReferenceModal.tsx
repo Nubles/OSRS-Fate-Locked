@@ -6,12 +6,13 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
-import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHANCE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
+import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ODDS, FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHAOS_PICK_TEXT, CHAOS_REACH_TEXT, CHUNKED_CHAOS_TEXT, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, OLD_SEEDED_CHAOS_TEXT, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
+import { chaosPicksTableFirst } from '../utils/seededRng';
 import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
@@ -59,13 +60,13 @@ export const describeVanillaRandomAccessPolicy = (
 ): string => {
   const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
   const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
-  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
+  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0 && policy.randomCosts.length > 0;
   // Chunked counts content only in the exact chunk it sits in, and filters
   // banks and guilds the same way (utils/gameEngine.ts isRandomUnlockEligible).
   const chunkedTables = andList([...policy.filteredTables.map(table => table.toLowerCase()), 'banks', 'guilds']);
   const randomAccess = hasLocationFilter
     ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`
-    : '';
+    : `In Vanilla, Keys and Chaos Keys roll anything left in their table, even ${tables || 'places'} you can't reach yet, and only Saradomin's Ward keeps a Key to what you can use. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`;
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
         hasLocationFilter ? 'If none can be reached, nothing is unlocked.' : 'If there is nothing to unlock, nothing happens.',
@@ -73,10 +74,11 @@ export const describeVanillaRandomAccessPolicy = (
         policy.emptyEligiblePool.preservesRngProgression ? "A seeded run's next roll stays the same." : '',
       ].filter(Boolean).join(' ')
     : '';
+  const omniWarns = policy.requiresTrackedHardGeography && tables.length > 0 && policy.omniDirect.warnsPlayer;
   const omni = policy.omniDirect.allowsLocationIneligible
     ? hasLocationFilter
       ? `An Omni-Key can still pick one you can't reach yet${policy.omniDirect.warnsPlayer ? ', with a warning' : ''}.`
-      : "An Omni-Key can pick one even if you can't reach it."
+      : `An Omni-Key can pick one even if you can't reach it${omniWarns ? ', with a warning' : ''}.`
     : hasLocationFilter
       ? 'An Omni-Key follows the same rule.'
       : 'An Omni-Key follows the usual rules for each table.';
@@ -91,13 +93,13 @@ export const describeVanillaRandomAccessPolicy = (
  */
 export const ChunkedFateRules: React.FC<{ chaosCost: number; cartographerCost: number }> = ({ chaosCost, cartographerCost }) => (
   <div className="bg-emerald-950/20 p-4 rounded-xl border border-emerald-500/30 text-sm text-gray-300 space-y-2">
-    <h3 className="font-bold text-emerald-300">Chunked only: tier caps, exploring, Breakthrough, Fate's Mercy, Fate's Thread and fate's marks</h3>
+    <h3 className="font-bold text-emerald-300">Chunked only: tier caps, exploring, Breakthrough, Fate's Mercy, Fate's Thread and fate's omens</h3>
     <p><b className="text-gray-100">Tier cap.</b> A skill's tier opens its training methods up to tier × 10, its cap (tier 10 opens all of them, to 99). As in Vanilla you may keep levelling past the cap with those methods, but in Chunked a level past the cap rolls no Key and no Chaos Key until its next tier opens.</p>
     <p><b className="text-gray-100">Exploring.</b> Each chunk you unlock pays one {DROP_RATES[DropSource.CHUNK_EXPLORE]}% Key roll for each new thing you first do there: train a skill it has, fight something, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to {CHUNK_EXPLORE_ROLLS} per chunk; your start chunk pays none.</p>
     <p><b className="text-gray-100">Breakthrough.</b> A skill at or past its tier cap, when your chunks give you a way to train it at its next tier, gets one free {BREAKTHROUGH_CHANCE * 100}% roll to open that tier. Each tier rolls once, win or lose; a Key can still open it after a loss. Hitpoints starts at level 10, the cap of tier 1, so it gets its Breakthrough once you have a combat style to train it with.</p>
     <p><b className="text-gray-100">Fate's Mercy.</b> It opens only when all of these hold: you have no Keys, Omni-Keys or Chaos Keys; you have less than {chaosCost} Fate (the Ritual of Chaos; the Cartographer costs {cartographerCost}) and no free Chaos ritual waiting, nor a free Cartographer while a frontier chunk is left to chart; no skill your chunks can train is below its tier cap; no Breakthrough or exploring roll is waiting; and no quest in your chunks is doable now. Those last three are the tracker's best guess at what you can still do, so if 3 days pass with no new Key, unlock or level, Mercy opens anyway. Then fate draws one frontier chunk or trainable skill tier, from what a Key could roll, or, once none is left, the Farming patch type, guild, merchant or gear slot that keeps a skill from training, and nothing is spent. The Keys screen says what keeps it shut.</p>
     <p><b className="text-gray-100">Fate's Thread.</b> Fate ties a thread to an unheld chunk {FATE_THREAD_MIN_STEPS} to {FATE_THREAD_MAX_STEPS} chunks past your border: a boss, minigame, guild or bank where there is one. One Chunks draw in {Math.round(1 / FATE_THREAD_LEAN_CHANCE)} goes to the frontier chunks nearest the thread; the rest draw from your whole frontier. When you gain the thread's chunk, by any means, fate is fulfilled: you get a free ritual fate picks, and fate ties a new thread.</p>
-    <p><b className="text-gray-100">Fate's marks.</b> Each chunk you gain has a 1 in {Math.round(1 / FATE_MARK_CHANCE)} chance to be marked. <b className="text-gray-100">Blessed</b>: +{FATE_MARK_BLESSED_FATE} Fate, up to the pity line. <b className="text-gray-100">Gilded</b>: a free {DROP_RATES[DropSource.FATE_MARK]}% Key roll, waiting on the Keys screen. <b className="text-gray-100">Chaotic</b>: a {FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key. <b className="text-gray-100">Cursed</b>: your next {FATE_MARK_CURSED_ROLLS} Key rolls are {FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.</p>
+    <p><b className="text-gray-100">Fate's omens.</b> Every chunk you gain draws one of eight omens, each as likely as the others. Four are boons. <b className="text-gray-100">Blessed</b>: +{FATE_MARK_BLESSED_FATE} Fate, up to the pity line. <b className="text-gray-100">Gilded</b>: a free {DROP_RATES[DropSource.FATE_MARK]}% Key roll, waiting on the Keys screen. <b className="text-gray-100">Fortunate</b>: your next {FATE_MARK_FORTUNATE_ROLLS} Key rolls are {FATE_MARK_FORTUNATE_ODDS}% better. <b className="text-gray-100">Chaotic</b>: a {FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key. Four are banes. <b className="text-gray-100">Cursed</b>: your next {FATE_MARK_CURSED_ROLLS} Key rolls are {FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate. <b className="text-gray-100">Withered</b>: you lose {FATE_MARK_WITHERED_FATE} Fate. <b className="text-gray-100">Clouded</b>: your next {FATE_MARK_CLOUDED_ROLLS} Key rolls give no Fate if they fail. <b className="text-gray-100">Tangled</b>: Fate's Thread doesn't pull your next chunk. A bane never takes Keys, chunks or unlocks. The map shows each chunk's omen; the Omens button hides them.</p>
   </div>
 );
 
@@ -108,7 +110,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
 
   // Live rules for the current run — the codex shows the player's actual
   // numbers, not generic defaults.
-  const { gameModeId, customMode } = useGame();
+  const { gameModeId, customMode, rngSeed, rngVersion } = useGame();
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
@@ -412,7 +414,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-emerald-950/40 to-[#222] p-6 rounded-xl border border-emerald-500/20">
                                 <h3 className="text-emerald-300 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Compass size={18}/> Smart Play</h3>
                                 <ul className="space-y-2 text-sm text-gray-300">
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks {DROP_RATES[DropSource.SLAYER_BOSS]}%). Move up as soon as you can survive their tasks.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%; a boss task rolls from its boss’s Key stash). Move up as soon as you can survive their tasks.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for what you need most.</b> Pick a must-have, such as a boss, a gear slot or a skill, rather than something from a small table that a Key will soon give you anyway.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Spend Fate before your next success.</b> Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: {ritualCost('LUCK')} on Clarity before a big roll, or {ritualCost('CHAOS')} on a Chaos Key.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best Journal roll:</b> a guaranteed Key and a {omniFloor(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll. A new pet gives an Omni-Key outright. Raids give {omniFloor(DropSource.RAID)}%, Elite diaries {omniFloor(DropSource.DIARY_ELITE)}% and high-tier bosses {omniFloor(DropSource.BOSS_HIGH)}%.</span></li>
@@ -443,7 +445,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys can land on bosses and minigames you can't reach yet.</li>
                                     <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left. Fate's Thread leans your Chunks draws toward a place fate picks, and fate marks about one chunk in eight (see Key Economy).</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
@@ -647,8 +649,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
-                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most.'}
+                                        {CHAOS_PICK_TEXT}{gameModeId === 'chunked' ? ` ${CHUNKED_CHAOS_TEXT}` : ` ${CHAOS_REACH_TEXT}`}
+                                        {!chaosPicksTableFirst({ rngSeed, rngVersion }) && ` ${OLD_SEEDED_CHAOS_TEXT}`}{' '}
                                         Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
                                         every level-up, or the Ritual of Chaos.
                                     </p>

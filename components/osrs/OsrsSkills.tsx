@@ -6,10 +6,13 @@ import { TableType, type UnlockState } from '../../types';
 import { NoteTrigger } from '../NoteTrigger';
 import { SectionGuide } from '../SectionGuide';
 import { SkillAdvisorPanel } from '../SkillAdvisorPanel';
-import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
+import { formatKeyPercent } from '../../utils/keyRoll';
+import { levelUpKeyChance } from '../../utils/keyChance';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
 import { levelPastTierCap, tierCap } from '../../utils/chunkedFate';
-import { chunkedPastCapText } from '../SkillRollOdds';
+import { chunkedPastCapText, levelBoostNote } from '../SkillRollOdds';
+import { SkillInfoButton } from '../SkillInfoButton';
+import { useSkillOddsHover } from '../../utils/skillOddsPref';
 import { skillIconSrc, itemSrc, gemColor, gemCropStyle, roman, TIER_GEMS } from './OsrsDashGems';
 import './osrs-char.css';
 import './osrs-dashboard.css';
@@ -27,7 +30,9 @@ import './osrs-dashboard.css';
  * starts it with an Omni-Key when locked), the skill icon opens the skill
  * guide, the small Omni-Key button buys the next tier, and the note button
  * (shown on hover, or always once a note exists) opens the skill's note. The
- * next level's Key odds are the cell's tooltip and its Examine text. The
+ * next level's Key odds open from the small "i" in the cell's corner, in the
+ * game's yellow hover box beside the cell, and are its Examine text; with
+ * Settings > "Skill odds on hover" on, they are the cell's tooltip instead. The
  * Skill Advisor opens from the "Advisor" button in the panel's title row.
  * Dashboard owns every handler.
  */
@@ -53,7 +58,9 @@ export const OsrsSkills: React.FC<Props> = ({
 }) => {
   const totalLevel = SKILLS_LIST.reduce((sum, s) => sum + (unlocks.levels[s] || 1), 0);
   const [showAdvisor, setShowAdvisor] = useState(false);
-  const { gameModeId } = useGame();
+  const game = useGame();
+  const { gameModeId } = game;
+  const skillOddsHover = useSkillOddsHover();
   // With nothing to rank, the Advisor says so on its button instead of
   // opening a panel over the skills just to say "nothing". The ranking is
   // slow (every quest and diary per skill level), so it is only worked out
@@ -142,10 +149,12 @@ export const OsrsSkills: React.FC<Props> = ({
 
             const nextLevel = level + 1;
             const pastCap = canLevel && levelPastTierCap(gameModeId, unlocks, skill, nextLevel);
+            // The chance the level-up rolls against, boosts included (utils/keyChance.ts).
+            const chance = canLevel ? levelUpKeyChance(game, skill) : null;
             const odds = pastCap
               ? `Next Lv ${nextLevel}: no Key roll. ${chunkedPastCapText(tierCap(tier))}`
-              : canLevel
-              ? `Next Lv ${nextLevel}: ${formatKeyPercent(skillLevelKeyChance(nextLevel))} Key chance. ${isSkillChaosMilestone(nextLevel)
+              : chance !== null
+              ? `Next Lv ${nextLevel}: ${formatKeyPercent(chance)} Key chance.${levelBoostNote(chance, nextLevel)} ${isSkillChaosMilestone(nextLevel)
                 ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
                 : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}`
               : '';
@@ -160,7 +169,7 @@ export const OsrsSkills: React.FC<Props> = ({
                 data-skill-card={skill}
                 data-examine-name={skill}
                 data-examine={examine}
-                title={`${skill}: ${examine}${action ? ` ${action}` : ''}`}
+                title={skillOddsHover ? `${skill}: ${examine}${action ? ` ${action}` : ''}` : undefined}
                 onClick={isMainActionable ? handleMainClick : undefined}
                 onKeyDown={isMainActionable ? (event) => {
                   if (event.target !== event.currentTarget) return;
@@ -176,9 +185,9 @@ export const OsrsSkills: React.FC<Props> = ({
                   canUnlockStart ? 'can-start' : '',
                   levelingSkill === skill ? 'is-leveling' : '',
                 ].filter(Boolean).join(' ')}
-                role="button"
-                tabIndex={isMainActionable ? 0 : -1}
-                aria-label={`${skill}, level ${level}${isUnlocked ? `, tier ${tier}, methods ${methodRange}` : ', locked'}`}
+                role={isMainActionable ? 'button' : 'group'}
+                tabIndex={isMainActionable ? 0 : undefined}
+                aria-label={`${skill}, level ${level}${isUnlocked ? `, tier ${tier}, methods ${methodRange}` : ', locked'}${canUnlockStart ? ', unlock with an Omni-Key' : canLevel ? ', level up' : ''}`}
                 aria-describedby={canLevel ? oddsDescriptionId : undefined}
               >
                 <span className="osrs-char-skrow">
@@ -221,6 +230,12 @@ export const OsrsSkills: React.FC<Props> = ({
                     ? <>Tier {roman(tier)} · <span className="osrs-char-sklong">methods </span>to {tier >= 10 ? 99 : tier * 10}</>
                     : 'Needs a Key to start'}
                 </span>
+                {canLevel && !skillOddsHover && (
+                  <span className="osrs-skill-info-slot">
+                    <SkillInfoButton skill={skill} level={level} tier={tier} chance={chance}
+                      pastCap={pastCap ? tierCap(tier) : undefined} variant="osrs" />
+                  </span>
+                )}
                 {canLevel && <span id={oddsDescriptionId} className="sr-only">{odds}</span>}
               </div>
             );

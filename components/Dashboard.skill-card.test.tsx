@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import React from 'react';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const levelUpSkill = vi.hoisted(() => vi.fn());
@@ -32,10 +32,13 @@ vi.mock('../services/WikiService', () => ({
 }));
 
 import { Dashboard } from './Dashboard';
+import { setSkillOddsHover } from '../utils/skillOddsPref';
 
 afterEach(() => {
   cleanup();
   levelUpSkill.mockClear();
+  setSkillOddsHover(false);
+  localStorage.clear();
 });
 
 describe('Dashboard skill cards', () => {
@@ -49,5 +52,42 @@ describe('Dashboard skill cards', () => {
 
     expect(levelUpSkill).toHaveBeenCalledTimes(2);
     expect(levelUpSkill).toHaveBeenCalledWith('Attack');
+  });
+
+  it('opens the roll odds from the i in the corner, outside the card, without levelling', async () => {
+    render(<Dashboard suspendModals />);
+    const card = document.querySelector<HTMLElement>('[data-skill-card="Attack"]')!;
+    expect(card.querySelector('[role="tooltip"]')).toBeNull();
+    const info = screen.getByRole('button', { name: 'Attack roll odds' });
+    fireEvent.click(info);
+    expect(levelUpSkill).not.toHaveBeenCalled();
+    const box = await screen.findByRole('tooltip');
+    expect(card.contains(box)).toBe(false);
+    expect(box.textContent).toContain('Next Lv 6');
+    expect(box.textContent).toContain('1.2%');
+  });
+
+  it('brings back the hover box, and drops the button, when Settings turns it on', () => {
+    render(<Dashboard suspendModals />);
+    act(() => { setSkillOddsHover(true); });
+    const card = document.querySelector<HTMLElement>('[data-skill-card="Attack"]')!;
+    expect(screen.queryByRole('button', { name: 'Attack roll odds' })).toBeNull();
+    const box = card.querySelector('[role="tooltip"]')!;
+    expect(box.className).toContain('group-hover:opacity-100');
+    expect(box.className).not.toContain('group-focus-within');
+  });
+
+  it('names the card for screen readers and leaves locked cards out of the Tab order', () => {
+    render(<Dashboard suspendModals />);
+    const card = document.querySelector<HTMLElement>('[data-skill-card="Attack"]')!;
+    expect(card.tabIndex).toBe(0);
+    expect(card.getAttribute('aria-label')).toBe('Attack, level 5, tier 1, methods 1-10, level up');
+
+    // Strength is locked and there is no Omni-Key: nothing to press, so it is
+    // a labelled group rather than a button that does nothing.
+    const locked = document.querySelector<HTMLElement>('[data-skill-card="Strength"]')!;
+    expect(locked.getAttribute('role')).toBe('group');
+    expect(locked.hasAttribute('tabindex')).toBe(false);
+    expect(locked.getAttribute('aria-label')).toBe('Strength, locked');
   });
 });

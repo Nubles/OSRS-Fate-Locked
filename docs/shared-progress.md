@@ -18,8 +18,12 @@ browser: only the summary in `utils/progressSnapshot.ts` is sent.
    hands the code to the relay, which records that Discord user's link to the
    run and forgets the code.
 3. `ProgressShareDriver` republishes when progress changes: changes settle
-   for 30 seconds and publishes are at least a minute apart, since each is a
-   KV write. An unchanged summary is not sent again.
+   for a minute and publishes are at least 3 minutes apart, since each is a
+   KV write; a run of unlocks goes out, and into the feed, together. An
+   unchanged summary is not sent again, and the relay doesn't store one it
+   already holds (after a reload): it answers `{ updatedAt, unchanged: true }`
+   with no KV write and nothing for the bot, unless the stored summary is
+   30 days old, so a shared run doesn't expire.
 
 ## Unlock feed and roles
 

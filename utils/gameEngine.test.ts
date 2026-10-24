@@ -10,9 +10,13 @@ import {
   isRandomUnlockEligible,
   isOmniDirectUnlockAvailable,
   isValidUnlock,
+  pickChaosEntry,
   pickRandomPoolEntry,
+  pickRandomUnlock,
   randomUnlockPool,
+  randomUnlockTables,
 } from './gameEngine';
+import { chaosPicksTableFirst } from './seededRng';
 
 const baseUnlocks: UnlockState = {
   equipment: {},
@@ -49,12 +53,23 @@ afterEach(() => {
 });
 
 describe('isRandomUnlockEligible', () => {
-  it('filters a vanilla activity until its exact area is accessible', () => {
+  it('lets a Vanilla Key or Chaos Key land on a boss or minigame the run cannot reach yet', () => {
+    for (const cost of ['key', 'chaosKey'] as const) {
+      expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', cost)).toBe(true);
+      expect(isRandomUnlockEligible(TableType.BOSSES, 'Giant Mole', makeUnlocks(), 'vanilla', cost)).toBe(true);
+    }
+    for (const table of [TableType.BOSSES, TableType.MINIGAMES]) {
+      expect(randomUnlockPool(makeUnlocks(), 'vanilla', 'chaosKey', table).length).toBe(getPoolAndStateKey(table).pool.length);
+    }
+  });
+
+  it('filters a vanilla activity until its exact area is accessible under a policy that lists the cost', () => {
+    const placeFiltered: VanillaRandomAccessPolicy = { ...VANILLA_RANDOM_ACCESS_POLICY, randomCosts: ['key', 'chaosKey'] };
     const lockedOutpost = makeUnlocks();
     const openOutpost = makeUnlocks({ regions: ["Void Knights' Outpost"] });
 
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', lockedOutpost, 'vanilla')).toBe(false);
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', openOutpost, 'vanilla')).toBe(true);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', lockedOutpost, 'vanilla', 'key', placeFiltered)).toBe(false);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', openOutpost, 'vanilla', 'key', placeFiltered)).toBe(true);
   });
 
   it('keeps activity rolls available outside Vanilla and Chunked', () => {
@@ -122,6 +137,67 @@ describe('pickRandomPoolEntry', () => {
 
     expect(pickRandomPoolEntry([], nextFloat)).toBeUndefined();
     expect(nextFloat).not.toHaveBeenCalled();
+  });
+});
+
+describe('a Chaos Key picks a table, then an entry (GP-6)', () => {
+  const pool = [
+    ...['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(item => ({ table: TableType.BANKS, item })),
+    { table: TableType.SKILLS, item: 'Attack' },
+    { table: TableType.EQUIPMENT, item: 'Head' }, { table: TableType.EQUIPMENT, item: 'Body' },
+  ];
+
+  it('gives every table with an entry the same chance, whatever its size', () => {
+    const picks = (u: number) => pickChaosEntry(pool, index => index === 0 ? u : 0)!.table;
+    // Three tables, in pool order: Banks, Skills, Equipment.
+    expect([0, 0.34, 0.67].map(picks)).toEqual([TableType.BANKS, TableType.SKILLS, TableType.EQUIPMENT]);
+    // The second draw picks uniformly inside the chosen table.
+    expect(pickChaosEntry(pool, index => index === 0 ? 0.9 : 0.5)).toEqual({ table: TableType.EQUIPMENT, item: 'Body' });
+    expect(pickChaosEntry(pool, index => index === 0 ? 0 : 0.99)).toEqual({ table: TableType.BANKS, item: 'h' });
+  });
+
+  it('draws twice, table then entry, and never for an empty pool', () => {
+    const draw = vi.fn(() => 0.5);
+    pickChaosEntry(pool, draw);
+    expect(draw.mock.calls).toEqual([[0], [1]]);
+    const none = vi.fn(() => 0.5);
+    expect(pickChaosEntry([], none)).toBeUndefined();
+    expect(none).not.toHaveBeenCalled();
+  });
+
+  it('shares Chaos draws equally among the tables a fresh Vanilla or Chunked run can draw from', () => {
+    for (const mode of ['vanilla', 'chunked']) {
+      const fresh = randomUnlockPool(makeUnlocks(), mode, 'chaosKey');
+      const tables = randomUnlockTables(mode).filter(t => fresh.some(c => c.table === t));
+      const counts = new Map<TableType, number>();
+      const steps = tables.length * 40;
+      for (let i = 0; i < steps; i++) {
+        const picked = pickChaosEntry(fresh, index => index === 0 ? (i + 0.5) / steps : 0)!;
+        counts.set(picked.table, (counts.get(picked.table) ?? 0) + 1);
+      }
+      expect([...counts.keys()]).toEqual(tables);
+      expect(new Set(counts.values())).toEqual(new Set([40]));
+    }
+  });
+
+  it('keeps Standard Keys and old seeded Chaos draws on one draw over the whole pool', () => {
+    const nextFloat = vi.fn((_purpose: string, _index?: number) => 0.95);
+    expect(pickRandomUnlock(pool, 'key', true, nextFloat)).toEqual({ table: TableType.EQUIPMENT, item: 'Body' });
+    expect(nextFloat.mock.calls).toEqual([['gacha']]);
+    nextFloat.mockClear();
+    // 0.5 of 11 entries is the sixth bank; table-first would pick Skills.
+    nextFloat.mockReturnValue(0.5);
+    expect(pickRandomUnlock(pool, 'chaosKey', false, nextFloat)).toEqual({ table: TableType.BANKS, item: 'f' });
+    expect(nextFloat.mock.calls).toEqual([['chaos']]);
+    nextFloat.mockClear();
+    expect(pickRandomUnlock(pool, 'chaosKey', true, nextFloat)).toEqual({ table: TableType.SKILLS, item: 'Attack' });
+    expect(nextFloat.mock.calls).toEqual([['chaos', 0], ['chaos', 1]]);
+  });
+
+  it('uses the table-first pick on unseeded runs and on runs seeded from version 3', () => {
+    expect(chaosPicksTableFirst({})).toBe(true);
+    expect(chaosPicksTableFirst({ rngSeed: 'S', rngVersion: 3 })).toBe(true);
+    for (const rngVersion of [undefined, 1, 2] as const) expect(chaosPicksTableFirst({ rngSeed: 'S', rngVersion })).toBe(false);
   });
 });
 

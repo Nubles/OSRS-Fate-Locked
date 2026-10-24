@@ -83,14 +83,14 @@ const ChaosRow: React.FC<{ chaosKeys: number; totalLevel: number; onSpend: () =>
   if (chaosKeys > 0) {
     return (
       <button type="button" className={`ospend-chaos is-live${wide ? ' wide' : ''}`} onClick={onSpend} disabled={busy}
-        data-examine-name="Chaos Key" data-examine="Unlocks a random entry from all the tables at once.">
+        data-examine-name="Chaos Key" data-examine="Fate picks a table, then a random entry in it.">
         <span className="osrs-slot ospend-note-slot">
           <img className="osrs-px" src={CHAOS_KEY_ICON} alt="" aria-hidden="true" />
           <span className="osrs-stack">{chaosKeys}</span>
         </span>
         <span className="ospend-note-words">
           <span className="t ospend-chaos-title" style={{ color: '#ff3030' }}>Chaos Key Available</span>
-          <span className="s">Unlocks a random entry from all the tables at once.</span>
+          <span className="s">Fate picks a table, then a random entry in it.</span>
         </span>
         <span className="ospend-chaos-cta">Spend</span>
       </button>
@@ -329,7 +329,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
             </div>
           )}
           <span className="ospend-foot">
-            Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.
+            Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys let fate pick a table, then an entry in it.
           </span>
         </div>
       </div>

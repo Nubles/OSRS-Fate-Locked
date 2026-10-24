@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Scroll } from './OsrsIcon';
+import { useGame } from '../context/GameContext';
+import { describeRollOutcome, type RollOutcomeText } from '../utils/rollOutcomeText';
 
 /**
  * Quest-complete celebration. Listens for `fate:quest-complete` {name} and
  * shows the OSRS wiki reward scroll for that quest with a gold particle burst —
  * the iconic "Congratulations! Quest complete!" moment. Auto-dismisses, or
  * click / Esc to close. Quests with no reward scroll on the wiki fall back to a
- * clean generic celebration (the image hides on error).
+ * clean generic celebration (the image hides on error). Under the quest's
+ * name it says what the quest's Key roll gave, in the toast's words.
  */
 const rewardScrollUrl = (name: string) =>
   `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, '_'))}_reward_scroll.png`;
@@ -18,17 +21,30 @@ const PARTICLES = Array.from({ length: 14 }, (_, i) => i);
 export const QuestCompleteOverlay: React.FC = () => {
   const [quest, setQuest] = useState<string | null>(null);
   const [imgOk, setImgOk] = useState(true);
+  const [roll, setRoll] = useState<RollOutcomeText | null>(null);
+  const { lastEvent } = useGame();
+  // The game event shown before this quest completed: the quest's own roll is the next one.
+  const latestEventId = useRef<string | null>(lastEvent?.id ?? null);
+  const eventBeforeQuest = useRef<string | null>(null);
+  useEffect(() => { latestEventId.current = lastEvent?.id ?? null; }, [lastEvent]);
 
   useEffect(() => {
     const onComplete = (e: Event) => {
       const name = (e as CustomEvent<{ name?: string }>).detail?.name;
       if (!name) return;
       setImgOk(true);
+      setRoll(null);
+      eventBeforeQuest.current = latestEventId.current;
       setQuest(name);
     };
     window.addEventListener('fate:quest-complete', onComplete);
     return () => window.removeEventListener('fate:quest-complete', onComplete);
   }, []);
+
+  useEffect(() => {
+    if (!quest || roll || !lastEvent || lastEvent.id === eventBeforeQuest.current) return;
+    setRoll(describeRollOutcome(lastEvent));
+  }, [quest, roll, lastEvent]);
 
   useEffect(() => {
     if (!quest) return;
@@ -45,7 +61,7 @@ export const QuestCompleteOverlay: React.FC = () => {
     <div
       onClick={() => setQuest(null)}
       className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-pointer"
-      role="dialog" aria-modal="true" aria-label={`${quest} complete`}
+      role="dialog" aria-modal="true" aria-label={`${quest} complete${roll ? `. ${roll.text}` : ''}`}
     >
       {/* The qc-* keyframes live in styles.css: adding and removing a <style>
           here restyled the whole page twice per completed quest. */}
@@ -89,10 +105,12 @@ export const QuestCompleteOverlay: React.FC = () => {
           ) : (
             <div className="py-8 px-6 flex flex-col items-center gap-2 text-amber-100">
               <Scroll size={48} className="text-amber-400/80" />
-              <div className="text-xs text-amber-200/60">Reward unlocked</div>
             </div>
           )}
           <div className="mt-3 text-lg font-bold text-amber-100">{quest}</div>
+          {roll && (
+            <div className={`mt-1 text-sm font-bold ${roll.won ? 'text-amber-300' : 'text-amber-200/70'}`}>{roll.text}</div>
+          )}
           <div className="mt-1 text-[11px] text-amber-200/40">click anywhere to dismiss</div>
         </div>
       </div>

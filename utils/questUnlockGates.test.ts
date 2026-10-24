@@ -113,7 +113,7 @@ describe("the quests' shop-only items, bar drinks and fairy rings", () => {
   it.each([
     ['Prince Ali Rescue', ['Clothes Shops', 'Bars & Inns']],
     ['Rag and Bone Man I', ['Wine Traders']],
-    ['Rag and Bone Man II', ['Wine Traders']],
+    ['Rag and Bone Man II', ['Wine Traders', 'Slayer Equipment']],
     ["Icthlarin's Little Helper", ['Clothes Shops']],
     ['The Feud', ['General Stores']],
     ["Daddy's Home", ['Sawmill Operators']],

@@ -6,6 +6,7 @@ import {
   LINK_CODE_TTL_SECONDS,
   feedForPublish,
   PROGRESS_TTL_SECONDS,
+  PROGRESS_UNCHANGED_REFRESH_MS,
   newLinkCode,
   newUnlocksSince,
   normalizeLinkCode,
@@ -28,7 +29,10 @@ class MemoryKv {
     return { value, metadata: value === null ? null : this.metadata.get(key) ?? null };
   }
 
+  puts: string[] = [];
+
   async put(key: string, value: string, options?: { expirationTtl?: number; metadata?: unknown }) {
+    this.puts.push(key);
     this.records.set(key, value);
     this.ttls.set(key, options?.expirationTtl);
     if (options?.metadata !== undefined) this.metadata.set(key, options.metadata);
@@ -164,9 +168,31 @@ describe('Fate relay shared progress', () => {
     expect((await call(env, `/p/${RUN}`, { method: 'POST', body: JSON.stringify(snapshot()) })).status).toBe(403);
     expect((await publish(env, { v: 1 })).status).toBe(400);
     expect((await publish(env, snapshot())).status).toBe(200);
-    const again = await publish(env, snapshot());
+    const again = await publish(env, snapshot({ quests: { done: 22, total: 212 } }));
     expect(again.status).toBe(429);
     expect(Number(again.headers.get('Retry-After'))).toBeGreaterThan(0);
+  });
+
+  it('writes nothing for the summary it already holds, until it is a month old', async () => {
+    const first = await publish(env, snapshot());
+    const { updatedAt } = await first.json() as { updatedAt: number };
+    expect(kv.puts).toEqual([`p:${RUN}`]);
+
+    // A reload sends the same summary, within the minute or later: no KV write.
+    const same = await publish(env, snapshot());
+    expect(same.status).toBe(200);
+    expect(await same.json()).toEqual({ updatedAt, unchanged: true });
+    vi.spyOn(Date, 'now').mockReturnValue(updatedAt + 10 * 86_400_000);
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect(kv.puts).toEqual([`p:${RUN}`]);
+    // Another token still can't touch it.
+    expect((await publish(env, snapshot(), OTHER_TOKEN)).status).toBe(403);
+
+    // A month on, it is stored again, so it doesn't expire while shared.
+    vi.spyOn(Date, 'now').mockReturnValue(updatedAt + PROGRESS_UNCHANGED_REFRESH_MS);
+    const refreshed = await publish(env, snapshot());
+    expect(await refreshed.json()).toEqual({ updatedAt: updatedAt + PROGRESS_UNCHANGED_REFRESH_MS });
+    expect(kv.puts).toEqual([`p:${RUN}`, `p:${RUN}`]);
   });
 
   it('has no public read: a GET of a snapshot is refused', async () => {
@@ -274,14 +300,21 @@ describe('Fate relay shared progress', () => {
 
     it('sends nothing for an unlinked run, without an events URL, or after /unlink', async () => {
       await linkRun();
-      await republish(snapshot());
+      await republish(snapshot({ quests: { done: 22, total: 212 } }));
       expect(sent).toHaveLength(0);
 
       (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
       await bot(env, 'DELETE');
       expect(kv.records.has(`ld:${RUN}`)).toBe(false);
       vi.restoreAllMocks();
-      await republish(snapshot());
+      await republish(snapshot({ quests: { done: 23, total: 212 } }));
+      expect(sent).toHaveLength(0);
+    });
+
+    it('sends nothing for a publish of the summary the relay already holds', async () => {
+      (env as Record<string, unknown>).DISCORD_EVENTS_URL = EVENTS_URL;
+      await linkRun();
+      expect((await republish(snapshot())).status).toBe(200);
       expect(sent).toHaveLength(0);
     });
 
@@ -290,7 +323,7 @@ describe('Fate relay shared progress', () => {
       vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline'); }));
       vi.spyOn(console, 'error').mockImplementation(() => undefined);
       await linkRun();
-      expect((await republish(snapshot())).status).toBe(200);
+      expect((await republish(snapshot({ quests: { done: 22, total: 212 } }))).status).toBe(200);
     });
 
     it('gives a link made before the reverse index its pointer when the bot reads it', async () => {

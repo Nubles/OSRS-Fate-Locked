@@ -145,16 +145,28 @@ export const FATE_THREAD_MAX_STEPS = 4;
  * (play-test 2026-10-18); at 1 in 6 a thread falls about every 10-14 chunks.
  */
 export const FATE_THREAD_LEAN_CHANCE = 1 / 6;
-/** The chance fate marks a chunk the run gains: about one in eight. */
-export const FATE_MARK_CHANCE = 0.125;
+/**
+ * Every chunk a Chunked run gains draws one of fate's eight omens, four boons
+ * and four banes at even odds (utils/fateLand.ts). Each is small because one
+ * lands with every chunk: a play-test of 30 full runs (2026-10-22) gave about
+ * +10 Keys a run and no change to a run's length.
+ */
 /** Fate a Blessed chunk gives, filled up to the pity line at most. */
-export const FATE_MARK_BLESSED_FATE = 25;
+export const FATE_MARK_BLESSED_FATE = 10;
 /** A Chaotic chunk's chance of a Chaos Key. */
 export const FATE_MARK_CHAOS_CHANCE = 0.1;
+/** Key rolls a Fortunate chunk makes better... */
+export const FATE_MARK_FORTUNATE_ROLLS = 3;
+/** ...by this many percentage points. */
+export const FATE_MARK_FORTUNATE_ODDS = 5;
 /** Key rolls a Cursed chunk makes worse... */
 export const FATE_MARK_CURSED_ROLLS = 3;
 /** ...by this many percentage points. Each fail among them gives double Fate. */
 export const FATE_MARK_CURSED_ODDS = 5;
+/** Fate a Withered chunk takes, never below zero. */
+export const FATE_MARK_WITHERED_FATE = 10;
+/** Key rolls a Clouded chunk leaves without Fate when they fail. */
+export const FATE_MARK_CLOUDED_ROLLS = 3;
 
 // ── Earning ──────────────────────────────────────────────────────────────────
 export type EarnCategory =
@@ -259,7 +271,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
       { tier: 'Nieve / Steve',      source: DropSource.SLAYER_NIEVE,      rate: DROP_RATES[DropSource.SLAYER_NIEVE] },
       { tier: 'Krystilia',          source: DropSource.SLAYER_KRYSTILIA,  rate: DROP_RATES[DropSource.SLAYER_KRYSTILIA] },
       { tier: 'Duradel / Kuradal',  source: DropSource.SLAYER_DURADEL,    rate: DROP_RATES[DropSource.SLAYER_DURADEL] },
-      { tier: 'Boss Task',          source: DropSource.SLAYER_BOSS,       rate: DROP_RATES[DropSource.SLAYER_BOSS], bonus: 'The best Slayer rate.' },
+      { tier: 'Boss Task',          source: DropSource.SLAYER_BOSS,       rate: DROP_RATES[DropSource.SLAYER_BOSS], bonus: 'Needs Like a Boss. In Vanilla and Chunked it rolls from the boss’s Key stash, as a kill does.' },
     ],
   },
   {
@@ -299,7 +311,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
     blurb: `Chunked only: the first time you do something new in a chunk you unlocked, roll once: train a skill it has, fight something there, take a task from its Slayer master or use its herb patch, once your unlocks allow it. Up to ${CHUNK_EXPLORE_ROLLS} rolls per chunk.`,
     tiers: [
       { tier: 'Each new thing in a chunk', source: DropSource.CHUNK_EXPLORE, rate: DROP_RATES[DropSource.CHUNK_EXPLORE] },
-      { tier: 'Each Gilded chunk', source: DropSource.FATE_MARK, rate: DROP_RATES[DropSource.FATE_MARK], bonus: `About one chunk in ${Math.round(1 / FATE_MARK_CHANCE)} you gain is marked by fate; a Gilded one gives one free Key roll.` },
+      { tier: 'Each Gilded chunk', source: DropSource.FATE_MARK, rate: DROP_RATES[DropSource.FATE_MARK], bonus: "Every chunk you gain draws one of fate's omens; a Gilded one gives one free Key roll." },
     ],
   },
   {
@@ -358,6 +370,13 @@ export interface KeyTypeInfo {
 }
 
 /** Where land comes from in Chunked, since an Omni-Key can't pick it (the UNLOCK reducer refuses). */
+/** How a Chaos Key picks (utils/gameEngine.ts pickChaosEntry). */
+export const CHAOS_PICK_TEXT = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
+export const CHAOS_REACH_TEXT = "Places you can't reach yet can come up too.";
+export const CHUNKED_CHAOS_TEXT = 'In Chunked, only banks and guilds inside your chunks can come up.';
+/** A seeded run from before the table-first rule keeps its old draw (utils/seededRng.ts chaosPicksTableFirst). */
+export const OLD_SEEDED_CHAOS_TEXT = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
+
 export const CHUNKED_OMNI_LAND_TEXT = "In Chunked an Omni-Key can't pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate's Mercy.";
 
 export const KEY_TYPES: KeyTypeInfo[] = [
@@ -399,7 +418,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.',
+    spend: `${CHAOS_PICK_TEXT} Outside Chunked, places you can't reach yet can come up too. ${CHUNKED_CHAOS_TEXT}`,
   },
 ];
 
@@ -481,7 +500,7 @@ export const RITUALS: Ritual[] = [
     effect: 'Fate draws up to 3 frontier chunks and keeps them until you chart one; choose which of them unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
   { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
-    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach. You can cast it again 25 rolls later.' },
+    effect: 'Your next Key on bosses, minigames, guilds or banks can only land on something you can use right now. Fate still picks, just from places you can reach. Outside Chunked, a Chaos Key stays random. You can cast it again 25 rolls later.' },
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',

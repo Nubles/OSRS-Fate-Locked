@@ -9,16 +9,21 @@ import {
   type OnlineBackupEventDetail,
 } from '../utils/onlineBackupRecord';
 
-/** At most one upload every 15 minutes while the run changes. */
-export const ONLINE_BACKUP_INTERVAL_MS = 15 * 60 * 1000;
+/**
+ * At most one upload every 30 minutes while the run changes. Each upload is
+ * one of the relay's 1,000 KV writes a day for every player, and the save in
+ * the browser stays the run's real copy; the backup is there for when that
+ * copy is lost.
+ */
+export const ONLINE_BACKUP_INTERVAL_MS = 30 * 60 * 1000;
 /** Let a burst of changes settle before uploading. */
 export const ONLINE_BACKUP_SETTLE_MS = 30 * 1000;
 /**
- * Leaving the page sends a waiting change early, but at most every 5 minutes:
+ * Leaving the page sends a waiting change early, but at most every 15 minutes:
  * players switch between the game and the tracker all the time, and the relay's
- * free plan allows 1,000 uploads a day for everyone.
+ * free plan allows 1,000 writes a day for everyone.
  */
-export const ONLINE_BACKUP_HIDDEN_MIN_MS = 5 * 60 * 1000;
+export const ONLINE_BACKUP_HIDDEN_MIN_MS = 15 * 60 * 1000;
 
 /** How long until the next scheduled upload of a changed run. */
 export const nextUploadDelay = (lastUploadAt: number | undefined, now: number): number =>
@@ -26,8 +31,8 @@ export const nextUploadDelay = (lastUploadAt: number | undefined, now: number): 
 
 /**
  * Keeps the active run's online backup current (utils/onlineBackup.ts): when the
- * run changes, it uploads once things settle, at most every 15 minutes, and
- * earlier when the page is hidden with a change waiting, at most every 5
+ * run changes, it uploads once things settle, at most every 30 minutes, and
+ * earlier when the page is hidden with a change waiting, at most every 15
  * minutes. "Back up now" and turning backup on upload at once. A change that
  * would replace a backup of another or a longer run is held for the player
  * (OnlineBackupPanel); "Replace it" sends it. Only the tab that owns the save
@@ -78,7 +83,7 @@ export const OnlineBackupDriver: React.FC = () => {
     }
   };
 
-  // A change in the run: back it up once things settle, at most every 15 minutes.
+  // A change in the run: back it up once things settle, at most every 30 minutes.
   useEffect(() => {
     const record = readOnlineBackupRecord(storageKey);
     if (!record.code || saveOwnershipStatus !== 'owner') return;

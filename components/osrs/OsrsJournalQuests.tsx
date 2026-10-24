@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { QuestData } from '../../data/questData';
 import type { QuestCardQuest } from '../QuestLog';
 import type { UnlockState } from '../../types';
-import { DROP_RATES } from '../../config/rules';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { questLocations } from '../../utils/questLocations';
 import { chunkForPlace, showChunkOnMap } from '../../utils/chunkLocations';
 import { enforcedQuestAreas } from '../../utils/questGeographyDisplay';
@@ -265,7 +265,9 @@ const QuestDetail: React.FC<{
   const { game, fate, checks } = questLines(quest, unlocks, currentQP, onPrereqClick, onSkillClick);
   const all = [...game, ...fate, ...checks];
   const metCount = all.filter(line => line.met).length;
-  const rate = DROP_RATES[quest.difficulty];
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = chanceOf(quest.difficulty);
 
   const loc = questLocations(quest.name, unlocks, gameModeId);
   const start = loc.startPlaces[0] ?? loc.places[0] ?? null;
@@ -284,7 +286,7 @@ const QuestDetail: React.FC<{
       value: isCompleted ? 'Quest complete' : <span className={metCount === all.length ? 'ojr-good' : 'ojr-bad'}>{metCount}/{all.length}</span>,
     });
   }
-  if (rate !== undefined) rows.push({ label: 'Fate Locked roll', value: `${rate}% base Key chance on completion` });
+  if (rate !== undefined) rows.push({ label: 'Fate Locked roll', value: `${rate}% Key chance on completion` });
 
   const mainLabel = isCompleted ? 'Completed' : needsConfirmation ? 'Confirm and complete' : 'Complete and roll for a Key';
   const mainTitle = isCompleted ? 'Completed' : needsConfirmation ? 'Confirm & Complete' : 'Complete & Roll';

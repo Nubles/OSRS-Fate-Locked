@@ -13,7 +13,10 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { chunkUnlocked } from '../utils/chunkLocations';
 import { runProgress } from '../utils/runProgress';
+import { restoredLabel } from '../utils/restoreCount';
 import { REGION_CHUNKS } from '../data/regionChunks';
+import { mapAuthoringAvailable } from '../utils/mapAuthoring';
+import { REGION_DRAFT_BACKUP_KEY, REGION_DRAFT_KEY } from '../utils/mapDraft';
 
 // ---- mini-map drawing -------------------------------------------------------
 
@@ -126,11 +129,17 @@ const drawMiniMap = async (
 
 // ---- helpers -----------------------------------------------------------------
 
-/** Read authoring data without changing the saved draft or its recovery backup. */
+/**
+ * The map geography the card draws. Players always get the shipped map; only
+ * a browser with map authoring enabled previews its draft (or the recovery
+ * backup). Never changes the saved draft or its backup.
+ */
 export const loadRunCardRegionChunks = (
   storage?: Pick<Storage, 'getItem'>,
+  authoring: boolean = mapAuthoringAvailable(),
 ): Record<string, ChunkCoord[]> => {
-  for (const key of ['fate-region-chunks-draft-v1', 'fate-region-chunks-backup-v1']) {
+  if (!authoring) return REGION_CHUNKS;
+  for (const key of [REGION_DRAFT_KEY, REGION_DRAFT_BACKUP_KEY]) {
     try {
       const raw = (storage ?? localStorage).getItem(key);
       if (!raw) continue;
@@ -184,16 +193,18 @@ interface CardInnerProps {
   runId: string | null;
   integrityOk: boolean;
   integrityLabel: string;
+  /** "Restored 2 times", or null when the run was never restored. */
+  restored: string | null;
   modeName: string;
   renderMap: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
 const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
   profileName, stats, regionsUnlocked, regionsTotal,
-  fatePoints, pityThreshold, firstTs, runId, integrityOk, integrityLabel, modeName, renderMap,
+  fatePoints, pityThreshold, firstTs, runId, integrityOk, integrityLabel, restored, modeName, renderMap,
 }, ref) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [draftChunks] = useState(loadRunCardRegionChunks);
+  const [draftChunks] = useState(() => loadRunCardRegionChunks());
   const { unlocks, gameModeId } = useGame();
   const isChunked = gameModeId === 'chunked';
 
@@ -274,7 +285,7 @@ const CardInner = React.forwardRef<HTMLDivElement, CardInnerProps>(({
             </span>
           </div>
           <div className="text-[10px] text-gray-500 font-mono" style={{ lineHeight: 1 }}>
-            Day {days} · Since {formatDate(firstTs)}
+            Day {days} · Since {formatDate(firstTs)}{restored && ` · ${restored}`}
           </div>
         </div>
       </div>
@@ -402,7 +413,7 @@ const KeyChip: React.FC<{ label: string; count: number; color: 'amber' | 'purple
 // ---- modal / trigger --------------------------------------------------------
 
 export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }> = ({ onClose, embedded }) => {
-  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId, customMode } = useGame();
+  const { history, unlocks, keys, specialKeys, chaosKeys, fatePoints, gameModeId, customMode, restoreCount } = useGame();
   const { activeProfileName } = useProfiles();
   const cardRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -450,6 +461,7 @@ export const RunCardModal: React.FC<{ onClose: () => void; embedded?: boolean }>
     runId,
     integrityOk,
     integrityLabel,
+    restored: restoredLabel(restoreCount),
     modeName: getGameMode(gameModeId).name,
     renderMap,
   };

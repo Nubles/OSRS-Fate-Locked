@@ -222,3 +222,28 @@ describe('detected Chunked level-ups and the tier cap', () => {
     expect(action.payload.skillChaos).toBeUndefined();
   });
 });
+
+// Critique GP-1 (October 2026): a detected level-up's Chaos milestones count
+// only levels above the Sync & Roll baseline, so a linked account's old
+// levels pay nothing through RuneLite.
+describe('detected level-ups and the Sync & Roll baseline', () => {
+  const attack = (level: number, tier: number, baseline?: number) => run({
+    unlocks: { skills: { Hitpoints: 1, Attack: tier }, levels: { ...run().unlocks.levels, Attack: level } },
+    ...(baseline ? { syncBaseline: { account: 'Nubles', levels: { Attack: baseline }, takenAt: 1 } } : {}),
+  });
+  const intent = (level: number): RollIntent => ({
+    source: `Attack Level ${level}`, threshold: 2, failureFate: failureFateForSkillLevel(level), target: `Attack Level ${level}`,
+  });
+
+  it("pays no milestone Chaos Keys for levels the account had when linked", () => {
+    // Recorded at 1, linked at 70: the jump to 71 crosses milestones only below 70.
+    const state = attack(1, 10, 70);
+    const next = accept(state, { kind: 'SKILL_LEVEL', skill: 'Attack', level: 71 }, intent(71), fail);
+    expect(next.unlocks.levels.Attack).toBe(71);
+    expect(next.chaosKeys).toBe(state.chaosKeys);
+
+    // Without a baseline (a run linked before baselines) the same jump pays them.
+    const legacy = attack(1, 10);
+    expect(accept(legacy, { kind: 'SKILL_LEVEL', skill: 'Attack', level: 71 }, intent(71), fail).chaosKeys).toBeGreaterThan(legacy.chaosKeys);
+  });
+});

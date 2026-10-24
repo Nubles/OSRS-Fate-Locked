@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { setOsrsProgressionTabs } from '../../utils/osrsNav';
 import { SectionGuide } from '../SectionGuide';
 import { ActivityAccessWarning } from '../ActivityAccessWarning';
@@ -150,9 +151,12 @@ interface ConfirmProps {
 }
 
 /** The Omni-Key confirmation, as an OSRS interface window over the dashboard. */
-export const OsrsConfirmOmni: React.FC<ConfirmProps> = ({ item, table, unlocks, modeId, onCancel, onConfirm }) => (
+export const OsrsConfirmOmni: React.FC<ConfirmProps> = ({ item, table, unlocks, modeId, onCancel, onConfirm }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
+  return (
   <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,.6)' }}>
-    <div className="osrs-win" role="dialog" aria-modal="true" aria-label="Confirm Unlock" style={{ width: 380, maxWidth: '100%', padding: 4 }}>
+    <div ref={dialogRef} tabIndex={-1} className="osrs-win" role="dialog" aria-modal="true" aria-label="Confirm Unlock" style={{ width: 380, maxWidth: '100%', padding: 4 }}>
       <h3 className="osrs-title" style={{ margin: '2px 0 6px', textAlign: 'center' }}>Confirm Unlock</h3>
       <div className="osrs-inner" style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -172,4 +176,5 @@ export const OsrsConfirmOmni: React.FC<ConfirmProps> = ({ item, table, unlocks, 
       </div>
     </div>
   </div>
-);
+  );
+};
