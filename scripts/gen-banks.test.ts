@@ -5,13 +5,13 @@ import { buildBankDefinitions, generateBankSource } from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 describe('bank source generator', () => {
-  it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 125 physical banks', () => {
+  it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 124 physical banks', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
     const registry = readBankLocationRegistry();
     const defs = buildBankDefinitions(doc, registry);
     const byId = Object.fromEntries(defs.map(def => [def.id, def.name]));
 
-    expect(defs).toHaveLength(126);
+    expect(defs).toHaveLength(125);
     expect(defs.at(-1)).toEqual({
       id: 'woodcutting-leprechaun',
       name: 'Woodcutting Leprechaun (Forestry)',
@@ -74,8 +74,13 @@ describe('bank source generator', () => {
     const registry = readBankLocationRegistry();
     const labels = Object.fromEntries(buildBankDefinitions(doc, registry).map(def => [def.id, def.name]));
     // utils/entityAccess.ts names a reviewed location by its label, so the two must agree.
-    for (const location of registry.locations) expect(labels[location.id], location.id).toBe(location.name);
+    // A merged location (the Falador west bank's deposit box) is no bank of its own.
+    const merged = new Set(registry.merges.map(({ id }: { id: string }) => id));
+    for (const location of registry.locations) {
+      expect(labels[location.id], location.id).toBe(merged.has(location.id) ? undefined : location.name);
+    }
     const source = generateBankSource(doc, registry);
+    expect(source).not.toContain('{"id":"11572"}');
     expect(source).toContain('{"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]}');
     expect(source).toContain('{"id":"10553","accessOptions":[{"diaries":["Fremennik Easy"]}');
     expect(source).not.toContain('oldschool.runescape.wiki');
