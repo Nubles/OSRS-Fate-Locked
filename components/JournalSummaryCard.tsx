@@ -15,7 +15,7 @@ import {
   countDoableDiaryTasks, evaluateDiaryTaskEligibility, evaluateQuestEligibility, evaluateDiaryTierEligibility,
 } from '../utils/journalStatus';
 import { canonicalBossId } from '../utils/contentIdentity';
-import { getActivityAccess } from '../utils/activityAccess';
+import { bossAreaBlocker } from '../utils/caTaskAccess';
 import type { DiaryTask } from '../data/diaryTasks';
 import type { CATask } from '../data/caTasks';
 import {
@@ -166,12 +166,14 @@ export function doableDiaryTasks<T extends DiaryTask>(
 
 /**
  * Combat Achievement tasks doable now: not done, and fought at a boss the run
- * has unlocked (the opposite of caTaskLockedBoss). In Chunked the boss must
- * also be in the run's chunks (getActivityAccess). Tasks at a monster that is
- * not a boss carry no unlock to check, so they are not counted.
+ * has unlocked and can get to (bossAreaBlocker: one of the boss's areas owned
+ * and reachable, or in Chunked the chunk it is entered from). Pass
+ * `areaRoutes` (from useAreaRoutes) to leave out owned areas no route reaches.
+ * Tasks at a monster that is not a boss carry no unlock to check, so they are
+ * not counted.
  */
 export function doableCATasks<T extends Pick<CATask, 'id' | 'monster'>>(
-  tasks: readonly T[], unlocks: Pick<UnlockState, 'completedTasks' | 'bosses'>, gameModeId?: string,
+  tasks: readonly T[], unlocks: UnlockState, gameModeId?: string, areaRoutes?: AreaRoutes | null,
 ): T[] {
   const done = new Set(unlocks.completedTasks);
   const reachable = new Map<string, boolean>();
@@ -179,8 +181,7 @@ export function doableCATasks<T extends Pick<CATask, 'id' | 'monster'>>(
     if (done.has(task.id)) return false;
     const boss = canonicalBossId(task.monster);
     if (!boss || !unlocks.bosses.includes(boss)) return false;
-    if (gameModeId !== 'chunked') return true;
-    if (!reachable.has(boss)) reachable.set(boss, getActivityAccess(boss, unlocks as UnlockState, gameModeId).eligible);
+    if (!reachable.has(boss)) reachable.set(boss, !bossAreaBlocker(boss, unlocks, gameModeId, areaRoutes));
     return reachable.get(boss)!;
   });
 }
@@ -230,7 +231,7 @@ export function computeJournalSummary(
   ).length;
   const caTasksLeft = caTasksTotal - caTasksDone;
   const nextCATier = CA_TIER_ORDER.find(tier => !caEarnedTiers.includes(tier));
-  const caTasksDoable = doableCATasks(ALL_CA_TASKS, unlocks, gameModeId).length;
+  const caTasksDoable = doableCATasks(ALL_CA_TASKS, unlocks, gameModeId, areaRoutes).length;
 
   const stats = {
     quests: {
