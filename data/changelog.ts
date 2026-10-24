@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-24-skillcape-emblem',
+    title: 'Skillcapes show their emblem',
+    date: '2026-10-24',
+    sections: {
+      fixed: [
+        'When a skill unlocks, its skillcape now faces you with the skill\'s emblem on show, instead of the plain side.',
+        'The cape holds still in the reveal so the emblem stays in view. Drag it to turn it round.',
+      ],
+    },
+  },
+  {
     id: '2026-10-23-roll-rings',
     title: 'Roll rings turn again',
     date: '2026-10-23',
