@@ -44,6 +44,7 @@ export const CHANGELOG_RELEASES = [
       fixed: [
         'When a skill unlocks, its skillcape now faces you with the skill\'s emblem on show, instead of the plain side.',
         'The cape holds still in the reveal so the emblem stays in view. Drag it to turn it round.',
+        'Every 3D model has deeper, truer colours. They looked washed out before.',
       ],
     },
   },
