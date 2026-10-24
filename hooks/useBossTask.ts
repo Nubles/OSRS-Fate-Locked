@@ -4,7 +4,7 @@ import { useGame } from '../context/GameContext';
 import { usesActivityKeyReserves } from '../config/gameModes';
 import { vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
 import { bossTier } from '../data/bossKeyTiers';
-import { achievementBoostFor } from '../utils/achievementBoosts';
+import { keyChance } from '../utils/keyChance';
 import { bossTaskChoices } from '../utils/farmGates';
 
 export interface BossTaskModel {
@@ -28,7 +28,8 @@ type HandleRoll = (source: string, chance: number, e: { clientX: number; clientY
  * where the card keeps its old flat rate.
  */
 export const useBossTask = (handleRoll: HandleRoll): BossTaskModel | null => {
-  const { unlocks, gameModeId, bossStandardKeysAwarded, achievementsClaimed } = useGame();
+  const game = useGame();
+  const { unlocks, gameModeId, bossStandardKeysAwarded } = game;
   const [picked, setPick] = useState('');
   const reserves = usesActivityKeyReserves(gameModeId);
   const gate = useMemo(
@@ -36,10 +37,11 @@ export const useBossTask = (handleRoll: HandleRoll): BossTaskModel | null => {
     [reserves, unlocks, gameModeId, bossStandardKeysAwarded],
   );
   if (!gate) return null;
-  // Shown with the Slayer boost the roll adds; the roll passes the stash's base rate.
-  const boost = achievementBoostFor(DropSource.SLAYER_BOSS, achievementsClaimed);
+  // The roll passes the stash's base rate; the shown chance is the one the
+  // roll is made against, every boost and ritual included (utils/keyChance.ts).
   const stageOf = (name: string) => vanillaBossKeyStage(name, bossStandardKeysAwarded?.[name] ?? 0);
-  const rateOf = (name: string) => Math.min(100, (stageOf(name).currentRate ?? 0) + boost);
+  const contextOf = (name: string): KeyRollContext => ({ kind: 'boss', bossName: name, bossClass: bossTier(name) });
+  const rateOf = (name: string) => keyChance(game, DropSource.SLAYER_BOSS, stageOf(name).currentRate ?? 0, contextOf(name)) ?? 0;
   const pick = gate.bosses.includes(picked) ? picked : '';
   return {
     block: gate.block,
@@ -49,7 +51,7 @@ export const useBossTask = (handleRoll: HandleRoll): BossTaskModel | null => {
     rate: pick ? rateOf(pick) : null,
     roll: (e) => {
       if (!pick) return;
-      handleRoll(DropSource.SLAYER_BOSS, stageOf(pick).currentRate ?? 0, e, { kind: 'boss', bossName: pick, bossClass: bossTier(pick) });
+      handleRoll(DropSource.SLAYER_BOSS, stageOf(pick).currentRate ?? 0, e, contextOf(pick));
       // Each boss task is its own: the next one asks again.
       setPick('');
     },

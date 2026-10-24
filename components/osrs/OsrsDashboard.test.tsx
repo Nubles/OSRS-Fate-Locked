@@ -135,7 +135,7 @@ describe('Dashboard in the OSRS layout', () => {
 
   it('opens a skill\'s roll odds from the i in its corner instead of a tooltip over the cell', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
-    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30' }, { timeout: 10000 });
+    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30, level up' }, { timeout: 10000 });
     expect(card.getAttribute('title')).toBeNull();
     const info = screen.getByRole('button', { name: 'Attack roll odds' });
     expect(card.contains(info)).toBe(true);
