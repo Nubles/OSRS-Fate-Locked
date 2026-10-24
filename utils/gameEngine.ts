@@ -82,11 +82,12 @@ export interface RandomUnlockCandidate {
 }
 
 /**
- * Applies the Vanilla exact-area policy only to random boss and minigame
- * unlocks, and Chunked's trainable-skill rule to random Skills unlocks. In
- * Chunked, random Bosses, Minigames, Guilds and Banks also land only on places
- * whose own chunk is owned. All other modes and tables retain their existing
- * validity rules.
+ * Whether a random Key or Chaos Key may land on an entry. A Key rolls anything
+ * left in its table, places the run can't reach yet included: only Saradomin's
+ * Ward narrows a draw to what the run can use (utils/ritualWard.ts). The one
+ * other rule is Chunked's trainable-skill rule for random Skills unlocks. The
+ * place checks below run only for a policy that lists the Key's cost in
+ * randomCosts, which the shared policy no longer does (October 2026).
  */
 export const isRandomUnlockEligible = (
     table: TableType,

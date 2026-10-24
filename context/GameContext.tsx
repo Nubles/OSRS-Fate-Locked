@@ -3081,7 +3081,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (!selection) {
         showToast(warded
           ? "Saradomin's Ward finds nothing here you can use yet. Your Key is safe: try another category."
-          : 'No eligible unlocks remain. Open more locations or choose another category.');
+          : 'Nothing left to unlock here. Choose another category.');
         return;
       }
       const next = commitAction({ type: 'UNLOCK', payload: { ...selection, costType, cost: UNLOCK_COST, revealId: generateId(), ...(warded ? { ward: true } : {}) } });

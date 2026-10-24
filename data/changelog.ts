@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-24-keys-roll-anything',
+    title: 'Keys roll anything left',
+    date: '2026-10-24',
+    sections: {
+      changed: [
+        "Keys and Chaos Keys now roll anything left in a table, even a boss, minigame, guild or bank you can't reach yet.",
+        "Saradomin's Ward is the one way to keep a Key to what you can use right now.",
+        'In Chunked, a Skills Key still only rolls skills your chunks can train.',
+      ],
+    },
+  },
+  {
     id: '2026-10-23-roll-rings',
     title: 'Roll rings turn again',
     date: '2026-10-23',

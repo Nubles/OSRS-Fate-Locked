@@ -411,7 +411,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.',
+    spend: "Unlocks one random entry from all the tables at once. Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. Only Saradomin's Ward keeps it to what you can use.",
   },
 ];
 

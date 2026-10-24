@@ -93,7 +93,7 @@ describe('vanilla activity access declarations', () => {
   it('exports the downstream vanilla random access policy', () => {
     expect(VANILLA_RANDOM_ACCESS_POLICY).toEqual({
       filteredTables: [TableType.BOSSES, TableType.MINIGAMES],
-      randomCosts: ['key', 'chaosKey'],
+      randomCosts: [],
       requiresTrackedHardGeography: true,
       emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: true },
       omniDirect: { allowsLocationIneligible: true, warnsPlayer: true },

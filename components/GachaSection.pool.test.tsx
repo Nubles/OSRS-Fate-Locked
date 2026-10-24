@@ -13,10 +13,22 @@ vi.mock('../context/GameContext', async importOriginal => ({
   ...(await importOriginal<typeof import('../context/GameContext')>()),
   useGame: () => game.current,
 }));
+// A table whose random pool is empty though entries are left. Random Keys no
+// longer skip places the run can't reach, so the tests stand one in.
+const blocked = vi.hoisted(() => ({ table: undefined as string | undefined }));
+vi.mock('../utils/gameEngine', async importOriginal => {
+  const engine = await importOriginal<typeof import('../utils/gameEngine')>();
+  return {
+    ...engine,
+    randomUnlockPool: (...args: Parameters<typeof engine.randomUnlockPool>) =>
+      args[3] !== undefined && args[3] === blocked.table ? [] : engine.randomUnlockPool(...args),
+  };
+});
 
 afterEach(() => {
   cleanup();
   setStartArea(undefined);
+  blocked.table = undefined;
 });
 
 const renderWith = async (unlocks: ReturnType<typeof createFreshState>['unlocks'], gameModeId = 'vanilla') => {
@@ -30,15 +42,21 @@ const card = (label: string) => screen.getByRole('button', { name: `Unlock from 
 describe('Spend Keys cards', () => {
   it('block a table whose remaining entries are all ineligible instead of offering Unlock', async () => {
     const fresh = createFreshState().unlocks;
-    const eligible = randomUnlockPool(fresh, 'vanilla', 'key', TableType.BOSSES).map(entry => entry.item);
-    expect(eligible.length).toBeGreaterThan(0);
+    expect(randomUnlockPool(fresh, 'vanilla', 'key', TableType.BOSSES).length).toBeGreaterThan(0);
+    blocked.table = TableType.BOSSES;
 
-    await renderWith({ ...fresh, bosses: eligible });
+    await renderWith(fresh);
 
     const bosses = card('Bosses');
     expect(bosses.disabled).toBe(true);
     expect(bosses.textContent).toContain('Blocked');
     expect(bosses.textContent).not.toContain('Done');
+  });
+
+  it('offers Unlock on Bosses while no boss can be reached yet', async () => {
+    await renderWith(createFreshState().unlocks);
+
+    expect(card('Bosses').disabled).toBe(false);
   });
 
   it('count Housing against the rollable facilities, excluding retired ones', async () => {

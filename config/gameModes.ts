@@ -74,7 +74,7 @@ export const GAME_MODES: GameMode[] = [
   {
     id: 'chunked',
     name: 'Chunked',
-    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land you can walk into from the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. Content counts only in the chunk it sits in, so Keys only unlock bosses, minigames, banks and guilds inside your chunks. A Skills Key only rolls skills your chunks can train. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first new things you do in each chunk you unlock roll for a Key. Levels past a skill\'s tier cap (tier × 10) roll no Keys. A skill at its cap gets one 50% Breakthrough roll to open its next tier, and if you ever run out of everything, Fate\'s Mercy draws a chunk or skill tier for you. Fate draws your land: it ties a thread to a boss, minigame, guild or bank past your border and sends one Chunks draw in six toward it, and every chunk you gain draws an omen, a boon or a bane.',
+    description: 'One chunk at a time, as in Chunk Locked ironman. You start in one chunk of Lumbridge and unlock land you can walk into from the chunks you hold. Once you have done Pandemonium and unlocked Sailing, land across open sea from your coast, and land a boat from your land sails to, count as next to your land too; the sea itself costs no unlock. Content counts only in the chunk it sits in. A Key can land on a boss, minigame, bank or guild outside your chunks, which counts once you hold its chunk. A Skills Key only rolls skills your chunks can train. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first new things you do in each chunk you unlock roll for a Key. Levels past a skill\'s tier cap (tier × 10) roll no Keys. A skill at its cap gets one 50% Breakthrough roll to open its next tier, and if you ever run out of everything, Fate\'s Mercy draws a chunk or skill tier for you. Fate draws your land: it ties a thread to a boss, minigame, guild or bank past your border and sends one Chunks draw in six toward it, and every chunk you gain draws an omen, a boon or a bane.',
     tagline: 'Fate draws your land, chunk by chunk',
     beta: true,
     rules: {
@@ -133,8 +133,8 @@ export const resolveModeRules = (id?: string, customRules?: GameModeRules): Game
 
 /**
  * Modes where each boss and minigame pays from its own small Key reserve,
- * rolls only once unlocked, and random Boss and Minigame Keys land only on
- * ones the run can reach. Vanilla since October 2026; Chunked joined it on
+ * and rolls only once unlocked. Random Keys land on any of them, reachable or
+ * not (Saradomin's Ward aside). Vanilla since October 2026; Chunked joined it on
  * 17 October 2026 so short minigames stop flooding a chunk run with Keys.
  */
 export const usesActivityKeyReserves = (id?: string): boolean => id === 'vanilla' || id === 'chunked';
