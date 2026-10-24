@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-24-ca-boss-areas',
+    title: 'Combat tasks need the way there',
+    date: '2026-10-24',
+    sections: {
+      fixed: [
+        "A combat achievement only counts as doable when you've unlocked its boss and can get to the boss's area, like quests and diary tasks.",
+        "Tasks at a boss you own but can't reach yet show orange in the Journal, with the area you still need.",
+        'You can still log any task by hand.',
+      ],
+    },
+  },
+  {
     id: '2026-10-23-roll-rings',
     title: 'Roll rings turn again',
     date: '2026-10-23',

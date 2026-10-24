@@ -45,6 +45,8 @@ html[data-ui="osrs"] .ojr-sub { padding-left: 22px; }
 html[data-ui="osrs"] .ojr-done { color: #0dc10d; }
 html[data-ui="osrs"] .ojr-ready { color: #ffff00; }
 html[data-ui="osrs"] .ojr-locked { color: #ff0000; }
+/* A Combat Achievement at an unlocked boss the run can't get to yet. */
+html[data-ui="osrs"] .ojr-far { color: #ff981f; }
 html[data-ui="osrs"] .ojr-muted { color: var(--osrs-muted, #8a7c66); }
 
 /* Diaries: one line per area, the four tiers as columns, as in game. */
