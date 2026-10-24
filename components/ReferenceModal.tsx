@@ -59,13 +59,13 @@ export const describeVanillaRandomAccessPolicy = (
 ): string => {
   const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
   const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
-  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
+  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0 && policy.randomCosts.length > 0;
   // Chunked counts content only in the exact chunk it sits in, and filters
   // banks and guilds the same way (utils/gameEngine.ts isRandomUnlockEligible).
   const chunkedTables = andList([...policy.filteredTables.map(table => table.toLowerCase()), 'banks', 'guilds']);
   const randomAccess = hasLocationFilter
     ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`
-    : '';
+    : `In Vanilla, Keys and Chaos Keys roll anything left in their table, even ${tables || 'places'} you can't reach yet, and only Saradomin's Ward keeps a Key to what you can use. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`;
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
         hasLocationFilter ? 'If none can be reached, nothing is unlocked.' : 'If there is nothing to unlock, nothing happens.',
@@ -73,10 +73,11 @@ export const describeVanillaRandomAccessPolicy = (
         policy.emptyEligiblePool.preservesRngProgression ? "A seeded run's next roll stays the same." : '',
       ].filter(Boolean).join(' ')
     : '';
+  const omniWarns = policy.requiresTrackedHardGeography && tables.length > 0 && policy.omniDirect.warnsPlayer;
   const omni = policy.omniDirect.allowsLocationIneligible
     ? hasLocationFilter
       ? `An Omni-Key can still pick one you can't reach yet${policy.omniDirect.warnsPlayer ? ', with a warning' : ''}.`
-      : "An Omni-Key can pick one even if you can't reach it."
+      : `An Omni-Key can pick one even if you can't reach it${omniWarns ? ', with a warning' : ''}.`
     : hasLocationFilter
       ? 'An Omni-Key follows the same rule.'
       : 'An Omni-Key follows the usual rules for each table.';
@@ -443,7 +444,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys can land on bosses and minigames you can't reach yet.</li>
                                     <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left. Fate's Thread leans your Chunks draws toward a place fate picks, and fate marks about one chunk in eight (see Key Economy).</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
@@ -647,8 +648,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
-                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most.'}
+                                        Unlocks a <b>random entry from all the tables at once</b>. Every entry left is
+                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most, even places you can\'t reach yet.'}{' '}
                                         Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
                                         every level-up, or the Ritual of Chaos.
                                     </p>

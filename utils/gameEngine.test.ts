@@ -49,12 +49,23 @@ afterEach(() => {
 });
 
 describe('isRandomUnlockEligible', () => {
-  it('filters a vanilla activity until its exact area is accessible', () => {
+  it('lets a Vanilla Key or Chaos Key land on a boss or minigame the run cannot reach yet', () => {
+    for (const cost of ['key', 'chaosKey'] as const) {
+      expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks(), 'vanilla', cost)).toBe(true);
+      expect(isRandomUnlockEligible(TableType.BOSSES, 'Giant Mole', makeUnlocks(), 'vanilla', cost)).toBe(true);
+    }
+    for (const table of [TableType.BOSSES, TableType.MINIGAMES]) {
+      expect(randomUnlockPool(makeUnlocks(), 'vanilla', 'chaosKey', table).length).toBe(getPoolAndStateKey(table).pool.length);
+    }
+  });
+
+  it('filters a vanilla activity until its exact area is accessible under a policy that lists the cost', () => {
+    const placeFiltered: VanillaRandomAccessPolicy = { ...VANILLA_RANDOM_ACCESS_POLICY, randomCosts: ['key', 'chaosKey'] };
     const lockedOutpost = makeUnlocks();
     const openOutpost = makeUnlocks({ regions: ["Void Knights' Outpost"] });
 
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', lockedOutpost, 'vanilla')).toBe(false);
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', openOutpost, 'vanilla')).toBe(true);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', lockedOutpost, 'vanilla', 'key', placeFiltered)).toBe(false);
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', openOutpost, 'vanilla', 'key', placeFiltered)).toBe(true);
   });
 
   it('keeps activity rolls available outside Vanilla and Chunked', () => {
