@@ -178,9 +178,9 @@ export interface VanillaRandomAccessPolicy {
 
 export const VANILLA_RANDOM_ACCESS_POLICY = {
   filteredTables: [TableType.BOSSES, TableType.MINIGAMES],
-  // No random Key is kept to places the run can reach: a Key or Chaos Key
-  // rolls anything left in its table, as fate picks (October 2026). Only
-  // Saradomin's Ward narrows a draw to what the run can use (utils/ritualWard.ts).
+  // In Vanilla a random Key or Chaos Key rolls anything left in its table, as
+  // fate picks, places the run can't reach yet included (October 2026). Only
+  // Saradomin's Ward narrows a Key's draw to what the run can use.
   randomCosts: [],
   requiresTrackedHardGeography: true,
   emptyEligiblePool: { noUnlock: true, retainsKey: true, preservesRngProgression: true },

@@ -132,17 +132,19 @@ describe('economy ↔ engine consistency', () => {
     const chaos = KEY_TYPES.find(k => k.id === 'chaos')!;
     expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
     expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
-    // A Chaos Key draws once from every entry left in every table, reachable or
-    // not, so a table's share is its size: on a fresh run Banks is among the biggest.
+    // A Chaos Key draws once from every eligible entry of every table, so a
+    // table's share is its size: on a fresh Vanilla run, where nothing is kept
+    // to reachable places, Banks is among the biggest.
     const tableSizes = (mode: string) => {
       const sizes = new Map<TableType, number>();
       for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
       return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
     };
     expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
-    // Chunked has no Areas table; the Codex names its two biggest.
-    expect(tableSizes('chunked').slice(0, 2)).toEqual([TableType.BANKS, TableType.BOSSES]);
-    expect(chaos.spend).toContain("Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. Only Saradomin's Ward keeps it to what you can use.");
+    // Chunked only offers banks in owned chunks, so a fresh run's biggest table is Merchants.
+    expect(tableSizes('chunked')[0]).toBe(TableType.MERCHANTS);
+    expect(tableSizes('chunked').slice(0, 5)).not.toContain(TableType.BANKS);
+    expect(chaos.spend).toContain("Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. In Chunked, only banks and guilds inside your chunks can come up.");
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
@@ -284,8 +286,9 @@ describe('economy ↔ engine consistency', () => {
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
-      "Keys and Chaos Keys roll anything left in their table, even bosses, minigames, banks and guilds you can't reach yet. "
-      + "Only Saradomin's Ward keeps a Key to what you can use. "
+      "In Vanilla, Keys and Chaos Keys roll anything left in their table, even bosses and minigames you can't reach yet, "
+      + "and only Saradomin's Ward keeps a Key to what you can use. "
+      + 'In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold. '
       + "If there is nothing to unlock, nothing happens. You keep the Key. A seeded run's next roll stays the same. "
       + "An Omni-Key can pick one even if you can't reach it, with a warning.",
     );
@@ -314,7 +317,7 @@ describe('economy ↔ engine consistency', () => {
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('can still pick one');
 
     const noFilteredTables: VanillaRandomAccessPolicy = { ...policy, filteredTables: [] };
-    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('only unlock');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toMatch(/In Vanilla, Keys( and Chaos Keys)? only unlock/);
     expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain("An Omni-Key can pick one even if you can't reach it");
 
     const minigamesOnly: VanillaRandomAccessPolicy = { ...policy, filteredTables: [TableType.MINIGAMES] };

@@ -411,7 +411,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: "Unlocks one random entry from all the tables at once. Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. Only Saradomin's Ward keeps it to what you can use.",
+    spend: "Unlocks one random entry from all the tables at once. Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. In Chunked, only banks and guilds inside your chunks can come up.",
   },
 ];
 
@@ -493,7 +493,7 @@ export const RITUALS: Ritual[] = [
     effect: 'Fate draws up to 3 frontier chunks and keeps them until you chart one; choose which of them unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
   { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
-    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach. You can cast it again 25 rolls later.' },
+    effect: 'Your next Key on bosses, minigames, guilds or banks can only land on something you can use right now. Fate still picks, just from places you can reach. Outside Chunked, a Chaos Key stays random. You can cast it again 25 rolls later.' },
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',

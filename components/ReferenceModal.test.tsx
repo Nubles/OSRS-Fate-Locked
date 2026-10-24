@@ -203,14 +203,14 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('High: 50% → 25% (2 Keys)');
     expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(drops).toContain('25% → 15% → 10%');
-    expect(unlocks).toContain('Keys and Chaos Keys roll anything left in their table, even bosses, minigames, banks and guilds you can&#x27;t reach yet. Only Saradomin&#x27;s Ward keeps a Key to what you can use.');
+    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys roll anything left in their table, even bosses and minigames you can&#x27;t reach yet, and only Saradomin&#x27;s Ward keeps a Key to what you can use. In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold.');
     expect(unlocks).toContain('If there is nothing to unlock, nothing happens. You keep the Key.');
     expect(unlocks).toContain('An Omni-Key can pick one even if you can&#x27;t reach it, with a warning.');
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
     expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
-    expect(unlocks).toContain('Every entry left is equally likely, so big tables such as Areas and Banks come up most, even places you can&#x27;t reach yet.');
-    expect(renderCodex('unlocks', 'chunked')).toContain('so big tables such as Banks and Bosses come up most, even places you can&#x27;t reach yet.');
+    expect(unlocks).toContain('Every entry left is equally likely, so big tables such as Areas and Banks come up most, even places you can&#x27;t reach yet. Guaranteed');
+    expect(renderCodex('unlocks', 'chunked')).toContain('so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up. Guaranteed');
   });
 
   it('labels the reserve rules as active in Chunked and inactive elsewhere', () => {

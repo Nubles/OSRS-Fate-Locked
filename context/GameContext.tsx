@@ -1514,9 +1514,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       if (action.payload.revealId && (state.pendingUnlock || costType === 'specialKey'
         || (costType === 'key' ? state.keys < cost : state.chaosKeys < 1)
         || !isRandomUnlockEligible(table, item, state.unlocks, state.gameModeId, costType))) return state;
-      // Saradomin's Ward: a random spend on a place (or a Chaos Key) must have been drawn
+      // Saradomin's Ward: a random spend on a place (or a Chunked Chaos Key) must have been drawn
       // from what the run can use now. rollUnlock filters the draw and marks it.
-      const warded = !!action.payload.revealId && state.rituals?.ward === true && costType !== 'specialKey' && wardApplies(costType, table);
+      const warded = !!action.payload.revealId && state.rituals?.ward === true && costType !== 'specialKey' && wardApplies(costType, table, state.gameModeId);
       if (warded && action.payload.ward !== true) return state;
       // Direct (Omni) unlocks must be paid for and still unlockable, or two
       // quick confirmations could spend one Omni-key twice.
@@ -3067,7 +3067,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         return;
       }
       // Saradomin's Ward: fate still picks, but only from what the run can use right now.
-      const warded = current.rituals?.ward === true && wardApplies(costType, table);
+      const warded = current.rituals?.ward === true && wardApplies(costType, table, current.gameModeId);
       if (warded && !usable) return;
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
@@ -3090,7 +3090,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       else flushCurrentSave();
     };
     const current = stateRef.current;
-    if (current.rituals?.ward !== true || !wardApplies(costType, table)) { draw(); return; }
+    if (current.rituals?.ward !== true || !wardApplies(costType, table, current.gameModeId)) { draw(); return; }
     // The Ward's activity checks load with the first warded spend, not with the app.
     import('../utils/ritualWard').then(({ wardUsable }) => {
       if (!mountedRef.current) return;

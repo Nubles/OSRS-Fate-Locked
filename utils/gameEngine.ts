@@ -82,12 +82,11 @@ export interface RandomUnlockCandidate {
 }
 
 /**
- * Whether a random Key or Chaos Key may land on an entry. A Key rolls anything
- * left in its table, places the run can't reach yet included: only Saradomin's
- * Ward narrows a draw to what the run can use (utils/ritualWard.ts). The one
- * other rule is Chunked's trainable-skill rule for random Skills unlocks. The
- * place checks below run only for a policy that lists the Key's cost in
- * randomCosts, which the shared policy no longer does (October 2026).
+ * Applies Chunked's trainable-skill rule to random Skills unlocks, and lands
+ * Chunked's random Bosses, Minigames, Guilds and Banks only on places whose own
+ * chunk is owned. Vanilla follows the shared random-access policy, which no
+ * longer keeps any random cost to reachable places (October 2026). All other
+ * modes and tables retain their existing validity rules.
  */
 export const isRandomUnlockEligible = (
     table: TableType,
@@ -101,10 +100,15 @@ export const isRandomUnlockEligible = (
     // Chunked: random Skills rolls only land on skills the run's chunks can train.
     if (modeId === 'chunked' && table === TableType.SKILLS) return chunkedSkillRollable(item, unlocks);
     if (!usesActivityKeyReserves(modeId)) return true;
+    // Chunked: a random boss, minigame, bank or guild counts only in a chunk the run owns.
+    if (modeId === 'chunked') {
+        if (table === TableType.BANKS) return chunkedBankOwned(item, unlocks);
+        if (table === TableType.GUILDS || table === TableType.BOSSES || table === TableType.MINIGAMES) {
+            return randomKeyActivityAccess(item, unlocks, modeId).eligible;
+        }
+        return true;
+    }
     if (!policy.randomCosts.includes(randomCost)) return true;
-    // Chunked: a random bank or guild counts only in a chunk the run owns.
-    if (modeId === 'chunked' && table === TableType.BANKS) return chunkedBankOwned(item, unlocks);
-    if (modeId === 'chunked' && table === TableType.GUILDS) return randomKeyActivityAccess(item, unlocks, modeId).eligible;
     if (!policy.filteredTables.some(candidate => candidate === table)) return true;
     if (!policy.requiresTrackedHardGeography) return true;
     return randomKeyActivityAccess(item, unlocks, modeId).eligible;

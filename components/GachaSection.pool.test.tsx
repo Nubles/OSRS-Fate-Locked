@@ -13,7 +13,7 @@ vi.mock('../context/GameContext', async importOriginal => ({
   ...(await importOriginal<typeof import('../context/GameContext')>()),
   useGame: () => game.current,
 }));
-// A table whose random pool is empty though entries are left. Random Keys no
+// A table whose random pool is empty though entries are left. Vanilla Keys no
 // longer skip places the run can't reach, so the tests stand one in.
 const blocked = vi.hoisted(() => ({ table: undefined as string | undefined }));
 vi.mock('../utils/gameEngine', async importOriginal => {
@@ -53,7 +53,7 @@ describe('Spend Keys cards', () => {
     expect(bosses.textContent).not.toContain('Done');
   });
 
-  it('offers Unlock on Bosses while no boss can be reached yet', async () => {
+  it('offers Unlock on Vanilla Bosses while no boss can be reached yet', async () => {
     await renderWith(createFreshState().unlocks);
 
     expect(card('Bosses').disabled).toBe(false);

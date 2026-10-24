@@ -42,9 +42,9 @@ export const CHANGELOG_RELEASES = [
     date: '2026-10-24',
     sections: {
       changed: [
-        "Keys and Chaos Keys now roll anything left in a table, even a boss, minigame, guild or bank you can't reach yet.",
+        "In Vanilla, Keys and Chaos Keys now roll any boss or minigame left, even ones you can't reach yet.",
         "Saradomin's Ward is the one way to keep a Key to what you can use right now.",
-        'In Chunked, a Skills Key still only rolls skills your chunks can train.',
+        "A Chaos Key is always random: it no longer uses up a waiting Ward. Chunked is unchanged.",
       ],
     },
   },
