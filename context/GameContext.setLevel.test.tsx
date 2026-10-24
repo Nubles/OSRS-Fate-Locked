@@ -57,15 +57,18 @@ const fixedRandom = () => {
   return () => { s = (Math.imul(s, 1103515245) + 12345) >>> 0; return s / 4294967296; };
 };
 
-// Both plays of a test are the same run, so its seeded draws match.
+// Both plays of a test are the same run, so its seeded draws match. An
+// unseeded run draws from its hidden salt (utils/seededRng.ts runDrawFloat),
+// so both plays share that too.
 const RUN_ID = '6f1c2a4e-8b3d-4c5e-9a7f-1b2c3d4e5f60';
+const RUN_SALT = '055d0d16-9ba5-42df-99ec-623759aa77e3';
 
 type Play = { save: unknown; summary: LevelBatchSummary | null; rendersForAction: number; lastEventType: string | null };
 
 async function play(storageKey: string, start: Partial<GameState>, skill: string, target: number, how: 'clicks' | 'set'): Promise<Play> {
   vi.setSystemTime(new Date('2026-10-19T12:00:00Z'));
   vi.spyOn(Math, 'random').mockImplementation(fixedRandom());
-  localStorage.setItem(storageKey, serializeCurrent({ ...createFreshState(), runId: RUN_ID, ...start }));
+  localStorage.setItem(storageKey, serializeCurrent({ ...createFreshState(), runId: RUN_ID, rngSalt: RUN_SALT, ...start }));
   render(<GameProvider storageKey={storageKey} leaseOptions={{ ownerId: storageKey }}><Capture /></GameProvider>);
   await settle();
   const from = current.unlocks.levels[skill] || 1;
@@ -147,7 +150,7 @@ describe('Set level rolls every level as the clicks would', () => {
     expect(set.save).toEqual(clicks.save);
   });
 
-  it('matches the clicks on an unseeded run drawing the same random numbers', async () => {
+  it('matches the clicks on an unseeded run drawing from the same hidden salt', async () => {
     const start = { ...vanilla(), rngSeed: undefined, rngVersion: undefined };
     const clicks = await play('set-level-unseeded-clicks', start, 'Attack', 30, 'clicks');
     const set = await play('set-level-unseeded-set', start, 'Attack', 30, 'set');
