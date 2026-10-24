@@ -515,7 +515,7 @@ step to 256 kB by 18 October 2026, and lowered to 219 kB on 19 October
 2026, when the Advisor panels, the Activities sub-panels, the RuneLite
 bundle builder and the content service behind the journal routes moved
 behind lazy loads and the entry fell from 254.8 to 216.1 kB; raised to 220 kB on 23 October 2026 for the skill cards' info button and its
-Settings choice, at 219.3 kB, with the odds box itself loading on first use). The 225 kB split came from the build
+Settings choice, at 219.3 kB, with the odds box itself loading on first use; raised to 226 kB on 24 October 2026 for the combined update's Key, roll, save and Slayer changes, at 225.1 kB). The 225 kB split came from the build
 id stamped into the entry: CI built with a 13-digit timestamp and the deploy
 with the 40-character commit SHA. CI now stamps the SHA too (on a pull
 request, its merge commit's), and a build without `BUILD_ID` stamps a random
