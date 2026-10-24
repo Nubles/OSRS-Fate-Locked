@@ -3,7 +3,7 @@ import type { CATier } from '../../data/caData';
 import { ALL_CA_TASKS, type CATask } from '../../data/caTasks';
 import type { UnlockState } from '../../types';
 import type { AreaRoutes } from '../../utils/areaRoutes';
-import { DROP_RATES } from '../../config/rules';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { CA_TASK_POINTS, isCATierId } from '../../utils/caProgress';
 import { caTaskBlocker, caTaskBlockerText, type CATaskBlocker } from '../../utils/caTaskAccess';
 import { EntityLocations } from '../EntityLocations';
@@ -151,7 +151,9 @@ const TierDetail: React.FC<{
   const isRecorded = unlocks.cas.includes(tier.id);
   const isActionable = isRecorded || totalPoints >= tier.pointsRequired;
   const done = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
-  const rate = DROP_RATES[tier.difficulty];
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = chanceOf(tier.difficulty);
   const rows: WikiRow[] = [
     { label: 'Tasks done', value: `${done}/${tasks.length}` },
     { label: 'Points per task', value: String(pointsOf(tier.id)) },
@@ -159,7 +161,7 @@ const TierDetail: React.FC<{
     { label: 'Your points', value: <span className={totalPoints >= tier.pointsRequired ? 'ojr-good' : 'ojr-bad'}>{totalPoints.toLocaleString()}</span> },
   ];
   if (nextTier) rows.push({ label: 'Next reward', value: nextTier });
-  if (rate !== undefined) rows.push({ label: 'Fate Locked roll', value: `${rate}% base Key chance per task` });
+  if (rate !== undefined) rows.push({ label: 'Fate Locked roll', value: `${rate}% Key chance per task` });
 
   return (
     <div className="ojr-detail">

@@ -25,7 +25,7 @@ import { SkillRollOdds } from './SkillRollOdds';
 import { SkillInfoButton } from './SkillInfoButton';
 import { useSkillOddsHover } from '../utils/skillOddsPref';
 import { levelPastTierCap, tierCap } from '../utils/chunkedFate';
-import { achievementBoostFor } from '../utils/achievementBoosts';
+import { levelUpKeyChance } from '../utils/keyChance';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
@@ -382,11 +382,11 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
+  const game = useGame();
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
     history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
-  } = useGame();
-  const levelBoost = achievementBoostFor('Level Up', achievementsClaimed);
+  } = game;
   const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
@@ -644,6 +644,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
                     const tierColorText = isUnlocked ? 'text-gray-200' : 'text-gray-500';
                     const pastCap = levelPastTierCap(gameModeId, unlocks, skill, level + 1) ? tierCap(tier) : undefined;
+                    const levelChance = levelUpKeyChance(game, skill);
                     const showInfo = canLevel && !skillOddsHover;
 
                     if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
@@ -716,7 +717,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                     <div className="text-[9px] text-gray-400 font-mono leading-none mt-0.5">
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
-                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} boost={levelBoost}
+                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} chance={levelChance}
                                         pastCap={pastCap} hoverBox={skillOddsHover} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
@@ -741,7 +742,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                             {/* Roll odds, opened from the corner so the card stays in view while levelling */}
                             {showInfo && (
                                 <span className="absolute right-1.5 bottom-1 z-20 flex">
-                                    <SkillInfoButton skill={skill} level={level} tier={tier} boost={levelBoost} pastCap={pastCap} variant="classic" />
+                                    <SkillInfoButton skill={skill} level={level} tier={tier} chance={levelChance} pastCap={pastCap} variant="classic" />
                                 </span>
                             )}
                             

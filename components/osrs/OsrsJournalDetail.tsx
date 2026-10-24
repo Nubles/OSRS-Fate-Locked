@@ -7,7 +7,7 @@ import { CA_DATA, type CATier } from '../../data/caData';
 import type { CATask } from '../../data/caTasks';
 import type { UnlockState } from '../../types';
 import type { AreaRoutes } from '../../utils/areaRoutes';
-import { DROP_RATES } from '../../config/rules';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { failureFateForSource } from '../../config/economy';
 import { questLocations } from '../../utils/questLocations';
 import { showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
@@ -44,9 +44,8 @@ export const selKey = (sel: JournalSel): string => `${sel.kind}:${sel.id}`;
 
 export interface MapTarget { cx: number; cy: number; label: string }
 
-/** "50% Key chance, or 1 Fate Point on a miss", from the rules the roll uses. */
-export const rollFact = (source: QuestData['difficulty'], each = ''): string => {
-  const rate = DROP_RATES[source];
+/** "50% Key chance, or 1 Fate Point on a miss": `rate` is the chance the roll is made against (useSourceKeyChance). */
+export const rollFact = (source: QuestData['difficulty'], rate: number, each = ''): string => {
   const fate = failureFateForSource(source);
   return `${rate}% Key chance${each}, or ${plural(fate, 'Fate Point')} on a miss`;
 };
@@ -149,7 +148,9 @@ export const QuestDetail: React.FC<{
   const isAvailable = !isCompleted && quest.eligibility.eligible;
   const needsConfirmation = !isCompleted && quest.eligibility.machineEligible && !quest.eligibility.eligible;
   const { game, fate, checks } = questLines(quest, unlocks, currentQP, onPrereqClick, onSkillClick);
-  const rate = DROP_RATES[quest.difficulty];
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = chanceOf(quest.difficulty);
   const loc = questLocations(quest.name, unlocks, gameModeId);
   const start = loc.startPlaces[0] ?? null;
   const map = questMapTarget(quest, unlocks, gameModeId);
@@ -169,7 +170,7 @@ export const QuestDetail: React.FC<{
   if (start) facts.push({ label: 'Start point', value: start.label });
   if (quest.series) facts.push({ label: 'Series', value: quest.series });
   if (routeCheck && !isCompleted) facts.push({ label: 'Route check', value: routeCheck });
-  if (rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(quest.difficulty) });
+  if (rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(quest.difficulty, rate) });
 
   const main: MainAction = isCompleted
     ? { label: 'Completed', disabled: true, title: 'Completed', onClick: () => {} }
@@ -261,7 +262,9 @@ export const DiaryTaskDetail: React.FC<{
   const done = tasks.filter(isDoneOf).length;
   const isDone = isDoneOf(task);
   const ready = !isDone && evaluateDiaryTaskEligibility(task, unlocks, gameModeId, areaRoutes).eligible;
-  const rate = diary ? DROP_RATES[diary.difficulty] : undefined;
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = diary ? chanceOf(diary.difficulty) : undefined;
 
   const at = Math.max(0, tasks.findIndex(t => t.id === task.id));
   const from = Math.max(0, Math.min(at - 2, tasks.length - TASK_WINDOW));
@@ -273,7 +276,7 @@ export const DiaryTaskDetail: React.FC<{
   if (where.length > 0) facts.push({ label: 'Area', value: where.join(', ') });
   else if (diary) facts.push({ label: 'Area', value: diary.region });
   facts.push({ label: 'Status', value: isDone ? 'Done' : ready ? 'Doable now' : 'Not yet' });
-  if (diary && rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(diary.difficulty, ' per task') });
+  if (diary && rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(diary.difficulty, rate, ' per task') });
 
   return (
     <Pane
@@ -338,7 +341,9 @@ export const DiaryTierDetail: React.FC<{
     && evaluateDiaryTaskEligibility(t, unlocks, gameModeId, areaRoutes).eligible).length;
   const allTasksDone = tasks.length === 0 || done === tasks.length;
   const tier = evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes);
-  const rate = DROP_RATES[diary.difficulty];
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = chanceOf(diary.difficulty);
   // The Journal's search narrows the tier's tasks the way it narrows the list (OsrsJournalSearch).
   const query = compileJournalQuery(searchTerm);
   const shown = query ? tasks.filter(task => journalMatches(query, diaryTaskSearchFields(task))) : tasks;
@@ -354,7 +359,7 @@ export const DiaryTierDetail: React.FC<{
     },
   ];
   if (!isCompleted && tier.manualChecks.length > 0) facts.push({ label: 'Needs confirmation', value: tier.manualChecks.join(', ') });
-  if (rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(diary.difficulty, ' per task') });
+  if (rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(diary.difficulty, rate, ' per task') });
 
   return (
     <Pane
@@ -412,14 +417,16 @@ export const CATaskDetail: React.FC<{
   const isDone = unlocks.completedTasks.includes(task.id);
   const blocker = caTaskBlocker(task, unlocks, gameModeId, areaRoutes);
   const tier = CA_DATA[task.tierId];
-  const rate = tier ? DROP_RATES[tier.difficulty] : undefined;
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = tier ? chanceOf(tier.difficulty) : undefined;
   const facts: WikiRow[] = [
     { label: 'Tier', value: task.tierId },
     { label: 'Points', value: String(caPoints(task.tierId)) },
     { label: 'Monster', value: <a className="ojr-wlink" href={monsterWikiUrl(task.monster)} target="_blank" rel="noopener noreferrer">{task.monster}</a> },
   ];
   if (!isDone) facts.push({ label: 'Where', value: <EntityLocations name={task.monster} kinds={['monster']} cap={3} /> });
-  if (tier && rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(tier.difficulty) });
+  if (tier && rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(tier.difficulty, rate) });
 
   return (
     <Pane
@@ -456,7 +463,9 @@ export const CATierDetail: React.FC<{
   const isRecorded = unlocks.cas.includes(tier.id);
   const isActionable = isRecorded || totalPoints >= tier.pointsRequired;
   const done = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
-  const rate = DROP_RATES[tier.difficulty];
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = chanceOf(tier.difficulty);
   const facts: WikiRow[] = [
     { label: 'Tasks done', value: `${done}/${tasks.length}` },
     { label: 'Points per task', value: String(caPoints(tier.id)) },
@@ -464,7 +473,7 @@ export const CATierDetail: React.FC<{
     { label: 'Your points', value: <span className={totalPoints >= tier.pointsRequired ? 'ojr-good' : 'ojr-bad'}>{totalPoints.toLocaleString()}</span> },
   ];
   if (nextTier) facts.push({ label: 'Next reward', value: nextTier });
-  if (rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(tier.difficulty, ' per task') });
+  if (rate !== undefined) facts.push({ label: 'Fate Locked roll', value: rollFact(tier.difficulty, rate, ' per task') });
 
   return (
     <Pane

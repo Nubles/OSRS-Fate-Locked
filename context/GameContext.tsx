@@ -7,16 +7,15 @@ import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
 import { usesActivityKeyReserves, resolveModeRules, DEFAULT_MODE_ID } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
 import type { GameModeRules } from '../config/gameModes';
-import { getActiveRegionBonuses } from '../config/regionModifiers';
 import { exploreBlocker, withExploreStart } from '../utils/chunkExplore';
 import { leanTowardThread, withFateLand } from '../utils/fateLand';
-import { achievementBoostFor } from '../utils/achievementBoosts';
+import { keyRollOdds } from '../utils/keyChance';
 import { failureFateForSkillLevel, failureFateForSource, getRitual, isSkillChaosMilestone, ritualFateCost, XTREME_MILESTONE_INTERVAL, BREAKTHROUGH_CHANCE, GREED_REFUND_FRACTION, gambitKeys, STARTING_KEYS } from '../config/economy';
 import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
-  afterRoll, applyOddsBonus, castBarrows, castInvocations, castPact, castTears, failFate,
-  pickSacrifice, ritualAvailability, rollRitualActive, rollRitualPlan, sacrificeCandidates, tidyRituals, wardApplies,
+  afterRoll, castBarrows, castInvocations, castPact, castTears, failFate,
+  pickSacrifice, ritualAvailability, rollRitualActive, sacrificeCandidates, tidyRituals, wardApplies,
   type RitualState, type SacrificeTier,
 } from '../utils/ritualEffects';
 import { tableDisplayName } from '../utils/tableDisplay';
@@ -101,11 +100,10 @@ import {
 import {
   formatKeyPercent,
   formatKeyRollValue,
-  normalizePercent,
   resolveKeyRoll,
   skillLevelKeyChance,
 } from '../utils/keyRoll';
-import { effectiveVanillaClueRate, isKnownVanillaMinigame, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
+import { isKnownVanillaMinigame, MINIGAME_MISS_FATE_MIN_RATE, minigameMissPaysFate, vanillaBossKeyStage, vanillaMinigameKeyStage, type KeyReserveStage } from '../config/vanillaKeyEconomy';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import {
   blockPendingSave,
@@ -595,49 +593,19 @@ export function prepareKeyRollAction(
   meta?: DetectedGameEventMeta,
   context?: KeyRollContext,
 ): RollResultAction | null {
-  const vanillaBossContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'boss'
-    ? context
-    : null;
-  const vanillaClueContext = state.gameModeId === 'vanilla' && context?.kind === 'clue'
-    ? context
-    : null;
-  const recordedBossAwarded = vanillaBossContext
-    ? state.bossStandardKeysAwarded?.[vanillaBossContext.bossName] ?? 0
-    : 0;
-  const bossStage = vanillaBossContext
-    ? vanillaBossKeyStage(vanillaBossContext.bossName, recordedBossAwarded)
-    : null;
-  const vanillaMinigameContext = usesActivityKeyReserves(state.gameModeId) && context?.kind === 'minigame'
-    ? context
-    : null;
-  // A minigame that left the table (Rat Pits) has nothing left to pay.
-  if (vanillaMinigameContext && !isKnownVanillaMinigame(vanillaMinigameContext.minigameName)) return null;
-  const minigameStage = vanillaMinigameContext
-    ? vanillaMinigameKeyStage(
-      vanillaMinigameContext.minigameName,
-      state.minigameStandardKeysAwarded?.[vanillaMinigameContext.minigameName] ?? 0,
-    )
-    : null;
-  // A boss or a minigame: both pay from a fixed Key reserve.
-  const reserveStage = bossStage ?? minigameStage;
-
-  // Do not advance seeded RNG (or consume a buff) after a boss or minigame reserve ends.
-  if (reserveStage?.capped) return null;
+  // The odds come from utils/keyChance.ts, the same function every screen
+  // that shows a Key chance reads (utils/keyChance.test.ts pins them).
+  // Null: a boss or minigame reserve that has run out, or a minigame that
+  // left the table (Rat Pits). Do not advance seeded RNG (or consume a buff).
+  const odds = keyRollOdds(state, source, threshold, context);
+  if (!odds) return null;
+  const {
+    bossContext: vanillaBossContext, clueContext: vanillaClueContext, minigameContext: vanillaMinigameContext,
+    bossStage, minigameStage, clueAwarded, successBonus, omniBonus, plan,
+  } = odds;
 
   const mode = resolveModeRules(state.gameModeId, state.customMode);
-  let successBonus = 0;
-  let omniBonus = 0;
-  if (mode.regionModifiers) {
-    const bonuses = getActiveRegionBonuses(state.unlocks.regions);
-    successBonus = bonuses.successBonus;
-    omniBonus = bonuses.omniBonus;
-  }
-  // Activity milestones the run has earned raise that activity's own rolls,
-  // apart from Vanilla minigame reserves, which keep their own pace.
-  if (!vanillaMinigameContext) successBonus += achievementBoostFor(source, state.achievementsClaimed);
-
-  const clueAwarded = vanillaClueContext ? state.clueStandardKeysAwarded ?? 0 : 0;
-  const isVanillaContext = vanillaBossContext !== null || vanillaClueContext !== null || vanillaMinigameContext !== null;
+  const isVanillaContext = odds.exact;
   const rollPurpose = vanillaBossContext
     ? `roll:boss:${vanillaBossContext.bossName}:${bossStage!.awarded}`
     : vanillaMinigameContext
@@ -654,9 +622,8 @@ export function prepareKeyRollAction(
   let effectiveThreshold: number;
   let success: boolean;
   if (isVanillaContext) {
-    baseThreshold = reserveStage?.currentRate
-      ?? effectiveVanillaClueRate(threshold, clueAwarded);
-    effectiveThreshold = normalizePercent(Math.max(0, Math.min(100, baseThreshold + successBonus)));
+    baseThreshold = odds.baseThreshold;
+    effectiveThreshold = odds.boostedThreshold;
     const exactRoll = (index: number) => resolveKeyRoll(
       (nextDice(rollPurpose, index, 10_000) - dieOffset) / 10_000,
       effectiveThreshold,
@@ -685,9 +652,8 @@ export function prepareKeyRollAction(
 
   // The run's rituals (Pact, Invocations, Barrows): odds first, then Verac's
   // hit-through on a miss. Extra dice are drawn only while a ritual asks.
-  const plan = rollRitualPlan(state.rituals, state.fatePoints);
   if (plan.oddsBonus !== 0) {
-    effectiveThreshold = normalizePercent(applyOddsBonus(effectiveThreshold, plan.oddsBonus));
+    effectiveThreshold = odds.threshold;
     success = roll <= effectiveThreshold;
   }
   let hitThrough = false;

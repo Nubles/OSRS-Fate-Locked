@@ -7,7 +7,10 @@ import { summarisePlaces, showChunkOnMap } from '../../utils/chunkLocations';
 import { useGame } from '../../context/GameContext';
 import { skillGatherNote } from '../../utils/skillGatherNote';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { formatKeyPercent, skillLevelKeyChance } from '../../utils/keyRoll';
+import { formatKeyPercent } from '../../utils/keyRoll';
+import { levelUpKeyChance } from '../../utils/keyChance';
+import { tierCap } from '../../utils/chunkedFate';
+import { chunkedPastCapText, levelBoostNote } from '../SkillRollOdds';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
 import { TIER_GEMS, gemSrc, roman, skillIconSrc, tint } from './OsrsDashGems';
 import { SetLevelControl } from '../SetLevelControl';
@@ -79,8 +82,11 @@ const OsrsRegionPicker: React.FC<{ node: string; onJump: (cx: number, cy: number
 export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
-  const { unlocks, gameModeId } = useGame();
+  const game = useGame();
+  const { unlocks, gameModeId } = game;
   const level = unlocks.levels[skill] || 1;
+  // The chance the next level-up rolls against, boosts included; null past a Chunked tier cap.
+  const levelChance = levelUpKeyChance(game, skill);
   const unlockData = SKILL_UNLOCK_DATA[skill] || {};
   const tiers = Array.from({ length: 10 }, (_, i) => i + 1);
 
@@ -237,11 +243,14 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
             </span>
             {currentTier > 0 && level < 99 && (
               <span className="osrs-dash-odds" tabIndex={0} aria-describedby={oddsId}>
-                Next Lv {nextLevel} · {formatKeyPercent(skillLevelKeyChance(nextLevel))} Key
+                Next Lv {nextLevel} · {levelChance === null ? 'no roll' : `${formatKeyPercent(levelChance)} Key`}
                 <span id={oddsId} role="tooltip" className="osrs-tooltip osrs-dash-odds-tip">
-                  {isSkillChaosMilestone(nextLevel)
+                  {levelChance === null
+                    ? chunkedPastCapText(tierCap(currentTier))
+                    : isSkillChaosMilestone(nextLevel)
                     ? `Level ${nextLevel} also gives a guaranteed Chaos Key, and a separate ${LEVEL_CHAOS_CHANCE}% chance of another.`
                     : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}
+                  {levelChance !== null && levelBoostNote(levelChance, nextLevel)}
                 </span>
               </span>
             )}
