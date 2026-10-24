@@ -345,9 +345,12 @@ Follow-ups:
   `GET /r/:code` and optional ETag caching. The plugin does not write to the
   relay, and the browser receives no import receipt. Disconnect marks the
   code gone, which the plugin's `GET` then reports (`404 {"gone":true}`).
-  A profile lasts 30 days after the last publish. A failed publish is
-  retried after 15 s, 1 min, then every 5 min, and `RelayPublishBanner`
-  says so. Full contract in `docs/online-relay.md`. Deployed at
+  A profile lasts 30 days after the last publish. Publishes wait for 15 s
+  of quiet (at most 2 min; at once when the tab is hidden) and skip a
+  profile the relay already holds (`utils/relayPublishFingerprint.ts`:
+  same fingerprint without export time and revision, under a day old). A
+  failed publish is retried after 15 s, 1 min, then every 5 min, and
+  `RelayPublishBanner` says so. Full contract in `docs/online-relay.md`. Deployed at
   `fate-relay.fatelocked.workers.dev`; redeploy with
   `npx wrangler@latest deploy` from `workers/fate-relay/` (KV id and rate
   limit bindings are committed in wrangler.toml; steps for the latest
@@ -359,7 +362,9 @@ Follow-ups:
   Writes are limited per IP (30 a minute; record-creating writes 4 a
   minute; error reports 10 a minute) by Workers Rate Limiting bindings. The
   limits slow abuse but don't protect the free plan's 1,000 KV writes a day;
-  only Workers Paid does. See "Abuse limits" in `docs/online-relay.md`.
+  only Workers Paid does. See "Abuse limits" in `docs/online-relay.md`;
+  "Daily KV quota" there lists every write and the hourly alert
+  (`.github/workflows/relay-kv-usage.yml`, needs `CLOUDFLARE_ANALYTICS_TOKEN`).
 - **Legacy relay resources removed:** `/r/:code/state`, `/events`, `/acks`
   and `/suggest` answer 404. No app, plugin `main` or Plugin Hub build
   (`0ae842d`) requested them.

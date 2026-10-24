@@ -18,6 +18,7 @@ import { bankLocksActive } from './reachability';
 import type { GameModeRules } from '../config/gameModes';
 import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
 import { isStartAreaFor } from './freeAreas';
+import { relayFingerprint } from './relayPublishFingerprint';
 
 /**
  * The run's mode no longer matches the free baseline every region check
@@ -92,13 +93,15 @@ export interface BundlePayloadOptions {
 /**
  * Build the v4 bundle for the current run and return it both as plain JSON (for
  * the readable file download) and as the compressed FLGZ form (clipboard / relay).
- * Shared by the clipboard/file export and the online relay push.
+ * Shared by the clipboard/file export and the online relay push. `fingerprint`
+ * names the bundle without its build time and revision, so the relay
+ * publisher can skip one it already sent (utils/relayPublishFingerprint.ts).
  */
 export async function buildBundlePayload(
   unlocks: UnlockState,
   run: RuneliteRunInput,
   options: BundlePayloadOptions = {},
-): Promise<{ json: string; compressed: string }> {
+): Promise<{ json: string; compressed: string; fingerprint: string | null }> {
   refuseChangedRun(run);
   let itemTiers: Record<string, number> | undefined;
   try {
@@ -155,7 +158,7 @@ export async function buildBundlePayload(
   refuseChangedRun(run);
   const json = JSON.stringify(payload);
   const compressed = await compressForClipboard(json);
-  return { json, compressed };
+  return { json, compressed, fingerprint: await relayFingerprint(payload) };
 }
 
 export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRunInput): Promise<void> {
