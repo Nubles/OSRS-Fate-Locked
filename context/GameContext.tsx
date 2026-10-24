@@ -82,6 +82,7 @@ import {
 } from '../utils/petCompensation';
 import { isPetId } from '../data/petIds';
 import { normalizeAccountName } from '../utils/accountName';
+import { pendingBaseline, planDetectedLevel, recordBaseline, skillBaseline } from '../utils/syncBaseline';
 import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
   canEarnDiaryTier,
@@ -326,6 +327,10 @@ interface GameContextType extends GameState {
   setLinkedAccount: (account: string) => void;
   /** Change the linked character's name, as after an OSRS name change. */
   renameLinkedAccount: (from: string, to: string) => void;
+  /** Record a successful hiscores reading of the linked name as its Sync & Roll baseline (utils/syncBaseline.ts). */
+  recordSyncBaseline: (account: string, levels: Record<string, number | null>) => void;
+  /** Record a skill's baseline level without a roll, before Sync & Roll rolls the levels above it. False when refused. */
+  catchUpSyncLevel: (skill: string, level: number) => boolean;
   /** Rival Ghost controls. */
   setRival: (rival: RivalState) => void;
   clearRival: () => void;
@@ -527,6 +532,8 @@ export type Action =
   | { type: 'SET_LOADOUT_SLOT'; payload: { slot: string; itemId: number | null; clearSlots?: string[] } }
   | { type: 'SET_LINKED_ACCOUNT'; payload: string }
   | { type: 'RENAME_LINKED_ACCOUNT'; payload: { from: string; to: string } }
+  | { type: 'RECORD_SYNC_BASELINE'; payload: { account: string; levels: Record<string, number | null> } }
+  | { type: 'SYNC_CATCH_UP_LEVEL'; payload: { skill: string; level: number } }
   | { type: 'SET_RIVAL'; payload: RivalState }
   | { type: 'CLEAR_RIVAL' }
   | { type: 'ACK_RIVAL'; payload: number }
@@ -738,18 +745,25 @@ export const prepareDetectedEventAcceptanceAction = (
   meta: DetectedGameEventMeta,
   expected: DetectedEventIdentity,
 ): Extract<TransitionAction, { type: 'ACCEPT_DETECTED_EVENT' }> => {
-  const currentSkillLevel = progress.kind === 'SKILL_LEVEL'
-    ? state.unlocks.levels[progress.skill] ?? 1
-    : 0;
-  const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
-    ? Array.from({ length: Math.min(99, progress.level) - currentSkillLevel }, (_, index) => currentSkillLevel + index + 1)
+  // Sync & Roll's baseline (utils/syncBaseline.ts): Chaos milestones count only
+  // levels above the run's and the baseline's. Otherwise the manual level-up's
+  // rules, as before (no milestone or 2% chance past the Chunked tier cap).
+  const detectedLevel = progress.kind === 'SKILL_LEVEL'
+    ? planDetectedLevel({
+      tracker: state.unlocks.levels[progress.skill] ?? 1,
+      level: progress.level,
+      baseline: skillBaseline(state.syncBaseline, state.linkedAccount, progress.skill),
+    })
+    : null;
+  const guaranteedChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && detectedLevel?.hold === null
+    ? Array.from({ length: Math.max(0, Math.min(99, progress.level) - detectedLevel.from) }, (_, index) => detectedLevel.from + index + 1)
       // Chunked: a milestone past the tier cap pays nothing, as a manual level-up there.
       .filter(level => isSkillChaosMilestone(level) && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, level)).length
     : 0;
   // The 2% Chaos chance rolls once, as a manual level-up's does, and not for
   // a level past the Chunked tier cap (LEVEL_UP's rule).
-  const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && progress.level > currentSkillLevel
-    && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, currentSkillLevel + 1)
+  const randomChaosKeysAwarded = progress.kind === 'SKILL_LEVEL' && detectedLevel?.hold === null
+    && !levelPastTierCap(state.gameModeId, state.unlocks, progress.skill, detectedLevel.from + 1)
     && nextDice('detected-skill-chaos', 0, 100) <= 2
     ? 1
     : 0;
@@ -1986,8 +2000,46 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'SET_LINKED_ACCOUNT': {
       // Link the run to one OSRS account on the first fetch; RENAME_LINKED_ACCOUNT changes it.
+      // The baseline waits for that fetch's reading (RECORD_SYNC_BASELINE).
       if (state.linkedAccount) return state;
-      return { ...state, linkedAccount: action.payload };
+      return { ...state, linkedAccount: action.payload, syncBaseline: pendingBaseline(action.payload) };
+    }
+
+    case 'RECORD_SYNC_BASELINE': {
+      // A successful hiscores reading of the linked name: the levels it already
+      // had become the baseline Sync & Roll never rolls (utils/syncBaseline.ts).
+      const syncBaseline = recordBaseline(state.syncBaseline, state.linkedAccount, action.payload.account, action.payload.levels, now);
+      return syncBaseline === state.syncBaseline ? state : { ...state, syncBaseline };
+    }
+
+    case 'SYNC_CATCH_UP_LEVEL': {
+      // Before Sync & Roll rolls a skill's first level above the baseline, the
+      // run records the baseline level itself, without a roll: the account
+      // already had it. Only up to the baseline.
+      const { skill, level } = action.payload;
+      const current = state.unlocks.levels[skill] ?? 1;
+      const tier = state.unlocks.skills[skill] ?? 0;
+      const baseline = skillBaseline(state.syncBaseline, state.linkedAccount, skill);
+      if (typeof baseline !== 'number' || tier < 1) return state;
+      if (!Number.isSafeInteger(level) || level <= current || level > baseline) return state;
+      const levels = { ...state.unlocks.levels, [skill]: level };
+      const totalLevel = Object.values(levels).reduce((a, b) => a + b, 0);
+      return {
+        ...state,
+        unlocks: { ...state.unlocks, levels },
+        // Levels the account already had never count toward a start-area milestone Key.
+        ...(state.gameModeId === 'xtreme'
+          ? { xtremeMilestoneClaimed: Math.max(state.xtremeMilestoneClaimed ?? 0, Math.floor(totalLevel / XTREME_MILESTONE_INTERVAL)) }
+          : {}),
+        history: [...state.history, {
+          id: generateId(),
+          timestamp: now,
+          type: 'LEVEL_UP',
+          message: `${skill} Level ${level}: already had`,
+          details: 'Had when the run was linked: no roll. Only new levels roll.',
+          meta: { skill, level, totalLevel, syncBaseline: baseline, chaosKeysAwarded: 0, chaosKeyAwarded: false },
+        }],
+      };
     }
 
     case 'RENAME_LINKED_ACCOUNT': {
@@ -1998,7 +2050,10 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const next = to.trim();
       if (!state.linkedAccount || !next) return state;
       if (normalizeAccountName(state.linkedAccount) !== normalizeAccountName(from)) return state;
-      return { ...state, linkedAccount: next };
+      // A new name takes a new baseline from its first reading: Sync & Roll
+      // can't tell one character's hiscores from another's.
+      if (normalizeAccountName(state.linkedAccount) === normalizeAccountName(next)) return { ...state, linkedAccount: next };
+      return { ...state, linkedAccount: next, syncBaseline: pendingBaseline(next) };
     }
 
     case 'LOG_ITEM': {
@@ -3291,6 +3346,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'RENAME_LINKED_ACCOUNT', payload: { from, to } });
   }, [commitAction]);
 
+  const recordSyncBaseline = useCallback((account: string, levels: Record<string, number | null>) => {
+    commitAction({ type: 'RECORD_SYNC_BASELINE', payload: { account, levels } });
+  }, [commitAction]);
+
+  const catchUpSyncLevel = useCallback((skill: string, level: number): boolean => {
+    const current = stateRef.current;
+    return commitAction({ type: 'SYNC_CATCH_UP_LEVEL', payload: { skill, level } }) !== current;
+  }, [commitAction]);
+
   const setRival = useCallback((rival: RivalState) =>
     commitAction({ type: 'SET_RIVAL', payload: rival }), [commitAction]);
   const clearRival = useCallback(() => commitAction({ type: 'CLEAR_RIVAL' }), [commitAction]);
@@ -3810,6 +3874,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setLoadoutSlot,
     setLinkedAccount,
     renameLinkedAccount,
+    recordSyncBaseline,
+    catchUpSyncLevel,
     setRival,
     clearRival,
     ackRival
@@ -3870,6 +3936,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setLoadoutSlot,
     setLinkedAccount,
     renameLinkedAccount,
+    recordSyncBaseline,
+    catchUpSyncLevel,
     setRival,
     clearRival,
     ackRival

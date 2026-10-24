@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useAutoRoll } from '../AutoRollPanel';
+import { BASELINE_NOTE, syncHoldText, syncIdleText, useAutoRoll } from '../AutoRollPanel';
 import { RollInbox } from '../RollInbox';
 import { RuneLiteOnboarding } from '../RuneLiteOnboarding';
 import { WikiIcon } from '../WikiIcon';
@@ -35,6 +35,7 @@ const OsrsSyncRoll: React.FC = () => {
   const {
     linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
+    plans, holds, baselineTaken,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   } = useAutoRoll();
 
@@ -59,7 +60,7 @@ const OsrsSyncRoll: React.FC = () => {
         <span className="osync-tag" style={{ color: '#c77dff', background: '#2a1f33' }}>Prototype</span>
       </div>
       <span className="osync-small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>
-        Pull your real account from the OSRS hiscores and roll every level you've already gained, as if you logged each one.
+        Pull your account from the OSRS hiscores and roll every level you've gained since you linked it, as if you logged each one.
         Powered by the Wise Old Man API. Currently syncs skill levels.
       </span>
 
@@ -95,7 +96,7 @@ const OsrsSyncRoll: React.FC = () => {
         <div className="osrs-chat osync-rename" data-testid="character-rename">
           <span className="osync-small">
             Changed your OSRS name? Type the new one as it shows in game. RuneLite records your run on this
-            character, and Sync &amp; Roll pulls its hiscores.
+            character, and Sync &amp; Roll pulls its hiscores. Roll any new levels first: the new name's levels count as already had.
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <label className="osync-input">
@@ -131,6 +132,11 @@ const OsrsSyncRoll: React.FC = () => {
 
       {fetched && (
         <>
+          {baselineTaken && (
+            <span role="status" data-testid="sync-baseline-note" className="osync-small" style={{ color: '#00ffff' }}>
+              {BASELINE_NOTE}
+            </span>
+          )}
           <div className="osync-account">
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '18px', minWidth: 0 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -188,11 +194,7 @@ const OsrsSyncRoll: React.FC = () => {
                 </span>
               )}
               {!applied && !skillRolling && gains.length === 0 && (
-                <span style={{ color: 'var(--osrs-tan, #c8b897)' }}>
-                  {fetched.skills.some(s => !isUnlocked(s.skill) && s.level > (currentLevels[s.skill] ?? 1))
-                    ? 'No unlocked skills to roll. Unlock more skills in the run first.'
-                    : 'Your unlocked skills already match or exceed this account.'}
-                </span>
+                <span style={{ color: 'var(--osrs-tan, #c8b897)' }}>{syncIdleText(holds)}</span>
               )}
             </div>
           </div>
@@ -202,12 +204,15 @@ const OsrsSyncRoll: React.FC = () => {
             {fetched.skills.map((s) => {
               const current = currentLevels[s.skill] ?? 1;
               const unlocked = isUnlocked(s.skill);
-              const isGain = s.level > current && unlocked;
               const gainIdx = gains.findIndex(g => g.skill === s.skill);
-              const revealed = !isGain || applied || (gainIdx > -1 && gainIdx < rolledTo);
+              const isGain = gainIdx > -1;
+              const revealed = !isGain || applied || gainIdx < rolledTo;
+              const held = plans[s.skill]?.hold === 'linked';
+              const shown = isGain ? gains[gainIdx].level : s.level;
               return (
                 <div key={s.skill} className={`osync-skill${unlocked ? '' : ' is-locked'}${isGain && !applied ? ' is-gain' : ''}`}
-                  title={!unlocked ? `${s.skill} isn't unlocked yet. Unlock it in the run before it can be rolled.` : undefined}>
+                  data-sync-hold={plans[s.skill]?.hold ?? undefined}
+                  title={syncHoldText(s.skill, plans[s.skill])}>
                   <img className="osrs-px" src={skillIconSrc(s.skill)} alt="" aria-hidden="true" />
                   <span className="osync-skill-name">{s.skill}</span>
                   {!unlocked ? (
@@ -215,7 +220,7 @@ const OsrsSyncRoll: React.FC = () => {
                   ) : (
                     <span className="osync-skill-lvl">
                       {isGain && !applied && <span style={{ color: 'var(--osrs-muted, #8a7c66)', fontFamily: "'RSSmall', sans-serif" }}>{current} &rarr; </span>}
-                      <span style={{ color: isGain ? (revealed ? '#00ff00' : 'var(--osrs-muted, #8a7c66)') : '#ffff00' }}>{revealed ? s.level : '..'}</span>
+                      <span style={{ color: isGain ? (revealed ? '#00ff00' : 'var(--osrs-muted, #8a7c66)') : held ? 'var(--osrs-muted, #8a7c66)' : '#ffff00' }}>{revealed ? shown : '..'}</span>
                     </span>
                   )}
                 </div>
@@ -224,14 +229,14 @@ const OsrsSyncRoll: React.FC = () => {
           </div>
           <span className="osync-small" style={{ color: '#6f6250', lineHeight: '15px' }}>
             Hiscores data via Wise Old Man · each synced level runs through the live RNG engine, so it awards keys, Omni and
-            Chaos exactly as levelling it would, all logged to History · a backup is created first.
+            Chaos exactly as levelling it would, all logged to History · levels the account had when linked don't roll · a backup is created first.
           </span>
         </>
       )}
 
       {status === 'idle' && !linkedAccount && (
         <div className="osync-empty">
-          Enter your OSRS username to bind this run to your account. It's saved permanently to the run and can't be changed afterward.
+          Enter your OSRS username to bind this run to your account. Levels it already has don't roll; only the ones you gain from now on.
         </div>
       )}
     </div>

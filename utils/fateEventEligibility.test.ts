@@ -182,6 +182,23 @@ describe('classifyFateEvent', () => {
     expect(classifyFateEvent(levelEvent(11), woodcutting('vanilla', 10)).state).toBe('READY');
   });
 
+  // Critique GP-1 (October 2026): Sync & Roll's baseline holds for RuneLite too.
+  it('rolls no detected level the account had when Sync & Roll linked it', () => {
+    const linked = {
+      ...withUnlocks({ skills: { Attack: 10 }, levels: { ...initialState.unlocks.levels, Attack: 1 } }),
+      linkedAccount: 'Linked',
+      syncBaseline: { account: 'Linked', levels: { Attack: 70 }, takenAt: 1 },
+    };
+    const levelEvent = (level: number) => event('SKILL_LEVEL', `Attack Level ${level}`, { account: 'Linked', evidence: { skill: 'Attack', level } });
+    expect(classifyFateEvent(levelEvent(70), linked)).toEqual({
+      state: 'BLOCKED',
+      reason: 'Your account was already level 70 in Attack when this run was linked. Only new levels roll.',
+    });
+    expect(classifyFateEvent(levelEvent(71), linked)).toMatchObject({ state: 'READY', progress: { kind: 'SKILL_LEVEL', skill: 'Attack', level: 71 } });
+    // Vanilla keeps rolling past the tier band, as the manual button does.
+    expect(classifyFateEvent(levelEvent(71), { ...linked, unlocks: { ...linked.unlocks, skills: { Attack: 1 } } }).state).toBe('READY');
+  });
+
   // Audit V6 (October 2026): a detected 9 -> 30 at tier 1 rolled at level 30's
   // odds; a manual 9 -> 30 rolls only level 10, the cap.
   it('in Chunked, rolls a detected jump across the tier cap at the capped level\'s odds', () => {

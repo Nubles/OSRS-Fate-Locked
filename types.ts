@@ -243,6 +243,16 @@ export interface CollectionLogIdentity {
   quarantinedIds: number[];
 }
 
+/** Sync & Roll's baseline for the linked OSRS name (utils/syncBaseline.ts). */
+export interface SyncBaseline {
+  /** The name the baseline is for. */
+  account: string;
+  /** Each skill's level when linked; null while the hiscores haven't reported it. Absent until the first reading (pending). */
+  levels?: Record<string, number | null>;
+  /** When the reading was taken (ms). */
+  takenAt?: number;
+}
+
 export interface GameState {
   /** Presence records a run-scoped identity review; fresh canonical writes need no legacy cache. */
   collectionLogIdentity?: CollectionLogIdentity;
@@ -313,6 +323,12 @@ export interface GameState {
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is linked to (Sync & Roll's first fetch); the player can rename it. */
   linkedAccount?: string;
+  /**
+   * The linked account's hiscores levels when it was linked (and at each name
+   * change): levels it already had, which Sync & Roll never rolls. Absent on
+   * a run linked before baselines existed (it has none). See utils/syncBaseline.
+   */
+  syncBaseline?: SyncBaseline;
   /**
    * Xtreme Start anti-softlock insurance: how many 50-total-level milestones
    * have already paid out a guaranteed key. Only accrues while gameModeId is
