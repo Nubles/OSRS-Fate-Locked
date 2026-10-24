@@ -432,9 +432,10 @@ describe('Diary tasks in Zanaris', () => {
         { label: 'The Abyss', quests: ['Enter the Abyss'], regions: ['Edgeville'] },
       ],
     });
-    // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss.
-    // Essence for it comes from Rune Mysteries, minotaurs, Daeyalt or Temple Trekking.
-    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'], regions: ['Zanaris'] });
+    // The altar takes a cosmic or catalytic talisman or tiara, unless you arrive through the Abyss,
+    // whose rift skips Zanaris. Essence for it comes from Rune Mysteries, minotaurs, Daeyalt or Temple Trekking.
+    expect(task('lum_hard_3')).toMatchObject({ quests: ['Lost City'] });
+    expect(task('lum_hard_3').regions ?? []).toEqual([]);
     const routes = task('lum_hard_3').oneOf ?? [];
     expect(routes.map(route => route.label)).toEqual([
       'Zanaris + Mine pure essence', 'Zanaris + Minotaur drops', 'Zanaris + Daeyalt essence', 'Zanaris + Temple Trekking',
@@ -442,11 +443,12 @@ describe('Diary tasks in Zanaris', () => {
     ]);
     expect(routes[0]).toMatchObject({ quests: ['Rune Mysteries'], skills: { Mining: 30 } });
     for (const route of routes.slice(0, 4)) {
-      expect(route).toMatchObject({ items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF] });
+      expect(route).toMatchObject({ items: ['Cosmic or catalytic talisman or tiara'], equipmentRequirements: [STAFF], regions: expect.arrayContaining(['Zanaris']) });
     }
     for (const route of routes.slice(4)) {
       expect(route).toMatchObject({ quests: ['Enter the Abyss'], regions: expect.arrayContaining(['Edgeville']) });
       expect(route.items).toBeUndefined();
+      expect(route.regions).not.toContain('Zanaris');
     }
   });
 });

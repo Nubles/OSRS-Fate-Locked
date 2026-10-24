@@ -10426,9 +10426,7 @@
       "quests": [
         "Lost City"
       ],
-      "regions": [
-        "Zanaris"
-      ],
+      "regions": [],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Craft 56 Cosmic runes simultaneously.",
@@ -10452,11 +10450,15 @@
               "reason": "Dramen or lunar staff to enter Zanaris",
               "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Zanaris"
           ]
         },
         {
           "label": "Zanaris + Minotaur drops",
           "regions": [
+            "Zanaris",
             "Barbarian Village"
           ],
           "items": [
@@ -10489,6 +10491,9 @@
               "reason": "Dramen or lunar staff to enter Zanaris",
               "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Zanaris"
           ]
         },
         {
@@ -10506,6 +10511,9 @@
               "reason": "Dramen or lunar staff to enter Zanaris",
               "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Zanaris"
           ]
         },
         {
