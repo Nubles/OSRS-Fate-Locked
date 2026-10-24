@@ -23,15 +23,24 @@ interface NagRecord {
   lastExport: number;
   /** Dismissals push this forward; the banner stays hidden until then. */
   snoozeUntil: number;
+  /**
+   * When the tracker quietly asked the browser to keep this site's storage
+   * (utils/persistentStorage.ts), so it asks once per profile. Absent = never.
+   */
+  persistRequestedAt?: number;
 }
 
 export const readNagRecord = (storageKey: string): NagRecord => {
   try {
     const parsed = JSON.parse(localStorage.getItem(profileExportNagKey(storageKey)) || '');
-    return {
+    const record: NagRecord = {
       lastExport: typeof parsed?.lastExport === 'number' ? parsed.lastExport : 0,
       snoozeUntil: typeof parsed?.snoozeUntil === 'number' ? parsed.snoozeUntil : 0,
     };
+    if (typeof parsed?.persistRequestedAt === 'number' && Number.isFinite(parsed.persistRequestedAt)) {
+      record.persistRequestedAt = parsed.persistRequestedAt;
+    }
+    return record;
   } catch {
     return { lastExport: 0, snoozeUntil: 0 };
   }
@@ -53,6 +62,10 @@ export const markExported = (storageKey: string, now = Date.now()): void =>
 export const snoozeNag = (storageKey: string, now = Date.now()): void =>
   write(storageKey, { ...readNagRecord(storageKey), snoozeUntil: now + SNOOZE_MS });
 
+/** Call when the tracker has quietly asked for persistent storage for this profile. */
+export const markPersistRequested = (storageKey: string, now = Date.now()): void =>
+  write(storageKey, { ...readNagRecord(storageKey), persistRequestedAt: now });
+
 /**
  * Pure decision — exported for tests. `historyLength` gates on real progress;
  * a run is nag-worthy when it has never been exported (or not for NAG_AFTER_MS)
@@ -70,11 +83,3 @@ export const shouldNagPure = (
 
 export const shouldNag = (storageKey: string, historyLength: number, now = Date.now()): boolean =>
   shouldNagPure(readNagRecord(storageKey), historyLength, now);
-
-/** "never" | "3 days ago" | "today" — banner copy helper. */
-export const lastExportLabel = (storageKey: string, now = Date.now()): string => {
-  const { lastExport } = readNagRecord(storageKey);
-  if (!lastExport) return 'never';
-  const days = Math.floor((now - lastExport) / (24 * 60 * 60 * 1000));
-  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
-};

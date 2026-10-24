@@ -4,6 +4,7 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { StrictMode, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePersistentStorage } from './usePersistentStorage';
+import { PERSISTENT_STORAGE_EVENT } from '../utils/persistentStorage';
 
 afterEach(() => {
   cleanup();
@@ -20,6 +21,14 @@ const setStorageManager = (storage: unknown): void => {
 describe('usePersistentStorage', () => {
   beforeEach(() => {
     setStorageManager(undefined);
+  });
+
+  it('hears a quiet grant made elsewhere in the app, so the reminder drops its button', () => {
+    setStorageManager({ persist: vi.fn(), persisted: vi.fn().mockResolvedValue(false) });
+    const hook = renderHook(() => usePersistentStorage());
+    expect(hook.result.current.status).toBe('unknown');
+    act(() => { window.dispatchEvent(new Event(PERSISTENT_STORAGE_EVENT)); });
+    expect(hook.result.current.status).toBe('granted');
   });
 
   it('reports granted when the browser accepts the explicit request', async () => {

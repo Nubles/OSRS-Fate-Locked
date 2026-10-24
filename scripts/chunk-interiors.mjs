@@ -43,6 +43,8 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
     if (override?.entrances) return override.entrances.map(entrance => ({
       chunkId: entrance.chunkId,
       requirements: [...new Set([...entryRequirements(id), ...entrance.requirements])],
+      // A way in that skips the area the interior belongs to, as the cosmic rift skips Zanaris.
+      ...(entrance.outsideArea ? { outsideArea: true } : {}),
     }));
     if (row?.disposition === 'mapped') return row.entrances.map(e => ({ chunkId: e.chunkId, requirements: [...new Set([...entryRequirements(id), ...e.requirements])] }));
     return null;
@@ -105,7 +107,11 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
       if (explicit) {
         nearest = Math.min(nearest, path.length + 1);
         for (const e of explicit) if (surface.has(e.chunkId)) {
-          recordRoute({ chunkId: e.chunkId, requirements: [...new Set([...req, ...e.requirements])], via: [...path, id] });
+          recordRoute({
+            chunkId: e.chunkId, requirements: [...new Set([...req, ...e.requirements])], via: [...path, id],
+            // Only the interior's own way in skips its area; a route through it does not.
+            ...(e.outsideArea && !path.length ? { outsideArea: true } : {}),
+          });
         }
         continue;
       }
@@ -208,6 +214,7 @@ export function validateInteriorAccessPolicy(data, accessPolicy = policy) {
       const requirements = [...(rule.requirements ?? []), ...routes.flatMap(route => route.requirements),
         ...Object.values(rule.entityRequirements ?? {}).flatMap(entities => Object.values(entities).flat())];
       if (requirements.some(raw => typeof raw !== 'string' || !raw.trim())) throw new Error(`Invalid interior requirement: ${key}`);
+      if (routes.some(route => route.outsideArea !== undefined && route.outsideArea !== true)) throw new Error(`Invalid interior outsideArea: ${key}`);
     }
   }
 }

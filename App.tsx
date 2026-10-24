@@ -51,7 +51,7 @@ import { earlierPetRollTimes, gambitStakeFor } from './utils/petCompensation';
 import {
   changelogVisibilityReducer, markChangelogSeen, mayAutoOpenChangelogAgain,
   resolveChangelogModalRenderPolicy, shouldAutoOpenChangelog,
-  shouldEnableUnderlyingModalEscape, shouldShowChangelog,
+  shouldEnableUnderlyingModalEscape, hasUnseenReleaseForRun, readSeenChangelog,
 } from './utils/changelogState';
 import { relaySync } from './services/relaySync';
 import { parseRunelitePairFragment } from './utils/runelitePairing';
@@ -77,6 +77,7 @@ const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyCha
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
+const PersistentStorageDriver = lazyWithRetry(() => import('./components/PersistentStorageDriver').then(m => ({ default: m.PersistentStorageDriver })));
 const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
@@ -119,6 +120,7 @@ import { BarChart3, HelpCircle, Search, Database, SlidersHorizontal, Radio, Sett
 import { readUiStyle, setUiStyle, useIsOsrsUi } from './utils/uiStyle';
 import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
+import { describeRollOutcome } from './utils/rollOutcomeText';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 
@@ -240,7 +242,8 @@ const ToastNotification = () => {
 
     if (undoableTypes.includes(lastEvent.type)) {
       let msg = 'Action Complete';
-      if (lastEvent.type.includes('ROLL')) msg = 'Roll Recorded';
+      const rollOutcome = describeRollOutcome(lastEvent);
+      if (rollOutcome) msg = rollOutcome.text;
       if (lastEvent.type === 'UNLOCK') msg = 'Content Unlocked';
       if (lastEvent.type === 'PET') msg = 'New Pet: Omni-Key Found!';
       if (lastEvent.type === 'RITUAL') {
@@ -266,12 +269,12 @@ const ToastNotification = () => {
         && typeof mergedLevelMeta?.level === 'number'
       ) {
         const chaosKeysAwarded = Number(mergedLevelMeta.chaosKeysAwarded ?? mergedLevelMeta.chaosKeyAwarded ?? 0);
-        if (chaosKeysAwarded > 0) msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}!`;
+        if (chaosKeysAwarded > 0) msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}! ${msg}`;
       }
 
       setMessage(msg);
       // A won key's natural next beat is spending it — hand the player there
-      // instead of dead-ending at "Roll Recorded".
+      // instead of dead-ending at the result.
       if (lastEvent.type === 'ROLL_SUCCESS' || lastEvent.type === 'ROLL_OMNI' || lastEvent.type === 'ROLL_PITY' || lastEvent.type === 'PET') {
         setAction({
           label: 'Spend it',
@@ -322,7 +325,8 @@ const KeyCount = ({ label, value, lit, file, Fallback, tone, title }: {
   label: string; value: number; lit: boolean; file: string; Fallback: React.ComponentProps<typeof WikiIcon>['Fallback'];
   tone: typeof KEY_TONES.keys; title: string;
 }) => (
-  <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${lit ? tone.chip : 'bg-white/5 border-white/10'}`} title={title}>
+  <div className={`flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 rounded-lg border transition-colors min-w-[44px] lg:min-w-[60px] justify-center ${lit ? tone.chip : 'bg-white/5 border-white/10'}`} title={title}
+    role="img" aria-label={`${title.split(':')[0]}: ${value}`}>
     <span className="hidden sm:inline-flex" aria-hidden="true">
       <WikiIcon file={file} alt="" Fallback={Fallback} size={17} className={lit ? (tone.pulse ? 'animate-pulse drop-shadow' : 'drop-shadow') : 'opacity-50 grayscale'} />
     </span>
@@ -531,7 +535,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                 <KeyCount label="Omni" value={specialKeys} lit={specialKeys > 0} file="Enhanced_crystal_key.png" Fallback={Sparkles} tone={KEY_TONES.omni}
                   title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} />
                 <KeyCount label="Chaos" value={chaosKeys} lit={chaosKeys > 0} file="Sinister_key.png" Fallback={Dna} tone={KEY_TONES.chaos}
-                  title="Chaos Keys: each one unlocks a random entry from all the tables at once" />
+                  title="Chaos Keys: for each one, fate picks a table, then a random entry in it" />
           </div>
           </div>
 
@@ -717,26 +721,29 @@ const ControlPanel: React.FC<{ suspendModals?: boolean }> = ({ suspendModals = f
       </div>
       </> : <>
       {/* Tabs */}
-      <div className="flex border-b border-[#333] bg-[#161616] shrink-0">
+      <div role="tablist" className="flex border-b border-[#333] bg-[#161616] shrink-0">
         <button
+          type="button" role="tab" aria-selected={activeTab === 'FARM'}
           data-tour="farm"
           onClick={() => setActiveTab('FARM')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'FARM' ? 'bg-[#252525] text-green-400 border-b-2 border-green-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Slayer_icon.png" alt="Farm Keys" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
+          <WikiIcon file="Slayer_icon.png" alt="" Fallback={Swords} size={15} className={activeTab === 'FARM' ? '' : 'opacity-60 grayscale'} /> Farm Keys
         </button>
         <button
+          type="button" role="tab" aria-selected={activeTab === 'SPEND'}
           data-tour="spend"
           onClick={() => setActiveTab('SPEND')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'SPEND' ? 'bg-[#252525] text-osrs-gold border-b-2 border-osrs-gold' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Mystery_box.png" alt="Spend Keys" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
+          <WikiIcon file="Mystery_box.png" alt="" Fallback={ShoppingBag} size={15} className={activeTab === 'SPEND' ? '' : 'opacity-60 grayscale'} /> Spend Keys
         </button>
         {showLogTab && <button
+          type="button" role="tab" aria-selected={activeTab === 'LOG'}
           onClick={() => setActiveTab('LOG')}
           className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors ${activeTab === 'LOG' ? 'bg-[#252525] text-blue-400 border-b-2 border-blue-400' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]'}`}
         >
-          <WikiIcon file="Watch.png" alt="History" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
+          <WikiIcon file="Watch.png" alt="" Fallback={ScrollText} size={15} className={activeTab === 'LOG' ? '' : 'opacity-60 grayscale'} /> History
         </button>}
       </div>
 
@@ -821,7 +828,7 @@ const GameLayout = () => {
     undefined,
     () => shouldAutoOpenChangelog({
       hasSeenOnboarding,
-      releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
+      releaseIsUnseen: hasUnseenReleaseForRun(readSeenChangelog(), LATEST_CHANGELOG_ID, history.length),
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
       hasPendingGuidePrompt: directGuideRequested,
@@ -1041,7 +1048,9 @@ const GameLayout = () => {
       || !mayAutoOpenChangelogAgain(changelogAutoOpenedRelease.current === changelogAutoOpenKey, hasPendingOffer)
       || !shouldAutoOpenChangelog({
         hasSeenOnboarding,
-        releaseIsUnseen: shouldShowChangelog(LATEST_CHANGELOG_ID),
+        // history.length is deliberately not a dependency: a first roll mid-visit
+        // shouldn't pop What's New over the roll; it waits for the next visit.
+        releaseIsUnseen: hasUnseenReleaseForRun(readSeenChangelog(), LATEST_CHANGELOG_ID, history.length),
         startupHash,
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
@@ -1129,6 +1138,8 @@ const GameLayout = () => {
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
       {ON_OLD_ADDRESS && <Suspense fallback={null}><MoveAddressDriver /></Suspense>}
+      {/* Quietly asks the browser to keep site storage at the run's first roll. */}
+      <Suspense fallback={null}><PersistentStorageDriver /></Suspense>
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as

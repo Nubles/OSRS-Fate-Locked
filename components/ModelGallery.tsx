@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Search, ChevronRight } from 'lucide-react';
 import { Boxes } from './OsrsIcon';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { EntityModel } from './EntityModel';
 import { loadedModelFiles, modelUrlBySlug, orientationForSlug } from '../data/entityModels';
@@ -21,6 +22,8 @@ const prettify = (slug: string) =>
 export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { animationsEnabled } = useGame();
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const ready = useModelManifest();
   const slugs = useMemo(() => (ready ? Object.keys(loadedModelFiles()).sort() : []), [ready]);
@@ -38,6 +41,7 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      ref={dialogRef} tabIndex={-1}
       role="dialog" aria-modal="true" aria-label="3D model gallery" onClick={onClose}
     >
       <div

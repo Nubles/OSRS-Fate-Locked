@@ -146,7 +146,7 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     assertNonEmptyString(merge.into, `Merged bank ${merge.id} target`);
     if (merges.filter(other => other.id === merge.id).length > 1) throw new Error(`Duplicate bank merge: ${merge.id}`);
     if (merge.into === merge.id || merged.has(merge.into)) throw new Error(`Bank merge ${merge.id} must lead to a bank that stays`);
-    if (validBankIds instanceof Set && !validBankIds.has(merge.id)) throw new Error(`Merged bank ${merge.id} is not a bank`);
+    if (validBankIds instanceof Set && !validBankIds.has(merge.id) && !ids.has(merge.id)) throw new Error(`Merged bank ${merge.id} is not a bank`);
     if (validBankIds instanceof Set && !validBankIds.has(merge.into) && !ids.has(merge.into) && !virtualIds.has(merge.into)) {
       throw new Error(`Bank merge ${merge.id} leads to an unknown bank: ${merge.into}`);
     }

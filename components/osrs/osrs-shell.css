@@ -134,9 +134,8 @@ html[data-ui="osrs"] .osrs-xp-drop {
   70% { opacity: 1; }
   100% { opacity: 0; transform: translateY(-60px); }
 }
-@media (prefers-reduced-motion: reduce) {
-  html[data-ui="osrs"] .osrs-xp-layer { display: none; }
-}
+/* XP drops follow the in-app Animations toggle (OsrsXpDrops), not the OS
+   reduced-motion setting. */
 
 /* ── Docked chatbox (Idea-Chatbox board: 184px parchment + 38px tab row) ── */
 html[data-ui="osrs"] .osrs-chatdock { position: relative; display: flex; flex-direction: column; }

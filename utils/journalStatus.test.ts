@@ -41,6 +41,7 @@ const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
   quests: ['Pandemonium', "The Knight's Sword"],
   skills: { Smithing: 3, Sailing: 2 },
   levels: { Smithing: 30, Sailing: 12 },
+  merchants: ['Food Shops'],
 });
 
 describe('Wilderness Easy Chaos Altar access', () => {
@@ -69,11 +70,12 @@ describe('manual journal readiness', () => {
       kind: 'alternative',
       blockerKinds: ['region'],
     }));
-    expect(evaluateDiaryTaskEligibility(task, unlocked({ equipment: { Cape: 1 } }), 'vanilla').machineEligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task, unlocked({ equipment: { Cape: 1 }, merchants: ['Clothes Shops'] }), 'vanilla').machineEligible).toBe(true);
 
     const reachable = evaluateDiaryTaskEligibility(task, unlocked({
       regions: [REGION_GROUPS.Wilderness[0]],
       equipment: { Cape: 1 },
+      merchants: ['Clothes Shops'],
     }));
     expect(reachable).toMatchObject({
       machineEligible: true,
@@ -303,9 +305,9 @@ describe('reported quest access', () => {
 
     expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Falador'] })).status)
       .toBe('LOCKED_REGION');
-    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'] })).status)
+    expect(evaluateQuestEligibility(quest, unlocked({ regions: ['Rimmington'], merchants: ['Magic Shops'] })).status)
       .toBe('AVAILABLE');
-    expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['46,50'] }), 'chunked').status)
+    expect(evaluateQuestEligibility(quest, unlocked({ chunks: ['46,50'], merchants: ['Magic Shops'] }), 'chunked').status)
       .toBe('AVAILABLE');
   });
 
@@ -377,8 +379,8 @@ describe('reported quest access', () => {
 
   it('requires the exact South Falador Farm chunk in Chunked mode', () => {
     const q = QUEST_DATA['A Porcine of Interest'];
-    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'] });
-    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'] });
+    const near = unlocked({ chunks: ['46,51', '48,50', '49,52', '48,51'], equipment: { Head: 1 } });
+    const exact = unlocked({ chunks: ['47,51', '48,50', '49,52', '48,51'], equipment: { Head: 1 } });
     expect(evaluateQuestEligibility(q, near, 'chunked').status).toBe('LOCKED_REGION');
     expect(evaluateQuestEligibility(q, exact, 'chunked').status).toBe('AVAILABLE');
   });
@@ -386,7 +388,7 @@ describe('reported quest access', () => {
   it('calculates Dream Mentor combat instead of reading a pseudo-skill', () => {
     const q = QUEST_DATA['Dream Mentor'];
     const base = {
-      regions: ['Lunar Isle'], quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      regions: ['Lunar Isle'], quests: ['Lunar Diplomacy', "Eadgar's Ruse"], merchants: ['Magic Shops'],
       skills: { Attack: 10, Strength: 10, Defence: 10, Hitpoints: 10, Prayer: 10, Ranged: 10, Magic: 10 },
     };
     const lowLevels = { Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60, Prayer: 60, Ranged: 60, Magic: 60 };
@@ -445,7 +447,7 @@ describe('reported quest access', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
       id: 'alternative-location', name: 'Alternative location',
-      accessPolicy: 'regions',
+      accessPolicy: 'regions', equipmentRequirements: undefined,
       regions: [], locations: [], skills: {}, prereqs: [],
       oneOf: [{ locations: [{
         id: 'test-crossing', label: 'Test crossing',
@@ -463,7 +465,7 @@ describe('reported quest access', () => {
   it('treats an empty alternative list as no alternative requirement', () => {
     const quest: QuestData = {
       ...QUEST_DATA['A Porcine of Interest'],
-      accessPolicy: 'regions',
+      accessPolicy: 'regions', equipmentRequirements: undefined,
       regions: ['Misthalin'],
       locations: [],
       oneOf: [],

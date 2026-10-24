@@ -686,15 +686,20 @@ describe('Fate relay code ownership', () => {
     expect(kv.records.get(`own:r:${CODE}`)?.startsWith(`${await sha256Hex('legacy-token')}:`)).toBe(true);
   });
 
-  it('refreshes the owner record at most once a day', async () => {
+  it('refreshes the owner record at most once a week', async () => {
     const { token } = await (await publish({ payload: flgz('v1') })).json();
     await publish({ token, payload: flgz('v2') });
     await publish({ token, payload: flgz('v3') });
     expect(kv.puts.filter(key => key === `own:r:${CODE}`)).toHaveLength(1);
 
+    // Six days on: still no refresh, each one a KV write.
     const [hash] = kv.records.get(`own:r:${CODE}`)!.split(':');
-    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 2 * 86_400_000}`);
+    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 6 * 86_400_000}`);
     await publish({ token, payload: flgz('v4') });
+    expect(kv.puts.filter(key => key === `own:r:${CODE}`)).toHaveLength(1);
+
+    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 8 * 86_400_000}`);
+    await publish({ token, payload: flgz('v5') });
     expect(kv.puts.filter(key => key === `own:r:${CODE}`)).toHaveLength(2);
   });
 
@@ -871,7 +876,7 @@ describe('Fate relay codes the owner marked gone', () => {
   it('refreshes an old owner record, as a publish does', async () => {
     const { token } = await publishProfile();
     const [hash] = kv.records.get(`own:r:${CODE}`)!.split(':');
-    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 2 * 86_400_000}`);
+    kv.records.set(`own:r:${CODE}`, `${hash}:${Date.now() - 8 * 86_400_000}`);
     kv.puts.length = 0;
 
     expect((await post(PROFILE, { token, gone: true })).status).toBe(200);

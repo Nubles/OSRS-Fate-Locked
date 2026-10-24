@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { TableType } from '../types';
 import { categoryColor } from '../utils/rarity';
 import { X, Play, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
@@ -34,6 +35,8 @@ interface FHub { key: string; label: string; color: string; x: number; y: number
 export const FateThread: React.FC<Props> = ({ onClose }) => {
   const { unlocks, history } = useGame();
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
   // OSRS layout: a stone window on a dark map well, flat dots without glow.
   const osrs = useIsOsrsUi();
 
@@ -251,7 +254,7 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
 
   if (osrs) {
     return (
-      <div className="fixed inset-0 z-[120] owb-thread-backdrop" role="dialog" aria-modal="true" aria-label="Fate Thread">
+      <div ref={dialogRef} tabIndex={-1} className="fixed inset-0 z-[120] owb-thread-backdrop" role="dialog" aria-modal="true" aria-label="Fate Thread">
         <div className="osrs-win owb-win owb-thread">
           <OsrsTitleBar title="Fate Thread" onClose={onClose} />
           <div className="owb-toolbar">
@@ -270,7 +273,7 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[120] bg-[#06060a] flex flex-col" role="dialog" aria-modal="true" aria-label="Fate Thread">
+    <div ref={dialogRef} tabIndex={-1} className="fixed inset-0 z-[120] bg-[#06060a] flex flex-col" role="dialog" aria-modal="true" aria-label="Fate Thread">
       {/* header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/40 shrink-0">
         <div className="flex items-center gap-3">

@@ -41,6 +41,13 @@ describe('bankDecisions', () => {
     // Merged into the banks they lead to, so they are no longer decided at all.
     expect(decisions['10810']).toBeUndefined();
     expect(decisions['12085']).toBeUndefined();
+    expect(decisions['11572']).toBeUndefined();
+  });
+
+  it('finds the Falador west bank deposit box over its chunk line, under West Falador', () => {
+    expect(bankDecisions(service, context(run({})))['11828']).toMatchObject({
+      name: 'West Falador', at: '46,52', physical: ['45,52', '46,52'],
+    });
   });
 
   it('opens a bank only once it is rolled, in a bank-locked run', () => {
@@ -59,7 +66,7 @@ describe('bankDecisions', () => {
     });
     const decisions = bankDecisions(service, context(unlocks));
     expect(Object.keys(decisions)).toHaveLength(numericBanks.length);
-    expect(numericBanks).toHaveLength(125);
+    expect(numericBanks).toHaveLength(124);
     for (const bank of numericBanks) {
       const decision = decisions[bank.id];
       const row = manifest.chunks[decision.at]?.categories.BANKS?.find((one) => one.key === `bank:${bank.id}`);

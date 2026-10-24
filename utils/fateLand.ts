@@ -5,7 +5,8 @@
  * draw in six goes to the frontier chunks nearest the thread, the rest to the
  * whole frontier. When the run gains the place, fate is
  * fulfilled: a free ritual fate picks, and a new thread. Every chunk the run
- * gains may also be marked by fate: Blessed, Gilded, Chaotic or Cursed.
+ * gains draws one of fate's eight omens at even odds: a boon (Blessed, Gilded,
+ * Fortunate, Chaotic) or a bane (Cursed, Withered, Clouded, Tangled).
  *
  * gameReducer runs withFateLand after every action, so every way a chunk is
  * gained (a Chunks Key, a Chaos Key, Fate's Mercy, the Cartographer) counts.
@@ -14,16 +15,22 @@
 import type { FateLand, FateMark, GameState, LogEntry } from '../types';
 import { CHUNKED_START_KEY, chunkKey, getChunkFrontier, parseChunkKey } from './chunkAdjacency';
 import { chunkLabelWithCoords } from './chunkLabelWithCoords';
+import { FATE_MARK_EFFECTS, MARK_NAME, isBaneMark } from './fateMap';
 import { drawFloat, seededContext } from './seededRng';
 import { pickFreeRitual, ritualName, achievementFateCap } from './achievementRewards';
-import { FATE_MARK_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CURSED_ROLLS, FATE_THREAD_LEAN_CHANCE, FATE_THREAD_MIN_STEPS, FATE_THREAD_MAX_STEPS } from '../config/economy';
+import {
+  FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ROLLS,
+  FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE, FATE_THREAD_LEAN_CHANCE, FATE_THREAD_MIN_STEPS, FATE_THREAD_MAX_STEPS,
+} from '../config/economy';
 import { ACTIVITY_CHUNKS } from '../data/activityChunks';
 import { BANK_BY_ID } from '../data/banks';
 import { bankChunkKey } from './activityAccess';
 
 export type { FateLand, FateMark };
-export const FATE_MARKS: readonly FateMark[] = ['BLESSED', 'GILDED', 'CHAOTIC', 'CURSED'];
-export const FATE_MARK_NAMES: Record<FateMark, string> = { BLESSED: 'Blessed', GILDED: 'Gilded', CHAOTIC: 'Chaotic', CURSED: 'Cursed' };
+/** Fate's omens in draw order: the four boons, then the four banes. */
+export const FATE_MARKS: readonly FateMark[] = ['BLESSED', 'GILDED', 'FORTUNATE', 'CHAOTIC', 'CURSED', 'WITHERED', 'CLOUDED', 'TANGLED'];
+export { MARK_NAME as FATE_MARK_NAMES } from './fateMap';
+
 
 type FateLandRun = Pick<GameState, 'gameModeId' | 'unlocks' | 'history' | 'fatePoints' | 'chaosKeys' | 'freeRituals' | 'rituals' | 'customMode'>
   & Partial<Pick<GameState, 'rngSeed' | 'rngVersion' | 'runId' | 'fateLand'>>;
@@ -119,6 +126,8 @@ export const withFateLand = <S extends FateLandRun>(prev: FateLandRun, next: S, 
   let freeRituals = next.freeRituals;
   const marks = { ...land.marks };
   const gilded = [...land.gilded];
+  // A Tangled chunk spares only the next chunk from the thread's pull.
+  let tangled = gained.length > 0 ? false : land.tangled === true;
   let fulfilled = land.fulfilled;
   let thread = land.thread;
   const entries: LogEntry[] = [];
@@ -135,30 +144,34 @@ export const withFateLand = <S extends FateLandRun>(prev: FateLandRun, next: S, 
         { fate: 'fulfilled', chunk: key, ...(room ? { ritualsAwarded: [ritual] } : {}) }));
       thread = undefined;
     }
-    if (draw(`fate-mark:${key}`) >= FATE_MARK_CHANCE) continue;
     const mark = FATE_MARKS[Math.min(FATE_MARKS.length - 1, Math.floor(draw(`fate-mark-kind:${key}`) * FATE_MARKS.length))];
     marks[key] = mark;
+    const title = `Fate has marked ${label}: ${MARK_NAME[mark]}`;
+    const meta = { fate: 'mark', mark, chunk: key, omen: isBaneMark(mark) ? 'bane' : 'boon' };
     if (mark === 'BLESSED') {
       const after = Math.max(fatePoints, Math.min(fateCap, fatePoints + FATE_MARK_BLESSED_FATE));
       const gainedFate = after - fatePoints;
       fatePoints = after;
-      entries.push(entry(newId, now, `Fate has marked ${label}: Blessed`,
+      entries.push(entry(newId, now, title,
         gainedFate > 0 ? `You gain ${gainedFate} Fate.` : 'Your Fate is already full to the pity line.',
-        { fate: 'mark', mark, chunk: key, fatePointsAfter: fatePoints }));
-    } else if (mark === 'GILDED') {
-      gilded.push(key);
-      entries.push(entry(newId, now, `Fate has marked ${label}: Gilded`, 'A free Key roll waits on the Keys screen.', { fate: 'mark', mark, chunk: key }));
+        { ...meta, fatePointsAfter: fatePoints }));
+    } else if (mark === 'WITHERED') {
+      const lost = Math.min(Math.max(0, fatePoints), FATE_MARK_WITHERED_FATE);
+      fatePoints -= lost;
+      entries.push(entry(newId, now, title, lost > 0 ? `You lose ${lost} Fate.` : 'You have no Fate for it to take.',
+        { ...meta, fatePointsAfter: fatePoints }));
     } else if (mark === 'CHAOTIC') {
       const won = draw(`fate-mark-chaos:${key}`) < FATE_MARK_CHAOS_CHANCE && chaosKeys < maxCounter;
       if (won) chaosKeys += 1;
-      entries.push(entry(newId, now, `Fate has marked ${label}: Chaotic`,
-        won ? 'Fate gives you a Chaos Key.' : 'No Chaos Key this time.',
-        { fate: 'mark', mark, chunk: key, chaosKeysAwarded: won ? 1 : 0 }));
+      entries.push(entry(newId, now, title, won ? 'Fate gives you a Chaos Key.' : 'No Chaos Key this time.',
+        { ...meta, chaosKeysAwarded: won ? 1 : 0 }));
     } else {
-      rituals = { ...rituals, cursedRollsLeft: FATE_MARK_CURSED_ROLLS };
-      entries.push(entry(newId, now, `Fate has marked ${label}: Cursed`,
-        `Your next ${FATE_MARK_CURSED_ROLLS} Key rolls are 5% worse, but each fail among them gives double Fate.`,
-        { fate: 'mark', mark, chunk: key }));
+      if (mark === 'GILDED') gilded.push(key);
+      if (mark === 'FORTUNATE') rituals = { ...rituals, fortunateRollsLeft: FATE_MARK_FORTUNATE_ROLLS };
+      if (mark === 'CURSED') rituals = { ...rituals, cursedRollsLeft: FATE_MARK_CURSED_ROLLS };
+      if (mark === 'CLOUDED') rituals = { ...rituals, cloudedRollsLeft: FATE_MARK_CLOUDED_ROLLS };
+      if (mark === 'TANGLED') tangled = true;
+      entries.push(entry(newId, now, title, mark === 'GILDED' ? 'A free Key roll waits on the Keys screen.' : FATE_MARK_EFFECTS[mark], meta));
     }
   }
 
@@ -175,7 +188,7 @@ export const withFateLand = <S extends FateLandRun>(prev: FateLandRun, next: S, 
     }
   }
 
-  const fateLand: FateLand = { ...(thread ? { thread } : {}), fulfilled, marks, gilded };
+  const fateLand: FateLand = { ...(thread ? { thread } : {}), fulfilled, marks, gilded, ...(tangled ? { tangled: true } : {}) };
   return {
     ...next,
     fatePoints,

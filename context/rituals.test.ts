@@ -291,6 +291,19 @@ describe("Saradomin's Ward", () => {
     const s = cast(base({ fatePoints: 30, keys: 5, gameModeId: 'chunked' }), { type: 'RITUAL_WARD' });
     expect(cast(s, unlock('Attack', TableType.SKILLS, false)).rituals).toEqual({ ward: true, wardCooldown: 25 });
   });
+
+  it('leaves a Vanilla Chaos Key random and keeps waiting, but takes a Chunked one', () => {
+    const chaos = (item: string, ward: boolean): Action =>
+      ({ type: 'UNLOCK', payload: { table: TableType.BOSSES, item, costType: 'chaosKey', cost: 1, revealId: 'reveal', ward } });
+    const vanilla = cast(base({ fatePoints: 30, chaosKeys: 1, gameModeId: 'vanilla' }), { type: 'RITUAL_WARD' });
+    const landed = cast(vanilla, chaos('Giant Mole', false));
+    expect(landed.unlocks.bosses).toContain('Giant Mole');
+    expect(landed.rituals).toEqual({ ward: true, wardCooldown: 25 });
+
+    const chunked = cast(base({ fatePoints: 30, chaosKeys: 1, gameModeId: 'chunked', unlocks: walked }), { type: 'RITUAL_WARD' });
+    expect(cast(chunked, chaos(near, false))).toBe(chunked);
+    expect(cast(chunked, chaos(near, true)).rituals).toEqual({ wardCooldown: 25 });
+  });
 });
 
 describe('saves', () => {

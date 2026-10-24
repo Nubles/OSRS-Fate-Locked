@@ -24,6 +24,7 @@ describe('journal completion decisions', () => {
     quests: ['Pandemonium', "The Knight's Sword"],
     skills: { Smithing: 3, Sailing: 2 },
     levels: { Smithing: 30, Sailing: 12 },
+    merchants: ['Food Shops'],
   });
 
   const malformedQuest = (overrides: Partial<QuestData>): QuestData => ({
@@ -109,6 +110,7 @@ describe('journal completion decisions', () => {
         regions: ['Misthalin', 'Draynor Village', 'Port Sarim'],
         skills: { Slayer: 1 },
         levels: { Slayer: 1 },
+        equipment: { Head: 1 },
       }),
       'vanilla',
     );
@@ -118,7 +120,7 @@ describe('journal completion decisions', () => {
   it("rejects Witch's Potion and Murder Mystery before their exact locations are accessible", () => {
     expect(questCompletionDecision(
       QUEST_DATA["Witch's Potion"],
-      unlocked({ regions: ['Falador'] }),
+      unlocked({ regions: ['Falador'], merchants: ['Magic Shops'] }),
       'vanilla',
     )).toEqual({ ok: false, reason: 'Requires: Rimmington' });
     expect(questCompletionDecision(
@@ -215,6 +217,7 @@ describe('journal completion decisions', () => {
       regions: ['Misthalin', 'Draynor Village', 'Falador'],
       skills: { Slayer: 1 },
       levels: { Slayer: 1 },
+      equipment: { Head: 1 },
     });
 
     expect(questCompletionDecision(quest, available, 'vanilla')).toEqual({ ok: true });

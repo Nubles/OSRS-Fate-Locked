@@ -5,7 +5,7 @@ import { CHUNK_SKILL_FACTS } from '../data/chunkSkillNodes';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
-import type { CollectionLogIdentity, FateCompensationState, FateMark, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, UnlockState } from '../types';
+import type { CollectionLogIdentity, FateCompensationState, FateMark, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, SyncBaseline, UnlockState } from '../types';
 import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { getPoolAndStateKey } from './gameEngine';
@@ -21,11 +21,12 @@ import { isKnownVanillaMinigame, normalizeMinigameStandardKeysAwarded, vanillaBo
 import { calculateLegacyFateCompensation, LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { PET_COMPENSATION_ID, petCompensationOffer } from './petCompensation';
 import { isPetId, PET_IDS } from '../data/petIds';
-import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, FATE_MARK_CURSED_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, BARROWS_ROLLS, CHUNK_EXPLORE_ROLLS, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ROLLS, INVOCATION_ROLLS, INVOCATIONS, PACT_DEBT, PACT_ROLLS, SACRIFICE_USES_PER_RUN, TEARS_FAILS, WARD_COOLDOWN_ROLLS, type Invocation } from '../config/economy';
 import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
 import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
 import { FATE_MARKS } from './fateLand';
+import { legacyRunSalt } from './seededRng';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -822,7 +823,7 @@ const normalizeAchievementsClaimed = (value: unknown): Outcome<string[]> => {
   return { ok: true, value: [...seen] };
 };
 
-const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed', 'cursedRollsLeft']);
+const RITUAL_KEYS = new Set(['ward', 'wardCooldown', 'tearsFailsLeft', 'tearsSpent', 'pactRollsLeft', 'pactDebt', 'invocations', 'barrows', 'sacrificesUsed', 'cursedRollsLeft', 'fortunateRollsLeft', 'cloudedRollsLeft']);
 
 /** The newer Void Altar rituals still running: each field bounded by what the rituals can set. */
 const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
@@ -837,7 +838,7 @@ const normalizeRituals = (value: unknown): Outcome<RitualState | undefined> => {
     if (checked.ok === false) return checked;
     out[key] = checked.value;
   }
-  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS], ['cursedRollsLeft', FATE_MARK_CURSED_ROLLS]] as const) {
+  for (const [key, max] of [['tearsFailsLeft', TEARS_FAILS], ['pactRollsLeft', PACT_ROLLS], ['pactDebt', PACT_DEBT], ['sacrificesUsed', SACRIFICE_USES_PER_RUN], ['wardCooldown', WARD_COOLDOWN_ROLLS], ['cursedRollsLeft', FATE_MARK_CURSED_ROLLS], ['fortunateRollsLeft', FATE_MARK_FORTUNATE_ROLLS], ['cloudedRollsLeft', FATE_MARK_CLOUDED_ROLLS]] as const) {
     if (!own(raw, key)) continue;
     const checked = boundedInteger(readOwn(raw, key), `${path}.${key}`, 0, max);
     if (checked.ok === false) return checked;
@@ -1033,6 +1034,36 @@ const normalizeCollectionLogIdentity = (value: unknown): Outcome<CollectionLogId
   return { ok: true, value: { version: 1, quarantinedIds: [...quarantinedIds].sort((a, b) => a - b) } };
 };
 
+const normalizeSyncBaseline = (value: unknown): Outcome<SyncBaseline> => {
+  const path = 'syncBaseline';
+  const root = inspectRecord(value, new Set(['account', 'levels', 'takenAt']), 'invalid_field', path);
+  if (root.ok === false) return root;
+  const account = stringValue(readOwn(root.value, 'account'), `${path}.account`, MAX_IDENTIFIER_CHARS);
+  if (account.ok === false) return account;
+  const out: SyncBaseline = { account: account.value };
+  if (own(root.value, 'takenAt')) {
+    const takenAt = boundedInteger(readOwn(root.value, 'takenAt'), `${path}.takenAt`, 0, Number.MAX_SAFE_INTEGER);
+    if (takenAt.ok === false) return takenAt;
+    out.takenAt = takenAt.value;
+  }
+  if (own(root.value, 'levels')) {
+    const levelsPath = `${path}.levels`;
+    const record = inspectRecord(readOwn(root.value, 'levels'), null, 'invalid_field', levelsPath);
+    if (record.ok === false) return record;
+    const levels: Record<string, number | null> = {};
+    for (const skill of Object.getOwnPropertyNames(record.value)) {
+      if (!SKILLS_LIST.includes(skill)) return invalid('invalid_field', pathOf(levelsPath, skill));
+      const raw = readOwn(record.value, skill);
+      if (raw === null) { levels[skill] = null; continue; }
+      const level = boundedInteger(raw, pathOf(levelsPath, skill), 1, 99);
+      if (level.ok === false) return level;
+      levels[skill] = level.value;
+    }
+    out.levels = levels;
+  }
+  return { ok: true, value: out };
+};
+
 const TOP_LEVEL_KEYS = new Set([
   'app',
   'collectionLogIdentity',
@@ -1041,7 +1072,7 @@ const TOP_LEVEL_KEYS = new Set([
   'bossStandardKeysAwarded', 'clueStandardKeysAwarded', 'minigameStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
-  'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'pendingUnlock', 'areaUnlockRevision',
+  'gameModeLocked', 'rngSeed', 'rngVersion', 'rngSalt', 'restoreCount', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'chunkedProgressAt', 'fateLand', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
   'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
@@ -1328,8 +1359,24 @@ const normalizeState = (
   }
   if (own(input, 'rngVersion')) {
     const version = readOwn(input, 'rngVersion');
-    if (version !== 1 && version !== 2) return invalid('invalid_field', 'rngVersion');
+    if (version !== 1 && version !== 2 && version !== 3) return invalid('invalid_field', 'rngVersion');
     state.rngVersion = version;
+  }
+  // Every run has a hidden salt (GameState.rngSalt). A save from before
+  // salts takes one from its first history entry, so every copy of the run
+  // agrees; a run with no history yet takes the fresh state's.
+  if (own(input, 'rngSalt')) {
+    const checked = stringValue(readOwn(input, 'rngSalt'), 'rngSalt', MAX_IDENTIFIER_CHARS);
+    if (checked.ok === false || checked.value.length === 0) return invalid('invalid_field', 'rngSalt');
+    state.rngSalt = checked.value;
+  } else {
+    const salt = legacyRunSalt(state.history) ?? defaultRecord.rngSalt;
+    if (typeof salt === 'string' && salt.length > 0) state.rngSalt = salt;
+  }
+  if (own(input, 'restoreCount')) {
+    const checked = boundedInteger(readOwn(input, 'restoreCount'), 'restoreCount', 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.restoreCount = checked.value;
   }
   // A reveal is an acknowledgement of an existing award, never a new award.
   let pendingMerged = false;
@@ -1415,6 +1462,14 @@ const normalizeState = (
     if (checked.ok === false) return checked;
     if (checked.value > 0) state.chunkedProgressAt = checked.value;
   }
+  // Sync & Roll's baseline (utils/syncBaseline.ts). A run linked before
+  // baselines has none and keeps rolling as it did; an invalid one is refused
+  // rather than dropped, since dropping it would pay out the account's levels.
+  if (own(input, 'syncBaseline')) {
+    const checked = normalizeSyncBaseline(readOwn(input, 'syncBaseline'));
+    if (checked.ok === false) return checked;
+    state.syncBaseline = checked.value;
+  }
   if (own(input, 'chunkedBreakthroughs')) {
     const inspected = inspectRecord(readOwn(input, 'chunkedBreakthroughs'), null, 'invalid_field', 'chunkedBreakthroughs');
     if (inspected.ok === false) return inspected;
@@ -1448,7 +1503,7 @@ const normalizeState = (
     state.chunkExplore = { from: Math.min(from.value, state.unlocks.chunks?.length ?? 0), done };
   }
   if (own(input, 'fateLand') && readOwn(input, 'fateLand') !== undefined) {
-    const inspected = inspectRecord(readOwn(input, 'fateLand'), new Set(['thread', 'fulfilled', 'marks', 'gilded']), 'invalid_field', 'fateLand');
+    const inspected = inspectRecord(readOwn(input, 'fateLand'), new Set(['thread', 'fulfilled', 'marks', 'gilded', 'tangled']), 'invalid_field', 'fateLand');
     if (inspected.ok === false) return inspected;
     const isChunk = (key: unknown): key is string => typeof key === 'string' && /^\d{1,3},\d{1,3}$/.test(key);
     const thread = readOwn(inspected.value, 'thread');
@@ -1466,7 +1521,9 @@ const normalizeState = (
     const gilded = readOwn(inspected.value, 'gilded');
     if (!Array.isArray(gilded) || !gilded.every(key => isChunk(key) && marks[key as string] === 'GILDED')
       || new Set(gilded).size !== gilded.length) return invalid('invalid_field', 'fateLand.gilded');
-    state.fateLand = { ...(typeof thread === 'string' ? { thread } : {}), fulfilled: fulfilled.value, marks, gilded: [...gilded as string[]] };
+    const tangled = readOwn(inspected.value, 'tangled');
+    if (tangled !== undefined && typeof tangled !== 'boolean') return invalid('invalid_field', 'fateLand.tangled');
+    state.fateLand = { ...(typeof thread === 'string' ? { thread } : {}), fulfilled: fulfilled.value, marks, gilded: [...gilded as string[]], ...(tangled ? { tangled: true } : {}) };
   }
   if (own(input, 'cartographerOffer') && readOwn(input, 'cartographerOffer') !== undefined) {
     const raw = readOwn(input, 'cartographerOffer');

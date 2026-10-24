@@ -243,6 +243,16 @@ export interface CollectionLogIdentity {
   quarantinedIds: number[];
 }
 
+/** Sync & Roll's baseline for the linked OSRS name (utils/syncBaseline.ts). */
+export interface SyncBaseline {
+  /** The name the baseline is for. */
+  account: string;
+  /** Each skill's level when linked; null while the hiscores haven't reported it. Absent until the first reading (pending). */
+  levels?: Record<string, number | null>;
+  /** When the reading was taken (ms). */
+  takenAt?: number;
+}
+
 export interface GameState {
   /** Presence records a run-scoped identity review; fresh canonical writes need no legacy cache. */
   collectionLogIdentity?: CollectionLogIdentity;
@@ -304,12 +314,34 @@ export interface GameState {
    * once the run has history. Undefined = classic Math.random play.
    */
   rngSeed?: string;
-  /** Missing/1 preserves legacy history-hash draws; 2 ignores incidental event IDs/time. */
-  rngVersion?: 1 | 2;
+  /**
+   * Missing/1 preserves legacy history-hash draws; 2 ignores incidental event IDs/time;
+   * 3 also makes a Chaos Key pick a table before an entry (utils/seededRng.ts).
+   */
+  rngVersion?: 1 | 2 | 3;
+  /**
+   * Hidden per-run salt for a run without a seed: its draws come from
+   * hash(salt, semantic history, purpose) like a seeded run's, so restoring a
+   * backup cannot re-roll a result (utils/seededRng.ts::runDrawSource). Made
+   * at run start; older saves get one on load (legacyRunSalt). Never shown.
+   */
+  rngSalt?: string;
+  /**
+   * How many times this run was restored from a backup or imported over
+   * itself. Merged with this browser's own count, which a restore cannot roll
+   * back (utils/restoreCount.ts). Absent means never.
+   */
+  restoreCount?: number;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is linked to (Sync & Roll's first fetch); the player can rename it. */
   linkedAccount?: string;
+  /**
+   * The linked account's hiscores levels when it was linked (and at each name
+   * change): levels it already had, which Sync & Roll never rolls. Absent on
+   * a run linked before baselines existed (it has none). See utils/syncBaseline.
+   */
+  syncBaseline?: SyncBaseline;
   /**
    * Xtreme Start anti-softlock insurance: how many 50-total-level milestones
    * have already paid out a guaranteed key. Only accrues while gameModeId is
@@ -358,7 +390,8 @@ export interface GameState {
   fateLand?: FateLand;
 }
 
-export type FateMark = 'BLESSED' | 'GILDED' | 'CHAOTIC' | 'CURSED';
+/** Fate's omens: four boons (Blessed, Gilded, Fortunate, Chaotic) and four banes. */
+export type FateMark = 'BLESSED' | 'GILDED' | 'FORTUNATE' | 'CHAOTIC' | 'CURSED' | 'WITHERED' | 'CLOUDED' | 'TANGLED';
 
 /** Chunked's Fate's Thread and fate's marks (utils/fateLand.ts). */
 export interface FateLand {
@@ -370,6 +403,8 @@ export interface FateLand {
   marks: Record<string, FateMark>;
   /** Gilded chunks whose free Key roll is still waiting. */
   gilded: string[];
+  /** A Tangled chunk: fate's thread doesn't pull the next Chunks draw. */
+  tangled?: boolean;
 }
 
 /** A simulated nemesis ('sim') or a friend's run snapshot ('friend') to race. */

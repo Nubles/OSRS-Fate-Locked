@@ -38,7 +38,8 @@ describe('the fate map geometry', () => {
 
   it('names the thread and the marks in the words the map shows', () => {
     expect(threadLine('the Barrows')).toBe("Fate's Thread: the Barrows. One Chunks Key draw in six goes to the frontier chunks nearest it.");
-    expect(markLine('CURSED')).toBe('Marked by fate: Cursed');
+    expect(markLine('CURSED')).toBe("Fate's omen: Cursed, a bane");
+    expect(markLine('FORTUNATE')).toBe("Fate's omen: Fortunate, a boon");
     expect(THREAD_LEANING_LINE).toBe("Nearest Fate's Thread: 1 in 6 Chunks draws go to these");
     for (const line of [threadLine('the Barrows'), THREAD_LEANING_LINE]) expect(line).not.toMatch(/x2|twice/i);
   });

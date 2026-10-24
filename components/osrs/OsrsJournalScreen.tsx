@@ -7,6 +7,7 @@ import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
 import { CA_DATA } from '../../data/caData';
 import { ALL_CA_TASKS, type CATask } from '../../data/caTasks';
 import { DROP_RATES } from '../../config/rules';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { caTaskLockedBoss } from '../../utils/caProgress';
 import { evaluateDiaryTaskEligibility, type EligibilityBlocker } from '../../utils/journalStatus';
 import { isAlmostThere } from '../../utils/journalProgress';
@@ -152,17 +153,23 @@ export const OsrsJournalScreen: React.FC = () => {
 
   /* ── Lists ─────────────────────────────────────────────────────────────── */
 
+  // Lists sort by each source's base rate; the rows and the footer show the
+  // chance the roll is made against, the run's boosts included.
   const questRate = (q: QuestData) => DROP_RATES[q.difficulty] ?? 0;
   const taskRate = (t: DiaryTask) => DROP_RATES[DIARY_DATA[t.tierId]?.difficulty] ?? 0;
   const caRate = (t: CATask) => DROP_RATES[CA_DATA[t.tierId]?.difficulty] ?? 0;
+  const chanceOf = useSourceKeyChance();
+  const questChance = (q: QuestData) => chanceOf(q.difficulty) ?? 0;
+  const taskChance = (t: DiaryTask) => chanceOf(DIARY_DATA[t.tierId]?.difficulty) ?? 0;
+  const caChance = (t: CATask) => chanceOf(CA_DATA[t.tierId]?.difficulty) ?? 0;
 
   const readyQuests = useMemo(() => quest.allQuests
     .filter(q => q.status !== 'COMPLETED' && q.eligibility.eligible)
     .sort(byChanceThenName(questRate, q => q.name)), [quest.allQuests]);
   const readyTasks = useMemo(() => doableDiaryTasks(ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes)
     .sort(byChanceThenName(taskRate, t => t.description)), [unlocks, gameModeId, areaRoutes]);
-  const readyCA = useMemo(() => doableCATasks(ALL_CA_TASKS, unlocks, gameModeId)
-    .sort(byChanceThenName(caRate, t => t.name ?? t.description)), [unlocks, gameModeId]);
+  const readyCA = useMemo(() => doableCATasks(ALL_CA_TASKS, unlocks, gameModeId, areaRoutes)
+    .sort(byChanceThenName(caRate, t => t.name ?? t.description)), [unlocks, gameModeId, areaRoutes]);
 
   // Almost there: blocked by exactly one requirement (the classic "Almost" badge).
   const almostQuests = useMemo(() => quest.allQuests.flatMap(q => {
@@ -185,9 +192,10 @@ export const OsrsJournalScreen: React.FC = () => {
   }, []);
 
   const questTone = (q: QuestCardQuest) => q.status === 'COMPLETED' ? TONE.done : q.eligibility.eligible ? TONE.ready : TONE.locked;
+  // Orange: the boss is unlocked but the run can't get to it yet.
   const caTaskTone = (t: CATask) => unlocks.completedTasks.includes(t.id) ? TONE.done
     : caTaskLockedBoss(t, unlocks.bosses) ? TONE.locked
-    : doableCATasks([t], unlocks, gameModeId).length > 0 ? TONE.ready : ORANGE;
+    : doableCATasks([t], unlocks, gameModeId, areaRoutes).length > 0 ? TONE.ready : ORANGE;
 
   // The Combat tab's open tier: the selected entry's tier, else the classic log's expanded one.
   const combatSel = sel.combat;
@@ -240,12 +248,12 @@ export const OsrsJournalScreen: React.FC = () => {
     };
 
     if (tab === 'ready') {
-      const qs = pick(readyQuests, q => questHit(q)).map(([q, h]) => row({ kind: 'quest', id: q.id }, q.name, { keyText: pct(DROP_RATES[q.difficulty]), ...h }));
-      const ds = pick(readyTasks, taskHit).map(([t, h]) => row({ kind: 'task', id: t.id }, t.description, { keyText: pct(taskRate(t)), tip: t.tierId, ...h }));
-      const cs = pick(readyCA, t => caHit(t, false)).map(([t, h]) => row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { keyText: pct(caRate(t)), tip: `${t.tierId} · ${t.monster}`, ...h }));
+      const qs = pick(readyQuests, q => questHit(q)).map(([q, h]) => row({ kind: 'quest', id: q.id }, q.name, { keyText: pct(questChance(q)), ...h }));
+      const ds = pick(readyTasks, taskHit).map(([t, h]) => row({ kind: 'task', id: t.id }, t.description, { keyText: pct(taskChance(t)), tip: t.tierId, ...h }));
+      const cs = pick(readyCA, t => caHit(t, false)).map(([t, h]) => row({ kind: 'caTask', id: t.id }, t.name ?? t.description, { keyText: pct(caChance(t)), tip: `${t.tierId} · ${t.monster}`, ...h }));
       section({ key: 'h-q', title: 'Quests', icon: 'quest', count: String(readyQuests.length) }, readyQuests.length, qs, 'No quest is ready yet.');
       section({ key: 'h-d', title: 'Diary tasks', icon: 'diary', count: String(readyTasks.length) }, readyTasks.length, ds, 'No diary task is doable yet.');
-      section({ key: 'h-c', title: 'Combat Achievements', icon: 'ca', count: String(readyCA.length) }, readyCA.length, cs, 'No task at an unlocked boss.');
+      section({ key: 'h-c', title: 'Combat Achievements', icon: 'ca', count: String(readyCA.length) }, readyCA.length, cs, 'No task at a boss you can reach.');
       return out;
     }
     if (tab === 'almost') {
@@ -312,7 +320,7 @@ export const OsrsJournalScreen: React.FC = () => {
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, query, questStart, readyQuests, readyTasks, readyCA, almostQuests, almostTasks, quest.groupBySeries, quest.seriesGroups,
-    quest.mainQuests, quest.miniquests, diary.sortedDiaries, ca.filteredCAs, ca.totalPoints, openCATier, unlocks, gameModeId, areaRoutes, caTasksOf]);
+    quest.mainQuests, quest.miniquests, diary.sortedDiaries, ca.filteredCAs, ca.totalPoints, openCATier, unlocks, gameModeId, areaRoutes, caTasksOf, chanceOf]);
 
   const navRows = useMemo(() => items.filter((i): i is Extract<Item, { t: 'row' }> => i.t === 'row'), [items]);
   const noMatches = searching && navRows.length === 0;
@@ -499,10 +507,10 @@ export const OsrsJournalScreen: React.FC = () => {
   /* ── Footer numbers ────────────────────────────────────────────────────── */
 
   const readyCount = readyQuests.length + readyTasks.length + readyCA.length;
-  const keysWaiting = (readyQuests.reduce((s, q) => s + questRate(q), 0)
-    + readyTasks.reduce((s, t) => s + taskRate(t), 0)
-    + readyCA.reduce((s, t) => s + caRate(t), 0)) / 100;
-  const keysWaitingText = readyCount === 0 ? 'none yet' : keysWaiting < 1 ? 'under 1 at base chance' : `about ${Math.round(keysWaiting)} at base chance`;
+  const keysWaiting = (readyQuests.reduce((s, q) => s + questChance(q), 0)
+    + readyTasks.reduce((s, t) => s + taskChance(t), 0)
+    + readyCA.reduce((s, t) => s + caChance(t), 0)) / 100;
+  const keysWaitingText = readyCount === 0 ? 'none yet' : keysWaiting < 1 ? 'under 1' : `about ${Math.round(keysWaiting)}`;
 
   const routeCheckFor = (id: string): string | null => {
     if (!doability.isChunked) return null;
@@ -537,7 +545,7 @@ export const OsrsJournalScreen: React.FC = () => {
     }
     if (current.kind === 'caTask') {
       const t = caTaskById(current.id);
-      return t ? <CATaskDetail key={currentKey} task={t} unlocks={unlocks} gameModeId={gameModeId} monsterWikiUrl={ca.getWikiUrl}
+      return t ? <CATaskDetail key={currentKey} task={t} unlocks={unlocks} gameModeId={gameModeId} areaRoutes={areaRoutes} monsterWikiUrl={ca.getWikiUrl}
         onTaskComplete={ca.handleTaskComplete} onSelect={onSelect} /> : null;
     }
     const tier = CA_DATA[current.id];
@@ -551,7 +559,7 @@ export const OsrsJournalScreen: React.FC = () => {
     : null;
   const legend = tab === 'quests' || (tab === 'diaries' && searching) ? [['Done', TONE.done], ['Can do now', TONE.ready], ['Not yet', TONE.locked]]
     : tab === 'diaries' ? [['Done', TONE.done], ['Started', TONE.ready], ['Not started', TONE.locked]]
-    : tab === 'combat' ? [['Done', TONE.done], ['Boss unlocked', TONE.ready], ['Boss locked', TONE.locked]]
+    : tab === 'combat' ? [['Done', TONE.done], ['Can do now', TONE.ready], ["Can't reach", ORANGE], ['Boss locked', TONE.locked]]
     : null;
 
   const activeFilters = tab === 'quests'
@@ -594,7 +602,7 @@ export const OsrsJournalScreen: React.FC = () => {
         <span className="ojs-stat" data-examine={`${stats.diaries.done} of ${stats.diaries.total} Achievement Diary tasks done, ${stats.diaries.doable} doable now.`} data-examine-name="Diary tasks">
           <span style={{ color: ORANGE }}>Diary tasks</span> <span className="w">{stats.diaries.done}/{stats.diaries.total}</span> · <span className="y">{stats.diaries.doable} doable</span>
         </span>
-        <span className="ojs-stat" data-examine={`${stats.ca.points} of ${stats.ca.pointsTotal} Combat Achievement points, ${stats.ca.tasksDone} of ${stats.ca.tasksTotal} tasks, ${stats.ca.done} of ${stats.ca.total} reward tiers. ${stats.ca.doable} tasks at an unlocked boss.`} data-examine-name="Combat">
+        <span className="ojs-stat" data-examine={`${stats.ca.points} of ${stats.ca.pointsTotal} Combat Achievement points, ${stats.ca.tasksDone} of ${stats.ca.tasksTotal} tasks, ${stats.ca.done} of ${stats.ca.total} reward tiers. ${stats.ca.doable} tasks at a boss you can reach.`} data-examine-name="Combat">
           <span style={{ color: ORANGE }}>Combat</span> <span className="w">{caPointsLabel(stats)}</span> · <span className="y">{stats.ca.doable} doable</span>
         </span>
         <div className="ojs-bar-keys">

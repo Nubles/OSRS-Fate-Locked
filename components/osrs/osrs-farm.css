@@ -170,3 +170,7 @@ html[data-ui="osrs"] .okf-recent .ln { flex-shrink: 0; font: var(--osrs-fs, 16px
   html[data-ui="osrs"] .okf-wide { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
   html[data-ui="osrs"] .okf-wide .okf-main { min-height: 640px; }
 }
+
+/* The Boss Task card's "which boss was it?" picker. */
+html[data-ui="osrs"] .okf-select { width: 100%; min-width: 0; box-sizing: border-box; height: 24px; margin-top: 3px; padding: 0 4px; border: 1px solid #000; background: var(--osrs-well, #1f1a14); color: #fff; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; text-shadow: none; }
+html[data-ui="osrs"] .okf-select:focus { outline: 1px solid #ffff00; }

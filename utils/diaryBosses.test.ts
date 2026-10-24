@@ -31,6 +31,8 @@ const REVIEWED: Record<string, string> = {
   kar_med_6: 'Sarachnis',
   // The fire cape comes only from the Fight Cave, and the Inferno takes one to enter.
   kar_elite_4: 'TzHaar Fight Cave',
+  // 10 October 2026 item audit: Zulrah's scales, one way of two (sacred eels are the other).
+  karamja_elite_4: 'Zulrah',
   kou_elite_3: 'Skotizo',
   kou_elite_7: 'Chambers of Xeric',
   kou_med_11: 'Wintertodt',
@@ -40,6 +42,9 @@ const REVIEWED: Record<string, string> = {
   wild_elite_1: "Callisto, Artio, Venenatis, Spindel, Vet'ion, Calvar'ion",
   wild_hard_6: 'Chaos Elemental',
   wild_hard_7: 'Crazy Archaeologist, Chaos Fanatic, Scorpia',
+  // 13 October 2026 item recheck: Zalcano drops runite ore, one way of three.
+  kan_elite_5: 'Zalcano',
+  var_elite_4: 'Zalcano',
 };
 
 const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
@@ -68,11 +73,11 @@ describe('diary tasks that mean fighting a boss', () => {
   it('tag exactly the reviewed tasks, each with a boss the tracker unlocks', () => {
     const tagged = Object.fromEntries(ALL_DIARY_TASKS
       .filter(row => row.bosses?.length || row.anyOfBosses?.length || row.oneOf?.some(option => option.bosses?.length))
-      .map(row => [row.id, [
+      .map(row => [row.id, [...new Set([
         ...(row.bosses ?? []),
         ...(row.oneOf ?? []).flatMap(option => option.bosses ?? []),
         ...(row.anyOfBosses ?? []).flat(),
-      ].join(', ')]));
+      ])].join(', ')]));
 
     expect(tagged).toEqual(REVIEWED);
     for (const bosses of Object.values(REVIEWED)) {

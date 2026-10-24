@@ -3,7 +3,7 @@ import type { DiaryTier } from '../../data/diaryData';
 import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
 import type { UnlockState } from '../../types';
 import type { AreaRoutes } from '../../utils/areaRoutes';
-import { DROP_RATES } from '../../config/rules';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { chunkForPlace, chunkUnlocked, showChunkOnMap } from '../../utils/chunkLocations';
 import { effectiveSkillLevel } from '../../utils/slayerReach';
 import {
@@ -226,7 +226,9 @@ const DiaryDetail: React.FC<{
   const allTasksDone = tasks.length === 0 || view.done === tasks.length;
   const isActionable = isCompleted || allTasksDone;
   const tier = evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes);
-  const rate = DROP_RATES[diary.difficulty];
+  // The chance the roll is made against, the run's boosts included.
+  const chanceOf = useSourceKeyChance();
+  const rate = chanceOf(diary.difficulty);
   const term = searchTerm.toLowerCase();
   const shown = term && !diary.id.toLowerCase().includes(term)
     ? tasks.filter(task => task.description.toLowerCase().includes(term))
@@ -243,7 +245,7 @@ const DiaryDetail: React.FC<{
     },
   ];
   if (!isCompleted && tier.manualChecks.length > 0) rows.push({ label: 'Needs confirmation', value: tier.manualChecks.join(', ') });
-  if (rate !== undefined) rows.push({ label: 'Fate Locked roll', value: `${rate}% base Key chance per task` });
+  if (rate !== undefined) rows.push({ label: 'Fate Locked roll', value: `${rate}% Key chance per task` });
 
   return (
     <div className="ojr-detail">

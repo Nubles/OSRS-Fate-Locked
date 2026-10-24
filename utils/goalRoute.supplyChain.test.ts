@@ -42,12 +42,9 @@ describe('Supply Chain typed unlock blockers', () => {
       unlockTable: table,
     });
 
-    if (table === TableType.BOSSES || table === TableType.MINIGAMES) {
-      expect(route.tables).toEqual([]); // These fixture locations are not yet eligible in Vanilla.
-    } else {
-      expect(route.tables).toHaveLength(1);
-      expect(route.tables[0]).toMatchObject({ table, needed: [unlockId] });
-    }
+    // A random Key can land on a boss or minigame the run can't reach yet, so every table routes.
+    expect(route.tables).toHaveLength(1);
+    expect(route.tables[0]).toMatchObject({ table, needed: [unlockId] });
   });
 
   it.each([
@@ -69,7 +66,7 @@ describe('Supply Chain typed unlock blockers', () => {
     });
 
     expect(route.sources[0].missing).toContain('Unlock: Zulrah');
-    expect(route.tables).toEqual([]); // Ownership is needed, but a random roll cannot yet grant it.
+    expect(route.tables).toEqual([expect.objectContaining({ table: TableType.BOSSES, needed: ['Zulrah'] })]);
   });
 
   it('fails closed for an ambiguous source without table provenance', () => {

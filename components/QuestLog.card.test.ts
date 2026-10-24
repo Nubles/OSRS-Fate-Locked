@@ -34,6 +34,8 @@ describe('QuestCard geography integration', () => {
     };
     const quest = {
       ...QUEST_DATA['A Porcine of Interest'],
+      // Only the geography gates are under test here, not the goggles' Head slot.
+      equipmentRequirements: undefined,
       status: eligibility.status,
       eligibility,
     };
@@ -143,6 +145,7 @@ describe('QuestCard shop and travel unlocks', () => {
       ...QUEST_DATA["Hopespear's Will"],
       accessPolicy: 'regions' as const, regions: ['Misthalin'], locations: [], skills: {}, prereqs: [],
       manualRequirements: [], merchants: ['Clothes Shops'], mobility: ['Fairy Rings'],
+      equipmentRequirements: [],
     };
     const state = { ...unlocks, ...over };
     const eligibility = evaluateQuestEligibility(quest, state);

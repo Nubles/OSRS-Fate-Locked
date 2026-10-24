@@ -7,6 +7,10 @@
  */
 import type { FateMark } from '../types';
 import { MAP_BOUNDS, CHUNK_TILES } from './mapCoords';
+import {
+  FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS,
+  FATE_MARK_FORTUNATE_ODDS, FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE,
+} from '../config/economy';
 
 /** Map-image pixels per chunk on the 9216x6528 world map. */
 export const CHUNK_PX = 192;
@@ -80,14 +84,29 @@ export const threadStart = (held: Iterable<string>, thread: string): string | un
   return best;
 };
 
-/** Fate's marks on the map, in the tracker's OSRS colours. */
-export const FATE_MARK_COLOR: Record<FateMark, string> = {
-  BLESSED: '#ffc828',
-  GILDED: '#0dc10d',
-  CHAOTIC: '#c77dff',
-  CURSED: '#ff3030',
+/** Fate's omens on the map, in the tracker's OSRS colours: green boons, red banes. */
+export const OMEN_BOON = '#0dc10d';
+export const OMEN_BANE = '#ff3030';
+export const MARK_NAME: Record<FateMark, string> = {
+  BLESSED: 'Blessed', GILDED: 'Gilded', FORTUNATE: 'Fortunate', CHAOTIC: 'Chaotic',
+  CURSED: 'Cursed', WITHERED: 'Withered', CLOUDED: 'Clouded', TANGLED: 'Tangled',
 };
-const MARK_NAME: Record<FateMark, string> = { BLESSED: 'Blessed', GILDED: 'Gilded', CHAOTIC: 'Chaotic', CURSED: 'Cursed' };
+const BANE: ReadonlySet<FateMark> = new Set(['CURSED', 'WITHERED', 'CLOUDED', 'TANGLED']);
+export const isBaneMark = (mark: FateMark): boolean => BANE.has(mark);
+
+/** What an omen does, as the log and fate's spin say it. */
+export const FATE_MARK_EFFECTS: Record<FateMark, string> = {
+  BLESSED: `+${FATE_MARK_BLESSED_FATE} Fate, up to the pity line.`,
+  GILDED: 'A free Key roll, waiting on the Keys screen.',
+  FORTUNATE: `Your next ${FATE_MARK_FORTUNATE_ROLLS} Key rolls are ${FATE_MARK_FORTUNATE_ODDS}% better.`,
+  CHAOTIC: `A ${FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key.`,
+  CURSED: `Your next ${FATE_MARK_CURSED_ROLLS} Key rolls are ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`,
+  WITHERED: `You lose ${FATE_MARK_WITHERED_FATE} Fate.`,
+  CLOUDED: `Your next ${FATE_MARK_CLOUDED_ROLLS} Key rolls give no Fate if they fail.`,
+  TANGLED: "Fate's Thread doesn't pull your next chunk.",
+};
+
+export const omenColor = (mark: FateMark): string => (BANE.has(mark) ? OMEN_BANE : OMEN_BOON);
 
 /** The gold of Fate's Thread. */
 export const THREAD_GOLD = '#ffc828';
@@ -97,7 +116,7 @@ export const threadLines = (place: string): [string, string] =>
   [`Fate's Thread: ${place}.`, 'One Chunks Key draw in six goes to the frontier chunks nearest it.'];
 export const threadLine = (place: string): string => threadLines(place).join(' ');
 export const THREAD_LEANING_LINE = "Nearest Fate's Thread: 1 in 6 Chunks draws go to these";
-export const markLine = (mark: FateMark): string => `Marked by fate: ${MARK_NAME[mark]}`;
+export const markLine = (mark: FateMark): string => `Fate's omen: ${MARK_NAME[mark]}, a ${BANE.has(mark) ? 'bane' : 'boon'}`;
 
 // ── The "Fate draws the map" spin ─────────────────────────────────────────
 

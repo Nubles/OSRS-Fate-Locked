@@ -8,10 +8,12 @@ import { DISCORD_INVITE_URL } from '../../constants';
 import { RESET_CONFIRM_MESSAGE } from '../../utils/backups';
 import { FATE_EXPORT_HINT } from '../../utils/fateSaveFile';
 import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
+import { setSkillOddsHover, useSkillOddsHover } from '../../utils/skillOddsPref';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
 import { FateMapOptions } from '../FateMapOptions';
+import { OffDeviceCopyStatus } from '../OffDeviceCopyStatus';
 import { OsrsXpDrops } from './OsrsXpDrops';
 import { CHUNKED_OMNI_LAND_TEXT } from '../../config/economy';
 import './osrs-shell.css';
@@ -70,6 +72,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   onImportSave, onExportSave, onRuneliteExport, onMoveAddress,
 }) => {
   const uiStyle = useUiStyle();
+  const skillOddsHover = useSkillOddsHover();
   const {
     keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations,
     advisorsEnabled, toggleAdvisors, resetGame, gameModeId, customMode, linkedAccount,
@@ -123,15 +126,15 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
 
       {/* Key stacks, with the XP drops rising past them */}
       <div data-tour="keys" style={{ position: 'relative', display: 'flex', gap: 4, marginLeft: 6, flexShrink: 0 }}>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Keys: ${keys}. Spend one on a table in Spend Keys for a random unlock.`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Keys: ${keys}. Spend one on a table in Spend Keys for a random unlock.`} role="img" aria-label={`Keys: ${keys}`}>
           <img className="osrs-px" src={sprite('key.png')} alt="Keys" width={36} height={32} />
           <span className="osrs-stack">{keys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} role="img" aria-label={`Omni-Keys: ${specialKeys}`}>
           <img className="osrs-px" src={sprite('omni_key.png')} alt="Omni-Keys" width={36} height={32} />
           <span className="osrs-stack">{specialKeys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. Each one unlocks a random entry from all the tables at once.`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. For each one, fate picks a table, then a random entry in it.`} role="img" aria-label={`Chaos Keys: ${chaosKeys}`}>
           <img className="osrs-px" src={sprite('chaos_key.png')} alt="Chaos Keys" width={36} height={32} />
           <span className="osrs-stack">{chaosKeys}</span>
         </div>
@@ -237,7 +240,9 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={() => setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs')} aria-pressed={uiStyle === 'osrs'}>OSRS layout {onOff(uiStyle === 'osrs')}</button>
                   {uiStyle === 'osrs' && <Suspense fallback={null}><OsrsInterfaceOptions /></Suspense>}
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAdvisors()} aria-pressed={advisorsEnabled}>Advisor panels {onOff(advisorsEnabled)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => setSkillOddsHover(!skillOddsHover)} aria-pressed={skillOddsHover} title="On: a skill's roll odds show when you hover it. Off: they open from the small i in its corner.">Skill odds on hover {onOff(skillOddsHover)}</button>
                   <div className="osrs-menu-sep" />
+                  <OffDeviceCopyStatus osrs />
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onImportSave)}>Import save</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onExportSave)} title={FATE_EXPORT_HINT}>Export save file (.fate)</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => setShowSyncCode(true))}>Sync code (move device)</button>

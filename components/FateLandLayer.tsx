@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import type { FateMark } from '../types';
 import { MAP_IMAGE } from '../utils/mapCoords';
-import { CHUNK_PX, FATE_MARK_COLOR, THREAD_GOLD, chunkBox, fogPath, outlineEdges, threadStart } from '../utils/fateMap';
+import { CHUNK_PX, THREAD_GOLD, chunkBox, fogPath, isBaneMark, omenColor, outlineEdges, threadStart } from '../utils/fateMap';
 
 /**
  * A Chunked run's land as fate sees it, drawn over the World map inside its
  * pan/zoom layer (components/RegionMap.tsx): fog over the land the run
  * neither holds nor has on its frontier, Fate's Thread and the frontier chunks
- * nearest it, and fate's marks. Strokes and badges keep their on-screen size
+ * nearest it, and the omen fate drew on each held chunk. Strokes and badges keep their on-screen size
  * at every zoom through the --osrs-map-s scale RegionMap sets on the layer.
  */
 interface Props {
@@ -77,12 +77,18 @@ export const FateLandLayer: React.FC<Props> = ({ osrs, fog, held, frontier, thre
           </g>
         )}
 
+        {/* Every held chunk carries an omen: a small pip in its corner, + for a boon, − for a bane. */}
         {Object.entries(marks).map(([key, mark]) => {
           const { x, y } = chunkBox(key);
-          const color = FATE_MARK_COLOR[mark];
+          const bane = isBaneMark(mark);
           return (
-            <rect key={`m${key}`} data-mark={mark} x={x + 6} y={y + 6} width={CHUNK_PX - 12} height={CHUNK_PX - 12}
-              fill={color} fillOpacity={0.11} stroke={color} style={{ strokeWidth: px(3) }} />
+            <Pinned key={`m${key}`} x={x} y={y}>
+              <g data-mark={mark}>
+                <rect x={3} y={3} width={13} height={13} fill={omenColor(mark)} stroke="#000" strokeWidth={2} />
+                <line x1={6.5} y1={9.5} x2={12.5} y2={9.5} stroke="#000" strokeWidth={2} />
+                {!bane && <line x1={9.5} y1={6.5} x2={9.5} y2={12.5} stroke="#000" strokeWidth={2} />}
+              </g>
+            </Pinned>
           );
         })}
 
@@ -90,7 +96,7 @@ export const FateLandLayer: React.FC<Props> = ({ osrs, fog, held, frontier, thre
           const { x, y } = chunkBox(key);
           return (
             <g key={`l${key}`} data-thread-leaning={key}>
-              {/* Dashed, in the thread's gold: told apart from a Blessed mark's solid gold. */}
+              {/* Dashed, in the thread's gold: told apart from the thread's own solid box. */}
               <rect x={x + 3} y={y + 3} width={CHUNK_PX - 6} height={CHUNK_PX - 6} fill="none" stroke="rgba(0,0,0,0.6)" style={{ strokeWidth: px(4) }} />
               <rect x={x + 3} y={y + 3} width={CHUNK_PX - 6} height={CHUNK_PX - 6} fill="none" stroke={THREAD_GOLD}
                 style={{ strokeWidth: px(2), strokeDasharray: `${px(6)} ${px(4)}` }} />

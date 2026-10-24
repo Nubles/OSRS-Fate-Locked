@@ -37,6 +37,79 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-24-fairer-keys-update',
+    title: 'Fairer Keys, clearer rolls and quest fixes',
+    date: '2026-10-24',
+    sections: {
+      balance: [
+        'In Vanilla, Keys can now land on any boss or minigame left, even ones you can\'t reach yet. Saradomin\'s Ward keeps a Key to places you can use.',
+        'Chaos Keys pick a kind of unlock first, then something in it, so skills and gear come up as often as areas and banks.',
+      ],
+      fixed: [
+        'Quests and diary tasks now need what their items take: a gear slot, a shop or a skill. A Soul\'s Bane needs a Weapon slot, for one.',
+        'Combat achievements only count as doable once you can reach the boss, and the Abyss now opens from Edgeville through the Mage of Zamorak.',
+      ],
+      changed: [
+        'Rolls say what you got, every screen shows the Key chance the roll really uses, and Set level logs many levels in one go.',
+        'Slayer masters you can\'t use yet are greyed out, Sync & Roll only rolls levels gained after linking, and restoring a backup can\'t re-roll your luck.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-24-falador-west-bank',
+    title: 'One unlock for the Falador west bank',
+    date: '2026-10-24',
+    sections: {
+      fixed: [
+        'The deposit box inside the Falador west bank is now part of West Falador, so one Banks unlock opens the booths and the box.',
+        'Owned the old Falador west deposit box unlock? You now own West Falador. Owned both? You get 1 Key back.',
+        'There are now 125 Banks to unlock instead of 126.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-23-roll-rings',
+    title: 'Roll rings turn again',
+    date: '2026-10-23',
+    sections: {
+      fixed: [
+        'In the OSRS layout, the rings now turn while Fate is altered and the loot beam rises, even with Windows animation effects turned off.',
+        'Key and Fate drops by the orbs show up again on those PCs too.',
+        'They follow the Animations switch in Settings, like the rest of the roll reveals.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-23-skill-info-button',
+    title: 'Skill odds behind a small i',
+    date: '2026-10-23',
+    sections: {
+      changed: [
+        'Each skill you can level now has a small i in its corner. Point at it or tap it to see that skill\'s Key and Chaos Key odds.',
+        'The odds open beside the skill, so the skill stays in view while you click it to level up.',
+        'Like the old box over the whole skill? Turn on Skill odds on hover in Settings.',
+      ],
+      fixed: [
+        'The old hover box no longer stays stuck over a skill after you click it, and its first line isn\'t cut off.',
+        'In the OSRS layout, the skill odds now include your achievement bonus.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-22-chunked-omens',
+    title: 'Chunked beta: an omen on every chunk',
+    date: '2026-10-22',
+    sections: {
+      changed: [
+        'Every chunk you gain now draws one of fate’s eight omens instead of 1 in 8 getting a mark. Half are boons, half are banes.',
+        'Boons: Blessed (+10 Fate), Gilded (a free 10% Key roll), Fortunate (next 3 rolls 5% better) and Chaotic (10% Chaos Key).',
+        'Banes: Cursed (next 3 rolls 5% worse, double Fate on fails), Withered (−10 Fate), Clouded (no Fate on fails) and Tangled.',
+        'A Tangled chunk means Fate’s Thread doesn’t pull your next chunk. No bane ever takes Keys, chunks or unlocks.',
+        'Fate’s spin now ends on the omen, and the map shows a + or − on each chunk you hold. The Omens button hides them.',
+      ],
+    },
+  },
+  {
     id: '2026-10-22-intro-back-and-skip',
     title: 'Go back or skip the intro',
     date: '2026-10-22',
