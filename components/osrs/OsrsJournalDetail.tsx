@@ -14,7 +14,8 @@ import { showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
 import { effectiveSkillLevel } from '../../utils/slayerReach';
 import { evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility } from '../../utils/journalStatus';
 import { formatDiaryChecks } from '../../utils/diaryCheckFormat';
-import { CA_TASK_POINTS, caTaskLockedBoss, isCATierId } from '../../utils/caProgress';
+import { CA_TASK_POINTS, isCATierId } from '../../utils/caProgress';
+import { caTaskBlocker, caTaskBlockerText } from '../../utils/caTaskAccess';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { findEntityLocations } from '../../utils/entityLocationLookup';
 import { placeFor } from '../JournalNextBest';
@@ -403,12 +404,13 @@ export const CATaskDetail: React.FC<{
   task: CATask;
   unlocks: UnlockState;
   gameModeId?: string;
+  areaRoutes?: AreaRoutes | null;
   monsterWikiUrl: (monster: string) => string;
   onTaskComplete: (task: CATask, e: React.MouseEvent) => void;
   onSelect: (sel: JournalSel) => void;
-}> = ({ task, unlocks, gameModeId, monsterWikiUrl, onTaskComplete, onSelect }) => {
+}> = ({ task, unlocks, gameModeId, areaRoutes, monsterWikiUrl, onTaskComplete, onSelect }) => {
   const isDone = unlocks.completedTasks.includes(task.id);
-  const lockedBoss = caTaskLockedBoss(task, unlocks.bosses);
+  const blocker = caTaskBlocker(task, unlocks, gameModeId, areaRoutes);
   const tier = CA_DATA[task.tierId];
   const rate = tier ? DROP_RATES[tier.difficulty] : undefined;
   const facts: WikiRow[] = [
@@ -437,7 +439,7 @@ export const CATaskDetail: React.FC<{
         <button type="button" className="ojr-link" onClick={() => onSelect({ kind: 'caTier', id: task.tierId })}>{task.tierId} tier</button>
         , {plural(caPoints(task.tierId), 'point')}.
       </div>
-      {!isDone && lockedBoss && <div className="ojr-gap ojs-red">Unlock {lockedBoss} to fight here. You can still log the task by hand.</div>}
+      {blocker && <div className="ojr-gap ojs-red">{caTaskBlockerText(blocker)} You can still log the task by hand.</div>}
       {!isDone && rate !== undefined && <div className="ojr-gap ojs-red">Completing it rolls once for a Key at {rate}%.</div>}
     </Pane>
   );

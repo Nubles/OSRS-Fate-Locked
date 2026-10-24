@@ -2,15 +2,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { CATier } from '../../data/caData';
 import { ALL_CA_TASKS, type CATask } from '../../data/caTasks';
 import type { UnlockState } from '../../types';
+import type { AreaRoutes } from '../../utils/areaRoutes';
 import { DROP_RATES } from '../../config/rules';
-import { CA_TASK_POINTS, caTaskLockedBoss, isCATierId } from '../../utils/caProgress';
+import { CA_TASK_POINTS, isCATierId } from '../../utils/caProgress';
+import { caTaskBlocker, caTaskBlockerText, type CATaskBlocker } from '../../utils/caTaskAccess';
 import { EntityLocations } from '../EntityLocations';
 import { Legend, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
 
 /**
  * Combat Achievements in the OSRS layout: the reward tiers as list headings
- * with their tasks beneath (green done, yellow boss unlocked, red boss
- * locked), and the selected tier or task as a journal scroll with OSRS Wiki
+ * with their tasks beneath (green done, yellow can do now, orange boss
+ * unlocked but out of reach, red boss locked), and the selected tier or task as a journal scroll with OSRS Wiki
  * style details. Selection follows CALog's expanded tier; every button calls
  * CALog's handlers.
  */
@@ -18,6 +20,8 @@ import { Legend, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
 interface Props {
   tiers: CATier[];
   unlocks: UnlockState;
+  gameModeId?: string;
+  areaRoutes?: AreaRoutes | null;
   totalPoints: number;
   nextTier?: string;
   searchTerm: string;
@@ -32,19 +36,20 @@ interface Props {
 const pointsOf = (tierId: string): number => (isCATierId(tierId) ? CA_TASK_POINTS[tierId] : 0);
 const wiki = (name: string) => `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
 
-const taskTone = (task: CATask, unlocks: UnlockState): string =>
+const taskTone = (task: CATask, unlocks: UnlockState, blocker: CATaskBlocker | undefined): string =>
   unlocks.completedTasks.includes(task.id) ? 'ojr-done'
-    : caTaskLockedBoss(task, unlocks.bosses) ? 'ojr-locked' : 'ojr-ready';
+    : blocker?.kind === 'boss' ? 'ojr-locked' : blocker ? 'ojr-far' : 'ojr-ready';
 
-const taskExamine = (task: CATask, unlocks: UnlockState): string => {
+const taskExamine = (task: CATask, unlocks: UnlockState, blocker: CATaskBlocker | undefined): string => {
   const points = pointsOf(task.tierId);
   const state = unlocks.completedTasks.includes(task.id) ? 'Done.'
-    : caTaskLockedBoss(task, unlocks.bosses) ? `${caTaskLockedBoss(task, unlocks.bosses)} is not unlocked.` : 'Not done yet.';
+    : blocker?.kind === 'boss' ? `${blocker.boss} is not unlocked.`
+      : blocker ? caTaskBlockerText(blocker) : 'Not done yet.';
   return `${task.tierId} combat achievement, ${plural(points, 'point')}. ${task.monster}. ${state}`;
 };
 
 export const OsrsJournalCombat: React.FC<Props> = ({
-  tiers, unlocks, totalPoints, nextTier, searchTerm, selectedTierId, highlightedId,
+  tiers, unlocks, gameModeId, areaRoutes, totalPoints, nextTier, searchTerm, selectedTierId, highlightedId,
   onSelectTier, monsterWikiUrl, onTierComplete, onTaskComplete,
 }) => {
   const [selectedTask, setSelectedTask] = useState<string | null>(null);
@@ -96,20 +101,23 @@ export const OsrsJournalCombat: React.FC<Props> = ({
                   <span className="ojr-row-name">{ca.id} tier</span>
                   <span className="ojr-row-key">{done}/{all.length}</span>
                 </button>
-                {open && visibleTasks(ca).map(t => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    className={`ojr-row ojr-sub ${taskTone(t, unlocks)}`}
-                    data-examine={taskExamine(t, unlocks)}
-                    data-examine-name={t.name ?? t.monster}
-                    aria-current={task?.id === t.id ? 'true' : undefined}
-                    onClick={() => { onSelectTier(ca.id); setSelectedTask(t.id); }}
-                  >
-                    <span className="ojr-row-name">{t.name ?? t.description}</span>
-                    <span className="ojr-row-key">{t.monster}</span>
-                  </button>
-                ))}
+                {open && visibleTasks(ca).map(t => {
+                  const blocker = caTaskBlocker(t, unlocks, gameModeId, areaRoutes);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className={`ojr-row ojr-sub ${taskTone(t, unlocks, blocker)}`}
+                      data-examine={taskExamine(t, unlocks, blocker)}
+                      data-examine-name={t.name ?? t.monster}
+                      aria-current={task?.id === t.id ? 'true' : undefined}
+                      onClick={() => { onSelectTier(ca.id); setSelectedTask(t.id); }}
+                    >
+                      <span className="ojr-row-name">{t.name ?? t.description}</span>
+                      <span className="ojr-row-key">{t.monster}</span>
+                    </button>
+                  );
+                })}
               </React.Fragment>
             );
           })}
@@ -117,13 +125,14 @@ export const OsrsJournalCombat: React.FC<Props> = ({
         </div>
         <Legend items={[
           { label: 'Done', cls: 'ojr-done' },
-          { label: 'Boss unlocked', cls: 'ojr-ready' },
+          { label: 'Can do now', cls: 'ojr-ready' },
+          { label: "Can't reach", cls: 'ojr-far' },
           { label: 'Boss locked', cls: 'ojr-locked' },
         ]} />
       </div>
 
       {task
-        ? <TaskDetail key={task.id} task={task} unlocks={unlocks} monsterWikiUrl={monsterWikiUrl} onTaskComplete={onTaskComplete} />
+        ? <TaskDetail key={task.id} task={task} unlocks={unlocks} gameModeId={gameModeId} areaRoutes={areaRoutes} monsterWikiUrl={monsterWikiUrl} onTaskComplete={onTaskComplete} />
         : tier
           ? <TierDetail key={tier.id} tier={tier} tasks={tasksOf.get(tier.id) ?? []} unlocks={unlocks} totalPoints={totalPoints} nextTier={nextTier} onTierComplete={onTierComplete} />
           : <div className="ojr-detail" />}
@@ -195,11 +204,13 @@ const TierDetail: React.FC<{
 const TaskDetail: React.FC<{
   task: CATask;
   unlocks: UnlockState;
+  gameModeId?: string;
+  areaRoutes?: AreaRoutes | null;
   monsterWikiUrl: Props['monsterWikiUrl'];
   onTaskComplete: Props['onTaskComplete'];
-}> = ({ task, unlocks, monsterWikiUrl, onTaskComplete }) => {
+}> = ({ task, unlocks, gameModeId, areaRoutes, monsterWikiUrl, onTaskComplete }) => {
   const isDone = unlocks.completedTasks.includes(task.id);
-  const lockedBoss = caTaskLockedBoss(task, unlocks.bosses);
+  const blocker = caTaskBlocker(task, unlocks, gameModeId, areaRoutes);
   const rows: WikiRow[] = [
     { label: 'Tier', value: task.tierId },
     { label: 'Points', value: String(pointsOf(task.tierId)) },
@@ -214,8 +225,8 @@ const TaskDetail: React.FC<{
         {isDone && <div className="ojr-red" style={{ textAlign: 'center', marginBottom: 6 }}>TASK COMPLETE!</div>}
         <div className={isDone ? 'ojr-met' : undefined}>{task.description}</div>
         <div className="ojr-gap">{task.monster}, {task.tierId} tier, {plural(pointsOf(task.tierId), 'point')}.</div>
-        {!isDone && lockedBoss && (
-          <div className="ojr-gap ojr-red">Unlock {lockedBoss} to fight here. You can still log the task by hand.</div>
+        {blocker && (
+          <div className="ojr-gap ojr-red">{caTaskBlockerText(blocker)} You can still log the task by hand.</div>
         )}
       </div>
 

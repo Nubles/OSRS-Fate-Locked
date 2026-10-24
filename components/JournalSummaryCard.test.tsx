@@ -128,13 +128,26 @@ describe('the Journal window\'s doable lists', () => {
   });
 
   it('counts a Combat Achievement task as doable only at an unlocked boss, and never once done', () => {
-    const task = ALL_CA_TASKS.find(t => canonicalBossId(t.monster))!;
+    const task = ALL_CA_TASKS.find(t => canonicalBossId(t.monster) === 'Obor')!;
     const boss = canonicalBossId(task.monster)!;
-    const locked = { completedTasks: [] as string[], bosses: [] as string[] };
-    expect(doableCATasks([task], locked)).toEqual([]);
+    const locked: UnlockState = { ...pryingTimesUnlocks(), regions: ['Edgeville'] };
+    expect(doableCATasks([task], locked, 'vanilla')).toEqual([]);
     expect(caTaskLockedBoss(task, locked.bosses)).toBe(boss);
-    expect(doableCATasks([task], { completedTasks: [], bosses: [boss] })).toEqual([task]);
-    expect(doableCATasks([task], { completedTasks: [task.id], bosses: [boss] })).toEqual([]);
+    expect(doableCATasks([task], { ...locked, bosses: [boss] }, 'vanilla')).toEqual([task]);
+    expect(doableCATasks([task], { ...locked, bosses: [boss], completedTasks: [task.id] }, 'vanilla')).toEqual([]);
+  });
+
+  it("does not count a task at an unlocked boss whose area the run doesn't own or can't reach", () => {
+    const tasks = ALL_CA_TASKS.filter(t => canonicalBossId(t.monster) === 'Giant Mole');
+    const owned: UnlockState = { ...pryingTimesUnlocks(), regions: ['Lumbridge'], bosses: ['Giant Mole'] };
+    expect(doableCATasks(tasks, owned, 'vanilla')).toEqual([]);
+    const falador: UnlockState = { ...owned, regions: ['Lumbridge', 'Falador'] };
+    const stranded: AreaRoutes = { strandedAreas: new Set(['Falador']), strandedChunks: new Set() };
+    expect(doableCATasks(tasks, falador, 'vanilla', stranded)).toEqual([]);
+    expect(doableCATasks(tasks, falador, 'vanilla', null)).toEqual(tasks);
+    expect(computeJournalSummary(owned, 'vanilla', null, false).stats.ca.doable).toBe(0);
+    expect(computeJournalSummary(falador, 'vanilla', stranded, false).stats.ca.doable).toBe(0);
+    expect(computeJournalSummary(falador, 'vanilla', null, false).stats.ca.doable).toBe(tasks.length);
   });
 });
 
