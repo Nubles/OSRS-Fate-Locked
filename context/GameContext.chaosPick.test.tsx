@@ -41,11 +41,12 @@ const chaosDraws = async (mode: string, rngVersion: 1 | 2 | 3 | undefined, count
   return drawn;
 };
 
-// These draws were recorded on the tracker before Chaos Keys picked a table
-// first. A seeded run saved then must keep drawing exactly the same fate.
+// These draws come from the old one-draw pick on today's Vanilla pool, which
+// holds bosses and minigames you can't reach yet. A seeded run saved before
+// Chaos Keys picked a table first must keep drawing that way.
 // (Chunked pools also depend on map data the provider loads in the background,
 // so context/chaosReplay.test.ts pins Chunked with that data loaded.)
-const OLD_VANILLA_FIRST = 'Storage: Log Basket';
+const OLD_VANILLA_FIRST = 'Bosses: Hespori';
 
 it.each([2, 1, undefined] as const)('spends a Chaos Key on an old seeded Vanilla save (rngVersion %s) exactly as before', async version => {
   // Later draws also depend on what the app logs between spends, so the
