@@ -25,6 +25,7 @@ import {
 } from './saveSchema';
 import { LEGACY_FATE_COMPENSATION_ID } from './fateCompensation';
 import { notEligiblePetCompensation } from './petCompensation';
+import { legacyRunSalt } from './seededRng';
 
 const baseUnlocks = (): UnlockState => ({
   equipment: { Head: 0, Body: 0 },
@@ -167,6 +168,8 @@ const fullStateFixture = (): GameState => ({
   },
   gameModeLocked: true,
   rngSeed: 'FATE-2026-W30',
+  rngSalt: 'fixture-salt',
+  restoreCount: 2,
   loadout: { Head: 4151 },
   rival: {
     mode: 'friend',
@@ -1336,5 +1339,41 @@ describe('the kept Cartographer offer', () => {
     for (const bad of ['49,50', ['49,50', '49,50'], ['a,b'], ['1,1', '1,2', '1,3', '1,4'], [7]]) {
       expectRejected(candidate({ cartographerOffer: bad }), 'invalid_field', 'cartographerOffer');
     }
+  });
+});
+
+describe('hidden run salt and restore count (critique GP-4)', () => {
+  const withoutSalt = (over: Record<string, unknown> = {}) => {
+    const state = candidate(over) as Record<string, unknown>;
+    delete state.rngSeed;
+    delete state.rngSalt;
+    delete state.restoreCount;
+    return state;
+  };
+
+  it('gives an old unseeded save the same salt from its first entry on every load and device', () => {
+    const old = withoutSalt();
+    const first = expectAccepted(validateAndMigrateSave(clone(old), defaultsFixture()));
+    const second = expectAccepted(validateAndMigrateSave(clone(old), { ...defaultsFixture(), rngSalt: 'another-fresh-salt' }));
+    expect(first.state.rngSalt).toBe(legacyRunSalt(first.state.history));
+    expect(second.state.rngSalt).toBe(first.state.rngSalt);
+    expect(first.state.restoreCount).toBeUndefined();
+    // Loading it again (the save as written back) keeps that salt.
+    expect(expectAccepted(validateAndMigrateSave(clone(first.state), defaultsFixture())).state.rngSalt).toBe(first.state.rngSalt);
+  });
+
+  it('gives an old save with no history the fresh state\'s salt, and keeps a stored salt', () => {
+    expect(expectAccepted(validateAndMigrateSave(withoutSalt({ history: [] }), { ...defaultsFixture(), rngSalt: 'fresh' })).state.rngSalt).toBe('fresh');
+    expect(expectAccepted(validateAndMigrateSave(candidate({ rngSalt: 'kept' }), defaultsFixture())).state.rngSalt).toBe('kept');
+  });
+
+  it('checks the salt and the count', () => {
+    expectRejected(candidate({ rngSalt: '' }), 'invalid_field', 'rngSalt');
+    expectRejected(candidate({ rngSalt: 7 }), 'invalid_field', 'rngSalt');
+    expectRejected(candidate({ rngSalt: 's'.repeat(MAX_IDENTIFIER_CHARS + 1) }), 'invalid_field', 'rngSalt');
+    expectRejected(candidate({ restoreCount: -1 }), 'invalid_number', 'restoreCount');
+    expectRejected(candidate({ restoreCount: 1.5 }), 'invalid_number', 'restoreCount');
+    expect(expectAccepted(validateAndMigrateSave(candidate({ restoreCount: 0 }), defaultsFixture())).state.restoreCount).toBeUndefined();
+    expect(expectAccepted(validateAndMigrateSave(candidate({ restoreCount: 3 }), defaultsFixture())).state.restoreCount).toBe(3);
   });
 });

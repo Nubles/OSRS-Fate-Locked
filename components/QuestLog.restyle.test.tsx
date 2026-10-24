@@ -13,6 +13,12 @@ import { evaluateQuestEligibility } from '../utils/journalStatus';
 import { QuestCard } from './QuestLog';
 import { QuestCompleteOverlay } from './QuestCompleteOverlay';
 
+// The celebration reads the quest's roll from the game; no roll has landed here.
+vi.mock('../context/GameContext', async importOriginal => ({
+  ...(await importOriginal<typeof import('../context/GameContext')>()),
+  useGame: () => ({ lastEvent: null }),
+}));
+
 // Completing a quest on a long run froze the classic Journal for 2-3 s at 4x
 // CPU. Nearly all of it was the browser restyling the page, not our code:
 // - the finished quest's card moves in the list, and the sibling rules every

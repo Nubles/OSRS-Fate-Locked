@@ -101,7 +101,7 @@ export const GUIDES: Record<string, Guide> = {
     blurb: 'Spend a Key on a table to unlock a random entry from it.',
     bullets: [
       'Pick a table and spend a Key: it unlocks a random locked entry from that table.',
-      'Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys unlock at random from every table at once.',
+      'Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys let fate pick a table, then an entry in it.',
       'Spend Fate Points on rituals at the Void Altar.',
       `Chunked: each chunk you unlock pays up to ${CHUNK_EXPLORE_ROLLS} Key rolls for new things you first do there.`,
       `Chunked: a skill at its tier cap (tier × 10) gets one ${BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier. Levels past the cap roll nothing.`,

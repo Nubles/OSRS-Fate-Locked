@@ -32,8 +32,8 @@ code.
 ## When it backs up
 
 `components/OnlineBackupDriver.tsx` uploads when the run changes: 30 seconds
-after a burst of changes settles, at most every 15 minutes, and earlier when
-the page is hidden with a change waiting, at most every 5 minutes. **Back up
+after a burst of changes settles, at most every 30 minutes, and earlier when
+the page is hidden with a change waiting, at most every 15 minutes. **Back up
 now** and turning backup on upload at once. An unchanged run is not sent again. Only the tab that owns the
 save uploads. A failed upload is tried again after 5 minutes, and the Online
 tab says why it failed until one works.
@@ -96,6 +96,24 @@ once whether to turn backup on. **Set up** opens the Online tab; **Not now**
 answers it for good. While the prompt is unanswered, and while online backup
 has a copy from the last week, the "export a .fate backup" reminder waits.
 
+On Safari, and in any browser on iPhone or iPad, a site's storage can be
+deleted after 7 days of browser use without a visit. There the same prompt
+comes at 3 History entries, saying why, while the browser hasn't granted
+persistent storage, the tracker isn't opened from the home screen, and the run
+has no .fate file or online backup yet (`utils/persistentStorage.ts`).
+
+## Persistent storage and the last copy outside the browser
+
+`components/PersistentStorageDriver.tsx` calls `navigator.storage.persist()`
+once per profile, quietly, at the run's first History entry. Chrome, Edge and
+Safari answer without a prompt; Firefox shows one, so it isn't asked there (the
+reminder's **Keep site storage** button still is). The request is remembered as
+`persistRequestedAt` in the profile's `__exportNag` record.
+
+The Settings menu and the export reminder show "Last backup outside this
+browser": the later of the last .fate file and the last online backup upload
+(not counting an upload paused because it holds a different run).
+
 ## Relay API
 
 | Method | Path | Request | Response |
@@ -126,10 +144,9 @@ copies at once.
 ## Capacity
 
 The relay runs on Cloudflare's free plan. KV allows 1,000 writes a day for
-everyone. A player uploads at most every 15 minutes, or every 5 minutes while
+everyone. A player uploads at most every 30 minutes, or every 15 minutes while
 switching between the game and the tracker, so a two-hour session costs at
-most 24 writes, and the plan covers a small community (the project expects 1
-to 20 players). An upload from a different browser than the last one, and the
+most 8 writes. An upload from a different browser than the last one, and the
 first upload each day, costs one more write, to keep the copy it replaces.
 Storage is far below the 1 GB limit: a copy of a run with a 330 KB save is
 about 220 KB. A copy is capped at the longest sync code (2 MiB) encrypted,
@@ -137,6 +154,7 @@ about 2.67 MiB, so any run small enough for a sync code fits: even a 1.3 MB
 save whose browser can't compress makes a 1.73 MB sync code and a 2.31 MB
 copy.
 
-This estimate counts backups only. The same 1,000 writes a day also pay for
-every RuneLite profile publish (up to about one a minute while playing) and
-every shared-progress publish, so they, not backups, use most of it.
+This counts backups only. The same 1,000 writes a day also pay for RuneLite
+profile publishes and shared-progress publishes; "Daily KV quota" in
+[online-relay.md](online-relay.md#daily-kv-quota) adds them all up and
+describes the alert near the limit.

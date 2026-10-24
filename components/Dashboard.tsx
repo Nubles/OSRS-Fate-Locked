@@ -25,7 +25,7 @@ import { SkillRollOdds } from './SkillRollOdds';
 import { SkillInfoButton } from './SkillInfoButton';
 import { useSkillOddsHover } from '../utils/skillOddsPref';
 import { levelPastTierCap, tierCap } from '../utils/chunkedFate';
-import { achievementBoostFor } from '../utils/achievementBoosts';
+import { levelUpKeyChance } from '../utils/keyChance';
 // RegionMap is the single heaviest component in the app (map surface,
 // authoring tool, chunk overlays + their data). It only renders on the World
 // tab, so keep it out of the initial bundle.
@@ -51,6 +51,7 @@ const SkillDetailModal = lazyWithRetry(() => import('./SkillDetailModal').then(m
 import { PanelErrorBoundary } from './PanelErrorBoundary';
 import { ModalFallback, PaneFallback } from './LoadingFallback';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
@@ -381,11 +382,11 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) => {
+  const game = useGame();
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
     history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
-  } = useGame();
-  const levelBoost = achievementBoostFor('Level Up', achievementsClaimed);
+  } = game;
   const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
@@ -464,6 +465,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
   useEscapeKey(() => setShowRunCard(false), showRunCard && !suspendModals);
   useEscapeKey(() => setSelectedSkillForDetails(null), selectedSkillForDetails !== null && !suspendModals);
+  // The Omni-Key confirmation is a modal: Escape cancels, focus stays inside.
+  const confirmOmniRef = useRef<HTMLDivElement>(null);
+  useEscapeKey(() => setConfirmOmni(null), confirmOmni !== null && !suspendModals);
+  useFocusTrap(confirmOmniRef, confirmOmni !== null && !isOsrs && !suspendModals);
 
   // The Journal summary card lives in the persistent left sidebar (App.tsx), so
   // it can't set this component's tab state directly. It dispatches a
@@ -639,6 +644,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
                     const tierColorText = isUnlocked ? 'text-gray-200' : 'text-gray-500';
                     const pastCap = levelPastTierCap(gameModeId, unlocks, skill, level + 1) ? tierCap(tier) : undefined;
+                    const levelChance = levelUpKeyChance(game, skill);
                     const showInfo = canLevel && !skillOddsHover;
 
                     if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
@@ -664,8 +670,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                 ${levelingSkill === skill ? 'animate-pulse bg-green-900/40' : ''}
                                 ${!isMainActionable ? 'opacity-90' : ''}
                            `}
-                           role="button"
-                           tabIndex={isMainActionable ? 0 : -1}
+                           role={isMainActionable ? 'button' : 'group'}
+                           tabIndex={isMainActionable ? 0 : undefined}
+                           aria-label={`${skill}, ${isUnlocked ? `level ${level}, tier ${tier}, methods ${methodRange}` : 'locked'}${canUnlockStart ? ', unlock with an Omni-Key' : canLevel ? ', level up' : ''}`}
                            aria-describedby={canLevel ? oddsDescriptionId : undefined}
                         >
                             {/* Note Trigger */}
@@ -685,8 +692,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                         bg-purple-900/20 text-purple-400 border-purple-500/30 hover:bg-purple-600 hover:text-white hover:border-purple-400
                                     `}
                                     title={`Unlock Tier ${tier + 1} (1 Omni-Key)`}
+                                    aria-label={`Unlock Tier ${tier + 1} of ${skill} (1 Omni-Key)`}
                                 >
-                                    <ChevronsUp size={12} strokeWidth={3} />
+                                    <ChevronsUp size={12} strokeWidth={3} aria-hidden="true" />
                                 </button>
                             )}
 
@@ -699,8 +707,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                     }}
                                     className="shrink-0 transition-transform hover:scale-110 z-20 cursor-pointer p-0.5 rounded hover:bg-white/5"
                                     title="View Skill Details"
+                                    aria-label={`${skill} details`}
                                 >
-                                    <img src={getSkillIcon(skill)} className={`w-5 h-5 ${isUnlocked ? '' : 'grayscale opacity-40'}`} />
+                                    <img src={getSkillIcon(skill)} alt="" className={`w-5 h-5 ${isUnlocked ? '' : 'grayscale opacity-40'}`} />
                                 </button>
                                 
                                 <div className="min-w-0 flex-1 pointer-events-none">
@@ -708,7 +717,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                     <div className="text-[9px] text-gray-400 font-mono leading-none mt-0.5">
                                         {isUnlocked ? `Lvl ${level}/99` : 'Locked'}
                                     </div>
-                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} boost={levelBoost}
+                                    <SkillRollOdds currentLevel={level} isUnlocked={isUnlocked} descriptionId={oddsDescriptionId} chance={levelChance}
                                         pastCap={pastCap} hoverBox={skillOddsHover} />
                                     <div className="text-[8px] text-gray-500 mt-0.5 leading-none">
                                         Methods: <span className="text-gray-400">{methodRange}</span>
@@ -733,7 +742,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                             {/* Roll odds, opened from the corner so the card stays in view while levelling */}
                             {showInfo && (
                                 <span className="absolute right-1.5 bottom-1 z-20 flex">
-                                    <SkillInfoButton skill={skill} level={level} tier={tier} boost={levelBoost} pastCap={pastCap} variant="classic" />
+                                    <SkillInfoButton skill={skill} level={level} tier={tier} chance={levelChance} pastCap={pastCap} variant="classic" />
                                 </span>
                             )}
                             
@@ -1162,13 +1171,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       )}
       {!suspendModals && confirmOmni && !isOsrs && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="bg-[#1a1a1a] border border-purple-500/50 rounded-xl shadow-2xl p-6 max-w-sm w-full relative">
+              <div ref={confirmOmniRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="confirm-omni-title" className="bg-[#1a1a1a] border border-purple-500/50 rounded-xl shadow-2xl p-6 max-w-sm w-full relative">
                   <div className="flex items-center gap-3 mb-4">
                       <div className="p-3 bg-purple-900/20 rounded-full border border-purple-500/30 text-purple-400">
                           <Sparkles size={24} />
                       </div>
                       <div>
-                          <h3 className="text-lg font-bold text-white leading-none">Confirm Unlock</h3>
+                          <h3 id="confirm-omni-title" className="text-lg font-bold text-white leading-none">Confirm Unlock</h3>
                           <p className="text-xs text-purple-400 mt-1 font-mono uppercase tracking-wider">Omni-Key Required</p>
                       </div>
                   </div>
@@ -1340,19 +1349,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       <div className="flex flex-col border-b border-white/5 bg-[#161616] shrink-0">
           {/* The tabs have the whole row and wrap when it is too narrow, so no
               tab hides off the edge; the filter has its own row below. */}
-          <div data-tour="dashtabs" className="flex flex-wrap">
+          <div data-tour="dashtabs" role="tablist" className="flex flex-wrap">
               {visibleTabs.map(tab => {
                   const isActive = activeTab === tab.id;
                   return (
                       <button
                         key={tab.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
                         onClick={() => setActiveTab(tab.id)}
                         className={`
                             flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap
                             ${isActive ? `${tab.color} ${tab.border} bg-white/5` : 'text-gray-500 border-transparent hover:text-gray-300 hover:text-gray-300 hover:bg-white/5'}
                         `}
                       >
-                          <WikiIcon file={tab.img} alt={tab.label} Fallback={tab.icon} size={15} className={isActive ? '' : 'opacity-70 grayscale'} /> {tab.label}
+                          <WikiIcon file={tab.img} alt="" Fallback={tab.icon} size={15} className={isActive ? '' : 'opacity-70 grayscale'} /> {tab.label}
                       </button>
                   )
               })}

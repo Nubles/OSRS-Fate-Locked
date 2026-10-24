@@ -7,16 +7,22 @@ import {
 } from '../utils/progressShareRecord';
 
 /** Coalesce changes: publish once they pause this long. */
-const SETTLE_MS = 30_000;
-/** Never publish more often than the relay accepts. */
-const MIN_GAP_MS = 60_000;
+export const PROGRESS_SETTLE_MS = 60_000;
+/**
+ * Publishes are at least this far apart (the relay accepts one a minute).
+ * Each is one of the relay's 1,000 KV writes a day for every player, and the
+ * Discord feed posts a publish's new unlocks together, so a run of unlocks
+ * goes out as one.
+ */
+export const PROGRESS_MIN_GAP_MS = 3 * 60_000;
 
 /**
  * Publishes the run's progress for the Fate Locked Discord bot while sharing
  * is on (utils/progressShare.ts). Renders nothing and must stay ALWAYS-MOUNTED
  * (RollInboxDriver rule): progress changes from any tab. Each publish is a KV
- * write, so changes settle for 30 seconds, publishes are a minute apart, and
- * an unchanged snapshot is never sent twice. The snapshot builder pulls in the
+ * write, so changes settle for a minute, publishes are 3 minutes apart, and
+ * an unchanged snapshot is never sent twice (after a reload the relay itself
+ * skips the write). The snapshot builder pulls in the
  * quest and diary tables, so it and the relay requests load only once sharing is on.
  */
 export const ProgressShareDriver: React.FC = () => {
@@ -58,8 +64,8 @@ export const ProgressShareDriver: React.FC = () => {
 
     // The first publish after turning sharing on (or loading) goes out quickly,
     // so a link code can be requested; later ones wait for changes to settle.
-    const settle = lastSent.current?.id === record.id ? SETTLE_MS : 2_000;
-    const wait = Math.max(settle, lastAt.current + MIN_GAP_MS - Date.now());
+    const settle = lastSent.current?.id === record.id ? PROGRESS_SETTLE_MS : 2_000;
+    const wait = Math.max(settle, lastAt.current + PROGRESS_MIN_GAP_MS - Date.now());
     timer = window.setTimeout(send, wait);
     return () => {
       cancelled = true;

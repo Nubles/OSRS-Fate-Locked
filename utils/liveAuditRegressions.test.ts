@@ -78,7 +78,7 @@ describe('live audit requirement regressions', () => {
   });
 });
 
-it('uses actual random eligibility for every mode and suppresses inaccessible goal odds', () => {
+it('uses actual random eligibility for every mode and gives goal odds for places not yet reachable', () => {
   const u = fresh().unlocks;
   for (const mode of ['vanilla', 'xtreme', 'chunked']) {
     for (const table of randomUnlockTables(mode)) {
@@ -88,8 +88,7 @@ it('uses actual random eligibility for every mode and suppresses inaccessible go
   expect(randomUnlockTables('chunked')).toContain(TableType.CHUNKS);
   expect(randomUnlockTables('chunked')).not.toContain(TableType.REGIONS);
   expect(randomUnlockTables('vanilla')).toContain(TableType.BANKS);
-  expect(suggestTables([{ table: TableType.BOSSES, id: 'The Gauntlet' }], u, 'vanilla')).toEqual([]);
-  u.regions = ['Prifddinas'];
+  // A Key can land on the Gauntlet before Prifddinas is open, so the goal has odds already.
   expect(suggestTables([{ table: TableType.BOSSES, id: 'The Gauntlet' }], u, 'vanilla')[0].odds).toBeGreaterThan(0);
 });
 

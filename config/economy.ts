@@ -271,7 +271,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
       { tier: 'Nieve / Steve',      source: DropSource.SLAYER_NIEVE,      rate: DROP_RATES[DropSource.SLAYER_NIEVE] },
       { tier: 'Krystilia',          source: DropSource.SLAYER_KRYSTILIA,  rate: DROP_RATES[DropSource.SLAYER_KRYSTILIA] },
       { tier: 'Duradel / Kuradal',  source: DropSource.SLAYER_DURADEL,    rate: DROP_RATES[DropSource.SLAYER_DURADEL] },
-      { tier: 'Boss Task',          source: DropSource.SLAYER_BOSS,       rate: DROP_RATES[DropSource.SLAYER_BOSS], bonus: 'The best Slayer rate.' },
+      { tier: 'Boss Task',          source: DropSource.SLAYER_BOSS,       rate: DROP_RATES[DropSource.SLAYER_BOSS], bonus: 'Needs Like a Boss. In Vanilla and Chunked it rolls from the boss’s Key stash, as a kill does.' },
     ],
   },
   {
@@ -370,6 +370,13 @@ export interface KeyTypeInfo {
 }
 
 /** Where land comes from in Chunked, since an Omni-Key can't pick it (the UNLOCK reducer refuses). */
+/** How a Chaos Key picks (utils/gameEngine.ts pickChaosEntry). */
+export const CHAOS_PICK_TEXT = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
+export const CHAOS_REACH_TEXT = "Places you can't reach yet can come up too.";
+export const CHUNKED_CHAOS_TEXT = 'In Chunked, only banks and guilds inside your chunks can come up.';
+/** A seeded run from before the table-first rule keeps its old draw (utils/seededRng.ts chaosPicksTableFirst). */
+export const OLD_SEEDED_CHAOS_TEXT = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
+
 export const CHUNKED_OMNI_LAND_TEXT = "In Chunked an Omni-Key can't pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate's Mercy.";
 
 export const KEY_TYPES: KeyTypeInfo[] = [
@@ -411,7 +418,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: 'Unlocks one random entry from all the tables at once. Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.',
+    spend: `${CHAOS_PICK_TEXT} Outside Chunked, places you can't reach yet can come up too. ${CHUNKED_CHAOS_TEXT}`,
   },
 ];
 
@@ -493,7 +500,7 @@ export const RITUALS: Ritual[] = [
     effect: 'Fate draws up to 3 frontier chunks and keeps them until you chart one; choose which of them unlocks. The only way to choose land in Chunked.' },
   { id: 'TRANSMUTE',    name: 'Ritual of Transmutation', tagline: 'Trade Keys for an Omni-Key.', keyCost: 5, effect: 'Trade 5 Keys for 1 Omni-Key.' },
   { id: 'WARD',         name: "Saradomin's Ward",        tagline: 'Only land on what you can use.', fateCost: 30, god: 'Saradomin',
-    effect: 'Your next Key can only land on something you can use right now. Fate still picks, just from places you can reach. You can cast it again 25 rolls later.' },
+    effect: 'Your next Key on bosses, minigames, guilds or banks can only land on something you can use right now. Fate still picks, just from places you can reach. Outside Chunked, a Chaos Key stays random. You can cast it again 25 rolls later.' },
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',

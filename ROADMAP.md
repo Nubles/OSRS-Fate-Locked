@@ -345,9 +345,12 @@ Follow-ups:
   `GET /r/:code` and optional ETag caching. The plugin does not write to the
   relay, and the browser receives no import receipt. Disconnect marks the
   code gone, which the plugin's `GET` then reports (`404 {"gone":true}`).
-  A profile lasts 30 days after the last publish. A failed publish is
-  retried after 15 s, 1 min, then every 5 min, and `RelayPublishBanner`
-  says so. Full contract in `docs/online-relay.md`. Deployed at
+  A profile lasts 30 days after the last publish. Publishes wait for 15 s
+  of quiet (at most 2 min; at once when the tab is hidden) and skip a
+  profile the relay already holds (`utils/relayPublishFingerprint.ts`:
+  same fingerprint without export time and revision, under a day old). A
+  failed publish is retried after 15 s, 1 min, then every 5 min, and
+  `RelayPublishBanner` says so. Full contract in `docs/online-relay.md`. Deployed at
   `fate-relay.fatelocked.workers.dev`; redeploy with
   `npx wrangler@latest deploy` from `workers/fate-relay/` (KV id and rate
   limit bindings are committed in wrangler.toml; steps for the latest
@@ -359,7 +362,9 @@ Follow-ups:
   Writes are limited per IP (30 a minute; record-creating writes 4 a
   minute; error reports 10 a minute) by Workers Rate Limiting bindings. The
   limits slow abuse but don't protect the free plan's 1,000 KV writes a day;
-  only Workers Paid does. See "Abuse limits" in `docs/online-relay.md`.
+  only Workers Paid does. See "Abuse limits" in `docs/online-relay.md`;
+  "Daily KV quota" there lists every write and the hourly alert
+  (`.github/workflows/relay-kv-usage.yml`, needs `CLOUDFLARE_ANALYTICS_TOKEN`).
 - **Legacy relay resources removed:** `/r/:code/state`, `/events`, `/acks`
   and `/suggest` answer 404. No app, plugin `main` or Plugin Hub build
   (`0ae842d`) requested them.
@@ -510,7 +515,7 @@ step to 256 kB by 18 October 2026, and lowered to 219 kB on 19 October
 2026, when the Advisor panels, the Activities sub-panels, the RuneLite
 bundle builder and the content service behind the journal routes moved
 behind lazy loads and the entry fell from 254.8 to 216.1 kB; raised to 220 kB on 23 October 2026 for the skill cards' info button and its
-Settings choice, at 219.3 kB, with the odds box itself loading on first use). The 225 kB split came from the build
+Settings choice, at 219.3 kB, with the odds box itself loading on first use; raised to 226 kB on 24 October 2026 for the combined update's Key, roll, save and Slayer changes, at 225.1 kB). The 225 kB split came from the build
 id stamped into the entry: CI built with a 13-digit timestamp and the deploy
 with the 40-character commit SHA. CI now stamps the SHA too (on a pull
 request, its merge commit's), and a build without `BUILD_ID` stamps a random

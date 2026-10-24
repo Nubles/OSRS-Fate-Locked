@@ -25,8 +25,8 @@ const engineOmniChance = (source: DropSource): number => {
 
 type CodexTab = 'core' | 'economy' | 'modes' | 'drops' | 'unlocks' | 'altar';
 
-const renderCodex = (tab: CodexTab, gameModeId = 'vanilla') => {
-  const save = JSON.stringify({ gameModeId });
+const renderCodex = (tab: CodexTab, gameModeId = 'vanilla', seeded: { rngSeed?: string; rngVersion?: 1 | 2 | 3 } = {}) => {
+  const save = JSON.stringify({ gameModeId, ...seeded });
   vi.stubGlobal('localStorage', {
     getItem: () => save,
     setItem: () => undefined,
@@ -128,7 +128,7 @@ describe('ReferenceModal Smart Play', () => {
     expect(economy).toContain('Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: 8 on Clarity before a big roll, or 25 on a Chaos Key.');
     expect(economy).toContain('Any successful roll resets them to 0, so spend them at the Void Altar before that.');
     expect(economy).not.toMatch(/banks Fate|save toward a Chaos Key|fuel for the Void Altar/);
-    expect(economy).toContain(`Konar ${DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel ${DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks ${DROP_RATES[DropSource.SLAYER_BOSS]}%`);
+    expect(economy).toContain(`Konar ${DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel ${DROP_RATES[DropSource.SLAYER_DURADEL]}%; a boss task rolls from its boss’s Key stash)`);
     expect(economy).toContain(`a guaranteed Key and a ${engineOmniChance(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll.`);
     expect(economy).toContain(`Raids give ${engineOmniChance(DropSource.RAID)}%, Elite diaries ${engineOmniChance(DropSource.DIARY_ELITE)}% and high-tier bosses ${engineOmniChance(DropSource.BOSS_HIGH)}%.`);
   });
@@ -203,14 +203,24 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(drops).toContain('High: 50% → 25% (2 Keys)');
     expect(drops).toContain('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(drops).toContain('25% → 15% → 10%');
-    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold.');
-    expect(unlocks).toContain('If none can be reached, nothing is unlocked. You keep the Key.');
-    expect(unlocks).toContain('An Omni-Key can still pick one you can');
+    expect(unlocks).toContain('In Vanilla, Keys and Chaos Keys roll anything left in their table, even bosses and minigames you can&#x27;t reach yet, and only Saradomin&#x27;s Ward keeps a Key to what you can use. In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold.');
+    expect(unlocks).toContain('If there is nothing to unlock, nothing happens. You keep the Key.');
+    expect(unlocks).toContain('An Omni-Key can pick one even if you can&#x27;t reach it, with a warning.');
     expect(unlocks).toContain('In Vanilla the areas you roll don&#x27;t have to touch each other.');
     expect(unlocks).toContain('Only Chunked makes you grow out from land you hold.');
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
-    expect(unlocks).toContain('Every eligible entry is equally likely, so big tables such as Areas and Banks come up most.');
-    expect(renderCodex('unlocks', 'chunked')).toContain('so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
+    const tableFirst = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
+    expect(unlocks).toContain(`${tableFirst} Places you can&#x27;t reach yet can come up too. Guaranteed at skill levels`);
+    expect(unlocks).not.toContain('In Chunked, only banks and guilds');
+    expect(renderCodex('unlocks', 'chunked')).toContain(`${tableFirst} In Chunked, only banks and guilds inside your chunks can come up. Guaranteed`);
+    expect(unlocks).not.toContain('keeps its old odds');
+  });
+
+  it('tells a seeded run from before the table-first rule that it keeps its old Chaos odds', () => {
+    const oldOdds = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
+    expect(renderCodex('unlocks', 'vanilla', { rngSeed: 'OLD', rngVersion: 2 })).toContain(oldOdds);
+    expect(renderCodex('unlocks', 'vanilla', { rngSeed: 'OLD' })).toContain(oldOdds);
+    expect(renderCodex('unlocks', 'vanilla', { rngSeed: 'NEW', rngVersion: 3 })).not.toContain(oldOdds);
   });
 
   it('labels the reserve rules as active in Chunked and inactive elsewhere', () => {

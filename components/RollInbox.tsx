@@ -8,6 +8,7 @@ import {
   X,
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { keyChance } from '../utils/keyChance';
 import { RUNELITE_TERMS } from '../data/runeliteTerms';
 import { DetectorPlaytestExport } from './DetectorPlaytestExport';
 import type { EventAcknowledgement } from '../services/fateEventProtocol';
@@ -359,7 +360,8 @@ export function RollInboxView({
                     <span className="text-[11px] text-gray-500">
                       {classification.state === 'READY' && (classification.progress.kind === 'PET'
                         ? 'An Omni-Key, once per pet'
-                        : `${classification.intent.threshold}% chance`)}
+                        // The chance the roll is made against, the run's boosts included.
+                        : `${keyChance(game.state, classification.intent.source, classification.intent.threshold, classification.intent.context) ?? 0}% chance`)}
                     </span>
                     <button
                       type="button"

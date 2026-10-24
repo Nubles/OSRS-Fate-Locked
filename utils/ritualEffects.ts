@@ -11,7 +11,7 @@ import {
 import { TableType, type LogEntry, type UnlockState } from '../types';
 
 export interface RitualState {
-  /** Saradomin's Ward waits for the next random Key or Chaos Key spend. */
+  /** Saradomin's Ward waits for the next random Key spend on a place (a Chaos Key too, in Chunked). */
   ward?: boolean;
   /** Rolls left before Saradomin's Ward can be cast again. */
   wardCooldown?: number;
@@ -234,16 +234,20 @@ export const castBarrows = (r: RitualState | undefined, brother: BarrowsBrother[
 
 /**
  * Tables whose entries sit in one place on the map. The Ward waits for a Key
- * spent on one of them, or a Chaos Key. Shops are left out: a shop type is
- * sold in many towns, and the tracker has no full list of where.
+ * spent on one of them (or, in Chunked, a Chaos Key). Shops are left out: a
+ * shop type is sold in many towns, and the tracker has no full list of where.
  */
 export const WARD_TABLES: ReadonlySet<TableType> = new Set([
   TableType.BOSSES, TableType.MINIGAMES, TableType.GUILDS, TableType.BANKS,
 ]);
 
-/** Whether a random spend uses up a waiting Ward: a Chaos Key, or a Key on a table with places. */
-export const wardApplies = (costType: 'key' | 'chaosKey', table: TableType | undefined): boolean =>
-  costType === 'chaosKey' || (table !== undefined && WARD_TABLES.has(table));
+/**
+ * Whether a random spend uses up a waiting Ward: a Key on a table with places.
+ * A Chaos Key is always random and leaves the Ward waiting, except in Chunked,
+ * which keeps its own rules (October 2026).
+ */
+export const wardApplies = (costType: 'key' | 'chaosKey', table: TableType | undefined, modeId?: string): boolean =>
+  costType === 'chaosKey' ? modeId === 'chunked' : table !== undefined && WARD_TABLES.has(table);
 
 
 // --- Sacrifice -------------------------------------------------------------------

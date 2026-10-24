@@ -40,6 +40,14 @@ import {
   useGame,
 } from './GameContext';
 import { SaveRecoveryGuard } from '../components/SaveRecoveryGuard';
+import { runDrawFloat } from '../utils/seededRng';
+
+// Every run draws from its seed or hidden salt (runDrawFloat), never
+// Math.random, so a test that needs a given draw sets it here.
+vi.mock('../utils/seededRng', async importOriginal => {
+  const actual = await importOriginal<typeof import('../utils/seededRng')>();
+  return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
 
 
 type Game = ReturnType<typeof useGame>;
@@ -192,6 +200,7 @@ afterEach(() => {
   cleanup();
   resetPendingSavesForTest();
   vi.useRealTimers();
+  vi.mocked(runDrawFloat).mockReset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -2134,7 +2143,7 @@ describe('level-up feedback integration', () => {
       },
     };
     localStorage.setItem(storageKey, serializeCurrent(seeded));
-    const random = vi.spyOn(Math, 'random')
+    const random = vi.mocked(runDrawFloat)
       .mockReturnValueOnce(0.01)
       .mockReturnValue(0.99);
     let current: Game | undefined;
@@ -2164,7 +2173,7 @@ describe('level-up feedback integration', () => {
       },
     };
     localStorage.setItem(storageKey, serializeCurrent(seeded));
-    const random = vi.spyOn(Math, 'random').mockReturnValue(0.01);
+    const random = vi.mocked(runDrawFloat).mockReturnValue(0.01);
     let current: Game | undefined;
 
     render(
@@ -2273,6 +2282,9 @@ describe('quest completion integration', () => {
         drawResolution: 1000,
         standardKeysAwarded: 0,
         rewardKind: 'none',
+        fateBefore: before.state.fatePoints,
+        fateAfter: before.state.fatePoints + failureFate,
+        pityThreshold: 50,
       },
     });
   };
@@ -2293,7 +2305,7 @@ describe('quest completion integration', () => {
 
   it("leaves the complete run unchanged when Witch's Potion is machine-blocked", () => {
     const current = renderStoredGame('blocked-witch-completion', {
-      unlocks: { regions: ['Falador'] },
+      unlocks: { regions: ['Falador'], merchants: ['Magic Shops'] },
     });
     const before = providerSnapshot(current());
     let result: ReturnType<Game['completeQuest']> | undefined;
@@ -2335,9 +2347,9 @@ describe('quest completion integration', () => {
   });
 
   it('completes a valid quest with exactly one roll and makes its repeat a full-state no-op', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    vi.mocked(runDrawFloat).mockReturnValue(0.999);
     const current = renderStoredGame('valid-quest-completion', {
-      unlocks: { regions: ['Asgarnia', 'Rimmington'] },
+      unlocks: { regions: ['Asgarnia', 'Rimmington'], merchants: ['Magic Shops'] },
     });
     const before = providerSnapshot(current());
     let first: ReturnType<Game['completeQuest']> | undefined;
@@ -2363,7 +2375,7 @@ describe('quest completion integration', () => {
   });
 
   it('completes a valid miniquest with exactly one roll and makes its repeat a full-state no-op', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.999);
+    vi.mocked(runDrawFloat).mockReturnValue(0.999);
     const current = renderStoredGame('valid-miniquest-completion', {
       unlocks: { regions: ['Hosidius', 'Arceuus'] },
     });

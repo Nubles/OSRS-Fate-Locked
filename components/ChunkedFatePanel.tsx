@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import { Sparkles } from './OsrsIcon';
 import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_FORTUNATE_ODDS } from '../config/economy';
 import { DROP_RATES } from '../constants';
+import { keyChance } from '../utils/keyChance';
 import { DropSource } from '../types';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
 import { mercyShutReason } from '../utils/chunkedMercyText';
@@ -65,7 +66,8 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const fulfilled = fateLand?.fulfilled ?? 0;
   const gilded = fateLand?.gilded ?? [];
   const cursed = rituals?.cursedRollsLeft ?? 0;
-  const gildedChance = DROP_RATES[DropSource.FATE_MARK];
+  // The chances the rolls are made against, a curse or the run's boosts included.
+  const gildedChance = keyChance(game, DropSource.FATE_MARK, DROP_RATES[DropSource.FATE_MARK]) ?? 0;
   const threadText = thread
     ? `Fate has tied a thread to ${chunkPlaceLabel(thread)}. One Chunks draw in six goes to the frontier chunks nearest it. Gain it and fate grants you a free ritual.${fulfilled > 0 ? ` Threads fulfilled: ${fulfilled}.` : ''}`
     : null;
@@ -82,7 +84,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
 
   if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0 && !threadText && gilded.length === 0 && !omensShown) return null;
   const chance = Math.round(BREAKTHROUGH_CHANCE * 100);
-  const exploreChance = DROP_RATES[DropSource.CHUNK_EXPLORE];
+  const exploreChance = keyChance(game, DropSource.CHUNK_EXPLORE, DROP_RATES[DropSource.CHUNK_EXPLORE]) ?? 0;
   const mercyText = needsQuestCheck && !ready
     ? 'Checking your chunks for quests you can still do…'
     : shutReason

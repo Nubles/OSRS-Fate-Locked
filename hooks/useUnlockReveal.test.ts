@@ -55,7 +55,8 @@ describe('getUnlockRevealTransition', () => {
   });
 
   it('still announces automatically eligible quest and diary transitions', () => {
-    const questPrevious = unlocks();
+    // Witch's Potion also needs an eye of newt from a Magic Shops merchant.
+    const questPrevious = unlocks({ merchants: ['Magic Shops'] });
     const falador = { ...questPrevious, regions: ['Falador'] };
     expect(getUnlockRevealTransition(questPrevious, falador)?.newQuestsAvailable)
       .not.toContainEqual({ id: "Witch's Potion", name: "Witch's Potion" });

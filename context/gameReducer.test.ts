@@ -8,7 +8,8 @@ import {
   prepareCATaskCompletionActions,
 } from './GameContext';
 import { drawDice } from '../utils/seededRng';
-import { TableType, LogEntry, type FailureFateAward } from '../types';
+import { DropSource, TableType, LogEntry, type FailureFateAward } from '../types';
+import { DROP_RATES } from '../config/rules';
 import { isRollEntry } from '../utils/logEntry';
 import { XTREME_MILESTONE_INTERVAL, LEVEL_CHAOS_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_WITHERED_FATE } from '../config/economy';
 import { isValidUnlock } from '../utils/gameEngine';
@@ -84,6 +85,19 @@ describe('ROLL_RESULT', () => {
     }));
     expect(failed.fatePoints).toBe(13);
     expect(failed.history.at(-1)?.meta?.fatePointsEarned).toBe(3);
+  });
+
+  it('puts the Fate the roll left on its event, for the result toast', () => {
+    const missed = gameReducer({ ...base(), fatePoints: 10 }, roll({ success: false, failureFate: 3 }));
+    expect(missed.lastEvent).toMatchObject({ type: 'ROLL_FAIL', meta: { fateBefore: 10, fateAfter: 13, pityThreshold: 50 } });
+    const won = gameReducer({ ...base(), fatePoints: 12 }, roll({ success: true }));
+    expect(won.lastEvent).toMatchObject({ type: 'ROLL_SUCCESS', meta: { fateBefore: 12, fateAfter: 0 } });
+    const noPity = gameReducer({
+      ...base(),
+      gameModeId: 'custom',
+      customMode: { pityEnabled: false, pityThreshold: 50, omniChanceBase: 2, ritualCostMultiplier: 1, regionModifiers: false },
+    }, roll({ success: false }));
+    expect(noPity.lastEvent?.meta).toMatchObject({ fateBefore: 0, fateAfter: 1, pityThreshold: null });
   });
 
   it('an omni roll grants both a special key and a standard key', () => {
@@ -1541,5 +1555,33 @@ describe('Chunked Combat Achievement tasks roll only at a boss in the run\'s chu
     expect(owned.prepared.result).toEqual({ ok: true });
     expect(owned.next.keys).toBe(1);
     expect(complete(run('vanilla')).next.keys).toBe(1);
+  });
+});
+
+// --- Boss tasks draw from the boss's stash (critique GP-10) -------------------
+
+describe('Boss Task roll (Vanilla)', () => {
+  const vorkath = { kind: 'boss' as const, bossName: 'Vorkath', bossClass: 'mid' as const };
+  const vanilla = () => ({ ...base(), gameModeId: 'vanilla' });
+
+  it('rolls at the boss’s next-Key odds, not the old flat 80%, on the kill’s own dice', () => {
+    const draws: string[] = [];
+    const action = prepareKeyRollAction(
+      { ...vanilla(), bossStandardKeysAwarded: { Vorkath: 1 } },
+      DropSource.SLAYER_BOSS, DROP_RATES[DropSource.SLAYER_BOSS], 3,
+      (purpose, index = 0, max = 100) => { draws.push(purpose); return index === 0 ? 9_000 : max; },
+      undefined, undefined, undefined, vorkath,
+    );
+    // Vorkath's stash: 30%, then 15%.
+    expect(action?.payload).toMatchObject({ source: DropSource.SLAYER_BOSS, baseThreshold: 15, success: false, context: vorkath });
+    expect(draws[0]).toBe('roll:boss:Vorkath:1');
+  });
+
+  it('takes its Key from the boss’s stash, and a spent stash doesn’t roll', () => {
+    const next = gameReducer(vanilla(), roll({ success: true, source: DropSource.SLAYER_BOSS, context: vorkath }));
+    expect(next.bossStandardKeysAwarded?.Vorkath).toBe(1);
+    expect(next.history.at(-1)).toMatchObject({ source: DropSource.SLAYER_BOSS, meta: { bossName: 'Vorkath', remainingReserve: 1 } });
+    const spent = { ...vanilla(), bossStandardKeysAwarded: { Vorkath: 2 } };
+    expect(prepareKeyRollAction(spent, DropSource.SLAYER_BOSS, 80, 3, () => 1, undefined, undefined, undefined, vorkath)).toBeNull();
   });
 });

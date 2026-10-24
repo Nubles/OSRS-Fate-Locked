@@ -33,6 +33,10 @@ export const profileProgressShareKey = (storageKey: string): string =>
 export const profileDiscordCursorKey = (storageKey: string): string =>
   `${storageKey}__discordCursor`;
 
+/** How many times each run was restored in this profile, outside GameState (utils/restoreCount.ts). */
+export const profileRestoreCountKey = (storageKey: string): string =>
+  `${storageKey}__restores`;
+
 export const profileFeatureSeenKey = (profileId: string): string =>
   `fate_features_seen_v1_${profileId}`;
 
@@ -181,6 +185,7 @@ export const profileOwnedKeys = (profileId: string): readonly string[] => {
     profileExportNagKey(storageKey),
     profileDiscordKey(storageKey),
     profileDiscordCursorKey(storageKey),
+    profileRestoreCountKey(storageKey),
     profileOnlineBackupKey(storageKey),
     profileProgressShareKey(storageKey),
     profileFeatureSeenKey(profileId),

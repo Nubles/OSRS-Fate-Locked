@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
+import { markChangelogSeen } from '../utils/changelogState';
+import { LATEST_CHANGELOG_ID } from '../data/changelogLatest';
 import { STARTING_KEYS } from '../config/economy';
 import { DEFAULT_MODE_ID, getGameMode } from '../config/gameModes';
 import { ArrowRight, Check, Lock, MousePointer2 } from 'lucide-react';
@@ -336,7 +338,7 @@ const AltarVisual: React.FC = () => {
 // --- MAIN WIZARD COMPONENT ---
 
 export const OnboardingWizard: React.FC = () => {
-  const { completeOnboarding } = useGame();
+  const { completeOnboarding, history } = useGame();
   const [step, setStep] = useState(0);
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
@@ -392,6 +394,10 @@ export const OnboardingWizard: React.FC = () => {
     if (next !== 'finish') {
       setStep(next);
     } else {
+      // Everything in What's New predates a new player, so it starts out read:
+      // they'll only be shown releases that come after today. An old save that
+      // never saw onboarding but has rolls is a returning player: keep its news.
+      if (history.length === 0) markChangelogSeen(LATEST_CHANGELOG_ID);
       completeOnboarding();
     }
   };

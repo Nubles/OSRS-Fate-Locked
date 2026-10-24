@@ -3,13 +3,14 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SkillInfoButton } from './SkillInfoButton';
+import { skillLevelKeyChance } from '../utils/keyRoll';
 
 afterEach(cleanup);
 
 const renderCard = (onCardClick = vi.fn()) => {
   render(
     <div data-skill-card="Attack" onClick={onCardClick}>
-      <SkillInfoButton skill="Attack" level={47} tier={5} variant="classic" />
+      <SkillInfoButton skill="Attack" level={47} tier={5} chance={skillLevelKeyChance(48)} variant="classic" />
     </div>,
   );
   return { button: screen.getByRole('button', { name: 'Attack roll odds' }), onCardClick };

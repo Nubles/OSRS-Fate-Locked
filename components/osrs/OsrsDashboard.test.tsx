@@ -106,7 +106,7 @@ describe('Dashboard in the OSRS layout', () => {
 
   it('levels a skill from its cell, which shows level, tier and trainable range', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
-    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30' }, { timeout: 10000 });
+    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30, level up' }, { timeout: 10000 });
     expect(card.getAttribute('data-skill-card')).toBe('Attack');
     expect(card.textContent).toContain('25');
     // Tier III is Red topaz: the gem, three filled notches and the tier line.
@@ -121,8 +121,10 @@ describe('Dashboard in the OSRS layout', () => {
     expect(levelUpSkill).toHaveBeenCalledTimes(2);
     expect(levelUpSkill).toHaveBeenCalledWith('Attack');
 
-    // Locked skills do nothing on click and say so.
-    const mining = screen.getByRole('button', { name: 'Mining, level 1, locked' });
+    // Locked skills do nothing on click and say so; with nothing to press they
+    // are a labelled group, not a button, and stay out of the Tab order.
+    const mining = screen.getByRole('group', { name: 'Mining, level 1, locked' });
+    expect(mining.hasAttribute('tabindex')).toBe(false);
     expect(mining.textContent).toContain('Locked');
     expect(mining.textContent).toContain('Needs a Key to start');
     expect(mining.querySelector('.osrs-char-gem')).toBeNull();
@@ -133,7 +135,7 @@ describe('Dashboard in the OSRS layout', () => {
 
   it('opens a skill\'s roll odds from the i in its corner instead of a tooltip over the cell', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
-    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30' }, { timeout: 10000 });
+    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30, level up' }, { timeout: 10000 });
     expect(card.getAttribute('title')).toBeNull();
     const info = screen.getByRole('button', { name: 'Attack roll odds' });
     expect(card.contains(info)).toBe(true);

@@ -56,6 +56,10 @@ export default defineConfig(({ mode }) => {
     ...{
       test: {
         exclude: [...configDefaults.exclude, '**/.worktrees/**', '**/output/**'],
+        // Component tests draw the classic layout unless they pick the OSRS one
+        // (UI_STYLE_KEY). The new-visitor default (OSRS) is pinned in
+        // utils/uiStyle.test.ts, which unstubs this.
+        env: { VITE_DEFAULT_UI_STYLE: 'classic' },
       },
     },
     build: {

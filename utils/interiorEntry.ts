@@ -15,6 +15,8 @@ export interface InteriorEntrance {
   chunkId: string;
   /** What the route in needs, in the source's words. */
   requirements: string[];
+  /** A way in that skips the interior's area, as the cosmic rift skips Zanaris. */
+  outsideArea?: boolean;
 }
 
 export interface InteriorRecord {
@@ -35,14 +37,16 @@ export interface InteriorContext {
 
 /**
  * LOCKED while the run can't reach the area the interior belongs to, even
- * through an open entrance. Otherwise the most usable way in, where a way
- * needs both its entrance chunk and its route's requirements. UNKNOWN when
- * no entrance is known.
+ * through an open entrance, unless a way in skips that area. Otherwise the
+ * most usable way in, where a way needs both its entrance chunk and its
+ * route's requirements. UNKNOWN when no entrance is known.
  */
 export function interiorEntry(record: InteriorRecord, context: InteriorContext): PermissionStatus {
   const area = interiorArea(record.name);
-  if (area && !isAreaReachable(area, context.unlocks, context.gameModeId)) return 'LOCKED';
-  const ways = record.entrances.map((entrance) => {
+  const areaLocked = !!area && !isAreaReachable(area, context.unlocks, context.gameModeId);
+  const entrances = areaLocked ? record.entrances.filter((entrance) => entrance.outsideArea) : record.entrances;
+  if (areaLocked && !entrances.length) return 'LOCKED';
+  const ways = entrances.map((entrance) => {
     const id = Number(entrance.chunkId);
     const coord = { cx: Math.floor(id / 256), cy: id % 256 };
     const route = evaluateRouteGates(compileRawRequirements(

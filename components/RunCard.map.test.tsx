@@ -20,6 +20,9 @@ vi.mock('../context/GameContext', () => ({ useGame: () => fixtures.game }));
 vi.mock('../context/ProfileContext', () => ({ useProfiles: () => ({ activeProfileName: 'Map fixture' }) }));
 vi.mock('../hooks/useFocusTrap', () => ({ useFocusTrap: () => undefined }));
 vi.mock('html2canvas', () => ({ default: fixtures.capture }));
+// Map authoring is a maintainer tool; tests opt a browser in or out explicitly.
+const authoringFlag = vi.hoisted(() => ({ on: true }));
+vi.mock('../utils/mapAuthoring', () => ({ MAP_AUTHORING_FLAG: 'fate-map-authoring', mapAuthoringAvailable: () => authoringFlag.on }));
 
 const DRAFT_KEY = 'fate-region-chunks-draft-v1';
 const BACKUP_KEY = 'fate-region-chunks-backup-v1';
@@ -31,27 +34,35 @@ const storageWith = (draft: string | null, backup: string | null = null) => ({
   setItem: vi.fn(), removeItem: vi.fn(),
 });
 
-describe('Run card saved geography', () => {
+describe('Run card saved geography (map authoring enabled unless stated)', () => {
+  it('ignores a stored draft and its backup for players without map authoring', () => {
+    const storage = storageWith(JSON.stringify(envelope), JSON.stringify(envelope));
+    expect(loadRunCardRegionChunks(storage, false)).toBe(REGION_CHUNKS);
+    expect(storage.getItem).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
   it('unwraps the exact RegionMap v2 format without touching its draft or backup', () => {
     const storage = storageWith(JSON.stringify(envelope));
-    expect(loadRunCardRegionChunks(storage)).toEqual(geometry);
+    expect(loadRunCardRegionChunks(storage, true)).toEqual(geometry);
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
   });
 
   it('keeps legacy drafts readable', () => {
-    expect(loadRunCardRegionChunks(storageWith(JSON.stringify(geometry)))).toEqual(geometry);
+    expect(loadRunCardRegionChunks(storageWith(JSON.stringify(geometry)), true)).toEqual(geometry);
   });
 
   it('recovers valid backup geometry when the draft is malformed', () => {
     const storage = storageWith('{bad json', JSON.stringify(envelope));
-    expect(loadRunCardRegionChunks(storage)).toEqual(geometry);
+    expect(loadRunCardRegionChunks(storage, true)).toEqual(geometry);
     expect(storage.getItem).toHaveBeenCalledWith(BACKUP_KEY);
   });
 
   it('uses current shipped geography for an untouched older v2 cache', () => {
     const cached = { ...envelope, seed: 'old-seed', dirty: false };
-    expect(loadRunCardRegionChunks(storageWith(JSON.stringify(cached)))).toBe(REGION_CHUNKS);
+    expect(loadRunCardRegionChunks(storageWith(JSON.stringify(cached)), true)).toBe(REGION_CHUNKS);
   });
 
   it.each([
@@ -65,11 +76,11 @@ describe('Run card saved geography', () => {
     JSON.stringify({ Misthalin: [] }),
     JSON.stringify({}),
   ])('falls back to shipped geography for missing or invalid data: %s', (raw) => {
-    expect(loadRunCardRegionChunks(storageWith(raw))).toBe(REGION_CHUNKS);
+    expect(loadRunCardRegionChunks(storageWith(raw), true)).toBe(REGION_CHUNKS);
   });
 
   it('still has geography when browser storage is unavailable', () => {
-    expect(loadRunCardRegionChunks({ getItem: () => { throw new Error('Storage blocked'); } })).toBe(REGION_CHUNKS);
+    expect(loadRunCardRegionChunks({ getItem: () => { throw new Error('Storage blocked'); } }, true)).toBe(REGION_CHUNKS);
   });
 });
 
@@ -118,6 +129,7 @@ describe('Vanilla run card map capture', () => {
   });
 
   const showCard = () => render(<RunCardModal onClose={vi.fn()} embedded />);
+  const chunkFills = () => fills.filter(fill => fill === 'rgba(16,185,129,0.55)' || fill === 'rgba(239,68,68,0.45)');
   const loadImage = async (index = 0) => {
     await act(async () => { PendingMapImage.instances[index].onload?.(); });
   };
@@ -147,6 +159,26 @@ describe('Vanilla run card map capture', () => {
     await waitFor(() => expect(fixtures.capture).toHaveBeenCalledTimes(1));
     expect(fills).toContain('rgba(16,185,129,0.55)');
     expect(fills).toContain('rgba(239,68,68,0.45)');
+  });
+
+  it('draws the shipped map for a player even with a hand-painted draft stored', async () => {
+    authoringFlag.on = false;
+    try {
+      showCard();
+      await loadImage();
+      await waitFor(() => expect(fixtures.capture).toHaveBeenCalledTimes(1));
+      expect(chunkFills()).toHaveLength(Object.values(REGION_CHUNKS).flat().length);
+      expect(localStorage.getItem(DRAFT_KEY)).toBe(JSON.stringify(envelope));
+    } finally {
+      authoringFlag.on = true;
+    }
+  });
+
+  it('previews the stored draft where map authoring is enabled', async () => {
+    showCard();
+    await loadImage();
+    await waitFor(() => expect(fixtures.capture).toHaveBeenCalledTimes(1));
+    expect(chunkFills()).toHaveLength(2);
   });
 
   it('clears a failed image load and lets Re-render try loading again', async () => {

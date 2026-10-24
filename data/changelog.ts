@@ -37,6 +37,25 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-24-fairer-keys-update',
+    title: 'Fairer Keys, clearer rolls and quest fixes',
+    date: '2026-10-24',
+    sections: {
+      balance: [
+        'In Vanilla, Keys can now land on any boss or minigame left, even ones you can\'t reach yet. Saradomin\'s Ward keeps a Key to places you can use.',
+        'Chaos Keys pick a kind of unlock first, then something in it, so skills and gear come up as often as areas and banks.',
+      ],
+      fixed: [
+        'Quests and diary tasks now need what their items take: a gear slot, a shop or a skill. A Soul\'s Bane needs a Weapon slot, for one.',
+        'Combat achievements only count as doable once you can reach the boss, and the Abyss now opens from Edgeville through the Mage of Zamorak.',
+      ],
+      changed: [
+        'Rolls say what you got, every screen shows the Key chance the roll really uses, and Set level logs many levels in one go.',
+        'Slayer masters you can\'t use yet are greyed out, Sync & Roll only rolls levels gained after linking, and restoring a backup can\'t re-roll your luck.',
+      ],
+    },
+  },
+  {
     id: '2026-10-24-falador-west-bank',
     title: 'One unlock for the Falador west bank',
     date: '2026-10-24',

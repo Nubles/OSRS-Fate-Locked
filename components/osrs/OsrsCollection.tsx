@@ -2,13 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FixedSizeGrid as Grid, GridChildComponentProps } from 'react-window';
 import './osrs-spend.css';
 import { useGame } from '../../context/GameContext';
+import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { COLLECTION_LOG_DATA } from '../../data/collectionLogData';
 import { collectionLogSync } from '../../services/CollectionLogSyncService';
 import { wikiService } from '../../services/WikiService';
 import { useCollectionLogModel } from '../CollectionLog';
 import { WikiIcon } from '../WikiIcon';
 import { UTILITY_ITEM_IDS } from '../../constants';
-import { DROP_RATES } from '../../config/rules';
 import { failureFateForSource } from '../../config/economy';
 import { DropSource } from '../../types';
 import { itemSrc } from './OsrsDashGems';
@@ -110,6 +110,8 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
     activeItems, globalStats, reach, showReach, setShowReach, pendingReviewCount,
   } = useCollectionLogModel(searchTerm, { showReachDefault: true });
   const { history, animationsEnabled } = useGame();
+  // The chance a new item's roll is made against, the run's boosts included.
+  const logChance = useSourceKeyChance()(DropSource.COLLECTION_LOG) ?? 0;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -226,7 +228,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
         })}
       </div>
       <div style={{ flexShrink: 0, margin: '0 8px', padding: '4px 0 6px', borderTop: '1px solid #a8987a', lineHeight: '18px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        Each new item rolls for a Key at <span style={{ color: '#005f00' }}>{DROP_RATES[DropSource.COLLECTION_LOG]}%</span>. A miss adds <span style={{ color: '#7f0000' }}>+{failureFateForSource(DropSource.COLLECTION_LOG)} Fate</span>.
+        Each new item rolls for a Key at <span style={{ color: '#005f00' }}>{logChance}%</span>. A miss adds <span style={{ color: '#7f0000' }}>+{failureFateForSource(DropSource.COLLECTION_LOG)} Fate</span>.
       </div>
       </div>
     </div>

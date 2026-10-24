@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useMemo } from 'react';
+import React, { Suspense, useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { X, ChevronsUp, AlertCircle, RotateCcw, Plus, Minus, SlidersHorizontal, Lock } from 'lucide-react';
@@ -7,6 +7,7 @@ import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX, SLOT_CONFIG } from '../constants';
 import { NoteTrigger } from './NoteTrigger';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { TIER_LABELS } from '../utils/combatPower';
 import { EQUIP_TIER_COLORS, equipTierColor } from '../utils/equipTiers';
 import { useIsOsrsUi } from '../utils/uiStyle';
@@ -292,6 +293,8 @@ interface SlotDetailProps {
 
 const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClose, onUpgrade }) => {
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
   const isMaxed = tier >= EQUIPMENT_TIER_MAX;
   const nextTier = tier + 1;
   const canUpgrade = !isMaxed && specialKeys > 0;
@@ -302,6 +305,8 @@ const SlotDetail: React.FC<SlotDetailProps> = ({ slot, tier, specialKeys, onClos
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150"
       onClick={onClose}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label={`${slot} details`}

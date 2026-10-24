@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { PERSISTENT_STORAGE_EVENT } from '../utils/persistentStorage';
 
 export type PersistentStorageStatus =
   | 'unknown'
@@ -42,8 +43,10 @@ const canRequestPersistence = (
 
 /**
  * Read the browser's persistence capability without asking for permission.
- * `persisted()` is only a status check; the permission request is made by the
- * returned callback after an explicit user action.
+ * `persisted()` is only a status check; this hook's permission request is made
+ * by the returned callback after an explicit user action. Separately,
+ * PersistentStorageDriver asks once per profile, quietly, in browsers that
+ * answer without a prompt; a grant there reaches this hook as an event.
  */
 export const usePersistentStorage = (
   options: UsePersistentStorageOptions = {},
@@ -91,6 +94,17 @@ export const usePersistentStorage = (
       });
 
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    // PersistentStorageDriver's quiet request was granted elsewhere in the app.
+    if (typeof window === 'undefined') return;
+    const onGranted = () => {
+      statusRef.current = 'granted';
+      if (mountedRef.current) setStatus('granted');
+    };
+    window.addEventListener(PERSISTENT_STORAGE_EVENT, onGranted);
+    return () => window.removeEventListener(PERSISTENT_STORAGE_EVENT, onGranted);
   }, []);
 
   const requestPersistence = useCallback(async (): Promise<PersistentStorageStatus> => {

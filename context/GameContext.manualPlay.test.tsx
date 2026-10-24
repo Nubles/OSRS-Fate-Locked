@@ -58,9 +58,11 @@ const detected = (runId: string, eventId: string, overrides: Partial<FateEventEn
 /** Log a level by hand, roll for a Key, then spend one, and report what the run became. */
 async function playByHand(storageKey: string, withDetections: boolean) {
   // Both plays start from the same run, moment, seed and dice, so any difference is the inbox's doing.
+  // The run id must be valid for the save to load as this seeded run (an invalid one fell back to a
+  // fresh unseeded run), and rngVersion 2 keeps each entry's random id out of the draws.
   vi.setSystemTime(new Date('2026-09-28T12:00:00Z'));
   vi.spyOn(Math, 'random').mockReturnValue(0.42);
-  localStorage.setItem(storageKey, JSON.stringify({ ...createFreshState(), runId: 'manual-play-run', keys: 3, rngSeed: 'manual-play' }));
+  localStorage.setItem(storageKey, JSON.stringify({ ...createFreshState(), runId: '6f1d2c3b-4a5e-4f60-8a7b-9c0d1e2f3a4b', keys: 3, rngSeed: 'manual-play', rngVersion: 2 }));
   render(<GameProvider storageKey={storageKey} leaseOptions={{ ownerId: storageKey }}><Capture /></GameProvider>);
   await settle();
   const inbox = getRollInboxStore(current.runId);

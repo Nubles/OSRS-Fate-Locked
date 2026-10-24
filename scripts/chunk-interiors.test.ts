@@ -53,6 +53,29 @@ describe('reviewed interior entrances', () => {
       .toEqual([['Common quest', 'Northern door'], ['Common quest', 'Southern fee']]);
   });
 
+  it("marks only the interior's own way in that skips its area, not routes through it", () => {
+    const data = {
+      walkableChunks: ['256', '512'],
+      chunks: {
+        256: {}, 512: {},
+        900: { Name: 'Altar', Object: { Altar: 1 }, Connect: { 901: true } },
+        901: { Name: 'Annex', Object: { Rock: 1 }, Connect: { 900: true } },
+      },
+    };
+    const result = buildInteriorContent(data, null, encode, { locations: { Altar: { entrances: [
+      { chunkId: '256', requirements: [] },
+      { chunkId: '512', requirements: ['Rift quest'], outsideArea: true },
+    ] } } });
+    expect(result['900'].entrances).toEqual([
+      { chunkId: '256', requirements: [], via: ['900'] },
+      { chunkId: '512', requirements: ['Rift quest'], via: ['900'], outsideArea: true },
+    ]);
+    expect(result['901'].entrances.some(route => 'outsideArea' in route)).toBe(false);
+    expect(() => validateInteriorAccessPolicy(data, { locations: { Altar: { entrances: [
+      { chunkId: '256', requirements: [], outsideArea: 'yes' },
+    ] } } })).toThrow('Invalid interior outsideArea');
+  });
+
   it("drops the Chunk Picker's F2P Only tag from an interior's entity requirements (accuracy audit S11)", () => {
     const result = buildInteriorContent({
       walkableChunks: ['256'],

@@ -81,16 +81,19 @@ interface DetailsProps extends SkillOddsInfo {
  * level's Key and Chaos Key odds and how far the tier reaches. Only for skills
  * that can still level, so there is always a next level.
  */
-export const SkillOddsDetails: React.FC<DetailsProps> = ({ skill, level, tier, boost = 0, pastCap, variant }) => {
+export const SkillOddsDetails: React.FC<DetailsProps> = ({ skill, level, tier, chance, pastCap, variant }) => {
   const nextLevel = level + 1;
   const base = skillLevelKeyChance(nextLevel);
+  const boost = chance === null ? 0 : Math.round((chance - base) * 100) / 100;
   const milestone = isSkillChaosMilestone(nextLevel);
   const nextMilestone = SKILL_CHAOS_MILESTONES.find((m) => m > nextLevel);
   const rows: [string, string][] = pastCap !== undefined
     ? [['Key chance', 'no roll'], ['Why', `past this tier's cap of level ${pastCap}`]]
+    : chance === null
+    ? [['Key chance', 'no roll']]
     : [
-      ['Key chance', formatKeyPercent(Math.min(100, base + boost))],
-      ...(boost > 0 ? [['From achievements', `+${boost}%`] as [string, string]] : []),
+      ['Key chance', formatKeyPercent(chance)],
+      ...(boost !== 0 ? [['From your boosts', `${boost > 0 ? '+' : ''}${boost}%`] as [string, string]] : []),
       ['Chaos Key', milestone ? `guaranteed, plus ${LEVEL_CHAOS_CHANCE}% for another` : `${LEVEL_CHAOS_CHANCE}% chance`],
       ...(!milestone && nextMilestone ? [['Next free Chaos', `level ${nextMilestone}`] as [string, string]] : []),
     ];
