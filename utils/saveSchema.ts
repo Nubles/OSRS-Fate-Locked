@@ -26,6 +26,7 @@ import { tidyRituals, type RitualState } from './ritualEffects';
 import { FREE_RITUAL_IDS } from './achievementRewards';
 import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
 import { FATE_MARKS } from './fateLand';
+import { legacyRunSalt } from './seededRng';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -1071,7 +1072,7 @@ const TOP_LEVEL_KEYS = new Set([
   'bossStandardKeysAwarded', 'clueStandardKeysAwarded', 'minigameStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
-  'gameModeLocked', 'rngSeed', 'rngVersion', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'pendingUnlock', 'areaUnlockRevision',
+  'gameModeLocked', 'rngSeed', 'rngVersion', 'rngSalt', 'restoreCount', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'chunkedProgressAt', 'fateLand', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
   'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
@@ -1360,6 +1361,22 @@ const normalizeState = (
     const version = readOwn(input, 'rngVersion');
     if (version !== 1 && version !== 2 && version !== 3) return invalid('invalid_field', 'rngVersion');
     state.rngVersion = version;
+  }
+  // Every run has a hidden salt (GameState.rngSalt). A save from before
+  // salts takes one from its first history entry, so every copy of the run
+  // agrees; a run with no history yet takes the fresh state's.
+  if (own(input, 'rngSalt')) {
+    const checked = stringValue(readOwn(input, 'rngSalt'), 'rngSalt', MAX_IDENTIFIER_CHARS);
+    if (checked.ok === false || checked.value.length === 0) return invalid('invalid_field', 'rngSalt');
+    state.rngSalt = checked.value;
+  } else {
+    const salt = legacyRunSalt(state.history) ?? defaultRecord.rngSalt;
+    if (typeof salt === 'string' && salt.length > 0) state.rngSalt = salt;
+  }
+  if (own(input, 'restoreCount')) {
+    const checked = boundedInteger(readOwn(input, 'restoreCount'), 'restoreCount', 0, MAX_COUNTER);
+    if (checked.ok === false) return checked;
+    if (checked.value > 0) state.restoreCount = checked.value;
   }
   // A reveal is an acknowledgement of an existing award, never a new award.
   let pendingMerged = false;

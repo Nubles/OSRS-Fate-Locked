@@ -319,6 +319,19 @@ export interface GameState {
    * 3 also makes a Chaos Key pick a table before an entry (utils/seededRng.ts).
    */
   rngVersion?: 1 | 2 | 3;
+  /**
+   * Hidden per-run salt for a run without a seed: its draws come from
+   * hash(salt, semantic history, purpose) like a seeded run's, so restoring a
+   * backup cannot re-roll a result (utils/seededRng.ts::runDrawSource). Made
+   * at run start; older saves get one on load (legacyRunSalt). Never shown.
+   */
+  rngSalt?: string;
+  /**
+   * How many times this run was restored from a backup or imported over
+   * itself. Merged with this browser's own count, which a restore cannot roll
+   * back (utils/restoreCount.ts). Absent means never.
+   */
+  restoreCount?: number;
   loadout?: Record<string, number>; // equipment slot -> real item id (Gear mode)
   rival?: RivalState; // Rival Ghost the player is racing (optional)
   /** OSRS account this run is linked to (Sync & Roll's first fetch); the player can rename it. */

@@ -32,7 +32,7 @@ import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartograp
 import { loadWalkSections } from '../utils/walkSections';
 import { UNLOCK_COST, randomUnlockPool, pickRandomUnlock, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
-import { CURRENT_RNG_VERSION, chaosPicksTableFirst, drawFloat, seededContext, usesSemanticContext } from '../utils/seededRng';
+import { CURRENT_RNG_VERSION, chaosPicksTableFirst, drawFloat, runDrawFloat, seededContext, usesSemanticContext } from '../utils/seededRng';
 import { levelsToLog, summarizeLevelBatch, type LevelBatchSummary } from '../utils/setLevel';
 import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
@@ -43,7 +43,6 @@ import {
   type BackupMeta,
 } from '../utils/backups';
 import {
-  applyPreparedReplacement,
   applyValidatedReplacementAsync,
   applyValidatedReplacement,
   prepareReplacement,
@@ -55,7 +54,8 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave, type SaveValidationResult } from '../utils/saveSchema';
+import { readRestoreCounts, rememberRun, stampRestoreCount, writeRestoreCounts, type RestoreKind } from '../utils/restoreCount';
 import { memoizeLast } from '../utils/memoizeLast';
 import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
@@ -305,7 +305,8 @@ interface GameContextType extends GameState {
   /**
    * Gameplay RNG choke point. On a seeded run this derives from
    * (rngSeed, versioned history context, purpose, index) — deterministic and
-   * replayable; on an unseeded run it's Math.random. EVERY gameplay outcome
+   * replayable; an unseeded run draws the same way from its hidden salt
+   * (GameState.rngSalt), so a restore cannot re-roll. EVERY gameplay outcome
    * (rolls, table picks, gambles) must draw through here, never Math.random
    * directly — that's what makes seeded runs raceable and verifiable.
    * Visual-only randomness (particles, animation jitter) is exempt.
@@ -378,6 +379,7 @@ export const initialState: GameState = {
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
   runId: newRunId(),
+  rngSalt: newRunId(),
   runRevision: 0,
   keys: STARTING_KEYS,
   specialKeys: 0,
@@ -417,6 +419,8 @@ export const createFreshState = (): GameState => ({
   userNotes: {},
   loadout: {},
   runId: newRunId(),
+  // The run's hidden salt: its draws without a seed (see GameState.rngSalt).
+  rngSalt: newRunId(),
   runRevision: 0,
   // A new run is paid for every achievement it earns (see GameState).
   achievementsClaimed: [],
@@ -3101,13 +3105,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   // Gameplay RNG choke point (see GameContextType.nextFloat). Reads through
   // stateRef so one render's callbacks always draw against the latest chain
   // tip; the tip changes with every appended history entry, which is what
-  // keeps successive draws independent on a seeded run.
-  const nextFloat = useCallback((purpose: string, index = 0): number => {
-    const s = stateRef.current;
-    if (!s.rngSeed) return Math.random();
-    const tip = seededContext(s);
-    return drawFloat(s.rngSeed, tip, purpose, index);
-  }, []);
+  // keeps successive draws independent. A seeded run draws from its seed, any
+  // other run from its hidden salt (runDrawFloat), so a restored backup gives
+  // the same result for the same action. Math.random is left only for a state
+  // that has neither.
+  const nextFloat = useCallback((purpose: string, index = 0): number =>
+    runDrawFloat(stateRef.current, purpose, index) ?? Math.random(), []);
   const nextDice = useCallback((purpose: string, index = 0, max = 100): number =>
     Math.floor(nextFloat(purpose, index) * max) + 1, [nextFloat]);
   const setSeed = useCallback((seed: string) =>
@@ -3586,13 +3589,26 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     return checkpoint;
   }, [coordinator, pushOwnedBackup]);
 
+  // Every import and restore carries the run's restore count, merged with
+  // this profile's own count, which the replacement cannot roll back
+  // (utils/restoreCount.ts). The profile's count is written once it lands.
+  const stampReplacement = useCallback((prepared: SaveValidationResult, kind: RestoreKind) => {
+    const stamped = stampRestoreCount(prepared, stateRef.current, readRestoreCounts(localStorage, storageKey), kind);
+    const settle = (result: ImportResult): ImportResult => {
+      if (result.ok) writeRestoreCounts(localStorage, storageKey, stamped.counts);
+      return result;
+    };
+    return { prepared: stamped.prepared, settle };
+  }, [storageKey]);
+
   const importSave = useCallback(async (data: unknown): Promise<ImportResult> => {
     const authorization = authorizeOwnedWrite();
     if (authorization.ok === false) return saveAuthorizationFailureResult(authorization.reason);
     const isCurrent = beginReplacement();
+    const { prepared, settle } = stampReplacement(prepareReplacement(data, stateRef.current, createFreshState()), 'import');
     if (coordinator !== null) {
-      return applyValidatedReplacementAsync(
-        prepareReplacement(data, stateRef.current, createFreshState()),
+      return settle(await applyValidatedReplacementAsync(
+        prepared,
         {
           current: stateRef.current,
           createCheckpoint: createCoordinatedCheckpoint,
@@ -3601,18 +3617,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           replace: replaceState,
           isCurrent,
         },
-      );
+      ));
     }
     if (!isCurrent()) return replacementStaleResult();
-    const result = applyPreparedReplacement(data, {
+    return settle(applyValidatedReplacement(prepared, {
       current: stateRef.current,
-      defaults: createFreshState(),
       writeBackup: current => pushOwnedBackup(current, 'Before import'),
       writeReplacement,
       replace: replaceState,
-    });
-    return result;
-  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, writeCoordinatedReplacement, writeReplacement]);
+    }));
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, stampReplacement, writeCoordinatedReplacement, writeReplacement]);
 
   const createBackup = useCallback((reason: string): BackupWriteResult | Promise<BackupWriteResult> => {
     const data = serializeCurrent();
@@ -3679,9 +3693,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (data === null) {
       return { ok: false, code: 'invalid_json', message: 'Backup was not found.' };
     }
+    const { prepared, settle } = stampReplacement(parseAndMigrateSave(data, createFreshState()), 'restore');
     if (coordinator !== null) {
-      return applyValidatedReplacementAsync(
-        parseAndMigrateSave(data, createFreshState()),
+      return settle(await applyValidatedReplacementAsync(
+        prepared,
         {
           current: stateRef.current,
           createCheckpoint: createCoordinatedCheckpoint,
@@ -3690,21 +3705,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           replace: replaceState,
           isCurrent,
         },
-      );
+      ));
     }
     if (!isCurrent()) return replacementStaleResult();
-    const result = applyValidatedReplacement(parseAndMigrateSave(data, createFreshState()), {
+    return settle(applyValidatedReplacement(prepared, {
       current: stateRef.current,
       writeBackup: current => pushOwnedBackup(current, 'Before restore'),
       writeReplacement,
       replace: replaceState,
-    });
-    return result;
-  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, storageKey, writeCoordinatedReplacement, writeReplacement]);
+    }));
+  }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, stampReplacement, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
   const resetGame = useCallback(async (): Promise<void> => {
     // Auto-snapshot so an accidental reset is recoverable.
     const isCurrent = beginReplacement();
+    // Remember the run being reset, so importing it again counts as a restore.
+    writeRestoreCounts(localStorage, storageKey, rememberRun(readRestoreCounts(localStorage, storageKey), stateRef.current));
     if (coordinator !== null) {
       const replacement = createFreshState();
       const backup = await createCoordinatedCheckpoint(
@@ -3730,7 +3746,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     pushOwnedBackup(serializeCurrent(), 'Before reset');
     setStateReplacements(count => count + 1);
     commitAction({ type: 'RESET' });
-  }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, writeCoordinatedReplacement]);
+  }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, storageKey, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const saveNote = useCallback((id: string, text: string) =>
     commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);

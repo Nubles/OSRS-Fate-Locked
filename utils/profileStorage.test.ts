@@ -14,6 +14,7 @@ const expectedKeys = (profileId: string): string[] => {
     `${base}__exportNag`,
     `${base}__discord`,
     `${base}__discordCursor`,
+    `${base}__restores`,
     `${base}__onlineBackup`,
     `${base}__progressShare`,
     `fate_features_seen_v1_${profileId}`,
