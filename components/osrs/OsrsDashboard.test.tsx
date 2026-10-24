@@ -131,6 +131,22 @@ describe('Dashboard in the OSRS layout', () => {
     expect(mining.getAttribute('data-examine')).toBe('Level 1. Locked: no tier unlocked yet.');
   });
 
+  it('opens a skill\'s roll odds from the i in its corner instead of a tooltip over the cell', { timeout: 20000 }, async () => {
+    render(<Dashboard suspendModals />);
+    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30' }, { timeout: 10000 });
+    expect(card.getAttribute('title')).toBeNull();
+    const info = screen.getByRole('button', { name: 'Attack roll odds' });
+    expect(card.contains(info)).toBe(true);
+    fireEvent.click(info);
+    expect(levelUpSkill).not.toHaveBeenCalled();
+    const box = await screen.findByRole('tooltip');
+    expect(box.className).toBe('osrs-skill-info-box');
+    expect(box.textContent).toContain('Attack: next level 26');
+    expect(box.textContent).toContain('Key chance: 5.2%');
+    // Locked skills have nothing to roll, so no button.
+    expect(screen.queryByRole('button', { name: 'Mining roll odds' })).toBeNull();
+  });
+
   it('shows each worn-equipment slot with its tier, and a slot opens its ladder inside the panel', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
     const head = await screen.findByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }, { timeout: 10000 });

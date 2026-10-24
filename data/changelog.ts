@@ -37,12 +37,12 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-23-quest-item-checks',
+    id: '2026-10-24-quest-item-checks',
     title: 'Quests and diaries check the items you need',
-    date: '2026-10-23',
+    date: '2026-10-24',
     sections: {
       changed: [
-        'Quests need the slot for gear they make you wear, like a Weapon for A Soul’s Bane’s rage room or Gloves for Heroes’ Quest’s ice gloves.',
+        'Quests need the slot for gear they make you wear, like a Weapon for A Soul’s Bane or a Head slot for A Porcine of Interest’s goggles.',
         'Quests and diary tasks now need a way to get their items, such as a shop, a skill, a drop or a spawn, and the slot to wear them.',
         'Logs need the Woodcutting level to cut them, rune essence needs Rune Mysteries, and mithril grapples need a way to make or find one.',
         'Gertrude’s Cat needs a fishing shop or 5 Fishing, and the start of Recipe for Disaster needs the shops that sell the cook’s items.',
@@ -50,6 +50,34 @@ export const CHANGELOG_RELEASES = [
       ],
       fixed: [
         'The Doable tab no longer lists quests in areas you can’t reach. Diary tasks you can do now say Can do now.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-23-roll-rings',
+    title: 'Roll rings turn again',
+    date: '2026-10-23',
+    sections: {
+      fixed: [
+        'In the OSRS layout, the rings now turn while Fate is altered and the loot beam rises, even with Windows animation effects turned off.',
+        'Key and Fate drops by the orbs show up again on those PCs too.',
+        'They follow the Animations switch in Settings, like the rest of the roll reveals.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-23-skill-info-button',
+    title: 'Skill odds behind a small i',
+    date: '2026-10-23',
+    sections: {
+      changed: [
+        'Each skill you can level now has a small i in its corner. Point at it or tap it to see that skill\'s Key and Chaos Key odds.',
+        'The odds open beside the skill, so the skill stays in view while you click it to level up.',
+        'Like the old box over the whole skill? Turn on Skill odds on hover in Settings.',
+      ],
+      fixed: [
+        'The old hover box no longer stays stuck over a skill after you click it, and its first line isn\'t cut off.',
+        'In the OSRS layout, the skill odds now include your achievement bonus.',
       ],
     },
   },

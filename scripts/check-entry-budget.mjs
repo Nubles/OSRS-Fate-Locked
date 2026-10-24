@@ -24,7 +24,8 @@ import { gzipSync } from 'node:zlib';
 // 255: Chunked's Fate's Thread and fate's marks in the game engine, which every save runs through (254.2 on 2026-10-18).
 // 256: the build check behind chunk-error reloads, so a dropped connection doesn't reload onto the browser's error page (254.8 on 2026-10-18).
 // 219: advisors, the Activities sub-panels, the RuneLite bundle builder and the content service behind the journal routes load on demand (216.1 on 2026-10-19); about 3 kB of headroom, so growth shows.
-export const ENTRY_GZIP_BUDGET_KB = 219;
+// 220: the skill cards' info button and the Settings choice for the old hover box (219.3 on 2026-10-23; the box itself loads on first use).
+export const ENTRY_GZIP_BUDGET_KB = 220;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

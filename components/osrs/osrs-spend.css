@@ -121,12 +121,10 @@ html[data-ui="osrs"] .ospend-ring-b { animation: ospend-turn-back 1.6s linear in
 html[data-ui="osrs"] .ospend-ring-c { animation: ospend-turn 0.9s linear infinite; }
 @keyframes ospend-rise { from { transform: translateX(-50%) scaleY(0); } to { transform: translateX(-50%) scaleY(1); } }
 html[data-ui="osrs"] .ospend-beam { transform-origin: bottom center; animation: ospend-rise 0.6s steps(6) both; }
-@media (prefers-reduced-motion: reduce) {
-  html[data-ui="osrs"] .ospend-ring-a,
-  html[data-ui="osrs"] .ospend-ring-b,
-  html[data-ui="osrs"] .ospend-ring-c,
-  html[data-ui="osrs"] .ospend-beam { animation: none; }
-}
+/* No prefers-reduced-motion stop here: like the rest of the roll reveals these
+   follow only the in-app Animations toggle (OsrsSpendReveal skips the rings and
+   beam when it is off). Windows turns reduced motion on with "Animation
+   effects" off, which left the rings frozen for players who never asked. */
 
 /* ── History (compact panel and History board) ──────────────────────────── */
 html[data-ui="osrs"] .ohist { color: #ff981f; font: var(--osrs-fs, 16px) 'RS', sans-serif; }
