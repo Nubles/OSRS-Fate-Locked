@@ -523,7 +523,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
                 <KeyCount label="Omni" value={specialKeys} lit={specialKeys > 0} file="Enhanced_crystal_key.png" Fallback={Sparkles} tone={KEY_TONES.omni}
                   title={`Omni-Keys: click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} />
                 <KeyCount label="Chaos" value={chaosKeys} lit={chaosKeys > 0} file="Sinister_key.png" Fallback={Dna} tone={KEY_TONES.chaos}
-                  title="Chaos Keys: each one unlocks a random entry from all the tables at once" />
+                  title="Chaos Keys: for each one, fate picks a table, then a random entry in it" />
           </div>
           </div>
 

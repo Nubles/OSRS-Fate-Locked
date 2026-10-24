@@ -15,7 +15,7 @@ import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
 import { BANKS } from '../data/banks';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
-import { randomUnlockPool } from '../utils/gameEngine';
+import { pickChaosEntry, randomUnlockPool } from '../utils/gameEngine';
 import { createFreshState, initialState, prepareKeyRollAction } from '../context/GameContext';
 import { resolveModeRules } from './gameModes';
 
@@ -128,23 +128,29 @@ describe('economy ↔ engine consistency', () => {
     }
   });
 
-  it('says most Chaos Keys are guaranteed, and that big tables come up most', () => {
+  it('says most Chaos Keys are guaranteed, and that fate picks a table before an entry', () => {
     const chaos = KEY_TYPES.find(k => k.id === 'chaos')!;
     expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
-    expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
-    // A Chaos Key draws once from every eligible entry of every table, so a
-    // table's share is its size: on a fresh Vanilla run, where nothing is kept
-    // to reachable places, Banks is among the biggest.
-    const tableSizes = (mode: string) => {
-      const sizes = new Map<TableType, number>();
-      for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
-      return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
+    expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table|biggest tables/i);
+    // pickChaosEntry gives every table with an eligible entry the same share,
+    // so Skills and Equipment are as likely as the big Banks table.
+    const shares = (mode: string) => {
+      const pool = randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey');
+      const tables = [...new Set(pool.map(c => c.table))];
+      const counts = new Map<TableType, number>();
+      for (let i = 0; i < tables.length; i++) {
+        const { table } = pickChaosEntry(pool, index => index === 0 ? (i + 0.5) / tables.length : 0)!;
+        counts.set(table, (counts.get(table) ?? 0) + 1);
+      }
+      return counts;
     };
-    expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
-    // Chunked only offers banks in owned chunks, so a fresh run's biggest table is Merchants.
-    expect(tableSizes('chunked')[0]).toBe(TableType.MERCHANTS);
-    expect(tableSizes('chunked').slice(0, 5)).not.toContain(TableType.BANKS);
-    expect(chaos.spend).toContain("Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. In Chunked, only banks and guilds inside your chunks can come up.");
+    for (const mode of ['vanilla', 'chunked']) {
+      const counts = shares(mode);
+      expect(counts.get(TableType.SKILLS)).toBe(1);
+      expect(counts.get(TableType.EQUIPMENT)).toBe(1);
+      expect(counts.get(TableType.BANKS)).toBe(1);
+    }
+    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only banks and guilds inside your chunks can come up.");
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {

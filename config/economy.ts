@@ -370,6 +370,13 @@ export interface KeyTypeInfo {
 }
 
 /** Where land comes from in Chunked, since an Omni-Key can't pick it (the UNLOCK reducer refuses). */
+/** How a Chaos Key picks (utils/gameEngine.ts pickChaosEntry). */
+export const CHAOS_PICK_TEXT = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
+export const CHAOS_REACH_TEXT = "Places you can't reach yet can come up too.";
+export const CHUNKED_CHAOS_TEXT = 'In Chunked, only banks and guilds inside your chunks can come up.';
+/** A seeded run from before the table-first rule keeps its old draw (utils/seededRng.ts chaosPicksTableFirst). */
+export const OLD_SEEDED_CHAOS_TEXT = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
+
 export const CHUNKED_OMNI_LAND_TEXT = "In Chunked an Omni-Key can't pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate's Mercy.";
 
 export const KEY_TYPES: KeyTypeInfo[] = [
@@ -411,7 +418,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
       'The Ritual of Chaos turns Fate Points into one.',
     ],
-    spend: "Unlocks one random entry from all the tables at once. Every entry left is equally likely, so the biggest tables come up most, places you can't reach yet included. In Chunked, only banks and guilds inside your chunks can come up.",
+    spend: `${CHAOS_PICK_TEXT} Outside Chunked, places you can't reach yet can come up too. ${CHUNKED_CHAOS_TEXT}`,
   },
 ];
 

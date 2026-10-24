@@ -31,9 +31,9 @@ import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
 import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
 import { loadWalkSections } from '../utils/walkSections';
-import { UNLOCK_COST, randomUnlockPool, pickRandomPoolEntry, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
+import { UNLOCK_COST, randomUnlockPool, pickRandomUnlock, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
-import { drawFloat, seededContext } from '../utils/seededRng';
+import { CURRENT_RNG_VERSION, chaosPicksTableFirst, drawFloat, seededContext, usesSemanticContext } from '../utils/seededRng';
 import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
@@ -628,7 +628,7 @@ export function prepareKeyRollAction(
 
   // Integer dice must land inside their float bin, not on its rounding edge.
   // Keep the old conversion for existing seeded histories to preserve their stream.
-  const dieOffset = state.rngSeed && state.rngVersion !== 2 ? 1 : 0.5;
+  const dieOffset = state.rngSeed && !usesSemanticContext(state) ? 1 : 0.5;
   let roll: number;
   let baseThreshold: number;
   let effectiveThreshold: number;
@@ -1171,7 +1171,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // Like the game mode, the seed is part of the run's identity — it can
       // be chosen or changed only while the run has no history.
       if (state.history.length > 0) return state;
-      return { ...state, rngSeed: action.payload || undefined, rngVersion: 2 };
+      return { ...state, rngSeed: action.payload || undefined, rngVersion: CURRENT_RNG_VERSION };
     }
 
     case 'ACCEPT_DETECTED_EVENT': {
@@ -3077,7 +3077,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         const lean = nextFloat('fate-thread-lean');
         if (!current.fateLand?.tangled) pool = leanTowardThread(pool, current.fateLand?.thread, lean);
       }
-      const selection = pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
+      // A Chaos Key picks a table, then an entry in it (utils/gameEngine.ts).
+      const selection = pickRandomUnlock(pool, costType, chaosPicksTableFirst(current), nextFloat);
       if (!selection) {
         showToast(warded
           ? "Saradomin's Ward finds nothing here you can use yet. Your Key is safe: try another category."

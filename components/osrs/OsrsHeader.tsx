@@ -131,7 +131,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
           <img className="osrs-px" src={sprite('omni_key.png')} alt="Omni-Keys" width={36} height={32} />
           <span className="osrs-stack">{specialKeys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. Each one unlocks a random entry from all the tables at once.`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Chaos Keys: ${chaosKeys}. For each one, fate picks a table, then a random entry in it.`}>
           <img className="osrs-px" src={sprite('chaos_key.png')} alt="Chaos Keys" width={36} height={32} />
           <span className="osrs-stack">{chaosKeys}</span>
         </div>

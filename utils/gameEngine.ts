@@ -134,6 +134,41 @@ export const pickRandomPoolEntry = <T>(pool: readonly T[], nextFloat: () => numb
     return pool[Math.floor(nextFloat() * pool.length)];
 };
 
+/**
+ * A Chaos Key's draw: fate first picks one of the tables that still has an
+ * eligible entry, each table equally likely, then one entry in that table.
+ * So Skills and Equipment come up as often as Areas or Banks, however many
+ * entries each holds. Tables with nothing eligible are skipped; an empty pool
+ * draws nothing and never touches RNG. `draw(0)` picks the table, `draw(1)`
+ * the entry.
+ */
+export const pickChaosEntry = <T extends { table: TableType }>(pool: readonly T[], draw: (index: number) => number): T | undefined => {
+    const byTable = new Map<TableType, T[]>();
+    for (const candidate of pool) {
+        const entries = byTable.get(candidate.table);
+        if (entries) entries.push(candidate);
+        else byTable.set(candidate.table, [candidate]);
+    }
+    const table = pickRandomPoolEntry([...byTable.values()], () => draw(0));
+    return table && pickRandomPoolEntry(table, () => draw(1));
+};
+
+/**
+ * How a random spend picks from its pool. A Standard Key draws one entry of its
+ * table. A Chaos Key picks a table first (pickChaosEntry), except on a seeded
+ * run started before that rule (rngVersion below 3): those keep the old single
+ * draw over every table's entries, so their seed replays the same fate.
+ */
+export const pickRandomUnlock = <T extends { table: TableType }>(
+    pool: readonly T[],
+    costType: 'key' | 'chaosKey',
+    chaosTableFirst: boolean,
+    nextFloat: (purpose: string, index?: number) => number,
+): T | undefined => {
+    if (costType === 'chaosKey' && chaosTableFirst) return pickChaosEntry(pool, index => nextFloat('chaos', index));
+    return pickRandomPoolEntry(pool, () => nextFloat(costType === 'key' ? 'gacha' : 'chaos'));
+};
+
 /** Each table's pool; the Areas pool depends on which areas the run's mode frees. */
 export const getPoolAndStateKey = (table: TableType, mode?: string, custom?: GameModeRules) => {
     switch (table) {
