@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-24-keys-roll-anything',
+    title: 'Keys roll anything left',
+    date: '2026-10-24',
+    sections: {
+      changed: [
+        "In Vanilla, Keys and Chaos Keys now roll any boss or minigame left, even ones you can't reach yet.",
+        "Saradomin's Ward is the one way to keep a Key to what you can use right now.",
+        "A Chaos Key is always random: it no longer uses up a waiting Ward. Chunked is unchanged.",
+      ],
+    },
+  },
+  {
     id: '2026-10-23-roll-rings',
     title: 'Roll rings turn again',
     date: '2026-10-23',
