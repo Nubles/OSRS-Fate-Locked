@@ -13,6 +13,7 @@ import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
 import { FateMapOptions } from '../FateMapOptions';
+import { OffDeviceCopyStatus } from '../OffDeviceCopyStatus';
 import { OsrsXpDrops } from './OsrsXpDrops';
 import { CHUNKED_OMNI_LAND_TEXT } from '../../config/economy';
 import './osrs-shell.css';
@@ -239,6 +240,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAdvisors()} aria-pressed={advisorsEnabled}>Advisor panels {onOff(advisorsEnabled)}</button>
                   <button type="button" className="osrs-menu-item" onClick={() => setSkillOddsHover(!skillOddsHover)} aria-pressed={skillOddsHover} title="On: a skill's roll odds show when you hover it. Off: they open from the small i in its corner.">Skill odds on hover {onOff(skillOddsHover)}</button>
                   <div className="osrs-menu-sep" />
+                  <OffDeviceCopyStatus osrs />
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onImportSave)}>Import save</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onExportSave)} title={FATE_EXPORT_HINT}>Export save file (.fate)</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => setShowSyncCode(true))}>Sync code (move device)</button>

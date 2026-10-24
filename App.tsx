@@ -72,6 +72,7 @@ const SupplyChainCalculator = lazyWithRetry(() => import('./components/SupplyCha
 const GameModePicker = lazyWithRetry(() => import('./components/GameModePicker').then(m => ({ default: m.GameModePicker })));
 const SyncCodeModal = lazyWithRetry(() => import('./components/SyncCodeModal').then(m => ({ default: m.SyncCodeModal })));
 const OnlineBackupDriver = lazyWithRetry(() => import('./components/OnlineBackupDriver').then(m => ({ default: m.OnlineBackupDriver })));
+const PersistentStorageDriver = lazyWithRetry(() => import('./components/PersistentStorageDriver').then(m => ({ default: m.PersistentStorageDriver })));
 const ProgressShareDriver = lazyWithRetry(() => import('./components/ProgressShareDriver').then(m => ({ default: m.ProgressShareDriver })));
 const OnlineBackupPrompt = lazyWithRetry(() => import('./components/OnlineBackupPrompt').then(m => ({ default: m.OnlineBackupPrompt })));
 const BackupNagBanner = lazyWithRetry(() => import('./components/BackupNagBanner').then(m => ({ default: m.BackupNagBanner })));
@@ -1123,6 +1124,8 @@ const GameLayout = () => {
       <EffectsLayer />
       <OnlineSyncDriver />
       <Suspense fallback={null}><OnlineBackupDriver /></Suspense>
+      {/* Quietly asks the browser to keep site storage at the run's first roll. */}
+      <Suspense fallback={null}><PersistentStorageDriver /></Suspense>
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as

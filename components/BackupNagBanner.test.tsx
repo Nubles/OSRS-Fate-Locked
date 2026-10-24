@@ -9,7 +9,7 @@ import { BackupNagBanner } from './BackupNagBanner';
 const backupNag = vi.hoisted(() => ({
   shouldNag: vi.fn(() => true),
   snoozeNag: vi.fn(),
-  lastExportLabel: vi.fn(() => 'Never'),
+  readNagRecord: vi.fn(() => ({ lastExport: 0, snoozeUntil: 0 })),
 }));
 const game = vi.hoisted(() => ({
   history: [{ id: 'event-1' }],
@@ -60,6 +60,17 @@ describe('BackupNagBanner', () => {
     await user.click(screen.getByRole('button', { name: 'Enable persistent storage' }));
     expect(persistent.requestPersistence).toHaveBeenCalledOnce();
     expect(screen.getByRole('button', { name: 'Export backup' })).toBeTruthy();
+  });
+
+  it('says when the run last left the device, counting online backup uploads', () => {
+    const { unmount } = render(<BackupNagBanner />);
+    expect(screen.getByText(/Last backup outside this browser:/).textContent).toMatch(/would erase it\. Last backup outside this browser: never\./);
+    unmount();
+
+    // A stale online backup brings the reminder back, and it counts as the last copy.
+    onlineBackup.record = { code: '0123456789ABCDEFGHJK', lastUploadAt: Date.now() - 9 * 86_400_000 };
+    render(<BackupNagBanner />);
+    expect(screen.getByText(/Last backup outside this browser:/).textContent).toMatch(/9 days ago/);
   });
 
   it('waits while the online backup prompt is unanswered, so one banner shows at a time', () => {

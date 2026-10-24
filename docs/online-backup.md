@@ -96,6 +96,24 @@ once whether to turn backup on. **Set up** opens the Online tab; **Not now**
 answers it for good. While the prompt is unanswered, and while online backup
 has a copy from the last week, the "export a .fate backup" reminder waits.
 
+On Safari, and in any browser on iPhone or iPad, a site's storage can be
+deleted after 7 days of browser use without a visit. There the same prompt
+comes at 3 History entries, saying why, while the browser hasn't granted
+persistent storage, the tracker isn't opened from the home screen, and the run
+has no .fate file or online backup yet (`utils/persistentStorage.ts`).
+
+## Persistent storage and the last copy outside the browser
+
+`components/PersistentStorageDriver.tsx` calls `navigator.storage.persist()`
+once per profile, quietly, at the run's first History entry. Chrome, Edge and
+Safari answer without a prompt; Firefox shows one, so it isn't asked there (the
+reminder's **Keep site storage** button still is). The request is remembered as
+`persistRequestedAt` in the profile's `__exportNag` record.
+
+The Settings menu and the export reminder show "Last backup outside this
+browser": the later of the last .fate file and the last online backup upload
+(not counting an upload paused because it holds a different run).
+
 ## Relay API
 
 | Method | Path | Request | Response |
