@@ -4,7 +4,7 @@
  * plugin can then warn inside Keldagrim, not only at its entrance, and
  * point to the nearest usable bank.
  */
-import { BANKS } from '../data/banks';
+import { BANKS, MERGED_BANKS } from '../data/banks';
 import type { ChunkContent } from '../services/ChunkContentService';
 import { chunkEntry } from './chunkEntry';
 import { bankAccess, type ChunkPermissionContext, type PermissionStatus } from './chunkPermissionSnapshot';
@@ -19,8 +19,9 @@ export interface BankDecision {
   at: string;
   /**
    * The chunks its facilities are in: its own chunk when the facilities are
-   * on the surface, and the interiors entered from it that hold one. A bank
-   * with no facility found stays at its chunk.
+   * on the surface, the interiors entered from it that hold one, and a
+   * merged chunk's facilities (the Falador west bank's deposit box, over its
+   * chunk line). A bank with no facility found stays at its chunk.
    */
   physical: string[];
 }
@@ -55,6 +56,13 @@ export function bankDecisions(source: BankDecisionSource, context: ChunkPermissi
       ...source.interiorsEnteredFrom(coord.cx, coord.cy)
         .filter(({ sourceId, content: inside }) => /^\d+$/.test(sourceId) && bankFacilities(inside, bank.id).length)
         .map(({ sourceId }) => Number(sourceId)),
+      ...Object.entries(MERGED_BANKS)
+        .filter(([from, into]) => {
+          if (into !== bank.id) return false;
+          const merged = source.surfaceContentFor(Math.floor(Number(from) / 256), Number(from) % 256);
+          return !!merged && bankFacilities(merged, bank.id).length > 0;
+        })
+        .map(([from]) => Number(from)),
     ];
     decisions[bank.id] = {
       name: bank.name,

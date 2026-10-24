@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { isBankReachable, bankLocksActive } from './reachability';
 import { isValidUnlock, getPoolAndStateKey } from './gameEngine';
-import { BANKS, BANK_IDS, bankId, BANK_BY_ID } from '../data/banks';
+import { BANKS, BANK_IDS, bankId, BANK_BY_ID, MERGED_BANKS } from '../data/banks';
 import { TableType, UnlockState } from '../types';
 
 const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -12,27 +12,30 @@ const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
 });
 
 describe('bank data', () => {
-  it('has 126 uniquely-named, uniquely-keyed banks', () => {
+  it('has 125 uniquely-named, uniquely-keyed banks', () => {
     // Two of the Chunk Picker's 127 bank chunks open no bank and are merged into
     // the bank each leads to (data/sources/bank-locations.json merges).
-    expect(BANKS.length).toBe(126);
-    expect(new Set(BANK_IDS).size).toBe(126);
-    expect(new Set(BANKS.map(b => b.name)).size).toBe(126);
+    expect(BANKS.length).toBe(125);
+    expect(new Set(BANK_IDS).size).toBe(125);
+    expect(new Set(BANKS.map(b => b.name)).size).toBe(125);
   });
 
   it('contains every reviewed fixed-location addition with facility-first labels', () => {
     const additions = [
       '5678', '6454', '6458', '6711', '6712', '6961', '7225', '8499',
       '8508', '8751', '8756', '8757', '8999', '9274', '10553', '11047',
-      '11056', '11062', '11066', '11572', '11578', '12082', '12337', '12838',
+      '11056', '11062', '11066', '11578', '12082', '12337', '12838',
       '12849', '14132',
     ];
     expect(BANK_IDS).toEqual(expect.arrayContaining(additions));
+    // The Falador west bank's deposit box, over the bank's chunk line, is West Falador's.
+    expect(BANK_IDS).not.toContain('11572');
+    expect(MERGED_BANKS['11572']).toBe('11828');
     expect(BANK_BY_ID['10275'].name).toBe('Wyrmscraig bank chest');
     expect(BANK_BY_ID['11830'].name).toBe('Ruins of Camdozaal (via Ice Mountain)');
     expect(BANK_BY_ID['14132'].name).toBe('Sangvesti and Castle Drakan banking');
     expect(BANK_BY_ID['woodcutting-leprechaun'].name).toBe('Woodcutting Leprechaun (Forestry)');
-    expect(BANK_IDS.filter(id => /^\d+$/.test(id))).toHaveLength(125);
+    expect(BANK_IDS.filter(id => /^\d+$/.test(id))).toHaveLength(124);
   });
 
   it('names the Ardougne banks under their existing chunk ids', () => {
