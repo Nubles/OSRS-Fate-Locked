@@ -23,6 +23,14 @@ import {
   getPendingSave,
   resetPendingSavesForTest,
 } from './utils/pendingSaves';
+import { runDrawFloat } from './utils/seededRng';
+
+// Every run draws from its seed or hidden salt (runDrawFloat), never
+// Math.random, so a test that needs a given draw sets it here.
+vi.mock('./utils/seededRng', async importOriginal => {
+  const actual = await importOriginal<typeof import('./utils/seededRng')>();
+  return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
 const values = new Map<string, string>();
@@ -199,6 +207,7 @@ afterEach(() => {
   cleanup();
   resetPendingSavesForTest();
   values.clear();
+  vi.mocked(runDrawFloat).mockReset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   window.history.replaceState(null, '', '/');
@@ -311,7 +320,7 @@ describe('App changelog lifecycle', () => {
     readyState.unlocks.levels.Attack = currentLevel;
     storage.setItem(profileKey, JSON.stringify(readyState));
     storage.setItem(changelogStorageKey, latestChangelogId);
-    vi.spyOn(Math, 'random')
+    vi.mocked(runDrawFloat)
       .mockReturnValueOnce(0.01)
       .mockReturnValue(0.99);
     render(<App />);
@@ -323,7 +332,9 @@ describe('App changelog lifecycle', () => {
     });
     fireEvent.click(attackCard);
 
-    expect(await screen.findByText(expectedMessage)).toBeTruthy();
+    // The level's Key roll result follows the reward (utils/rollOutcomeText.ts).
+    const escaped = expectedMessage.replace(/[+!]/g, '\\$&');
+    expect(await screen.findByText(new RegExp(`^${escaped} No Key: \\+\\d+ Fate \\(\\d+/50\\)$`))).toBeTruthy();
   });
 
   it('recovers a structurally malformed profile registry without blanking the dashboard', async () => {
@@ -554,7 +565,7 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByText('Something went wrong')).toBeNull();
   }, 15_000);
 
-  it('auto-opens one unseen release after onboarding completes', async () => {
+  it('auto-opens one unseen release after onboarding completes on a run with rolls', async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -576,7 +587,7 @@ describe('App changelog lifecycle', () => {
     });
     expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
   }, 25_000);
-  it('defers the unseen release until the post-onboarding game-mode prompt closes', async () => {
+  it('keeps What\'s New closed for a brand-new player after the game-mode prompt closes', async () => {
     storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
     const user = userEvent.setup();
     render(<App />);
@@ -591,7 +602,14 @@ describe('App changelog lifecycle', () => {
     expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
 
     await user.click(within(gameMode).getByRole('button', { name: 'Close' }));
-    expect(await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 })).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: 'Choose game mode' })).toBeNull();
+    });
+    // Every release predates a new player: onboarding marks them all read.
+    expect(storage.getItem(changelogStorageKey)).toBe(latestChangelogId);
+    // What's New loads lazily, so give it time to show up if it were going to.
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 1_500)); });
+    expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
   }, 25_000);
 
   it('scrubs a valid RuneLite pairing fragment and owns the startup modal', async () => {

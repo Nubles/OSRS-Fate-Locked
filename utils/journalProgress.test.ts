@@ -61,6 +61,7 @@ describe('questUnmet', () => {
     expect(questUnmet(QUEST_DATA['Dream Mentor'], u({
       regions: ['Lunar Isle'],
       quests: ['Lunar Diplomacy', "Eadgar's Ruse"],
+      merchants: ['Magic Shops'],
       levels: {
         Attack: 60, Strength: 60, Defence: 60, Hitpoints: 60,
         Prayer: 60, Ranged: 60, Magic: 60,
@@ -74,6 +75,7 @@ describe('questUnmet', () => {
       quests: ['Pandemonium', "The Knight's Sword"],
       skills: { Smithing: 3, Sailing: 2 },
       levels: { Smithing: 30, Sailing: 12 },
+      merchants: ['Food Shops'],
     }))).toEqual([{
       kind: 'manual',
       label: 'Confirm: One open Sailing task slot',

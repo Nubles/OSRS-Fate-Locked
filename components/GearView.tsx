@@ -1,10 +1,11 @@
 import { createPortal } from 'react-dom';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Search, Trash2, Lock, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Shirt } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS, SLOT_CONFIG } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { gearService } from '../services/GearService';
 import { chunkContentService } from '../services/ChunkContentService';
 import { GearItem, sumBonuses, BONUS_GROUPS, GearBonuses } from '../utils/gearStats';
@@ -178,6 +179,8 @@ interface PickerProps {
 
 const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, onClose, onEquip, onRemove, onRetry }) => {
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
   const [query, setQuery] = useState('');
   // Lazy-load the chunk-content dataset so we can show where each item is
   // obtainable (and whether that source is unlocked yet).
@@ -209,6 +212,8 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-150"
       onClick={onClose}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label={`Choose ${slot}`}

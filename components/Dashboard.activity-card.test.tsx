@@ -53,7 +53,7 @@ afterEach(() => {
 const openBosses = async () => {
   const user = userEvent.setup();
   render(<Dashboard suspendModals />);
-  await user.click(screen.getByRole('button', { name: /Activities & Utility/ }));
+  await user.click(screen.getByRole('tab', { name: /Activities & Utility/ }));
   return screen.getByText('The Mad Angel').closest('div.relative') as HTMLElement;
 };
 
@@ -92,7 +92,7 @@ describe('Dashboard activity cards', () => {
   it("lists Druidic Ritual beside Mastering Mixology's Herblore level", async () => {
     const user = userEvent.setup();
     render(<Dashboard suspendModals />);
-    await user.click(screen.getByRole('button', { name: /Activities & Utility/ }));
+    await user.click(screen.getByRole('tab', { name: /Activities & Utility/ }));
     await user.click(screen.getByText('Minigames').closest('button')!);
     const card = screen.getByText('Mastering Mixology').closest('div.relative') as HTMLElement;
 

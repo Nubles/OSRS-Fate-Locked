@@ -15,8 +15,8 @@ export interface SkillOddsInfo {
   skill: string;
   level: number;
   tier: number;
-  /** Extra Key chance from the run's level-up achievements. */
-  boost?: number;
+  /** The next level's Key chance as the roll makes it (utils/keyChance.ts levelUpKeyChance). */
+  chance: number | null;
   /** Chunked: the tier cap when the next level is past it, so it rolls nothing. */
   pastCap?: number;
 }

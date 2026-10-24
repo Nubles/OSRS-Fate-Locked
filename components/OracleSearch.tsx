@@ -321,8 +321,8 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
             onKeyDown={handleKeyDown}
           />
           <SectionGuide id="ORACLE" />
-          <button onClick={onClose} className="p-1 hover:bg-[#333] rounded text-gray-500 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="p-1 hover:bg-[#333] rounded text-gray-500 hover:text-white transition-colors" aria-label="Close">
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 

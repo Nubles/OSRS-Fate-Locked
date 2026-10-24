@@ -4,11 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { SkillRollOdds } from './SkillRollOdds';
 import { SkillOddsDetails } from './SkillInfoBox';
 import { SKILL_CHAOS_MILESTONES } from '../config/economy';
+import { skillLevelKeyChance } from '../utils/keyRoll';
 
 describe('SkillRollOdds', () => {
   it('shows the exact chance for the next level', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" />,
+      <SkillRollOdds currentLevel={41} chance={skillLevelKeyChance(41 + 1)} isUnlocked descriptionId="attack-key-roll-description" />,
     );
 
     expect(html).toContain('Next Lv 42');
@@ -20,24 +21,24 @@ describe('SkillRollOdds', () => {
   it('names the guaranteed Chaos Key when the next level is a milestone', () => {
     for (const level of SKILL_CHAOS_MILESTONES) {
       const html = renderToStaticMarkup(
-        <SkillRollOdds currentLevel={level - 1} isUnlocked descriptionId="attack-key-roll-description" />,
+        <SkillRollOdds currentLevel={level - 1} chance={skillLevelKeyChance(level - 1 + 1)} isUnlocked descriptionId="attack-key-roll-description" />,
       );
       expect(html, `level ${level}`).toContain(`Level ${level} also gives a guaranteed Chaos Key, and a separate 2% chance of another.`);
     }
   });
 
-  it('adds the run\'s level-up boost from achievements', () => {
+  it('shows the chance it is given, with what the run\'s boosts add', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" boost={2} />,
+      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" chance={10.4} />,
     );
 
     expect(html).toContain('10.4% Key');
-    expect(html).toContain('Your achievements add 2% to the Key chance.');
+    expect(html).toContain('8.4% base, +2% from your boosts.');
   });
 
   it('shows the maximum eligible chance at level 98', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={98} isUnlocked descriptionId="attack-key-roll-description" />,
+      <SkillRollOdds currentLevel={98} chance={skillLevelKeyChance(98 + 1)} isUnlocked descriptionId="attack-key-roll-description" />,
     );
 
     expect(html).toContain('Next Lv 99');
@@ -46,15 +47,15 @@ describe('SkillRollOdds', () => {
 
   it('shows nothing for locked or maxed skills', () => {
     expect(renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked={false} descriptionId="attack-key-roll-description" />,
+      <SkillRollOdds currentLevel={41} chance={skillLevelKeyChance(41 + 1)} isUnlocked={false} descriptionId="attack-key-roll-description" />,
     )).toBe('');
     expect(renderToStaticMarkup(
-      <SkillRollOdds currentLevel={99} isUnlocked descriptionId="attack-key-roll-description" />,
+      <SkillRollOdds currentLevel={99} chance={skillLevelKeyChance(99 + 1)} isUnlocked descriptionId="attack-key-roll-description" />,
     )).toBe('');
   });
   it('keeps the Chaos explanation for screen readers only by default', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" />,
+      <SkillRollOdds currentLevel={41} chance={skillLevelKeyChance(41 + 1)} isUnlocked descriptionId="attack-key-roll-description" />,
     );
 
     expect(html).toContain('id="attack-key-roll-description"');
@@ -68,7 +69,7 @@ describe('SkillRollOdds', () => {
     const html = renderToStaticMarkup(
       <div className="group" role="button" tabIndex={0} aria-describedby={descriptionId}>
         <SkillRollOdds
-          currentLevel={41}
+          currentLevel={41} chance={skillLevelKeyChance(41 + 1)}
           isUnlocked
           descriptionId={descriptionId}
           hoverBox
@@ -91,7 +92,7 @@ describe('SkillRollOdds', () => {
   });
   it('says a Chunked level past the tier cap rolls nothing', () => {
     const html = renderToStaticMarkup(
-      <SkillRollOdds currentLevel={10} isUnlocked descriptionId="wc" pastCap={10} />,
+      <SkillRollOdds currentLevel={10} chance={null} isUnlocked descriptionId="wc" pastCap={10} />,
     );
     expect(html).toContain('Next Lv 11 · no roll');
     expect(html).toContain('levels past the cap roll no Keys');
@@ -100,9 +101,9 @@ describe('SkillRollOdds', () => {
 });
 
 describe('SkillOddsDetails', () => {
-  it('lists the Key chance with the achievement share, the Chaos Key odds and the tier reach', () => {
+  it("lists the Key chance with the boosts' share, the Chaos Key odds and the tier reach", () => {
     const html = renderToStaticMarkup(
-      <SkillOddsDetails skill="Hitpoints" level={53} tier={6} boost={1.3} variant="classic" />,
+      <SkillOddsDetails skill="Hitpoints" level={53} tier={6} chance={skillLevelKeyChance(54) + 1.3} variant="classic" />,
     );
     expect(html).toContain('Hitpoints');
     expect(html).toContain('Next Lv 54');
@@ -115,17 +116,17 @@ describe('SkillOddsDetails', () => {
 
   it('names a guaranteed Chaos Key on a milestone level and leaves out the next one', () => {
     const html = renderToStaticMarkup(
-      <SkillOddsDetails skill="Attack" level={49} tier={5} variant="osrs" />,
+      <SkillOddsDetails skill="Attack" level={49} tier={5} chance={skillLevelKeyChance(50)} variant="osrs" />,
     );
     expect(html).toContain('Attack: next level 50');
     expect(html).toContain('Chaos Key: guaranteed, plus 2% for another');
     expect(html).not.toContain('Next free Chaos');
-    expect(html).not.toContain('From achievements');
+    expect(html).not.toContain('From your boosts');
   });
 
   it('says a Chunked level past the tier cap rolls nothing', () => {
     const html = renderToStaticMarkup(
-      <SkillOddsDetails skill="Woodcutting" level={10} tier={1} pastCap={10} variant="osrs" />,
+      <SkillOddsDetails skill="Woodcutting" level={10} tier={1} chance={null} pastCap={10} variant="osrs" />,
     );
     expect(html).toContain('Key chance: no roll');
     expect(html).toContain("past this tier&#x27;s cap of level 10");

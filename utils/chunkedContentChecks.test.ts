@@ -253,8 +253,9 @@ describe('Chunked combat achievements follow boss reachability', () => {
     const tasks = ALL_CA_TASKS.filter(task => task.monster === 'Obor');
     const unlocks = fresh({ bosses: ['Obor'] });
     expect(doableCATasks(tasks, unlocks, 'chunked')).toEqual([]);
-    // Vanilla keeps counting an unlocked boss.
-    expect(doableCATasks(tasks, unlocks, 'vanilla').length).toBe(tasks.length);
+    // Vanilla asks for Obor's area, Edgeville, instead of the chunk.
+    expect(doableCATasks(tasks, unlocks, 'vanilla')).toEqual([]);
+    expect(doableCATasks(tasks, { ...unlocks, regions: ['Edgeville'] }, 'vanilla').length).toBe(tasks.length);
   });
 
   it('counts the Mimic task once an Omni-Key unlocks the Mimic (content audit fix 2)', () => {

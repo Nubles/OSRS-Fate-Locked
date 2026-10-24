@@ -10,6 +10,7 @@ import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { DropSource, type GameState } from '../types';
 import { classifyFateEvent, classifyFateEventCandidate } from './fateEventEligibility';
+import { BOSS_TASK_ROLL_ON_CARD, SLAYER_LOCKED } from './farmGates';
 
 const state = (overrides: Partial<GameState> = {}): GameState => ({
   ...initialState,
@@ -124,7 +125,17 @@ describe('classifyFateEvent', () => {
     expect(classifyFateEvent(event('QUEST', "Cook's Assistant"), withUnlocks({ quests: ["Cook's Assistant"] })))
       .toEqual({ state: 'BLOCKED', reason: 'Already completed' });
     expect(classifyFateEvent(event('QUEST', 'Dragon Slayer I'), state()))
-      .toEqual({ state: 'BLOCKED', reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, Quest Points 32' });
+      .toEqual({
+        state: 'BLOCKED',
+        reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, '
+          + 'Smithing 34 + Bars & Inns + Clothes Shops or Smithing 34 + Bars & Inns + Silk Shops'
+          + ' or Smithing 34 + Thieving 20 + Bars & Inns or Civitas illa Fortis + Smithing 34 + Bars & Inns'
+          + ' or Smithing 34 + General Stores or Sawmill Operators + Bars & Inns + Clothes Shops'
+          + ' or Sawmill Operators + Bars & Inns + Silk Shops or Thieving 20 + Sawmill Operators + Bars & Inns'
+          + ' or Civitas illa Fortis + Sawmill Operators + Bars & Inns or Sawmill Operators + General Stores'
+          + ', Quest Points 32, Crafting 8, '
+          + "Shield T1: Equip the anti-dragon shield against Elvarg's dragonfire",
+      });
 
     // Manual checks wait for the player's review, which then confirms them.
     const sheep = event('QUEST', 'Sheep Shearer');
@@ -170,6 +181,23 @@ describe('classifyFateEvent', () => {
     // Up to the cap it rolls, and Vanilla rolls every level.
     expect(classifyFateEvent(levelEvent(10), woodcutting('chunked', 9)).state).toBe('READY');
     expect(classifyFateEvent(levelEvent(11), woodcutting('vanilla', 10)).state).toBe('READY');
+  });
+
+  // Critique GP-1 (October 2026): Sync & Roll's baseline holds for RuneLite too.
+  it('rolls no detected level the account had when Sync & Roll linked it', () => {
+    const linked = {
+      ...withUnlocks({ skills: { Attack: 10 }, levels: { ...initialState.unlocks.levels, Attack: 1 } }),
+      linkedAccount: 'Linked',
+      syncBaseline: { account: 'Linked', levels: { Attack: 70 }, takenAt: 1 },
+    };
+    const levelEvent = (level: number) => event('SKILL_LEVEL', `Attack Level ${level}`, { account: 'Linked', evidence: { skill: 'Attack', level } });
+    expect(classifyFateEvent(levelEvent(70), linked)).toEqual({
+      state: 'BLOCKED',
+      reason: 'Your account was already level 70 in Attack when this run was linked. Only new levels roll.',
+    });
+    expect(classifyFateEvent(levelEvent(71), linked)).toMatchObject({ state: 'READY', progress: { kind: 'SKILL_LEVEL', skill: 'Attack', level: 71 } });
+    // Vanilla keeps rolling past the tier band, as the manual button does.
+    expect(classifyFateEvent(levelEvent(71), { ...linked, unlocks: { ...linked.unlocks, skills: { Attack: 1 } } }).state).toBe('READY');
   });
 
   // Audit V6 (October 2026): a detected 9 -> 30 at tier 1 rolled at level 30's
@@ -483,9 +511,15 @@ describe('classifyFateEvent', () => {
     const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
       detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
     });
+    // Duradel: Slayer tier 5, and Shilo Village (the area and the quest).
+    const duradelOpen = withUnlocks({
+      skills: { ...initialState.unlocks.skills, Slayer: 5 },
+      regions: ['Shilo Village'],
+      quests: ['Shilo Village'],
+    });
     expect(classifyFateEventCandidate(
       slayerEvent,
-      state(),
+      duradelOpen,
       'Slayer (Duradel/Kuradal)',
     )).toMatchObject({
       state: 'READY',
@@ -495,5 +529,20 @@ describe('classifyFateEvent', () => {
         failureFate: 2,
       },
     });
+  });
+
+  it('holds a confirmed Slayer task to the Farm Keys card gates (GP-10)', () => {
+    const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
+      detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
+    });
+    expect(classifyFateEventCandidate(slayerEvent, state(), 'Slayer (Duradel/Kuradal)'))
+      .toEqual({ state: 'BLOCKED', reason: SLAYER_LOCKED });
+    const slayerOpen = withUnlocks({ skills: { ...initialState.unlocks.skills, Slayer: 10 }, slayerUnlocks: ['Like a Boss'] });
+    expect(classifyFateEventCandidate(slayerEvent, slayerOpen, 'Slayer (Duradel/Kuradal)'))
+      .toEqual({ state: 'BLOCKED', reason: 'Needs the Shilo Village area' });
+    // A boss task rolls from its boss's stash, so the Farm Keys card, which asks which boss, rolls it.
+    expect(classifyFateEventCandidate(slayerEvent, slayerOpen, DropSource.SLAYER_BOSS))
+      .toEqual({ state: 'BLOCKED', reason: BOSS_TASK_ROLL_ON_CARD });
+    expect(classifyFateEventCandidate(slayerEvent, slayerOpen, DropSource.SLAYER_VANNAKA).state).toBe('READY');
   });
 });

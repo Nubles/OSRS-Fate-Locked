@@ -48,7 +48,7 @@ afterEach(cleanup);
 const merchantCard = async (category: string) => {
   const user = userEvent.setup();
   render(<Dashboard suspendModals />);
-  await user.click(screen.getByRole('button', { name: /Activities & Utility/ }));
+  await user.click(screen.getByRole('tab', { name: /Activities & Utility/ }));
   await user.click(screen.getByRole('button', { name: /^Merchants/ }));
   return screen.getByText(category).closest('div.relative') as HTMLElement;
 };

@@ -4,7 +4,11 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readOnlineBackupRecord, writeOnlineBackupRecord } from '../utils/onlineBackupRecord';
+import { markExported } from '../utils/backupNag';
+import { AT_RISK_BACKUP_PROMPT_MIN_HISTORY } from '../utils/persistentStorage';
 import { OnlineBackupPrompt, ONLINE_BACKUP_PROMPT_MIN_HISTORY } from './OnlineBackupPrompt';
+
+const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
 const game = vi.hoisted(() => ({ history: [] as unknown[] }));
 
@@ -30,6 +34,7 @@ describe('OnlineBackupPrompt', () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('asks once a run has some progress, and Set up opens the Online backup tab', async () => {
@@ -86,5 +91,29 @@ describe('OnlineBackupPrompt', () => {
 
     act(() => { writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK', lastRunId: 'run-2' }); });
     expect(screen.queryByRole('region', { name: 'Online backup paused' })).toBeNull();
+  });
+
+  describe('on Safari and iPhone, where a week away can wipe the run', () => {
+    beforeEach(() => {
+      vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue(IPHONE_SAFARI);
+      withHistory(AT_RISK_BACKUP_PROMPT_MIN_HISTORY);
+    });
+
+    it('asks early, once, and says why', () => {
+      render(<OnlineBackupPrompt />);
+      expect(screen.getByRole('region', { name: 'Online backup' }).textContent).toMatch(/after 7 days without a visit/);
+    });
+
+    it('waits for the usual progress once the run has a copy outside the browser', () => {
+      markExported('P');
+      render(<OnlineBackupPrompt />);
+      expect(screen.queryByRole('region', { name: 'Online backup' })).toBeNull();
+    });
+
+    it('is not asked early in other browsers', () => {
+      vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36');
+      render(<OnlineBackupPrompt />);
+      expect(screen.queryByRole('region', { name: 'Online backup' })).toBeNull();
+    });
   });
 });

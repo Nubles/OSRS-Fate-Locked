@@ -3,7 +3,10 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { relaySync } from '../services/relaySync';
-import { NOT_SAVING_PUBLISH_MESSAGE, OnlineSyncDriver } from './OnlineSyncDriver';
+import {
+  NOT_SAVING_PUBLISH_MESSAGE, OnlineSyncDriver, PUBLISH_MAX_WAIT_MS, PUBLISH_QUIET_MS,
+} from './OnlineSyncDriver';
+import { RELAY_REPUBLISH_UNCHANGED_MS } from '../utils/relayPublishFingerprint';
 
 const stableGameState = vi.hoisted(() => ({
   unlocks: {},
@@ -34,10 +37,15 @@ vi.mock('../utils/runeliteExport', () => ({
   RunChangedError,
 }));
 
-// The publish contract: wait for 5 s without changes, but never more than
-// 60 s during nonstop changes; pairing and Retry publish at once.
-const QUIET_MS = 5_000;
-const MAX_WAIT_MS = 60_000;
+// The publish contract: wait for 15 s without changes, but never more than
+// 2 minutes during nonstop changes; pairing and Retry publish at once.
+const QUIET_MS = PUBLISH_QUIET_MS;
+const MAX_WAIT_MS = PUBLISH_MAX_WAIT_MS;
+
+it('waits 15 s of quiet, and at most 2 minutes, before a publish', () => {
+  expect(QUIET_MS).toBe(15_000);
+  expect(MAX_WAIT_MS).toBe(120_000);
+});
 
 const deferred = <T,>() => {
   let resolve!: (value: T) => void;
@@ -259,28 +267,142 @@ describe('OnlineSyncDriver', () => {
     visibility.mockRestore();
   });
 
-  it('still publishes once a minute while changes never pause', async () => {
+  it('still publishes every 2 minutes while changes never pause', async () => {
     relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     const view = render(<OnlineSyncDriver />);
     await advance(QUIET_MS);
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    // A change every 2 s from t=5 s to t=73 s never leaves 5 s of quiet;
-    // the first of them is published by t=65 s regardless.
-    for (let step = 1; step <= 35; step += 1) {
+    // A change every 2 s from t=15 s never leaves 15 s of quiet; the first
+    // of them is published 2 minutes after it regardless.
+    const steps = MAX_WAIT_MS / 2_000;
+    for (let step = 1; step <= steps + 5; step += 1) {
       stableGameState.runRevision = 9 + step;
       view.rerender(<OnlineSyncDriver />);
       await advance(2_000);
-      if (5_000 + step * 2_000 === QUIET_MS + MAX_WAIT_MS - 2_000) {
-        expect(fetchMock).toHaveBeenCalledTimes(1);
-      }
+      if (step === steps - 1) expect(fetchMock).toHaveBeenCalledTimes(1);
     }
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 39 });
+    expect(buildBundlePayloadMock.mock.calls[1]?.[1]).toMatchObject({ runRevision: 9 + steps });
 
     await advance(QUIET_MS);
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(buildBundlePayloadMock.mock.calls[2]?.[1]).toMatchObject({ runRevision: 44 });
+    expect(buildBundlePayloadMock.mock.calls[2]?.[1]).toMatchObject({ runRevision: 9 + steps + 5 });
+  });
+
+  describe('an unchanged profile', () => {
+    const CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const built = (fingerprint: string, compressed = `bundle-${fingerprint}`) => ({ json: '{}', compressed, fingerprint });
+    const change = async (view: ReturnType<typeof render>, revision: number) => {
+      stableGameState.runRevision = revision;
+      view.rerender(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+    };
+
+    it('is not sent again: only a change RuneLite would see is', async () => {
+      buildBundlePayloadMock.mockResolvedValueOnce(built('A'))
+        .mockResolvedValueOnce(built('A'))
+        .mockResolvedValueOnce(built('A'))
+        .mockResolvedValueOnce(built('B'));
+      relaySync.adoptCode(CODE);
+      const view = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(sentPayloads()).toEqual(['bundle-A']);
+
+      // A note or a ticked task: a new revision, the same profile.
+      await change(view, 10);
+      await change(view, 11);
+      expect(buildBundlePayloadMock).toHaveBeenCalledTimes(3);
+      expect(sentPayloads()).toEqual(['bundle-A']);
+      expect(relaySync.status).toBe('synced');
+
+      await change(view, 12);
+      expect(sentPayloads()).toEqual(['bundle-A', 'bundle-B']);
+      expect(JSON.parse(storage.fate_relay_published_v1)).toMatchObject({ code: CODE, fingerprint: 'B', runRevision: 12 });
+    });
+
+    it('is not sent after a reload, and the status shows the earlier publish', async () => {
+      buildBundlePayloadMock.mockResolvedValue(built('A'));
+      relaySync.adoptCode(CODE);
+      const first = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      const sentAt = relaySync.lastSyncAt;
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      first.unmount();
+
+      // A reload: the pairing is read back, nothing has been sent from this page yet.
+      relaySync.status = 'off';
+      relaySync.lastSyncAt = null;
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(relaySync.status).toBe('synced');
+      expect(relaySync.lastSyncAt).toBe(sentAt);
+    });
+
+    it('is sent again every six hours, so the relay copy never gets old', async () => {
+      buildBundlePayloadMock.mockResolvedValue(built('A'));
+      relaySync.adoptCode(CODE);
+      const view = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      await advance(RELAY_REPUBLISH_UNCHANGED_MS - QUIET_MS - 1_000);
+      await change(view, 10);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      await advance(1_000);
+      await change(view, 11);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('is sent on Retry and on pairing again, whatever the relay holds', async () => {
+      buildBundlePayloadMock.mockResolvedValue(built('A'));
+      relaySync.adoptCode(CODE);
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      act(() => { relaySync.requestPush(); });
+      await advance(0);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      await act(async () => { relaySync.adoptCode('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'); });
+      await advance(0);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it('is sent when the run went back to an earlier revision (a restored save)', async () => {
+      buildBundlePayloadMock.mockResolvedValue(built('A'));
+      relaySync.adoptCode(CODE);
+      const view = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      await change(view, 5);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('is sent after a failed publish, and Disconnect forgets what was sent', async () => {
+      buildBundlePayloadMock.mockResolvedValue(built('A'));
+      fetchMock.mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: false, status: 503 });
+      buildBundlePayloadMock.mockResolvedValueOnce(built('A')).mockResolvedValueOnce(built('B'));
+      relaySync.adoptCode(CODE);
+      const view = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      await change(view, 10);
+      expect(relaySync.status).toBe('error');
+      // Back to A, which the relay holds, but a publish failed since: send it
+      // (here the 15 s retry sends it, built from the run as it is now).
+      stableGameState.runRevision = 11;
+      view.rerender(<OnlineSyncDriver />);
+      await advance(QUIET_MS + 2);
+      expect(sentPayloads()).toEqual(['bundle-A', 'bundle-B', 'bundle-A']);
+      expect(storage.fate_relay_published_v1).toBeDefined();
+      await act(async () => { await relaySync.disconnect(); });
+      expect(storage.fate_relay_published_v1).toBeUndefined();
+    });
+
+    it('is always sent when the browser could not fingerprint it', async () => {
+      buildBundlePayloadMock.mockResolvedValue({ json: '{}', compressed: 'bundle', fingerprint: null });
+      relaySync.adoptCode(CODE);
+      const view = render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      await change(view, 10);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('keeps one publish in flight, then sends only the newest state', async () => {
@@ -418,7 +540,11 @@ describe('OnlineSyncDriver', () => {
     old.unmount();
     stableGameState.runId = 'run-b';
     render(<OnlineSyncDriver />);
-    await advance(QUIET_MS);
+    // Send the new profile at once, while the old write is still on its way
+    // (it would time out after 15 s, as long as the quiet period).
+    act(() => { relaySync.requestPush(); });
+    await advance(0);
+    expect(buildBundlePayloadMock).toHaveBeenCalledTimes(2);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     await act(async () => { oldNetwork.resolve({ ok: true }); await Promise.resolve(); });
     expect(sentPayloads()).toEqual(['profile-a', 'profile-b']);
@@ -494,17 +620,21 @@ describe('OnlineSyncDriver', () => {
     });
 
     it('lets a run change send first, replacing the scheduled retry', async () => {
-      fetchMock.mockResolvedValueOnce(failing(503));
+      fetchMock.mockResolvedValueOnce(failing(503)).mockResolvedValueOnce(failing(503));
       relaySync.adoptCode('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
       const view = render(<OnlineSyncDriver />);
       await advance(QUIET_MS);
+      // The 15 s retry fails too; the next is due a minute later.
+      await advance(15_002);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(relaySync.retryAt! - Date.now()).toBeGreaterThan(55_000);
       stableGameState.runRevision = 10;
       view.rerender(<OnlineSyncDriver />);
       await advance(QUIET_MS);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
       expect(relaySync.status).toBe('synced');
-      await advance(15_000);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      await advance(60_000);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
     it("doesn't try again in a tab that isn't saving the profile", async () => {

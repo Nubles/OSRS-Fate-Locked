@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { createFreshState, useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
@@ -141,6 +142,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
     };
   }, []);
   useEscapeKey(closeModal, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const [tab, setTab] = useState<Tab>(initialImportCode ? 'IMPORT' : initialTab ?? 'EXPORT');
 
@@ -437,6 +440,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={closeModal}
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Sync code"

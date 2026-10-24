@@ -249,6 +249,15 @@ html[data-ui="osrs"] .osrs-dash-odds {
 html[data-ui="osrs"] .osrs-dash-odds-tip { visibility: hidden; position: absolute; right: 0; top: calc(100% + 4px); z-index: 5; width: 260px; white-space: normal; line-height: 17px; }
 html[data-ui="osrs"] .osrs-dash-odds:hover .osrs-dash-odds-tip,
 html[data-ui="osrs"] .osrs-dash-odds:focus .osrs-dash-odds-tip { visibility: visible; }
+/* Set level: type the level reached; every level between rolls (components/SetLevelControl.tsx). */
+html[data-ui="osrs"] .osrs-dash-setlevel { flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 5px 10px; }
+html[data-ui="osrs"] .osrs-dash-setlevel-label { font-family: 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
+html[data-ui="osrs"] .osrs-dash-setlevel-input { width: 52px; padding: 0 6px; }
+html[data-ui="osrs"] .osrs-dash-setlevel-input input { text-align: center; }
+html[data-ui="osrs"] .osrs-dash-setlevel-hint { min-width: 0; font-family: 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); }
+html[data-ui="osrs"] .osrs-dash-setlevel-hint.is-warn { color: var(--osrs-yellow, #ff0); }
+html[data-ui="osrs"] .osrs-dash-setlevel-done { flex-basis: 100%; color: var(--osrs-green, #0dc10d); }
+html[data-ui="osrs"] .osrs-dash-setlevel-done:empty { display: none; }
 html[data-ui="osrs"] .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr); gap: 6px; }
 html[data-ui="osrs"] .osrs-dash-rungs { display: flex; flex-direction: column; padding: 3px; min-height: 0; overflow-y: auto; }
 html[data-ui="osrs"] .osrs-dash-rung {

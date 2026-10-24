@@ -92,6 +92,7 @@ describe('quest Wilderness access', () => {
       regions: ['Baxtorian Falls', ...route],
       skills: { Thieving: 6 },
       levels: { Thieving: 53 },
+      equipment: { Ring: 1, Neck: 1 },
     }), 'vanilla');
 
     expect(result.machineEligible).toBe(true);

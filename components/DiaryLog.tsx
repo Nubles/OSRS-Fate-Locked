@@ -304,7 +304,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
       ) : <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
         {sortedDiaries.map(diary => {
           const isCompleted = diary.status === 'COMPLETED';
-          const isAvailable = diary.status === 'AVAILABLE' && evaluateDiaryTierEligibility(diary, unlocks, gameModeId).eligible;
+          const isAvailable = diary.status === 'AVAILABLE' && evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes).eligible;
           const isSearching = searchTerm.length > 0;
           const isExpanded = expandedId === diary.id || isSearching;
           const color = diary.tier === 'Elite' ? 'text-purple-400' : diary.tier === 'Hard' ? 'text-red-400' : diary.tier === 'Medium' ? 'text-blue-400' : 'text-green-400';
@@ -345,6 +345,17 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
               <div 
                 className="p-3 flex justify-between items-start gap-4 cursor-pointer hover:bg-white/5"
                 onClick={() => setExpandedId(isExpanded && !isSearching ? null : diary.id)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setExpandedId(isExpanded && !isSearching ? null : diary.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-expanded={isExpanded}
+                aria-label={`${diary.id} diary`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -422,6 +433,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           isActionable ? 'bg-black/40 text-gray-600 border-gray-700 hover:border-gray-500 hover:text-gray-400' : 
                           'bg-black/20 text-gray-700 border-gray-800 cursor-not-allowed opacity-50'}`}
                     title={isCompleted ? "Completed" : isActionable ? "Complete Full Section" : "Complete all tasks first"}
+                    aria-label={isCompleted ? `${diary.id} diary: completed` : isActionable ? `Complete ${diary.id} diary` : `${diary.id} diary: complete all tasks first`}
                     >
                     {isCompleted ? <CheckCircle2 size={18} /> : isActionable ? <Sparkles size={16} /> : <Lock size={14} />}
                     </button>
@@ -452,14 +464,20 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           const unmetSkillRequirements = skillRequirements.filter(([skill, level]) =>
                             !meetsSkillRequirement(unlocks, skill, level as number),
                           );
+                          // Once another way through the choice is met, its
+                          // other areas are optional and are not drawn as locks.
+                          const choiceMet = Boolean(alternativeLabel)
+                            && !unmetChoice(taskEligibility.blockers, alternativeLabel!);
+                          const directRegions = new Set([...(task.regions ?? []), ...(task.anyOfRegions ?? [])]);
                           const regionRequirements = [...new Set([
-                            ...(task.regions ?? []),
-                            ...(task.anyOfRegions ?? []),
+                            ...directRegions,
                             ...(task.oneOf ?? []).flatMap(option => option.regions ?? []),
                           ])].map((region) => ({
                             region,
                             chunk: chunkForPlace(region),
+                            optional: choiceMet && !directRegions.has(region),
                           }));
+                          const canDoNow = !isCompleted && !isTaskDone && taskEligibility.eligible;
                           const locationRequirements = placesToShow(task);
                           const hasRequirementActions = unmetSkillRequirements.length > 0
                             || regionRequirements.length > 0 || locationRequirements.length > 0;
@@ -486,6 +504,11 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <span className={`text-xs ${isTaskDone ? 'text-gray-400 line-through' : 'text-gray-300'}`}>{task.description}</span>
+                                  {canDoNow && (
+                                    <span className="ml-1.5 align-middle text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-900/25 text-emerald-400 border border-emerald-500/30">
+                                      Can do now
+                                    </span>
+                                  )}
                                   {hasReqs && !isTaskDone && (
                                     <div className="flex flex-wrap gap-1.5 mt-1.5">
                                       {skillRequirements.filter(([skill, level]) => meetsSkillRequirement(unlocks, skill, level as number)).map(([skill, level]) => (
@@ -661,8 +684,8 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                                       </button>;
                                     })}
                                   </div>)}
-                                  {regionRequirements.map(({ region, chunk }) => {
-                                    const isUnlocked = isAreaReachable(region, unlocks, gameModeId);
+                                  {regionRequirements.map(({ region, chunk, optional }) => {
+                                    const isUnlocked = optional || isAreaReachable(region, unlocks, gameModeId);
                                     const cls = isUnlocked ? 'border-white/5 text-gray-500 bg-black/30 hover:bg-white/5' : 'border-red-500/30 text-red-400 bg-red-900/10 hover:bg-red-900/20';
                                     return (
                                       <button

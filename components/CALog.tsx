@@ -12,10 +12,11 @@ import { EntityLocations } from './EntityLocations';
 import { WikiLink } from './WikiLink';
 import {
   CA_TIER_ORDER,
-  caTaskLockedBoss,
   completedCAPoints,
   earnedCATiers,
 } from '../utils/caProgress';
+import { caTaskBlocker, caTaskBlockerText } from '../utils/caTaskAccess';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import './osrs/osrs-journal.css';
@@ -119,12 +120,15 @@ export const useCAJournal = (externalSearch = '') => {
 
 export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' }) => {
   const isOsrs = useIsOsrsUi();
+  const { gameModeId } = useGame();
   const {
     unlocks, advisorsEnabled, expandedId, setExpandedId, filterStatus, setFilterStatus,
     filterTier, setFilterTier, localSearch, setLocalSearch, highlightedId, searchTerm,
     getWikiUrl, totalPoints, nextTier, handleTierComplete, handleTaskComplete,
     filteredCAs, statusCounts,
   } = useCAJournal(externalSearch);
+  // An unlocked boss in an area the run can't get to isn't ready to fight.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
 
   const getStyle = (id: string) => {
       switch(id) {
@@ -172,6 +176,8 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
           <OsrsJournalCombat
             tiers={filteredCAs}
             unlocks={unlocks}
+            gameModeId={gameModeId}
+            areaRoutes={areaRoutes}
             totalPoints={totalPoints}
             nextTier={nextTier}
             searchTerm={searchTerm}
@@ -216,6 +222,17 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                     <div
                         className="p-4 flex justify-between items-start cursor-pointer"
                         onClick={() => setExpandedId(isExpanded && !isSearching ? null : ca.id)}
+                        onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget) return;
+                            if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                setExpandedId(isExpanded && !isSearching ? null : ca.id);
+                            }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={isExpanded}
+                        aria-label={`${ca.id} Tier, ${totalPoints}/${ca.pointsRequired} cumulative points`}
                     >
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -265,6 +282,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                       isActionable ? 'bg-black/40 text-gray-600 border-gray-700 hover:border-gray-500 hover:text-gray-400' :
                                       'bg-black/20 text-gray-700 border-gray-800 cursor-not-allowed opacity-50'}`}
                                 title={isRecorded ? "Reward tier recorded" : isActionable ? "Record earned reward tier" : `Requires ${ca.pointsRequired} cumulative points`}
+                                aria-label={isRecorded ? `${ca.id} reward tier recorded` : isActionable ? `Record ${ca.id} reward tier` : `${ca.id} reward tier requires ${ca.pointsRequired} cumulative points`}
                             >
                                 {isRecorded ? <CheckCircle2 size={20} /> : isActionable ? <Sparkles size={18} /> : <Lock size={16} />}
                             </button>
@@ -277,6 +295,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                         <div className="border-t border-white/10 bg-black/20 p-2 space-y-1">
                             {tasks.map(task => {
                                 const isTaskDone = unlocks.completedTasks.includes(task.id);
+                                const blocker = caTaskBlocker(task, unlocks, gameModeId, areaRoutes);
                                 if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !task.monster.toLowerCase().includes(searchTerm.toLowerCase()) && !ca.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
 
                                 return (
@@ -292,12 +311,12 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-0.5">
                                                 <span className="text-[10px] uppercase font-bold text-gray-500 bg-white/5 px-1.5 rounded">{task.monster}</span>
-                                                {!isTaskDone && caTaskLockedBoss(task, unlocks.bosses) && (
+                                                {blocker && (
                                                   <span
                                                     className="text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-1.5 rounded"
-                                                    title={`Unlock ${caTaskLockedBoss(task, unlocks.bosses)} to fight here. You can still log the task by hand.`}
+                                                    title={`${caTaskBlockerText(blocker)} You can still log the task by hand.`}
                                                   >
-                                                    Boss not unlocked
+                                                    {blocker.kind === 'boss' ? 'Boss not unlocked' : "Can't reach yet"}
                                                   </span>
                                                 )}
                                                 {task.name && <WikiLink name={task.name} className="text-[11px] font-semibold text-gray-300 hover:underline decoration-dotted underline-offset-2 hover:text-amber-200" />}

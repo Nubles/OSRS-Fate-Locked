@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useProfiles } from '../context/ProfileContext';
 import { useGame } from '../context/GameContext';
 import {
@@ -6,6 +6,7 @@ import {
   testEmbed, postEmbeds,
 } from '../utils/discordWebhook';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { showToast } from '../utils/toast';
 import { X, Webhook, Send, Link2 } from 'lucide-react';
 import { relaySync } from '../services/relaySync';
@@ -26,6 +27,8 @@ export const DiscordSettingsModal: React.FC<{ onClose: () => void }> = ({ onClos
   const [showLink, setShowLink] = useState(() => readProgressShare(storageKey)?.enabled === true);
   const [testing, setTesting] = useState(false);
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
 
   const urlOk = isValidWebhookUrl(cfg.url);
   const urlEmpty = cfg.url.trim() === '';
@@ -49,7 +52,10 @@ export const DiscordSettingsModal: React.FC<{ onClose: () => void }> = ({ onClos
       <div
         className="w-full max-w-md bg-[#1c1c1c] border border-white/15 rounded-xl shadow-2xl p-5"
         onClick={(e) => e.stopPropagation()}
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
+        aria-modal="true"
         aria-label="Discord notifications"
       >
         <div className="flex items-center justify-between mb-3">

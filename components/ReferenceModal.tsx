@@ -6,12 +6,13 @@ import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, usesActivityKeyReserves } from '../config/gameModes';
-import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ODDS, FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
+import { andList, BREAKTHROUGH_CHANCE, FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ODDS, FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS, CHAOS_PICK_TEXT, CHAOS_REACH_TEXT, CHUNKED_CHAOS_TEXT, CHUNKED_OMNI_LAND_TEXT, CHUNK_EXPLORE_ROLLS, OLD_SEEDED_CHAOS_TEXT, CLUE_ONBOARDING_MINIMUMS, EARN_METHODS, getRitual, omniFloor, KEY_TYPES, LEVEL_CHAOS_CHANCE, RITUALS, ritualFateCost, SKILL_CHAOS_MILESTONES, SPEND_TABLES, STARTING_KEYS, UNLOCK_KEY_COST, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, MINIGAME_MISS_FATE_MIN_RATE, ritualEffect, type Ritual } from '../config/economy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { DropSource, TableType } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
+import { chaosPicksTableFirst } from '../utils/seededRng';
 import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
@@ -59,13 +60,13 @@ export const describeVanillaRandomAccessPolicy = (
 ): string => {
   const keys = policy.randomCosts.includes('chaosKey') ? 'Keys and Chaos Keys' : 'Keys';
   const tables = policy.filteredTables.map(table => table.toLowerCase()).join(' and ');
-  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0;
+  const hasLocationFilter = policy.requiresTrackedHardGeography && tables.length > 0 && policy.randomCosts.length > 0;
   // Chunked counts content only in the exact chunk it sits in, and filters
   // banks and guilds the same way (utils/gameEngine.ts isRandomUnlockEligible).
   const chunkedTables = andList([...policy.filteredTables.map(table => table.toLowerCase()), 'banks', 'guilds']);
   const randomAccess = hasLocationFilter
     ? `In Vanilla, ${keys} only unlock ${tables} you can reach with the areas you own. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`
-    : '';
+    : `In Vanilla, Keys and Chaos Keys roll anything left in their table, even ${tables || 'places'} you can't reach yet, and only Saradomin's Ward keeps a Key to what you can use. In Chunked, they only unlock ${chunkedTables} inside a chunk you hold.`;
   const emptyPool = policy.emptyEligiblePool.noUnlock
     ? [
         hasLocationFilter ? 'If none can be reached, nothing is unlocked.' : 'If there is nothing to unlock, nothing happens.',
@@ -73,10 +74,11 @@ export const describeVanillaRandomAccessPolicy = (
         policy.emptyEligiblePool.preservesRngProgression ? "A seeded run's next roll stays the same." : '',
       ].filter(Boolean).join(' ')
     : '';
+  const omniWarns = policy.requiresTrackedHardGeography && tables.length > 0 && policy.omniDirect.warnsPlayer;
   const omni = policy.omniDirect.allowsLocationIneligible
     ? hasLocationFilter
       ? `An Omni-Key can still pick one you can't reach yet${policy.omniDirect.warnsPlayer ? ', with a warning' : ''}.`
-      : "An Omni-Key can pick one even if you can't reach it."
+      : `An Omni-Key can pick one even if you can't reach it${omniWarns ? ', with a warning' : ''}.`
     : hasLocationFilter
       ? 'An Omni-Key follows the same rule.'
       : 'An Omni-Key follows the usual rules for each table.';
@@ -108,7 +110,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
 
   // Live rules for the current run — the codex shows the player's actual
   // numbers, not generic defaults.
-  const { gameModeId, customMode } = useGame();
+  const { gameModeId, customMode, rngSeed, rngVersion } = useGame();
   const activeMode = getGameMode(gameModeId);
   const rules = resolveModeRules(gameModeId, customMode);
   const ritualCost = (id: Ritual['id']) => ritualFateCost(id, rules.ritualCostMultiplier);
@@ -412,7 +414,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-gradient-to-br from-emerald-950/40 to-[#222] p-6 rounded-xl border border-emerald-500/20">
                                 <h3 className="text-emerald-300 font-bold uppercase tracking-widest mb-3 flex items-center gap-2"><Compass size={18}/> Smart Play</h3>
                                 <ul className="space-y-2 text-sm text-gray-300">
-                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%, boss tasks {DROP_RATES[DropSource.SLAYER_BOSS]}%). Move up as soon as you can survive their tasks.</span></li>
+                                    <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Slayer never runs out.</b> Every task you finish rolls, and higher masters roll better (Konar {DROP_RATES[DropSource.SLAYER_KONAR]}%, Duradel {DROP_RATES[DropSource.SLAYER_DURADEL]}%; a boss task rolls from its boss’s Key stash). Move up as soon as you can survive their tasks.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Save Omni-Keys for what you need most.</b> Pick a must-have, such as a boss, a gear slot or a skill, rather than something from a small table that a Key will soon give you anyway.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Spend Fate before your next success.</b> Failed rolls give Fate, but any successful roll resets it to 0, so spend it first: {ritualCost('LUCK')} on Clarity before a big roll, or {ritualCost('CHAOS')} on a Chaos Key.</span></li>
                                     <li className="flex gap-2"><span className="text-emerald-400 font-bold shrink-0">›</span><span><b>Grandmaster quests are the best Journal roll:</b> a guaranteed Key and a {omniFloor(DropSource.QUEST_GRANDMASTER)}% Omni-Key chance, the best of any roll. A new pet gives an Omni-Key outright. Raids give {omniFloor(DropSource.RAID)}%, Elite diaries {omniFloor(DropSource.DIARY_ELITE)}% and high-tier bosses {omniFloor(DropSource.BOSS_HIGH)}%.</span></li>
@@ -443,7 +445,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                             <div className="bg-[#222] p-6 rounded-xl border border-white/5">
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
-                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys only unlock bosses and minigames you can reach.</li>
+                                    <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys can land on bosses and minigames you can't reach yet.</li>
                                     <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left. Fate's Thread leans your Chunks draws toward a place fate picks, and fate marks about one chunk in eight (see Key Economy).</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
@@ -647,8 +649,8 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <div className="bg-[#222] p-4 rounded-xl border border-red-500/30">
                                     <h4 className="font-bold text-red-400 mb-1 flex items-center gap-2"><Dna size={16}/> Chaos Key</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Unlocks a <b>random entry from all the tables at once</b>. Every eligible entry is
-                                        equally likely, so {gameModeId === 'chunked' ? 'the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.' : 'big tables such as Areas and Banks come up most.'}
+                                        {CHAOS_PICK_TEXT}{gameModeId === 'chunked' ? ` ${CHUNKED_CHAOS_TEXT}` : ` ${CHAOS_REACH_TEXT}`}
+                                        {!chaosPicksTableFirst({ rngSeed, rngVersion }) && ` ${OLD_SEEDED_CHAOS_TEXT}`}{' '}
                                         Guaranteed at skill levels {andList(SKILL_CHAOS_MILESTONES)}, a {LEVEL_CHAOS_CHANCE}% chance on
                                         every level-up, or the Ritual of Chaos.
                                     </p>

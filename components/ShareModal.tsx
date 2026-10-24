@@ -18,6 +18,7 @@ import { BANK_IDS } from '../data/banks';
 import { completionPercent } from '../utils/completion';
 import { chunkRegionMastery, chunkTotals } from '../utils/runProgress';
 import { computeRunId } from '../utils/integrity';
+import { restoredLabel } from '../utils/restoreCount';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 
@@ -67,6 +68,7 @@ const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ on
 
   const progressPercent = completionPercent(unlocks, gameModeId, customMode);
   const runId = useMemo(() => computeRunId(gameState.history ?? []), [gameState.history]);
+  const restored = restoredLabel(gameState.restoreCount);
 
   // Region Mastery. Chunked counts the chunks owned in each map region
   // (Misthalin included); other modes count the named areas reached.
@@ -166,7 +168,7 @@ ${isChunked ? 'Chunks' : 'Areas'}: ${totalRegions} Unlocked
 Gear Tiers: ${totalEquipTiers}
 Bosses: ${bossCount} | Minigames: ${minigameCount}
 Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
-#OSRS #FateLocked`;
+${restored ? `${restored}\n` : ''}#OSRS #FateLocked`;
   };
 
   const handleCopyText = async () => {
@@ -308,6 +310,7 @@ Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
                         <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md">Fate Locked</h2>
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
                             <span className="text-xs text-gray-400 font-mono flex items-center gap-1.5"><Calendar size={12} /> {new Date().toLocaleDateString()}</span>
+                            {restored && <span className="text-xs text-gray-400 font-mono">{restored}</span>}
                         </div>
                     </div>
                 </div>

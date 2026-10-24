@@ -79,7 +79,10 @@ describe('rankFrontierChunks', () => {
       if (quests.reduce((sum, id) => sum + QUEST_DATA[id].points, 0) >= 12) break;
       if (quest.kind === 'quest' && quest.id !== "Black Knights' Fortress") quests.push(quest.id);
     }
-    const unlocks = { ...baseUnlocks(['49,50', '48,50', '47,50', '47,51', '47,52', '46,53', '47,54']), quests, equipment: { Head: 1, Body: 1 } };
+    const unlocks = {
+      ...baseUnlocks(['49,50', '48,50', '47,50', '47,51', '47,52', '46,53', '47,54']), quests, equipment: { Head: 1, Body: 1 },
+      merchants: ['Chainbody Shops'],
+    };
     const expected = computeUnlockImpact(unlocks, { ...unlocks, chunks: [...unlocks.chunks, '46,52'] }, 'chunked');
     expect(expected.directQuestNames).toContain("Black Knights' Fortress");
 

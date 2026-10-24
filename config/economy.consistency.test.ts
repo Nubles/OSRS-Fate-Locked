@@ -15,7 +15,7 @@ import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
 import { BANKS } from '../data/banks';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
-import { randomUnlockPool } from '../utils/gameEngine';
+import { pickChaosEntry, randomUnlockPool } from '../utils/gameEngine';
 import { createFreshState, initialState, prepareKeyRollAction } from '../context/GameContext';
 import { resolveModeRules } from './gameModes';
 
@@ -128,22 +128,29 @@ describe('economy ↔ engine consistency', () => {
     }
   });
 
-  it('says most Chaos Keys are guaranteed, and that big tables come up most', () => {
+  it('says most Chaos Keys are guaranteed, and that fate picks a table before an entry', () => {
     const chaos = KEY_TYPES.find(k => k.id === 'chaos')!;
     expect(chaos.earn[0]).toBe(`Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99: ${SKILL_CHAOS_MILESTONES.length} per skill.`);
-    expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table/i);
-    // A Chaos Key draws once from every eligible entry of every table, so a
-    // table's share is its size: on a fresh Vanilla run Banks is among the biggest.
-    const tableSizes = (mode: string) => {
-      const sizes = new Map<TableType, number>();
-      for (const { table } of randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey')) sizes.set(table, (sizes.get(table) ?? 0) + 1);
-      return [...sizes].sort((a, b) => b[1] - a[1]).map(([table]) => table);
+    expect([...chaos.earn, chaos.spend].join(' ')).not.toMatch(/rare|ANY table|biggest tables/i);
+    // pickChaosEntry gives every table with an eligible entry the same share,
+    // so Skills and Equipment are as likely as the big Banks table.
+    const shares = (mode: string) => {
+      const pool = randomUnlockPool(createFreshState().unlocks, mode, 'chaosKey');
+      const tables = [...new Set(pool.map(c => c.table))];
+      const counts = new Map<TableType, number>();
+      for (let i = 0; i < tables.length; i++) {
+        const { table } = pickChaosEntry(pool, index => index === 0 ? (i + 0.5) / tables.length : 0)!;
+        counts.set(table, (counts.get(table) ?? 0) + 1);
+      }
+      return counts;
     };
-    expect(tableSizes('vanilla').slice(0, 2)).toEqual([TableType.REGIONS, TableType.BANKS]);
-    // Chunked only offers banks in owned chunks, so a fresh run's biggest table is Merchants.
-    expect(tableSizes('chunked')[0]).toBe(TableType.MERCHANTS);
-    expect(tableSizes('chunked').slice(0, 5)).not.toContain(TableType.BANKS);
-    expect(chaos.spend).toContain('Every eligible entry is equally likely, so the biggest tables come up most. In Chunked, only banks and guilds inside your chunks can come up.');
+    for (const mode of ['vanilla', 'chunked']) {
+      const counts = shares(mode);
+      expect(counts.get(TableType.SKILLS)).toBe(1);
+      expect(counts.get(TableType.EQUIPMENT)).toBe(1);
+      expect(counts.get(TableType.BANKS)).toBe(1);
+    }
+    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only banks and guilds inside your chunks can come up.");
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
@@ -285,15 +292,17 @@ describe('economy ↔ engine consistency', () => {
   it('formats Codex policy directly from the shared Vanilla configuration', () => {
     expect(formatVanillaBossSchedule('Raid', VANILLA_BOSS_KEY_RATES.raid)).toBe('Raid: 65% → 32.5% → 16.25% (3 Keys)');
     expect(describeVanillaRandomAccessPolicy(VANILLA_RANDOM_ACCESS_POLICY)).toBe(
-      'In Vanilla, Keys and Chaos Keys only unlock bosses and minigames you can reach with the areas you own. '
+      "In Vanilla, Keys and Chaos Keys roll anything left in their table, even bosses and minigames you can't reach yet, "
+      + "and only Saradomin's Ward keeps a Key to what you can use. "
       + 'In Chunked, they only unlock bosses, minigames, banks and guilds inside a chunk you hold. '
-      + "If none can be reached, nothing is unlocked. You keep the Key. A seeded run's next roll stays the same. "
-      + "An Omni-Key can still pick one you can't reach yet, with a warning.",
+      + "If there is nothing to unlock, nothing happens. You keep the Key. A seeded run's next roll stays the same. "
+      + "An Omni-Key can pick one even if you can't reach it, with a warning.",
     );
   });
 
   it('derives each Codex safety-valve sentence from policy decisions', () => {
-    const policy: VanillaRandomAccessPolicy = VANILLA_RANDOM_ACCESS_POLICY;
+    // A policy that still keeps random Keys to reachable places (the shared one no longer does).
+    const policy: VanillaRandomAccessPolicy = { ...VANILLA_RANDOM_ACCESS_POLICY, randomCosts: ['key', 'chaosKey'] };
     const formatted = describeVanillaRandomAccessPolicy(policy);
     expect(formatted).toContain('Keys and Chaos Keys only unlock bosses and minigames you can reach');
     expect(formatted).toContain('If none can be reached, nothing is unlocked.');
@@ -314,7 +323,7 @@ describe('economy ↔ engine consistency', () => {
     expect(describeVanillaRandomAccessPolicy(noGeography)).not.toContain('can still pick one');
 
     const noFilteredTables: VanillaRandomAccessPolicy = { ...policy, filteredTables: [] };
-    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toContain('only unlock');
+    expect(describeVanillaRandomAccessPolicy(noFilteredTables)).not.toMatch(/In Vanilla, Keys( and Chaos Keys)? only unlock/);
     expect(describeVanillaRandomAccessPolicy(noFilteredTables)).toContain("An Omni-Key can pick one even if you can't reach it");
 
     const minigamesOnly: VanillaRandomAccessPolicy = { ...policy, filteredTables: [TableType.MINIGAMES] };
