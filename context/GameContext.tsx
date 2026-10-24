@@ -193,7 +193,11 @@ const completionFailure = (reason: string): CompletionResult => {
   return { ok: false, reason };
 };
 
-type RollEventMeta = { roll: number; baseThreshold: number; threshold: number };
+type RollEventMeta = {
+  roll: number; baseThreshold: number; threshold: number;
+  /** Fate before and after the roll, and the pity line (null with pity off): what the result toast says (utils/rollOutcomeText.ts). */
+  fateBefore?: number; fateAfter?: number; pityThreshold?: number | null;
+};
 type UnlockEventMeta = { item: string; cost: number; category?: TableType };
 type RitualEventMeta = {
   type: Ritual['id']; won?: boolean; stake?: number; keysWon?: number; chunk?: string;
@@ -1496,6 +1500,18 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             threshold,
         });
         newState.lastEvent = { id: generateId(), type: 'ROLL_FAIL', x, y, meta: eventMeta };
+      }
+      // The result toast and the quest overlay say what Fate the roll left.
+      if (newState.lastEvent?.meta) {
+        newState.lastEvent = {
+          ...newState.lastEvent,
+          meta: {
+            ...newState.lastEvent.meta,
+            fateBefore: state.fatePoints,
+            fateAfter: newState.fatePoints,
+            pityThreshold: rollRules.pityEnabled ? rollRules.pityThreshold : null,
+          } as GameEventMeta,
+        };
       }
 
       return { ...newState, history: newHistory };

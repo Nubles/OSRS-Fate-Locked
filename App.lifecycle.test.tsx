@@ -323,7 +323,9 @@ describe('App changelog lifecycle', () => {
     });
     fireEvent.click(attackCard);
 
-    expect(await screen.findByText(expectedMessage)).toBeTruthy();
+    // The level's Key roll result follows the reward (utils/rollOutcomeText.ts).
+    const escaped = expectedMessage.replace(/[+!]/g, '\\$&');
+    expect(await screen.findByText(new RegExp(`^${escaped} No Key: \\+\\d+ Fate \\(\\d+/50\\)$`))).toBeTruthy();
   });
 
   it('recovers a structurally malformed profile registry without blanking the dashboard', async () => {

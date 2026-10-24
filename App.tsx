@@ -112,6 +112,7 @@ import { BarChart3, HelpCircle, Search, Database, SlidersHorizontal, Radio, Sett
 import { readUiStyle, setUiStyle, useIsOsrsUi } from './utils/uiStyle';
 import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './utils/osrsNav';
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
+import { describeRollOutcome } from './utils/rollOutcomeText';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 
@@ -233,7 +234,8 @@ const ToastNotification = () => {
 
     if (undoableTypes.includes(lastEvent.type)) {
       let msg = 'Action Complete';
-      if (lastEvent.type.includes('ROLL')) msg = 'Roll Recorded';
+      const rollOutcome = describeRollOutcome(lastEvent);
+      if (rollOutcome) msg = rollOutcome.text;
       if (lastEvent.type === 'UNLOCK') msg = 'Content Unlocked';
       if (lastEvent.type === 'PET') msg = 'New Pet: Omni-Key Found!';
       if (lastEvent.type === 'RITUAL') {
@@ -259,12 +261,12 @@ const ToastNotification = () => {
         && typeof mergedLevelMeta?.level === 'number'
       ) {
         const chaosKeysAwarded = Number(mergedLevelMeta.chaosKeysAwarded ?? mergedLevelMeta.chaosKeyAwarded ?? 0);
-        if (chaosKeysAwarded > 0) msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}!`;
+        if (chaosKeysAwarded > 0) msg = `Level Up + ${chaosKeysAwarded === 1 ? 'Chaos Key' : `${chaosKeysAwarded} Chaos Keys`}! ${msg}`;
       }
 
       setMessage(msg);
       // A won key's natural next beat is spending it — hand the player there
-      // instead of dead-ending at "Roll Recorded".
+      // instead of dead-ending at the result.
       if (lastEvent.type === 'ROLL_SUCCESS' || lastEvent.type === 'ROLL_OMNI' || lastEvent.type === 'ROLL_PITY' || lastEvent.type === 'PET') {
         setAction({
           label: 'Spend it',
