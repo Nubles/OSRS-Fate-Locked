@@ -26,6 +26,8 @@ import { WikiIcon } from '../WikiIcon';
 import { isRollEntry } from '../../utils/logEntry';
 import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
 import { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER, useFarmModel } from '../ActionSection';
+import { slayerCardBlock } from '../../utils/farmGates';
+import { useBossTask } from '../../hooks/useBossTask';
 import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
 
@@ -183,11 +185,29 @@ interface CardModel {
   /** Owned but not reachable yet (Activities says "Not ready"): the roll
    * stays available, drawn greyed out with what's missing. */
   notReady?: string;
+  /** Why it can't roll at all (a Slayer master the run can't use yet): greyed out and disabled. */
+  blocked?: string;
+  /** Shown in place of the rate (the Boss Task card before its boss is picked). */
+  rateLabel?: string;
+  /** The Boss Task card asks which boss the task was. */
+  picker?: BossPicker;
   btn: string;
   examine: string;
   title: string;
   onRoll: (p: RollPoint) => void;
 }
+
+interface BossPicker { value: string; options: { name: string; rate: number }[]; onChange: (name: string) => void }
+
+/** The Boss Task card's question: which boss was the task? Picking it is what happened, not a roll. */
+const BossTaskPicker: React.FC<{ picker: BossPicker }> = ({ picker }) => (
+  <select className="okf-select" aria-label="Which boss was the task?" value={picker.value} onChange={(e) => picker.onChange(e.target.value)}>
+    <option value="">Which boss was it?</option>
+    {picker.options.map((o) => <option key={o.name} value={o.name}>{o.name} · {o.rate}%</option>)}
+  </select>
+);
+
+const BLOCKED_COLOR = '#ff981f';
 
 // Rounded so summed boosts never print as 0.30000000000000004.
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
@@ -209,7 +229,7 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
       <div className="okf-card-head">
         <img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
         <span className="tier" style={{ color: gem.color }}>{gem.label}</span>
-        <span className="rate">{card.rate}%<BonusTag bonus={card.bonus} /></span>
+        <span className="rate">{card.rateLabel ?? `${card.rate}%`}{card.rateLabel ? null : <BonusTag bonus={card.bonus} />}</span>
       </div>
       <div className="okf-stage" style={{ background: stageBg }}>
         <div className="shadow" />
@@ -230,11 +250,12 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
       <div className="okf-card-foot">
         <span className="name">{card.name}</span>
         <span className="small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>{card.sub}</span>
-        <span className="small" style={{ color: card.notReady ? '#ffff00' : card.status.color }}>{card.notReady ?? card.status.text}</span>
+        <span className="small" style={{ color: card.blocked ? BLOCKED_COLOR : card.notReady ? '#ffff00' : card.status.color }} title={card.blocked}>{card.blocked ?? card.notReady ?? card.status.text}</span>
         {card.extra ? <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>
           : reserveExtra && <span className="small" aria-hidden="true">&nbsp;</span>}
         <span className="small" style={{ color: '#ffffff' }}>{card.stats}</span>
-        <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling} onClick={trigger}>
+        {card.picker && <BossTaskPicker picker={card.picker} />}
+        <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>
           {isRolling ? 'Rolling...' : card.btn}
         </button>
       </div>
@@ -258,10 +279,11 @@ const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
       <RowThumb thumb={card.thumb} dim={card.disabled} />
       <div className="who">
         <div className="name">{card.name}</div>
-        <div className="where" style={card.notReady ? { color: '#ffff00' } : undefined}>{card.notReady ?? card.extra?.text ?? card.sub}</div>
+        <div className="where" style={card.blocked ? { color: BLOCKED_COLOR } : card.notReady ? { color: '#ffff00' } : undefined} title={card.blocked}>{card.blocked ?? card.notReady ?? card.extra?.text ?? card.sub}</div>
+        {card.picker && <BossTaskPicker picker={card.picker} />}
       </div>
-      <span className="rate">{card.disabled && card.stash ? 'Spent' : `${card.rate}%`}<BonusTag bonus={card.bonus} /></span>
-      <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
+      <span className="rate">{card.disabled && card.stash ? 'Spent' : card.blocked ? '—' : card.rateLabel ?? `${card.rate}%`}{card.blocked || card.rateLabel ? null : <BonusTag bonus={card.bonus} />}</span>
+      <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
     </div>
   );
 };
@@ -578,6 +600,8 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const [otherOpen, setOtherOpen] = useState(false);
   const [minigameQuery, setMinigameQuery] = useState('');
   const { isVanilla, reserves, bonusFor, effectiveRate, handleRoll } = p;
+  // Vanilla and Chunked: the Boss Task card asks which boss, and rolls from its stash.
+  const bossTask = useBossTask(handleRoll);
   useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
@@ -602,26 +626,36 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const ready = { text: 'Ready to roll', color: '#0dc10d' };
 
   const slayerCards: CardModel[] = p.slayers.map((m) => {
-    const rate = effectiveRate(m.source);
     const isBossTask = m.source === DropSource.SLAYER_BOSS;
+    // Vanilla and Chunked: the Boss Task card asks which boss, and rolls from its stash.
+    const task = isBossTask ? bossTask : null;
+    const rate = task ? task.rate ?? 0 : effectiveRate(m.source);
+    const blocked = (task ? task.block : slayerCardBlock(m.name, unlocks, gameModeId)) ?? undefined;
     const body = npcBody(m.name);
     const sharer = p.slayers.find((o) => o.source === m.source);
     const shared = sharer && sharer.name !== m.name;
     const head = isBossTask ? BOSS_TASK_IMG : npcHead(m.name);
+    const odds = task && !task.pick ? 'the boss’s next-Key odds' : `${rate}%`;
     return {
       id: m.name,
       name: m.name,
       sub: m.subText,
       rate,
-      bonus: bonusFor(m.source),
+      bonus: task ? 0 : bonusFor(m.source),
       art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
       thumb: isBossTask ? { src: BOSS_TASK_IMG, item: true } : { src: head ?? m.image },
-      status: ready,
+      status: task && !task.pick ? { text: 'Pick the boss, then roll', color: '#ffff00' } : ready,
       stats: shared ? `Shares ${sharer!.name}’s odds` : tallyText(tally.get(m.source)),
+      blocked,
+      disabled: Boolean(blocked),
+      rateLabel: blocked || (task && !task.pick) ? '—' : undefined,
+      picker: task && !blocked ? { value: task.pick, options: task.bosses, onChange: task.setPick } : undefined,
       btn: 'Roll',
-      title: `${m.name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`,
-      examine: `${m.subText}. ${rate}% chance of a Key per task.`,
-      onRoll: roll({ who: m.name, head: head ?? m.image, headIsItem: isBossTask || !head }, m.source, DROP_RATES[m.source]),
+      title: blocked ? `${m.name}: ${blocked}` : `${m.name}: ${task && !task.pick ? 'pick the boss the task was' : `${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`}`,
+      examine: blocked ? `${m.subText}. ${blocked}.` : `${m.subText}. ${odds} chance of a Key per task.`,
+      onRoll: task
+        ? (pt: RollPoint) => { if (task.pick) { setPending({ who: task.pick, head: npcHead(task.pick) ?? BOSS_TASK_IMG, headIsItem: !npcHead(task.pick), source: m.source, at: Date.now() }); task.roll(pt); } }
+        : roll({ who: m.name, head: head ?? m.image, headIsItem: isBossTask || !head }, m.source, DROP_RATES[m.source]),
     };
   });
 
@@ -775,7 +809,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   };
 
   const ladderRows: LadderRow[] = (() => {
-    if (subTab === 'SLAYER') return buildLadder(slayerCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
+    if (subTab === 'SLAYER') return buildLadder(slayerCards.filter((c) => !c.rateLabel).map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
     if (subTab === 'CLUES') return buildLadder(clueCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
     if (subTab === 'BOSSING') {
       if (reserves) return buildLadder(vanillaBossCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));

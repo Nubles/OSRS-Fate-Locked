@@ -1,4 +1,5 @@
 import { DROP_RATES } from '../config/rules';
+import { slayerSourceBlock } from './farmGates';
 import { usesActivityKeyReserves } from '../config/gameModes';
 import { policyFor } from '../config/detectorPolicies';
 import { failureFateForSkillLevel, failureFateForSource } from '../config/economy';
@@ -478,6 +479,9 @@ export function classifyFateEventCandidate(
     if (!SLAYER_SOURCES.includes(target as DropSource)) {
       return needsConfirmation('Choose the Slayer master used for this assignment.');
     }
+    // The same gates as Farm Keys' Slayer cards (utils/farmGates.ts).
+    const slayerBlock = slayerSourceBlock(target, state.unlocks, state.gameModeId);
+    if (slayerBlock) return blocked(slayerBlock);
     return ready(target, event.canonicalLabel ?? 'Slayer task', { kind: 'NONE' });
   }
   if (event.eventType === 'DIARY_TASK') {

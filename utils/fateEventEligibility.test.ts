@@ -10,6 +10,7 @@ import { PETS } from '../data/pets';
 import type { FateEventEnvelope, FateEventType } from '../services/fateEventProtocol';
 import { DropSource, type GameState } from '../types';
 import { classifyFateEvent, classifyFateEventCandidate } from './fateEventEligibility';
+import { BOSS_TASK_ROLL_ON_CARD, SLAYER_LOCKED } from './farmGates';
 
 const state = (overrides: Partial<GameState> = {}): GameState => ({
   ...initialState,
@@ -510,9 +511,15 @@ describe('classifyFateEvent', () => {
     const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
       detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
     });
+    // Duradel: Slayer tier 5, and Shilo Village (the area and the quest).
+    const duradelOpen = withUnlocks({
+      skills: { ...initialState.unlocks.skills, Slayer: 5 },
+      regions: ['Shilo Village'],
+      quests: ['Shilo Village'],
+    });
     expect(classifyFateEventCandidate(
       slayerEvent,
-      state(),
+      duradelOpen,
       'Slayer (Duradel/Kuradal)',
     )).toMatchObject({
       state: 'READY',
@@ -522,5 +529,20 @@ describe('classifyFateEvent', () => {
         failureFate: 2,
       },
     });
+  });
+
+  it('holds a confirmed Slayer task to the Farm Keys card gates (GP-10)', () => {
+    const slayerEvent = event('SLAYER_TASK', 'Abyssal demons', {
+      detectorId: 'slayer-task-varp-v1', confidence: 'UNCERTAIN',
+    });
+    expect(classifyFateEventCandidate(slayerEvent, state(), 'Slayer (Duradel/Kuradal)'))
+      .toEqual({ state: 'BLOCKED', reason: SLAYER_LOCKED });
+    const slayerOpen = withUnlocks({ skills: { ...initialState.unlocks.skills, Slayer: 10 }, slayerUnlocks: ['Like a Boss'] });
+    expect(classifyFateEventCandidate(slayerEvent, slayerOpen, 'Slayer (Duradel/Kuradal)'))
+      .toEqual({ state: 'BLOCKED', reason: 'Needs the Shilo Village area' });
+    // A boss task rolls from its boss's stash, so the Farm Keys card, which asks which boss, rolls it.
+    expect(classifyFateEventCandidate(slayerEvent, slayerOpen, DropSource.SLAYER_BOSS))
+      .toEqual({ state: 'BLOCKED', reason: BOSS_TASK_ROLL_ON_CARD });
+    expect(classifyFateEventCandidate(slayerEvent, slayerOpen, DropSource.SLAYER_VANNAKA).state).toBe('READY');
   });
 });
