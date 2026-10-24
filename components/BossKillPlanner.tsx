@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Loader2, AlertCircle, RefreshCw, Clock, Gauge, Info, ChevronRight, Crosshair } from 'lucide-react';
 import { Swords, Shield, Zap, Skull, Crown, Heart, Box, Boxes, FlaskConical } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../constants';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { SectionGuide } from './SectionGuide';
 import { gearService } from '../services/GearService';
@@ -44,6 +45,8 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const { unlocks, loadout: rawLoadout, gameModeId } = useGame();
   const loadout = rawLoadout || {};
   useEscapeKey(onClose, true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
   // OSRS layout: stone window, orange title bar, stone buttons (osrs-windows-b.css).
   const osrs = useIsOsrsUi();
 
@@ -104,7 +107,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
   const current = ranked.find((r) => r.boss === selected) ?? ranked[0];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} role="dialog" aria-modal="true" aria-label="Boss Kill Planner">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Boss Kill Planner">
       <div className={osrs ? 'osrs-win owb-win owb-bkp w-full max-w-3xl h-[82vh] overflow-hidden' : 'bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-3xl h-[82vh] flex flex-col overflow-hidden'} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         {osrs ? (
@@ -128,7 +131,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
           <button onClick={() => window.dispatchEvent(new CustomEvent('fate:nav', { detail: { target: 'open:gallery' } }))} title="Review all 3D models" className="flex items-center gap-1.5 px-2.5 py-1 rounded border border-white/10 bg-[#1f1f1f] text-gray-400 hover:text-white hover:border-white/20 text-[10px] font-bold uppercase tracking-wide transition-colors">
             <Boxes size={11} /> Gallery
           </button>
-          <button onClick={() => setBoostsOn((b) => !b)} title="Toggle prayers + potions" className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${boostsOn ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-white/10 bg-[#1f1f1f] text-gray-400'}`}>
+          <button onClick={() => setBoostsOn((b) => !b)} aria-pressed={boostsOn} title="Toggle prayers + potions" className={`flex items-center gap-1.5 px-2.5 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${boostsOn ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300' : 'border-white/10 bg-[#1f1f1f] text-gray-400'}`}>
             <FlaskConical size={11} /> Boosts {boostsOn ? 'on' : 'off'}
           </button>
           <button onClick={onClose} className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white" aria-label="Close"><X size={18} /></button>

@@ -183,9 +183,9 @@ export const OsrsSkills: React.FC<Props> = ({
                   canUnlockStart ? 'can-start' : '',
                   levelingSkill === skill ? 'is-leveling' : '',
                 ].filter(Boolean).join(' ')}
-                role="button"
-                tabIndex={isMainActionable ? 0 : -1}
-                aria-label={`${skill}, level ${level}${isUnlocked ? `, tier ${tier}, methods ${methodRange}` : ', locked'}`}
+                role={isMainActionable ? 'button' : 'group'}
+                tabIndex={isMainActionable ? 0 : undefined}
+                aria-label={`${skill}, level ${level}${isUnlocked ? `, tier ${tier}, methods ${methodRange}` : ', locked'}${canUnlockStart ? ', unlock with an Omni-Key' : canLevel ? ', level up' : ''}`}
                 aria-describedby={canLevel ? oddsDescriptionId : undefined}
               >
                 <span className="osrs-char-skrow">

@@ -155,8 +155,8 @@ const ClassicSkillDetailModal: React.FC<SkillDetailModalProps> = ({ skill, curre
                 </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors group">
-            <X className="w-6 h-6 text-gray-400 group-hover:text-white" />
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors group" aria-label="Close">
+            <X className="w-6 h-6 text-gray-400 group-hover:text-white" aria-hidden="true" />
           </button>
         </div>
 

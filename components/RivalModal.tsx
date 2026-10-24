@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Clock, Trash2, ClipboardPaste, Loader2, AlertTriangle, ChevronRight } from 'lucide-react';
 import { Swords, Crown, Skull, Flag, Sparkles, Zap } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import { SectionGuide } from './SectionGuide';
 import { WikiIcon } from './WikiIcon';
 import { getRivalImage } from '../data/wikiRivalIcons';
@@ -142,8 +143,11 @@ const RaceBar: React.FC<{ label: string; image: string; pct: number; color: stri
 );
 
 // ── Modal shell ──────────────────────────────────────────────────────────────
-const Shell: React.FC<{ onClose: () => void; title: string; image?: string; subtitle: string; children: React.ReactNode }> = ({ onClose, title, image = 'Combat_icon.png', subtitle, children }) => (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} role="dialog" aria-modal="true" aria-label="Rival Ghost">
+const Shell: React.FC<{ onClose: () => void; title: string; image?: string; subtitle: string; children: React.ReactNode }> = ({ onClose, title, image = 'Combat_icon.png', subtitle, children }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef);
+  return (
+  <div ref={dialogRef} tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose} role="dialog" aria-modal="true" aria-label="Rival Ghost">
     <div className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
         <div className="p-2 bg-fuchsia-900/20 rounded-lg border border-fuchsia-500/30 text-fuchsia-300"><WikiIcon file={image} alt="" Fallback={Swords} size={24} /></div>
@@ -156,7 +160,8 @@ const Shell: React.FC<{ onClose: () => void; title: string; image?: string; subt
       <div className="flex-1 overflow-y-auto custom-scrollbar">{children}</div>
     </div>
   </div>
-);
+  );
+};
 
 // ── Setup (no rival yet) ─────────────────────────────────────────────────────
 const Setup: React.FC<{ onClose: () => void; onStart: (r: ReturnType<typeof makeSimRival>) => void }> = ({ onClose, onStart }) => {

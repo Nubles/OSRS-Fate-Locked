@@ -232,7 +232,7 @@ const SlayerMasterCard: React.FC<SlayerMasterProps> = ({ name, displayRate, bonu
       {/* Character Portrait (Right Aligned) */}
       <img 
         src={image} 
-        alt={name}
+        alt=""
         className={`absolute -right-2 -bottom-2 w-auto h-[120%] object-contain transition-all duration-300 filter drop-shadow-lg ${isRolling ? 'opacity-20 grayscale blur-sm' : 'opacity-40 grayscale group-hover:opacity-100 group-hover:scale-110 group-hover:-translate-x-2 group-hover:grayscale-0'}`}
       />
 
@@ -302,7 +302,7 @@ const ClueScrollCard: React.FC<ClueScrollCardProps> = ({ tier, displayRate, bonu
 
       {/* Clue Icon */}
       <div className={`relative z-10 w-9 h-9 transition-all duration-300 filter drop-shadow-lg flex items-center justify-center bg-black/20 rounded-full border border-white/5 p-1 ${isRolling ? 'opacity-0' : 'group-hover:scale-110'}`}>
-         <img src={imageUrl} alt={tier} className="w-full h-full object-contain" />
+         <img src={imageUrl} alt="" className="w-full h-full object-contain" />
       </div>
 
       {/* Hover Flash */}
@@ -562,12 +562,15 @@ const ClassicActionSection: React.FC = () => {
     <div className="lg:h-full p-3 lg:p-4 flex flex-col gap-3">
 
       {/* Sub-tab toggle */}
-      <div className="grid grid-cols-2 gap-1 bg-[#161616] border border-white/5 rounded-lg p-1 shrink-0 min-w-0">
+      <div role="tablist" aria-label="Key sources" className="grid grid-cols-2 gap-1 bg-[#161616] border border-white/5 rounded-lg p-1 shrink-0 min-w-0">
         {tabs.map(tab => {
           const isActive = subTab === tab.id;
           return (
             <button
               key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
               onClick={() => setSubTab(tab.id)}
               className={`min-w-0 flex flex-wrap items-center justify-center gap-1 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all
                 ${isActive
