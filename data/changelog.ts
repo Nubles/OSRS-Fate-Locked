@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-25-skill-guide-text',
+    title: 'Skill guide tiers stop overlapping',
+    date: '2026-10-25',
+    sections: {
+      fixed: [
+        'The tier list in the skill guides no longer draws text on top of itself when your browser or computer shows text larger than usual.',
+        'Long tier lines wrap onto a second line and the list scrolls, so every tier, gem and unlock count stays readable.',
+      ],
+    },
+  },
+  {
     id: '2026-10-24-skillcape-emblem',
     title: 'Skillcapes show their emblem',
     date: '2026-10-24',
