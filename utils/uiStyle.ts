@@ -31,6 +31,8 @@ export type UiStyle = 'classic' | 'osrs';
 export type InterfaceStyle = '2007' | '2010';
 export type ClientLayout = 'resizable' | 'fixed';
 export type TextSize = 'normal' | 'medium' | 'large';
+/** How the OSRS layout marks a skill or slot tier: Roman numerals, or the older cut gems. */
+export type TierMarks = 'numerals' | 'gems';
 
 export const UI_STYLE_KEY = 'fate_ui_style_v1';
 /** The default this browser was given when it first opened the tracker (not a choice). */
@@ -38,11 +40,13 @@ export const UI_DEFAULT_KEY = 'fate_ui_default_v1';
 export const INTERFACE_STYLE_KEY = 'fate_osrs_interface_style_v1';
 export const CLIENT_LAYOUT_KEY = 'fate_osrs_client_layout_v1';
 export const TEXT_SIZE_KEY = 'fate_osrs_text_size_v1';
+export const TIER_MARKS_KEY = 'fate_osrs_tier_marks_v1';
 const CHANGE_EVENT = 'fate:ui-style';
 
 export const DEFAULT_INTERFACE_STYLE: InterfaceStyle = '2007';
 export const DEFAULT_CLIENT_LAYOUT: ClientLayout = 'resizable';
 export const DEFAULT_TEXT_SIZE: TextSize = 'normal';
+export const DEFAULT_TIER_MARKS: TierMarks = 'numerals';
 
 const isUiStyle = (value: unknown): value is UiStyle => value === 'classic' || value === 'osrs';
 
@@ -140,6 +144,8 @@ export const readClientLayout = (): ClientLayout =>
   readChoice<ClientLayout>(CLIENT_LAYOUT_KEY, ['resizable', 'fixed'], DEFAULT_CLIENT_LAYOUT);
 export const readTextSize = (): TextSize =>
   readChoice<TextSize>(TEXT_SIZE_KEY, ['normal', 'medium', 'large'], DEFAULT_TEXT_SIZE);
+export const readTierMarks = (): TierMarks =>
+  readChoice<TierMarks>(TIER_MARKS_KEY, ['numerals', 'gems'], DEFAULT_TIER_MARKS);
 
 /**
  * The OSRS layout is drawn for desktop-sized windows; below this width its
@@ -194,6 +200,7 @@ const setOption = (key: string, value: string): void => {
 export const setInterfaceStyle = (value: InterfaceStyle): void => setOption(INTERFACE_STYLE_KEY, value);
 export const setClientLayout = (value: ClientLayout): void => setOption(CLIENT_LAYOUT_KEY, value);
 export const setTextSize = (value: TextSize): void => setOption(TEXT_SIZE_KEY, value);
+export const setTierMarks = (value: TierMarks): void => setOption(TIER_MARKS_KEY, value);
 
 const subscribe = (onChange: () => void) => {
   // Another tab changed a choice: re-mirror it here too, then re-render.
@@ -230,3 +237,6 @@ export const useClientLayout = (): ClientLayout =>
 
 export const useTextSize = (): TextSize =>
   useSyncExternalStore(subscribe, readTextSize, () => DEFAULT_TEXT_SIZE);
+
+export const useTierMarks = (): TierMarks =>
+  useSyncExternalStore(subscribe, readTierMarks, () => DEFAULT_TIER_MARKS);

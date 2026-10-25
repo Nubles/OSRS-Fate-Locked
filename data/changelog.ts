@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-25-tier-numerals',
+    title: 'Tiers as Roman numerals',
+    date: '2026-10-25',
+    sections: {
+      changed: [
+        'In the OSRS layout, skill and gear tiers now show as Roman numerals in the tier\'s colour, like the Worn Equipment slots, instead of gems.',
+        'Prefer the gems? Settings > Tier marks switches them back.',
+      ],
+      fixed: [
+        'The tier list in a skill\'s Progression window no longer overlaps itself at Medium or Large text, or on very wide screens.',
+      ],
+    },
+  },
+  {
     id: '2026-10-24-skillcape-emblem',
     title: 'Skillcapes show their emblem',
     date: '2026-10-24',

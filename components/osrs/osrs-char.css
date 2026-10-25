@@ -7,6 +7,11 @@
 /* ── Skill cells ────────────────────────────────────────────────────────── */
 html[data-ui="osrs"] .osrs-char-skrow { display: flex; align-items: center; gap: 6px; min-width: 0; height: 25px; }
 html[data-ui="osrs"] .osrs-char-gem { flex-shrink: 0; width: 22px; height: 24px; image-rendering: pixelated; }
+/* The tier as a Roman numeral (Settings > Tier marks), drawn like the Worn Equipment slots' numerals. */
+html[data-ui="osrs"] .osrs-char-tiernum {
+  flex-shrink: 0; min-width: 22px; text-align: right; font: 16px 'RSBold', sans-serif; line-height: 16px;
+  letter-spacing: .5px; text-shadow: 1px 1px 0 #000; white-space: nowrap;
+}
 html[data-ui="osrs"] .osrs-char-sklock { flex-shrink: 0; font: 16px 'RSSmall', sans-serif; line-height: 16px; color: var(--osrs-red, #ff3030); }
 html[data-ui="osrs"] .osrs-char-sktier { display: none; font: 16px 'RSSmall', sans-serif; line-height: 16px; white-space: nowrap; }
 html[data-ui="osrs"] .osrs-char-notches { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 2px; flex-shrink: 0; }

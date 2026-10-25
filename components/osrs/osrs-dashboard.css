@@ -258,16 +258,18 @@ html[data-ui="osrs"] .osrs-dash-setlevel-hint { min-width: 0; font-family: 'RSSm
 html[data-ui="osrs"] .osrs-dash-setlevel-hint.is-warn { color: var(--osrs-yellow, #ff0); }
 html[data-ui="osrs"] .osrs-dash-setlevel-done { flex-basis: 100%; color: var(--osrs-green, #0dc10d); }
 html[data-ui="osrs"] .osrs-dash-setlevel-done:empty { display: none; }
-html[data-ui="osrs"] .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr); gap: 6px; }
+/* The ladder column widens with Settings > Text size, as the left column does. */
+html[data-ui="osrs"] .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(262px * var(--osrs-ts, 1)) minmax(0, 1fr); gap: 6px; }
 html[data-ui="osrs"] .osrs-dash-rungs { display: flex; flex-direction: column; padding: 3px; min-height: 0; overflow-y: auto; }
 html[data-ui="osrs"] .osrs-dash-rung {
-  all: unset; box-sizing: border-box; cursor: pointer; flex: 1; min-height: 40px; display: flex; align-items: center; gap: 8px;
+  /* Rungs share spare height but never squeeze below their text (bigger text sizes scroll the ladder instead of overlapping). */
+  all: unset; box-sizing: border-box; cursor: pointer; flex: 1 0 auto; min-height: 40px; display: flex; align-items: center; gap: 8px;
   padding: 0 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000;
 }
 html[data-ui="osrs"] .osrs-dash-rung:hover:not([disabled]) { filter: brightness(1.2); }
 html[data-ui="osrs"] .osrs-dash-rung:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
 html[data-ui="osrs"] .osrs-dash-rung[disabled] { cursor: default; }
-html[data-ui="osrs"] .osrs-dash-guiderow { border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osrs-dash-guiderow { flex-shrink: 0; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
 html[data-ui="osrs"] .osrs-dash-benefit { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 2px 10px; }
 html[data-ui="osrs"] .osrs-dash-node { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 8px; padding: 3px 10px; }
 html[data-ui="osrs"] .osrs-dash-node:hover { background: var(--osrs-slot, #3b3226); }
