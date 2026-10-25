@@ -13,7 +13,8 @@ import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../../confi
 import { categoryColor } from '../../utils/rarity';
 import { useGame } from '../../context/GameContext';
 import { openOsrsScreen, setOsrsKeysTab } from '../../utils/osrsNav';
-import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, ON_PARCHMENT, osrsSkillIcon, tableSprite, tierGem } from './OsrsSpendShared';
+import { CASKET_ICON, CHAOS_KEY_ICON, KEY_ICON, OMNI_KEY_ICON, ON_PARCHMENT, osrsSkillIcon, tableSprite } from './OsrsSpendShared';
+import { OsrsTierMark } from './OsrsTierMark';
 import { clock, lineDetails, look, speaker } from './OsrsHistoryShared';
 import { setRevealHost, setSpendTable, useKeysView } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
@@ -26,7 +27,7 @@ import { lazyWithRetry } from '../../utils/lazyRetry';
 // Chunked's exploring rolls, Breakthroughs and Fate's Mercy (loads with the chunk content).
 const ChunkedFatePanel = lazyWithRetry(() => import('../ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
-type Chip = { text: string; icon?: string; gem?: string | null; on: boolean; examine: string };
+type Chip = { text: string; icon?: string; tier?: number; on: boolean; examine: string };
 
 /** What a table's card can do right now; the same rules as the classic SpendCard. */
 const cardState = (c: SpendCategory, rollable: boolean, keys: number, pending: boolean) => {
@@ -197,12 +198,12 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
       case TableType.SKILLS:
         return SKILLS_LIST.map(skill => {
           const tier = unlocks.skills?.[skill] ?? 0;
-          return { text: skill, icon: osrsSkillIcon(skill, true), gem: tierGem(tier), on: tier > 0, examine: tier > 0 ? `${skill}: tier ${tier}.` : `${skill}: locked.` };
+          return { text: skill, icon: osrsSkillIcon(skill, true), tier, on: tier > 0, examine: tier > 0 ? `${skill}: tier ${tier}.` : `${skill}: locked.` };
         });
       case TableType.EQUIPMENT:
         return EQUIPMENT_SLOTS.map(slot => {
           const tier = unlocks.equipment?.[slot] ?? 0;
-          return { text: tier > 0 ? slot : `${slot}: locked`, gem: tierGem(tier), on: tier > 0, examine: tier > 0 ? `${slot} slot: tier ${tier}.` : `${slot} slot: locked.` };
+          return { text: tier > 0 ? slot : `${slot}: locked`, tier, on: tier > 0, examine: tier > 0 ? `${slot} slot: tier ${tier}.` : `${slot} slot: locked.` };
         });
       case TableType.REGIONS:
         return owned(unlockableAreas(gameModeId, customMode).filter(area => isAreaReachable(area, unlocks, gameModeId)));
@@ -323,7 +324,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
                 <span key={c.text} className={`ospend-chip${c.on ? '' : ' off'}`} data-examine-name={c.text} data-examine={c.examine}>
                   {c.icon && <img className="osrs-px" src={c.icon} alt="" aria-hidden="true" style={{ width: 18, height: 18, objectFit: 'contain', filter: c.on ? 'none' : 'grayscale(1) brightness(.6)' }} />}
                   {c.text}
-                  {c.gem && <img className="osrs-px" src={c.gem} alt="" aria-hidden="true" style={{ width: 18, height: 16 }} />}
+                  {c.tier ? <OsrsTierMark tier={c.tier} size="chip" /> : null}
                 </span>
               ))}
             </div>

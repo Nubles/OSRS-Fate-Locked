@@ -5,7 +5,9 @@ import { SectionGuide } from '../SectionGuide';
 import { TIER_LABELS } from '../../utils/combatPower';
 import { canonicalTierFromName } from '../../utils/gearTiers';
 import { gearService } from '../../services/GearService';
-import { TIER_GEMS, gemSrc, gemColor, itemSrc, roman } from './OsrsDashGems';
+import { TIER_GEMS, gemColor, itemSrc, roman } from './OsrsDashGems';
+import { OsrsTierMark } from './OsrsTierMark';
+import { useTierMarks } from '../../utils/uiStyle';
 import { OsrsCharDoll, type DollSlot } from './OsrsCharDoll';
 import { BONUS_GROUPS, type GearItem } from '../../utils/gearStats';
 import { OsrsGearPicker, useWornItems, type GearStatus } from './OsrsCharGear';
@@ -282,10 +284,11 @@ const SlotDetail: React.FC<{ slot: string; tier: number; specialKeys: number; on
   const isMaxed = tier >= EQUIPMENT_TIER_MAX;
   const nextTier = tier + 1;
   const canUpgrade = !isMaxed && specialKeys > 0;
+  const gems = useTierMarks() === 'gems';
   return (
     <section className="osrs-inner osrs-char-detail" aria-label={`${slot} details`}>
       <div className="osrs-sh osrs-char-detailhead">
-        <img className="osrs-px" src={gemSrc(Math.max(tier, 1))} alt="" aria-hidden="true" width={27} height={24} style={tier > 0 ? undefined : { filter: 'grayscale(1) brightness(.5)' }} />
+        {gems || tier > 0 ? <OsrsTierMark tier={Math.max(tier, 1)} size="row" look={tier > 0 ? 'on' : 'off'} framed /> : null}
         <span style={{ fontFamily: 'RSBold, sans-serif', color: '#fff' }}>{slot}</span>
         <span className="osrs-char-detailtier">
           <span style={{ color: tier > 0 ? gemColor(tier) : 'var(--osrs-muted, #8a7c66)' }}>Tier {tier > 0 ? roman(tier) : 0}</span>

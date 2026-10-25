@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-25-tier-numerals',
+    title: 'Tiers as Roman numerals',
+    date: '2026-10-25',
+    sections: {
+      changed: [
+        'In the OSRS layout, skill and gear tiers now show as Roman numerals in the tier\'s colour, like the Worn Equipment slots, instead of gems.',
+        'Prefer the gems? Settings > Tier marks switches them back.',
+      ],
+    },
+  },
+  {
     id: '2026-10-25-skill-guide-text',
     title: 'Skill guide tiers stop overlapping',
     date: '2026-10-25',

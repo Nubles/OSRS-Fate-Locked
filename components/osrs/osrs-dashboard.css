@@ -258,7 +258,8 @@ html[data-ui="osrs"] .osrs-dash-setlevel-hint { min-width: 0; font-family: 'RSSm
 html[data-ui="osrs"] .osrs-dash-setlevel-hint.is-warn { color: var(--osrs-yellow, #ff0); }
 html[data-ui="osrs"] .osrs-dash-setlevel-done { flex-basis: 100%; color: var(--osrs-green, #0dc10d); }
 html[data-ui="osrs"] .osrs-dash-setlevel-done:empty { display: none; }
-html[data-ui="osrs"] .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr); gap: 6px; }
+/* The ladder column widens with Settings > Text size, as the left column does. */
+html[data-ui="osrs"] .osrs-dash-guidebody { flex: 1; min-height: 0; display: grid; grid-template-columns: calc(262px * var(--osrs-ts, 1)) minmax(0, 1fr); gap: 6px; }
 html[data-ui="osrs"] .osrs-dash-rungs { display: flex; flex-direction: column; padding: 3px; min-height: 0; overflow-y: auto; }
 /* Tier rung: icon | name + levels | state + count, one grid so the two text columns can never draw over
    each other. Rows grow with their text (flex-shrink 0) and the ladder scrolls, so larger text (browser
@@ -268,7 +269,7 @@ html[data-ui="osrs"] .osrs-dash-rung {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; align-content: center; column-gap: 8px;
   padding: 3px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000;
 }
-html[data-ui="osrs"] .osrs-dash-rung > img { grid-row: 1 / span 2; }
+html[data-ui="osrs"] .osrs-dash-rung > :is(img, .osrs-tiermark) { grid-row: 1 / span 2; }
 html[data-ui="osrs"] .osrs-dash-rung-name,
 html[data-ui="osrs"] .osrs-dash-rung-sub { grid-column: 2; min-width: 0; }
 html[data-ui="osrs"] .osrs-dash-rung-name { grid-row: 1; font: 16px 'RSBold', sans-serif; line-height: 1; overflow-wrap: anywhere; }
@@ -281,7 +282,7 @@ html[data-ui="osrs"] .osrs-dash-rung-count { grid-row: 2; color: var(--osrs-yell
 html[data-ui="osrs"] .osrs-dash-rung:hover:not([disabled]) { filter: brightness(1.2); }
 html[data-ui="osrs"] .osrs-dash-rung:focus-visible { outline: 1px solid var(--osrs-yellow, #ff0); }
 html[data-ui="osrs"] .osrs-dash-rung[disabled] { cursor: default; }
-html[data-ui="osrs"] .osrs-dash-guiderow { border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .osrs-dash-guiderow { flex-shrink: 0; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
 html[data-ui="osrs"] .osrs-dash-benefit { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 2px 10px; }
 html[data-ui="osrs"] .osrs-dash-node { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: flex; align-items: center; gap: 8px; padding: 3px 10px; }
 html[data-ui="osrs"] .osrs-dash-node:hover { background: var(--osrs-slot, #3b3226); }

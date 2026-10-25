@@ -3,6 +3,7 @@ import { TableType, type LogEntry, type UnlockState } from '../../types';
 import { BANK_BY_ID } from '../../data/banks';
 import { chunkLabel } from '../../utils/chunkAdjacency';
 import { tierBand } from '../../utils/skillTiers';
+import { useTierMarks } from '../../utils/uiStyle';
 import './osrs-shell.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -101,6 +102,8 @@ export const unlockCostType = (history: LogEntry[], item: string): string | unde
  * It shows after the unlock reveal has been accepted, so it never covers it.
  */
 export const OsrsLevelUp: React.FC<{ message: LevelUpMessage; onContinue: () => void }> = ({ message, onContinue }) => {
+  // With numerals the second line already names the tier, so the gem is left out.
+  const gems = useTierMarks() === 'gems';
   return (
     <div className="osrs-lvl" role="dialog" aria-label="Unlocked" aria-live="polite">
       <div className="osrs-lvl-side">
@@ -112,7 +115,7 @@ export const OsrsLevelUp: React.FC<{ message: LevelUpMessage; onContinue: () => 
         <button type="button" className="osrs-lvl-cont" onClick={onContinue}>Click here to continue</button>
       </div>
       <div className="osrs-lvl-side">
-        {message.gem && <img className="osrs-px" src={message.gem.src} alt={message.gem.alt} width={36} height={32} />}
+        {gems && message.gem && <img className="osrs-px" src={message.gem.src} alt={message.gem.alt} width={36} height={32} />}
       </div>
     </div>
   );

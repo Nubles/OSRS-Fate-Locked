@@ -7,7 +7,8 @@ import { chunkContentService } from '../../services/ChunkContentService';
 import { GearItem, GearBonuses, sumBonuses } from '../../utils/gearStats';
 import { itemObtainability } from '../../utils/itemObtainability';
 import { WikiLink } from '../WikiLink';
-import { gemSrc, gemColor, itemSpriteSrc, itemSpriteFallback } from './OsrsDashGems';
+import { gemSrc, gemColor, itemSpriteSrc, itemSpriteFallback, roman } from './OsrsDashGems';
+import { useTierMarks } from '../../utils/uiStyle';
 
 /**
  * Equipment Lab, Gear view: the item picker for the chosen slot ("Choose
@@ -78,6 +79,8 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
   const equip = useEquip();
   const currentItemId = (loadout || {})[slot];
   const unlockedTier = unlocks.equipment[slot] || 0;
+  // With numerals the tier is written as one, and the gem goes.
+  const gems = useTierMarks() === 'gems';
   const [query, setQuery] = useState('');
   const [contentReady, setContentReady] = useState(chunkContentService.ready);
   useEffect(() => {
@@ -104,8 +107,8 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
     <div className="osrs-dash-pickbody">
       <div className="osrs-sh osrs-dash-pickhead">
         <span>Unlocked up to</span>
-        {unlockedTier > 0 && <img className="osrs-px" src={gemSrc(unlockedTier)} alt="" aria-hidden="true" width={27} height={24} />}
-        <span style={{ color: gemColor(unlockedTier) }}>Tier {unlockedTier}</span>
+        {gems && unlockedTier > 0 && <img className="osrs-px" src={gemSrc(unlockedTier)} alt="" aria-hidden="true" width={27} height={24} />}
+        <span style={{ color: gemColor(unlockedTier) }}>Tier {gems || unlockedTier === 0 ? unlockedTier : roman(unlockedTier)}</span>
         {currentItemId != null && (
           <button type="button" className="osrs-btn" style={{ marginLeft: 'auto', height: 28, color: 'var(--osrs-red, #ff3030)' }} onClick={() => setLoadoutSlot(slot, null)}>
             <svg aria-hidden="true" width="12" height="14" viewBox="0 0 12 14"><path d="M1 3h10M4 3V1h4v2M2.5 3l.8 10h5.4l.8-10" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
@@ -130,7 +133,7 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
         {status === 'ready' && shown.map((item) => {
           const tier = gearService.tierOf(item.id);
           const estimated = canonicalTierFromName(item.name) == null;
-          const tierLabel = `${estimated ? 'Est. ' : ''}T${tier}`;
+          const tierLabel = `${estimated ? 'Est. ' : ''}${gems ? `T${tier}` : (tier > 0 ? roman(tier) : '0')}`;
           const locked = tier > unlockedTier;
           const isCurrent = item.id === currentItemId;
           const obt = contentReady ? itemObtainability(item.name, unlocks) : 'unknown';
@@ -157,7 +160,7 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
               <span className="osrs-dash-tierbadge" title={estimated ? 'Est. = a stat-based tier awaiting review' : undefined} style={{ color: locked ? 'var(--osrs-muted, #8a7c66)' : gemColor(tier), background: locked ? 'var(--osrs-well, #1f1a14)' : 'var(--osrs-slot-hi, #2a231a)' }}>
                 {locked
                   ? <svg aria-hidden="true" width="11" height="12" viewBox="0 0 12 12"><rect x="2" y="5" width="8" height="6" fill="#8a7c66" /><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="#8a7c66" strokeWidth="1.5" /></svg>
-                  : tier > 0 && <img className="osrs-px" src={gemSrc(tier)} alt="" aria-hidden="true" width={18} height={16} />}
+                  : gems && tier > 0 && <img className="osrs-px" src={gemSrc(tier)} alt="" aria-hidden="true" width={18} height={16} />}
                 {tierLabel}
               </span>
             </button>

@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const levelUpSkill = vi.hoisted(() => vi.fn());
@@ -61,7 +61,7 @@ vi.mock('../../services/MonsterService', () => ({
 }));
 
 import { Dashboard } from '../Dashboard';
-import { UI_STYLE_KEY, applyUiStyle } from '../../utils/uiStyle';
+import { TIER_MARKS_KEY, UI_STYLE_KEY, applyUiStyle, setTierMarks } from '../../utils/uiStyle';
 import { getOsrsNav, openOsrsScreen } from '../../utils/osrsNav';
 
 beforeEach(() => {
@@ -74,6 +74,7 @@ afterEach(() => {
   levelUpSkill.mockClear();
   openOsrsScreen('home');
   localStorage.removeItem(UI_STYLE_KEY);
+  localStorage.removeItem(TIER_MARKS_KEY);
   applyUiStyle();
 });
 
@@ -109,9 +110,10 @@ describe('Dashboard in the OSRS layout', () => {
     const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30, level up' }, { timeout: 10000 });
     expect(card.getAttribute('data-skill-card')).toBe('Attack');
     expect(card.textContent).toContain('25');
-    // Tier III is Red topaz: the gem, three filled notches and the tier line.
+    // Tier III: the numeral, three filled notches and the tier line.
     expect(card.textContent).toContain('Tier III · methods to 30');
-    expect((card.querySelector('.osrs-char-gem') as HTMLElement).style.backgroundImage).toContain('red_topaz');
+    expect(card.querySelector('.osrs-char-tiernum')?.textContent).toBe('III');
+    expect(card.querySelector('.osrs-char-gem')).toBeNull();
     expect(card.querySelectorAll('.osrs-char-notches > .is-on')).toHaveLength(3);
     expect(card.getAttribute('data-examine-name')).toBe('Attack');
     expect(card.getAttribute('data-examine')).toMatch(/^Level 25\. Tier 3: you can train levels 1-30\. Next Lv 26: .+ Key chance\./);
@@ -127,10 +129,25 @@ describe('Dashboard in the OSRS layout', () => {
     expect(mining.hasAttribute('tabindex')).toBe(false);
     expect(mining.textContent).toContain('Locked');
     expect(mining.textContent).toContain('Needs a Key to start');
-    expect(mining.querySelector('.osrs-char-gem')).toBeNull();
+    expect(mining.querySelector('.osrs-char-tiernum')).toBeNull();
     fireEvent.click(mining);
     expect(levelUpSkill).toHaveBeenCalledTimes(2);
     expect(mining.getAttribute('data-examine')).toBe('Level 1. Locked: no tier unlocked yet.');
+  });
+
+  it('draws tiers as the older cut gems when Settings > Tier marks is Gems', { timeout: 20000 }, async () => {
+    render(<Dashboard suspendModals />);
+    const card = await screen.findByRole('button', { name: 'Attack, level 25, tier 3, methods 1-30, level up' }, { timeout: 10000 });
+    const head = screen.getByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' });
+    expect(head.querySelector('.osrs-char-slotgem')).toBeNull();
+    act(() => setTierMarks('gems'));
+    // Tier III is Red topaz; the Head slot's Tier 2 keeps its numeral and gains a Jade gem.
+    expect((card.querySelector('.osrs-char-gem') as HTMLElement).style.backgroundImage).toContain('red_topaz');
+    expect(card.querySelector('.osrs-char-tiernum')).toBeNull();
+    expect(head.querySelector('.osrs-char-slottier')?.textContent).toBe('II');
+    expect(head.querySelector('.osrs-char-slotgem')?.getAttribute('src')).toContain('gem-jade');
+    act(() => setTierMarks('numerals'));
+    expect(card.querySelector('.osrs-char-tiernum')?.textContent).toBe('III');
   });
 
   it('opens a skill\'s roll odds from the i in its corner instead of a tooltip over the cell', { timeout: 20000 }, async () => {
@@ -152,9 +169,8 @@ describe('Dashboard in the OSRS layout', () => {
   it('shows each worn-equipment slot with its tier, and a slot opens its ladder inside the panel', { timeout: 20000 }, async () => {
     render(<Dashboard suspendModals />);
     const head = await screen.findByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }, { timeout: 10000 });
-    // Tier 2 is a II numeral and a Jade gem on the slot; an empty slot shows its wiki slot icon.
+    // Tier 2 is a II numeral on the slot; an empty slot shows its wiki slot icon.
     expect(head.querySelector('.osrs-char-slottier')?.textContent).toBe('II');
-    expect(head.querySelector('.osrs-char-slotgem')?.getAttribute('src')).toContain('gem-jade');
     expect(head.querySelector('.osrs-char-slotsil')?.getAttribute('src')).toContain('Head_slot.png');
     const neck = screen.getByRole('button', { name: 'Neck: Tier 0. Click for its tier ladder.' });
     expect(neck.className).toContain('is-dim');
