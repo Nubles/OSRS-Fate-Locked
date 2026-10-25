@@ -337,11 +337,9 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
                 className="osrs-dash-rung" disabled={unlockedOnly && currentTier < 1}
                 style={sel === 'stations' ? { background: 'var(--osrs-selected, #5a4c3a)', boxShadow: 'inset 0 0 0 1px var(--osrs-yellow, #ff0)' } : undefined}>
                 <img className="osrs-px" src={skillIconSrc(skill)} alt="" aria-hidden="true" width={25} height={25} style={{ margin: '0 1px' }} />
-                <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '16px', minWidth: 0 }}>
-                  <span style={{ fontFamily: 'RSBold, sans-serif', color: 'var(--osrs-orange, #ff981f)' }}>Stations</span>
-                  <span className="osrs-dash-tan-s" style={{ whiteSpace: 'nowrap' }}>Usable from level 1</span>
-                </span>
-                <span className="osrs-dash-yellow-s" style={{ marginLeft: 'auto' }}>{visibleStations.length || ''}</span>
+                <span className="osrs-dash-rung-name" style={{ color: 'var(--osrs-orange, #ff981f)' }}>Stations</span>
+                <span className="osrs-dash-rung-sub">Usable from level 1</span>
+                <span className="osrs-dash-rung-count">{visibleStations.length || ''}</span>
               </button>
             )}
             {TIER_GEMS.map((g, i) => {
@@ -366,16 +364,12 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
                   }}
                 >
                   <OsrsTierMark tier={t} size="row" look={owned ? 'on' : (next ? 'next' : 'off')} framed />
-                  <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '16px', minWidth: 0, overflow: 'hidden' }}>
-                    <span style={{ fontFamily: 'RSBold, sans-serif', color: owned ? g.color : (next ? 'var(--osrs-orange, #ff981f)' : '#7d705c') }}>Tier {roman(t)}</span>
-                    <span className="osrs-dash-tan-s" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Levels {tierBand(t).label}{named(t)}</span>
+                  <span className="osrs-dash-rung-name" style={{ color: owned ? g.color : (next ? 'var(--osrs-orange, #ff981f)' : '#7d705c') }}>Tier {roman(t)}</span>
+                  <span className="osrs-dash-rung-sub"><span>Levels {tierBand(t).label}</span>{gemNames && <> · <span>{g.name}</span></>}</span>
+                  <span className="osrs-dash-rung-state" style={{ color: owned ? 'var(--osrs-green, #0dc10d)' : (next ? 'var(--osrs-yellow, #ff0)' : '#7d705c') }}>
+                    {owned ? 'Active' : (next ? 'Next Unlock' : 'Locked')}
                   </span>
-                  <span style={{ marginLeft: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '15px', whiteSpace: 'nowrap' }}>
-                    <span style={{ font: "16px 'RSSmall', sans-serif", color: owned ? 'var(--osrs-green, #0dc10d)' : (next ? 'var(--osrs-yellow, #ff0)' : '#7d705c') }}>
-                      {owned ? 'Active' : (next ? 'Next Unlock' : 'Locked')}
-                    </span>
-                    <span className="osrs-dash-yellow-s">{n ? `${n} ${tab === 'gather' ? 'to gather' : (n === 1 ? 'unlock' : 'unlocks')}` : ''}</span>
-                  </span>
+                  <span className="osrs-dash-rung-count">{n ? `${n} ${tab === 'gather' ? 'to gather' : (n === 1 ? 'unlock' : 'unlocks')}` : ''}</span>
                 </button>
               );
             })}

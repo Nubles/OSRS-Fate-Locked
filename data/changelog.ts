@@ -45,8 +45,16 @@ export const CHANGELOG_RELEASES = [
         'In the OSRS layout, skill and gear tiers now show as Roman numerals in the tier\'s colour, like the Worn Equipment slots, instead of gems.',
         'Prefer the gems? Settings > Tier marks switches them back.',
       ],
+    },
+  },
+  {
+    id: '2026-10-25-skill-guide-text',
+    title: 'Skill guide tiers stop overlapping',
+    date: '2026-10-25',
+    sections: {
       fixed: [
-        'The tier list in a skill\'s Progression window no longer overlaps itself at Medium or Large text, or on very wide screens.',
+        'The tier list in the skill guides no longer draws text on top of itself when your browser or computer shows text larger than usual.',
+        'Long tier lines wrap onto a second line and the list scrolls, so every tier, gem and unlock count stays readable.',
       ],
     },
   },
