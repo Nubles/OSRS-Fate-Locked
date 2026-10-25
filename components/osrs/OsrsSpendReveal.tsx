@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import './osrs-spend.css';
 import { getItemDescription } from '../VoidReveal';
 import { EntityModel, preloadModelViewer } from '../EntityModel';
-import { loadModelManifest, orientationFor } from '../../data/entityModels';
+import { isSkillcape, loadModelManifest, orientationFor } from '../../data/entityModels';
 import { useModelFor } from '../../hooks/useModelFor';
 import { bankFor } from '../../utils/bankPicture';
 import { OsrsBankReveal } from './OsrsBankPicture';
@@ -96,7 +96,8 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   } else if (model) {
     // Skills show their skillcape: no skill-icon poster while the cape loads,
     // so a roll never shows the icon on one skill and the cape on another.
-    shown = <EntityModel src={model} poster={isSkill ? undefined : itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />;
+    // The cape holds still with its emblem facing out instead of spinning.
+    shown = <EntityModel src={model} poster={isSkill ? undefined : itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} spin={isSkillcape(itemName) ? false : undefined} orientation={orientationFor(itemName)} />;
   } else if (isRegion && chunksForArea(itemName).length) {
     // An area has no single model: show its piece of the world map instead.
     shown = (

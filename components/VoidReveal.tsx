@@ -4,7 +4,7 @@ import { Copy, ExternalLink, Check, Loader2 } from 'lucide-react';
 import { Sparkles, Map, Box, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, Flag } from './OsrsIcon';
 import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
-import { orientationFor } from '../data/entityModels';
+import { isSkillcape, orientationFor } from '../data/entityModels';
 import { useModelFor } from '../hooks/useModelFor';
 import { categoryColor, categoryRarity, rarityRank } from '../utils/rarity';
 import { tableDisplayName } from '../utils/tableDisplay';
@@ -458,7 +458,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
                         <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
                     )}
                     <div className="relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />
+                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} spin={isSkillcape(itemName) ? false : undefined} orientation={orientationFor(itemName)} />
                     </div>
                  </div>
               ) : itemImage && !imageError ? (
