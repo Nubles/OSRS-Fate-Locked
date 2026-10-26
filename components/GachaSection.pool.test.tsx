@@ -29,7 +29,7 @@ vi.mock('../utils/gameEngine', async importOriginal => {
 
 afterEach(() => {
   cleanup();
-  confirmSpendPref.set(true);
+  confirmSpendPref.set(false);
   setStartArea(undefined);
   blocked.table = undefined;
   resetClickGuard();
@@ -71,7 +71,8 @@ describe('Spend Keys cards', () => {
     expect(rollUnlock).toHaveBeenCalledWith(TableType.EQUIPMENT);
   });
 
-  it('asks Yes or No first while Ask before spending is on', async () => {
+  it('asks Yes or No first while Ask before Key clicks is on', async () => {
+    confirmSpendPref.set(true);
     await renderWith(createFreshState().unlocks);
     const rollUnlock = game.current.rollUnlock as ReturnType<typeof vi.fn>;
 

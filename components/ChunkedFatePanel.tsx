@@ -1,3 +1,4 @@
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Sparkles } from './OsrsIcon';
@@ -36,7 +37,14 @@ export const breakthroughRowText = (skill: string, level: number, tier: number):
  */
 export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> = ({ osrs = false, compact = false }) => {
   const game = useGame();
-  const { unlocks, gameModeId, pendingUnlock, rollBreakthrough, callOnFate, exploreChunk, rollGilded, fateLand, rituals } = game;
+  const { unlocks, gameModeId, pendingUnlock, fateLand, rituals } = game;
+  // With "Ask before Key clicks" on, each roll asks Yes or No first (utils/spendConfirm.ts).
+  const rollBreakthrough = (skill: string) => confirmThen(`Roll a Breakthrough for ${skill}?`, () => game.rollBreakthrough(skill));
+  const callOnFate = () => confirmThen("Call on Fate's Mercy?", () => game.callOnFate());
+  const exploreChunk = (chunk: string, fact: string, x?: number, y?: number) =>
+    confirmThen('Roll for a Key for exploring this?', () => game.exploreChunk(chunk, fact, x, y));
+  const rollGilded = (chunk: string, x?: number, y?: number) =>
+    confirmThen("Roll this Gilded chunk's Key?", () => game.rollGilded(chunk, x, y));
   const waiting = pendingBreakthroughs(game);
   // Everything but the quest check, which needs the chunk content.
   const needsQuestCheck = mercyBlocker(game) === null;

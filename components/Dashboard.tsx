@@ -1,3 +1,4 @@
+import { confirmThen } from '../utils/spendConfirm';
 import { getUtilityActivityReq } from '../utils/utilityReadiness';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
@@ -571,13 +572,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const completionPercent = useMemo(() => runCompletion(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
 
   // --- Handlers ---
-  const handleLevelUp = (skill: string) => {
+  const handleLevelUp = (skill: string) => confirmThen(`Level up ${skill} and roll for a Key?`, () => {
     if (animationsEnabled) {
         setLevelingSkill(skill);
         setTimeout(() => setLevelingSkill(null), 500);
     }
     levelUpSkill(skill);
-  };
+  });
 
   const handleSpecialUnlock = (table: TableType, name: string) => {
       // Chunked mode has no named-region unlocks (chunks are the only territory

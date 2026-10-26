@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-ask-before-rolls',
+    title: 'Ask before Key rolls too',
+    date: '2026-10-26',
+    sections: {
+      changed: [
+        'The Yes or No box now also comes up before a click rolls for a Key, such as a level-up, a quest, a Farm Keys roll or a new Collection Log item.',
+        'Its setting is now called Ask before Key clicks.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-ask-before-spending',
     title: 'Ask before spending',
     date: '2026-10-26',

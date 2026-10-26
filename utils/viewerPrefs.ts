@@ -12,7 +12,8 @@ export interface ViewerPref {
   use: () => boolean;
 }
 
-const makePref = (key: string, fallback: boolean): ViewerPref => {
+const makePref = (key: string, defaultOn: boolean | (() => boolean)): ViewerPref => {
+  const fallback = (): boolean => (typeof defaultOn === 'function' ? defaultOn() : defaultOn);
   const event = `fate:pref:${key}`;
   let memory: boolean | undefined;
   const read = (): boolean => {
@@ -21,7 +22,7 @@ const makePref = (key: string, fallback: boolean): ViewerPref => {
       if (raw === 'on') return true;
       if (raw === 'off') return false;
     } catch { /* storage blocked: this page's choice, else the default */ }
-    return memory ?? fallback;
+    return memory ?? fallback();
   };
   const set = (on: boolean): void => {
     memory = on;
@@ -36,15 +37,16 @@ const makePref = (key: string, fallback: boolean): ViewerPref => {
       window.removeEventListener('storage', onChange);
     };
   };
-  const use = (): boolean => useSyncExternalStore(subscribe, read, () => fallback);
+  const use = (): boolean => useSyncExternalStore(subscribe, read, fallback);
   return { key, read, set, use };
 };
 
 /** Spend Keys: the line under each table saying how many draws you could use now. */
 export const tableOutlookPref = makePref('fate_table_outlook_v1', false);
 
-/** Spend Keys: a Yes / No box before each Key is spent (utils/spendConfirm.ts). */
-export const confirmSpendPref = makePref('fate_confirm_spend_v1', true);
+/** Ask before Key clicks: a Yes / No box before a click spends a Key or rolls for one (utils/spendConfirm.ts). */
+// On unless the build says 'off' (component tests do: vite.config.ts).
+export const confirmSpendPref = makePref('fate_confirm_spend_v1', () => import.meta.env.VITE_ASK_BEFORE_KEY_CLICKS !== 'off');
 
 /** The short note about your last session after a break. */
 export const welcomeBackPref = makePref('fate_welcome_back_v1', true);

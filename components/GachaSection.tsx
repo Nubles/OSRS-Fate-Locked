@@ -19,8 +19,7 @@ import { chunkTotals } from '../utils/runProgress';
 import type { SpendNote } from '../utils/spendNoteTypes';
 import { movedJustNow, watchLayoutShifts } from '../utils/clickGuard';
 import { showToast } from '../utils/toast';
-import { confirmSpendPref } from '../utils/viewerPrefs';
-import { askBeforeSpending } from '../utils/spendConfirm';
+import { confirmThen } from '../utils/spendConfirm';
 
 const SpendNotesBridge = lazyWithRetry(() => import('./SpendNotesBridge'));
 const NO_NOTES: ReadonlyMap<TableType, SpendNote> = new Map();
@@ -258,11 +257,8 @@ export const useSpendModel = () => {
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
 
-  // With "Ask before spending" on, a Yes / No box comes first (utils/spendConfirm.ts).
-  const spendAfterAsking = (question: string, spend: () => void) => guarded(() => {
-    if (!confirmSpendPref.read()) { spend(); return; }
-    void askBeforeSpending(question).then(yes => { if (yes) spend(); });
-  });
+  // With "Ask before Key clicks" on, a Yes / No box comes first (utils/spendConfirm.ts).
+  const spendAfterAsking = (question: string, spend: () => void) => guarded(() => confirmThen(question, spend));
   const handleUnlock = (table: TableType) => {
     const label = SPEND_CATEGORIES.find(c => c.type === table)?.label ?? 'this table';
     spendAfterAsking(`Spend a Key on ${label}?`, () => rollUnlock(table));

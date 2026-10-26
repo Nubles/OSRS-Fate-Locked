@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { confirmSpendPref, tableOutlookPref } from './viewerPrefs';
 
 describe('viewer prefs', () => {
-  it('start with Ask before spending on and the table outlook off', () => {
+  afterEach(() => { vi.unstubAllEnvs(); });
+
+  it('start with Ask before Key clicks on and the table outlook off', () => {
+    vi.stubEnv('VITE_ASK_BEFORE_KEY_CLICKS', '');
     localStorage.clear();
     expect(confirmSpendPref.read()).toBe(true);
     expect(tableOutlookPref.read()).toBe(false);
