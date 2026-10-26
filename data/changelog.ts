@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-osrs-windows',
+    title: 'More windows in the OSRS look',
+    date: '2026-10-26',
+    sections: {
+      changed: [
+        'In the OSRS layout, the Game Mode, Sync Code, note, RuneLite guide and Strategy Guide windows now use the same stone frames, buttons and fonts.',
+        'The world map\'s chunk panel matches too, and the Strategy Guide\'s filters are square stone buttons with the chosen one pressed in.',
+        'The classic layout looks the same as before.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-osrs-layout-fixes',
     title: 'OSRS layout fixes',
     date: '2026-10-26',

@@ -37,6 +37,7 @@ import { ChunkInfoSection } from './chunk-info/ChunkInfoSection';
 import { ChunkInfoIcon } from './chunk-info/ChunkInfoIcon';
 
 import { ChunkInfoSummary } from './chunk-info/ChunkInfoSummary';
+import './osrs/osrs-windows-c.css';
 import {
   buildChunkInfoDrawerSummary,
   buildChunkInfoSectionStats,
@@ -976,7 +977,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
 
 
   return (
-    <div className="absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
+    <div data-osrs-win="chunk" className="ocw-panel absolute bottom-3 right-3 top-3 z-30 flex w-80 max-w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-xl border border-cyan-900/50 bg-[#16191b]/95 shadow-2xl backdrop-blur-sm">
       <ChunkInfoHeader
         title={title}
         meta={mode === 'region'
