@@ -37,6 +37,16 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-ask-before-spending',
+    title: 'Ask before spending',
+    date: '2026-10-26',
+    sections: {
+      added: [
+        'Spend Keys now asks Yes or No before each Key is spent. Enter says Yes, Esc says No. Turn it off in Settings: Ask before spending.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-spend-guard',
     title: 'Safer Spend Keys clicks and log links',
     date: '2026-10-26',
