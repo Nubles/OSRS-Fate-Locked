@@ -24,6 +24,8 @@ import {
 import { showToast } from '../utils/toast';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import { Landmark } from './OsrsIcon';
+import './osrs/osrs-windows-a.css';
+import './osrs/osrs-windows-c.css';
 import { OnlineBackupPanel } from './OnlineBackupPanel';
 
 interface Props {
@@ -426,7 +428,8 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
         setStatus(null);
         if (id !== 'BACKUPS') setBackupError(null);
       }}
-      className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
+      data-osrs-on={tab === id ? 'true' : undefined}
+      className={`osrs-wa-tab flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
         tab === id
           ? 'text-cyan-300 border-b-2 border-cyan-400 bg-white/[0.03]'
           : 'text-gray-500 hover:text-gray-300 border-b-2 border-transparent'
@@ -438,7 +441,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="osrs-wa-overlay fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
       onClick={closeModal}
       ref={dialogRef}
       tabIndex={-1}
@@ -447,23 +450,24 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
       aria-label="Sync code"
     >
       <div
-        className="bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden"
+        data-osrs-win="sync"
+        className="osrs-wa-win bg-[#161616] border border-white/10 rounded-xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
-          <div className="p-2 bg-cyan-900/20 rounded-lg border border-cyan-500/30 text-cyan-400">
+        <div className="osrs-wa-head flex items-center gap-3 p-4 border-b border-white/10 bg-[#1b1b1b] shrink-0">
+          <div className="osrs-wa-hicon p-2 bg-cyan-900/20 rounded-lg border border-cyan-500/30 text-cyan-400">
             <Link2 size={18} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base font-bold text-white leading-none flex items-center gap-1.5">Sync Code <SectionGuide id="SYNC" /></h2>
-            <p className="text-[11px] text-gray-500 mt-1">
+          <div className="osrs-wa-htext flex-1 min-w-0">
+            <h2 className="osrs-wa-title text-base font-bold text-white leading-none flex items-center gap-1.5">Sync Code <SectionGuide id="SYNC" /></h2>
+            <p className="osrs-wa-sub text-[11px] text-gray-500 mt-1">
               Move a run between devices — copy a code, paste it elsewhere. No account needed.
             </p>
           </div>
           <button
             onClick={closeModal}
-            className="p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            className="osrs-wa-close p-1.5 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
             aria-label="Close"
           >
             <X size={18} />
@@ -471,7 +475,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10 bg-[#141414] shrink-0">
+        <div className="osrs-wa-tabs flex border-b border-white/10 bg-[#141414] shrink-0">
           {tabButton('EXPORT', 'Export', Upload)}
           {tabButton('IMPORT', 'Import', ArrowDownToLine)}
           {tabButton('BACKUPS', 'Backups', History)}
