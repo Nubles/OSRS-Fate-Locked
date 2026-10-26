@@ -43,6 +43,9 @@ const makePref = (key: string, fallback: boolean): ViewerPref => {
 /** Spend Keys: the line under each table saying how many draws you could use now. */
 export const tableOutlookPref = makePref('fate_table_outlook_v1', false);
 
+/** Spend Keys: a Yes / No box before each Key is spent (utils/spendConfirm.ts). */
+export const confirmSpendPref = makePref('fate_confirm_spend_v1', true);
+
 /** The short note about your last session after a break. */
 export const welcomeBackPref = makePref('fate_welcome_back_v1', true);
 

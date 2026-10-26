@@ -19,6 +19,8 @@ import { chunkTotals } from '../utils/runProgress';
 import type { SpendNote } from '../utils/spendNoteTypes';
 import { movedJustNow, watchLayoutShifts } from '../utils/clickGuard';
 import { showToast } from '../utils/toast';
+import { confirmSpendPref } from '../utils/viewerPrefs';
+import { askBeforeSpending } from '../utils/spendConfirm';
 
 const SpendNotesBridge = lazyWithRetry(() => import('./SpendNotesBridge'));
 const NO_NOTES: ReadonlyMap<TableType, SpendNote> = new Map();
@@ -231,8 +233,6 @@ export const useSpendModel = () => {
     if (movedJustNow()) { showToast('The page moved as you clicked, so no Key was spent. Click again if you meant it.'); return; }
     spend();
   };
-  const handleUnlock = (table: TableType) => guarded(() => rollUnlock(table));
-  const handleChaosUnlock = () => guarded(() => rollUnlock());
 
   // How many distinct entries the player has unlocked per category, for the
   // per-card progress bars. Equipment/Skills count slots/skills started (tier>0).
@@ -257,6 +257,17 @@ export const useSpendModel = () => {
     { type: TableType.SLAYER_UNLOCKS, label: 'Slayer', subLabel: 'Reward Unlocks', iconSrc: OSRS_GACHA_ICONS.SLAYER_UNLOCKS, unlocked: (unlocks.slayerUnlocks ?? []).length, total: SLAYER_UNLOCKS_LIST.length, can: canUnlock.slayerUnlocks },
     ...(bankLocks ? [{ type: TableType.BANKS, label: 'Banks', subLabel: 'Bank Access', iconSrc: OSRS_GACHA_ICONS.BANKS, unlocked: (unlocks.banks ?? []).length, total: BANK_IDS.length, can: (canUnlock as any).banks as boolean }] : []),
   ];
+
+  // With "Ask before spending" on, a Yes / No box comes first (utils/spendConfirm.ts).
+  const spendAfterAsking = (question: string, spend: () => void) => guarded(() => {
+    if (!confirmSpendPref.read()) { spend(); return; }
+    void askBeforeSpending(question).then(yes => { if (yes) spend(); });
+  });
+  const handleUnlock = (table: TableType) => {
+    const label = SPEND_CATEGORIES.find(c => c.type === table)?.label ?? 'this table';
+    spendAfterAsking(`Spend a Key on ${label}?`, () => rollUnlock(table));
+  };
+  const handleChaosUnlock = () => spendAfterAsking('Spend a Chaos Key?', () => rollUnlock());
 
   return { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, animationsEnabled, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES };
 };
