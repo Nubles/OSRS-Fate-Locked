@@ -5,10 +5,12 @@ import { relaySync } from '../../services/relaySync';
 import { getRollInboxStore } from '../../services/rollInboxRuntime';
 import { isRollEntry } from '../../utils/logEntry';
 import type { LogEntry } from '../../types';
+import { useWelcomeBack } from '../../hooks/useWelcomeBack';
 
 /**
  * Game messages the OSRS chatbox pins under the log, in place of the classic
  * layout's strip under the header:
+ *   - the welcome-back note after a break (hooks/useWelcomeBack.ts)
  *   - the coach hint (CoachStrip: the one next step, its button, its dismiss)
  * Same rules, same storage keys and same actions as that strip, so a hint
  * dismissed in one layout stays dismissed in the other.
@@ -89,7 +91,15 @@ export const useOsrsChatNotices = (): OsrsChatNotice[] => {
     return null;
   }, [keys, fatePoints, history, gameModeId, customMode, pendingCount, tourDone]);
 
+  const welcome = useWelcomeBack();
   const notices: OsrsChatNotice[] = [];
+  if (welcome) {
+    notices.push({
+      id: 'welcome-back',
+      text: welcome.text,
+      actions: [{ label: 'Dismiss', title: 'Hide this until your next break', run: welcome.dismiss }],
+    });
+  }
   if (hint && hint.id !== dismissed) {
     notices.push({
       id: `coach-${hint.id}`,

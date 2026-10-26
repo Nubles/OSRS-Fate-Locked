@@ -19,6 +19,7 @@ import {
   type RitualState, type SacrificeTier,
 } from '../utils/ritualEffects';
 import { tableDisplayName } from '../utils/tableDisplay';
+import { MAX_HOPES, hopeKey } from '../utils/hopeKey';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
@@ -83,6 +84,7 @@ import {
 import { isPetId } from '../data/petIds';
 import { normalizeAccountName } from '../utils/accountName';
 import { pendingBaseline, planDetectedLevel, recordBaseline, skillBaseline } from '../utils/syncBaseline';
+import { recordScores } from '../utils/syncScores';
 import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import {
   canEarnDiaryTier,
@@ -321,6 +323,8 @@ interface GameContextType extends GameState {
   /** Restore a backup by stable id (snapshots the current run first). */
   restoreBackup: (id: string | number) => Promise<ImportResult>;
   togglePin: (id: string) => void;
+  /** Star or unstar one locked unlock on the hope list (utils/hopes.ts). */
+  toggleHope: (key: string) => void;
   saveNote: (id: string, text: string) => void;
   updateRuneProof: (expectedRunId: string, change: RuneProofMutation) => boolean;
   completeQuest: (id: string, x?: number, y?: number, attestation?: CompletionAttestation) => CompletionResult;
@@ -337,6 +341,8 @@ interface GameContextType extends GameState {
   renameLinkedAccount: (from: string, to: string) => void;
   /** Record a successful hiscores reading of the linked name as its Sync & Roll baseline (utils/syncBaseline.ts). */
   recordSyncBaseline: (account: string, levels: Record<string, number | null>) => void;
+  /** Sync & Roll: a hiscores reading's boss kills and clue caskets, as the run's score baseline (utils/syncActivity.ts). */
+  recordSyncScores: (account: string, scores: Record<string, number | null>) => void;
   /** Record a skill's baseline level without a roll, before Sync & Roll rolls the levels above it. False when refused. */
   catchUpSyncLevel: (skill: string, level: number) => boolean;
   /** Rival Ghost controls. */
@@ -534,6 +540,7 @@ export type Action =
   | { type: 'LEVEL_UP'; payload: { skill: string; chaosRoll: number } }
   | { type: 'ADD_LOG'; payload: LogEntry }
   | { type: 'TOGGLE_PIN'; payload: string }
+  | { type: 'TOGGLE_HOPE'; payload: string }
   | { type: 'UPDATE_NOTE'; payload: { id: string; text: string } }
   | { type: 'COMPLETE_QUEST'; payload: string }
   | { type: 'COMPLETE_DIARY'; payload: string }
@@ -544,6 +551,7 @@ export type Action =
   | { type: 'SET_LINKED_ACCOUNT'; payload: string }
   | { type: 'RENAME_LINKED_ACCOUNT'; payload: { from: string; to: string } }
   | { type: 'RECORD_SYNC_BASELINE'; payload: { account: string; levels: Record<string, number | null> } }
+  | { type: 'RECORD_SYNC_SCORES'; payload: { account: string; scores: Record<string, number | null> } }
   | { type: 'SYNC_CATCH_UP_LEVEL'; payload: { skill: string; level: number } }
   | { type: 'SET_RIVAL'; payload: RivalState }
   | { type: 'CLEAR_RIVAL' }
@@ -1602,6 +1610,12 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
     case 'ACKNOWLEDGE_UNLOCK': {
       if (state.pendingUnlock?.id !== action.payload) return state;
       const { pendingUnlock, ...rest } = state;
+      // A hope that just landed has done its job: take it off the list.
+      const landed = hopeKey(pendingUnlock.table, pendingUnlock.item);
+      if (rest.hopes?.includes(landed)) {
+        const hopes = rest.hopes.filter(key => key !== landed);
+        if (hopes.length) rest.hopes = hopes; else delete rest.hopes;
+      }
       return { ...rest, lastEvent: { id: generateId(), type: 'UNLOCK', meta: { item: pendingUnlock.item, cost: pendingUnlock.cost, category: pendingUnlock.table } } };
     }
 
@@ -1954,6 +1968,16 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       };
     }
 
+    case 'TOGGLE_HOPE': {
+      const hopes = state.hopes ?? [];
+      const next = hopes.includes(action.payload)
+        ? hopes.filter(key => key !== action.payload)
+        : [...hopes, action.payload].slice(-MAX_HOPES);
+      const out = { ...state, hopes: next };
+      if (next.length === 0) delete out.hopes;
+      return out;
+    }
+
     case 'UPDATE_NOTE': {
       return {
         ...state,
@@ -2022,6 +2046,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // had become the baseline Sync & Roll never rolls (utils/syncBaseline.ts).
       const syncBaseline = recordBaseline(state.syncBaseline, state.linkedAccount, action.payload.account, action.payload.levels, now);
       return syncBaseline === state.syncBaseline ? state : { ...state, syncBaseline };
+    }
+
+    case 'RECORD_SYNC_SCORES': {
+      // Kills and caskets the account already had never roll; later readings
+      // only fill what earlier ones couldn't read (utils/syncActivity.ts).
+      const syncScores = recordScores(state.syncScores, state.linkedAccount, action.payload.account, action.payload.scores, now);
+      return syncScores === state.syncScores ? state : { ...state, syncScores };
     }
 
     case 'SYNC_CATCH_UP_LEVEL': {
@@ -3364,6 +3395,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'RENAME_LINKED_ACCOUNT', payload: { from, to } });
   }, [commitAction]);
 
+  const recordSyncScores = useCallback((account: string, scores: Record<string, number | null>) => {
+    commitAction({ type: 'RECORD_SYNC_SCORES', payload: { account, scores } });
+  }, [commitAction]);
   const recordSyncBaseline = useCallback((account: string, levels: Record<string, number | null>) => {
     commitAction({ type: 'RECORD_SYNC_BASELINE', payload: { account, levels } });
   }, [commitAction]);
@@ -3748,6 +3782,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'RESET' });
   }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, storageKey, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
+  const toggleHope = useCallback((key: string) => commitAction({ type: 'TOGGLE_HOPE', payload: key }), [commitAction]);
   const saveNote = useCallback((id: string, text: string) =>
     commitAction({ type: 'UPDATE_NOTE', payload: { id, text } }), [commitAction]);
   const completeQuest = useCallback((id: string, x?: number, y?: number, attestation: CompletionAttestation = {}): CompletionResult => {
@@ -3894,6 +3929,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     listBackups,
     restoreBackup,
     togglePin,
+    toggleHope,
     saveNote,
     updateRuneProof,
     completeQuest,
@@ -3907,6 +3943,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setLinkedAccount,
     renameLinkedAccount,
     recordSyncBaseline,
+    recordSyncScores,
     catchUpSyncLevel,
     setRival,
     clearRival,
@@ -3957,6 +3994,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     listBackups,
     restoreBackup,
     togglePin,
+    toggleHope,
     saveNote,
     updateRuneProof,
     completeQuest,
@@ -3970,6 +4008,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setLinkedAccount,
     renameLinkedAccount,
     recordSyncBaseline,
+    recordSyncScores,
     catchUpSyncLevel,
     setRival,
     clearRival,
@@ -4004,7 +4043,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
         tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined}
         chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined}
-        chunkedMarks={state.gameModeId === 'chunked' ? state.fateLand?.marks : undefined} /> : null}
+        chunkedMarks={state.gameModeId === 'chunked' ? state.fateLand?.marks : undefined}
+        hoped={!!state.hopes?.includes(hopeKey(state.pendingUnlock.table, state.pendingUnlock.item))} /> : null}
     </GameContext.Provider>
   );
 };

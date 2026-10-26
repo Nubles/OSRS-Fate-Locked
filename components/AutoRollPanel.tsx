@@ -10,6 +10,14 @@ import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { planSkillSync, skillBaseline, type SyncSkillPlan } from '../utils/syncBaseline';
 import { baselineFromReading, readHiscoreOverall, readHiscoreSkill, type HiscoreReading } from '../utils/hiscoreReading';
+import { baselineScores, planActivitySync, readScores, type ActivitySyncItem, type ScoreReading } from '../utils/syncActivity';
+import { usesActivityKeyReserves } from '../config/gameModes';
+import { failureFateForSource } from '../config/economy';
+import { BOSSES_LIST } from '../constants';
+import { BRUTUS_BOSS_NAME } from '../config/vanillaKeyEconomy';
+import { farmPlaceReachable } from '../utils/activityAccess';
+import { ACTIVITY_CHUNKS } from '../data/activityChunks';
+import type { DropSource } from '../types';
 import {
   GROUP_IRON_TITLES,
   GROUP_TITLES,
@@ -32,8 +40,7 @@ import {
  * NOT send CORS headers, so they can't be fetched client-side without a proxy;
  * WOM mirrors the same hiscore data and auto-tracks unknown players on update.
  *
- * This is a prototype: it syncs SKILL LEVELS only (the cleanest 1:1 mapping).
- * Bosses/diaries/collection-log syncing is sketched in the UI but not wired.
+ * It syncs skill levels, boss kills and clue caskets (utils/syncActivity.ts).
  */
 
 const WOM_BASE = 'https://api.wiseoldman.net/v2/players/';
@@ -68,6 +75,8 @@ interface Fetched {
   skills: FetchedSkill[];
   /** Each skill as ranked, unranked or missing, for the Sync & Roll baseline (utils/syncBaseline.ts). */
   reading: HiscoreReading;
+  /** Boss kills and clue caskets per Wise Old Man metric (utils/syncActivity.ts). */
+  scores: Record<string, ScoreReading>;
   updatedAt: string | null;
 }
 
@@ -97,6 +106,7 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   });
   return {
     reading,
+    scores: readScores(data.latestSnapshot.data),
     displayName: data.displayName ?? name,
     accountType: typeof data.type === 'string' ? data.type : 'unknown',
     totalLevel: snap.overall?.level ?? skills.reduce((a, s) => a + s.level, 0),
@@ -114,6 +124,7 @@ export function useAutoRoll() {
   const {
     unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount, renameLinkedAccount,
     syncBaseline, recordSyncBaseline, catchUpSyncLevel,
+    syncScores, recordSyncScores, rollForKey, history, gameModeId,
   } = useGame() as any;
   // Each run is linked to one OSRS character: the first fetch sets it, and the
   // player can change it (a name change, a typo) with Change name.
@@ -156,6 +167,8 @@ export function useAutoRoll() {
   // per-level key rate ramping correctly. Counts let us tally what was earned.
   const levelUpRef = useRef(levelUpSkill);
   levelUpRef.current = levelUpSkill;
+  const rollForKeyRef = useRef(rollForKey);
+  rollForKeyRef.current = rollForKey;
   const catchUpRef = useRef(catchUpSyncLevel);
   catchUpRef.current = catchUpSyncLevel;
   const countsRef = useRef({ keys, specialKeys, chaosKeys });
@@ -190,6 +203,19 @@ export function useAutoRoll() {
         return { skill: s.skill, level: plan.to, current: plan.current, from: plan.from, catchUpTo: plan.catchUpTo, count: plan.count };
       });
   }, [fetched, plans]);
+  // Boss kills and clue caskets since the score baseline, less what the run
+  // has already rolled for them (utils/syncActivity.ts planActivitySync).
+  const activity = useMemo<ActivitySyncItem[]>(() => {
+    if (!fetched) return [];
+    const reserves = usesActivityKeyReserves(gameModeId);
+    // Farm Keys' boss list in Vanilla and Chunked: unlocked bosses, and Brutus where his arena is reachable.
+    const bosses = reserves ? [
+      ...(farmPlaceReachable(ACTIVITY_CHUNKS[BRUTUS_BOSS_NAME], unlocks, gameModeId) ? [BRUTUS_BOSS_NAME] : []),
+      ...(unlocks?.bosses ?? []).filter((boss: string) => BOSSES_LIST.includes(boss)),
+    ] : [];
+    return planActivitySync({ scores: syncScores, linkedAccount: linkedAccount ?? undefined, reading: fetched.scores, history: history ?? [], gameModeId, reserves, bosses });
+  }, [fetched, syncScores, linkedAccount, history, gameModeId, unlocks]);
+  const activityRolls = activity.reduce((sum, a) => sum + a.count, 0);
   const holds = useMemo(() => {
     const out = { linked: 0, locked: 0 };
     for (const plan of Object.values(plans)) if (plan.hold === 'linked' || plan.hold === 'locked') out[plan.hold]++;
@@ -212,6 +238,8 @@ export function useAutoRoll() {
       const pending = !linkedAccount || (!!syncBaseline && !syncBaseline.levels);
       if (!linkedAccount) { setLinkedAccount?.(data.displayName); setName(data.displayName); }
       recordSyncBaseline?.(account, baselineFromReading(data.reading));
+      // Kills and caskets this account already has never roll either.
+      recordSyncScores?.(account, baselineScores(data.scores));
       setBaselineTaken(pending);
       setFetched(data);
       setStatus('loaded');
@@ -219,7 +247,7 @@ export function useAutoRoll() {
       setError(e?.message ?? 'Failed to reach the hiscores API.');
       setStatus('error');
     }
-  }, [name, linkedAccount, setLinkedAccount, recordSyncBaseline, syncBaseline, setSkillRollingState]);
+  }, [name, linkedAccount, setLinkedAccount, recordSyncBaseline, recordSyncScores, syncBaseline, setSkillRollingState]);
 
   // If the run is already bound, pull that account's hiscores on open.
   useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
@@ -261,7 +289,7 @@ export function useAutoRoll() {
   // keys those levels would have. Runs in batches for a responsive slot-machine
   // feel; tallies the keys/omni/chaos earned at the end.
   const autoRoll = useCallback(async () => {
-    if (!fetched || gains.length === 0 || skillRollingRef.current) return;
+    if (!fetched || (gains.length === 0 && activityRolls === 0) || skillRollingRef.current) return;
     // Lock before awaiting the protective backup. Otherwise the button stays
     // live during the async gap and a double click can start overlapping rolls.
     setSkillRollingState(true);
@@ -276,13 +304,16 @@ export function useAutoRoll() {
     // One queue entry per level still to gain, plus per-skill reveal
     // boundaries. A skill behind its baseline first records the baseline,
     // without a roll, so only the levels above it roll.
-    const queue: Array<{ skill: string; catchUpTo?: number }> = [];
+    const queue: Array<{ skill: string; catchUpTo?: number } | { kill: ActivitySyncItem }> = [];
     const bounds: number[] = [];
     for (const g of gains) {
       if (g.catchUpTo) queue.push({ skill: g.skill, catchUpTo: g.catchUpTo });
       for (let n = 0; n < g.count; n++) queue.push({ skill: g.skill });
       bounds.push(queue.length);
     }
+    // Then each new kill and casket, one Farm Keys roll apiece. A boss whose
+    // stash runs dry part way rolls nothing more (rollForKey skips it).
+    for (const a of activity) for (let n = 0; n < a.count; n++) queue.push({ kill: a });
     const total = queue.length;
     if (total === 0) {
       setSkillRollingState(false);
@@ -300,6 +331,11 @@ export function useAutoRoll() {
       const levelUp = levelUpRef.current;
       for (let b = 0; b < BATCH && i < total; b++, i++) {
         const step = queue[i];
+        if ('kill' in step) {
+          const { source, rate, context } = step.kill;
+          rollForKeyRef.current?.(source, rate, failureFateForSource(source as DropSource), undefined, undefined, undefined, context);
+          continue;
+        }
         if (refused.has(step.skill)) continue;
         if (step.catchUpTo) {
           if (catchUpRef.current?.(step.skill, step.catchUpTo) !== true) refused.add(step.skill);
@@ -318,16 +354,39 @@ export function useAutoRoll() {
         }, 250);
       }
     }, 70);
-  }, [fetched, gains, createBackup, setSkillRollingState]);
+  }, [fetched, gains, activity, activityRolls, createBackup, setSkillRollingState]);
 
   const totalGain = gains.reduce((a, s) => a + s.count, 0);
 
   return {
     linkedAccount: linkedAccount as string | null | undefined, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
-    plans, holds, baselineTaken,
+    plans, holds, baselineTaken, activity, activityRolls,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   };
+}
+
+/** One kill or casket row: "Vorkath: 12 new kills, 3 already rolled, 9 to roll". */
+export function activityRowText(a: ActivitySyncItem): string {
+  const noun = a.kind === 'clue' ? 'casket' : 'kill';
+  const parts = [`${a.gained} new ${noun}${a.gained === 1 ? '' : 's'}`];
+  if (a.rolled > 0) parts.push(`${Math.min(a.rolled, a.gained)} already rolled`);
+  if (a.hold === 'locked') parts.push("not unlocked in this run, so they don't roll");
+  else parts.push(a.count > 0 ? `${a.count} to roll` : 'nothing left to roll');
+  return parts.join(', ');
+}
+
+/** What the roll button says: "Auto-roll 3 skills (+12), 9 kills and 2 caskets". */
+export function syncButtonText(skills: number, levels: number, activity: readonly ActivitySyncItem[]): string {
+  const count = (kind: ActivitySyncItem['kind']) => activity.reduce((sum, a) => sum + (a.kind === kind ? a.count : 0), 0);
+  const kills = count('boss');
+  const caskets = count('clue');
+  const parts: string[] = [];
+  if (skills > 0) parts.push(`${skills} skill${skills === 1 ? '' : 's'} (+${levels})`);
+  if (kills > 0) parts.push(`${kills} kill${kills === 1 ? '' : 's'}`);
+  if (caskets > 0) parts.push(`${caskets} casket${caskets === 1 ? '' : 's'}`);
+  const last = parts.pop();
+  return `Auto-roll ${parts.length ? `${parts.join(', ')} and ${last}` : last}`;
 }
 
 /** Why a skill's hiscores level doesn't (all) roll, for its tile's tooltip. */
@@ -361,7 +420,7 @@ function ClassicAutoRollPanel() {
   const {
     linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
-    plans, holds, baselineTaken,
+    plans, holds, baselineTaken, activity, activityRolls,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   } = useAutoRoll();
 
@@ -376,7 +435,7 @@ function ClassicAutoRollPanel() {
           </h2>
           <p className="text-xs text-gray-500 mt-1 max-w-xl">
             Pull your account from the OSRS hiscores and roll every level you've gained since you linked it, as if you logged each one.
-            Powered by the <span className="text-gray-400">Wise Old Man</span> API. Currently syncs skill levels.
+            Powered by the <span className="text-gray-400">Wise Old Man</span> API. Syncs skill levels, boss kills and clue caskets.
           </p>
         </div>
       </div>
@@ -536,17 +595,17 @@ function ClassicAutoRollPanel() {
               )}
             </div>
             <div className="flex-1" />
-            {!applied && !skillRolling && gains.length > 0 && (
+            {!applied && !skillRolling && (gains.length > 0 || activityRolls > 0) && (
               <button
                 onClick={autoRoll}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-emerald-600 hover:from-fuchsia-500 hover:to-emerald-500 text-white text-sm font-bold flex items-center gap-2 shadow-lg"
               >
-                <Sparkles size={16} /> Auto-roll {gains.length} skill{gains.length === 1 ? '' : 's'} (+{totalGain})
+                <Sparkles size={16} /> {syncButtonText(gains.length, totalGain, activity)}
               </button>
             )}
             {skillRolling && (
               <div className="flex items-center gap-2 text-fuchsia-300 text-sm font-semibold">
-                <Loader2 size={16} className="animate-spin" /> Rolling levels…
+                <Loader2 size={16} className="animate-spin" /> Rolling…
               </div>
             )}
             {applied && (
@@ -561,7 +620,7 @@ function ClassicAutoRollPanel() {
                 )}
               </div>
             )}
-            {!applied && !skillRolling && gains.length === 0 && (
+            {!applied && !skillRolling && gains.length === 0 && activityRolls === 0 && (
               <div className="text-sm text-gray-400 max-w-xs">{syncIdleText(holds)}</div>
             )}
           </div>
@@ -616,9 +675,23 @@ function ClassicAutoRollPanel() {
             })}
           </div>
 
+          {activity.length > 0 && (
+            <div className="space-y-1" data-testid="sync-activity">
+              <h3 className="text-xs font-bold text-gray-300">Boss kills and clue caskets since you linked</h3>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                {activity.map((a) => (
+                  <li key={a.label} className={`px-2.5 py-1.5 rounded border text-xs ${a.count > 0 && !applied ? 'border-emerald-500/40 bg-emerald-950/20' : 'border-white/10 bg-white/5'}`}>
+                    <span className="text-gray-200 font-semibold">{a.label}</span>
+                    <span className="text-gray-500"> · {activityRowText(a)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <p className="text-[10px] text-gray-600">
             Hiscores data via Wise Old Man · each synced level runs through the live RNG engine, so it awards keys, Omni and
-            Chaos exactly as levelling it would — all logged to History · levels the account had when linked don't roll · a backup is created first.
+            Chaos exactly as levelling it would — all logged to History · new boss kills and clue caskets roll as Farm Keys clicks would, less any you've already rolled · levels, kills and caskets the account had when linked don't roll · a backup is created first.
           </p>
         </div>
       )}

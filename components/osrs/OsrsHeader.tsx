@@ -9,6 +9,7 @@ import { RESET_CONFIRM_MESSAGE } from '../../utils/backups';
 import { FATE_EXPORT_HINT } from '../../utils/fateSaveFile';
 import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
 import { setSkillOddsHover, useSkillOddsHover } from '../../utils/skillOddsPref';
+import { tableOutlookPref, welcomeBackPref } from '../../utils/viewerPrefs';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
@@ -71,6 +72,8 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
 }) => {
   const uiStyle = useUiStyle();
   const skillOddsHover = useSkillOddsHover();
+  const tableOutlook = tableOutlookPref.use();
+  const welcomeBack = welcomeBackPref.use();
   const {
     keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations,
     advisorsEnabled, toggleAdvisors, resetGame, gameModeId, customMode, linkedAccount,
@@ -239,6 +242,8 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   {uiStyle === 'osrs' && <Suspense fallback={null}><OsrsInterfaceOptions /></Suspense>}
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAdvisors()} aria-pressed={advisorsEnabled}>Advisor panels {onOff(advisorsEnabled)}</button>
                   <button type="button" className="osrs-menu-item" onClick={() => setSkillOddsHover(!skillOddsHover)} aria-pressed={skillOddsHover} title="On: a skill's roll odds show when you hover it. Off: they open from the small i in its corner.">Skill odds on hover {onOff(skillOddsHover)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => tableOutlookPref.set(!tableOutlook)} aria-pressed={tableOutlook} title="On: each table on Spend Keys says how many of its draws you could use straight away. A Key still draws from the whole table.">Table outlook {onOff(tableOutlook)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => welcomeBackPref.set(!welcomeBack)} aria-pressed={welcomeBack} title="On: after 12 hours or more away, a short note in the chatbox says what your last session did.">Welcome back note {onOff(welcomeBack)}</button>
                   <div className="osrs-menu-sep" />
                   <OffDeviceCopyStatus osrs />
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onImportSave)}>Import save</button>

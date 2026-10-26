@@ -13,7 +13,7 @@ const OsrsSpendReveal = lazyWithRetry(() => import('./osrs/OsrsSpendReveal'));
 const FateDrawsMap = lazyWithRetry(() => import('./FateDrawsMap'));
 
 /** Mounted for the whole run, so a saved reveal also resumes outside Spend Keys. */
-export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier, chunkedUnlocks, chunkedMarks }: {
+export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier, chunkedUnlocks, chunkedMarks, hoped }: {
   pending: PendingUnlock; animationsEnabled: boolean; onAccept: (id: string) => void;
   /** The skill's tier now that the unlock is applied. */
   tier?: number;
@@ -21,6 +21,8 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier
   chunkedUnlocks?: GameState['unlocks'];
   /** A Chunked run's omens: the spin ends on the one fate drew on this chunk. */
   chunkedMarks?: Readonly<Record<string, FateMark>>;
+  /** The drawn entry was on the player's hope list. */
+  hoped?: boolean;
 }) {
   const osrs = useIsOsrsUi();
   // With the wide Spend Keys board open, the OSRS reveal draws in its reveal window.
@@ -43,7 +45,7 @@ export function PendingUnlockReveal({ pending, animationsEnabled, onAccept, tier
     ? `https://chisel.weirdgloop.org/static/img/osrs-sprite/${UTILITY_ITEM_IDS[pending.item]}.png`
     : file ? `https://oldschool.runescape.wiki/images/${file}` : undefined;
   const props = { itemName: label, itemType: pending.table, itemImage: image, isChaos: pending.costType === 'chaosKey',
-    animationsEnabled, tier, onComplete: () => onAccept(pending.id) };
+    animationsEnabled, tier, hoped, onComplete: () => onAccept(pending.id) };
   // Fate's Mercy and Breakthrough are free: the OSRS reveal names them instead of a cost.
   const freeDraw = pending.costType === 'mercy' || pending.costType === 'breakthrough' ? pending.costType : undefined;
   // The OSRS layout draws the same roll as an OSRS interface window.

@@ -5,7 +5,7 @@ import { CHUNK_SKILL_FACTS } from '../data/chunkSkillNodes';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
-import type { CollectionLogIdentity, FateCompensationState, FateMark, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, SyncBaseline, UnlockState } from '../types';
+import type { CollectionLogIdentity, FateCompensationState, FateMark, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, SyncBaseline, SyncScores, UnlockState } from '../types';
 import { captureCollectionLogIdentity } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { getPoolAndStateKey } from './gameEngine';
@@ -27,6 +27,7 @@ import { FREE_RITUAL_IDS } from './achievementRewards';
 import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
 import { FATE_MARKS } from './fateLand';
 import { legacyRunSalt } from './seededRng';
+import { MAX_HOPES } from './hopeKey';
 /** Version 5 freezes the one-time pet offer and stores claimed pets and owed Keys. */
 export const CURRENT_SAVE_VERSION = 5;
 /**
@@ -1064,6 +1065,35 @@ const normalizeSyncBaseline = (value: unknown): Outcome<SyncBaseline> => {
   return { ok: true, value: out };
 };
 
+/** Wise Old Man metric names (utils/syncActivity.ts SCORE_METRICS), checked by shape so the schema needn't load that list. */
+const SCORE_METRIC_NAME = /^[a-z][a-z_]{0,63}$/;
+const MAX_SCORE_METRICS = 200;
+
+const normalizeSyncScores = (value: unknown): Outcome<SyncScores> => {
+  const path = 'syncScores';
+  const root = inspectRecord(value, new Set(['account', 'scores', 'takenAt']), 'invalid_field', path);
+  if (root.ok === false) return root;
+  const account = stringValue(readOwn(root.value, 'account'), `${path}.account`, MAX_IDENTIFIER_CHARS);
+  if (account.ok === false) return account;
+  const takenAt = boundedInteger(readOwn(root.value, 'takenAt'), `${path}.takenAt`, 0, Number.MAX_SAFE_INTEGER);
+  if (takenAt.ok === false) return takenAt;
+  const scoresPath = `${path}.scores`;
+  const record = inspectRecord(readOwn(root.value, 'scores'), null, 'invalid_field', scoresPath);
+  if (record.ok === false) return record;
+  const names = Object.getOwnPropertyNames(record.value);
+  if (names.length > MAX_SCORE_METRICS) return invalid('invalid_field', scoresPath);
+  const scores: Record<string, number | null> = {};
+  for (const metric of names) {
+    if (!SCORE_METRIC_NAME.test(metric)) return invalid('invalid_field', pathOf(scoresPath, metric));
+    const raw = readOwn(record.value, metric);
+    if (raw === null) { scores[metric] = null; continue; }
+    const count = boundedInteger(raw, pathOf(scoresPath, metric), 0, MAX_COUNTER);
+    if (count.ok === false) return count;
+    scores[metric] = count.value;
+  }
+  return { ok: true, value: { account: account.value, scores, takenAt: takenAt.value } };
+};
+
 const TOP_LEVEL_KEYS = new Set([
   'app',
   'collectionLogIdentity',
@@ -1072,10 +1102,10 @@ const TOP_LEVEL_KEYS = new Set([
   'bossStandardKeysAwarded', 'clueStandardKeysAwarded', 'minigameStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
-  'gameModeLocked', 'rngSeed', 'rngVersion', 'rngSalt', 'restoreCount', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'pendingUnlock', 'areaUnlockRevision',
+  'gameModeLocked', 'rngSeed', 'rngVersion', 'rngSalt', 'restoreCount', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'syncScores', 'pendingUnlock', 'areaUnlockRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'chunkedProgressAt', 'fateLand', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
-  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity',
+  'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity', 'hopes',
 ]);
 
 export const parseAndMigrateSave = (
@@ -1441,6 +1471,11 @@ const normalizeState = (
     }
     if (raw.length > 0) state.freeRituals = [...raw];
   }
+  if (own(input, 'hopes') && readOwn(input, 'hopes') !== undefined) {
+    const checked = identifierArray(readOwn(input, 'hopes'), 'hopes', 'invalid_field');
+    if (checked.ok === false) return checked;
+    if (checked.value.length > 0) state.hopes = checked.value.slice(-MAX_HOPES);
+  }
   // A preview build of achievement rewards gave free Rituals of Clarity as a count.
   if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
     const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
@@ -1469,6 +1504,13 @@ const normalizeState = (
     const checked = normalizeSyncBaseline(readOwn(input, 'syncBaseline'));
     if (checked.ok === false) return checked;
     state.syncBaseline = checked.value;
+  }
+  // Sync & Roll's kill and casket baseline (utils/syncActivity.ts): refused
+  // when invalid for the same reason.
+  if (own(input, 'syncScores')) {
+    const checked = normalizeSyncScores(readOwn(input, 'syncScores'));
+    if (checked.ok === false) return checked;
+    state.syncScores = checked.value;
   }
   if (own(input, 'chunkedBreakthroughs')) {
     const inspected = inspectRecord(readOwn(input, 'chunkedBreakthroughs'), null, 'invalid_field', 'chunkedBreakthroughs');

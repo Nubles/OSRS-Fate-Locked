@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-hopes-and-outlook',
+    title: 'Hopes, table odds and boss syncing',
+    date: '2026-10-26',
+    sections: {
+      added: [
+        'Star a locked boss, minigame, guild or area to put it on your hope list. Spend Keys shows your odds of drawing it, and the reveal says when one lands.',
+        'Spend Keys says how many draws on Bosses, Minigames, Guilds, Banks and Areas you could use straight away. A Key still draws from the whole table.',
+        'Sync & Roll now rolls new boss kills and clue caskets from the hiscores too, less any you already rolled by hand or from RuneLite.',
+        'Back after 12 hours or more? A short note says what your last session did.',
+        'Settings has a switch for the table odds and one for the welcome-back note.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-osrs-windows',
     title: 'More windows in the OSRS look',
     date: '2026-10-26',

@@ -23,6 +23,7 @@ import { useScrollMore } from '../../utils/scrollFade';
 import { preloadModelViewer } from '../EntityModel';
 import { loadModelManifest } from '../../data/entityModels';
 import { lazyWithRetry } from '../../utils/lazyRetry';
+import { useSpendNotes, type SpendNote } from '../../hooks/useSpendNotes';
 
 // Chunked's exploring rolls, Breakthroughs and Fate's Mercy (loads with the chunk content).
 const ChunkedFatePanel = lazyWithRetry(() => import('../ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
@@ -125,14 +126,18 @@ const ChaosRow: React.FC<{ chaosKeys: number; totalLevel: number; onSpend: () =>
 };
 
 /** Compact: one table as a stone card (World board): sprite and count, name and Roll, then its blurb (two lines, full text on hover). */
-const TableCard: React.FC<{ c: SpendCategory; st: CardState; onRoll: () => void; onOpen: () => void }> = ({ c, st, onRoll, onOpen }) => {
-  const what = sentenceCaseLabel(c.subLabel);
+const TableCard: React.FC<{ c: SpendCategory; st: CardState; note?: SpendNote; onRoll: () => void; onOpen: () => void }> = ({ c, st, note, onRoll, onOpen }) => {
+  const { outlook, hope } = note ?? {};
+  const what = outlook && !st.complete ? outlook.short : sentenceCaseLabel(c.subLabel);
+  const ahead = outlook && !st.complete ? ` If drawn now: ${outlook.line}` : '';
+  const hoping = hope ? ` Hoping for ${hope.names.join(', ')}: ${hope.odds} per Key.` : '';
   return (
-    <div className="ospend-card" data-examine-name={c.label} data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${statusText(st)}`}>
+    <div className="ospend-card" data-examine-name={c.label} data-examine={`${c.label}: ${c.subLabel}. ${c.unlocked} of ${c.total} unlocked. ${statusText(st)}${ahead}${hoping}`}>
       <button type="button" className="osrs-slot ospend-card-slot" onClick={onOpen} title={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window.`}
         aria-label={`${c.label}: ${c.unlocked} of ${c.total} unlocked. Open in the full window`}>
         <img className="osrs-px" src={tableSprite(c.type)} alt="" aria-hidden="true" style={{ opacity: st.keysAvailable || st.complete ? 1 : 0.55 }} />
         <span className="osrs-stack">{c.unlocked}</span>
+        {hope && <HopeMark title={hoping.trim()} />}
       </button>
       <span className="ospend-card-row">
         <button type="button" className="ospend-card-name" onClick={onOpen} tabIndex={-1} aria-hidden="true"
@@ -142,10 +147,17 @@ const TableCard: React.FC<{ c: SpendCategory; st: CardState; onRoll: () => void;
           {st.complete ? 'Done' : st.blocked ? 'Blocked' : <img className="osrs-px" src={KEY_ICON} alt="" aria-hidden="true" />}
         </button>
       </span>
-      <span className="what" title={what}>{what}</span>
+      <span className={`what${outlook && !st.complete ? ' is-outlook' : ''}`} title={ahead ? ahead.trim() : what}>{what}</span>
     </div>
   );
 };
+
+/** The hope list's star in a table's slot corner. */
+const HopeMark: React.FC<{ title: string }> = ({ title }) => (
+  <svg className="ospend-hope-mark" width="11" height="11" viewBox="0 0 12 12" role="img" aria-label={title}>
+    <path d="M6 .8l1.6 3.4 3.7.4-2.8 2.5.8 3.7L6 8.9 2.7 10.8l.8-3.7L.7 4.6l3.7-.4z" fill="#ff981f" stroke="#000" strokeWidth="1" strokeLinejoin="round" />
+  </svg>
+);
 
 /** The recent game messages under the reveal window (SpendRoll board). */
 const CHAT_LINES = 7;
@@ -181,9 +193,12 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
   const { keys, specialKeys, chaosKeys, keysOwed, unlocks, pendingUnlock, gameModeId, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
   const { customMode, history, linkedAccount } = useGame();
   const { spendTable } = useKeysView();
+  const notes = useSpendNotes();
   const sel = SPEND_CATEGORIES.find(c => c.type === spendTable) ?? SPEND_CATEGORIES.find(c => c.type === TableType.REGIONS || c.type === TableType.CHUNKS) ?? SPEND_CATEGORIES[0];
   const stateOf = (c: SpendCategory) => cardState(c, !!rollable.get(c.type), keys, !!pendingUnlock);
   const selState = stateOf(sel);
+  const selOutlook = notes.get(sel.type)?.outlook;
+  const selHope = notes.get(sel.type)?.hope;
   const [cardsRef, cardsMore] = useScrollMore<HTMLDivElement>();
   // A Key spent here shows a 3D model: have the viewer ready before the first roll.
   useEffect(() => { loadModelManifest().catch(() => {}); preloadModelViewer(); }, []);
@@ -232,7 +247,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
         {isChunked && <Suspense fallback={null}><ChunkedFatePanel osrs compact /></Suspense>}
         <div ref={cardsRef} className={`osrs-inner ospend-cards${cardsMore ? ' is-more' : ''}`}>
           {SPEND_CATEGORIES.map(c => (
-            <TableCard key={c.label} c={c} st={stateOf(c)} onRoll={() => handleUnlock(c.type)}
+            <TableCard key={c.label} c={c} st={stateOf(c)} note={notes.get(c.type)} onRoll={() => handleUnlock(c.type)}
               onOpen={() => { setSpendTable(c.type); openOsrsScreen('keys', 'spend'); }} />
           ))}
         </div>
@@ -317,6 +332,18 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
             </div>
             <span className="ospend-frac">{sel.unlocked}/{sel.total} unlocked</span>
           </div>
+          {selOutlook && !selState.complete && (
+            <p className="ospend-outlook" data-examine-name="Table outlook"
+              data-examine="A Key on this table still draws from all of it, reachable or not: fate picks. This only says how many draws you could use straight away. Switch it off in Settings.">
+              <span className="k">If drawn now:</span> {selOutlook.line}
+            </p>
+          )}
+          {selHope && !selState.complete && (
+            <p className="ospend-outlook" data-examine-name="Hope list"
+              data-examine="Star a locked unlock on the Activities or World tab to hope for it. Hopes never change a draw: fate still picks from the whole table.">
+              <span className="k">Hoping for:</span> {selHope.names.join(', ')}. {selHope.line}
+            </p>
+          )}
           <span className="ospend-listtitle">{listTitle}</span>
           {chips.length > 0 && (
             <div className="ospend-chips">
