@@ -176,14 +176,14 @@ describe('Dashboard in the OSRS layout', () => {
     expect(neck.className).toContain('is-dim');
     expect(neck.querySelector('.osrs-char-slotgem')).toBeNull();
     expect(neck.querySelector('.osrs-char-slottier')).toBeNull();
-    expect(head.closest('[data-examine]')?.getAttribute('data-examine')).toBe('Head slot. Tier 2 unlocked: up to Steel / Black / White gear.');
+    expect(head.closest('[data-examine]')?.getAttribute('data-examine')).toBe('Head slot. Tier II unlocked: up to Steel / Black / White gear.');
 
     // The slot's ladder opens inside the Equipment Lab panel: Skills and the left column stay.
     fireEvent.click(head);
     const lab = screen.getByRole('region', { name: 'Equipment Lab' });
     const detail = await screen.findByRole('region', { name: 'Head details' }, { timeout: 10000 });
     expect(lab.contains(detail)).toBe(true);
-    expect(detail.textContent).toContain('Next: Tier 3');
+    expect(detail.textContent).toContain('Next: Tier III');
     expect(screen.getByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' }).className).toContain('is-sel');
     expect(screen.getByRole('button', { name: 'Tiers' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('region', { name: 'Skills' })).toBeTruthy();

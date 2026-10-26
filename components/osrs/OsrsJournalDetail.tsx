@@ -307,7 +307,7 @@ export const DiaryTaskDetail: React.FC<{
             >
               {t.description}
             </button>
-            {sel && !tDone && ready && <span className="ojs-red">{'  < ready now'}</span>}
+            {sel && !tDone && ready && <span className="ojs-red">{' · ready now'}</span>}
             {sel && !tDone && !ready && <TaskNeeds task={t} unlocks={unlocks} gameModeId={gameModeId} areaRoutes={areaRoutes} onSkillClick={onSkillClick} />}
           </div>
         );
@@ -386,7 +386,7 @@ export const DiaryTierDetail: React.FC<{
               <button type="button" className={`ojr-link ${taskDone ? 'ojr-met' : ready ? '' : 'ojs-red'}`} onClick={() => onSelect({ kind: 'task', id: task.id })}>
                 {task.description}
               </button>
-              {ready && <span className="ojs-red">{'  < ready now'}</span>}
+              {ready && <span className="ojs-red">{' · ready now'}</span>}
               {!taskDone && !ready && <TaskNeeds task={task} unlocks={unlocks} gameModeId={gameModeId} areaRoutes={areaRoutes} onSkillClick={onSkillClick} />}
             </div>
             {!taskDone && (

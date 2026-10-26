@@ -128,7 +128,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
           <img className="osrs-px" src={sprite('key.png')} alt="Keys" width={36} height={32} />
           <span className="osrs-stack">{keys}</span>
         </div>
-        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Dashboard to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} role="img" aria-label={`Omni-Keys: ${specialKeys}`}>
+        <div className="osrs-slot osrs-tip" style={{ width: 44, height: 40 }} data-osrs-tip={`Omni-Keys: ${specialKeys}. Click a locked entry on the Character, World or Activities tab to unlock exactly that.${gameModeId === 'chunked' ? ` ${CHUNKED_OMNI_LAND_TEXT}` : ''}`} role="img" aria-label={`Omni-Keys: ${specialKeys}`}>
           <img className="osrs-px" src={sprite('omni_key.png')} alt="Omni-Keys" width={36} height={32} />
           <span className="osrs-stack">{specialKeys}</span>
         </div>

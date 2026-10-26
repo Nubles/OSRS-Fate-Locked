@@ -14,7 +14,7 @@ export const OsrsJournalHeader: React.FC = () => {
   return (
     <div className="ojr-strip" role="group" aria-label="Journal progress">
       <span className="ojr-stat" data-examine={`${s.questDone} of ${s.questTotal} quests and miniquests done, ${s.qp} quest points.`} data-examine-name="Quests">
-        <JournalIcon kind="quest" /><b>Quests</b> <span className="w">{s.questDone}/{s.questTotal}</span> · <span className="y">{s.qp} QP</span>
+        <JournalIcon kind="quest" /><b>Quests &amp; miniquests</b> <span className="w">{s.questDone}/{s.questTotal}</span> · <span className="y">{s.qp} QP</span>
       </span>
       <span className="ojr-stat" data-examine={`${s.diaryDone} of ${s.diaryTotal} Achievement Diary tiers complete.`} data-examine-name="Diaries">
         <JournalIcon kind="diary" /><b>Diaries</b> <span className="w">{s.diaryDone}/{s.diaryTotal}</span> tiers

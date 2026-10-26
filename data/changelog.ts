@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-osrs-layout-fixes',
+    title: 'OSRS layout fixes',
+    date: '2026-10-26',
+    sections: {
+      fixed: [
+        'On smaller windows the header fits again, so Settings, Rules and Fate Analytics no longer slip off the right edge.',
+        'On narrow windows the chatbox sits below the panels instead of on top of them.',
+        'The Timelapse names achievements, Fate and milestones instead of calling them all "ROLL".',
+        'The fixed client\'s Equipment Stats headings and the Kill Planner\'s gear note no longer run together.',
+        'The world map tooltip hides when a chunk\'s panel opens, and the Rules window shows all its icons.',
+        'Gear tiers use Roman numerals everywhere, and the Omni-Key check says which tier you\'re buying.',
+      ],
+    },
+  },
+  {
     id: '2026-10-25-tier-numerals',
     title: 'Tiers as Roman numerals',
     date: '2026-10-25',

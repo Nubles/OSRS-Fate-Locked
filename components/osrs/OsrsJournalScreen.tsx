@@ -597,7 +597,7 @@ export const OsrsJournalScreen: React.FC = () => {
       <div className="osrs-win ojs-bar">
         <span className="ojs-bar-title"><JournalIcon kind="quest" />Journal</span>
         <span className="ojs-stat" data-examine={`${stats.quests.done} of ${stats.quests.total} quests and miniquests done, ${stats.quests.available} ready to complete.`} data-examine-name="Quests">
-          <span style={{ color: ORANGE }}>Quests</span> <span className="w">{stats.quests.done}/{stats.quests.total}</span> · <span className="y">{stats.quests.available} ready</span>
+          <span style={{ color: ORANGE }}>Quests &amp; miniquests</span> <span className="w">{stats.quests.done}/{stats.quests.total}</span> · <span className="y">{stats.quests.available} ready</span>
         </span>
         <span className="ojs-stat" data-examine={`${stats.diaries.done} of ${stats.diaries.total} Achievement Diary tasks done, ${stats.diaries.doable} doable now.`} data-examine-name="Diary tasks">
           <span style={{ color: ORANGE }}>Diary tasks</span> <span className="w">{stats.diaries.done}/{stats.diaries.total}</span> · <span className="y">{stats.diaries.doable} doable</span>
