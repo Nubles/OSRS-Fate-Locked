@@ -1,3 +1,4 @@
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
@@ -367,7 +368,7 @@ export function RollInboxView({
                       type="button"
                       onClick={() => (classification.progress.kind === 'PET'
                         ? setConfirmingPet(row.event.eventId)
-                        : roll(row, classification))}
+                        : confirmThen(`Roll for a Key from ${classification.intent.source}?`, () => roll(row, classification)))}
                       className="ml-auto rounded-md bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-500"
                     >
                       {classification.state === 'READY' && classification.progress.kind === 'PET' ? 'Claim' : 'Roll'}

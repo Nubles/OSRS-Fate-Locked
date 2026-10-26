@@ -1,4 +1,5 @@
 
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useEffect, useState, useMemo } from 'react';
 import { DropSource } from '../types';
 import { DROP_RATES, BOSSES_LIST, MINIGAMES_LIST } from '../constants';
@@ -434,7 +435,9 @@ export const useFarmModel = () => {
   const collectionRate = effectiveRate(DropSource.COLLECTION_LOG);
 
   const handleRoll = (source: string, chance: number, e: { clientX: number; clientY: number }, context?: KeyRollContext) => {
-    rollForKey(source, chance, failureFateForSource(source as DropSource), e.clientX, e.clientY, undefined, context);
+    const { clientX, clientY } = e;
+    confirmThen(`Roll for a Key from ${source}?`, () =>
+      rollForKey(source, chance, failureFateForSource(source as DropSource), clientX, clientY, undefined, context));
   };
 
   const isVanilla = gameModeId === 'vanilla';

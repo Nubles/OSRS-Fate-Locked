@@ -1,7 +1,10 @@
+import { confirmSpendPref } from './viewerPrefs';
+
 /**
- * "Ask before spending" (Settings, utils/viewerPrefs.ts confirmSpendPref): a
- * Yes / No box before Spend Keys spends a Key. The box loads on first use, so
- * players who leave the setting off never download it.
+ * "Ask before Key clicks" (Settings, utils/viewerPrefs.ts
+ * confirmSpendPref): a Yes / No box before a click spends a Key or rolls for
+ * one. The box loads on first use, so players who turn the setting off never
+ * download it.
  */
 let asking: Promise<boolean> | null = null;
 
@@ -13,4 +16,10 @@ export function askBeforeSpending(question: string): Promise<boolean> {
     .catch(() => false)
     .finally(() => { asking = null; });
   return asking;
+}
+
+/** Run `act` now when the setting is off, else only after a Yes. */
+export function confirmThen(question: string, act: () => void): void {
+  if (!confirmSpendPref.read()) { act(); return; }
+  void askBeforeSpending(question).then(yes => { if (yes) act(); });
 }

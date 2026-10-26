@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './spend-confirm.css';
 
 /**
- * The Yes / No box "Ask before spending" shows before a Key is spent
+ * The Yes / No box "Ask before Key clicks" shows before a click spends a Key or rolls for one
  * (utils/spendConfirm.ts). In-game style in both layouts: a stone window,
  * an orange question, Yes focused so Enter spends, Esc or a click outside
  * cancels.
@@ -24,7 +24,7 @@ const SpendConfirm: React.FC<{ question: string; onAnswer: (yes: boolean) => voi
           <button ref={yesRef} type="button" className="osrs-btn" onClick={() => onAnswer(true)}>Yes</button>
           <button type="button" className="osrs-btn" onClick={() => onAnswer(false)}>No</button>
         </div>
-        <p className="spend-confirm-hint">Turn this off in Settings: Ask before spending.</p>
+        <p className="spend-confirm-hint">Turn this off in Settings: Ask before Key clicks.</p>
       </div>
     </div>
   );

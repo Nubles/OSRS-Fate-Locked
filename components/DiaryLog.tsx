@@ -1,4 +1,5 @@
 
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
@@ -217,7 +218,8 @@ export const useDiaryJournal = (externalSearch = '') => {
         message => window.confirm(message),
       );
       if (attestation === null) return;
-      completeDiaryTask(task.id, e.clientX, e.clientY, attestation);
+      const { clientX, clientY } = e;
+      confirmThen('Complete this diary task and roll for a Key?', () => completeDiaryTask(task.id, clientX, clientY, attestation));
   };
 
   return {

@@ -81,9 +81,9 @@ const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
            <Telescope size={13} className={tableOutlook ? 'text-amber-400' : 'text-gray-500'} />
            Table outlook <span className="ml-auto text-[10px] text-gray-500">{tableOutlook ? 'on' : 'off'}</span>
         </button>
-        <button type="button" onClick={() => { confirmSpendPref.set(!confirmSpend); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={confirmSpend} title="On: Spend Keys asks Yes or No before each Key is spent.">
+        <button type="button" onClick={() => { confirmSpendPref.set(!confirmSpend); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={confirmSpend} title="On: a Yes or No box comes up before a click spends a Key or rolls for one.">
            <ShieldCheck size={13} className={confirmSpend ? 'text-amber-400' : 'text-gray-500'} />
-           Ask before spending <span className="ml-auto text-[10px] text-gray-500">{confirmSpend ? 'on' : 'off'}</span>
+           Ask before Key clicks <span className="ml-auto text-[10px] text-gray-500">{confirmSpend ? 'on' : 'off'}</span>
         </button>
         <button type="button" onClick={() => { welcomeBackPref.set(!welcomeBack); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={welcomeBack} title="On: after 12 hours or more away, a short note says what your last session did.">
            <History size={13} className={welcomeBack ? 'text-amber-400' : 'text-gray-500'} />

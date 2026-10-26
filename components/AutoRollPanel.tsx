@@ -1,3 +1,4 @@
+import { confirmThen } from '../utils/spendConfirm';
 import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Search, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { Sparkles, Dice5 } from './OsrsIcon';
@@ -597,7 +598,7 @@ function ClassicAutoRollPanel() {
             <div className="flex-1" />
             {!applied && !skillRolling && (gains.length > 0 || activityRolls > 0) && (
               <button
-                onClick={autoRoll}
+                onClick={() => confirmThen('Roll for Keys on everything this sync found?', () => void autoRoll())}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-emerald-600 hover:from-fuchsia-500 hover:to-emerald-500 text-white text-sm font-bold flex items-center gap-2 shadow-lg"
               >
                 <Sparkles size={16} /> {syncButtonText(gains.length, totalGain, activity)}
