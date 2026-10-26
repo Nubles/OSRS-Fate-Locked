@@ -46,5 +46,5 @@ export const tableOutlookPref = makePref('fate_table_outlook_v1', true);
 /** The short note about your last session after a break. */
 export const welcomeBackPref = makePref('fate_welcome_back_v1', true);
 
-/** Other players' big moments in the chatbox's Clan tab. */
+/** The OSRS chatbox's Clan tab: other players' unlocks from the Fate Locked Discord. */
 export const clanBroadcastsPref = makePref('fate_clan_broadcasts_v1', true);

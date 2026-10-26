@@ -19,6 +19,9 @@ import { applyUiStyle } from './utils/uiStyle';
 // no router, lazy so the main bundle doesn't pay for it).
 const StreamOverlay = lazyWithRetry(() => import('./components/StreamOverlay'));
 const isOverlay = window.location.hash.startsWith('#/overlay');
+// A run's public Adventurer's Log: `#/log/<run id>`, read-only, lazy like the overlay.
+const AdventurersLog = lazyWithRetry(() => import('./components/AdventurersLog'));
+const logId = window.location.hash.startsWith('#/log/') ? window.location.hash.slice('#/log/'.length) : null;
 
 // Set <html data-ui> before the first paint so the OSRS skin never flashes.
 applyUiStyle();
@@ -34,7 +37,9 @@ const start = () => {
     <React.StrictMode>
       {isOverlay
         ? <Suspense fallback={null}><StreamOverlay /></Suspense>
-        : <App />}
+        : logId !== null
+          ? <Suspense fallback={null}><AdventurersLog id={logId} /></Suspense>
+          : <App />}
     </React.StrictMode>
   );
 };

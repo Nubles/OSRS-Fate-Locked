@@ -53,7 +53,9 @@ export const ProgressShareDriver: React.FC = () => {
         import('../utils/progressShare'),
       ]);
       if (cancelled) return;
-      const body = JSON.stringify(buildProgressSnapshot({ unlocks, history, gameModeId, customMode, linkedAccount }));
+      const body = JSON.stringify(buildProgressSnapshot({
+        unlocks, history, gameModeId, customMode, linkedAccount, publicLog: record.publicLog === true,
+      }));
       if (lastSent.current?.id === record.id && lastSent.current.body === body) return;
       lastAt.current = Date.now();
       const result = await publishProgress(relaySync.base(), record, JSON.parse(body));
