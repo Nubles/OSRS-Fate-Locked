@@ -37,15 +37,29 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-spend-guard',
+    title: 'Safer Spend Keys clicks and log links',
+    date: '2026-10-26',
+    sections: {
+      fixed: [
+        'A click on Spend Keys that lands just as the page moves no longer spends a Key. Click again if you meant it.',
+        'An Adventurer\'s Log link opened in a tab that already shows the tracker now opens the log.',
+      ],
+      changed: [
+        'The table outlook on Spend Keys is now off unless you turn it on in Settings.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-hopes-and-outlook',
     title: 'Hopes, clan broadcasts and the Adventurer\'s Log',
     date: '2026-10-26',
     sections: {
       added: [
         'Star a locked boss, minigame, guild or area to put it on your hope list. Spend Keys shows your odds of drawing it, and the reveal says when one lands.',
-        'Table outlook (off by default, in Settings): Spend Keys says how many draws on Bosses, Minigames, Guilds, Banks and Areas you could use straight away.',
+        'Spend Keys says how many draws on Bosses, Minigames, Guilds, Banks and Areas you could use straight away. A Key still draws from the whole table.',
         'Sync & Roll now rolls new boss kills and clue caskets from the hiscores too, less any you already rolled by hand or from RuneLite.',
-        'Back after 12 hours or more? A short note says what your last session did. Settings can switch it off.',
+        'Back after 12 hours or more? A short note says what your last session did. Settings can switch it and the table odds off.',
         'The OSRS chatbox has a Clan tab with other players\' unlocks from the Fate Locked Discord. Settings can switch it off.',
         'Adventurer\'s Log: a public page of your run with a map of your chunks, to share by link. Off until you turn it on in Discord notifications.',
       ],

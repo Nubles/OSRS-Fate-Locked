@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState } from '../context/GameContext';
 import { REGIONS_LIST, ROLLABLE_POH_ITEMS } from '../data/items';
 import { setStartArea } from '../utils/freeAreas';
 import { randomUnlockPool } from '../utils/gameEngine';
 import { TableType } from '../types';
+import { noteLayoutMoved, resetClickGuard } from '../utils/clickGuard';
 
 const game = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 vi.mock('../context/GameContext', async importOriginal => ({
@@ -29,6 +30,7 @@ afterEach(() => {
   cleanup();
   setStartArea(undefined);
   blocked.table = undefined;
+  resetClickGuard();
 });
 
 const renderWith = async (unlocks: ReturnType<typeof createFreshState>['unlocks'], gameModeId = 'vanilla') => {
@@ -51,6 +53,19 @@ describe('Spend Keys cards', () => {
     expect(bosses.disabled).toBe(true);
     expect(bosses.textContent).toContain('Blocked');
     expect(bosses.textContent).not.toContain('Done');
+  });
+
+  it('spend nothing on a click that lands just after the page moved', async () => {
+    await renderWith(createFreshState().unlocks);
+    const rollUnlock = game.current.rollUnlock as ReturnType<typeof vi.fn>;
+
+    noteLayoutMoved();
+    fireEvent.click(card('Equipment'));
+    expect(rollUnlock).not.toHaveBeenCalled();
+
+    resetClickGuard();
+    fireEvent.click(card('Equipment'));
+    expect(rollUnlock).toHaveBeenCalledWith(TableType.EQUIPMENT);
   });
 
   it('offers Unlock on Vanilla Bosses while no boss can be reached yet', async () => {

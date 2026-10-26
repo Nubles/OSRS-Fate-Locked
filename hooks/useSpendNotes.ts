@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import type { TableType } from '../types';
 import type { SpendNote } from '../utils/spendNoteTypes';
 import { tableOutlookPref } from '../utils/viewerPrefs';
+import { noteLayoutMoved } from '../utils/clickGuard';
 
 export type { SpendNote };
 
@@ -21,7 +22,10 @@ export const useSpendNotes = (): ReadonlyMap<TableType, SpendNote> => {
     let live = true;
     const timer = setTimeout(() => {
       import('../utils/spendNotes').then(({ spendNotes }) => {
-        if (live) setNotes(spendNotes(unlocks, gameModeId, customMode, hopes, outlookOn));
+        if (!live) return;
+        // The new lines can move the cards under the pointer: hold spend clicks for a moment.
+        noteLayoutMoved();
+        setNotes(spendNotes(unlocks, gameModeId, customMode, hopes, outlookOn));
       }).catch(() => { /* a failed chunk load just leaves the lines off */ });
     }, 250);
     return () => { live = false; clearTimeout(timer); };

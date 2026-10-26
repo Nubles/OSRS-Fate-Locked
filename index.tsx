@@ -7,6 +7,7 @@ import App from './App';
 import './styles.css';
 import './components/osrs/osrs-skin.css';
 import { applyUiStyle } from './utils/uiStyle';
+import { hashView, watchHashView } from './utils/hashView';
 // NOTE: deliberately no `vite:preloadError` handler here. Calling
 // event.preventDefault() makes Vite SWALLOW the failure — the dynamic import
 // then resolves with an undefined module and call sites crash with a mangled
@@ -18,10 +19,11 @@ import { applyUiStyle } from './utils/uiStyle';
 // badge bar instead of the app (hash-based so it works on GitHub Pages with
 // no router, lazy so the main bundle doesn't pay for it).
 const StreamOverlay = lazyWithRetry(() => import('./components/StreamOverlay'));
-const isOverlay = window.location.hash.startsWith('#/overlay');
 // A run's public Adventurer's Log: `#/log/<run id>`, read-only, lazy like the overlay.
 const AdventurersLog = lazyWithRetry(() => import('./components/AdventurersLog'));
-const logId = window.location.hash.startsWith('#/log/') ? window.location.hash.slice('#/log/'.length) : null;
+const view = hashView(window.location.hash);
+// A link to another page pasted into this tab only changes the hash: reload to show it.
+watchHashView(view);
 
 // Set <html data-ui> before the first paint so the OSRS skin never flashes.
 applyUiStyle();
@@ -35,10 +37,10 @@ const start = () => {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      {isOverlay
+      {view.kind === 'overlay'
         ? <Suspense fallback={null}><StreamOverlay /></Suspense>
-        : logId !== null
-          ? <Suspense fallback={null}><AdventurersLog id={logId} /></Suspense>
+        : view.kind === 'log'
+          ? <Suspense fallback={null}><AdventurersLog id={view.id} /></Suspense>
           : <App />}
     </React.StrictMode>
   );
