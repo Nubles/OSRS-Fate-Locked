@@ -43,9 +43,9 @@ export const CHANGELOG_RELEASES = [
     sections: {
       added: [
         'Star a locked boss, minigame, guild or area to put it on your hope list. Spend Keys shows your odds of drawing it, and the reveal says when one lands.',
-        'Spend Keys says how many draws on Bosses, Minigames, Guilds, Banks and Areas you could use straight away. A Key still draws from the whole table.',
+        'Table outlook (off by default, in Settings): Spend Keys says how many draws on Bosses, Minigames, Guilds, Banks and Areas you could use straight away.',
         'Sync & Roll now rolls new boss kills and clue caskets from the hiscores too, less any you already rolled by hand or from RuneLite.',
-        'Back after 12 hours or more? A short note says what your last session did. Settings can switch it and the table odds off.',
+        'Back after 12 hours or more? A short note says what your last session did. Settings can switch it off.',
         'The OSRS chatbox has a Clan tab with other players\' unlocks from the Fate Locked Discord. Settings can switch it off.',
         'Adventurer\'s Log: a public page of your run with a map of your chunks, to share by link. Off until you turn it on in Discord notifications.',
       ],
