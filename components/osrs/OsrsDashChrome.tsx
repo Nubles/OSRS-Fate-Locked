@@ -3,8 +3,10 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { setOsrsProgressionTabs } from '../../utils/osrsNav';
 import { SectionGuide } from '../SectionGuide';
 import { ActivityAccessWarning } from '../ActivityAccessWarning';
-import type { TableType, UnlockState } from '../../types';
-import { itemSrc } from './OsrsDashGems';
+import { TableType, type UnlockState } from '../../types';
+import { TIER_LABELS } from '../../utils/combatPower';
+import { tierCap } from '../../utils/chunkedFate';
+import { itemSrc, roman } from './OsrsDashGems';
 import './osrs-dashboard.css';
 
 /**
@@ -150,10 +152,24 @@ interface ConfirmProps {
   onConfirm: () => void;
 }
 
+/** What the Omni-Key buys for a skill or gear slot: the next tier, not tier I. */
+const omniTierText = (table: TableType, item: string, unlocks: UnlockState): string | null => {
+  if (table === TableType.SKILLS) {
+    const next = (unlocks.skills[item] ?? 0) + 1;
+    return `tier ${roman(next)} (methods to ${tierCap(next)})`;
+  }
+  if (table === TableType.EQUIPMENT) {
+    const next = (unlocks.equipment[item] ?? 0) + 1;
+    return TIER_LABELS[next - 1] ? `tier ${roman(next)} (${TIER_LABELS[next - 1]})` : null;
+  }
+  return null;
+};
+
 /** The Omni-Key confirmation, as an OSRS interface window over the dashboard. */
 export const OsrsConfirmOmni: React.FC<ConfirmProps> = ({ item, table, unlocks, modeId, onCancel, onConfirm }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
+  const tierText = omniTierText(table, item, unlocks);
   return (
   <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,.6)' }}>
     <div ref={dialogRef} tabIndex={-1} className="osrs-win" role="dialog" aria-modal="true" aria-label="Confirm Unlock" style={{ width: 380, maxWidth: '100%', padding: 4 }}>
@@ -166,7 +182,7 @@ export const OsrsConfirmOmni: React.FC<ConfirmProps> = ({ item, table, unlocks, 
           <span className="osrs-sh" style={{ color: 'var(--osrs-purple, #c77dff)' }}>Omni-Key Required</span>
         </div>
         <p className="osrs-sh" style={{ margin: 0, color: 'var(--osrs-tan, #c8b897)', lineHeight: '18px' }}>
-          Are you sure you want to use <span style={{ color: '#fff' }}>1 Omni-Key</span> to explicitly unlock <span style={{ color: 'var(--osrs-yellow, #ff0)' }}>{item}</span>?
+          Use <span style={{ color: '#fff' }}>1 Omni-Key</span> to unlock <span style={{ color: 'var(--osrs-yellow, #ff0)' }}>{item}{tierText ? ` ${tierText}` : ''}</span>?
         </p>
         <ActivityAccessWarning activity={item} table={table} unlocks={unlocks} modeId={modeId} />
         <div style={{ display: 'flex', gap: 6 }}>

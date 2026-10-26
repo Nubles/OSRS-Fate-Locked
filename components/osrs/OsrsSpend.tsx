@@ -56,7 +56,7 @@ const Notices: React.FC<{ specialKeys: number; keysOwed: number; isChunked: bool
         <div className="ospend-note-words">
           <span className="t" style={{ color: '#c77dff' }}>{specialKeys} Omni-Key{specialKeys > 1 ? 's' : ''} Ready</span>
           <span className="s">
-            Omni-Keys aren't spent here. Click a locked skill, gear slot, {isChunked ? '' : 'area, '}boss or other entry on the <span style={{ color: '#c77dff' }}>Dashboard</span> to pick exactly what to unlock.
+            Omni-Keys aren't spent here. Click a locked skill or gear slot on the <span style={{ color: '#c77dff' }}>Character</span> tab, {isChunked ? '' : 'an area on the World tab, '}or a boss or other entry under <span style={{ color: '#c77dff' }}>Activities &amp; Utility</span> to pick exactly what to unlock.
           </span>
         </div>
       </div>
@@ -330,7 +330,7 @@ const OsrsSpend: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
             </div>
           )}
           <span className="ospend-foot">
-            Omni-Keys (spent on the Dashboard) pick the exact unlock; Chaos Keys let fate pick a table, then an entry in it.
+            Omni-Keys (spent on the Character, World and Activities tabs) pick the exact unlock; Chaos Keys let fate pick a table, then an entry in it.
           </span>
         </div>
       </div>

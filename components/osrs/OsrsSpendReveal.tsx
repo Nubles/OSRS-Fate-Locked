@@ -169,7 +169,8 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
               )}
               <div style={{ position: 'absolute', left: 0, right: 0, bottom: 34, display: 'flex', justifyContent: 'center' }}>{shown}</div>
               <span style={{ position: 'absolute', left: 10, top: 8, ...RS(16, 'RSSmall'), color: beam, ...sh }}>
-                {isChaos ? 'Chaos unlock' : `${rarity.charAt(0).toUpperCase()}${rarity.slice(1)} unlock`}
+                {/* The table, not a rarity word: "Rare" read like luck. The beam colour keeps the rarity. */}
+                {isChaos ? 'Chaos unlock' : `${display} unlock`}
               </span>
               {freeDraw ? (
                 <span style={{ position: 'absolute', right: 10, top: 8, display: 'flex', alignItems: 'center', gap: 4, ...RS(16, 'RSSmall'), color: '#c77dff', ...sh }}>

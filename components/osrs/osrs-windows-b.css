@@ -145,7 +145,11 @@ html[data-ui="osrs"] .owb-tl-bar[data-on][data-tone="good"] { background: var(--
 html[data-ui="osrs"] .owb-tl-bar[data-on][data-tone="bad"] { background: var(--osrs-muted); }
 html[data-ui="osrs"] .owb-tl-bar[data-tone="broken"] { background: var(--osrs-red); }
 html[data-ui="osrs"] .owb-tl-bar:hover { height: 30px; }
-html[data-ui="osrs"] .owb-tl-spark .owb-tl-bar.is-cur[data-on] { height: 40px; min-width: 2px; background: var(--osrs-yellow); }
+/* The current event is a yellow line, so a short run's wide bars don't turn it into a block. */
+html[data-ui="osrs"] .owb-tl-spark .owb-tl-bar.is-cur[data-on] { position: relative; min-width: 2px; }
+html[data-ui="osrs"] .owb-tl-spark .owb-tl-bar.is-cur[data-on]::after {
+  content: ''; position: absolute; left: 50%; bottom: 0; width: min(100%, 4px); height: 40px; transform: translateX(-50%); background: var(--osrs-yellow);
+}
 html[data-ui="osrs"] .owb-tl-controls { flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 6px 6px; }
 html[data-ui="osrs"] .owb-tl-ctl { height: 28px; min-width: 34px; padding: 0 6px; }
 html[data-ui="osrs"] .owb-tl-speed { margin-right: 2px; color: var(--osrs-tan); }

@@ -105,6 +105,12 @@ html[data-ui="osrs"] .osrs-char-bonuses dl { margin: 0; display: grid; grid-temp
 html[data-ui="osrs"] .osrs-char-bonuses dt, html[data-ui="osrs"] .osrs-char-bonuses dd { margin: 0; font: 16px 'RSSmall', sans-serif; line-height: 16px; white-space: nowrap; }
 html[data-ui="osrs"] .osrs-char-bonuses dt { color: var(--osrs-tan, #c8b897); overflow: hidden; text-overflow: ellipsis; }
 html[data-ui="osrs"] .osrs-char-bonuses dd { text-align: right; }
+/* Narrow panels (the fixed client): "Attack", "Defence", "Other" headings,
+   and the Other column gets the extra room its longer labels need. */
+@container osrs-worn (max-width: 379px) {
+  html[data-ui="osrs"] .osrs-char-bonuses { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.6fr); gap: 0 6px; padding-left: 6px; padding-right: 6px; }
+  html[data-ui="osrs"] .osrs-char-bonusword { display: none; }
+}
 
 /* ── The Character tab's Equipment panel ────────────────────────────────── */
 html[data-ui="osrs"] .osrs-char-worn { flex: 1; min-height: 0; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
