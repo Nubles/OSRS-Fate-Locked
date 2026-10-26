@@ -1,5 +1,5 @@
 
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { TableType } from '../types';
@@ -17,6 +17,8 @@ import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { chunkLabel } from '../utils/chunkAdjacency';
 import { chunkTotals } from '../utils/runProgress';
 import type { SpendNote } from '../utils/spendNoteTypes';
+import { movedJustNow, watchLayoutShifts } from '../utils/clickGuard';
+import { showToast } from '../utils/toast';
 
 const SpendNotesBridge = lazyWithRetry(() => import('./SpendNotesBridge'));
 const NO_NOTES: ReadonlyMap<TableType, SpendNote> = new Map();
@@ -223,8 +225,14 @@ export const useSpendModel = () => {
       return Object.values(unlocks.levels).reduce((a, b) => (a as number) + (b as number), 0) as number;
   }, [unlocks.levels]);
 
-  const handleUnlock = (table: TableType) => rollUnlock(table);
-  const handleChaosUnlock = () => rollUnlock();
+  useEffect(watchLayoutShifts, []);
+  // A click just after the page moved may have hit the wrong table: spend nothing (utils/clickGuard.ts).
+  const guarded = (spend: () => void) => {
+    if (movedJustNow()) { showToast('The page moved as you clicked, so no Key was spent. Click again if you meant it.'); return; }
+    spend();
+  };
+  const handleUnlock = (table: TableType) => guarded(() => rollUnlock(table));
+  const handleChaosUnlock = () => guarded(() => rollUnlock());
 
   // How many distinct entries the player has unlocked per category, for the
   // per-card progress bars. Equipment/Skills count slots/skills started (tier>0).

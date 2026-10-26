@@ -27,7 +27,8 @@ import { gzipSync } from 'node:zlib';
 // 220: the skill cards' info button and the Settings choice for the old hover box (219.3 on 2026-10-23; the box itself loads on first use).
 // 226: the combined update's Key, roll, save and Slayer changes in the reducer and game engine: Chaos table picks, roll text, the run's hidden salt, Set level, Sync & Roll baselines, Slayer gates and fewer relay writes (225.1 on 2026-10-24).
 // 227: the hope list (stars on unlock cards and areas, the saved list and its reveal line) and the save check for Sync & Roll's kill baseline; Spend Keys' outlook and hope lines, the welcome-back note and the kill sync itself load on demand, as do the Clan tab and the Adventurer's Log page (226.8 on 2026-10-26).
-export const ENTRY_GZIP_BUDGET_KB = 227;
+// 228: Spend Keys refuses a click that lands just after the page moved (utils/clickGuard.ts), so a late-loading line can't turn a click into a spend (227.0 on 2026-10-26).
+export const ENTRY_GZIP_BUDGET_KB = 228;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

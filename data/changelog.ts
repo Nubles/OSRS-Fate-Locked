@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-26-spend-guard',
+    title: 'Safer Spend Keys clicks and log links',
+    date: '2026-10-26',
+    sections: {
+      fixed: [
+        'A click on Spend Keys that lands just as the page moves no longer spends a Key. Click again if you meant it.',
+        'An Adventurer\'s Log link opened in a tab that already shows the tracker now opens the log.',
+      ],
+      changed: [
+        'The table outlook on Spend Keys is now off unless you turn it on in Settings.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-hopes-and-outlook',
     title: 'Hopes, clan broadcasts and the Adventurer\'s Log',
     date: '2026-10-26',
