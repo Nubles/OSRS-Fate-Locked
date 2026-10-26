@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BASELINE_NOTE, syncHoldText, syncIdleText, useAutoRoll } from '../AutoRollPanel';
+import { activityRowText, BASELINE_NOTE, syncButtonText, syncHoldText, syncIdleText, useAutoRoll } from '../AutoRollPanel';
 import { RollInbox } from '../RollInbox';
 import { RuneLiteOnboarding } from '../RuneLiteOnboarding';
 import { WikiIcon } from '../WikiIcon';
@@ -35,7 +35,7 @@ const OsrsSyncRoll: React.FC = () => {
   const {
     linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
-    plans, holds, baselineTaken,
+    plans, holds, baselineTaken, activity, activityRolls,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
   } = useAutoRoll();
 
@@ -61,7 +61,7 @@ const OsrsSyncRoll: React.FC = () => {
       </div>
       <span className="osync-small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>
         Pull your account from the OSRS hiscores and roll every level you've gained since you linked it, as if you logged each one.
-        Powered by the Wise Old Man API. Currently syncs skill levels.
+        Powered by the Wise Old Man API. Syncs skill levels, boss kills and clue caskets.
       </span>
 
       {/* Username: locked to the linked character once set (Change name moves it). */}
@@ -175,12 +175,12 @@ const OsrsSyncRoll: React.FC = () => {
               )}
             </div>
             <div style={{ marginLeft: 'auto', textAlign: 'right', maxWidth: 300, lineHeight: '18px' }}>
-              {!applied && !skillRolling && gains.length > 0 && (
-                <button type="button" className="osrs-btn" onClick={autoRoll} style={{ height: 30, padding: '0 12px', color: '#00ff00' }}>
-                  Auto-roll {gains.length} skill{gains.length === 1 ? '' : 's'} (+{totalGain})
+              {!applied && !skillRolling && (gains.length > 0 || activityRolls > 0) && (
+                <button type="button" className="osrs-btn" onClick={autoRoll} style={{ minHeight: 30, padding: '0 12px', color: '#00ff00' }}>
+                  {syncButtonText(gains.length, totalGain, activity)}
                 </button>
               )}
-              {skillRolling && <span style={{ color: '#ffff00' }}>Rolling levels...</span>}
+              {skillRolling && <span style={{ color: '#ffff00' }}>Rolling...</span>}
               {applied && (
                 <span style={{ color: '#0dc10d' }}>
                   Synced
@@ -193,7 +193,7 @@ const OsrsSyncRoll: React.FC = () => {
                   )}
                 </span>
               )}
-              {!applied && !skillRolling && gains.length === 0 && (
+              {!applied && !skillRolling && gains.length === 0 && activityRolls === 0 && (
                 <span style={{ color: 'var(--osrs-tan, #c8b897)' }}>{syncIdleText(holds)}</span>
               )}
             </div>
@@ -227,9 +227,20 @@ const OsrsSyncRoll: React.FC = () => {
               );
             })}
           </div>
+          {activity.length > 0 && (
+            <div className="osync-activity" data-testid="sync-activity">
+              <span className="osync-activity-h">Boss kills and clue caskets since you linked</span>
+              {activity.map((a) => (
+                <span key={a.label} className="osync-small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>
+                  <span style={{ color: a.count > 0 && !applied ? '#00ff00' : a.hold ? 'var(--osrs-muted, #8a7c66)' : '#ffff00' }}>{a.label}</span>: {activityRowText(a)}
+                </span>
+              ))}
+            </div>
+          )}
           <span className="osync-small" style={{ color: '#6f6250', lineHeight: '15px' }}>
             Hiscores data via Wise Old Man · each synced level runs through the live RNG engine, so it awards keys, Omni and
-            Chaos exactly as levelling it would, all logged to History · levels the account had when linked don't roll · a backup is created first.
+            Chaos exactly as levelling it would, all logged to History · new boss kills and clue caskets roll as Farm Keys clicks would, less any you've already rolled
+            · levels, kills and caskets the account had when linked don't roll · a backup is created first.
           </span>
         </>
       )}

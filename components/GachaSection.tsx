@@ -1,5 +1,5 @@
 
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { TableType } from '../types';
@@ -9,14 +9,17 @@ import { unlockableAreas } from '../utils/freeAreas';
 import { BANK_IDS, BANK_BY_ID } from '../data/banks';
 import { checkUnlockAvailability, getPoolAndStateKey, randomUnlockPool } from '../utils/gameEngine';
 import { REGION_ICONS, SLOT_CONFIG, SPECIAL_ICONS, EQUIPMENT_SLOTS, SKILLS_LIST, MOBILITY_LIST, ARCANA_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_POH_ITEMS, MERCHANTS_LIST, ROLLABLE_STORAGE_ITEMS, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, UTILITY_ITEM_IDS } from '../constants';
-import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check } from 'lucide-react';
+import { HelpCircle, Lock, TrendingUp, AlertTriangle, Check, Star } from 'lucide-react';
 import { Sparkles, Dices, Dna, Sprout, Key } from './OsrsIcon';
 import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { andList, LEVEL_CHAOS_CHANCE, SKILL_CHAOS_MILESTONES } from '../config/economy';
 import { openDashboardPool } from '../utils/dashboardPoolNavigation';
 import { chunkLabel } from '../utils/chunkAdjacency';
 import { chunkTotals } from '../utils/runProgress';
+import type { SpendNote } from '../utils/spendNoteTypes';
 
+const SpendNotesBridge = lazyWithRetry(() => import('./SpendNotesBridge'));
+const NO_NOTES: ReadonlyMap<TableType, SpendNote> = new Map();
 const ChunkedFatePanel = lazyWithRetry(() => import('./ChunkedFatePanel').then(m => ({ default: m.ChunkedFatePanel })));
 
 // --- Inner Components ---
@@ -69,6 +72,8 @@ interface SpendCardProps {
   priceDisplay?: string;
   index?: number;
   animate?: boolean;
+  /** How many draws you could use straight away (Settings: Table outlook), and your hopes here. */
+  note?: SpendNote;
 }
 
 export const OSRS_GACHA_ICONS = {
@@ -89,8 +94,9 @@ export const OSRS_GACHA_ICONS = {
 };
 
 export const SpendCard: React.FC<SpendCardProps> = ({
-  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, blocked = false, icon: Icon, iconSrc, onClick, onViewPool, priceDisplay = "1", index = 0, animate = false,
+  type, label, subLabel, unlocked, total, disabled, keysAvailable, complete, blocked = false, icon: Icon, iconSrc, onClick, onViewPool, priceDisplay = "1", index = 0, animate = false, note,
 }) => {
+  const { outlook, hope } = note ?? {};
   const a = ACCENTS[type] ?? DEFAULT_ACCENT;
   const isClickable = !disabled && keysAvailable && !complete;
   const isLocked = !keysAvailable && !complete;
@@ -141,6 +147,17 @@ export const SpendCard: React.FC<SpendCardProps> = ({
       <div className={`relative z-10 mt-1.5 flex-1 transition-opacity duration-300 ${dim}`}>
           <h3 className={`text-sm font-bold text-gray-100 ${a.titleHover} transition-colors leading-tight break-words`}>{label}</h3>
           <p className="text-[9px] text-gray-500 font-mono mt-0.5 uppercase break-words leading-tight">{subLabel}</p>
+          {outlook && !complete && (
+            <p className="text-[10px] text-amber-200/80 mt-0.5 leading-tight" title={`If drawn now: ${outlook.line} A Key still draws from the whole table.`}>
+              {outlook.short}
+            </p>
+          )}
+          {hope && !complete && (
+            <p className="text-[10px] text-amber-300 mt-0.5 leading-tight flex items-center gap-1" title={`Hoping for ${hope.names.join(', ')}. ${hope.line} Hopes never change a draw.`}>
+              <Star size={9} fill="currentColor" className="shrink-0" />
+              <span className="truncate">{hope.short}</span>
+            </p>
+          )}
       </div>
 
       {/* Progress + Roll affordance (one compact row) */}
@@ -247,6 +264,7 @@ export const GachaSection: React.FC = () => (
 
 const ClassicGachaSection: React.FC = () => {
   const { keys, specialKeys, chaosKeys, keysOwed, pendingUnlock, animationsEnabled, isChunked, rollable, totalLevel, handleUnlock, handleChaosUnlock, SPEND_CATEGORIES } = useSpendModel();
+  const [notes, setNotes] = useState(NO_NOTES);
 
   return (
     <div className="lg:h-full flex flex-col relative p-3 lg:p-4">
@@ -327,6 +345,7 @@ const ClassicGachaSection: React.FC = () => {
         </Suspense>
       )}
 
+      <Suspense fallback={null}><SpendNotesBridge onNotes={setNotes} /></Suspense>
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">
         {SPEND_CATEGORIES.map((c, i) => (
@@ -347,6 +366,7 @@ const ClassicGachaSection: React.FC = () => {
             onClick={() => handleUnlock(c.type)}
             index={i}
             animate={animationsEnabled}
+            note={notes.get(c.type)}
           />
         ))}
       </div>

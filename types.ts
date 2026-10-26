@@ -253,6 +253,16 @@ export interface SyncBaseline {
   takenAt?: number;
 }
 
+/** Sync & Roll's boss kill and clue casket baseline (utils/syncActivity.ts). */
+export interface SyncScores {
+  /** The name the counts are for. */
+  account: string;
+  /** Each Wise Old Man boss or clue metric's count when first read; null while unknown. */
+  scores: Record<string, number | null>;
+  /** When they were read (ms): rolls in the history since then count against new kills. */
+  takenAt: number;
+}
+
 export interface GameState {
   /** Presence records a run-scoped identity review; fresh canonical writes need no legacy cache. */
   collectionLogIdentity?: CollectionLogIdentity;
@@ -342,6 +352,8 @@ export interface GameState {
    * a run linked before baselines existed (it has none). See utils/syncBaseline.
    */
   syncBaseline?: SyncBaseline;
+  /** Sync & Roll's kill and casket baseline; absent until the first reading after linking. */
+  syncScores?: SyncScores;
   /**
    * Xtreme Start anti-softlock insurance: how many 50-total-level milestones
    * have already paid out a guaranteed key. Only accrues while gameModeId is
@@ -363,6 +375,11 @@ export interface GameState {
   achievementTitle?: string;
   /** Free rituals from achievements, by ritual id (one entry each); a cast uses one before any Fate. */
   freeRituals?: string[];
+  /**
+   * The player's hope list: locked unlocks they are hoping fate draws, as
+   * "<table>|<entry id>" (utils/hopes.ts). Shown only; no draw reads it.
+   */
+  hopes?: string[];
   /**
    * Chunked Breakthroughs already rolled: skill -> the tier its last roll was
    * for (utils/chunkedFate.ts). One roll per skill per tier, won or lost.

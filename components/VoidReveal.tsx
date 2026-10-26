@@ -16,6 +16,8 @@ interface VoidRevealProps {
   itemImage?: string;
   onComplete: () => void;
   isChaos?: boolean;
+  /** The entry was on the player's hope list. */
+  hoped?: boolean;
   animationsEnabled: boolean;
   /** A skill's tier after this unlock, so the reveal can say which methods it opens. */
   tier?: number;
@@ -51,7 +53,7 @@ export const getItemDescription = (type: string, name: string, tier?: number): s
     return "Content successfully unlocked.";
 };
 
-export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, animationsEnabled, tier }) => {
+export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, hoped = false, animationsEnabled, tier }) => {
   const [phase, setPhase] = useState<Phase>(() => {
       if (!animationsEnabled) return 'reveal';
       return isChaos ? 'roulette' : 'imploding';
@@ -495,6 +497,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
               )}
               
               <h2 className="text-3xl font-black text-white drop-shadow-md break-words leading-tight">{itemName}</h2>
+              {hoped && <p className="mt-1 text-sm font-bold text-amber-300">One of your hopes came true.</p>}
               <p className="text-gray-400 text-xs italic mt-2 px-4 leading-relaxed border-t border-white/5 pt-2">{description}</p>
             </div>
 
