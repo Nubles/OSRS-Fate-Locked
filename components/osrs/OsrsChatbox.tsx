@@ -263,7 +263,7 @@ export const OsrsChatbox: React.FC = () => {
             className="osrs-ctab"
             style={{ marginLeft: 'auto', width: 124 }}
             onClick={() => setShowTimelapse(true)}
-            title="Play back history as a verified timelapse"
+            title="Play back history as a timelapse"
           >
             Timelapse
           </button>

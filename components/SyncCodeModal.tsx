@@ -10,7 +10,7 @@ import { useFocusTrap } from '../hooks/useFocusTrap';
 import { SectionGuide } from './SectionGuide';
 import { encodeSyncCode, decodeAndValidateSyncCode } from '../utils/syncCode';
 import { makeQrSvg } from '../utils/qr';
-import { auditHistory, RunVerdict } from '../utils/integrity';
+import { auditHistory, type RunAudit, type RunVerdict } from '../utils/runAudit';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { chunkTotals } from '../utils/runProgress';
 import { BackupMeta } from '../utils/backups';
@@ -91,25 +91,33 @@ const previewOf = (state: GameState): RunPreview => {
   };
 };
 
-const VERDICT_UI: Record<RunVerdict, { label: string; sub: string; cls: string; Icon: typeof ShieldCheck }> = {
-  verified: {
-    label: 'Verified run',
-    sub: 'Hash chain intact — no signs of tampering.',
+const VERDICT_UI: Record<RunVerdict, { label: string; cls: string; Icon: typeof ShieldCheck }> = {
+  intact: {
+    label: 'History intact (self-reported)',
     cls: 'text-emerald-300 bg-emerald-950/40 border-emerald-500/30',
     Icon: ShieldCheck,
   },
   warning: {
-    label: 'Loadable, with warnings',
-    sub: 'Chain is intact but the replay hit an unusual state. Likely a legacy save.',
+    label: "History doesn't add up",
     cls: 'text-amber-300 bg-amber-950/40 border-amber-500/30',
     Icon: ShieldAlert,
   },
   tampered: {
-    label: 'Tampered run',
-    sub: 'The hash chain is broken — entries were added, edited, or removed.',
+    label: 'History edited',
     cls: 'text-red-300 bg-red-950/40 border-red-500/30',
     Icon: AlertTriangle,
   },
+};
+
+/** What the check covered, in a line or two: never more than it checked. */
+const verdictDetail = (audit: RunAudit): string => {
+  if (audit.verdict !== 'intact') {
+    const [first, ...rest] = audit.reasons;
+    return rest.length > 0 ? `${first} (+${rest.length} more)` : first ?? '';
+  }
+  return audit.totals.status === 'match'
+    ? 'Hash links, rolls, Keys, Fate and unlocks agree with the history. Checked on this device only; not proof of play.'
+    : `Hash links and rolls agree. ${audit.totals.reasons[0] ?? ''} Checked on this device only.`;
 };
 
 export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, initialTab }) => {
@@ -212,7 +220,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
   const decodedState = decoded?.value ?? null;
   const preview = useMemo(() => (decodedState ? previewOf(decodedState) : null), [decodedState]);
   const audit = useMemo(() => decodedState
-    ? auditHistory(decodedState.history, resolveModeRules(decodedState.gameModeId, decodedState.customMode))
+    ? auditHistory(decodedState.history, resolveModeRules(decodedState.gameModeId, decodedState.customMode), decodedState)
     : null, [decodedState]);
 
   const invalidateSource = useCallback((next: string) => {
@@ -290,7 +298,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
       return;
     }
     const warn = audit && audit.verdict === 'tampered'
-      ? 'This run failed verification (the hash chain is broken). '
+      ? 'This run\'s history was edited (its hash links are broken). '
       : '';
     if (!window.confirm(`${warn}Import this run? It replaces this profile's save. A backup of the current save is kept on the Backups tab.`)) {
       return;
@@ -605,7 +613,7 @@ export const SyncCodeModal: React.FC<Props> = ({ onClose, initialImportCode, ini
                       <v.Icon size={16} className="shrink-0 mt-0.5" />
                       <div className="min-w-0">
                         <p className="text-[12px] font-bold leading-snug">{v.label}</p>
-                        <p className="text-[10px] opacity-80 mt-0.5 leading-relaxed">{v.sub}</p>
+                        <p className="text-[10px] opacity-80 mt-0.5 leading-relaxed">{verdictDetail(audit)}</p>
                       </div>
                     </div>
 

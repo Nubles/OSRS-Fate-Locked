@@ -24,7 +24,7 @@ import {
   PROGRESS_TTL_SECONDS,
   PROGRESS_UNCHANGED_REFRESH_MS,
   newLinkCode,
-  newUnlocksSince,
+  feedForPublish,
   normalizeLinkCode,
   publicProgress,
   validProgressSnapshot,
@@ -406,17 +406,19 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   }
   if (!existing.metadata && !await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
   const updatedAt = Date.now();
-  await env.RELAY.put(key, JSON.stringify(snapshot), {
-    expirationTtl: PROGRESS_TTL_SECONDS,
-    metadata: { writeHash, updatedAt },
-  });
   let previous = null;
   try {
     previous = existing.value === null ? null : JSON.parse(existing.value);
   } catch {
     previous = null;
   }
-  await inBackground(ctx, notifyDiscordBot(env, id, previous, snapshot, updatedAt));
+  // The feed's limits ride in the metadata this write stores anyway.
+  const feed = feedForPublish(existing.metadata, previous, snapshot, updatedAt);
+  await env.RELAY.put(key, JSON.stringify(snapshot), {
+    expirationTtl: PROGRESS_TTL_SECONDS,
+    metadata: { writeHash, updatedAt, ...feed.meta },
+  });
+  await inBackground(ctx, notifyDiscordBot(env, id, feed.newUnlocks, snapshot, updatedAt));
   return json({ updatedAt }, headers);
 }
 
@@ -447,9 +449,10 @@ const DISCORD_EVENTS_TIMEOUT_MS = 5000;
  * Tell the Discord bot a linked run published, so it can post the run's new
  * unlocks in its feed and keep the player's roles current. Only a run some
  * Discord user linked is sent, and only to the bot's own https endpoint
- * (DISCORD_EVENTS_URL) with the bot's secret. A failure never fails the publish.
+ * (DISCORD_EVENTS_URL) with the bot's secret, carrying the unlocks feedForPublish
+ * let through. A failure never fails the publish.
  */
-async function notifyDiscordBot(env, runId, previous, snapshot, updatedAt) {
+async function notifyDiscordBot(env, runId, newUnlocks, snapshot, updatedAt) {
   const url = env.DISCORD_EVENTS_URL;
   const secret = env.PROGRESS_BOT_SECRET;
   if (typeof url !== 'string' || !url.startsWith('https://')) return;
@@ -460,7 +463,7 @@ async function notifyDiscordBot(env, runId, previous, snapshot, updatedAt) {
     await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discordId, snapshot, newUnlocks: newUnlocksSince(previous, snapshot), updatedAt }),
+      body: JSON.stringify({ discordId, snapshot, newUnlocks, updatedAt }),
       signal: AbortSignal.timeout(DISCORD_EVENTS_TIMEOUT_MS),
     });
   } catch (error) {

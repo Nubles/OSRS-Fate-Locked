@@ -2,7 +2,8 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RunCardModal } from './RunCard';
-import { auditHistory, ensureChain } from '../utils/integrity';
+import { ensureChain } from '../utils/integrity';
+import { auditHistory } from '../utils/runAudit';
 import type { LogEntry } from '../types';
 import { resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { setStartArea } from '../utils/freeAreas';
@@ -117,21 +118,35 @@ describe('RunCardModal local history status', () => {
     expect(audit.violations.some(warning => warning.kind === 'KEYS_NEGATIVE')).toBe(true);
 
     const markup = renderCard();
-    expect(markup).toContain('REPLAY WARNING');
-    expect(markup).not.toContain('HISTORY CHECKED');
+    expect(markup).toContain('HISTORY DOESN&#x27;T ADD UP');
+    expect(markup).not.toContain('HISTORY INTACT');
     expect(markup).not.toContain('VERIFIED');
-    expect(markup).toContain('1 replay warning');
+    expect(markup).toContain('2 problems: Saved Keys: 0, but the history adds up to -1.');
   });
 
-  it('labels a valid Vanilla history as a local check rather than external verification', () => {
+  it('labels a valid Vanilla history as intact and self-reported, never verified', () => {
     mockGame.current.history = ensureChain([entry()]);
-    expect(auditHistory(mockGame.current.history).verdict).toBe('verified');
+    expect(auditHistory(mockGame.current.history).verdict).toBe('intact');
 
     const markup = renderCard();
-    expect(markup).toContain('HISTORY CHECKED');
-    expect(markup).toContain('not external verification');
+    expect(markup).toContain('HISTORY INTACT');
+    expect(markup).toContain('Self-reported; checked on this device only');
     expect(markup).not.toContain('VERIFIED');
-    expect(markup).not.toContain('REPLAY WARNING');
+    expect(markup).not.toContain('HISTORY DOESN');
+  });
+
+  it('says the saved Keys match the history only when they were compared', () => {
+    mockGame.current.history = ensureChain([entry({ meta: { standardKeysAwarded: 1 } })]);
+    mockGame.current.keys = 4;
+    try {
+      expect(renderCard()).toContain('Self-reported: Keys and unlocks match the history');
+      mockGame.current.keys = 999;
+      const markup = renderCard();
+      expect(markup).toContain('HISTORY DOESN&#x27;T ADD UP');
+      expect(markup).toContain('Saved Keys: 999, but the history adds up to 4.');
+    } finally {
+      mockGame.current.keys = 0;
+    }
   });
 
   it("checks a pity-off run's Fate against its own mode", () => {
@@ -143,8 +158,8 @@ describe('RunCardModal local history status', () => {
     })));
 
     const markup = renderCard();
-    expect(markup).toContain('HISTORY CHECKED');
-    expect(markup).not.toContain('REPLAY WARNING');
+    expect(markup).toContain('HISTORY INTACT');
+    expect(markup).not.toContain('HISTORY DOESN');
   });
 
   it('keeps broken hashes distinct from a replay warning', () => {
@@ -153,16 +168,16 @@ describe('RunCardModal local history status', () => {
     expect(auditHistory(mockGame.current.history).verdict).toBe('tampered');
 
     const markup = renderCard();
-    expect(markup).toContain('BROKEN HISTORY');
+    expect(markup).toContain('HISTORY EDITED');
     expect(markup).toContain('1 broken link');
-    expect(markup).not.toContain('HISTORY CHECKED');
+    expect(markup).not.toContain('HISTORY INTACT');
   });
 
   it('does not report an empty history as checked', () => {
     const markup = renderCard();
     expect(markup).toContain('NO HISTORY');
     expect(markup).toContain('No recorded history to check');
-    expect(markup).not.toContain('HISTORY CHECKED');
+    expect(markup).not.toContain('HISTORY INTACT');
   });
 });
 

@@ -3,7 +3,7 @@ import { gameReducer, initialState } from './GameContext';
 import { petById, PETS } from '../data/pets';
 import { DropSource, type FailureFateAward, type GameState, type LogEntry, type PetCompensationChoice } from '../types';
 import { PET_COMPENSATION_ID } from '../utils/petCompensation';
-import { replayInvariants } from '../utils/integrity';
+import { replayInvariants } from '../utils/runAudit';
 import { CURRENT_SAVE_VERSION, validateAndMigrateSave } from '../utils/saveSchema';
 
 /**

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Play, Pause, SkipBack, SkipForward, FastForward, ShieldCheck, ShieldAlert, Download, ChevronsRight } from 'lucide-react';
 import { LogEntry } from '../types';
-import { verifyChain, replayInvariants, buildVerifiedBundle, computeRunId, ensureChain } from '../utils/integrity';
+import { computeRunId, ensureChain } from '../utils/integrity';
+import { auditHistory, replayInvariants, buildVerifiedBundle } from '../utils/runAudit';
 import { narrate, detectMilestones, toRunDay } from '../utils/timelapseNarration';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
@@ -49,11 +50,14 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   useFocusTrap(dialogRef);
   // OSRS layout: stone window, stone panels and buttons, parchment event box.
   const osrs = useIsOsrsUi();
-  const { gameModeId, customMode } = useGame();
+  const { gameModeId, customMode, keys, specialKeys, chaosKeys, fatePoints, unlocks } = useGame();
   const pityRules = resolveModeRules(gameModeId, customMode);
+  const saved = useMemo(() => ({ keys, specialKeys, chaosKeys, fatePoints, unlocks }), [keys, specialKeys, chaosKeys, fatePoints, unlocks]);
+  // The history as stored is what's checked; the chained copy only fills in
+  // links for display and export.
+  const audit = useMemo(() => auditHistory(history, pityRules, saved), [history, pityRules, saved]);
   const chained = useMemo(() => ensureChain(history), [history]);
-  const chainReport = useMemo(() => verifyChain(chained), [chained]);
-  const replay = useMemo(() => replayInvariants(chained, undefined, pityRules), [chained, pityRules]);
+  const chainReport = audit.chain;
   const milestones = useMemo(() => detectMilestones(chained), [chained]);
   const runId = useMemo(() => computeRunId(chained), [chained]);
   const firstTs = chained[0]?.timestamp ?? Date.now();
@@ -61,13 +65,13 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const brokenSet = useMemo(() => new Set(chainReport.brokenAt), [chainReport]);
   const violationSet = useMemo(() => {
     const m = new Map<number, string[]>();
-    for (const v of replay.violations) {
+    for (const v of audit.violations) {
       const arr = m.get(v.index) ?? [];
       arr.push(v.message);
       m.set(v.index, arr);
     }
     return m;
-  }, [replay]);
+  }, [audit]);
 
   const [idx, setIdx] = useState(chained.length > 0 ? chained.length - 1 : 0);
   const [playing, setPlaying] = useState(false);
@@ -106,10 +110,10 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const exportBundle = async () => {
     setBundleBusy(true);
     try {
-      const bundle = await buildVerifiedBundle(chained, {
+      const bundle = await buildVerifiedBundle(history, {
         id: gameModeId ?? 'vanilla',
         rules: pityRules,
-      });
+      }, saved);
       const json = JSON.stringify(bundle, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -150,12 +154,11 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const theme = typeTheme[current.type] ?? typeTheme.ROLL;
   const isBroken = brokenSet.has(idx);
   const hasViolation = violationSet.has(idx);
-  const totalIssues = chainReport.brokenAt.length + replay.violations.length;
-  // Same verdict as the share card (auditHistory): only a broken hash chain is
-  // "broken"; replay notes such as legacy ritual estimates are warnings.
-  const integrity: 'ok' | 'warning' | 'broken' = chainReport.brokenAt.length > 0
+  // Same verdict as the share card and the import check (auditHistory).
+  const integrity: 'ok' | 'warning' | 'broken' = audit.verdict === 'tampered'
     ? 'broken'
-    : replay.violations.length > 0 ? 'warning' : 'ok';
+    : audit.verdict === 'warning' ? 'warning' : 'ok';
+  const problems = audit.reasons.length;
   const day = toRunDay(current.timestamp, firstTs);
 
   return (
@@ -171,15 +174,18 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
           <div>
             <div className={`text-sm font-bold ${integrity === 'ok' ? 'text-emerald-300' : integrity === 'warning' ? 'text-amber-300' : 'text-red-300'}`}>
               {integrity === 'ok'
-                ? 'INTEGRITY: OK'
+                ? 'HISTORY INTACT (SELF-REPORTED)'
                 : integrity === 'warning'
-                  ? `REPLAY WARNING — ${replay.violations.length} note${replay.violations.length === 1 ? '' : 's'}`
-                  : `INTEGRITY: BROKEN — ${totalIssues} issue${totalIssues === 1 ? '' : 's'}`}
+                  ? `HISTORY DOESN'T ADD UP: ${problems} problem${problems === 1 ? '' : 's'}`
+                  : `HISTORY EDITED: ${problems} problem${problems === 1 ? '' : 's'}`}
             </div>
             <div className="text-[10px] font-mono text-gray-400 tracking-wide">
               runId: <span className="text-gray-200">{runId ?? '—'}</span>
-              {chainReport.brokenAt.length > 0 && <span className="ml-3 text-red-400">chain: {chainReport.brokenAt.length} broken links</span>}
-              {replay.violations.length > 0 && <span className="ml-3 text-amber-400">invariants: {replay.violations.length}</span>}
+              <span className={`ml-3 ${integrity === 'broken' ? 'text-red-400' : integrity === 'warning' ? 'text-amber-400' : 'text-gray-400'}`}>
+                {integrity !== 'ok'
+                  ? audit.reasons[0]
+                  : audit.totals.status === 'match' ? 'Keys, Fate and unlocks match the history.' : audit.totals.reasons[0]}
+              </span>
             </div>
           </div>
         </div>
@@ -188,10 +194,10 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
             onClick={exportBundle}
             disabled={bundleBusy}
             className={osrs ? 'osrs-btn owb-tl-export' : 'px-3 py-1.5 rounded text-xs bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10 flex items-center gap-1.5 disabled:opacity-50'}
-            title="Export verified bundle (JSON) with SHA-256 commitment"
+            title="Download this run's history and replay totals as JSON, with a SHA-256 checksum. Nothing is signed."
           >
             {!osrs && <Download size={13} />}
-            {bundleBusy ? 'Signing…' : 'Export Verified Bundle'}
+            {bundleBusy ? 'Exporting…' : 'Export run bundle'}
           </button>
           {!osrs && <button onClick={onClose} aria-label="Close timelapse" className="p-1.5 text-gray-400 hover:text-white"><X size={20} /></button>}
         </div>

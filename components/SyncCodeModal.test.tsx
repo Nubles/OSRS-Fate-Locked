@@ -249,8 +249,43 @@ describe('SyncCodeModal import verdict', () => {
     });
     await user.click(screen.getByRole('button', { name: 'Verify code' }));
 
-    expect(await screen.findByText('Verified run')).toBeTruthy();
-    expect(screen.queryByText('Loadable, with warnings')).toBeNull();
+    expect(await screen.findByText('History intact (self-reported)')).toBeTruthy();
+    expect(screen.queryByText("History doesn't add up")).toBeNull();
+    expect(screen.queryByText(/Verified/)).toBeNull();
+  });
+
+  it('says an imported run with more Keys than its history pays for does not add up', async () => {
+    // Ten honest misses, then the save's counters edited by hand.
+    const history = ensureChain(Array.from({ length: 10 }, (_, index) => ({
+      id: `miss-${index}`,
+      timestamp: index + 1,
+      type: 'ROLL_FAIL' as const,
+      message: 'No Key.',
+      rollValue: 100,
+      threshold: 25,
+      meta: { fatePointsEarned: 1, standardKeysAwarded: 0 },
+    })));
+    vi.mocked(decodeAndValidateSyncCode).mockResolvedValueOnce({
+      ok: true,
+      state: {
+        unlocks: { skills: { Hitpoints: 1 }, regions: [], quests: [] },
+        keys: 999, specialKeys: 0, chaosKeys: 0, fatePoints: 10,
+        history,
+        gameModeId: 'vanilla',
+      } as unknown as GameState,
+      checksumOk: true,
+      warnings: [],
+    });
+    const user = userEvent.setup();
+    render(<SyncCodeModal onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Import' }));
+    fireEvent.change(screen.getByPlaceholderText('FLSYNC.g1.…'), { target: { value: 'edited-code' } });
+    await user.click(screen.getByRole('button', { name: 'Verify code' }));
+
+    expect(await screen.findByText("History doesn't add up")).toBeTruthy();
+    expect(screen.getByText('Saved Keys: 999, but the history adds up to 3.')).toBeTruthy();
+    expect(screen.queryByText('History intact (self-reported)')).toBeNull();
   });
 
   it("previews a Chunked run's chunks and names its mode", async () => {

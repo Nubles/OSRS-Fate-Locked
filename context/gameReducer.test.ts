@@ -18,7 +18,7 @@ import { ALL_CA_TASKS } from '../data/caTasks';
 import { activityEntranceChunks } from '../utils/activityAccess';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { MAX_COUNTER, validateAndMigrateSave } from '../utils/saveSchema';
-import { replayInvariants } from '../utils/integrity';
+import { replayInvariants } from '../utils/runAudit';
 
 /**
  * Tests for the core game reducer — every roll, unlock, ritual, level-up and
@@ -973,7 +973,7 @@ describe('rituals', () => {
   it.each([
     ['a Greed success', roll({ success: true })],
     ['a Greed Omni-Key roll', roll({ success: true, omni: true })],
-    ['a Greed fail', roll({ success: false })],
+    ['a Greed fail', roll({ success: false, roll: 60 })],
   ])('the integrity replay counts the Keys from %s', (_label, action) => {
     const armed = { ...base(), activeBuff: 'GREED' as const };
     const s = gameReducer(armed, action);
