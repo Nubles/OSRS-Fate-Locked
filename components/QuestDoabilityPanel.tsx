@@ -9,7 +9,7 @@ import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations'
 import { chunkAreaLabelAt } from '../utils/chunkPlaceLabel';
 import { questChunkStatus, doabilityBucket, DoabilityBucket, hasCanonicalQuestLocationEvidence, QuestChunkStatus } from '../utils/questDoability';
 import {
-  evaluateQuestEligibility, questRequirementOptionLabel, withSkillGateQuests,
+  evaluateQuestEligibility, questReadyFrom, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
 import { actualCombatLevel } from '../utils/slayerReach';
 import { WIKI_OVERRIDES } from '../constants';
@@ -121,7 +121,7 @@ export const evaluateQuestDoability = (
   const missingEquipment = eligibility.blockers.flatMap(blocker => blocker.kind === 'equipment'
     ? [{ slot: blocker.slot, tier: blocker.tier, have: unlocks.equipment?.[blocker.slot] ?? 0, label: blocker.label }]
     : []);
-  const reqsMet = (eligibility.eligible && !unreviewedAccess) || completed;
+  const reqsMet = (questReadyFrom(eligibility) && !unreviewedAccess) || completed;
   const manualChecks = completed ? [] : eligibility.manualChecks;
   const otherRequirements = [
     ...eligibility.blockers.filter(blocker => blocker.kind === 'quest'

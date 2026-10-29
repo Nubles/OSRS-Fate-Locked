@@ -13,7 +13,9 @@ import { CA_DATA } from '../data/caData';
 import { ALL_CA_TASKS } from '../data/caTasks';
 import {
   countDoableDiaryTasks, evaluateDiaryTaskEligibility, evaluateQuestEligibility, evaluateDiaryTierEligibility,
+  questReadyFrom,
 } from '../utils/journalStatus';
+import { diaryTaskProgress } from '../utils/diaryProgress';
 import { canonicalBossId } from '../utils/contentIdentity';
 import { bossAreaBlocker } from '../utils/caTaskAccess';
 import type { DiaryTask } from '../data/diaryTasks';
@@ -75,9 +77,8 @@ export function analyzeJournalQuestRecommendations(
     quest.id,
     evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes),
   ]));
-  const candidates = allQuests.filter(quest => (
-    !unlocks.quests.includes(quest.id) && baseQ.get(quest.id)!.eligible
-  ));
+  // Ready as isQuestReady reads it: the Quest Log, Next best and Doable agree.
+  const candidates = allQuests.filter(quest => questReadyFrom(baseQ.get(quest.id)!));
   const counts = {
     available: candidates.length,
     availableMiniquests: candidates.filter(quest => quest.kind === 'miniquest').length,
@@ -215,10 +216,8 @@ export function computeJournalSummary(
   // ── Diary tasks doable ───────────────────────────────────────────────────
   const diaryTasksDoable = countDoableDiaryTasks(
     ALL_DIARY_TASKS, unlocks, gameModeId, areaRoutes);
-  const diaryTasksTotal  = ALL_DIARY_TASKS.length;
-  const diaryTasksDone   = unlocks.completedTasks.filter((id: string) =>
-    ALL_DIARY_TASKS.some((t) => t.id === id),
-  ).length;
+  // A tier marked complete counts all its tasks, as the Journal's rings do.
+  const { done: diaryTasksDone, total: diaryTasksTotal } = diaryTaskProgress(unlocks);
 
   // ── CA tasks remaining ───────────────────────────────────────────────────
   const caTiersTotal = CA_TIER_ORDER.length;
