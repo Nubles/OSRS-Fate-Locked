@@ -28,6 +28,8 @@ export const look = (e: LogEntry): { tone: Tone; icon: string; dim: boolean; kin
     case 'COMPENSATION': return { tone: 'void', icon: OMNI_KEY_ICON, dim: false, kind: 'Compensation' };
     case 'FATE': return e.meta?.fate === 'mark'
       ? { tone: e.meta?.omen === 'bane' ? 'fail' : e.meta?.omen === 'boon' ? 'success' : 'void', icon: tableSprite(TableType.CHUNKS), dim: false, kind: "Fate's omen" }
+      : e.meta?.fate === 'site' ? { tone: 'success', icon: tableSprite(TableType.CHUNKS), dim: false, kind: 'Fated site' }
+      : e.meta?.fate === 'seal' ? { tone: 'success', icon: VOID_SEAL_ICON, dim: false, kind: 'Region seal' }
       : { tone: 'void', icon: tableSprite(TableType.CHUNKS), dim: false, kind: "Fate's Thread" };
     default: return { tone: 'plain', icon: CASKET_ICON, dim: false, kind: e.type };
   }

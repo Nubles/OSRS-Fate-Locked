@@ -100,7 +100,8 @@ const toneOf = (entry: LogEntry): string => {
     case 'ALTAR': return entry.meta?.won === false ? '#7f0000' : '#6a0090';
     case 'LEVEL_UP': return Number(entry.meta?.chaosKeysAwarded ?? 0) > 0 ? '#ef1020' : '#000000';
     case 'COMPENSATION': return '#000080';
-    case 'FATE': return entry.meta?.omen === 'bane' ? '#7f0000' : entry.meta?.omen === 'boon' ? '#005f00' : '#6a0090';
+    case 'FATE': return entry.meta?.omen === 'bane' ? '#7f0000' : entry.meta?.omen === 'boon' ? '#005f00'
+      : entry.meta?.fate === 'site' || entry.meta?.fate === 'seal' ? '#0000ff' : '#6a0090';
     default: return '#000000';
   }
 };

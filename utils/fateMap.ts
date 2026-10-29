@@ -5,11 +5,12 @@
  * window and hops of the "Fate draws the map" spin. Pure, so vitest pins it;
  * looks only, it never changes what fate draws.
  */
-import type { FateMark } from '../types';
+import type { FateMark, FateSite } from '../types';
 import { MAP_BOUNDS, CHUNK_TILES } from './mapCoords';
 import {
   FATE_MARK_BLESSED_FATE, FATE_MARK_CHAOS_CHANCE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS,
-  FATE_MARK_FORTUNATE_ODDS, FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE,
+  FATE_MARK_FORTUNATE_ODDS, FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE, FATE_SEAL_BOON_FACTOR,
+  FATE_WAYSTONE_DRAWS,
 } from '../config/economy';
 
 /** Map-image pixels per chunk on the 9216x6528 world map. */
@@ -107,6 +108,27 @@ export const FATE_MARK_EFFECTS: Record<FateMark, string> = {
 };
 
 export const omenColor = (mark: FateMark): string => (BANE.has(mark) ? OMEN_BANE : OMEN_BOON);
+
+/** What a boon does when it breaks a region's seal, at FATE_SEAL_BOON_FACTOR times its strength. */
+export const SEAL_BOON_EFFECTS: Partial<Record<FateMark, string>> = {
+  BLESSED: `+${FATE_MARK_BLESSED_FATE * FATE_SEAL_BOON_FACTOR} Fate, up to the pity line.`,
+  GILDED: `${FATE_SEAL_BOON_FACTOR} free Key rolls, waiting on the Keys screen.`,
+  FORTUNATE: `Your next ${FATE_MARK_FORTUNATE_ROLLS * FATE_SEAL_BOON_FACTOR} Key rolls are ${FATE_MARK_FORTUNATE_ODDS}% better.`,
+  CHAOTIC: `A ${FATE_MARK_CHAOS_CHANCE * 100 * FATE_SEAL_BOON_FACTOR}% chance of a Chaos Key.`,
+};
+
+// ── Fated sites and region seals ──────────────────────────────────────────
+
+export const SITE_NAME: Record<FateSite, string> = { SHRINE: 'Shrine', HOARD: 'Hoard', RIFT: 'Rift', WAYSTONE: 'Waystone' };
+/** What a site does, as the log, the map and fate's spin say it. */
+export const SITE_EFFECTS: Record<FateSite, string> = {
+  SHRINE: "A free ritual, like reaching Fate's Thread.",
+  HOARD: 'Fate gives you a Chaos Key.',
+  RIFT: 'Fate draws a second chunk straight away.',
+  WAYSTONE: `Your next ${FATE_WAYSTONE_DRAWS} Chunks draws all lean toward Fate's Thread.`,
+};
+export const siteLine = (site: FateSite): string => `Fated site: ${SITE_NAME[site]}. ${SITE_EFFECTS[site]}`;
+export const sealLine = (region: string): string => `The seal of ${region} breaks.`;
 
 /** The gold of Fate's Thread. */
 export const THREAD_GOLD = '#ffc828';

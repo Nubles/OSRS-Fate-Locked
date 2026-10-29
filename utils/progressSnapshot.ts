@@ -97,7 +97,9 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
   const caPoints = completedCAPoints(unlocks.completedTasks);
   const caTiers = earnedCATiers(caPoints, unlocks.cas);
   const recent = history
-    .filter(entry => entry.type === 'UNLOCK' && entry.message.trim() !== '')
+    // Unlocks, and a Chunked run's broken seals and Fated sites.
+    .filter(entry => (entry.type === 'UNLOCK' || (entry.type === 'FATE' && (entry.meta?.fate === 'seal' || entry.meta?.fate === 'site')))
+      && entry.message.trim() !== '')
     .slice(-MAX_RECENT_UNLOCKS)
     .reverse()
     .map(entry => ({ text: unlockText(entry), at: entry.timestamp }));

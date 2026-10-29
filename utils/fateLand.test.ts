@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DropSource, TableType, type GameState } from '../types';
+import { DropSource, TableType, type FateSite, type GameState } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { gameReducer, initialState } from '../context/GameContext';
-import { CHUNKED_START_KEY, chunkKey, getChunkFrontier } from './chunkAdjacency';
-import { FATE_MARKS, leanTowardThread, threadCandidates, threadLeaning, withFateLand } from './fateLand';
+import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, chunkKey, chunkRegion, getChunkFrontier } from './chunkAdjacency';
+import { drawFloat } from './seededRng';
+import { FATE_MARKS, FATE_SITES, leanTowardThread, placeSites, threadCandidates, threadLeaning, withFateLand } from './fateLand';
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './runAudit';
 import { afterRoll, failFate, rollRitualPlan } from './ritualEffects';
@@ -13,6 +14,7 @@ import { bankChunkKey } from './activityAccess';
 import {
   FATE_THREAD_LEAN_CHANCE, FATE_MARK_BLESSED_FATE, FATE_MARK_CLOUDED_ROLLS, FATE_MARK_CURSED_ODDS, FATE_MARK_CURSED_ROLLS, FATE_MARK_FORTUNATE_ODDS,
   FATE_MARK_FORTUNATE_ROLLS, FATE_MARK_WITHERED_FATE, FATE_THREAD_MAX_STEPS, FATE_THREAD_MIN_STEPS,
+  FATE_SEAL_BOON_FACTOR, FATE_SITE_COUNT, FATE_WAYSTONE_DRAWS,
 } from '../config/economy';
 
 type Run = ReturnType<typeof gameReducer>;
@@ -194,5 +196,123 @@ describe("Fate's omens", () => {
   it('refuses a save with a Gilded roll on an unmarked chunk', () => {
     const s = tied('62,40', { fateLand: { thread: '62,40', fulfilled: 0, marks: {}, gilded: ['49,50'] } });
     expect(persists(s).ok).toBe(false);
+  });
+});
+
+describe('Fated sites and region seals', () => {
+  const sited = (sites: Record<string, FateSite>, over: Partial<GameState> = {}): Run =>
+    chunked({ fateLand: { thread: '62,40', fulfilled: 0, marks: {}, gilded: [], sites, seals: { Misthalin: '' } }, ...over });
+  const siteEntry = (s: Run) => fateEntries(s).find(e => e.meta?.fate === 'site');
+
+  it('hides 16 sites on unheld land when a run starts, the same for the same seed', () => {
+    const s = gameReducer(chunked(), { type: 'TOGGLE_ANIMATIONS' });
+    const sites = s.fateLand?.sites ?? {};
+    expect(Object.keys(sites)).toHaveLength(FATE_SITE_COUNT);
+    for (const [key, site] of Object.entries(sites)) {
+      expect(ALL_CHUNK_KEYS).toContain(key);
+      expect(key).not.toBe(CHUNKED_START_KEY);
+      expect(FATE_SITES).toContain(site);
+    }
+    expect(gameReducer(chunked(), { type: 'TOGGLE_ANIMATIONS' }).fateLand?.sites).toEqual(sites);
+    expect(gameReducer(chunked({ rngSeed: 'other' }), { type: 'TOGGLE_ANIMATIONS' }).fateLand?.sites).not.toEqual(sites);
+    expect(s.fateLand?.seals).toEqual({ Misthalin: '' });
+    expect(persists(s).ok).toBe(true);
+  });
+
+  it('places every kind of site about as often', () => {
+    const counts = new Map<string, number>();
+    for (let i = 0; i < 40; i++) {
+      const sites = placeSites(new Set([CHUNKED_START_KEY]), p => drawFloat(`kinds-${i}`, 'c', p));
+      for (const site of Object.values(sites)) counts.set(site, (counts.get(site) ?? 0) + 1);
+    }
+    for (const site of FATE_SITES) expect(counts.get(site)).toBeGreaterThan(110);
+  });
+
+  it('gives a run from before sites its sites on its next action, and counts its regions as unsealed', () => {
+    const s = gameReducer(tied('62,40', { unlocks: { ...initialState.unlocks, chunks: ['49,50', '51,50'] } }), { type: 'TOGGLE_ANIMATIONS' });
+    expect(Object.keys(s.fateLand?.sites ?? {})).toHaveLength(FATE_SITE_COUNT);
+    expect(Object.keys(s.fateLand?.sites ?? {})).not.toContain('51,50');
+    expect(s.fateLand?.seals).toEqual({ Misthalin: '', [chunkRegion('51,50')!]: '' });
+    expect(fateEntries(s)).toEqual([]);
+  });
+
+  it('a Shrine gives a free ritual instead of an omen', () => {
+    const s = spend(sited({ '49,50': 'SHRINE' }), '49,50');
+    expect(s.freeRituals).toHaveLength(1);
+    expect(s.fateLand?.marks['49,50']).toBeUndefined();
+    expect(siteEntry(s)?.meta).toMatchObject({ site: 'SHRINE', chunk: '49,50', ritualsAwarded: s.freeRituals });
+    expect(persists(s).ok).toBe(true);
+  });
+
+  it('a Hoard gives a Chaos Key, and the audit follows it', () => {
+    const s = spend(sited({ '49,50': 'HOARD' }), '49,50');
+    expect(s.chaosKeys).toBe(1);
+    expect(replayInvariants(s.history, initialState.keys).final.chaosKeys).toBe(1);
+  });
+
+  it('a Rift draws a second chunk from the frontier for free, and fate has its say on it too', () => {
+    const before = sited({ '49,50': 'RIFT' });
+    const s = spend(before, '49,50');
+    const chunks = s.unlocks.chunks ?? [];
+    expect(chunks).toHaveLength(2);
+    const second = chunks[1];
+    expect(frontier([CHUNKED_START_KEY, '49,50'])).toContain(second);
+    expect(s.fateLand?.marks[second] ?? s.fateLand?.sites?.[second]).toBeDefined();
+    const unlock = s.history.find(e => e.type === 'UNLOCK' && e.meta?.costType === 'rift');
+    expect(unlock?.meta).toMatchObject({ item: second, cost: 0, category: TableType.CHUNKS });
+    expect(replayInvariants(s.history, before.keys).final.keys).toBe(s.keys);
+    expect(persists(s).ok).toBe(true);
+    // The same seed draws the same second chunk.
+    expect(spend(before, '49,50').unlocks.chunks).toEqual(chunks);
+  });
+
+  it('a Waystone makes the next 3 Chunks Key draws lean toward the thread', () => {
+    const s = spend(sited({ '49,50': 'WAYSTONE' }), '49,50');
+    expect(s.fateLand?.pull).toBe(FATE_WAYSTONE_DRAWS);
+    expect(persists(s).ok).toBe(true);
+    const next = spend(s, frontier([CHUNKED_START_KEY, '49,50']).find(key => !s.fateLand?.sites?.[key])!);
+    expect(next.fateLand?.pull).toBe(FATE_WAYSTONE_DRAWS - 1);
+  });
+
+  it("breaks a region's seal with the run's first chunk there, and its omen is always a doubled boon", () => {
+    const region = chunkRegion('51,50')!;
+    expect(region).not.toBe('Misthalin');
+    const boons = new Set<string>();
+    for (let i = 0; i < 60; i++) {
+      const s = spend(sited({}, { rngSeed: `seal-${i}`, fatePoints: 10 }), '51,50');
+      expect(s.fateLand?.seals?.[region]).toBe('51,50');
+      const mark = s.fateLand?.marks['51,50'];
+      expect(['BLESSED', 'GILDED', 'FORTUNATE', 'CHAOTIC']).toContain(mark);
+      boons.add(mark!);
+      expect(fateEntries(s).find(e => e.meta?.fate === 'seal')?.meta).toMatchObject({ region, chunk: '51,50' });
+      expect(fateEntries(s).find(e => e.meta?.fate === 'mark')?.meta?.sealed).toBe(true);
+      if (mark === 'BLESSED') expect(s.fatePoints).toBe(10 + FATE_MARK_BLESSED_FATE * FATE_SEAL_BOON_FACTOR);
+      if (mark === 'FORTUNATE') expect(s.rituals?.fortunateRollsLeft).toBe(FATE_MARK_FORTUNATE_ROLLS * FATE_SEAL_BOON_FACTOR);
+      if (mark === 'GILDED') {
+        expect(s.fateLand?.gilded).toEqual(['51,50', '51,50']);
+        const once = gameReducer(s, { type: 'FATE_MARK_ROLL', payload: { chunk: '51,50' } });
+        expect(once.fateLand?.gilded).toEqual(['51,50']);
+      }
+      expect(persists(s).ok).toBe(true);
+    }
+    expect(boons.size).toBe(4);
+    // A second chunk in the region breaks nothing.
+    const s = spend(spend(sited({}), '51,50'), '51,49');
+    expect(fateEntries(s).filter(e => e.meta?.fate === 'seal')).toHaveLength(chunkRegion('51,49') === region ? 1 : 2);
+  });
+
+  it('a site that breaks a seal sets off the site and the doubled boon', () => {
+    const s = spend(sited({ '51,50': 'HOARD' }), '51,50');
+    expect(s.chaosKeys).toBeGreaterThanOrEqual(1);
+    expect(['BLESSED', 'GILDED', 'FORTUNATE', 'CHAOTIC']).toContain(s.fateLand?.marks['51,50']);
+  });
+
+  it('refuses saves with an unknown site or region, too long a pull, or three Gilded rolls on one chunk', () => {
+    const land = { thread: '62,40', fulfilled: 0, marks: { '51,50': 'GILDED' as const }, gilded: [] as string[] };
+    expect(persists(chunked({ fateLand: { ...land, sites: { '49,50': 'CASTLE' as FateSite } } })).ok).toBe(false);
+    expect(persists(chunked({ fateLand: { ...land, seals: { Atlantis: '' } } })).ok).toBe(false);
+    expect(persists(chunked({ fateLand: { ...land, pull: FATE_WAYSTONE_DRAWS + 1 } })).ok).toBe(false);
+    expect(persists(chunked({ fateLand: { ...land, gilded: ['51,50', '51,50'] } })).ok).toBe(true);
+    expect(persists(chunked({ fateLand: { ...land, gilded: ['51,50', '51,50', '51,50'] } })).ok).toBe(false);
   });
 });
