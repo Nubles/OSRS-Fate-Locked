@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AdventurersLog, { mapView } from './AdventurersLog';
 import { MAP_GRID } from '../utils/chunkMapBits';
@@ -36,7 +36,8 @@ describe('the Adventurer\'s Log page', () => {
     expect(screen.getByText('3 hours ago')).toBeTruthy();
     expect(screen.getByRole('img', { name: /2 owned chunks lit/ })).toBeTruthy();
     expect(screen.getByText(/Updated 2 minutes ago/)).toBeTruthy();
-    expect(document.title).toBe('Whim\'s Adventurer\'s Log · Fate Locked');
+    // The page names itself in an effect after the run loads, which can land a tick later.
+    await waitFor(() => expect(document.title).toBe('Whim\'s Adventurer\'s Log · Fate Locked'));
   });
 
   it('says so when the run is private or gone', async () => {

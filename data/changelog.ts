@@ -37,6 +37,19 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-29-orion-and-frost-dragons',
+    title: 'Orion, and frost dragon tasks',
+    date: '2026-10-29',
+    sections: {
+      added: [
+        'Orion, the pet from The Fractured Archive, is now on the All Pets page, so claiming it gives an Omni-Key.',
+      ],
+      fixed: [
+        'Nieve and Duradel only give frost dragon tasks once Dragon Slayer I is complete, as in the game since the 28 October update.',
+      ],
+    },
+  },
+  {
     id: '2026-10-26-ask-before-rolls',
     title: 'Ask before Key rolls too',
     date: '2026-10-26',

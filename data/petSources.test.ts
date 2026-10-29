@@ -11,7 +11,7 @@ describe('pet sources', () => {
     expect(Object.keys(PET_SOURCES).map(Number).sort()).toEqual(PETS.map((candidate) => candidate.id).sort());
     const count = (group: string) => PETS.filter((candidate) => PET_SOURCES[candidate.id].group === group).length;
     // The wiki's Pet page: boss pets, skilling pets, and the collection log's other pets.
-    expect([count('Boss'), count('Skilling'), count('Other')]).toEqual([54, 9, 8]);
+    expect([count('Boss'), count('Skilling'), count('Other')]).toEqual([55, 9, 8]);
     expect(PET_GROUPS.map(({ group }) => group)).toEqual(['Boss', 'Skilling', 'Other']);
   });
 
