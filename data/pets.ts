@@ -81,6 +81,7 @@ export const PETS: readonly Pet[] = [
   { id: 502069, name: 'Maggot marquess' },
   { id: 502070, name: 'Aggy' },
   { id: 502071, name: 'Mr McGroot' },
+  { id: 502072, name: 'Orion' },
 ];
 
 const BY_ID = new Map(PETS.map((pet) => [pet.id, pet]));
