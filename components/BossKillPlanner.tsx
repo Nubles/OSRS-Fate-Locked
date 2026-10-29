@@ -162,7 +162,8 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
             <div className="owb-bkp-list flex flex-col min-h-0 border-r border-white/10 overflow-y-auto custom-scrollbar p-2 space-y-1">
               {gear.count === 0 && (
                 <div className="owb-bkp-note text-[10px] text-amber-300/80 bg-amber-950/20 border border-amber-500/20 rounded-lg px-2.5 py-2 mb-1 flex items-start gap-1.5">
-                  <Info size={11} className="shrink-0 mt-0.5" /> No gear equipped — equip items in the Equipment Lab’s <span className="text-fuchsia-300">Gear</span> tab for real numbers.
+                  <Info size={11} className="shrink-0 mt-0.5" />
+                  <span>No gear equipped — equip items in the Equipment Lab’s <span className="text-fuchsia-300">Gear</span> tab for real numbers.</span>
                 </div>
               )}
               {ranked.map(({ boss, monster, plan }) => {

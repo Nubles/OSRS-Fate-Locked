@@ -84,6 +84,9 @@ html[data-ui="osrs"] .ospend-listtitle { font: var(--osrs-fs, 16px) 'RSBold', sa
 html[data-ui="osrs"] .ospend-chips { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; }
 html[data-ui="osrs"] .ospend-chip { height: 24px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; padding: 0 7px 0 5px; background: var(--osrs-window, #3e3529); border: 1px solid #000; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #fff; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
 html[data-ui="osrs"] .ospend-chip.off { background: #241e17; color: var(--osrs-btn-off, #7d705c); }
+html[data-ui="osrs"] .ospend-outlook { margin: 0; font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #c8b897; text-shadow: 1px 1px 0 #000; }
+html[data-ui="osrs"] .ospend-outlook .k { color: #ff981f; }
+html[data-ui="osrs"] .ospend-card .what.is-outlook { color: #ffff00; }
 html[data-ui="osrs"] .ospend-foot { flex-shrink: 0; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-muted, #8a7c66); text-shadow: 1px 1px 0 #000; }
 
 html[data-ui="osrs"] .ospend-side { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -212,3 +215,4 @@ html[data-ui="osrs"] .ocoll-bar { height: 8px; background: var(--osrs-well, #1f1
 @media (max-width: 520px) {
   html[data-ui="osrs"] .ohist-ftab img { display: none; }
 }
+html[data-ui="osrs"] .ospend-hope-mark { position: absolute; top: 2px; right: 2px; filter: drop-shadow(1px 1px 0 #000); pointer-events: none; }

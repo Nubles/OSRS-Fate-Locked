@@ -1,0 +1,22 @@
+/* The "Ask before spending" box (components/SpendConfirm.tsx): an in-game stone window in both layouts. */
+.spend-confirm-backdrop {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.spend-confirm {
+  width: min(320px, 100%); padding: 12px 14px 10px;
+  background: #3e3529; border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 #5c5244, inset -1px -1px 0 #14110d, 0 6px 18px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+.spend-confirm-q {
+  margin: 2px 0 12px; font: 16px/18px 'RSBold', ui-sans-serif, sans-serif;
+  color: #ff981f; text-shadow: 1px 1px 0 #000;
+}
+.spend-confirm-actions { display: flex; gap: 8px; justify-content: center; }
+.spend-confirm-actions .osrs-btn { min-width: 96px; height: 28px; }
+.spend-confirm-hint {
+  margin: 10px 0 0; font: 16px/16px 'RSSmall', ui-sans-serif, sans-serif;
+  color: #a89878; text-shadow: 1px 1px 0 #000;
+}

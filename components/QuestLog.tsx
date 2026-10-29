@@ -1,4 +1,5 @@
 
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
@@ -583,11 +584,14 @@ export const useQuestJournal = (externalSearch = '') => {
         message => window.confirm(message),
       );
       if (attestation === null) return;
-      const result = completeQuest(quest.id, e.clientX, e.clientY, attestation);
-      if (!result.ok) return;
+      const { clientX, clientY } = e;
+      confirmThen(`Complete ${quest.name} and roll for a Key?`, () => {
+        const result = completeQuest(quest.id, clientX, clientY, attestation);
+        if (!result.ok) return;
 
-      // Celebration overlay (QuestCompleteOverlay) shows the wiki reward scroll.
-      window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
+        // Celebration overlay (QuestCompleteOverlay) shows the wiki reward scroll.
+        window.dispatchEvent(new CustomEvent('fate:quest-complete', { detail: { name: quest.name } }));
+      });
   };
 
   const allEntriesByKind = splitJournalEntriesByKind(Object.values(QUEST_DATA));

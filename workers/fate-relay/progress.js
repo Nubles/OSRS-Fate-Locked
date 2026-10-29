@@ -22,6 +22,8 @@ export const LINK_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const MAX_RECENT_UNLOCKS = 5;
 
 const MAX_COUNT = 1_000_000;
+// The snapshot's chunk map: 48 x 34 bits (utils/progressSnapshot.ts MAP_GRID) in base64.
+const CHUNK_MAP_RE = /^[A-Za-z0-9+/]{272}$/;
 
 const object = value => (value !== null && typeof value === 'object' && !Array.isArray(value) ? value : null);
 
@@ -68,6 +70,9 @@ export function validProgressSnapshot(body) {
   if (record.rulesTag !== undefined && !(typeof record.rulesTag === 'string' && /^R-[0-9A-F]{4,8}$/.test(record.rulesTag))) return null;
   if (record.account !== undefined && !text(record.account, 32)) return null;
   if (record.startedAt !== undefined && !timestamp(record.startedAt)) return null;
+  if (record.map !== undefined && !(typeof record.map === 'string' && CHUNK_MAP_RE.test(record.map))) return null;
+  // The player's choice to show this summary as a public Adventurer's Log (GET /p/<id>).
+  if (record.public !== undefined && record.public !== true) return null;
 
   return {
     v: 1,
@@ -82,7 +87,24 @@ export function validProgressSnapshot(body) {
     diaryTasks,
     ca: { points: ca.points, tier: ca.tier },
     recent,
+    ...(record.map !== undefined ? { map: record.map } : {}),
+    ...(record.public === true ? { public: true } : {}),
   };
+}
+
+/**
+ * What a public read of a stored summary shows: the summary itself when its
+ * player made it a public Adventurer's Log, else null (answered as 404, the
+ * same as no summary, so a private run can't be told from a missing one).
+ */
+export function publicProgress(stored) {
+  let snapshot = null;
+  try {
+    snapshot = typeof stored === 'string' ? JSON.parse(stored) : null;
+  } catch {
+    snapshot = null;
+  }
+  return snapshot !== null && typeof snapshot === 'object' && snapshot.public === true ? snapshot : null;
 }
 
 /** A new link code: LINK_CODE_LENGTH symbols, each uniform over the alphabet. */

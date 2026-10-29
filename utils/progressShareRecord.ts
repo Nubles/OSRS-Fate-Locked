@@ -20,6 +20,11 @@ export interface ProgressShareRecord {
   token: string;
   /** Whether this browser publishes progress for the run. */
   enabled: boolean;
+  /**
+   * Whether the published summary is a public Adventurer's Log: then anyone
+   * with the run's #/log/<id> link can read it, map included.
+   */
+  publicLog?: boolean;
 }
 
 /** Fired on window when a run's record changes, so the driver and the settings agree. */
@@ -45,7 +50,12 @@ export const readProgressShare = (storageKey: string): ProgressShareRecord | nul
     const parsed = JSON.parse(localStorage.getItem(profileProgressShareKey(storageKey)) ?? '');
     if (typeof parsed?.id === 'string' && ID_RE.test(parsed.id)
       && typeof parsed?.token === 'string' && TOKEN_RE.test(parsed.token)) {
-      return { id: parsed.id, token: parsed.token, enabled: parsed.enabled === true };
+      return {
+        id: parsed.id,
+        token: parsed.token,
+        enabled: parsed.enabled === true,
+        ...(parsed.publicLog === true ? { publicLog: true } : {}),
+      };
     }
   } catch {
     /* missing or unreadable: not shared */

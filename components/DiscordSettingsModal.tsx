@@ -8,12 +8,17 @@ import {
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { showToast } from '../utils/toast';
-import { X, Webhook, Send, Link2 } from 'lucide-react';
+import { X, Webhook, Send, Link2, BookOpen, Copy } from 'lucide-react';
 import { relaySync } from '../services/relaySync';
 import {
   deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
   readProgressShare, requestLinkCode, writeProgressShare,
 } from '../utils/progressShare';
+import type { ProgressShareRecord } from '../utils/progressShareRecord';
+
+/** The public Adventurer's Log page for a shared run (index.tsx, #/log/<id>). */
+export const adventurersLogUrl = (id: string): string =>
+  `${window.location.origin}${window.location.pathname}#/log/${id}`;
 
 /**
  * Settings for Discord unlock announcements. The URL is stored per profile in
@@ -138,6 +143,16 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     return () => window.clearInterval(timer);
   }, [link.kind]);
 
+  /** Publish the run's summary now, as `next` says (public or not), instead of waiting for the driver. */
+  const publishNow = useCallback(async (next: ProgressShareRecord) => {
+    const { buildProgressSnapshot } = await import('../utils/progressSnapshot');
+    const snapshot = buildProgressSnapshot({
+      unlocks: game.unlocks, history: game.history, gameModeId: game.gameModeId,
+      customMode: game.customMode, linkedAccount: game.linkedAccount, publicLog: next.publicLog === true,
+    });
+    return publishProgress(relaySync.base(), next, snapshot);
+  }, [game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
+
   const getCode = useCallback(async () => {
     setLink({ kind: 'working' });
     const current = readProgressShare(storageKey);
@@ -146,12 +161,7 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     setRecord(next);
     const base = relaySync.base();
     // A code needs a published run, so publish now. A refusal within a minute means one is already there.
-    const { buildProgressSnapshot } = await import('../utils/progressSnapshot');
-    const snapshot = buildProgressSnapshot({
-      unlocks: game.unlocks, history: game.history, gameModeId: game.gameModeId,
-      customMode: game.customMode, linkedAccount: game.linkedAccount,
-    });
-    const published = await publishProgress(base, next, snapshot);
+    const published = await publishNow(next);
     if (!published.ok && 'error' in published) {
       setLink({ kind: 'error', message: published.error === 'network'
         ? 'Could not reach the relay. Check your connection and try again.'
@@ -163,19 +173,55 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     setLink(issued.ok
       ? { kind: 'code', code: issued.code, expiresAt: issued.expiresAt }
       : { kind: 'error', message: 'Could not get a link code. Try again in a minute.' });
-  }, [storageKey, game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
+  }, [storageKey, publishNow]);
+
+  const [logBusy, setLogBusy] = useState(false);
+  /**
+   * Make the run's Adventurer's Log public (sharing turns on with it) or
+   * private again. The change is published straight away; if the relay asks
+   * to wait, ProgressShareDriver sends it once the minute is up.
+   */
+  const setPublicLog = useCallback(async (on: boolean) => {
+    setLogBusy(true);
+    const current = readProgressShare(storageKey);
+    const base = current ? { ...current, enabled: on ? true : current.enabled } : newProgressShareRecord();
+    const next: ProgressShareRecord = on ? { ...base, publicLog: true } : { id: base.id, token: base.token, enabled: base.enabled };
+    writeProgressShare(storageKey, next);
+    setRecord(next);
+    const published = next.enabled ? await publishNow(next) : { ok: true };
+    setLogBusy(false);
+    if (!published.ok && 'error' in published) {
+      showToast('Could not reach the relay. It will try again shortly.');
+    } else if (on) {
+      showToast('Your Adventurer\'s Log is public');
+    } else {
+      showToast('Your Adventurer\'s Log is private again');
+    }
+  }, [storageKey, publishNow]);
+
+  const copyLogLink = useCallback(async () => {
+    if (!record) return;
+    try {
+      await navigator.clipboard.writeText(adventurersLogUrl(record.id));
+      showToast('Link copied');
+    } catch {
+      showToast('Could not copy. Select the link and copy it yourself.');
+    }
+  }, [record]);
 
   const stop = useCallback(async () => {
     const current = readProgressShare(storageKey);
     if (!current) return;
-    writeProgressShare(storageKey, { ...current, enabled: false });
-    setRecord({ ...current, enabled: false });
+    const stopped = { id: current.id, token: current.token, enabled: false };
+    writeProgressShare(storageKey, stopped);
+    setRecord(stopped);
     setLink({ kind: 'idle' });
     const deleted = await deleteProgress(relaySync.base(), current);
     showToast(deleted ? 'Stopped sharing progress with Discord' : 'Sharing is off; the relay copy expires on its own');
   }, [storageKey]);
 
   const sharing = record?.enabled === true;
+  const publicLog = sharing && record?.publicLog === true;
   const secondsLeft = link.kind === 'code' ? Math.max(0, Math.ceil((link.expiresAt - now) / 1000)) : 0;
 
   return (
@@ -229,6 +275,45 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
           )}
         </>
       )}
+      <div className="mt-3 pt-3 border-t border-white/5">
+        <h3 className="text-[11px] font-black uppercase tracking-wider text-gray-200 flex items-center gap-2 mb-1.5">
+          <BookOpen size={13} className="text-amber-400" /> Adventurer&apos;s Log
+        </h3>
+        <p className="text-[12px] text-gray-400 mb-2">
+          A read-only page anyone with the link can open: this run&apos;s mode, counts, last few unlocks and
+          a map of the chunks you own. Off unless you turn it on; your save never leaves this device.
+        </p>
+        {publicLog && record && (
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              readOnly
+              value={adventurersLogUrl(record.id)}
+              onFocus={e => e.currentTarget.select()}
+              aria-label="Adventurer's Log link"
+              className="flex-1 min-w-0 bg-black/40 border border-white/15 rounded-lg px-2 py-1.5 text-[11px] text-gray-300 font-mono"
+            />
+            <button
+              onClick={copyLogLink}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-[#252525] border border-white/15 text-gray-300 hover:text-white"
+            >
+              <Copy size={12} /> Copy
+            </button>
+          </div>
+        )}
+        <button
+          onClick={() => setPublicLog(!publicLog)}
+          disabled={logBusy}
+          aria-pressed={publicLog}
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-colors disabled:opacity-40 ${publicLog ? 'bg-amber-900/30 border-amber-500/50 text-amber-200' : 'bg-[#252525] border-white/15 text-gray-400 hover:text-white'}`}
+        >
+          {publicLog ? 'Public: on' : 'Public: off'}
+        </button>
+        {publicLog && (
+          <p className="text-[10px] text-gray-600 mt-1.5">
+            Anyone with the link can see it. Turning it off takes the page down within a few minutes.
+          </p>
+        )}
+      </div>
     </div>
   );
 };

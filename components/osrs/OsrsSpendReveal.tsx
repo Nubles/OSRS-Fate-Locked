@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import './osrs-spend.css';
 import { getItemDescription } from '../VoidReveal';
 import { EntityModel, preloadModelViewer } from '../EntityModel';
-import { loadModelManifest, orientationFor } from '../../data/entityModels';
+import { isSkillcape, loadModelManifest, orientationFor } from '../../data/entityModels';
 import { useModelFor } from '../../hooks/useModelFor';
 import { bankFor } from '../../utils/bankPicture';
 import { OsrsBankReveal } from './OsrsBankPicture';
@@ -29,6 +29,8 @@ export interface OsrsSpendRevealProps {
   tier?: number;
   /** Draw inside the wide Spend Keys board's reveal window (when it is open) instead of over the screen. */
   docked?: boolean;
+  /** The entry was on the player's hope list. */
+  hoped?: boolean;
 }
 
 type Phase = 'altering' | 'reveal';
@@ -44,7 +46,7 @@ const RS = (size = 16, family = 'RS'): React.CSSProperties => ({ font: `${size}p
  * the roll plays out, then a loot beam over the unlocked entry. The outcome is
  * already decided and saved by the time this mounts; the wait is only visual.
  */
-const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, freeDraw, animationsEnabled, tier, docked = false }) => {
+const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, freeDraw, animationsEnabled, tier, docked = false, hoped = false }) => {
   const host = useRevealHost();
   const inDock = docked && !!host;
   const [phase, setPhase] = useState<Phase>(animationsEnabled ? 'altering' : 'reveal');
@@ -96,7 +98,8 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
   } else if (model) {
     // Skills show their skillcape: no skill-icon poster while the cape loads,
     // so a roll never shows the icon on one skill and the cape on another.
-    shown = <EntityModel src={model} poster={isSkill ? undefined : itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />;
+    // The cape holds still with its emblem facing out instead of spinning.
+    shown = <EntityModel src={model} poster={isSkill ? undefined : itemImage} alt={itemName} size={220} interactive autoRotate={animationsEnabled} spin={isSkillcape(itemName) ? false : undefined} orientation={orientationFor(itemName)} />;
   } else if (isRegion && chunksForArea(itemName).length) {
     // An area has no single model: show its piece of the world map instead.
     shown = (
@@ -168,7 +171,8 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
               )}
               <div style={{ position: 'absolute', left: 0, right: 0, bottom: 34, display: 'flex', justifyContent: 'center' }}>{shown}</div>
               <span style={{ position: 'absolute', left: 10, top: 8, ...RS(16, 'RSSmall'), color: beam, ...sh }}>
-                {isChaos ? 'Chaos unlock' : `${rarity.charAt(0).toUpperCase()}${rarity.slice(1)} unlock`}
+                {/* The table, not a rarity word: "Rare" read like luck. The beam colour keeps the rarity. */}
+                {isChaos ? 'Chaos unlock' : `${display} unlock`}
               </span>
               {freeDraw ? (
                 <span style={{ position: 'absolute', right: 10, top: 8, display: 'flex', alignItems: 'center', gap: 4, ...RS(16, 'RSSmall'), color: '#c77dff', ...sh }}>
@@ -181,6 +185,7 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
               )}
             </div>
             <span style={{ ...RS(32, 'RSBold'), lineHeight: '30px', color: '#ffffff', textAlign: 'center', padding: '0 12px', overflowWrap: 'anywhere', ...sh }}>{itemName}</span>
+            {hoped && <span style={{ ...RS(16, 'RSBold'), color: '#ffff00', ...sh }}>One of your hopes came true.</span>}
             <span style={{ maxWidth: 460, ...RS(), lineHeight: '19px', color: 'var(--osrs-tan, #c8b897)', textAlign: 'center', padding: '0 12px', ...sh }}>{description}</span>
             <div className="ospend-rv-actions" style={{ marginTop: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               <button type="button" className="osrs-btn" onClick={onComplete} style={{ width: 240, height: 36, fontFamily: "'RSBold', sans-serif" }}>Continue</button>

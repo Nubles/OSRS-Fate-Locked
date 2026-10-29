@@ -5,7 +5,9 @@ import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { LogEntry, UnlockState } from '../types';
 import { validProgressSnapshot } from '../workers/fate-relay/progress.js';
-import { buildProgressSnapshot, rulesTag } from './progressSnapshot';
+import { buildProgressSnapshot, encodeChunkMap, rulesTag } from './progressSnapshot';
+import { ALL_CHUNKS } from './chunkAdjacency';
+import { MAP_GRID, chunkMapBit, decodeChunkMap } from './chunkMapBits';
 
 const run = (changes: Partial<UnlockState>): UnlockState => ({ ...structuredClone(initialState.unlocks), ...changes });
 
@@ -68,5 +70,39 @@ describe('rulesTag', () => {
     const reordered = Object.fromEntries(Object.entries(vanilla).reverse()) as typeof vanilla;
     expect(rulesTag('custom', reordered)).toBe(rulesTag('custom', vanilla));
     expect(rulesTag('custom', { ...vanilla, pityThreshold: vanilla.pityThreshold + 1 })).not.toBe(rulesTag('custom', vanilla));
+  });
+});
+
+describe('the public Adventurer\'s Log fields', () => {
+  const unlocks = run({ regions: ['Falador'] });
+
+  it('stay out of a private summary', () => {
+    const snapshot = buildProgressSnapshot({ unlocks, history: [], gameModeId: 'vanilla' });
+    expect(snapshot).not.toHaveProperty('map');
+    expect(snapshot).not.toHaveProperty('public');
+  });
+
+  it('map exactly the chunks a public summary counts, in an order the relay keeps', () => {
+    const snapshot = buildProgressSnapshot({ unlocks, history: [], gameModeId: 'vanilla', publicLog: true });
+    expect(snapshot.public).toBe(true);
+    expect(snapshot.map).toHaveLength(272);
+    expect(decodeChunkMap(snapshot.map!)!.size).toBe(snapshot.chunks.unlocked);
+    // The relay stores its own field order; the stored text must equal this one so an unchanged publish writes nothing.
+    expect(JSON.stringify(validProgressSnapshot(JSON.parse(JSON.stringify(snapshot))))).toBe(JSON.stringify(snapshot));
+  });
+
+  it('use a grid that holds every land chunk, bits row by row from the north-west corner', () => {
+    for (const { cx, cy } of ALL_CHUNKS) expect(chunkMapBit(cx, cy)).toBeGreaterThanOrEqual(0);
+    // Lumbridge's 50,50 is row 15, column 35.
+    const one = Uint8Array.from(atob(encodeChunkMap((cx, cy) => cx === 50 && cy === 50)), char => char.charCodeAt(0));
+    const bit = 15 * MAP_GRID.cols + 35;
+    expect(one[bit >> 3]).toBe(1 << (bit & 7));
+    expect(one.reduce((sum, byte) => sum + byte, 0)).toBe(1 << (bit & 7));
+    expect([...decodeChunkMap(encodeChunkMap((cx, cy) => cx === 50 && cy === 50))!]).toEqual(['50,50']);
+  });
+
+  it('refuse a map that is not one', () => {
+    expect(decodeChunkMap('A'.repeat(100))).toBeNull();
+    expect(decodeChunkMap('!'.repeat(272))).toBeNull();
   });
 });

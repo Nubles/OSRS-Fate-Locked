@@ -1,5 +1,6 @@
 import React from 'react';
-import { Download, Info, Link2, PauseCircle, PlayCircle, Radio, RotateCcw, SlidersHorizontal, Upload } from 'lucide-react';
+import { Download, History, Info, Link2, PauseCircle, PlayCircle, Radio, RotateCcw, SlidersHorizontal, Upload, Telescope, ShieldCheck } from 'lucide-react';
+import { confirmSpendPref, tableOutlookPref, welcomeBackPref } from '../utils/viewerPrefs';
 import { BookOpen, Lightbulb, ScrollText } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { RESET_CONFIRM_MESSAGE } from '../utils/backups';
@@ -32,6 +33,9 @@ const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
   const osrsFits = useIsWideEnoughForOsrs();
   const { animationsEnabled, toggleAnimations, advisorsEnabled, toggleAdvisors, resetGame, gameModeId } = useGame();
   const skillOddsHover = useSkillOddsHover();
+  const tableOutlook = tableOutlookPref.use();
+  const confirmSpend = confirmSpendPref.use();
+  const welcomeBack = welcomeBackPref.use();
   // An item that leaves the menu: focus goes back to the gear first, so a
   // dialog it opens returns focus there when it closes.
   const pickUtil = (run: () => void) => {
@@ -72,6 +76,18 @@ const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
         <button type="button" onClick={() => { setSkillOddsHover(!skillOddsHover); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={skillOddsHover} title="On: a skill's roll odds show over the card when you hover it. Off: they open from the small i in the card's corner.">
            <Info size={13} className={skillOddsHover ? 'text-amber-400' : 'text-gray-500'} />
            Skill odds on hover <span className="ml-auto text-[10px] text-gray-500">{skillOddsHover ? 'on' : 'off'}</span>
+        </button>
+        <button type="button" onClick={() => { tableOutlookPref.set(!tableOutlook); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={tableOutlook} title="On: each table on Spend Keys says how many of its draws you could use straight away. A Key still draws from the whole table.">
+           <Telescope size={13} className={tableOutlook ? 'text-amber-400' : 'text-gray-500'} />
+           Table outlook <span className="ml-auto text-[10px] text-gray-500">{tableOutlook ? 'on' : 'off'}</span>
+        </button>
+        <button type="button" onClick={() => { confirmSpendPref.set(!confirmSpend); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={confirmSpend} title="On: a Yes or No box comes up before a click spends a Key or rolls for one.">
+           <ShieldCheck size={13} className={confirmSpend ? 'text-amber-400' : 'text-gray-500'} />
+           Ask before Key clicks <span className="ml-auto text-[10px] text-gray-500">{confirmSpend ? 'on' : 'off'}</span>
+        </button>
+        <button type="button" onClick={() => { welcomeBackPref.set(!welcomeBack); }} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-gray-300 hover:bg-white/5 hover:text-white" role="menuitemcheckbox" aria-checked={welcomeBack} title="On: after 12 hours or more away, a short note says what your last session did.">
+           <History size={13} className={welcomeBack ? 'text-amber-400' : 'text-gray-500'} />
+           Welcome back note <span className="ml-auto text-[10px] text-gray-500">{welcomeBack ? 'on' : 'off'}</span>
         </button>
         <div role="separator" className="my-1 border-t border-white/10" />
         <OffDeviceCopyStatus />

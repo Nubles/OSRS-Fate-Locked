@@ -98,6 +98,7 @@ export const PET_SOURCES: Readonly<Record<number, PetSource>> = {
   502069: boss('Maggot King'),
   502070: boss('Mad Angel'),
   502071: other('Hunting Wyrmscraig Goats'),
+  502072: boss('The Fractured Archive', ['tfa', 'raids']),
 };
 
 /** The pet's picture on the OSRS Wiki, by its name (every pet's is there; petSources.test.ts lists them). */

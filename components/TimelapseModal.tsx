@@ -22,7 +22,8 @@ const TICK_MS = 350; // base event interval at 1x
 /** OSRS layout: the outcome word's colour on the parchment event box (chat colours). */
 const outcomeTone = (type: string): 'good' | 'bad' | undefined => {
   switch (type) {
-    case 'ROLL_OMNI': case 'PET': case 'ROLL_SUCCESS': case 'PITY': case 'UNLOCK': case 'LEVEL_UP': return 'good';
+    case 'ROLL_OMNI': case 'PET': case 'ROLL_SUCCESS': case 'PITY': case 'UNLOCK': case 'LEVEL_UP':
+    case 'ACHIEVEMENT': case 'XTREME_MILESTONE': return 'good';
     case 'ROLL_FAIL': return 'bad';
     default: return undefined;
   }
@@ -37,6 +38,10 @@ const typeTheme: Record<string, { bg: string; border: string; glow: string; tint
   UNLOCK:       { bg: 'bg-purple-950/70',   border: 'border-purple-400/60',   glow: 'shadow-[0_0_30px_rgba(167,139,250,0.4)]', tint: 'from-purple-500/20',  label: 'UNLOCK' },
   ALTAR:        { bg: 'bg-indigo-950/70',   border: 'border-indigo-400/60',   glow: 'shadow-[0_0_25px_rgba(129,140,248,0.3)]', tint: 'from-indigo-500/15',  label: 'RITUAL' },
   LEVEL_UP:     { bg: 'bg-teal-950/70',     border: 'border-teal-400/60',     glow: 'shadow-[0_0_25px_rgba(45,212,191,0.3)]',  tint: 'from-teal-500/15',    label: 'LEVEL UP' },
+  ACHIEVEMENT:  { bg: 'bg-yellow-950/70',   border: 'border-yellow-400/60',   glow: 'shadow-[0_0_25px_rgba(250,204,21,0.3)]',  tint: 'from-yellow-500/15',  label: 'ACHIEVEMENT' },
+  XTREME_MILESTONE: { bg: 'bg-amber-950/70', border: 'border-amber-400/60',   glow: 'shadow-[0_0_25px_rgba(251,191,36,0.3)]',  tint: 'from-amber-500/15',   label: 'MILESTONE' },
+  FATE:         { bg: 'bg-violet-950/70',   border: 'border-violet-400/50',   glow: '',                                        tint: 'from-violet-500/10',  label: 'FATE' },
+  COMPENSATION: { bg: 'bg-cyan-950/70',     border: 'border-cyan-400/50',     glow: '',                                        tint: 'from-cyan-500/10',    label: 'COMPENSATION' },
   ROLL:         { bg: 'bg-gray-900/70',     border: 'border-white/20',        glow: '',                                        tint: 'from-white/5',        label: 'ROLL' },
 };
 

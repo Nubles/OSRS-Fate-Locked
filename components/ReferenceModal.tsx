@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { X, ArrowUp, Lock, HelpCircle, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { X, ArrowUp, Lock, HelpCircle, ChevronDown } from 'lucide-react';
 import { Shield, Package, BookOpen, Dices, Sparkles, Map, Zap, Scroll, Skull, Activity, Key, Dna, Coins, GraduationCap, Compass } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -135,10 +135,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'core', label: 'Core Rules', icon: BookOpen },
     { id: 'economy', label: 'Key Economy', icon: Coins },
-    { id: 'modes', label: 'Game Modes', icon: SlidersHorizontal },
+    { id: 'modes', label: 'Game Modes', icon: Compass },
     { id: 'drops', label: 'RNG & Drop Rates', icon: Dices },
     { id: 'altar', label: 'The Void Altar', icon: Zap },
-    { id: 'unlocks', label: 'Unlock Systems', icon: Lock },
+    { id: 'unlocks', label: 'Unlock Systems', icon: Key },
     { id: 'equipment', label: 'Equipment Tiers', icon: Shield },
     { id: 'storage', label: 'Storage', icon: Package },
   ];

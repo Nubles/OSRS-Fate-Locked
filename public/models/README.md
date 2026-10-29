@@ -22,7 +22,10 @@ mapped explicitly in `MODEL_REGISTRY` in `data/entityModels.ts`.
 ## Batch export from a cache (recommended)
 
 `scripts/export-models.mjs` generates these files for you from a local OSRS cache
-using the open-source [osrscachereader](https://github.com/Dezinater/osrscachereader):
+using the open-source [osrscachereader](https://github.com/Dezinater/osrscachereader). It
+deepens each model's colours from the exporter's brightest setting as it writes
+them (`scripts/model-colours.mjs`); a model dropped in by hand needs
+`node scripts/model-colours.mjs` once, or `scripts/model-colours.test.ts` fails. To export:
 
 ```bash
 npm install -D osrscachereader                 # cache reader (pulls `canvas`)

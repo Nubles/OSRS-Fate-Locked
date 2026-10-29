@@ -14,11 +14,15 @@ import { QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { LogEntry, UnlockState } from '../types';
 import { completedCAPoints, earnedCATiers } from './caProgress';
+import { ALL_CHUNKS } from './chunkAdjacency';
+import { chunkMapBit, MAP_GRID } from './chunkMapBits';
+import { chunkUnlocked } from './chunkLocations';
 import { simpleHash } from './integrity';
 import { runProgress } from './runProgress';
 import { tableDisplayName } from './tableDisplay';
 
 export const MAX_RECENT_UNLOCKS = 5;
+export { MAP_GRID };
 
 export interface ProgressSnapshot {
   v: 1;
@@ -39,6 +43,24 @@ export interface ProgressSnapshot {
   ca: { points: number; tier: string | null };
   /** The newest unlocks, newest first. */
   recent: { text: string; at: number }[];
+  /**
+   * The land chunks the run owns (utils/chunkMapBits.ts), for the public
+   * Adventurer's Log's map. Sent only when the log is public.
+   */
+  map?: string;
+  /** The player made this summary a public Adventurer's Log (#/log/<id>). */
+  public?: true;
+}
+
+/** The `map` field for the chunks `owned` says the run has. */
+export function encodeChunkMap(owned: (cx: number, cy: number) => boolean): string {
+  const bytes = new Uint8Array(Math.ceil((MAP_GRID.cols * MAP_GRID.rows) / 8));
+  for (const { cx, cy } of ALL_CHUNKS) {
+    const bit = chunkMapBit(cx, cy);
+    if (bit < 0 || !owned(cx, cy)) continue;
+    bytes[bit >> 3] |= 1 << (bit & 7);
+  }
+  return btoa(String.fromCharCode(...bytes));
 }
 
 export interface ProgressSource {
@@ -47,6 +69,8 @@ export interface ProgressSource {
   gameModeId?: string;
   customMode?: GameModeRules;
   linkedAccount?: string;
+  /** Publish as a public Adventurer's Log, map included. */
+  publicLog?: boolean;
 }
 
 /**
@@ -67,7 +91,7 @@ const unlockText = (entry: LogEntry): string => {
 };
 
 export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot {
-  const { unlocks, history, gameModeId, customMode, linkedAccount } = source;
+  const { unlocks, history, gameModeId, customMode, linkedAccount, publicLog } = source;
   const progress = runProgress(unlocks, gameModeId);
   const diaryIds = new Set(ALL_DIARY_TASKS.map(task => task.id));
   const caPoints = completedCAPoints(unlocks.completedTasks);
@@ -97,5 +121,11 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
     },
     ca: { points: caPoints, tier: caTiers.length > 0 ? caTiers[caTiers.length - 1] : null },
     recent,
+    // The relay stores fields in this order too (validProgressSnapshot), so an
+    // unchanged summary compares equal to the stored one.
+    ...(publicLog ? {
+      map: encodeChunkMap((cx, cy) => chunkUnlocked(cx, cy, unlocks, gameModeId)),
+      public: true as const,
+    } : {}),
   };
 }

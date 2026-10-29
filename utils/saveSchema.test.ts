@@ -1377,3 +1377,24 @@ describe('hidden run salt and restore count (critique GP-4)', () => {
     expect(expectAccepted(validateAndMigrateSave(candidate({ restoreCount: 3 }), defaultsFixture())).state.restoreCount).toBe(3);
   });
 });
+
+describe('the hope list and the kill baseline (big ideas, October 2026)', () => {
+  it('keeps hopes, drops an empty list, trims to the newest 50 and refuses junk', () => {
+    const hopes = ['Bosses|Vorkath', 'Regions|Morytania'];
+    expect(expectAccepted(validateAndMigrateSave(candidate({ hopes }), defaultsFixture())).state.hopes).toEqual(hopes);
+    expect(expectAccepted(validateAndMigrateSave(candidate({ hopes: [] }), defaultsFixture())).state.hopes).toBeUndefined();
+    const many = Array.from({ length: 60 }, (_, i) => `Bosses|Boss ${i}`);
+    expect(expectAccepted(validateAndMigrateSave(candidate({ hopes: many }), defaultsFixture())).state.hopes).toEqual(many.slice(-50));
+    expectRejected(candidate({ hopes: 'Bosses|Vorkath' }), 'invalid_field', 'hopes');
+    expectRejected(candidate({ hopes: [7] }), 'invalid_field', 'hopes[0]');
+  });
+
+  it('keeps a kill baseline and refuses a broken one', () => {
+    const syncScores = { account: 'Whim', takenAt: 1_790_000_000_000, scores: { vorkath: 12, clue_scrolls_easy: 0, nex: null } };
+    expect(expectAccepted(validateAndMigrateSave(candidate({ syncScores }), defaultsFixture())).state.syncScores).toEqual(syncScores);
+    expectRejected(candidate({ syncScores: { ...syncScores, scores: { vorkath: -1 } } }), 'invalid_number', 'syncScores.scores.vorkath');
+    expectRejected(candidate({ syncScores: { ...syncScores, scores: { 'Not a metric': 1 } } }), 'invalid_field', 'syncScores.scores.Not a metric');
+    expectRejected(candidate({ syncScores: { account: 'Whim', scores: {} } }), 'invalid_number', 'syncScores.takenAt');
+    expectRejected(candidate({ syncScores: { ...syncScores, extra: 1 } }), 'invalid_field', 'syncScores.extra');
+  });
+});

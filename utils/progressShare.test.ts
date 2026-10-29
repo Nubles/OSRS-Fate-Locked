@@ -40,6 +40,13 @@ describe('progress share record', () => {
     expect(readProgressShare('FATE_PROFILE_a')).toBeNull();
   });
 
+  it('keeps the public Adventurer\'s Log choice only when it is on', () => {
+    writeProgressShare('FATE_PROFILE_a', { ...record, publicLog: true });
+    expect(readProgressShare('FATE_PROFILE_a')).toEqual({ ...record, publicLog: true });
+    localStorage.setItem('FATE_PROFILE_a__progressShare', JSON.stringify({ ...record, publicLog: 'yes' }));
+    expect(readProgressShare('FATE_PROFILE_a')).toEqual(record);
+  });
+
   it('ignores a malformed record', () => {
     localStorage.setItem('FATE_PROFILE_a__progressShare', JSON.stringify({ id: 'short', token: record.token, enabled: true }));
     expect(readProgressShare('FATE_PROFILE_a')).toBeNull();

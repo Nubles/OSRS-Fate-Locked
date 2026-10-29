@@ -38,11 +38,13 @@
  * Built directly against osrscachereader@1.1.x's exported API
  * (RSCache/IndexType/ConfigType/GLTFExporter/ModelGroup) — the same flow its own
  * GLTFModelBuilder uses. GLTFExporter writes self-contained .gltf (model-viewer
- * loads .gltf fine), so output is /public/models/<slug>.gltf.
+ * loads .gltf fine), so output is /public/models/<slug>.gltf. Each file's colours
+ * are deepened from the exporter's brightest setting (scripts/model-colours.mjs).
  */
 import { readFileSync, existsSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
+import { deepenModelColours } from './model-colours.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = path.join(ROOT, 'public', 'models');
@@ -247,7 +249,7 @@ async function exportNpc(id, slug, pet = false, { dropJunk = false, outDir, stil
   }
 
   const gltf = pruneMorphTargets(exporter.export());
-  writeFileSync(path.join(outDir ?? (pet ? PETS_DIR : OUT_DIR), `${slug}.gltf`), gltf);
+  writeFileSync(path.join(outDir ?? (pet ? PETS_DIR : OUT_DIR), `${slug}.gltf`), deepenModelColours(gltf));
 }
 
 // addSequence adds a morph target for every frame in the animation's frame archive,
@@ -497,7 +499,7 @@ async function exportUnlocks() {
         catch { still = true; }
       }
     }
-    writeFileSync(path.join(OUT_DIR, `${slug}.gltf`), pruneMorphTargets(exporter.export()));
+    writeFileSync(path.join(OUT_DIR, `${slug}.gltf`), deepenModelColours(pruneMorphTargets(exporter.export())));
     return { faces: merged.faceCount - ground, skipped, ground, anim, still };
   }
 

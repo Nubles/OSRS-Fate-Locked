@@ -1,3 +1,4 @@
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useId, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { formatLevelBatchSummary, planSetLevel } from '../utils/setLevelText';
@@ -35,10 +36,13 @@ export const SetLevelControl: React.FC<{ skill: string; variant: 'classic' | 'os
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!plan.ok) return;
-    const result = setSkillLevel(skill, plan.to);
-    if (!result) return;
-    setSummary(`${skill} ${result.from} to ${result.to}. ${formatLevelBatchSummary(result)}.`);
-    setValue('');
+    const to = plan.to;
+    confirmThen(`Log ${skill} to level ${to} and roll for each level?`, () => {
+      const result = setSkillLevel(skill, to);
+      if (!result) return;
+      setSummary(`${skill} ${result.from} to ${result.to}. ${formatLevelBatchSummary(result)}.`);
+      setValue('');
+    });
   };
 
   const buttonLabel = plan.ok ? `Roll ${plan.count} level${plan.count === 1 ? '' : 's'}` : 'Roll levels';

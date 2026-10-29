@@ -1,7 +1,7 @@
 /**
  * Fate Locked online relay: the RuneLite profile (/r/), online backups (/b/),
- * shared progress for the Discord bot (/p/, /l/) and the web app's error
- * reports (/e). Every route id must have the exact shape its client makes,
+ * shared progress for the Discord bot (/p/, /l/), public Adventurer's Logs
+ * (GET /p/), the clan feed (/clan) and the web app's error reports (/e). Every route id must have the exact shape its client makes,
  * and writes are rate-limited per IP, before any KV access.
  */
 import {
@@ -26,8 +26,10 @@ import {
   newLinkCode,
   feedForPublish,
   normalizeLinkCode,
+  publicProgress,
   validProgressSnapshot,
 } from './progress.js';
+import { CLAN_FEED_PATH, clanFeed, recentClanFeed, rememberClanFeed } from './clan.js';
 import { MAX_ERROR_BYTES, errorReport, firstInWindow, forwardError } from './errors.js';
 
 /**
@@ -51,6 +53,13 @@ const PROFILE_ROUTE = /^\/r\/([^/]*)$/;
 const BACKUP_ROUTE = /^\/b\/([^/]*)(\/previous)?$/;
 const PROGRESS_ROUTE = /^\/p\/([^/]*)(\/link-code)?$/;
 const DISCORD_LINK_ROUTE = /^\/l\/([^/]*)$/;
+const CLAN_ROUTE = '/clan';
+/**
+ * Public reads (an Adventurer's Log, the clan feed) are answered from the
+ * edge cache for this long, so a link passed round a clan chat costs one KV
+ * read or one bot call a minute, not one per visitor.
+ */
+const PUBLIC_READ_MAX_AGE_SECONDS = 60;
 // An online backup's write token: 32 bytes in base64url, derived from the
 // player's backup code in the browser. The relay never sees the code or the key.
 const BACKUP_TOKEN_RE = /^Bearer ([A-Za-z0-9_-]{43})$/;
@@ -293,13 +302,55 @@ async function backupRoute(request, env, headers, id, previous) {
   return json({ updatedAt: now }, headers);
 }
 
+/** Headers for a public read: any origin, and cacheable for a minute. */
+const publicHeaders = headers => ({
+  ...headers,
+  'Access-Control-Allow-Origin': '*',
+  'Cache-Control': `public, max-age=${PUBLIC_READ_MAX_AGE_SECONDS}`,
+});
+
+/**
+ * Answer a public GET from the edge cache when it holds one, else from
+ * `read`, keeping a 200 or 404 for the next visitor. Outside Workers (tests,
+ * local development) there is no cache and every request reads.
+ */
+async function cachedPublicRead(request, ctx, read) {
+  const cache = typeof caches !== 'undefined' && caches?.default ? caches.default : null;
+  const key = new Request(new URL(request.url).toString(), { method: 'GET' });
+  if (cache) {
+    const hit = await cache.match(key);
+    if (hit) return hit;
+  }
+  const response = await read();
+  if (cache && (response.status === 200 || response.status === 404)) {
+    await inBackground(ctx, cache.put(key, response.clone()).catch(() => {}));
+  }
+  return response;
+}
+
+/**
+ * A run's Adventurer's Log: its shared summary, readable by anyone, but only
+ * when the player chose to make it public. A private run and a missing one
+ * both answer 404.
+ */
+async function publicProgressRoute(request, env, headers, id, ctx) {
+  return cachedPublicRead(request, ctx, async () => {
+    const { value, metadata } = await env.RELAY.getWithMetadata(`p:${id}`);
+    const snapshot = value === null ? null : publicProgress(value);
+    if (!snapshot) return json({}, publicHeaders(headers), 404);
+    return json({ snapshot, updatedAt: metadata?.updatedAt ?? null }, publicHeaders(headers));
+  });
+}
+
 /**
  * Shared progress, written by the player's browser. The first publish claims the id with
  * its write token (kept as a SHA-256 hash in the record's metadata); later publishes, the
- * delete and link codes need the same token. Nothing here is readable without the bot's
- * secret: the bot reads a run only through a Discord link the player made with a code.
+ * delete and link codes need the same token. A run is readable without the bot's secret
+ * only when its player made it a public Adventurer's Log; otherwise the bot reads a run
+ * only through a Discord link the player made with a code.
  */
 async function progressRoute(request, env, headers, id, linkCode, ctx) {
+  if (request.method === 'GET' && !linkCode) return publicProgressRoute(request, env, headers, id, ctx);
   if (request.method !== 'POST' && request.method !== 'DELETE') {
     return new Response('method not allowed', { status: 405, headers });
   }
@@ -418,6 +469,43 @@ async function notifyDiscordBot(env, runId, newUnlocks, snapshot, updatedAt) {
   } catch (error) {
     console.error('discord bot notify failed', error?.name ?? 'error');
   }
+}
+
+const CLAN_FEED_TIMEOUT_MS = 5000;
+
+/**
+ * The clan feed: the latest unlocks the Discord bot posted in #live-unlocks,
+ * for the tracker's Clan chat tab. The relay asks the bot (on the origin of
+ * DISCORD_EVENTS_URL, with the bot's secret) and passes on only the fields
+ * clanFeed keeps. It writes nothing to KV, and the edge cache (or, on a
+ * workers.dev address, the instance's memory) means the bot is asked at most
+ * about once a minute.
+ */
+async function clanRoute(request, env, headers, ctx) {
+  if (request.method !== 'GET') return new Response('method not allowed', { status: 405, headers });
+  const url = env.DISCORD_EVENTS_URL;
+  const secret = env.PROGRESS_BOT_SECRET;
+  if (typeof url !== 'string' || !url.startsWith('https://') || typeof secret !== 'string' || secret.length < 32) {
+    return new Response('clan feed unavailable', { status: 503, headers });
+  }
+  return cachedPublicRead(request, ctx, async () => {
+    const recent = recentClanFeed();
+    if (recent) return json({ entries: recent }, publicHeaders(headers));
+    let body = null;
+    try {
+      const response = await fetch(`${new URL(url).origin}${CLAN_FEED_PATH}`, {
+        headers: { Authorization: `Bearer ${secret}` },
+        signal: AbortSignal.timeout(CLAN_FEED_TIMEOUT_MS),
+      });
+      body = response.ok ? await response.json() : null;
+    } catch (error) {
+      console.error('clan feed failed', error?.name ?? 'error');
+    }
+    const entries = body === null ? null : clanFeed(body);
+    if (entries === null) return new Response('clan feed unavailable', { status: 502, headers });
+    rememberClanFeed(entries);
+    return json({ entries }, publicHeaders(headers));
+  });
 }
 
 /** Whether the request carries the Discord bot's secret. Unset, nothing does. */
@@ -578,6 +666,7 @@ const routes = {
     if (request.method === 'OPTIONS') return new Response(null, { headers });
 
     if (url.pathname === '/e') return errorRoute(request, env, headers, ctx);
+    if (url.pathname === CLAN_ROUTE) return clanRoute(request, env, headers, ctx);
 
     const discordLink = url.pathname.match(DISCORD_LINK_ROUTE);
     if (discordLink) {

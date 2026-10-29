@@ -9,12 +9,19 @@ import { ModalFallback } from '../LoadingFallback';
 import { useOsrsNav } from '../../utils/osrsNav';
 import { OsrsLevelUp, levelUpMessage, unlockCostType, type LevelUpMessage } from './OsrsLevelUp';
 import { useOsrsChatNotices } from './OsrsShellChatNotices';
+import { relaySync } from '../../services/relaySync';
+import { clanBroadcastsPref } from '../../utils/viewerPrefs';
+import { CLAN_POLL_MS, CLAN_TAG, clanLines, fetchClanFeed, type ClanEntry } from '../../utils/clanFeed';
 import './osrs-shell.css';
 
 const TimelapseModal = lazyWithRetry(() => import('../TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
-/** The History panel's filters, as OSRS chat tabs ("Game" is its level-up filter). */
-type ChatTab = 'All' | 'Game' | 'Rolls' | 'Unlocks' | 'Rituals';
+/**
+ * The History panel's filters, as OSRS chat tabs ("Game" is its level-up
+ * filter), and Clan: other players' unlocks from the Fate Locked Discord
+ * (utils/clanFeed.ts), shown while Settings > Clan broadcasts is on.
+ */
+type ChatTab = 'All' | 'Game' | 'Rolls' | 'Unlocks' | 'Rituals' | 'Clan';
 const TABS: ChatTab[] = ['All', 'Game', 'Rolls', 'Unlocks', 'Rituals'];
 const MATCH: Record<ChatTab, (entry: LogEntry) => boolean> = {
   All: () => true,
@@ -22,6 +29,55 @@ const MATCH: Record<ChatTab, (entry: LogEntry) => boolean> = {
   Rolls: isRollEntry,
   Unlocks: entry => entry.type === 'UNLOCK',
   Rituals: entry => entry.type === 'ALTAR',
+  Clan: () => false,
+};
+
+/** Clan chat colours: the channel's name in blue, its messages in dark red. */
+const CLAN_TAG_COLOR = '#0000ff';
+const CLAN_TEXT_COLOR = '#7f0000';
+
+/**
+ * The clan feed while the Clan tab is showing: fetched when it opens and
+ * every two minutes while it stays open. undefined while the first answer
+ * is on its way, null when the relay can't give one.
+ */
+const useClanFeed = (showing: boolean): ClanEntry[] | null | undefined => {
+  const [entries, setEntries] = useState<ClanEntry[] | null | undefined>(undefined);
+  useEffect(() => {
+    if (!showing) return;
+    let cancelled = false;
+    const load = async () => {
+      const fresh = await fetchClanFeed(relaySync.base());
+      // A failed refresh keeps the lines already shown.
+      if (!cancelled) setEntries(current => fresh ?? (current ?? null));
+    };
+    void load();
+    const timer = window.setInterval(load, CLAN_POLL_MS);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [showing]);
+  return entries;
+};
+
+const ClanLog: React.FC<{ entries: ClanEntry[] | null | undefined }> = ({ entries }) => {
+  const lines = useMemo(() => (entries ? clanLines(entries) : []), [entries]);
+  const info = (text: string) => <div className="osrs-chat-line" style={{ color: '#000080' }}>{text}</div>;
+  if (entries === undefined) return info('Joining the Fate Locked clan channel…');
+  if (entries === null) return info('The clan channel can\'t be reached right now. It will try again shortly.');
+  if (lines.length === 0) return info('No clan broadcasts yet. Link your run in Settings > Discord to share your unlocks here.');
+  return (
+    <>
+      {lines.map(line => (
+        <div
+          key={line.key}
+          className="osrs-chat-line"
+          title={`${new Date(line.at).toLocaleString()}: ${line.name}${line.mode ? ` (${line.mode})` : ''} ${line.text}`}
+        >
+          <span style={{ color: CLAN_TAG_COLOR }}>[{CLAN_TAG}]</span>{' '}
+          <span style={{ color: CLAN_TEXT_COLOR }}>{line.name} {line.text}</span>
+        </div>
+      ))}
+    </>
+  );
 };
 
 const MAX_LINES = 150;
@@ -76,7 +132,11 @@ const ChatLine: React.FC<{ entry: LogEntry }> = ({ entry }) => {
 export const OsrsChatbox: React.FC = () => {
   const { history, lastEvent, unlocks, linkedAccount } = useGame();
   const { activeProfileName } = useProfiles();
-  const [tab, setTab] = useState<ChatTab>('All');
+  const [pickedTab, setTab] = useState<ChatTab>('All');
+  const clanOn = clanBroadcastsPref.use();
+  // Turning Clan broadcasts off while its tab is showing goes back to All.
+  const tab: ChatTab = pickedTab === 'Clan' && !clanOn ? 'All' : pickedTab;
+  const tabs: ChatTab[] = clanOn ? [...TABS, 'Clan'] : TABS;
   const { screen, progressionWide } = useOsrsNav();
   const notices = useOsrsChatNotices();
   // Home keeps the saved open/closed choice. The wide Keys and Journal screens
@@ -144,9 +204,11 @@ export const OsrsChatbox: React.FC = () => {
   // Off home the screen draws its own unlock reveal, so a level-up message
   // waits for home instead of unfolding the chatbox over it.
   const bodyOpen = !collapsed || (!!levelUp && onHome);
+  const clan = useClanFeed(tab === 'Clan' && bodyOpen && !levelUp);
   const name = linkedAccount || activeProfileName;
   const note = tab === 'All'
     ? `Fate Timeline · ${history.length.toLocaleString()} ${history.length === 1 ? 'entry' : 'entries'}`
+    : tab === 'Clan' ? 'Clan · unlocks from the Fate Locked Discord'
     : `Fate Timeline · ${tab} only`;
 
   return (
@@ -158,9 +220,9 @@ export const OsrsChatbox: React.FC = () => {
               <OsrsLevelUp key={levelUp.id} message={levelUp.message} onContinue={dismissLevelUp} />
             ) : (
               <>
-                <div className="osrs-chat-log" role="log" aria-label={`Fate Timeline, ${tab}`}>
+                <div className="osrs-chat-log" role="log" aria-label={tab === 'Clan' ? 'Clan broadcasts' : `Fate Timeline, ${tab}`}>
                   <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 8px' }}>
-                    {lines.length === 0
+                    {tab === 'Clan' ? <ClanLog entries={clan} /> : lines.length === 0
                       ? <div className="osrs-chat-line" style={{ color: '#000080' }}>Welcome to Fate Locked. Your rolls, unlocks and rituals will show here.</div>
                       : lines.map(entry => <ChatLine key={entry.id} entry={entry} />)}
                     {notices.map(notice => (
@@ -179,7 +241,7 @@ export const OsrsChatbox: React.FC = () => {
           </div>
         )}
         <div role="tablist" aria-label="Chat filters" className={`osrs-chat-tabs${bodyOpen ? '' : ' is-collapsed'}`}>
-          {TABS.map(label => (
+          {tabs.map(label => (
             <button
               key={label}
               type="button"
@@ -187,7 +249,9 @@ export const OsrsChatbox: React.FC = () => {
               className="osrs-ctab"
               aria-selected={tab === label}
               aria-expanded={tab === label ? !collapsed : undefined}
-              title={tab === label ? (collapsed ? 'Show the chatbox' : 'Hide the chatbox') : `Show ${label === 'All' ? 'every entry' : `${label} only`}`}
+              title={tab === label ? (collapsed ? 'Show the chatbox' : 'Hide the chatbox')
+                : label === 'Clan' ? 'Show unlocks from other players in the Fate Locked Discord'
+                : `Show ${label === 'All' ? 'every entry' : `${label} only`}`}
               onClick={() => pickTab(label)}
             >
               {label}

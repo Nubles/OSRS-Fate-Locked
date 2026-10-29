@@ -5,7 +5,9 @@ import { SectionGuide } from '../SectionGuide';
 import { TIER_LABELS } from '../../utils/combatPower';
 import { canonicalTierFromName } from '../../utils/gearTiers';
 import { gearService } from '../../services/GearService';
-import { TIER_GEMS, gemSrc, gemColor, itemSrc, roman } from './OsrsDashGems';
+import { TIER_GEMS, gemColor, itemSrc, roman } from './OsrsDashGems';
+import { OsrsTierMark } from './OsrsTierMark';
+import { useTierMarks } from '../../utils/uiStyle';
 import { OsrsCharDoll, type DollSlot } from './OsrsCharDoll';
 import { BONUS_GROUPS, type GearItem } from '../../utils/gearStats';
 import { OsrsGearPicker, useWornItems, type GearStatus } from './OsrsCharGear';
@@ -61,7 +63,7 @@ export const useGearData = () => {
 };
 
 const slotExamine = (slot: string, tier: number, itemName?: string) =>
-  `${slot} slot${itemName ? `: ${itemName}` : ''}. ${tier > 0 ? `Tier ${tier} unlocked: up to ${TIER_LABELS[tier - 1]} gear.` : 'Locked: no tier unlocked yet.'}`;
+  `${slot} slot${itemName ? `: ${itemName}` : ''}. ${tier > 0 ? `Tier ${roman(tier)} unlocked: up to ${TIER_LABELS[tier - 1]} gear.` : 'Locked: no tier unlocked yet.'}`;
 
 const TierCells: React.FC<{ tier: number; target?: number }> = ({ tier, target = 0 }) => (
   <span className="osrs-dash-cells" aria-hidden="true">
@@ -83,7 +85,8 @@ const WornBonuses: React.FC<{ status: GearStatus }> = ({ status }) => {
       title={`Equipment Stats for what you wear (${items.length}/${EQUIPMENT_SLOTS.length} slots). Choose gear in the Gear view.`}>
       {BONUS_GROUPS.map((group) => (
         <div key={group.label} style={{ minWidth: 0 }}>
-          <h4>{group.label}</h4>
+          {/* "Attack bonus" etc.; the word "bonus" drops out when the panel is narrow. */}
+          <h4>{group.label.replace(/ bonus$/, '')}<span className="osrs-char-bonusword"> bonus</span></h4>
           <dl>
             {group.rows.map((row) => {
               const v = totals[row.key];
@@ -164,7 +167,7 @@ export const OsrsLabCompact: React.FC<PanelProps> = ({ view, onView, onUpgrade, 
     return {
       slot, itemId: id, imageFile: item?.imageFile, gem: id != null ? tier : ut, dim: id == null && ut === 0, selected: pickSlot === slot,
       label: id != null
-        ? `${slot}: ${item?.name ?? 'equipped item'}${item ? `, ${est ? 'Est. ' : ''}Tier ${tier}` : ''}. Choose ${slot}`
+        ? `${slot}: ${item?.name ?? 'equipped item'}${item ? `, ${est ? 'Est. ' : ''}Tier ${roman(tier)}` : ''}. Choose ${slot}`
         : `${slot}: empty, unlocked up to Tier ${ut}. Choose ${slot}`,
       examine: slotExamine(slot, ut, item?.name),
       onClick: () => onView({ mode: 'gear', slot }),
@@ -282,10 +285,11 @@ const SlotDetail: React.FC<{ slot: string; tier: number; specialKeys: number; on
   const isMaxed = tier >= EQUIPMENT_TIER_MAX;
   const nextTier = tier + 1;
   const canUpgrade = !isMaxed && specialKeys > 0;
+  const gems = useTierMarks() === 'gems';
   return (
     <section className="osrs-inner osrs-char-detail" aria-label={`${slot} details`}>
       <div className="osrs-sh osrs-char-detailhead">
-        <img className="osrs-px" src={gemSrc(Math.max(tier, 1))} alt="" aria-hidden="true" width={27} height={24} style={tier > 0 ? undefined : { filter: 'grayscale(1) brightness(.5)' }} />
+        {gems || tier > 0 ? <OsrsTierMark tier={Math.max(tier, 1)} size="row" look={tier > 0 ? 'on' : 'off'} framed /> : null}
         <span style={{ fontFamily: 'RSBold, sans-serif', color: '#fff' }}>{slot}</span>
         <span className="osrs-char-detailtier">
           <span style={{ color: tier > 0 ? gemColor(tier) : 'var(--osrs-muted, #8a7c66)' }}>Tier {tier > 0 ? roman(tier) : 0}</span>
@@ -297,30 +301,30 @@ const SlotDetail: React.FC<{ slot: string; tier: number; specialKeys: number; on
           const t = i + 1;
           const reached = tier >= t;
           return (
-            <span key={g.name} title={`Tier ${t} · ${TIER_LABELS[i]}`} className={t === nextTier ? 'is-next' : undefined}
+            <span key={g.name} title={`Tier ${roman(t)} · ${TIER_LABELS[i]}`} className={t === nextTier ? 'is-next' : undefined}
               style={{ background: reached ? g.color : undefined, color: reached ? '#fff' : undefined }}>
-              {t}
+              {roman(t)}
             </span>
           );
         })}
       </div>
       {isMaxed ? (
         <div className="osrs-sh osrs-char-detailnext" style={{ color: 'var(--osrs-yellow, #ff0)' }}>
-          Maxed: Tier {EQUIPMENT_TIER_MAX} ({TIER_LABELS[EQUIPMENT_TIER_MAX - 1]})
+          Maxed: Tier {roman(EQUIPMENT_TIER_MAX)} ({TIER_LABELS[EQUIPMENT_TIER_MAX - 1]})
         </div>
       ) : (
         <>
           <div className="osrs-sh osrs-char-detailnext">
-            <span className="osrs-char-detailnexttext">Next: <span style={{ color: '#fff' }}>Tier {nextTier}</span><span style={{ color: 'var(--osrs-orange, #ff981f)' }}> · {TIER_LABELS[nextTier - 1]}</span></span>
+            <span className="osrs-char-detailnexttext">Next: <span style={{ color: '#fff' }}>Tier {roman(nextTier)}</span><span style={{ color: 'var(--osrs-orange, #ff981f)' }}> · {TIER_LABELS[nextTier - 1]}</span></span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, color: 'var(--osrs-purple, #c77dff)' }} title="Cost: 1 Omni-Key">
               <img className="osrs-px" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} />1
             </span>
           </div>
           <div className="osrs-char-detailact">
             <button type="button" className="osrs-btn" style={{ color: canUpgrade ? 'var(--osrs-purple, #c77dff)' : undefined }} onClick={onUpgrade} disabled={!canUpgrade}
-              title={tier === 0 ? 'This slot is locked. Unlocking grants Tier 1.' : 'Each Omni-Key raises one slot by one tier.'}>
+              title={tier === 0 ? 'This slot is locked. Unlocking grants Tier I.' : 'Each Omni-Key raises one slot by one tier.'}>
               {!canUpgrade && <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="5" width="8" height="6" fill="currentColor" /><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>}
-              {canUpgrade ? `Upgrade to Tier ${nextTier}` : 'Need an Omni-Key'}
+              {canUpgrade ? `Upgrade to Tier ${roman(nextTier)}` : 'Need an Omni-Key'}
             </button>
             <span className="osrs-dash-muted-s" title={`You hold ${specialKeys} Omni-Key${specialKeys === 1 ? '' : 's'}. Each one raises one slot by one tier.`}>have {specialKeys}</span>
           </div>

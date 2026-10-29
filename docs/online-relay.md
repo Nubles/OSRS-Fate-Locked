@@ -257,7 +257,8 @@ near the limit.
 | Discord link (`l:<id>`, `ld:<run>`; deletes `lc:`, old links) | The bot's `/link` and `/unlink` | Once per link; `ld:` once more for a link made before it existed |
 | Deletes (`b:`, `p:`) | Turning backup or sharing off | Once |
 
-Error reports (`/e`) store nothing, and the rate limits count in Workers Rate
+Error reports (`/e`), public Adventurer's Log reads (`GET /p/<id>`) and the
+clan feed (`GET /clan`) store nothing, and the rate limits count in Workers Rate
 Limiting, not KV; nothing on the relay keeps a per-request counter in KV.
 
 Estimated writes for one active player-day (a 2-hour session with online
