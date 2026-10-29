@@ -25,7 +25,7 @@ const chunkMocks = vi.hoisted(() => ({
   reachability: vi.fn(() => ({ reachable: new Set() })),
 }));
 vi.mock('../services/ChunkContentService', () => ({
-  chunkContentService: { ready: false, ...chunkMocks },
+  chunkContentService: { ready: false, subscribe: () => () => {}, ...chunkMocks },
 }));
 vi.mock('../utils/chunkReach', () => ({ chunkReachability: chunkMocks.reachability }));
 beforeEach(() => vi.clearAllMocks());

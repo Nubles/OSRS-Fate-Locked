@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  simpleHash, hashEntry, ensureChain, verifyChain,
-  replayInvariants, computeRunId, buildVerifiedBundle, sha256Hex, auditHistory,
-} from './integrity';
+import { simpleHash, hashEntry, ensureChain, verifyChain, computeRunId, sha256Hex } from './integrity';
+import { replayInvariants, buildVerifiedBundle, auditHistory } from './runAudit';
 import { LogEntry } from '../types';
 import { resolveModeRules } from '../config/gameModes';
 
@@ -480,7 +478,7 @@ describe('replayInvariants', () => {
 
   it('audits a pity-off run against its own rules', () => {
     const fails = ensureChain(Array.from({ length: 30 }, () => fail({ meta: { fatePointsEarned: 2 } })));
-    expect(auditHistory(fails, resolveModeRules('hardcore')).verdict).toBe('verified');
+    expect(auditHistory(fails, resolveModeRules('hardcore')).verdict).toBe('intact');
   });
 
   it('flags roll values outside 0.1-100.0', () => {

@@ -215,7 +215,7 @@ const HistoryBoard: React.FC = () => {
     </button>
   );
   const timelapseBtn = (
-    <button type="button" className={wide ? 'osrs-btn ohist-big' : 'osrs-btn ohist-small'} onClick={() => setShowTimelapse(true)} title="Play back history as a verified timelapse">
+    <button type="button" className={wide ? 'osrs-btn ohist-big' : 'osrs-btn ohist-small'} onClick={() => setShowTimelapse(true)} title="Play back history as a timelapse">
       <span>Timelapse</span>{wide && <span className="sub">Play back</span>}
     </button>
   );

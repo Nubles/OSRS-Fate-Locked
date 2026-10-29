@@ -37,6 +37,25 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-29-share-card-and-sites',
+    title: 'A new share card, Fated sites and fixes',
+    date: '2026-10-29',
+    sections: {
+      added: [
+        'Share Run makes one new card with your map, Keys, quests, diary tasks, unlocked content, and every skill and gear slot with its tier.',
+        'Chunked beta: fate hides 16 sites in your fog, and every region but Misthalin starts sealed until your first chunk there. See Rules for what each does.',
+      ],
+      changed: [
+        "The run check now adds up your history against your Keys, Fate and unlocks. It's self-reported, and a run that doesn't add up says why.",
+        "Ava's attractor is now a tier 2 cape, so raising your Cape slot to 2 opens something.",
+        'The Codex and skill pages explain why gear tiers go by material, not level.',
+      ],
+      fixed: [
+        "The Journal's ready-quest count matches everywhere, diaries sort Easy to Elite, and diary progress counts tasks.",
+      ],
+    },
+  },
+  {
     id: '2026-10-29-orion-and-frost-dragons',
     title: 'Orion, and frost dragon tasks',
     date: '2026-10-29',

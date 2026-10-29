@@ -18,6 +18,7 @@ import {
   meetsSkillRequirement,
   type QuestEligibility,
   type QuestStatus,
+  questReadyFrom,
   questRequirementOptionLabel,
   withSkillGateQuests,
 } from '../utils/journalStatus';
@@ -107,8 +108,9 @@ export type QuestCardQuest = QuestData & {
     eligibility: QuestEligibility;
 };
 
-const questFilterStatus = (quest: QuestCardQuest): JournalStatus =>
-    quest.status === 'COMPLETED' ? 'COMPLETED' : quest.eligibility.eligible ? 'AVAILABLE' : 'LOCKED';
+/** The status filter's bucket. AVAILABLE is isQuestReady, as every Journal count reads it. */
+export const questFilterStatus = (quest: Pick<QuestCardQuest, 'status' | 'eligibility'>): JournalStatus =>
+    quest.status === 'COMPLETED' ? 'COMPLETED' : questReadyFrom(quest.eligibility) ? 'AVAILABLE' : 'LOCKED';
 
 interface QuestCardProps {
     quest: QuestCardQuest;
@@ -553,9 +555,9 @@ export const useQuestJournal = (externalSearch = '') => {
   // simulations on every keystroke while the player is searching.
   const showAdvisorStrip = advisorsEnabled && !searchTerm && filter === 'ALL' && activeRegion === 'ALL' && advisorMode;
   const rankedQuests = useMemo(
-    () => (showAdvisorStrip ? rankAvailableQuests(unlocks, gameModeId) : []),
+    () => (showAdvisorStrip ? rankAvailableQuests(unlocks, gameModeId, areaRoutes) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showAdvisorStrip, unlocks, gameModeId],
+    [showAdvisorStrip, unlocks, gameModeId, areaRoutes],
   );
 
   const { quests: mainQuests, miniquests } = splitJournalEntriesByKind(filteredQuests);

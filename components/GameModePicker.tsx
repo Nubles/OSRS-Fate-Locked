@@ -196,7 +196,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
             {seedLocked ? (
               <p className="text-[11px] text-gray-500">
                 {rngSeed
-                  ? 'This run is seeded — same seed + same decisions means the same fate, and every roll is verifiable.'
+                  ? 'This run is seeded — same seed + same decisions means the same fate.'
                   : 'This run is unseeded (classic randomness). Seeds can only be chosen before the first roll.'}
               </p>
             ) : (

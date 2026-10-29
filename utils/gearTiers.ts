@@ -89,7 +89,8 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/^red salamander$/, 6],
   [/^black salamander$/, 7],
   [/^tecu salamander$/, 8],
-  [/^ava's attractor$/, 3],
+  // The early ranged cape has no wear level; it is the Cape slot's one T2 step, below the god cloaks.
+  [/^ava's attractor$/, 2],
   [/^(?:ava's accumulator|accumulator max cape)$/, 5],
   [/^(?:ava's assembler|assembler max cape|masori assembler(?: max cape)?)$/, 7],
   [/^(?:blessed )?dizana's (?:quiver|(?:max )?cape)$/, 9],

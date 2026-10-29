@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import type { DiaryTier } from '../../data/diaryData';
+import { DIARY_TIER_ORDER, diaryAreaOf, type DiaryTier } from '../../data/diaryData';
 import { ALL_DIARY_TASKS, type DiaryTask } from '../../data/diaryTasks';
 import type { UnlockState } from '../../types';
 import type { AreaRoutes } from '../../utils/areaRoutes';
@@ -20,7 +20,7 @@ import { Legend, SkillIcon, WikiTable, plural, type WikiRow } from './OsrsJourna
  * DiaryLog's handlers.
  */
 
-const TIERS = ['Easy', 'Medium', 'Hard', 'Elite'] as const;
+const TIERS = DIARY_TIER_ORDER;
 const SHORT: Record<string, string> = { Easy: 'Easy', Medium: 'Med', Hard: 'Hard', Elite: 'Elite' };
 
 export type OsrsDiaryEntry = DiaryTier & { status: string; eligible: boolean };
@@ -58,7 +58,7 @@ interface TierView {
   complete: boolean;
 }
 
-const areaOf = (tierId: string): string => tierId.replace(/ (Easy|Medium|Hard|Elite)$/, '');
+const areaOf = diaryAreaOf;
 
 const toneOf = (view: TierView): string =>
   view.complete ? 'ojr-done' : view.done > 0 ? 'ojr-ready' : 'ojr-locked';

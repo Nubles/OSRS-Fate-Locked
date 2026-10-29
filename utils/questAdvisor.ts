@@ -11,7 +11,8 @@
  */
 
 import { QUEST_DATA } from '../data/questData';
-import { evaluateQuestEligibility } from './journalStatus';
+import { isQuestReady } from './journalStatus';
+import type { AreaRoutes } from './areaRoutes';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
 
 export interface RankedQuest {
@@ -38,13 +39,11 @@ export interface RankedQuest {
  *
  * @param unlocks  Current unlocks snapshot (same shape as GameContext unlocks)
  * @param gameModeId  Active mode used by canonical quest access checks
+ * @param areaRoutes  From useAreaRoutes: a quest no route reaches is not available
  */
-export function rankAvailableQuests(unlocks: any, gameModeId?: string): RankedQuest[] {
+export function rankAvailableQuests(unlocks: any, gameModeId?: string, areaRoutes?: AreaRoutes | null): RankedQuest[] {
   const allQuests = Object.values(QUEST_DATA);
-  const available = allQuests.filter(
-    quest => !unlocks.quests.includes(quest.id)
-      && evaluateQuestEligibility(quest, unlocks, gameModeId).eligible,
-  );
+  const available = allQuests.filter(quest => isQuestReady(quest, unlocks, gameModeId, areaRoutes));
   // Every candidate is simulated from the same snapshot, so its base
   // statuses are evaluated once and shared, as the Skill Advisor does.
   const context = prepareUnlockImpactContext(unlocks, gameModeId);

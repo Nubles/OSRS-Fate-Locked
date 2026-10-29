@@ -3,7 +3,7 @@ import { confirmThen } from '../utils/spendConfirm';
 import React, { useMemo, useState, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
-import { DIARY_DATA, DiaryTier } from '../data/diaryData';
+import { DIARY_DATA, DIARY_TIER_ORDER, DiaryTier, compareDiaryTiers } from '../data/diaryData';
 import { ALL_DIARY_TASKS, DiaryTask, type DiaryLocationRequirement } from '../data/diaryTasks';
 import { CheckCircle2, Lock, ChevronDown, CheckSquare, Square, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Map, Sparkles, BookOpen, MapPin, Flag, Sprout, Home, Skull } from './OsrsIcon';
@@ -11,6 +11,7 @@ import { WikiIcon } from './WikiIcon';
 import { SLOT_CONFIG } from '../data/assets';
 import { chunkForPlace, chunkUnlocked, chunkUnlockRequirement, showChunkOnMap } from '../utils/chunkLocations';
 import { diaryUnmet, isAlmostThere } from '../utils/journalProgress';
+import { diaryTaskProgress } from '../utils/diaryProgress';
 import { isAreaReachable } from '../utils/reachability';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -62,8 +63,28 @@ const placesToShow = (task: DiaryTask): DiaryLocationRequirement[] => {
 const unmetChoice = (blockers: readonly EligibilityBlocker[], label: string): AlternativeBlocker | undefined =>
   blockers.find((blocker): blocker is AlternativeBlocker => blocker.kind === 'alternative' && blocker.label === label);
 
+const TIER_PILL: Record<DiaryTier['tier'], string> = {
+  Easy: 'bg-green-900/40 text-green-300',
+  Medium: 'bg-blue-900/40 text-blue-300',
+  Hard: 'bg-red-900/40 text-red-300',
+  Elite: 'bg-purple-900/40 text-purple-300',
+};
+
 // Doable-now counting lives in utils/journalStatus (shared with the
 // insights band) — see countDoableTasks there.
+
+/**
+ * The Diary list's order ("By area", and the tie-break under "Closest
+ * first"): available first, then locked, then completed; within each, by
+ * area and then Easy, Medium, Hard, Elite.
+ */
+export const compareDiaryJournalOrder = (
+  a: Pick<DiaryTier, 'id' | 'tier'> & { status: string },
+  b: Pick<DiaryTier, 'id' | 'tier'> & { status: string },
+): number => {
+  const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
+  return score(a.status) - score(b.status) || compareDiaryTiers(a, b);
+};
 
 interface DiaryLogProps {
   searchTerm?: string;
@@ -150,11 +171,11 @@ export const useDiaryJournal = (externalSearch = '') => {
     return Object.values(DIARY_DATA).map(d => {
       const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId, areaRoutes);
       return { ...d, status: eligibility.status, eligible: eligibility.eligible };
-    }).sort((a, b) => {
-        const score = (s: string) => s === 'AVAILABLE' ? 0 : s.includes('LOCKED') ? 1 : 2;
-        return score(a.status) - score(b.status) || a.id.localeCompare(b.id);
-    });
+    }).sort(compareDiaryJournalOrder);
   }, [unlocks, gameModeId, areaRoutes]);
+
+  // Progress in tasks: a tier marked complete counts all its tasks.
+  const diaryProgress = useMemo(() => diaryTaskProgress(unlocks), [unlocks]);
 
   const filteredDiaries = diaries.filter(d => {
       const matchesRegion = filterRegion === 'ALL' || d.region === filterRegion;
@@ -227,7 +248,7 @@ export const useDiaryJournal = (externalSearch = '') => {
     filterRegion, setFilterRegion, expandedId, setExpandedId, filterStatus, setFilterStatus,
     filterTier, setFilterTier, sortMode, setSortMode, localSearch, setLocalSearch, highlightedId,
     skillPopover, setSkillPopover, searchTerm, focusCard, getStatus, getDiaryWikiLink,
-    diaries, filteredDiaries, regions, sortedDiaries, statusCounts, handleToggle, handleTaskToggle,
+    diaries, filteredDiaries, regions, sortedDiaries, statusCounts, diaryProgress, handleToggle, handleTaskToggle,
   };
 };
 
@@ -238,7 +259,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
     filterRegion, setFilterRegion, expandedId, setExpandedId, filterStatus, setFilterStatus,
     filterTier, setFilterTier, sortMode, setSortMode, localSearch, setLocalSearch, highlightedId,
     skillPopover, setSkillPopover, searchTerm, focusCard, getDiaryWikiLink,
-    regions, sortedDiaries, statusCounts, handleToggle, handleTaskToggle,
+    regions, sortedDiaries, statusCounts, diaryProgress, handleToggle, handleTaskToggle,
   } = useDiaryJournal(externalSearch);
 
   return (
@@ -253,17 +274,12 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
         status={filterStatus}
         onStatusChange={setFilterStatus}
         statusCounts={statusCounts}
-        completed={unlocks.diaries.length}
-        total={Object.keys(DIARY_DATA).length}
+        completed={diaryProgress.done}
+        total={diaryProgress.total}
         regions={regions}
         activeRegion={filterRegion}
         onRegionChange={setFilterRegion}
-        tiers={[
-          { id: 'Easy', colorClass: 'bg-green-900/40 text-green-300' },
-          { id: 'Medium', colorClass: 'bg-blue-900/40 text-blue-300' },
-          { id: 'Hard', colorClass: 'bg-red-900/40 text-red-300' },
-          { id: 'Elite', colorClass: 'bg-purple-900/40 text-purple-300' },
-        ]}
+        tiers={DIARY_TIER_ORDER.map(id => ({ id, colorClass: TIER_PILL[id] }))}
         activeTier={filterTier}
         onTierChange={setFilterTier}
         rightExtras={
@@ -313,7 +329,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
 
           const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === diary.id);
           const hasTasks = tasks.length > 0;
-          const tasksCompletedCount = tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
+          const tasksCompletedCount = isCompleted ? tasks.length : tasks.filter(t => unlocks.completedTasks.includes(t.id)).length;
 
           const allTasksDone = !hasTasks || tasksCompletedCount === tasks.length;
           const isActionable = isCompleted || allTasksDone;
@@ -326,7 +342,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
           const tierEligibility = evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes);
           const dUnmet = (isCompleted || isAvailable)
             ? []
-            : diaryUnmet(diary, unlocks, gameModeId);
+            : diaryUnmet(diary, unlocks, gameModeId, areaRoutes);
           const dTotalMet = tierEligibility.evidence.length;
           const dTotalReqs = dTotalMet + tierEligibility.blockers.length + tierEligibility.manualChecks.length;
           const dReqPct = dTotalReqs === 0 ? 100 : Math.round((dTotalMet / dTotalReqs) * 100);

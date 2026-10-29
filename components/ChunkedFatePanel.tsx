@@ -13,6 +13,10 @@ import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { tierBand } from '../utils/skillTiers';
 import { chunkContentService } from '../services/ChunkContentService';
 import { chunkedQuestRows } from './QuestDoabilityPanel';
+import { REGION_CHUNKS } from '../data/regionChunks';
+
+/** The regions a Chunked run can unseal. */
+const REGION_COUNT = Object.keys(REGION_CHUNKS).length;
 
 /** How many chunks the exploring list shows before "and N more". */
 const EXPLORE_SHOWN = 4;
@@ -87,7 +91,13 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
     ...(cursed > 0 ? [{ text: `Cursed: your next ${rolls(cursed)} ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`, bane: true }] : []),
     ...(clouded > 0 ? [{ text: `Clouded: your next ${clouded === 1 ? 'Key roll gives' : `${clouded} Key rolls give`} no Fate if ${clouded === 1 ? 'it fails' : 'they fail'}.`, bane: true }] : []),
     ...(fateLand?.tangled ? [{ text: "Tangled: Fate's Thread doesn't pull your next chunk.", bane: true }] : []),
+    ...((fateLand?.pull ?? 0) > 0 ? [{ text: `Waystone: your next ${fateLand!.pull === 1 ? 'Chunks draw leans' : `${fateLand!.pull} Chunks draws lean`} toward Fate's Thread.`, bane: false }] : []),
   ];
+  // Fated sites found and regions unsealed (utils/fateLand.ts).
+  const sitesHeld = Object.keys(fateLand?.sites ?? {}).filter(key => (unlocks.chunks ?? []).includes(key)).length;
+  const tally = fateLand?.sites && fateLand.seals
+    ? `Fated sites found: ${sitesHeld} of ${Object.keys(fateLand.sites).length}. Regions unsealed: ${Object.keys(fateLand.seals).length} of ${REGION_COUNT}.`
+    : null;
   const omensShown = omens.length > 0;
 
   if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0 && !threadText && gilded.length === 0 && !omensShown) return null;
@@ -137,8 +147,9 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
               <span className="t">Fate's Thread</span>
               {threadText && <span className="s">{threadText}</span>}
             </div>
-            {gilded.map(chunk => (
-              <div key={chunk} className="ofate-row">
+            {tally && <span className="s">{tally}</span>}
+            {gilded.map((chunk, i) => (
+              <div key={`${chunk}-${i}`} className="ofate-row">
                 <span className="ofate-name">{chunkPlaceLabel(chunk)}</span>
                 <span className="ofate-left">Gilded by fate: one free Key roll at {gildedChance}%.</span>
                 <button type="button" className="osrs-btn ofate-btn" disabled={!!pendingUnlock} onClick={e => rollGilded(chunk, e.clientX, e.clientY)}>Roll</button>
@@ -210,11 +221,12 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
           <div>
             <h3 className="text-sm font-bold uppercase tracking-widest text-yellow-300">Fate's Thread</h3>
             {threadText && <p className="text-[11px] font-mono leading-snug text-yellow-200/70">{threadText}</p>}
+            {tally && <p className="text-[11px] font-mono leading-snug text-yellow-200/70">{tally}</p>}
           </div>
           {gilded.length > 0 && (
             <ul className="grid gap-1.5">
-              {gilded.map(chunk => (
-                <li key={chunk} className="flex items-center justify-between gap-3 rounded border border-white/10 bg-black/30 px-3 py-2">
+              {gilded.map((chunk, i) => (
+                <li key={`${chunk}-${i}`} className="flex items-center justify-between gap-3 rounded border border-white/10 bg-black/30 px-3 py-2">
                   <span className="text-xs text-gray-200 min-w-0"><b className="text-yellow-200">{chunkPlaceLabel(chunk)}</b> is Gilded by fate: one free Key roll at {gildedChance}%.</span>
                   <button
                     type="button"

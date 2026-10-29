@@ -1,607 +1,270 @@
-
-import React, { useRef, useState, useMemo, useEffect } from 'react';
-import { X, Copy, Download, Calendar } from 'lucide-react';
-import { Key, Trophy, Map, Shield, Sparkles, Skull, Crown, Activity, Zap, Home, Store, Gamepad2, Package, Dna, Star, Landmark } from './OsrsIcon';
-import { WikiIcon } from './WikiIcon';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Copy, Download, Image as ImageIcon, X } from 'lucide-react';
 import { useGame } from '../context/GameContext';
+import { useProfiles } from '../context/ProfileContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
-import { RunCardModal } from './RunCard';
 import { SectionGuide } from './SectionGuide';
 import { getGameMode } from '../config/gameModes';
 import { showToast } from '../utils/toast';
-import { EQUIPMENT_SLOTS, SKILLS_LIST, REGION_GROUPS, SLOT_CONFIG } from '../constants';
-import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
-import { isAreaReachable } from '../utils/reachability';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { BANK_IDS } from '../data/banks';
 import { completionPercent } from '../utils/completion';
-import { chunkRegionMastery, chunkTotals } from '../utils/runProgress';
-import { computeRunId } from '../utils/integrity';
-import { restoredLabel } from '../utils/restoreCount';
+import { chunkTotals } from '../utils/runProgress';
+import { buildShareCardStats } from '../utils/shareCard';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
+import { RS_BOLD, RS_FONT, RS_SMALL, loadRitualFonts } from './rituals/ritualAssets';
+import { CARD_H, CARD_W, describeShareCard, drawShareCard, type ShareCardStyle } from './ShareCardCanvas';
 
-interface ShareModalProps {
-  onClose: () => void;
-}
+/** Per-viewer choices for the card, kept outside the save. */
+const STYLE_KEY = 'fate_share_card_style_v1';
+const ZOOM_KEY = 'fate_share_card_zoom_v1';
 
-type CardTheme = 'OSRS' | 'VOID' | 'GILDED' | 'IRON' | 'BLOOD' | 'NATURE';
-const CLASSIC_THEMES: CardTheme[] = ['VOID', 'GILDED', 'IRON', 'BLOOD', 'NATURE'];
-/** The OSRS layout adds a stone-window card (osrs-windows-b.css) and opens on it. */
-const OSRS_THEMES: CardTheme[] = ['OSRS', ...CLASSIC_THEMES];
-const THEME_LABEL: Record<CardTheme, string> = { OSRS: 'OSRS', VOID: 'Void', GILDED: 'Gilded', IRON: 'Iron', BLOOD: 'Blood', NATURE: 'Nature' };
+const readChoice = (key: string): string | null => {
+  try { return localStorage.getItem(key); } catch { return null; }
+};
+const writeChoice = (key: string, value: string) => {
+  try { localStorage.setItem(key, value); } catch { /* storage blocked: the choice lasts this visit */ }
+};
 
-const TIER_COLORS = [
-  'bg-[#292524]', // T1 Stone
-  'bg-[#7c2d12]', // T2 Bronze
-  'bg-[#52525b]', // T3 Iron
-  'bg-[#94a3b8]', // T4 Steel
-  'bg-[#047857]', // T5 Adamant
-  'bg-[#0891b2]', // T6 Rune
-  'bg-[#b91c1c]', // T7 Dragon
-  'bg-[#7e22ce]', // T8 Ancient
-  'bg-[#c026d3]', // T9 Crystal
-  'bg-[#facc15]', // T10 Gilded
+const STYLES: { id: ShareCardStyle; label: string }[] = [
+  { id: 'osrs', label: 'OSRS' },
+  { id: 'tracker', label: 'Tracker' },
 ];
 
-const StatsShareCard: React.FC<ShareModalProps & { embedded?: boolean }> = ({ onClose, embedded }) => {
-  const gameState = useGame();
-  const activeMode = getGameMode(gameState.gameModeId);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef, !embedded);
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
+export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const game = useGame();
+  const { activeProfileName } = useProfiles();
   const osrs = useIsOsrsUi();
-  const [theme, setTheme] = useState<CardTheme>(osrs ? 'OSRS' : 'VOID');
-  const osrsCard = theme === 'OSRS';
+  const { unlocks, history, gameModeId, customMode, linkedAccount } = game;
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useFocusTrap(dialogRef);
+  useEscapeKey(onClose, true);
 
-  // --- Stats Calculation ---
-  const { unlocks, gameModeId, customMode } = gameState;
-  const isChunked = gameModeId === 'chunked';
-  // Chunked mode has no unlocks.regions — its "territory unlocked" stat is
-  // the chunk count every screen shows (start chunk included).
-  const totalRegions = isChunked ? chunkTotals(unlocks).unlocked : visibleAreaUnlocks(unlocks.regions).length;
-  const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
-  const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
+  const [style, setStyle] = useState<ShareCardStyle>(() => (readChoice(STYLE_KEY) === 'tracker' ? 'tracker' : 'osrs'));
+  const [zoom, setZoom] = useState(() => readChoice(ZOOM_KEY) !== 'off');
+  const [drawn, setDrawn] = useState(false);
+  const [drawError, setDrawError] = useState(false);
+  const [redraw, setRedraw] = useState(0);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
 
-  const progressPercent = completionPercent(unlocks, gameModeId, customMode);
-  const runId = useMemo(() => computeRunId(gameState.history ?? []), [gameState.history]);
-  const restored = restoredLabel(gameState.restoreCount);
+  const stats = useMemo(() => buildShareCardStats({
+    unlocks, history, gameModeId, customMode, linkedAccount,
+    profileName: activeProfileName,
+    keys: game.keys, specialKeys: game.specialKeys, chaosKeys: game.chaosKeys, fatePoints: game.fatePoints,
+    restoreCount: game.restoreCount,
+    now: Date.now(),
+  }), [unlocks, history, gameModeId, customMode, linkedAccount, activeProfileName,
+    game.keys, game.specialKeys, game.chaosKeys, game.fatePoints, game.restoreCount]);
 
-  // Region Mastery. Chunked counts the chunks owned in each map region
-  // (Misthalin included); other modes count the named areas reached.
-  const regionMastery = isChunked ? chunkRegionMastery(unlocks) : Object.entries(REGION_GROUPS).map(([group, areas]) => {
-      const unlockedCount = areas.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
-      return { group, count: unlockedCount, total: areas.length, percent: unlockedCount / areas.length };
-  }).filter(r => r.count > 0).sort((a, b) => b.percent - a.percent);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    let cancelled = false;
+    setDrawn(false);
+    setDrawError(false);
+    (async () => {
+      await loadRitualFonts(3000);
+      if (cancelled) return;
+      // Draw off to the side, then copy in, so a half-drawn card never shows.
+      const work = document.createElement('canvas');
+      await drawShareCard(work, stats, { style, zoom, fonts: { plain: RS_FONT, bold: RS_BOLD, small: RS_SMALL } });
+      if (cancelled) return;
+      canvas.width = work.width;
+      canvas.height = work.height;
+      canvas.getContext('2d')?.drawImage(work, 0, 0);
+      setDrawn(true);
+    })().catch(() => { if (!cancelled) setDrawError(true); });
+    return () => { cancelled = true; };
+  }, [stats, style, zoom, redraw]);
 
-  // Counts
-  const bossCount = unlocks.bosses.length;
-  const minigameCount = unlocks.minigames.length;
-  const arcanaCount = unlocks.arcana.length;
-  const pohCount = unlocks.housing.length;
+  const pickStyle = (next: ShareCardStyle) => { setStyle(next); writeChoice(STYLE_KEY, next); };
+  const toggleZoom = () => setZoom(z => { writeChoice(ZOOM_KEY, z ? 'off' : 'on'); return !z; });
 
-  // --- Theme Styles ---
-  const getThemeStyles = () => {
-    switch (theme) {
-      case 'OSRS':
-        // Utility classes defined in osrs-windows-b.css (OSRS layout only).
-        return {
-          bg: 'owb-c-bg',
-          border: 'owb-c-border',
-          accent: 'owb-c-accent',
-          sub: 'owb-c-sub',
-          panel: 'owb-c-panel',
-          gradient: '',
-          deco: 'owb-c-deco',
-          bar: 'owb-c-bar'
-        };
-      case 'GILDED':
-        return {
-          bg: 'bg-[#1a1814]',
-          border: 'border-[#854d0e]',
-          accent: 'text-yellow-500',
-          sub: 'text-yellow-200/60',
-          panel: 'bg-[#2a2620]',
-          gradient: 'from-yellow-900/40 via-[#1a1814] to-black',
-          deco: 'border-yellow-500/20',
-          bar: 'bg-yellow-500'
-        };
-      case 'IRON':
-        return {
-          bg: 'bg-[#1a1a1a]',
-          border: 'border-gray-500',
-          accent: 'text-gray-300',
-          sub: 'text-gray-500',
-          panel: 'bg-[#262626]',
-          gradient: 'from-gray-800/40 via-[#1a1a1a] to-black',
-          deco: 'border-gray-500/20',
-          bar: 'bg-gray-400'
-        };
-      case 'BLOOD':
-        return {
-          bg: 'bg-[#1a0a0a]',
-          border: 'border-red-900',
-          accent: 'text-red-500',
-          sub: 'text-red-200/60',
-          panel: 'bg-[#2a1010]',
-          gradient: 'from-red-900/40 via-[#1a0a0a] to-black',
-          deco: 'border-red-500/20',
-          bar: 'bg-red-600'
-        };
-      case 'NATURE':
-        return {
-          bg: 'bg-[#0f1a10]',
-          border: 'border-emerald-800',
-          accent: 'text-emerald-400',
-          sub: 'text-emerald-200/50',
-          panel: 'bg-[#142515]',
-          gradient: 'from-emerald-900/40 via-[#0f1a10] to-black',
-          deco: 'border-emerald-500/20',
-          bar: 'bg-emerald-500'
-        };
-      case 'VOID':
-      default:
-        return {
-          bg: 'bg-[#0f0f13]',
-          border: 'border-purple-900',
-          accent: 'text-purple-400',
-          sub: 'text-purple-200/50',
-          panel: 'bg-[#18181b]',
-          gradient: 'from-purple-900/20 via-[#0f0f13] to-black',
-          deco: 'border-purple-500/20',
-          bar: 'bg-purple-500'
-        };
-    }
+  const fileName = `fate-locked-${stats.name.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase() || 'run'}-${new Date().toISOString().slice(0, 10)}.png`;
+
+  const download = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !drawn) return;
+    const link = document.createElement('a');
+    link.download = fileName;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
   };
 
-  const ts = getThemeStyles();
+  const copyImage = useCallback(async () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !drawn) return;
+    try {
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob || typeof ClipboardItem === 'undefined') throw new Error('Clipboard images unsupported');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('Card copied. Paste it into Discord or anywhere else.');
+    } catch {
+      showToast('This browser can’t copy images. Use Download PNG instead.');
+    }
+  }, [drawn]);
 
-  // --- Actions ---
+  // The copied text summary (Discord-friendly), unchanged from the old Stats card.
+  const isChunked = gameModeId === 'chunked';
   const generateTextSummary = () => {
-    return `**Fate Locked Ironman** (${activeMode.name} mode)
-Progression: ${progressPercent}% | Total Level: ${totalLevel}
-Keys: ${gameState.keys} | Omni: ${gameState.specialKeys} | Chaos: ${gameState.chaosKeys}
+    const totalRegions = isChunked ? chunkTotals(unlocks).unlocked : visibleAreaUnlocks(unlocks.regions).length;
+    const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
+    const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
+    return `**Fate Locked Ironman** (${getGameMode(gameModeId).name} mode)
+Progression: ${completionPercent(unlocks, gameModeId, customMode)}% | Total Level: ${totalLevel}
+Keys: ${game.keys} | Omni: ${game.specialKeys} | Chaos: ${game.chaosKeys}
 ${isChunked ? 'Chunks' : 'Areas'}: ${totalRegions} Unlocked
 Gear Tiers: ${totalEquipTiers}
-Bosses: ${bossCount} | Minigames: ${minigameCount}
+Bosses: ${unlocks.bosses.length} | Minigames: ${unlocks.minigames.length}
 Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
-${restored ? `${restored}\n` : ''}#OSRS #FateLocked`;
+${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
   };
 
-  const handleCopyText = async () => {
+  const copySummary = async () => {
     try {
       await navigator.clipboard.writeText(generateTextSummary());
       setCopyStatus('copied');
       setTimeout(() => setCopyStatus('idle'), 2000);
-    } catch (err) {
-      console.error('Failed to copy', err);
+    } catch {
+      showToast('Copy failed. Your browser blocked the clipboard.');
     }
   };
 
-  const handleDownloadImage = async () => {
-    if (!cardRef.current) return;
-    setIsCapturing(true);
-    try {
-      // Capture the loaded Wiki artwork, with a bounded wait if a remote image is unavailable.
-      // Wiki icons load lazily, so start any the player hasn't scrolled to yet.
-      const images = Array.from(cardRef.current.querySelectorAll('img'));
-      for (const image of images) image.loading = 'eager';
-      await Promise.race([
-        Promise.all([
-          document.fonts.ready,
-          ...images.map(image => image.decode().catch(() => undefined)),
-        ]),
-        new Promise(resolve => setTimeout(resolve, 5000)),
-      ]);
-      const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(cardRef.current, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        scale: 2, 
-        logging: false
-      });
-      
-      const link = document.createElement('a');
-      link.download = `fate_locked_status_${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } catch (err) {
-      console.error('Screenshot failed', err);
-      showToast('Image generation failed — try your browser screenshot tool');
-    } finally {
-      setIsCapturing(false);
-    }
-  };
-
-  const getSlotImage = (slot: string) => {
-      const config = SLOT_CONFIG[slot];
-      return config ? `https://oldschool.runescape.wiki/images/${config.file}` : '';
-  };
-  
-  const getSkillImage = (skill: string) => {
-      return `https://oldschool.runescape.wiki/images/${skill}_icon.png`;
-  };
-
-  // Notable feats logic
-  const notableFeats = useMemo(() => {
-      const feats = [];
-      
-      // Skills
-      const maxedSkills = Object.entries(unlocks.skills).filter(([_, t]) => (t as number) >= 10);
-      if (maxedSkills.length > 0) feats.push({ label: `${maxedSkills.length} Maxed Skills`, icon: Crown, color: 'text-yellow-400' });
-      else if (Object.values(unlocks.skills).some(t => (t as number) >= 7)) feats.push({ label: 'High-Tier Skiller', icon: Activity, color: 'text-blue-400' });
-
-      // Gear
-      const maxedGear = Object.entries(unlocks.equipment).filter(([_, t]) => (t as number) >= 9);
-      if (maxedGear.length > 0) feats.push({ label: 'Endgame Gear Unlocked', icon: Shield, color: 'text-red-400' });
-
-      // Raids
-      if (unlocks.bosses.includes('Chambers of Xeric') || unlocks.bosses.includes('Theatre of Blood') || unlocks.bosses.includes('Tombs of Amascut')) {
-          feats.push({ label: 'Raid Access', icon: Skull, color: 'text-green-400' });
-      }
-
-      // Specifics
-      if (unlocks.bosses.includes('Inferno')) feats.push({ label: 'Inferno Unlocked', icon: Zap, color: 'text-orange-500' });
-      if (isAreaReachable('Prifddinas', unlocks, gameModeId)) feats.push({ label: 'Prifddinas Access', icon: Map, color: 'text-teal-400' });
-      // 'Wilderness' is a REGION_GROUPS continent key, not an unlockable area —
-      // unlocks.regions only ever contains children (Ferox Enclave, Lava Maze,
-      // etc.). Check any Wilderness area is unlocked instead.
-      if ((REGION_GROUPS['Wilderness'] || []).some(a => isAreaReachable(a, unlocks, gameModeId))) {
-          feats.push({ label: 'Brave Wanderer', icon: Skull, color: 'text-gray-400' });
-      }
-
-      return feats.slice(0, 4);
-  }, [unlocks, gameModeId]);
-
-  const inner = (
-      <div className="flex flex-col gap-6 items-center w-full max-w-5xl my-auto">
-
-        {/* Theme Selectors */}
-        {osrs ? (
-          <div className="owb-share-themes" role="group" aria-label="Card style">
-            <span className="owb-sub">Card style:</span>
-            {OSRS_THEMES.map(t => (
-              <button key={t} type="button" aria-pressed={theme === t} onClick={() => setTheme(t)} className={`osrs-btn${theme === t ? ' is-on' : ''}`}>{THEME_LABEL[t]}</button>
-            ))}
-          </div>
-        ) : (
-        <div className="flex gap-2 p-1.5 bg-[#1a1a1a] rounded-full border border-white/10 shadow-xl overflow-x-auto max-w-full">
-            {(['VOID', 'GILDED', 'IRON', 'BLOOD', 'NATURE'] as CardTheme[]).map(t => (
-                <button
-                    key={t}
-                    onClick={() => setTheme(t)}
-                    className={`px-2 sm:px-4 py-1.5 rounded-full text-[10px] font-bold transition-all uppercase tracking-wider ${theme === t ? 'bg-white text-black shadow-md scale-105' : 'text-gray-500 hover:text-white'}`}
-                >
-                    {t}
-                </button>
-            ))}
+  const preview = (
+    <div className="relative w-full">
+      <canvas
+        ref={canvasRef}
+        width={CARD_W}
+        height={CARD_H}
+        role="img"
+        aria-label={`Share card: ${describeShareCard(stats)}`}
+        className={`block w-full h-auto ${osrs ? 'owb-share-card' : 'rounded-md border border-white/10 bg-black'} transition-opacity ${drawn ? 'opacity-100' : 'opacity-40'}`}
+        style={{ aspectRatio: `${CARD_W} / ${CARD_H}` }}
+      />
+      {!drawn && (
+        <div className={`absolute inset-0 flex items-center justify-center text-sm ${osrs ? 'owb-sub' : 'text-gray-300'}`} aria-live="polite">
+          {drawError ? 'The card could not be drawn.' : 'Drawing card…'}
         </div>
-        )}
-
-        {/* --- THE CARD --- */}
-        <div 
-          ref={cardRef}
-          id="status-card"
-          data-card-theme={osrsCard ? 'osrs' : undefined}
-          className={`${osrsCard ? 'owb-card ' : ''}
-            w-full max-w-[850px]
-            rounded-2xl border-[4px] ${ts.border}
-            ${ts.bg} relative overflow-hidden shadow-2xl flex flex-col
-          `}
-        >
-            {/* Background Texture */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${ts.gradient} pointer-events-none`}></div>
-            
-            {/* Top Badge Decoration */}
-            <div className={`absolute top-0 right-0 p-32 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full pointer-events-none`}></div>
-
-            {/* HEADER */}
-            <div className={`owb-card-head relative z-10 flex flex-wrap justify-between items-start gap-4 p-4 sm:p-8 sm:pb-6 border-b ${ts.deco}`}>
-                <div className="flex items-center gap-3 sm:gap-6 min-w-0">
-                    <div className={`owb-card-badge w-12 h-12 sm:w-20 sm:h-20 shrink-0 rounded-2xl border-2 ${ts.border} bg-black/40 flex items-center justify-center shadow-[0_0_25px_rgba(0,0,0,0.5)] backdrop-blur-md`}>
-                        <Shield className={`w-8 h-8 sm:w-12 sm:h-12 ${ts.accent} drop-shadow-lg`} />
-                    </div>
-                    <div>
-                        <div className={`text-xs font-bold uppercase tracking-[0.2em] mb-1 ${ts.accent}`}>{activeMode.name} Mode</div>
-                        <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight leading-none drop-shadow-md">Fate Locked</h2>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2">
-                            <span className="text-xs text-gray-400 font-mono flex items-center gap-1.5"><Calendar size={12} /> {new Date().toLocaleDateString()}</span>
-                            {restored && <span className="text-xs text-gray-400 font-mono">{restored}</span>}
-                        </div>
-                    </div>
-                </div>
-                <div className="text-right">
-                    <div className="flex flex-col items-end">
-                         <span className={`owb-card-pct text-3xl sm:text-5xl font-black text-white leading-none flex items-center gap-2 drop-shadow-lg`}>
-                            {progressPercent}%
-                         </span>
-                         <span className={`text-[10px] font-mono uppercase tracking-[0.3em] ${ts.sub} mt-1`}>Completion</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* STATS BAR */}
-            <div className={`owb-card-stats relative z-10 grid grid-cols-3 sm:grid-cols-5 border-b ${ts.deco} bg-black/30 divide-x divide-white/5 backdrop-blur-sm`}>
-                 <div className="py-3 px-2 flex flex-col items-center group">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Total Level</span>
-                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Activity size={14} className={ts.accent} /> {totalLevel}</span>
-                 </div>
-                 <div className="py-3 px-2 flex flex-col items-center group">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Fate Points</span>
-                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Shield size={14} className="text-amber-400" /> {gameState.fatePoints}</span>
-                 </div>
-                 <div className="py-3 px-2 flex flex-col items-center group">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Keys</span>
-                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Key size={14} className={ts.accent} /> {gameState.keys}</span>
-                 </div>
-                 <div className="py-3 px-2 flex flex-col items-center group">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Omni-Keys</span>
-                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Sparkles size={14} className="text-purple-400" /> {gameState.specialKeys}</span>
-                 </div>
-                 <div className="py-3 px-2 flex flex-col items-center group">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5 group-hover:text-gray-300 transition-colors">Chaos Keys</span>
-                    <span className="text-lg font-bold text-white flex items-center gap-1.5"><Dna size={14} className="text-red-500" /> {gameState.chaosKeys}</span>
-                 </div>
-            </div>
-
-            {/* MAIN CONTENT */}
-            <div className="relative z-10 p-4 sm:p-8 grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
-                
-                {/* Left Panel: Gear & Unlocks (8 cols) */}
-                <div className="md:col-span-7 min-w-0 space-y-7">
-                    
-                    {/* Skills Section */}
-                    <div>
-                        <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
-                            <WikiIcon file="Stats_icon.png" alt="" size={14} /> Skill Mastery
-                        </h3>
-                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                             {SKILLS_LIST.map(skill => {
-                                 const tier = unlocks.skills[skill] || 0;
-                                 return (
-                                     <div key={skill} className={`owb-card-tile bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>
-                                         <div className="relative z-10 w-6 h-6 flex items-center justify-center mb-1.5">
-                                             <img 
-                                                src={getSkillImage(skill)} 
-                                                alt={skill} 
-                                                className={`w-full h-full object-contain ${tier === 0 ? 'opacity-30 grayscale' : 'drop-shadow-sm'}`} 
-                                                onError={(e) => { (e.target as HTMLImageElement).style.opacity = '0'; }}
-                                             />
-                                         </div>
-                                         {/* Tier Bar */}
-                                         <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                                            <div className={`h-full ${tier > 0 ? TIER_COLORS[Math.min(tier - 1, 9)] : 'bg-transparent'}`} style={{width: '100%'}}></div>
-                                         </div>
-                                     </div>
-                                 )
-                             })}
-                        </div>
-                    </div>
-
-                    {/* Equipment Section */}
-                    <div>
-                        <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
-                            <WikiIcon file="Worn_Equipment.png" alt="" size={14} /> Gear Access
-                        </h3>
-                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                             {EQUIPMENT_SLOTS.map(slot => {
-                                 const tier = unlocks.equipment[slot] || 0;
-                                 return (
-                                     <div key={slot} className={`owb-card-tile bg-black/40 rounded border ${ts.deco} p-1.5 flex flex-col items-center relative overflow-hidden group`}>
-                                         <div className="relative z-10 w-8 h-8 flex items-center justify-center mb-1.5">
-                                             <img src={getSlotImage(slot)} alt={slot} className={`w-full h-full object-contain ${tier === 0 ? 'opacity-20 grayscale' : 'drop-shadow-md'}`} />
-                                         </div>
-                                         <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                                            <div className={`h-full ${tier > 0 ? TIER_COLORS[Math.min(tier - 1, 9)] : 'bg-transparent'}`} style={{width: '100%'}}></div>
-                                         </div>
-                                     </div>
-                                 )
-                             })}
-                        </div>
-                    </div>
-
-                    {/* Unlock Counters */}
-                    <div>
-                         <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
-                            <Zap size={14} /> Unlocked Content
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Skull size={12} /> Bosses</div>
-                                <span className="font-bold text-white text-lg leading-none">{bossCount}</span>
-                            </div>
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Gamepad2 size={12} /> Minigames</div>
-                                <span className="font-bold text-white text-lg leading-none">{minigameCount}</span>
-                            </div>
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Store size={12} /> Merchants</div>
-                                <span className="font-bold text-white text-lg leading-none">{unlocks.merchants.length}</span>
-                            </div>
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Home size={12} /> POH</div>
-                                <span className="font-bold text-white text-lg leading-none">{pohCount}</span>
-                            </div>
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><WikiIcon file="Magic_icon.png" alt="" size={12} /> {COMBAT_POWERS_LABEL}</div>
-                                <span className="font-bold text-white text-lg leading-none">{arcanaCount}</span>
-                            </div>
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Package size={12} /> Storage</div>
-                                <span className="font-bold text-white text-lg leading-none">{unlocks.storage.length}</span>
-                            </div>
-                            <div className={`owb-card-count ${ts.panel} p-2 rounded border ${ts.deco} flex flex-col items-center justify-center gap-1`}>
-                                <div className="text-xs text-gray-400 font-bold uppercase flex items-center gap-1.5"><Landmark size={12} /> Banks</div>
-                                <span className="font-bold text-white text-lg leading-none">{(unlocks.banks ?? []).length}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                {/* Right Panel: Region Mastery (5 cols) */}
-                <div className="md:col-span-5 min-w-0 flex flex-col h-full">
-                     <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${ts.accent} flex items-center gap-2 border-b border-white/5 pb-2`}>
-                        <Map size={14} /> World Mastery
-                    </h3>
-                    
-                    <div className={`owb-card-world flex-1 ${ts.panel} rounded border ${ts.deco} p-4 overflow-hidden flex flex-col shadow-inner bg-black/20`}>
-                        <div className="space-y-3">
-                            {regionMastery.length === 0 && (
-                                <div className="text-center py-10 text-xs italic text-gray-600">{isChunked ? 'No chunks explored...' : 'No regions explored...'}</div>
-                            )}
-                            {regionMastery.map(({ group, count, total, percent }) => (
-                                <div key={group} className="space-y-1">
-                                    <div className="flex justify-between text-[10px] uppercase font-bold text-gray-300">
-                                        <span>{group}</span>
-                                        <span className="opacity-70 font-mono">{isChunked ? `${count}/${total} chunks` : `${Math.round(percent * 100)}%`}</span>
-                                    </div>
-                                    <div className="owb-card-track h-1.5 w-full bg-black/60 rounded-full overflow-hidden border border-white/5">
-                                        <div className={`h-full ${ts.bar} transition-all shadow-[0_0_5px_currentColor]`} style={{ width: `${percent * 100}%` }}></div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        
-                        {/* Notable Feats Section */}
-                        <div className="mt-auto pt-6">
-                            <h4 className="text-[10px] font-bold uppercase text-gray-500 mb-3 flex items-center gap-2 border-t border-white/5 pt-3">
-                                <Star size={10} /> Notable Feats
-                            </h4>
-                            <div className="flex flex-col gap-2">
-                                {notableFeats.length > 0 ? notableFeats.map((feat, i) => (
-                                    <div key={i} className="owb-card-feat flex items-center gap-3 bg-black/40 p-2 rounded border border-white/5">
-                                        <feat.icon size={16} className={feat.color} />
-                                        <span className="text-xs font-bold text-gray-300">{feat.label}</span>
-                                    </div>
-                                )) : (
-                                    <div className="text-[10px] text-gray-600 italic text-center py-2">No notable unlocks yet.</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* FOOTER */}
-            <div className={`owb-card-foot relative z-10 py-3 px-4 sm:px-8 bg-black/60 backdrop-blur-md flex flex-wrap gap-2 justify-between items-center text-[10px] ${ts.sub} font-mono uppercase border-t ${ts.deco}`}>
-                <div className="flex items-center gap-2">
-                    <Activity size={12} />
-                    <span>Fate Locked Ironman</span>
-                </div>
-                {runId && <div>Run ID: {runId}</div>}
-            </div>
-        </div>
-
-        {/* Controls */}
-        {osrs ? (
-          <div className="owb-share-actions">
-            <button type="button" className="osrs-btn" onClick={handleCopyText}>
-              {copyStatus === 'copied' ? <span className="owb-ok">Copied!</span> : 'Copy Summary'}
-            </button>
-            <button type="button" className="osrs-btn" onClick={handleDownloadImage} disabled={isCapturing}>
-              {isCapturing ? 'Generating Image...' : 'Download Card'}
-            </button>
-          </div>
-        ) : (
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-[850px]">
-            <button 
-                onClick={handleCopyText}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#2d2d2d] hover:bg-[#3d3d3d] text-white font-bold rounded-lg transition-all border border-white/10 shadow-lg"
-            >
-                {copyStatus === 'copied' ? <span className="text-green-400 flex items-center gap-2"><div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>Copied!</span> : <><Copy size={18} /> Copy Summary</>}
-            </button>
-            <button 
-                onClick={handleDownloadImage}
-                disabled={isCapturing}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 font-bold rounded-lg transition-all text-black shadow-lg hover:shadow-white/20 ${theme === 'GILDED' ? 'bg-yellow-500 hover:bg-yellow-400' : theme === 'BLOOD' ? 'bg-red-600 hover:bg-red-500 text-white' : theme === 'IRON' ? 'bg-gray-400 hover:bg-gray-300' : theme === 'NATURE' ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-purple-500 hover:bg-purple-400 text-white'}`}
-            >
-                {isCapturing ? <span className="animate-pulse">Generating Image...</span> : <><Download size={18} /> Download Card</>}
-            </button>
-        </div>
-        )}
-        
-        {!embedded && <button onClick={onClose} className="text-gray-500 hover:text-white text-sm underline pb-4">Close</button>}
-      </div>
-  );
-
-  if (embedded) return inner;
-  return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Share run" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto">
-      {inner}
+      )}
     </div>
   );
-};
 
-// ── Merged Share modal: one entry point, toggle between card styles. ──────────
-export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const [style, setStyle] = useState<'stats' | 'map'>('stats');
-  const dialogRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(dialogRef);
-  useEscapeKey(onClose, true);
-  const osrs = useIsOsrsUi();
+  const footNote = (
+    <p className={`text-[11px] font-mono text-center ${osrs ? 'owb-sub' : 'text-gray-500'}`}>
+      Run ID: {stats.runId ?? 'not started'} · {stats.history.detail}{stats.restored && ` · ${stats.restored}`}
+      {stats.history.ok ? '' : ' (not shown on the card)'}
+    </p>
+  );
+
+  const zoomBox = (
+    <label className={`flex items-center gap-2 cursor-pointer select-none ${osrs ? 'owb-share-zoom' : 'text-xs text-gray-300'}`}>
+      <input id="share-card-zoom" type="checkbox" checked={zoom} onChange={toggleZoom} className="accent-amber-500" />
+      Zoom to my land
+    </label>
+  );
+
   if (osrs) {
-    // OSRS layout: one stone window with the Journal's title bar, stone tabs
-    // for the two card styles and the card scrolling inside it.
+    // OSRS layout: one stone window with the Journal's title bar and stone tabs for the two looks.
     return (
       <div
-        className="fixed inset-0 z-[100] owb-share-backdrop"
-        onClick={onClose}
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Share run"
-        ref={dialogRef}
         tabIndex={-1}
+        onClick={onClose}
+        className="fixed inset-0 z-[100] owb-share-backdrop"
       >
-        <div className="osrs-win owb-win owb-share" onClick={(e) => e.stopPropagation()}>
+        <div className="osrs-win owb-win owb-share" onClick={e => e.stopPropagation()}>
           <OsrsTitleBar title="Share Run" onClose={onClose} tools={<SectionGuide id="SHARE" />} />
-          <div className="owb-tabs">
-            {(['stats', 'map'] as const).map((s) => (
-              <button key={s} type="button" className="owb-tab" aria-pressed={style === s} onClick={() => setStyle(s)}>
-                {s === 'stats' ? 'Stats card' : 'Map card'}
+          <div className="owb-tabs" role="group" aria-label="Card style">
+            {STYLES.map(s => (
+              <button key={s.id} type="button" className="owb-tab" aria-pressed={style === s.id} onClick={() => pickStyle(s.id)}>
+                {s.label}
               </button>
             ))}
+            <span className="ml-auto pb-1">{zoomBox}</span>
           </div>
-          <div className="owb-share-body custom-scrollbar">
-            {style === 'stats'
-              ? <StatsShareCard embedded onClose={onClose} />
-              : <div className="owb-mapcard"><RunCardModal embedded onClose={onClose} /></div>}
+          <div className="owb-share-body custom-scrollbar flex flex-col items-center gap-3">
+            {preview}
+            <div className="owb-share-actions">
+              <button type="button" className="osrs-btn" onClick={download} disabled={!drawn}>Download PNG</button>
+              <button type="button" className="osrs-btn" onClick={copyImage} disabled={!drawn}>Copy image</button>
+              <button type="button" className="osrs-btn" onClick={copySummary}>
+                {copyStatus === 'copied' ? <span className="owb-ok">Copied!</span> : 'Copy Summary'}
+              </button>
+              {drawError && <button type="button" className="osrs-btn" onClick={() => setRedraw(n => n + 1)}>Try again</button>}
+            </div>
+            {footNote}
           </div>
         </div>
       </div>
     );
   }
+
+  const button = 'flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40';
+
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"
-      onClick={onClose}
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Share run"
-      ref={dialogRef}
       tabIndex={-1}
+      onClick={onClose}
+      className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
     >
-      <div className="min-h-full flex flex-col items-center justify-center gap-4 py-4" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-1.5 p-1.5 bg-[#1a1a1a] rounded-full border border-white/10 shadow-xl">
-          {(['stats', 'map'] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => setStyle(s)}
-              className={`px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${style === s ? 'bg-white text-black shadow' : 'text-gray-400 hover:text-white'}`}
-            >
-              {s === 'stats' ? 'Stats card' : 'Map card'}
-            </button>
-          ))}
+      <div
+        className="mx-auto my-auto w-full max-w-5xl bg-[#0f1115] border border-white/10 rounded-xl shadow-2xl flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 sm:px-5 py-3 border-b border-white/10">
+          <div className="text-sm font-semibold text-gray-200">Share Run</div>
+          <div role="group" aria-label="Card style" className="flex items-center gap-1 p-1 bg-black/40 rounded-full border border-white/10">
+            {STYLES.map(s => (
+              <button
+                key={s.id}
+                type="button"
+                aria-pressed={style === s.id}
+                onClick={() => pickStyle(s.id)}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors ${style === s.id ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          {zoomBox}
           <SectionGuide id="SHARE" className="px-1" />
+          <button type="button" onClick={onClose} aria-label="Close" className="ml-auto text-gray-500 hover:text-white">
+            <X size={18} />
+          </button>
         </div>
-        {style === 'stats'
-          ? <StatsShareCard embedded onClose={onClose} />
-          : <RunCardModal embedded onClose={onClose} />}
-        <button onClick={onClose} className="text-gray-500 hover:text-white text-sm underline pb-2">Close</button>
+
+        <div className="p-3 sm:p-5 flex flex-col items-center gap-4">
+          {preview}
+
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+            <button type="button" onClick={download} disabled={!drawn} className={`${button} bg-emerald-700 hover:bg-emerald-600 text-white`}>
+              <Download size={15} /> Download PNG
+            </button>
+            <button type="button" onClick={copyImage} disabled={!drawn} className={`${button} bg-white/10 hover:bg-white/15 text-white border border-white/10`}>
+              <ImageIcon size={15} /> Copy image
+            </button>
+            <button type="button" onClick={copySummary} className={`${button} bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10`}>
+              {copyStatus === 'copied' ? <span className="text-green-400">Copied!</span> : <><Copy size={15} /> Copy Summary</>}
+            </button>
+            {drawError && (
+              <button type="button" onClick={() => setRedraw(n => n + 1)} className={`${button} bg-white/5 hover:bg-white/10 text-amber-300 border border-white/10`}>
+                Try again
+              </button>
+            )}
+          </div>
+
+          {footNote}
+        </div>
       </div>
     </div>
   );

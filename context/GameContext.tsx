@@ -1846,7 +1846,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       // ROLL_RESULT, the way an exploring roll does (utils/fateLand.ts).
       const land = state.fateLand;
       if (!land || !land.gilded.includes(action.payload.chunk)) return state;
-      return { ...state, fateLand: { ...land, gilded: land.gilded.filter(key => key !== action.payload.chunk) } };
+      // A chunk that broke a seal can hold two; each roll uses one.
+      const at = land.gilded.indexOf(action.payload.chunk);
+      return { ...state, fateLand: { ...land, gilded: [...land.gilded.slice(0, at), ...land.gilded.slice(at + 1)] } };
     }
 
     case 'CALL_ON_FATE': {
@@ -3185,10 +3187,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       let pool = randomUnlockPool(current.unlocks, current.gameModeId, costType, table, current.customMode);
       if (warded && usable) pool = pool.filter(usable);
       // Chunked: one Chunks draw in six goes toward Fate's Thread, unless a
-      // Tangled chunk spares this one (utils/fateLand.ts).
+      // Tangled chunk spares this one; every draw does after a Waystone (utils/fateLand.ts).
       if (table === TableType.CHUNKS) {
         const lean = nextFloat('fate-thread-lean');
-        if (!current.fateLand?.tangled) pool = leanTowardThread(pool, current.fateLand?.thread, lean);
+        if (!current.fateLand?.tangled) pool = leanTowardThread(pool, current.fateLand?.thread, (current.fateLand?.pull ?? 0) > 0 ? 0 : lean);
       }
       // A Chaos Key picks a table, then an entry in it (utils/gameEngine.ts).
       const selection = pickRandomUnlock(pool, costType, chaosPicksTableFirst(current), nextFloat);
@@ -4043,8 +4045,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
         tier={state.pendingUnlock.table === TableType.SKILLS ? state.unlocks.skills[state.pendingUnlock.item] : undefined}
         chunkedUnlocks={state.gameModeId === 'chunked' ? state.unlocks : undefined}
-        chunkedMarks={state.gameModeId === 'chunked' ? state.fateLand?.marks : undefined}
-        hoped={!!state.hopes?.includes(hopeKey(state.pendingUnlock.table, state.pendingUnlock.item))} /> : null}
+          chunkedLand={state.gameModeId === 'chunked' ? state.fateLand : undefined}
+          hoped={!!state.hopes?.includes(hopeKey(state.pendingUnlock.table, state.pendingUnlock.item))} /> : null}
     </GameContext.Provider>
   );
 };

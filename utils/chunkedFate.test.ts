@@ -5,7 +5,7 @@ import { historyFilterMatches } from '../components/LogViewer';
 import { chunkLabelWithCoords } from './chunkLabelWithCoords';
 import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { validateAndMigrateSave } from './saveSchema';
-import { replayInvariants } from './integrity';
+import { replayInvariants } from './runAudit';
 import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, MERCY_QUIET_MS, mercyBlocker, mercyEnablers, mercyPool, mercyQuietLeft, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
 import { FARMING_PATCH_LIST, MERCHANTS_LIST, SKILLS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';

@@ -173,6 +173,7 @@ export const calculateDiaryInsightStats = (
 
 export const DiaryInsights: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
+  // Owned areas with no route are not doable, as in the Diary list.
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const stats = useMemo(
     () => calculateDiaryInsightStats(

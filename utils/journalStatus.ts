@@ -455,6 +455,34 @@ export function evaluateQuestEligibility(
   return { ...manual, status, blockers, evidence };
 }
 
+/**
+ * The one definition of a "ready" quest that every Journal count uses (the
+ * home summary, the Quest Log's Available filter, Next best actions and the
+ * Doable tab): not done, and nothing left to unlock or confirm. Read from an
+ * eligibility already worked out, so a list never evaluates a quest twice.
+ */
+export const questReadyFrom = (eligibility: Pick<QuestEligibility, 'status' | 'eligible'>): boolean =>
+  eligibility.status !== 'COMPLETED' && eligibility.eligible;
+
+/**
+ * Whether a quest is ready to do now. Pass `areaRoutes` (from useAreaRoutes)
+ * so a quest in an owned area no route reaches is not ready.
+ */
+export const isQuestReady = (
+  quest: QuestData,
+  unlocks: UnlockState,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+): boolean => questReadyFrom(evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes));
+
+/** Every ready quest and miniquest (isQuestReady), in catalogue order. */
+export const readyQuests = (
+  unlocks: UnlockState,
+  gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
+  quests: readonly QuestData[] = Object.values(QUEST_DATA),
+): QuestData[] => quests.filter(quest => isQuestReady(quest, unlocks, gameModeId, areaRoutes));
+
 export function getQuestStatus(
   quest: QuestData,
   unlocks: UnlockState,

@@ -1,13 +1,15 @@
 import React, { useMemo } from 'react';
-import type { FateMark } from '../types';
+import type { FateMark, FateSite } from '../types';
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { CHUNK_PX, THREAD_GOLD, chunkBox, fogPath, isBaneMark, omenColor, outlineEdges, threadStart } from '../utils/fateMap';
+import { SEAL_EDGE, SITE_SPRITE } from '../utils/fateSiteMap';
 
 /**
  * A Chunked run's land as fate sees it, drawn over the World map inside its
  * pan/zoom layer (components/RegionMap.tsx): fog over the land the run
  * neither holds nor has on its frontier, Fate's Thread and the frontier chunks
- * nearest it, and the omen fate drew on each held chunk. Strokes and badges keep their on-screen size
+ * nearest it, the omen fate drew on each held chunk, the Fated sites the run
+ * has found or can see, and the borders of regions still sealed. Strokes and badges keep their on-screen size
  * at every zoom through the --osrs-map-s scale RegionMap sets on the layer.
  */
 interface Props {
@@ -20,6 +22,14 @@ interface Props {
   /** The frontier chunks nearest the thread (utils/fateLand.ts threadLeaning). */
   leaning: readonly string[];
   marks: Readonly<Record<string, FateMark>>;
+  /** Fated sites the run holds, by chunk key. */
+  sites?: Readonly<Record<string, FateSite>>;
+  /** Hidden sites the run is near (utils/fateMap.ts sightedSites): a mark in the fog. */
+  sighted?: readonly string[];
+  /** Held chunks that broke a region's seal. */
+  sealed?: readonly string[];
+  /** Edges between held land and a region still sealed, as [x1, y1, x2, y2]. */
+  sealEdges?: ReadonlyArray<readonly [number, number, number, number]>;
 }
 
 const S = 'var(--osrs-map-s, 0.2)';
@@ -28,6 +38,7 @@ const px = (n: number) => `calc(${n}px / ${S})`;
 const ORANGE = '#ff981f';
 const W = MAP_IMAGE.width;
 const H = MAP_IMAGE.height;
+const SPRITE = (file: string) => `${import.meta.env.BASE_URL}osrs-ui/items/${file}`;
 const svgProps = { className: 'absolute inset-0 pointer-events-none', width: W, height: H, viewBox: `0 0 ${W} ${H}`, 'aria-hidden': true } as const;
 
 /** A five-pointed star of radius r around (0, 0). */
@@ -42,7 +53,7 @@ const Pinned: React.FC<{ x: number; y: number; children: React.ReactNode }> = ({
   <g style={{ transform: `translate(${x}px, ${y}px) scale(calc(1 / ${S}))` }}>{children}</g>
 );
 
-export const FateLandLayer: React.FC<Props> = ({ osrs, fog, held, frontier, thread, leaning, marks }) => {
+export const FateLandLayer: React.FC<Props> = ({ osrs, fog, held, frontier, thread, leaning, marks, sites = {}, sighted = [], sealed = [], sealEdges = [] }) => {
   const fogD = useMemo(() => (fog ? fogPath([...held, ...frontier], W, H) : ''), [fog, held, frontier]);
   const heldEdges = useMemo(() => (fog && osrs ? outlineEdges(held) : []), [fog, osrs, held]);
   const from = thread ? threadStart(held, thread) : undefined;
@@ -87,6 +98,50 @@ export const FateLandLayer: React.FC<Props> = ({ osrs, fog, held, frontier, thre
                 <rect x={3} y={3} width={13} height={13} fill={omenColor(mark)} stroke="#000" strokeWidth={2} />
                 <line x1={6.5} y1={9.5} x2={12.5} y2={9.5} stroke="#000" strokeWidth={2} />
                 {!bane && <line x1={9.5} y1={6.5} x2={9.5} y2={12.5} stroke="#000" strokeWidth={2} />}
+              </g>
+            </Pinned>
+          );
+        })}
+
+        {/* A region still sealed: its border with the run's land, dotted in parchment. */}
+        {sealEdges.length > 0 && (
+          <g data-seal-edges strokeLinecap="round">
+            <g stroke="#000" style={{ strokeWidth: px(5), strokeDasharray: `${px(1)} ${px(7)}` }}>
+              {sealEdges.map(([x1, y1, x2, y2]) => <line key={`a${x1},${y1},${x2},${y2}`} x1={x1} y1={y1} x2={x2} y2={y2} />)}
+            </g>
+            <g stroke={SEAL_EDGE} style={{ strokeWidth: px(3), strokeDasharray: `${px(1)} ${px(7)}` }}>
+              {sealEdges.map(([x1, y1, x2, y2]) => <line key={`b${x1},${y1},${x2},${y2}`} x1={x1} y1={y1} x2={x2} y2={y2} />)}
+            </g>
+          </g>
+        )}
+
+        {/* A chunk that broke a region's seal: the seal, top right. */}
+        {sealed.map(key => {
+          const { x, y } = chunkBox(key);
+          return (
+            <Pinned key={`s${key}`} x={x + CHUNK_PX} y={y}>
+              <image data-seal={key} href={SPRITE('void_seal.png')} x={-22} y={3} width={18} height={16} style={{ imageRendering: 'pixelated' }} />
+            </Pinned>
+          );
+        })}
+
+        {/* Fated sites: found ones as their item, ones the run is near as a mark in the fog. */}
+        {Object.entries(sites).map(([key, site]) => {
+          const { x, y } = chunkBox(key);
+          return (
+            <Pinned key={`f${key}`} x={x + half} y={y + half}>
+              <image data-site={site} href={SPRITE(SITE_SPRITE[site])} x={-18} y={-16} width={36} height={32} style={{ imageRendering: 'pixelated' }} />
+            </Pinned>
+          );
+        })}
+        {sighted.map(key => {
+          const { x, y } = chunkBox(key);
+          return (
+            <Pinned key={`q${key}`} x={x + half} y={y + half}>
+              <g data-sighted={key}>
+                <circle r={11} fill="rgba(0,0,0,0.35)" stroke="#000" strokeWidth={3} />
+                <circle r={11} fill="none" stroke={SEAL_EDGE} strokeWidth={1.5} />
+                <text y={5} textAnchor="middle" fill={SEAL_EDGE} style={{ font: `14px ${font}` }}>?</text>
               </g>
             </Pinned>
           );
