@@ -21,6 +21,8 @@ import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from '../utils/activityReadiness';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
+import './osrs/osrs-windows-a.css';
+import './osrs/osrs-windows-c.css';
 
 const ROOT_UNLOCKS = {
     [TableType.EQUIPMENT]: new Set(EQUIPMENT_SLOTS),
@@ -266,52 +268,55 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     const filteredPlanner = useMemo(() => filterList(plannerContent, searchTerm, selectedCategory), [plannerContent, searchTerm, selectedCategory]);
 
     return (
-        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Strategy guide" tabIndex={-1} className="fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-200">
-            <div className="bg-[#121212] border border-gray-700 w-full max-w-5xl h-[85vh] rounded-xl flex flex-col shadow-2xl overflow-hidden">
-                <div className="bg-[#1a1a1a] p-4 border-b border-gray-700 flex justify-between items-center shrink-0">
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Strategy guide" tabIndex={-1} className="osrs-wa-overlay fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-200">
+            <div data-osrs-win="strategy" className="osrs-wa-win bg-[#121212] border border-gray-700 w-full max-w-5xl h-[85vh] rounded-xl flex flex-col shadow-2xl overflow-hidden">
+                <div className="osrs-wa-head bg-[#1a1a1a] p-4 border-b border-gray-700 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-900/30 rounded border border-emerald-500/30">
+                        <div className="osrs-wa-hicon p-2 bg-emerald-900/30 rounded border border-emerald-500/30">
                             <Compass className="w-5 h-5 text-emerald-400" />
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">Fate Strategy Guide <SectionGuide id="STRATEGY" /></h2>
-                            <p className="text-xs text-gray-500">What you can do now, and what is blocking the rest.</p>
+                        <div className="osrs-wa-htext">
+                            <h2 className="osrs-wa-title text-lg font-bold text-gray-100 flex items-center gap-2">Fate Strategy Guide <SectionGuide id="STRATEGY" /></h2>
+                            <p className="osrs-wa-sub text-xs text-gray-500">What you can do now, and what is blocking the rest.</p>
                         </div>
                     </div>
                     
-                    <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
+                    <div className="ost-tabs flex bg-black/40 rounded-lg p-1 border border-white/10">
                         <button 
                             onClick={() => setActiveTab('PLAYABLE')}
-                            className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'PLAYABLE' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
+                            data-osrs-on={activeTab === 'PLAYABLE' ? 'true' : undefined}
+                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'PLAYABLE' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             Available
                         </button>
                         <button 
                             onClick={() => setActiveTab('PLANNER')}
-                            className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'PLANNER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
+                            data-osrs-on={activeTab === 'PLANNER' ? 'true' : undefined}
+                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'PLANNER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             Locked
                         </button>
                         <button 
                             onClick={() => setActiveTab('PROPHECY')}
-                            className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'PROPHECY' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
+                            data-osrs-on={activeTab === 'PROPHECY' ? 'true' : undefined}
+                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'PROPHECY' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             <Sparkles size={12} /> Closest
                         </button>
                     </div>
 
-                    <button aria-label="Close Strategy Guide" onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                    <button aria-label="Close Strategy Guide" onClick={onClose} className="osrs-wa-close p-2 hover:bg-white/10 rounded-full transition-colors">
                         <XCircle className="w-6 h-6 text-gray-400" />
                     </button>
                 </div>
 
-                <div className="bg-[#161616] border-b border-white/5 p-3 shrink-0 flex flex-col gap-3">
+                <div className="ost-filters bg-[#161616] border-b border-white/5 p-3 shrink-0 flex flex-col gap-3">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
                         <input 
                             type="text" 
                             placeholder={activeTab === 'PLAYABLE' ? "Search available content..." : "Search locked goals..."}
-                            className="w-full bg-black/50 border border-white/10 rounded-lg pl-10 pr-10 py-2 text-sm text-gray-200 focus:outline-none focus:border-emerald-500/50 transition-colors placeholder-gray-600"
+                            className="ocw-input w-full bg-black/50 border border-white/10 rounded-lg pl-10 pr-10 py-2 text-sm text-gray-200 focus:outline-none focus:border-emerald-500/50 transition-colors placeholder-gray-600"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -329,7 +334,9 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-gray-700 hover:border-gray-500 hover:text-gray-300'}`}
+                                aria-pressed={selectedCategory === cat}
+                                data-osrs-on={selectedCategory === cat ? 'true' : undefined}
+                                className={`osrs-wa-btn ost-chip px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black border-white' : 'bg-transparent text-gray-500 border-gray-700 hover:border-gray-500 hover:text-gray-300'}`}
                             >
                                 {cat}
                             </button>

@@ -14,6 +14,7 @@ import { chunkedPastCapText, levelBoostNote } from '../SkillRollOdds';
 import { SkillInfoButton } from '../SkillInfoButton';
 import { useSkillOddsHover } from '../../utils/skillOddsPref';
 import { skillIconSrc, itemSrc, gemColor, gemCropStyle, roman, TIER_GEMS } from './OsrsDashGems';
+import { useTierMarks } from '../../utils/uiStyle';
 import './osrs-char.css';
 import './osrs-dashboard.css';
 
@@ -61,6 +62,7 @@ export const OsrsSkills: React.FC<Props> = ({
   const game = useGame();
   const { gameModeId } = game;
   const skillOddsHover = useSkillOddsHover();
+  const numerals = useTierMarks() === 'numerals';
   // With nothing to rank, the Advisor says so on its button instead of
   // opening a panel over the skills just to say "nothing". The ranking is
   // slow (every quest and diary per skill level), so it is only worked out
@@ -201,7 +203,7 @@ export const OsrsSkills: React.FC<Props> = ({
                     <img className="osrs-px" src={skillIconSrc(skill)} alt="" aria-hidden="true" width={25} height={25} />
                   </button>
                   <span className="osrs-dash-skill-lvl">{level}</span>
-                  {isUnlocked && <span className="osrs-char-sktier" style={{ color: gemColor(tier) }}>Tier {roman(tier)}</span>}
+                  {isUnlocked && !numerals && <span className="osrs-char-sktier" style={{ color: gemColor(tier) }}>Tier {roman(tier)}</span>}
                   <span className="osrs-dash-skill-tools">
                     {isUnlocked && canOmniUpgrade && (
                       <button
@@ -216,9 +218,11 @@ export const OsrsSkills: React.FC<Props> = ({
                     )}
                     <span className="osrs-dash-note"><NoteTrigger id={skill} title={skill} suspendModals={suspendModals} /></span>
                   </span>
-                  {isUnlocked
-                    ? <span className="osrs-char-gem" style={gemCropStyle(tier)} aria-hidden="true" title={`Tier ${roman(tier)} · ${TIER_GEMS[tier - 1]?.name ?? ''}`} />
-                    : <span className="osrs-char-sklock">Locked</span>}
+                  {!isUnlocked
+                    ? <span className="osrs-char-sklock">Locked</span>
+                    : numerals
+                    ? <span className="osrs-char-tiernum" style={{ color: gemColor(tier) }} aria-hidden="true" title={`Tier ${roman(tier)}`}>{roman(tier)}</span>
+                    : <span className="osrs-char-gem" style={gemCropStyle(tier)} aria-hidden="true" title={`Tier ${roman(tier)} · ${TIER_GEMS[tier - 1]?.name ?? ''}`} />}
                 </span>
                 <span className="osrs-char-notches" aria-hidden="true">
                   {TIER_GEMS.map((g, i) => (
@@ -245,7 +249,7 @@ export const OsrsSkills: React.FC<Props> = ({
 
       <div className="osrs-dash-skillfoot osrs-char-skfoot">
         <span style={{ fontFamily: 'RSBold, sans-serif', color: 'var(--osrs-yellow, #ff0)' }}>Total level: {totalLevel}</span>
-        <span style={{ fontFamily: 'RSSmall, sans-serif', color: 'var(--osrs-tan, #c8b897)' }}>Gem = your tier. Bars fill as tiers unlock.</span>
+        <span style={{ fontFamily: 'RSSmall, sans-serif', color: 'var(--osrs-tan, #c8b897)' }}>{numerals ? 'Numeral' : 'Gem'} = your tier. Bars fill as tiers unlock.</span>
       </div>
     </section>
   );

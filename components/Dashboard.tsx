@@ -1,3 +1,4 @@
+import { confirmThen } from '../utils/spendConfirm';
 import { getUtilityActivityReq } from '../utils/utilityReadiness';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
@@ -12,7 +13,7 @@ import {
 import { useGame } from '../context/GameContext';
 import { useFeatureGates } from '../hooks/useFeatureGates';
 import type { FeatureId } from '../utils/featureGates';
-import { Search, ExternalLink, Unlock, Lock, ChevronDown, ChevronsUp, AlertCircle, List, Filter, Info, Share2, Route } from 'lucide-react';
+import { Search, ExternalLink, Unlock, Lock, ChevronDown, ChevronsUp, AlertCircle, List, Filter, Info, Share2, Route, Star } from 'lucide-react';
 import { Sparkles, User, Map, Swords, Package, Compass, BookOpen, ScrollText, Globe, MapPin, Trophy, Skull } from './OsrsIcon';
 import { VoidReveal } from './VoidReveal';
 import { ActivityAccessWarning } from './ActivityAccessWarning';
@@ -20,6 +21,7 @@ import { isOmniDirectUnlockAvailable } from '../utils/gameEngine';
 import { TableType } from '../types';
 import { wikiService } from '../services/WikiService';
 import { NoteTrigger } from './NoteTrigger';
+import { hopeKey } from '../utils/hopeKey';
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { SkillRollOdds } from './SkillRollOdds';
 import { SkillInfoButton } from './SkillInfoButton';
@@ -199,6 +201,20 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ current, total, colorClass })
   );
 };
 
+/** The hope list's star: shown on hover until starred. */
+const HopeStar: React.FC<{ name: string; hoped: boolean; onToggle: () => void }> = ({ name, hoped, onToggle }) => (
+  <button
+    type="button"
+    onClick={(e) => { e.stopPropagation(); onToggle(); }}
+    aria-pressed={hoped}
+    aria-label={`Hope for ${name}`}
+    title={hoped ? 'On your hope list. Click to take it off.' : 'Hope for this: Spend Keys shows your odds of drawing it.'}
+    className={`p-0.5 rounded ${hoped ? 'text-amber-300' : 'text-gray-600 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:text-amber-200'}`}
+  >
+    <Star size={11} fill={hoped ? 'currentColor' : 'none'} />
+  </button>
+);
+
 interface UnlockCardProps {
   item: string;
   isUnlocked: boolean;
@@ -211,6 +227,9 @@ interface UnlockCardProps {
   req?: ActivityReq;
   readiness?: ActivityReadiness;
   suspendModals?: boolean;
+  /** On the hope list; the star only shows while the entry is locked. */
+  hoped?: boolean;
+  onToggleHope?: () => void;
 }
 
 const UnlockCard: React.FC<UnlockCardProps> = ({
@@ -225,6 +244,8 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
   req,
   readiness,
   suspendModals = false,
+  hoped = false,
+  onToggleHope,
 }) => {
   // Image priority: a hand-picked sprite/icon → the item's real OSRS wiki image
   // (fetched + cached via WikiService) → the globe placeholder. Self-heals: if a
@@ -263,7 +284,8 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
         `}
     >
         {!isUnlocked && canUnlock && <button type="button" aria-label={`Unlock ${item} with an Omni-Key`} onClick={onClick} className="absolute inset-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-300" />}
-        <div className="absolute top-1 right-1 z-10">
+        <div className="absolute top-1 right-1 z-10 flex items-center gap-0.5">
+            {!isUnlocked && onToggleHope && <HopeStar name={item} hoped={hoped} onToggle={onToggleHope} />}
             <NoteTrigger id={item} title={item} suspendModals={suspendModals} />
         </div>
 
@@ -275,7 +297,7 @@ const UnlockCard: React.FC<UnlockCardProps> = ({
                 onError={() => setFailed((f) => ({ ...f, [imageUrl]: true }))}
              />
         </div>
-        <div className="flex-1 min-w-0 flex flex-col justify-center pr-6">
+        <div className={`flex-1 min-w-0 flex flex-col justify-center ${!isUnlocked && onToggleHope ? 'pr-10' : 'pr-6'}`}>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className={`text-xs font-bold leading-tight break-words ${isUnlocked ? 'text-gray-200' : canUnlock ? 'text-purple-300' : 'text-gray-500'}`}>
                     {item}
@@ -386,7 +408,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
     history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
+    hopes, toggleHope,
   } = game;
+  const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
   const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
@@ -548,13 +572,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const completionPercent = useMemo(() => runCompletion(unlocks, gameModeId, customMode), [unlocks, gameModeId, customMode]);
 
   // --- Handlers ---
-  const handleLevelUp = (skill: string) => {
+  const handleLevelUp = (skill: string) => confirmThen(`Level up ${skill} and roll for a Key?`, () => {
     if (animationsEnabled) {
         setLevelingSkill(skill);
         setTimeout(() => setLevelingSkill(null), 500);
     }
     levelUpSkill(skill);
-  };
+  });
 
   const handleSpecialUnlock = (table: TableType, name: string) => {
       // Chunked mode has no named-region unlocks (chunks are the only territory
@@ -831,6 +855,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     bossTierLabel={type === TableType.BOSSES ? `${TIER_LABEL[bossTier(label)]} tier` : undefined}
                     req={req}
                     readiness={readiness}
+                    hoped={hopeSet.has(hopeKey(type, item))}
+                    onToggleHope={() => toggleHope(hopeKey(type, item))}
                 />
             );
         })}
@@ -970,9 +996,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                                   </a>
                                               )
                                           }
+                                          const hoped = hopeSet.has(hopeKey(TableType.REGIONS, area));
                                           return (
+                                              <span key={area} className="group inline-flex items-center">
                                               <button 
-                                                key={area} 
                                                 onClick={() => canUnlock && handleSpecialUnlock(TableType.REGIONS, area)}
                                                 disabled={!canUnlock}
                                                 className={`
@@ -982,6 +1009,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                               >
                                                   {area} {canUnlock && <Lock size={8} />}
                                               </button>
+                                              {gameModeId !== 'chunked' && <HopeStar name={area} hoped={hoped} onToggle={() => toggleHope(hopeKey(TableType.REGIONS, area))} />}
+                                              </span>
                                           )
                                       })}
                                   </div>

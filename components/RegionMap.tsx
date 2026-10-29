@@ -1948,7 +1948,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const hoverKey = hoverChunk ? chunkKey(hoverChunk) : null;
     const hoverName = hoverKey ? (chunkSubArea[hoverKey] ?? osrsChunkRegion[hoverKey]) : undefined;
     let tip: { x: number; y: number; flip: boolean; lines: string[] } | null = null;
-    if (hoverChunk && hoverKey && hoverName && osrsBox && !authoring) {
+    // No hover tip while a chunk's panel is open: it would show through the panel.
+    if (hoverChunk && hoverKey && hoverName && osrsBox && !authoring && !selectedChunk) {
       const region = osrsChunkRegion[hoverKey];
       const sub = chunkSubArea[hoverKey];
       const unlocked = isChunked

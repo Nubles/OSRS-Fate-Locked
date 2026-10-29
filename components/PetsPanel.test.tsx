@@ -19,7 +19,7 @@ const handlers = () => ({ onFollow: vi.fn(), onShowFollower: vi.fn(), onClose: v
 describe('PetsPanel', () => {
   it('lists the claimed pets and starts on the follower, in 3D', () => {
     render(<PetsPanel claimed={[502001, 502026]} followerId={502026} followerShown animationsEnabled {...handlers()} />);
-    expect(screen.getByText('2 of 71 pets claimed')).toBeTruthy();
+    expect(screen.getByText('2 of 72 pets claimed')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Abyssal orphan/ })).toBeTruthy();
     const model = screen.getByTestId('model');
     expect(model.dataset.src).toMatch(/502026\.gltf$/);
@@ -61,7 +61,7 @@ describe('PetsPanel in the OSRS layout', () => {
   it('shows every pet like the collection log, claimed ones lit and the rest as silhouettes', () => {
     osrs();
     render(<PetsPanel claimed={[502001, 502026]} followerId={502026} followerShown animationsEnabled {...handlers()} />);
-    expect(screen.getByText('2 of 71 pets claimed')).toBeTruthy();
+    expect(screen.getByText('2 of 72 pets claimed')).toBeTruthy();
     const slots = document.querySelectorAll('[data-pet-slot]');
     expect(slots).toHaveLength(PETS.length);
     expect(document.querySelectorAll('[data-pet-slot="claimed"]')).toHaveLength(2);

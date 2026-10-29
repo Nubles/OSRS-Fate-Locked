@@ -15,6 +15,7 @@
  */
 
 import { importWithRetry } from '../utils/lazyRetry';
+import { SKILLS_LIST } from './items';
 
 /**
  * The manifest (several hundred models) loads on demand, not at startup, so it
@@ -85,8 +86,23 @@ export const modelUrlBySlug = (slug: string): string | undefined => {
  * axis flat. Tune here if one still looks off (try +90deg, or a yaw, to taste).
  */
 export const MODEL_ORIENTATION: Record<string, string> = {
-  // (none active — Galvek/Leviathan reverted; their raw export pose is kept)
+  // (no NPCs active — Galvek/Leviathan reverted; their raw export pose is kept)
 };
+
+/**
+ * Skills unlock as their skillcape, exported as worn, so the camera starts on
+ * the plain side facing the wearer. The skill's emblem is on the back, so turn
+ * each cape round (yaw 180°) to show the emblem first.
+ */
+export const SKILLCAPE_SLUGS: readonly string[] = SKILLS_LIST.map(slugify);
+const EMBLEM_TO_CAMERA = '0deg 0deg 180deg';
+for (const slug of SKILLCAPE_SLUGS) MODEL_ORIENTATION[slug] ??= EMBLEM_TO_CAMERA;
+
+/**
+ * A skillcape held still on its emblem in the unlock reveal: spinning it hid
+ * the emblem for most of the turn. The player can still drag it round.
+ */
+export const isSkillcape = (name: string): boolean => SKILLCAPE_SLUGS.includes(slugify(name));
 
 /** Render orientation for an unlock name, or undefined (no rotation). */
 export const orientationFor = (name: string): string | undefined =>

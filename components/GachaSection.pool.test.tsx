@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState } from '../context/GameContext';
 import { REGIONS_LIST, ROLLABLE_POH_ITEMS } from '../data/items';
 import { setStartArea } from '../utils/freeAreas';
 import { randomUnlockPool } from '../utils/gameEngine';
 import { TableType } from '../types';
+import { noteLayoutMoved, resetClickGuard } from '../utils/clickGuard';
+import { confirmSpendPref } from '../utils/viewerPrefs';
 
 const game = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 vi.mock('../context/GameContext', async importOriginal => ({
@@ -27,8 +29,10 @@ vi.mock('../utils/gameEngine', async importOriginal => {
 
 afterEach(() => {
   cleanup();
+  confirmSpendPref.set(false);
   setStartArea(undefined);
   blocked.table = undefined;
+  resetClickGuard();
 });
 
 const renderWith = async (unlocks: ReturnType<typeof createFreshState>['unlocks'], gameModeId = 'vanilla') => {
@@ -51,6 +55,39 @@ describe('Spend Keys cards', () => {
     expect(bosses.disabled).toBe(true);
     expect(bosses.textContent).toContain('Blocked');
     expect(bosses.textContent).not.toContain('Done');
+  });
+
+  it('spend nothing on a click that lands just after the page moved', async () => {
+    confirmSpendPref.set(false);
+    await renderWith(createFreshState().unlocks);
+    const rollUnlock = game.current.rollUnlock as ReturnType<typeof vi.fn>;
+
+    noteLayoutMoved();
+    fireEvent.click(card('Equipment'));
+    expect(rollUnlock).not.toHaveBeenCalled();
+
+    resetClickGuard();
+    fireEvent.click(card('Equipment'));
+    expect(rollUnlock).toHaveBeenCalledWith(TableType.EQUIPMENT);
+  });
+
+  it('asks Yes or No first while Ask before Key clicks is on', async () => {
+    confirmSpendPref.set(true);
+    await renderWith(createFreshState().unlocks);
+    const rollUnlock = game.current.rollUnlock as ReturnType<typeof vi.fn>;
+
+    fireEvent.click(card('Equipment'));
+    const question = await screen.findByText('Spend a Key on Equipment?');
+    expect(rollUnlock).not.toHaveBeenCalled();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByText('Spend a Key on Equipment?')).toBeNull());
+    expect(question.isConnected).toBe(false);
+    expect(rollUnlock).not.toHaveBeenCalled();
+
+    fireEvent.click(card('Equipment'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Yes' }));
+    await waitFor(() => expect(rollUnlock).toHaveBeenCalledWith(TableType.EQUIPMENT));
+    expect(rollUnlock).toHaveBeenCalledTimes(1);
   });
 
   it('offers Unlock on Vanilla Bosses while no boss can be reached yet', async () => {

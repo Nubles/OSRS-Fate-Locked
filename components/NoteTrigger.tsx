@@ -5,6 +5,8 @@ import { useGame } from '../context/GameContext';
 import { StickyNote, Save, X } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import './osrs/osrs-windows-a.css';
+import './osrs/osrs-windows-c.css';
 
 interface NoteTriggerProps {
   id: string; // The ID of the skill/region/item
@@ -44,18 +46,18 @@ export const NoteTrigger: React.FC<NoteTriggerProps> = ({ id, title, className, 
       </button>
 
       {!suspendModals && isOpen && createPortal(
-        <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setIsOpen(false)}>
-          <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className="bg-[#1e1e1e] border border-yellow-600/30 w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            <div className="bg-yellow-900/20 p-3 border-b border-yellow-600/20 flex justify-between items-center">
-              <h3 id={titleId} className="text-yellow-500 font-bold text-sm flex items-center gap-2">
-                <StickyNote size={16} /> Note: {title || id}
+        <div className="osrs-wa-overlay fixed inset-0 z-[1500] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setIsOpen(false)}>
+          <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} data-osrs-win="note" className="osrs-wa-win bg-[#1e1e1e] border border-yellow-600/30 w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="osrs-wa-head bg-yellow-900/20 p-3 border-b border-yellow-600/20 flex justify-between items-center">
+              <h3 id={titleId} className="osrs-wa-title text-yellow-500 font-bold text-sm flex items-center gap-2">
+                <StickyNote size={16} className="osrs-wa-hicon" /> Note: {title || id}
               </h3>
-              <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white" aria-label="Close note"><X size={16} aria-hidden="true" /></button>
+              <button onClick={() => setIsOpen(false)} className="osrs-wa-close text-gray-500 hover:text-white" aria-label="Close note"><X size={16} aria-hidden="true" /></button>
             </div>
             
             <div className="p-4">
               <textarea 
-                className="w-full h-32 bg-[#121212] border border-[#333] rounded p-3 text-sm text-gray-200 focus:border-yellow-500/50 focus:outline-none resize-none font-mono"
+                className="ocw-input w-full h-32 bg-[#121212] border border-[#333] rounded p-3 text-sm text-gray-200 focus:border-yellow-500/50 focus:outline-none resize-none font-mono"
                 placeholder="Write your plans here... (e.g. 'Farm Blue Dragons after 70 Agility')"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -63,11 +65,11 @@ export const NoteTrigger: React.FC<NoteTriggerProps> = ({ id, title, className, 
               />
             </div>
 
-            <div className="p-3 border-t border-[#333] bg-[#151515] flex justify-end gap-2">
-              <button onClick={() => setIsOpen(false)} className="px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors">Cancel</button>
+            <div className="ocw-foot p-3 border-t border-[#333] bg-[#151515] flex justify-end gap-2">
+              <button onClick={() => setIsOpen(false)} className="osrs-wa-btn px-3 py-1.5 text-xs text-gray-400 hover:text-white transition-colors">Cancel</button>
               <button 
                 onClick={handleSave} 
-                className="px-4 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs rounded flex items-center gap-1.5 transition-colors"
+                className="osrs-wa-btn px-4 py-1.5 bg-yellow-600 hover:bg-yellow-500 text-black font-bold text-xs rounded flex items-center gap-1.5 transition-colors"
               >
                 <Save size={14} /> Save Note
               </button>

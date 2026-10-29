@@ -9,6 +9,8 @@ import {
   BETA_MODE_NOTE, GAME_MODES, getGameMode, resolveModeRules, CUSTOM_RULE_BOUNDS,
 } from '../config/gameModes';
 import type { GameModeRules } from '../config/gameModes';
+import './osrs/osrs-windows-a.css';
+import './osrs/osrs-windows-c.css';
 
 interface Props {
   onClose: () => void;
@@ -54,22 +56,22 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
       aria-modal="true"
       aria-label="Choose game mode"
       tabIndex={-1}
-      className="fixed inset-0 z-[170] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="osrs-wa-overlay fixed inset-0 z-[170] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200"
     >
-      <div className="bg-[#0f1115] border border-white/10 rounded-xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden">
+      <div data-osrs-win="game-mode" className="osrs-wa-win bg-[#0f1115] border border-white/10 rounded-xl shadow-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-2 text-sm font-bold text-gray-200">
-            <Settings2 size={16} className="text-amber-400" />
+        <div className="osrs-wa-head flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
+          <div className="osrs-wa-title flex items-center gap-2 text-sm font-bold text-gray-200">
+            <Settings2 size={16} className="osrs-wa-hicon text-amber-400" />
             Game Mode
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white" aria-label="Close">
+          <button onClick={onClose} className="osrs-wa-close text-gray-500 hover:text-white" aria-label="Close">
             <X size={18} />
           </button>
         </div>
 
         {locked && (
-          <div className="px-5 py-2 bg-amber-950/40 border-b border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300 shrink-0">
+          <div className="ogm-locked px-5 py-2 bg-amber-950/40 border-b border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300 shrink-0">
             <Lock size={12} />
             The game mode is locked in — it can't be changed once chosen. Start a new profile to play a different mode.
           </div>
@@ -85,7 +87,8 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                 key={mode.id}
                 onClick={() => !locked && setSelectedId(mode.id)}
                 disabled={locked && !isActive}
-                className={`text-left rounded-lg border p-3 transition-all ${
+                data-osrs-on={isSelected ? 'true' : undefined}
+                className={`ogm-mode osrs-wa-tile text-left rounded-lg border p-3 transition-all ${
                   isSelected
                     ? 'border-amber-500/70 bg-amber-950/30'
                     : 'border-white/10 bg-white/[0.02] hover:border-white/25'
@@ -95,12 +98,12 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-white">{mode.name}</span>
                     {mode.beta && (
-                      <span className="text-[9px] uppercase tracking-wider bg-amber-900/60 text-amber-300 px-1.5 py-0.5 rounded">
+                      <span className="ocw-badge text-[9px] uppercase tracking-wider bg-amber-900/60 text-amber-300 px-1.5 py-0.5 rounded">
                         Beta
                       </span>
                     )}
                     {isActive && (
-                      <span className="text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">
+                      <span className="ocw-badge text-[9px] uppercase tracking-wider bg-emerald-900/60 text-emerald-300 px-1.5 py-0.5 rounded">
                         Active
                       </span>
                     )}
@@ -116,7 +119,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
 
           {/* Custom editor */}
           {selectedId === 'custom' && !locked && (
-            <div className="rounded-lg border border-white/10 bg-black/30 p-4 mt-1 flex flex-col gap-4">
+            <div className="osrs-wa-card rounded-lg border border-white/10 bg-black/30 p-4 mt-1 flex flex-col gap-4">
               <div className="text-[10px] uppercase tracking-widest text-gray-500">Custom ruleset</div>
 
               <label className="flex items-center justify-between gap-3 cursor-pointer">
@@ -181,7 +184,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
           )}
 
           {/* Seeded run */}
-          <div className="rounded-lg border border-white/10 bg-black/30 p-4 mt-1 flex flex-col gap-2">
+          <div className="osrs-wa-card rounded-lg border border-white/10 bg-black/30 p-4 mt-1 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="text-[10px] uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
                 <Dices size={12} className="text-cyan-400" /> Seeded run <span className="text-gray-600 normal-case tracking-normal">(optional)</span>
@@ -208,19 +211,19 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
                     value={seedDraft}
                     onChange={(e) => setSeedDraft(e.target.value)}
                     placeholder="Any phrase — or leave blank"
-                    className="flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-[12px] font-mono text-cyan-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500/50"
+                    className="ocw-input flex-1 bg-black/40 border border-white/15 rounded-lg px-3 py-1.5 text-[12px] font-mono text-cyan-200 placeholder-gray-600 focus:outline-none focus:border-cyan-500/50"
                     aria-label="Run seed"
                   />
                   <button
                     onClick={() => setSeedDraft(weeklySeed())}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-bold whitespace-nowrap transition-colors"
+                    className="osrs-wa-btn flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-[11px] font-bold whitespace-nowrap transition-colors"
                     title="This week's community seed"
                   >
                     <CalendarDays size={12} /> {weeklySeed()}
                   </button>
                   <button
                     onClick={() => setSeedDraft(randomSeed())}
-                    className="px-2.5 py-1.5 rounded-lg border border-white/15 bg-[#252525] hover:bg-white/5 text-gray-300 text-[11px] font-bold transition-colors"
+                    className="osrs-wa-btn osrs-wa-sq px-2.5 py-1.5 rounded-lg border border-white/15 bg-[#252525] hover:bg-white/5 text-gray-300 text-[11px] font-bold transition-colors"
                     title="Random seed"
                   >
                     <Dices size={12} />
@@ -232,7 +235,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
         </div>
 
         {/* Summary + apply */}
-        <div className="border-t border-white/10 px-5 py-3 shrink-0 flex items-center justify-between gap-4">
+        <div className="ogm-foot border-t border-white/10 px-5 py-3 shrink-0 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 text-[10px] text-gray-500">
             <Gauge size={13} className="text-gray-600" />
             <span>Pity: {activeRules.pityEnabled ? `${activeRules.pityThreshold} Fate` : 'off'}</span>
@@ -244,7 +247,7 @@ export const GameModePicker: React.FC<Props> = ({ onClose }) => {
           <button
             onClick={apply}
             disabled={locked && seedLocked}
-            className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="osrs-wa-btn px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {locked && seedLocked ? 'Locked' : locked ? 'Save seed' : 'Apply mode'}
           </button>

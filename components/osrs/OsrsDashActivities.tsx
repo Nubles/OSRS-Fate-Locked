@@ -63,6 +63,8 @@ interface CardData {
   req?: ActivityReq;
   readiness?: ActivityReadiness;
   suspendModals?: boolean;
+  hoped?: boolean;
+  onToggleHope?: () => void;
 }
 
 /** Reads the unlock cards out of the element tree renderGrid returns. */
@@ -149,6 +151,13 @@ const StagePicture: React.FC<{ name: string; icon?: string; owned: boolean }> = 
   return small ? <span className="osrs-slot oact-stage-slot">{img}</span> : img;
 };
 
+/** The hope list's star, drawn rather than typed so the RuneScape fonts don't need the glyph. */
+const HopeStar: React.FC<{ on: boolean; small?: boolean }> = ({ on, small }) => (
+  <svg className={`oact-hope-star${small ? ' is-small' : ''}`} aria-hidden="true" width={small ? 9 : 12} height={small ? 9 : 12} viewBox="0 0 12 12">
+    <path d="M6 .8l1.6 3.4 3.7.4-2.8 2.5.8 3.7L6 8.9 2.7 10.8l.8-3.7L.7 4.6l3.7-.4z" fill={on ? '#ff981f' : 'none'} stroke={on ? '#000' : 'currentColor'} strokeWidth="1" strokeLinejoin="round" />
+  </svg>
+);
+
 const QUEST_ICON = `${import.meta.env.BASE_URL}osrs-ui/quest_point_icon.png`;
 
 const Detail: React.FC<{ card: CardData; cat: OsrsActivityCategory; specialKeys: number; tool: boolean }> = ({ card, cat, specialKeys, tool }) => {
@@ -220,6 +229,14 @@ const Detail: React.FC<{ card: CardData; cat: OsrsActivityCategory; specialKeys:
               <img className="osrs-px" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={22} height={20} />
               {owned ? 'Unlocked' : 'Unlock with an Omni-Key'}
             </button>
+            {!owned && card.onToggleHope && (
+              <button type="button" className={`osrs-btn oact-hope${card.hoped ? ' is-on' : ''}`} aria-pressed={!!card.hoped}
+                title={card.hoped ? 'On your hope list. Click to take it off.' : 'Hope for this: Spend Keys shows your odds of drawing it.'}
+                onClick={card.onToggleHope}>
+                <HopeStar on={!!card.hoped} />
+                {card.hoped ? 'Hoped' : 'Hope'}
+              </button>
+            )}
             <span className="oact-note"><NoteTrigger id={card.item} title={card.item} suspendModals={card.suspendModals} /></span>
           </div>
         </div>
@@ -316,6 +333,7 @@ export const OsrsDashActivities: React.FC<Props> = ({ categories, activeId, onSe
                 onClick={() => setSel({ cat: cat.id, id: card.id })}
                 data-examine-name={card.item} data-examine={`${title}.${card.region ? ` ${card.region}.` : ''}`}>
                 {card.item}
+                {card.hoped && !card.isUnlocked && <HopeStar on small />}
               </button>
             );
           })}

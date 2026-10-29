@@ -162,9 +162,45 @@ describe('Fate relay shared progress', () => {
     expect(kv.puts).toEqual([`p:${RUN}`, `p:${RUN}`]);
   });
 
-  it('has no public read: a GET of a snapshot is refused', async () => {
+  it('has no public read of a private run: a GET answers 404, the same as a missing run', async () => {
+    expect((await call(env, `/p/${RUN}`)).status).toBe(404);
     await publish(env, snapshot());
-    expect((await call(env, `/p/${RUN}`)).status).toBe(405);
+    const read = await call(env, `/p/${RUN}`);
+    expect(read.status).toBe(404);
+    expect(await read.text()).not.toContain('Desert Battlefield');
+    expect((await call(env, `/p/${RUN}/link-code`)).status).toBe(405);
+  });
+
+  it('serves a public Adventurer\'s Log to anyone, with its map, and caches it for a minute', async () => {
+    const map = 'A'.repeat(271) + 'B';
+    await publish(env, snapshot({ public: true, map }));
+    const read = await call(env, `/p/${RUN}`, { headers: { Origin: 'https://elsewhere.test' } });
+    expect(read.status).toBe(200);
+    expect(read.headers.get('Access-Control-Allow-Origin')).toBe('*');
+    expect(read.headers.get('Cache-Control')).toBe('public, max-age=60');
+    const body = await read.json() as { snapshot: Record<string, unknown>; updatedAt: number };
+    expect(body.snapshot).toEqual(snapshot({ public: true, map }));
+    expect(body.updatedAt).toBeGreaterThan(0);
+    // Reads never write.
+    expect(kv.puts).toEqual([`p:${RUN}`]);
+  });
+
+  it('accepts only a well-formed map and a public flag of true', () => {
+    expect(validProgressSnapshot(snapshot({ map: 'A'.repeat(272) }))).toMatchObject({ map: 'A'.repeat(272) });
+    expect(validProgressSnapshot(snapshot({ map: 'A'.repeat(100) }))).toBeNull();
+    expect(validProgressSnapshot(snapshot({ map: '!'.repeat(272) }))).toBeNull();
+    expect(validProgressSnapshot(snapshot({ public: false }))).toBeNull();
+    expect(validProgressSnapshot(snapshot({ public: 'yes' }))).toBeNull();
+    expect(validProgressSnapshot(snapshot())).not.toHaveProperty('public');
+  });
+
+  it('goes private again when a later publish drops the public flag', async () => {
+    const first = await publish(env, snapshot({ public: true }));
+    const { updatedAt } = await first.json() as { updatedAt: number };
+    expect((await call(env, `/p/${RUN}`)).status).toBe(200);
+    vi.spyOn(Date, 'now').mockReturnValue(updatedAt + 61_000);
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect((await call(env, `/p/${RUN}`)).status).toBe(404);
   });
 
   it('links a Discord user with a one-time code, then serves that user the run', async () => {

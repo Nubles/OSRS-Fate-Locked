@@ -4,7 +4,7 @@ import { Copy, ExternalLink, Check, Loader2 } from 'lucide-react';
 import { Sparkles, Map, Box, Shield, BookOpen, Footprints, Zap, Home, Store, Gamepad2, Skull, Package, Dna, Flag } from './OsrsIcon';
 import { wikiUrlFor } from '../constants';
 import { EntityModel } from './EntityModel';
-import { orientationFor } from '../data/entityModels';
+import { isSkillcape, orientationFor } from '../data/entityModels';
 import { useModelFor } from '../hooks/useModelFor';
 import { categoryColor, categoryRarity, rarityRank } from '../utils/rarity';
 import { tableDisplayName } from '../utils/tableDisplay';
@@ -16,6 +16,8 @@ interface VoidRevealProps {
   itemImage?: string;
   onComplete: () => void;
   isChaos?: boolean;
+  /** The entry was on the player's hope list. */
+  hoped?: boolean;
   animationsEnabled: boolean;
   /** A skill's tier after this unlock, so the reveal can say which methods it opens. */
   tier?: number;
@@ -51,7 +53,7 @@ export const getItemDescription = (type: string, name: string, tier?: number): s
     return "Content successfully unlocked.";
 };
 
-export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, animationsEnabled, tier }) => {
+export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, itemImage, onComplete, isChaos = false, hoped = false, animationsEnabled, tier }) => {
   const [phase, setPhase] = useState<Phase>(() => {
       if (!animationsEnabled) return 'reveal';
       return isChaos ? 'roulette' : 'imploding';
@@ -458,7 +460,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
                         <div className={`absolute inset-0 bg-gradient-to-t ${theme.bgGradient} blur-xl opacity-50 animate-pulse`}></div>
                     )}
                     <div className="relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} orientation={orientationFor(itemName)} />
+                       <EntityModel src={entityModel} poster={itemImage} alt={itemName} size={200} interactive autoRotate={animationsEnabled} spin={isSkillcape(itemName) ? false : undefined} orientation={orientationFor(itemName)} />
                     </div>
                  </div>
               ) : itemImage && !imageError ? (
@@ -495,6 +497,7 @@ export const VoidReveal: React.FC<VoidRevealProps> = ({ itemName, itemType, item
               )}
               
               <h2 className="text-3xl font-black text-white drop-shadow-md break-words leading-tight">{itemName}</h2>
+              {hoped && <p className="mt-1 text-sm font-bold text-amber-300">One of your hopes came true.</p>}
               <p className="text-gray-400 text-xs italic mt-2 px-4 leading-relaxed border-t border-white/5 pt-2">{description}</p>
             </div>
 

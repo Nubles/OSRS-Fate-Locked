@@ -4,6 +4,7 @@ import {
   CLIENT_LAYOUT_KEY,
   INTERFACE_STYLE_KEY,
   TEXT_SIZE_KEY,
+  TIER_MARKS_KEY,
   UI_DEFAULT_KEY,
   UI_STYLE_KEY,
   applyUiStyle,
@@ -14,11 +15,13 @@ import {
   readClientLayout,
   readInterfaceStyle,
   readTextSize,
+  readTierMarks,
   readEffectiveUiStyle,
   readUiStyle,
   setClientLayout,
   setInterfaceStyle,
   setTextSize,
+  setTierMarks,
   setUiStyle,
   storageHasRun,
 } from './uiStyle';
@@ -48,16 +51,20 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('OSRS layout options', () => {
-  it('default to the 2007 style, the resizable client and normal text', () => {
+  it('default to the 2007 style, the resizable client, normal text and numeral tier marks', () => {
     expect(readInterfaceStyle()).toBe('2007');
     expect(readClientLayout()).toBe('resizable');
     expect(readTextSize()).toBe('normal');
+    expect(readTierMarks()).toBe('numerals');
   });
 
   it('read back what was written', () => {
     setInterfaceStyle('2010');
     setClientLayout('fixed');
     setTextSize('large');
+    setTierMarks('gems');
+    expect(stored.get(TIER_MARKS_KEY)).toBe('gems');
+    expect(readTierMarks()).toBe('gems');
     expect(stored.get(INTERFACE_STYLE_KEY)).toBe('2010');
     expect(stored.get(CLIENT_LAYOUT_KEY)).toBe('fixed');
     expect(stored.get(TEXT_SIZE_KEY)).toBe('large');
@@ -70,10 +77,12 @@ describe('OSRS layout options', () => {
     stored.set(INTERFACE_STYLE_KEY, '2012');
     stored.set(CLIENT_LAYOUT_KEY, 'FIXED');
     stored.set(TEXT_SIZE_KEY, '{"size":"large"}');
+    stored.set(TIER_MARKS_KEY, 'Gems');
     stored.set(UI_STYLE_KEY, 'osrs ');
     expect(readInterfaceStyle()).toBe('2007');
     expect(readClientLayout()).toBe('resizable');
     expect(readTextSize()).toBe('normal');
+    expect(readTierMarks()).toBe('numerals');
     expect(readUiStyle()).toBe(defaultUiStyle());
   });
 
@@ -85,6 +94,7 @@ describe('OSRS layout options', () => {
     expect(() => setInterfaceStyle('2010')).not.toThrow();
     expect(() => setClientLayout('fixed')).not.toThrow();
     expect(() => setTextSize('large')).not.toThrow();
+    expect(() => setTierMarks('gems')).not.toThrow();
     expect(() => setUiStyle('osrs')).not.toThrow();
   });
 

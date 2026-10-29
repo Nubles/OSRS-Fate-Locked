@@ -406,27 +406,27 @@ const OtherSources: React.FC<{ journalMin: number; journalMax: number; skillRate
       </button>
     </div>
     <div className="osrs-inner">
-      <div className="okf-other-row" data-examine={`Click unlocked skills in the Dashboard to roll. ${p.skillRateText}.`} data-examine-name="Skill Rolling">
+      <div className="okf-other-row" data-examine={`Click an unlocked skill on the Character tab to roll. ${p.skillRateText}.`} data-examine-name="Skill Rolling">
         <img className="osrs-px" src={p.statsIcon} alt="" aria-hidden="true" />
         <div>
           <div className="label">Skill Rolling</div>
-          <div className="desc">Click unlocked skills in the <em>Dashboard</em> to roll.</div>
+          <div className="desc">Click an unlocked skill on the <em>Character</em> tab to roll.</div>
           <div className="rate">{p.skillRateText}</div>
         </div>
       </div>
-      <div className="okf-other-row" data-examine={`Complete Quests, Diaries and CAs in the Journal Tab. Variable (${p.journalMin}% - ${p.journalMax}%).`} data-examine-name="Journal Activities">
+      <div className="okf-other-row" data-examine={`Complete Quests, Diaries and CAs on the Journal tab. Variable (${p.journalMin}% - ${p.journalMax}%).`} data-examine-name="Journal Activities">
         <img src={`${UI}quest_point_icon.png`} alt="" aria-hidden="true" />
         <div>
           <div className="label">Journal Activities</div>
-          <div className="desc">Complete Quests, Diaries &amp; CAs in the <em>Journal Tab</em>.</div>
+          <div className="desc">Complete Quests, Diaries &amp; CAs on the <em>Journal</em> tab.</div>
           <div className="rate">Variable ({p.journalMin}% - {p.journalMax}%)</div>
         </div>
       </div>
-      <div className="okf-other-row" data-examine={`Log new unique items in the Collection Log Tab to roll. ${p.collectionRate}% Drop Chance.`} data-examine-name="Collection Log">
+      <div className="okf-other-row" data-examine={`Log new unique items on the Collection tab to roll. ${p.collectionRate}% Drop Chance.`} data-examine-name="Collection Log">
         <img src={p.collLogIcon} alt="" aria-hidden="true" />
         <div>
           <div className="label">Collection Log</div>
-          <div className="desc">Log new unique items in the <em>Collection Log Tab</em> to roll.</div>
+          <div className="desc">Log new unique items on the <em>Collection</em> tab to roll.</div>
           <div className="rate">{p.collectionRate}% Drop Chance</div>
         </div>
       </div>

@@ -37,6 +37,130 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-29-orion-and-frost-dragons',
+    title: 'Orion, and frost dragon tasks',
+    date: '2026-10-29',
+    sections: {
+      added: [
+        'Orion, the pet from The Fractured Archive, is now on the All Pets page, so claiming it gives an Omni-Key.',
+      ],
+      fixed: [
+        'Nieve and Duradel only give frost dragon tasks once Dragon Slayer I is complete, as in the game since the 28 October update.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-26-ask-before-rolls',
+    title: 'Ask before Key rolls too',
+    date: '2026-10-26',
+    sections: {
+      changed: [
+        'The Yes or No box now also comes up before a click rolls for a Key, such as a level-up, a quest, a Farm Keys roll or a new Collection Log item.',
+        'Its setting is now called Ask before Key clicks.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-26-ask-before-spending',
+    title: 'Ask before spending',
+    date: '2026-10-26',
+    sections: {
+      added: [
+        'Spend Keys now asks Yes or No before each Key is spent. Enter says Yes, Esc says No. Turn it off in Settings: Ask before spending.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-26-spend-guard',
+    title: 'Safer Spend Keys clicks and log links',
+    date: '2026-10-26',
+    sections: {
+      fixed: [
+        'A click on Spend Keys that lands just as the page moves no longer spends a Key. Click again if you meant it.',
+        'An Adventurer\'s Log link opened in a tab that already shows the tracker now opens the log.',
+      ],
+      changed: [
+        'The table outlook on Spend Keys is now off unless you turn it on in Settings.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-26-hopes-and-outlook',
+    title: 'Hopes, clan broadcasts and the Adventurer\'s Log',
+    date: '2026-10-26',
+    sections: {
+      added: [
+        'Star a locked boss, minigame, guild or area to put it on your hope list. Spend Keys shows your odds of drawing it, and the reveal says when one lands.',
+        'Spend Keys says how many draws on Bosses, Minigames, Guilds, Banks and Areas you could use straight away. A Key still draws from the whole table.',
+        'Sync & Roll now rolls new boss kills and clue caskets from the hiscores too, less any you already rolled by hand or from RuneLite.',
+        'Back after 12 hours or more? A short note says what your last session did. Settings can switch it and the table odds off.',
+        'The OSRS chatbox has a Clan tab with other players\' unlocks from the Fate Locked Discord. Settings can switch it off.',
+        'Adventurer\'s Log: a public page of your run with a map of your chunks, to share by link. Off until you turn it on in Discord notifications.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-26-osrs-windows',
+    title: 'More windows in the OSRS look',
+    date: '2026-10-26',
+    sections: {
+      changed: [
+        'In the OSRS layout, the Game Mode, Sync Code, note, RuneLite guide and Strategy Guide windows now use the same stone frames, buttons and fonts.',
+        'The world map\'s chunk panel matches too, and the Strategy Guide\'s filters are square stone buttons with the chosen one pressed in.',
+        'The classic layout looks the same as before.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-26-osrs-layout-fixes',
+    title: 'OSRS layout fixes',
+    date: '2026-10-26',
+    sections: {
+      fixed: [
+        'On smaller windows the header fits again, so Settings, Rules and Fate Analytics no longer slip off the right edge.',
+        'On narrow windows the chatbox sits below the panels instead of on top of them.',
+        'The Timelapse names achievements, Fate and milestones instead of calling them all "ROLL".',
+        'The fixed client\'s Equipment Stats headings and the Kill Planner\'s gear note no longer run together.',
+        'The world map tooltip hides when a chunk\'s panel opens, and the Rules window shows all its icons.',
+        'Gear tiers use Roman numerals everywhere, and the Omni-Key check says which tier you\'re buying.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-25-tier-numerals',
+    title: 'Tiers as Roman numerals',
+    date: '2026-10-25',
+    sections: {
+      changed: [
+        'In the OSRS layout, skill and gear tiers now show as Roman numerals in the tier\'s colour, like the Worn Equipment slots, instead of gems.',
+        'Prefer the gems? Settings > Tier marks switches them back.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-25-skill-guide-text',
+    title: 'Skill guide tiers stop overlapping',
+    date: '2026-10-25',
+    sections: {
+      fixed: [
+        'The tier list in the skill guides no longer draws text on top of itself when your browser or computer shows text larger than usual.',
+        'Long tier lines wrap onto a second line and the list scrolls, so every tier, gem and unlock count stays readable.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-24-skillcape-emblem',
+    title: 'Skillcapes show their emblem',
+    date: '2026-10-24',
+    sections: {
+      fixed: [
+        'When a skill unlocks, its skillcape now faces you with the skill\'s emblem on show, instead of the plain side.',
+        'The cape holds still in the reveal so the emblem stays in view. Drag it to turn it round.',
+        'Every 3D model has deeper, truer colours. They looked washed out before.',
+      ],
+    },
+  },
+  {
     id: '2026-10-24-fairer-keys-update',
     title: 'Fairer Keys, clearer rolls and quest fixes',
     date: '2026-10-24',

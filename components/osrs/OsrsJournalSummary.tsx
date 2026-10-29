@@ -30,7 +30,8 @@ export const OsrsJournalSummary: React.FC<Props> = () => {
   const rows: Array<{ key: Tab; label: string; value: string; sub: string; active: boolean; examine: string }> = [
     {
       key: 'QUESTS',
-      label: 'Quests',
+      // The count includes miniquests, so the label says so (the Quest list counts them apart).
+      label: 'Quests & miniquests',
       value: `${stats.quests.done}/${stats.quests.total}`,
       sub: stats.quests.available > 0 ? `${stats.quests.available} ready to complete` : 'None ready yet',
       active: stats.quests.available > 0,

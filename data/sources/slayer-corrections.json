@@ -9,6 +9,7 @@
     { "title": "Duradel/Slayer assignments", "revision": 15287288, "url": "https://oldschool.runescape.wiki/w/Duradel/Slayer_assignments?oldid=15287288" },
     { "title": "Krystilia", "revision": 15341834, "url": "https://oldschool.runescape.wiki/w/Krystilia?oldid=15341834" },
     { "title": "Konar quo Maten", "revision": 15343043, "url": "https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15343043" },
+    { "title": "Slayer task/Frost dragons", "revision": 15384445, "url": "https://oldschool.runescape.wiki/w/Slayer_task/Frost_dragons?oldid=15384445" },
     { "title": "Boss Slayer", "revision": 15359739, "url": "https://oldschool.runescape.wiki/w/Boss_Slayer?oldid=15359739" }
   ],
   "corrections": [
@@ -29,6 +30,8 @@
     { "master": "Duradel", "task": "Frost dragons", "set": { "skills": { "Sailing": 87 } }, "reason": "Frost dragon tasks need 87 Sailing.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Nieve", "task": "Frost dragons", "removeReq": ["Dock at Grimstone"], "reason": "Docking at Grimstone needs the 87 Sailing the row already asks for; the wiki lists nothing else.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Duradel", "task": "Frost dragons", "removeReq": ["Dock at Grimstone"], "reason": "Docking at Grimstone needs the 87 Sailing the row already asks for; the wiki lists nothing else.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Nieve", "task": "Frost dragons", "set": { "req": ["Dragon Slayer I Complete the quest"] }, "reason": "Since the 28 October 2026 update, frost dragon tasks need Dragon Slayer I complete.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task/Frost_dragons?oldid=15384445"] },
+    { "master": "Duradel", "task": "Frost dragons", "set": { "req": ["Dragon Slayer I Complete the quest"] }, "reason": "Since the 28 October 2026 update, frost dragon tasks need Dragon Slayer I complete.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task/Frost_dragons?oldid=15384445"] },
     { "master": "Krystilia", "task": "Magic axes", "set": { "skills": { "Thieving": 23 } }, "removeReq": ["Unlock the door (Magic axe hut)"], "reason": "The magic axe hut's door needs 23 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Krystilia", "task": "Pirates", "set": { "skills": { "Thieving": 39 } }, "removeReq": ["WildernessPirateAccess[+]"], "reason": "The Pirates' Hideout's door needs 39 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] }
   ],

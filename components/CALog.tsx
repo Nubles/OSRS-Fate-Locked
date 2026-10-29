@@ -1,4 +1,5 @@
 
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useMemo, useState, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { CA_DATA, CATier } from '../data/caData';
@@ -80,7 +81,8 @@ export const useCAJournal = (externalSearch = '') => {
     event: React.MouseEvent,
   ) => {
     event.stopPropagation();
-    completeCATask(task.id, event.clientX, event.clientY);
+    const { clientX, clientY } = event;
+    confirmThen(`Complete ${task.name} and roll for a Key?`, () => completeCATask(task.id, clientX, clientY));
   };
 
   const filteredCAs = Object.values(CA_DATA).filter(ca => {

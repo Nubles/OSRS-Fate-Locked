@@ -108,6 +108,7 @@ const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompl
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
 const HeaderSettingsMenu = lazyWithRetry(() => import('./components/HeaderSettingsMenu'));
+const WelcomeBackStrip = lazyWithRetry(() => import('./components/WelcomeBackStrip'));
 const OsrsShellFrame = lazyWithRetry(() => import('./components/osrs/OsrsShellFrame'));
 const OsrsContextMenu = lazyWithRetry(() => import('./components/osrs/OsrsContextMenu').then(m => ({ default: m.OsrsContextMenu })));
 const RunelitePluginGuide = lazyWithRetry(() =>
@@ -1266,6 +1267,8 @@ const GameLayout = () => {
       )}
 
       {/* One contextual "next step" hint under the header — teaches the loop. */}
+      {/* After 12 hours or more away: what the last session did. */}
+      {!isOsrs && <Suspense fallback={null}><WelcomeBackStrip /></Suspense>}
       {!isOsrs && <CoachStrip />}
 
       {/* Asks once per run whether to turn on online backup. */}

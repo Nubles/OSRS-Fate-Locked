@@ -9,6 +9,8 @@ import { chunkContentService } from '../../services/ChunkContentService';
 import { displayAreaName } from '../../data/areaMapPolicy';
 import { misthalinListName } from '../../utils/worldWording';
 import { NoteTrigger } from '../NoteTrigger';
+import { TableType } from '../../types';
+import { hopeKey } from '../../utils/hopeKey';
 import { itemSrc } from './OsrsDashGems';
 import './osrs-world.css';
 
@@ -70,7 +72,8 @@ const useAdvisor = (): { heading: string; caption: string; sub: string; empty: s
 };
 
 export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable, onUnlockArea, suspendModals, viewButtons }) => {
-  const { unlocks, specialKeys, gameModeId, advisorsEnabled } = useGame();
+  const { unlocks, specialKeys, gameModeId, advisorsEnabled, hopes, toggleHope } = useGame();
+  const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
   const adv = useAdvisor();
   const q = searchQuery.toLowerCase();
   const canOmni = gameModeId !== 'chunked' && specialKeys > 0;
@@ -205,6 +208,17 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
                         <img className="osrs-px" src={itemSrc('omni_key')} alt="" aria-hidden="true" width={18} height={16} />Unlock
                       </button>
                     ) : <span className="owl-tag" style={{ background: '#3a1414', color: '#ff5050' }}>Locked</span>}
+                  {!free && gameModeId !== 'chunked' && (() => {
+                    const hoped = hopeSet.has(hopeKey(TableType.REGIONS, area));
+                    return (
+                      <button type="button" className={`owl-hope${hoped ? ' is-on' : ''}`} aria-pressed={hoped}
+                        aria-label={hoped ? `Take ${area} off your hope list` : `Hope for ${area}`}
+                        title={hoped ? 'On your hope list. Click to take it off.' : 'Hope for this: Spend Keys shows your odds of drawing it.'}
+                        onClick={() => toggleHope(hopeKey(TableType.REGIONS, area))}>
+                        <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12"><path d="M6 .8l1.6 3.4 3.7.4-2.8 2.5.8 3.7L6 8.9 2.7 10.8l.8-3.7L.7 4.6l3.7-.4z" fill={hoped ? '#ff981f' : 'none'} stroke={hoped ? '#000' : 'currentColor'} strokeWidth="1" strokeLinejoin="round" /></svg>
+                      </button>
+                    );
+                  })()}
                 </div>
               );
             })}

@@ -12,7 +12,9 @@ import { levelUpKeyChance } from '../../utils/keyChance';
 import { tierCap } from '../../utils/chunkedFate';
 import { chunkedPastCapText, levelBoostNote } from '../SkillRollOdds';
 import { isSkillChaosMilestone, LEVEL_CHAOS_CHANCE } from '../../config/economy';
-import { TIER_GEMS, gemSrc, roman, skillIconSrc, tint } from './OsrsDashGems';
+import { TIER_GEMS, roman, skillIconSrc, tint } from './OsrsDashGems';
+import { OsrsTierMark } from './OsrsTierMark';
+import { useTierMarks } from '../../utils/uiStyle';
 import { SetLevelControl } from '../SetLevelControl';
 import './osrs-dashboard.css';
 
@@ -130,6 +132,9 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
   const sel: Rung = rung === 'stations' && !showStationsRung ? Math.max(1, currentTier) : rung;
 
   const curGem = currentTier > 0 ? TIER_GEMS[currentTier - 1] : null;
+  // Gem names go with the gems: with numerals a tier is just Tier I..X.
+  const gemNames = useTierMarks() === 'gems';
+  const named = (t: number) => (gemNames ? ` · ${TIER_GEMS[t - 1].name}` : '');
   const contentTo = currentTier > 0 ? tierBand(currentTier).max : 0;
   const nextLevel = level + 1;
   const oddsId = `skill-guide-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
@@ -204,7 +209,7 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
     const g = TIER_GEMS[sel - 1];
     const owned = sel <= currentTier;
     return {
-      title: `Tier ${roman(sel)} · ${g.name}`, sub: `Levels ${tierBand(sel).label}`, color: g.color,
+      title: `Tier ${roman(sel)}${named(sel)}`, sub: `Levels ${tierBand(sel).label}`, color: g.color,
       bg: owned ? tint(g.color, 0.16) : 'var(--osrs-inner, #2e271e)', edge: owned ? g.color : 'var(--osrs-inner-ring, #4f4434)',
       state: owned ? 'Active' : (sel === currentTier + 1 ? 'Next Unlock' : 'Locked'),
       stateColor: owned ? 'var(--osrs-green, #0dc10d)' : (sel === currentTier + 1 ? 'var(--osrs-yellow, #ff0)' : 'var(--osrs-red, #ff3030)'),
@@ -234,12 +239,12 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
             </span>
           </span>
           <span className="osrs-dash-guidehero-tier">
-            {curGem && <img className="osrs-px" src={gemSrc(currentTier)} alt="" aria-hidden="true" width={36} height={32} />}
+            <OsrsTierMark tier={currentTier} size="hero" />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '17px' }}>
               <span style={{ fontFamily: 'RSBold, sans-serif', color: curGem ? curGem.color : 'var(--osrs-red, #ff3030)' }}>
-                {curGem ? `Current: Tier ${roman(currentTier)} · ${curGem.name}` : 'Current: Tier 0'}
+                {curGem ? `Current: Tier ${roman(currentTier)}${named(currentTier)}` : 'Current: Tier 0'}
               </span>
-              <span className="osrs-dash-tan-s">Max: Tier X · Zenyte</span>
+              <span className="osrs-dash-tan-s">Max: Tier X{named(10)}</span>
             </span>
             {currentTier > 0 && level < 99 && (
               <span className="osrs-dash-odds" tabIndex={0} aria-describedby={oddsId}>
@@ -332,11 +337,9 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
                 className="osrs-dash-rung" disabled={unlockedOnly && currentTier < 1}
                 style={sel === 'stations' ? { background: 'var(--osrs-selected, #5a4c3a)', boxShadow: 'inset 0 0 0 1px var(--osrs-yellow, #ff0)' } : undefined}>
                 <img className="osrs-px" src={skillIconSrc(skill)} alt="" aria-hidden="true" width={25} height={25} style={{ margin: '0 1px' }} />
-                <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '16px', minWidth: 0 }}>
-                  <span style={{ fontFamily: 'RSBold, sans-serif', color: 'var(--osrs-orange, #ff981f)' }}>Stations</span>
-                  <span className="osrs-dash-tan-s" style={{ whiteSpace: 'nowrap' }}>Usable from level 1</span>
-                </span>
-                <span className="osrs-dash-yellow-s" style={{ marginLeft: 'auto' }}>{visibleStations.length || ''}</span>
+                <span className="osrs-dash-rung-name" style={{ color: 'var(--osrs-orange, #ff981f)' }}>Stations</span>
+                <span className="osrs-dash-rung-sub">Usable from level 1</span>
+                <span className="osrs-dash-rung-count">{visibleStations.length || ''}</span>
               </button>
             )}
             {TIER_GEMS.map((g, i) => {
@@ -360,18 +363,13 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
                     boxShadow: on ? `inset 0 0 0 1px ${g.color}` : undefined,
                   }}
                 >
-                  <img className="osrs-px" src={gemSrc(t)} alt="" aria-hidden="true" width={27} height={24}
-                    style={{ filter: owned ? undefined : (next ? 'grayscale(.4) brightness(.8)' : 'grayscale(1) brightness(.45)') }} />
-                  <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '16px', minWidth: 0 }}>
-                    <span style={{ fontFamily: 'RSBold, sans-serif', color: owned ? g.color : (next ? 'var(--osrs-orange, #ff981f)' : '#7d705c') }}>Tier {roman(t)}</span>
-                    <span className="osrs-dash-tan-s" style={{ whiteSpace: 'nowrap' }}>Levels {tierBand(t).label} · {g.name}</span>
+                  <OsrsTierMark tier={t} size="row" look={owned ? 'on' : (next ? 'next' : 'off')} framed />
+                  <span className="osrs-dash-rung-name" style={{ color: owned ? g.color : (next ? 'var(--osrs-orange, #ff981f)' : '#7d705c') }}>Tier {roman(t)}</span>
+                  <span className="osrs-dash-rung-sub"><span>Levels {tierBand(t).label}</span>{gemNames && <> · <span>{g.name}</span></>}</span>
+                  <span className="osrs-dash-rung-state" style={{ color: owned ? 'var(--osrs-green, #0dc10d)' : (next ? 'var(--osrs-yellow, #ff0)' : '#7d705c') }}>
+                    {owned ? 'Active' : (next ? 'Next Unlock' : 'Locked')}
                   </span>
-                  <span style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '15px' }}>
-                    <span style={{ font: "16px 'RSSmall', sans-serif", color: owned ? 'var(--osrs-green, #0dc10d)' : (next ? 'var(--osrs-yellow, #ff0)' : '#7d705c') }}>
-                      {owned ? 'Active' : (next ? 'Next Unlock' : 'Locked')}
-                    </span>
-                    <span className="osrs-dash-yellow-s">{n ? `${n} ${tab === 'gather' ? 'to gather' : (n === 1 ? 'unlock' : 'unlocks')}` : ''}</span>
-                  </span>
+                  <span className="osrs-dash-rung-count">{n ? `${n} ${tab === 'gather' ? 'to gather' : (n === 1 ? 'unlock' : 'unlocks')}` : ''}</span>
                 </button>
               );
             })}
@@ -380,7 +378,7 @@ export const OsrsSkillGuide: React.FC<Props> = ({ skill, currentTier, onClose })
           <div style={{ minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
             <div className="osrs-sh" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 10px', background: head.bg, border: '1px solid #000', boxShadow: `inset 0 0 0 1px ${head.edge}` }}>
               {head.gem
-                ? <img className="osrs-px" src={gemSrc(head.gem)} alt="" aria-hidden="true" width={36} height={32} style={{ filter: head.gem <= currentTier ? undefined : 'grayscale(.5) brightness(.75)' }} />
+                ? <OsrsTierMark tier={head.gem} size="hero" look={head.gem <= currentTier ? 'on' : (head.gem === currentTier + 1 ? 'next' : 'off')} />
                 : <img className="osrs-px" src={skillIconSrc(skill)} alt="" aria-hidden="true" width={25} height={25} />}
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: '18px' }}>
                 <span style={{ fontFamily: 'RSBold, sans-serif', color: head.color }}>{head.title}</span>

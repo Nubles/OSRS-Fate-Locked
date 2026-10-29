@@ -1,4 +1,5 @@
 
+import { confirmThen } from '../utils/spendConfirm';
 import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
@@ -186,10 +187,12 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
   const handleItemClick = (e: React.MouseEvent, itemId: number, itemName: string) => {
     if (identityReview.blockedIds.has(itemId)) return;
     const isNewUnlock = !unlocks.collectionLog[itemId];
-    logCollectionItem(itemId);
-    if (isNewUnlock) {
-       rollForKey(`Col. Log: ${itemName}`, DROP_RATES[DropSource.COLLECTION_LOG], failureFateForSource(DropSource.COLLECTION_LOG), e.clientX, e.clientY);
-    }
+    if (!isNewUnlock) { logCollectionItem(itemId); return; }
+    const { clientX, clientY } = e;
+    confirmThen(`Log ${itemName} and roll for a Key?`, () => {
+      logCollectionItem(itemId);
+      rollForKey(`Col. Log: ${itemName}`, DROP_RATES[DropSource.COLLECTION_LOG], failureFateForSource(DropSource.COLLECTION_LOG), clientX, clientY);
+    });
   };
 
   // 1. Gather all matching pages for the Sidebar

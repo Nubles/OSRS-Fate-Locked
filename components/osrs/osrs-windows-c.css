@@ -1,0 +1,224 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   OSRS layout: the windows that still drew in the classic look (Game Mode,
+   Sync Code, the note editor, the world map's chunk panel, the RuneLite
+   Plugin Guide and the Strategy Guide's filters). They keep their classic
+   markup and take the osrs-wa-* hooks from osrs-windows-a.css; this file adds
+   what is particular to each. Scoped to html[data-ui="osrs"], so the classic
+   layout never sees it.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Shared: text fields are dark wells, range sliders a well with a stone knob. */
+html[data-ui="osrs"] :is(.osrs-wa-win, .ocw-panel) :is(.ocw-input, textarea.ocw-input) {
+  box-sizing: border-box;
+  border-radius: 0;
+  border: 1px solid #000;
+  background-color: var(--osrs-well);
+  box-shadow: inset 1px 1px 0 #000;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  line-height: var(--osrs-lh, 18px);
+  letter-spacing: 0;
+  color: var(--osrs-white);
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] :is(.osrs-wa-win, .ocw-panel) .ocw-input::placeholder { color: var(--osrs-text-dim); }
+html[data-ui="osrs"] :is(.osrs-wa-win, .ocw-panel) .ocw-input:focus { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; border-color: #000; }
+html[data-ui="osrs"] .osrs-wa-win input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  background: var(--osrs-well);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 #000;
+}
+html[data-ui="osrs"] .osrs-wa-win input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 18px;
+  background: var(--osrs-btn);
+  border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  cursor: pointer;
+}
+html[data-ui="osrs"] .osrs-wa-win input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 18px;
+  border-radius: 0;
+  background: var(--osrs-btn);
+  border: 1px solid #000;
+  cursor: pointer;
+}
+/* A small boxed word (Beta, Active, Unlocked) in a dark well. */
+html[data-ui="osrs"] :is(.osrs-wa-win, .ocw-panel) .ocw-badge {
+  padding: 0 5px;
+  border-radius: 0;
+  border: 1px solid #000;
+  background: var(--osrs-well);
+  font: var(--osrs-fs, 16px) 'RSSmall', sans-serif;
+  line-height: 16px;
+}
+
+/* ── Game Mode ──────────────────────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-win .ogm-locked { background: var(--osrs-inner); border-color: #000; color: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win .ogm-mode { display: block; width: 100%; cursor: pointer; }
+html[data-ui="osrs"] .osrs-wa-win .ogm-mode:hover:not(:disabled) .text-white { color: var(--osrs-yellow); }
+/* The chosen mode is pressed in, like a selected tab. */
+html[data-ui="osrs"] .osrs-wa-win .ogm-mode[data-osrs-on="true"] {
+  background-color: var(--osrs-selected);
+  box-shadow: inset 1px 1px 0 var(--osrs-selected-sh), inset -1px -1px 0 var(--osrs-bevel-hi);
+}
+html[data-ui="osrs"] .osrs-wa-win .ogm-mode[data-osrs-on="true"] svg { color: var(--osrs-yellow); }
+html[data-ui="osrs"] .osrs-wa-win .ogm-mode:disabled { opacity: 0.5; cursor: default; }
+html[data-ui="osrs"] .osrs-wa-win .ogm-mode:focus-visible { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; }
+html[data-ui="osrs"] .osrs-wa-win .ogm-foot { border-top: 1px solid var(--osrs-rule); padding: 6px 8px; }
+html[data-ui="osrs"] .osrs-wa-win .ogm-foot .osrs-wa-btn { min-width: 120px; }
+
+/* ── Sync Code and Online backup ────────────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab[data-osrs-on="true"] { position: relative; top: 1px; background: var(--osrs-selected); color: var(--osrs-white); }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab:disabled { cursor: default; color: var(--osrs-btn-off); }
+html[data-ui="osrs"] [data-osrs-win="sync"] .osrs-wa-tabs .osrs-wa-tab { flex: 0 0 auto; }
+html[data-ui="osrs"] .osrs-wa-win .osrs-wa-tab :is(img, svg) { display: none; }
+/* Every action button in the window is a stone button; the main one keeps
+   its place but not its bright web fill. */
+html[data-ui="osrs"] [data-osrs-win="sync"] button[class*="rounded-lg"] {
+  min-height: 28px;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  letter-spacing: 0;
+  color: var(--osrs-orange);
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] [data-osrs-win="sync"] button[class*="rounded-lg"]:hover:not(:disabled) { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="sync"] button[class*="rounded-lg"]:disabled { opacity: 1; color: var(--osrs-btn-off); background: var(--osrs-btn-off-bg); box-shadow: inset 1px 1px 0 var(--osrs-inner-ring); }
+html[data-ui="osrs"] [data-osrs-win="sync"] button[class*="rounded-lg"]:focus-visible { outline: 1px solid var(--osrs-yellow); }
+html[data-ui="osrs"] [data-osrs-win="sync"] :is(textarea, input[type="text"], input:not([type])) {
+  border-radius: 0;
+  border: 1px solid #000;
+  background-color: var(--osrs-well);
+  box-shadow: inset 1px 1px 0 #000;
+  font: var(--osrs-fs, 16px) 'RS', sans-serif;
+  color: var(--osrs-white);
+}
+html[data-ui="osrs"] [data-osrs-win="sync"] :is(textarea, input):focus { outline: 1px solid var(--osrs-yellow); outline-offset: -1px; }
+/* The backup code, the QR card and backup rows: dark wells and inner panels. */
+html[data-ui="osrs"] [data-osrs-win="sync"] [data-testid="backup-code"] { font-family: 'RSBold', sans-serif; color: var(--osrs-yellow); }
+html[data-ui="osrs"] [data-osrs-win="sync"] [class~="bg-cyan-950/20"] { background: var(--osrs-well); border-color: #000; }
+html[data-ui="osrs"] [data-osrs-win="sync"] .border-t { border-color: var(--osrs-rule); }
+
+/* ── Note editor and other plain footers ────────────────────────────────── */
+html[data-ui="osrs"] .osrs-wa-win .ocw-foot { background: none; border-top: 1px solid var(--osrs-rule); padding: 6px 8px; }
+html[data-ui="osrs"] [data-osrs-win="note"] .ocw-foot .osrs-wa-btn { min-width: 100px; }
+html[data-ui="osrs"] [data-osrs-win="note"] .ocw-foot .osrs-wa-btn svg { display: none; }
+
+/* ── World map chunk panel: a stone side window over the map ────────────── */
+html[data-ui="osrs"] [data-osrs-win="chunk"] {
+  border: 2px solid #000;
+  border-radius: 0;
+  background-color: var(--osrs-window);
+  backdrop-filter: none;
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo), 0 0 0 1px var(--osrs-bevel-lo);
+  color: var(--osrs-tan);
+  text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] [data-osrs-win="chunk"] > header { background: var(--osrs-window); border-bottom: 1px solid var(--osrs-rule); box-shadow: none; }
+html[data-ui="osrs"] [data-osrs-win="chunk"] > header h3 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange); }
+/* Status word (Unlocked / Locked / Varies) in a dark well, close as a stone square. */
+html[data-ui="osrs"] [data-osrs-win="chunk"] > header [class*="rounded-full"] { border-radius: 0; border-color: #000; background: var(--osrs-well); font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; text-transform: none; letter-spacing: 0; }
+html[data-ui="osrs"] [data-osrs-win="chunk"] > header button[aria-label="Close chunk info"] {
+  width: 22px; height: 22px; padding: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--osrs-orange); background: var(--osrs-btn); border: 1px solid; border-color: var(--osrs-btn-hi) var(--osrs-btn-lo) var(--osrs-btn-lo) var(--osrs-btn-hi);
+}
+html[data-ui="osrs"] [data-osrs-win="chunk"] > header button[aria-label="Close chunk info"]:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] > header button[aria-label="Close chunk info"] svg { stroke-width: 3.5; }
+/* This chunk / Whole area: two stone buttons, the chosen one pressed in. */
+html[data-ui="osrs"] [data-osrs-win="chunk"] [role="group"][aria-label="Chunk information scope"] { gap: 3px; padding: 0; border: 0; background: none; }
+html[data-ui="osrs"] [data-osrs-win="chunk"] [aria-label="Chunk information scope"] button {
+  border-radius: 0; border: 1px solid #000; background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; text-transform: none; letter-spacing: 0; color: var(--osrs-orange);
+}
+html[data-ui="osrs"] [data-osrs-win="chunk"] [aria-label="Chunk information scope"] button:hover { color: var(--osrs-white); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] [aria-label="Chunk information scope"] button[aria-pressed="true"] { background: var(--osrs-selected); color: var(--osrs-white); box-shadow: inset 1px 1px 0 var(--osrs-selected-sh); }
+/* Sections, summary tiles and notes: inner panels and wells, no cyan. */
+html[data-ui="osrs"] [data-osrs-win="chunk"] section { border-radius: 0; border-color: #000; background: var(--osrs-inner); box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] section > button > span:first-child { border-radius: 0; background: var(--osrs-slot); box-shadow: inset 1px 1px 0 var(--osrs-slot-lo); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] section > button > span:nth-child(2) { color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class~="bg-white/[0.035]"],
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class~="bg-white/[0.025]"],
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class~="bg-cyan-950/20"],
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class~="bg-black/20"] { border-radius: 0; border-color: #000; background: var(--osrs-well); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class*="border-cyan"] { border-color: #000; }
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class*="text-cyan"] { color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] [class*="bg-cyan"] { background-color: var(--osrs-well); }
+html[data-ui="osrs"] [data-osrs-win="chunk"] :focus-visible { outline: 1px solid var(--osrs-yellow); box-shadow: none; }
+
+/* ── RuneLite Plugin Guide: a large stone window, the contents down the left
+   as stone buttons, the chapters on the dark inner panel. ──────────────── */
+html[data-ui="osrs"] [data-runelite-guide-shell] { color: var(--osrs-tan); }
+html[data-ui="osrs"] [data-runelite-guide-header] { background: none; border-bottom: 1px solid var(--osrs-rule); }
+html[data-ui="osrs"] [data-runelite-guide-header] > div:first-child { padding: 4px 6px; }
+html[data-ui="osrs"] [data-runelite-guide-header] > div:first-child > span:first-child,
+html[data-ui="osrs"] [data-guide-chapter-header] > span:first-child {
+  border-radius: 0; border: 1px solid #000; background: var(--osrs-slot);
+  box-shadow: inset 1px 1px 0 var(--osrs-slot-hi), inset -1px -1px 0 var(--osrs-slot-lo);
+}
+html[data-ui="osrs"] [data-runelite-guide-header] h1 { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-runelite-guide-header] button[aria-label="Close RuneLite Plugin Guide"] {
+  width: 26px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 0;
+  color: var(--osrs-orange); background: var(--osrs-btn); border: 1px solid; border-color: var(--osrs-btn-hi) var(--osrs-btn-lo) var(--osrs-btn-lo) var(--osrs-btn-hi);
+}
+html[data-ui="osrs"] [data-runelite-guide-header] button[aria-label="Close RuneLite Plugin Guide"]:hover { color: var(--osrs-white); background: var(--osrs-btn); }
+html[data-ui="osrs"] [data-runelite-guide-header] button[aria-label="Close RuneLite Plugin Guide"] svg { width: 16px; height: 16px; stroke-width: 3.75; }
+/* Contents: group labels in orange, chapters as stone buttons, the one in view pressed in. */
+html[data-ui="osrs"] [data-runelite-guide-nav="desktop"] { background: none; border-right: 1px solid var(--osrs-rule); padding: 8px 6px; }
+html[data-ui="osrs"] [data-runelite-guide-nav="desktop"] [data-guide-nav-group] > p { color: var(--osrs-orange); font-family: 'RSBold', sans-serif; }
+html[data-ui="osrs"] [data-runelite-guide-nav="desktop"] a {
+  margin-bottom: 3px; border-radius: 0; border: 1px solid #000; background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo); color: var(--osrs-orange);
+}
+html[data-ui="osrs"] [data-runelite-guide-nav="desktop"] a:hover { background: var(--osrs-btn); color: var(--osrs-white); }
+html[data-ui="osrs"] [data-runelite-guide-nav="desktop"] a[aria-current] { background: var(--osrs-selected); color: var(--osrs-white); box-shadow: inset 1px 1px 0 var(--osrs-selected-sh); }
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] { background: var(--osrs-inner); border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--osrs-inner-ring); }
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] h2 { color: var(--osrs-orange); }
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] :is(p, li, dd) { line-height: 22px; }
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] .border-t { border-color: var(--osrs-rule); }
+/* Jump pills and the closing button: square stone buttons. */
+html[data-ui="osrs"] [data-guide-intro] a,
+html[data-ui="osrs"] [data-guide-intro] button,
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] > div > div:last-child button {
+  border-radius: 0; border: 1px solid #000; background: var(--osrs-btn);
+  box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
+  font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange);
+}
+html[data-ui="osrs"] [data-guide-intro] :is(a, button):hover,
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] > div > div:last-child button:hover { background: var(--osrs-btn); color: var(--osrs-white); }
+/* Step numbers: yellow on a dark slot; notes and term lists as stone panels. */
+html[data-ui="osrs"] [data-guide-steps] li > span:first-child {
+  border-radius: 0; border: 1px solid #000; background: var(--osrs-slot);
+  box-shadow: inset 1px 1px 0 var(--osrs-slot-hi), inset -1px -1px 0 var(--osrs-slot-lo);
+  font-family: 'RSBold', sans-serif; color: var(--osrs-yellow); text-shadow: var(--osrs-shadow);
+}
+html[data-ui="osrs"] [data-runelite-guide-scroll-region] li > span[aria-hidden="true"].rounded-full { border-radius: 0; background: var(--osrs-orange); }
+html[data-ui="osrs"] :is([data-guide-note], [data-guide-terms]) {
+  border-radius: 0; border: 1px solid #000; background: var(--osrs-window);
+  box-shadow: inset 1px 1px 0 var(--osrs-bevel-hi), inset -1px -1px 0 var(--osrs-bevel-lo);
+}
+html[data-ui="osrs"] [data-guide-note] > p:first-child { color: var(--osrs-yellow); }
+html[data-ui="osrs"] [data-runelite-guide-shell] :focus-visible { outline: 1px solid var(--osrs-yellow); box-shadow: none; }
+
+/* ── Strategy Guide: the title on the left, the Available / Locked / Closest
+   toggle as stone buttons beside it, the filter chips square stone buttons
+   (the chosen one pressed) instead of white pills. ────────────────────── */
+html[data-ui="osrs"] [data-osrs-win="strategy"] .osrs-wa-head > div:first-child { display: contents; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-tabs { gap: 4px; margin: 4px 6px; padding: 0; background: none; border: 0; border-radius: 0; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-tabs .osrs-wa-btn { min-height: 24px; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-tabs .osrs-wa-btn svg { width: 12px; height: 12px; }
+/* The classic close is a circled ×: drop the circle and grow the × to fill the square. */
+html[data-ui="osrs"] [data-osrs-win="strategy"] .osrs-wa-close svg circle { display: none; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .osrs-wa-close svg path { transform-origin: 12px 12px; transform: scale(2); stroke-width: 1.875; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-filters { background: var(--osrs-inner); border-bottom: 1px solid var(--osrs-rule); }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-filters .ocw-input { padding-left: 34px; padding-right: 34px; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-filters > div:last-child { gap: 4px; }
+html[data-ui="osrs"] [data-osrs-win="strategy"] .ost-chip { min-height: 24px; padding: 0 8px; white-space: nowrap; }

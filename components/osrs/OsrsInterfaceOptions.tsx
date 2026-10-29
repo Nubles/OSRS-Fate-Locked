@@ -3,15 +3,17 @@ import {
   setClientLayout,
   setInterfaceStyle,
   setTextSize,
+  setTierMarks,
   useClientLayout,
   useInterfaceStyle,
   useIsOsrsUi,
   useTextSize,
+  useTierMarks,
 } from '../../utils/uiStyle';
 import './osrs-options.css';
 
 /**
- * OSRS layout options (interface style, fixed client, bigger text). Rendered
+ * OSRS layout options (interface style, fixed client, bigger text, tier marks). Rendered
  * inside the settings menu while the OSRS layout is on. Each choice is a
  * per-viewer preference (utils/uiStyle.ts), never part of the save.
  */
@@ -76,12 +78,17 @@ const TEXT_SIZES = [
   { value: 'medium', label: 'Medium', hint: 'RuneScape fonts at 20px' },
   { value: 'large', label: 'Large', hint: 'RuneScape fonts at 24px' },
 ] as const;
+const TIER_MARKS = [
+  { value: 'numerals', label: 'Numerals', hint: 'Skill and slot tiers as Roman numerals, I to X' },
+  { value: 'gems', label: 'Gems', hint: 'Skill and slot tiers as cut gems, Opal to Zenyte' },
+] as const;
 
 export const OsrsInterfaceOptions: React.FC = () => {
   const isOsrs = useIsOsrsUi();
   const interfaceStyle = useInterfaceStyle();
   const clientLayout = useClientLayout();
   const textSize = useTextSize();
+  const tierMarks = useTierMarks();
   if (!isOsrs) return null;
   return (
     <div className="osrs-opts" role="group" aria-label="OSRS layout options">
@@ -89,6 +96,7 @@ export const OsrsInterfaceOptions: React.FC = () => {
       <OptionRow label="Interface style" value={interfaceStyle} choices={STYLES} onPick={setInterfaceStyle} />
       <OptionRow label="Client" value={clientLayout} choices={CLIENTS} onPick={setClientLayout} />
       <OptionRow label="Text size" value={textSize} choices={TEXT_SIZES} onPick={setTextSize} />
+      <OptionRow label="Tier marks" value={tierMarks} choices={TIER_MARKS} onPick={setTierMarks} />
     </div>
   );
 };

@@ -176,6 +176,12 @@ html[data-ui="osrs"] .oact-note > button::after { content: 'Note'; }
 html[data-ui="osrs"] .oact-note > button svg { display: none; }
 html[data-ui="osrs"] .oact-note > button[title="View Note"] { color: #ffff00; }
 html[data-ui="osrs"] .oact-note > button:hover { color: #fff; }
+/* The hope list's star toggle and the little star on hoped name rows. */
+html[data-ui="osrs"] .oact-hope { height: 28px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; color: #ff981f; }
+html[data-ui="osrs"] .oact-hope.is-on { color: #ffff00; }
+html[data-ui="osrs"] .oact-hope:hover { color: #fff; }
+html[data-ui="osrs"] .oact-hope-star { flex-shrink: 0; filter: drop-shadow(1px 1px 0 #000); }
+html[data-ui="osrs"] .oact-hope-star.is-small { margin-left: 4px; vertical-align: -1px; }
 
 html[data-ui="osrs"] .oact-tool { flex: 1 0 220px; min-height: 0; display: flex; flex-direction: column; }
 html[data-ui="osrs"] .oact-tool-head { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: var(--osrs-slot, #3b3226); border-bottom: 1px solid #000; flex-shrink: 0; }
@@ -306,6 +312,8 @@ html[data-ui="osrs"] .osync-account {
 html[data-ui="osrs"] .osync-link { all: unset; cursor: pointer; color: var(--osrs-tan, #c8b897); text-decoration: underline; }
 html[data-ui="osrs"] .osync-link:hover { color: #ffffff; }
 html[data-ui="osrs"] .osync-skills { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+html[data-ui="osrs"] .osync-activity { display: flex; flex-direction: column; gap: 2px; padding: 4px 6px; background: var(--osrs-slot, #3b3226); border: 1px solid #000; }
+html[data-ui="osrs"] .osync-activity-h { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; text-shadow: 1px 1px 0 #000; }
 html[data-ui="osrs"] .osync-skill {
   height: 28px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 0 7px 0 4px;
   background: var(--osrs-window, #3e3529); border: 1px solid #000; color: var(--osrs-tan, #c8b897);
@@ -466,3 +474,10 @@ html[data-ui="osrs"] [data-testid="chunk-info-scroll-body"] .justify-between > .
 html[data-ui="osrs"] .owm-omni-go { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
 /* Skill requirements in the chunk panel: the game's own 16px skill icon at its real size. */
 html[data-ui="osrs"] [data-testid="chunk-info-scroll-body"] .chunk-skill-icon { width: 16px; height: 16px; image-rendering: pixelated; }
+html[data-ui="osrs"] .owl-hope {
+  all: unset; box-sizing: border-box; cursor: pointer; flex-shrink: 0; width: 20px; height: 20px;
+  display: inline-flex; align-items: center; justify-content: center; color: #6f6250;
+}
+html[data-ui="osrs"] .owl-hope:hover, html[data-ui="osrs"] .owl-hope:focus-visible { color: #ff981f; }
+html[data-ui="osrs"] .owl-hope:focus-visible { outline: 1px solid #ffff00; }
+html[data-ui="osrs"] .owl-hope svg { filter: drop-shadow(1px 1px 0 #000); }

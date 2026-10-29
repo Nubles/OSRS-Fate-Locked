@@ -410,3 +410,20 @@ html[data-ui="osrs"]:is([data-osrs-text="medium"], [data-osrs-text="large"]) :is
 /* Big titles (32px) keep their size at every step. */
 html[data-ui="osrs"] :is(#root, body > :not(#root)) :is(.text-2xl, .text-3xl, .text-4xl, .osrs-hdr-title, [style*="font: 32px"]) { font-size: var(--osrs-fs-big) !important; line-height: 30px !important; }
 html[data-ui="osrs"] .osrs-tab { height: calc(28px * var(--osrs-ts)); line-height: calc(30px * var(--osrs-ts)); }
+
+/* ── Tier marks (components/osrs/OsrsTierMark.tsx): a tier as a Roman
+   numeral in its colour, the way the Worn Equipment slots draw it. Each size
+   takes the place of a gem; the framed one sits in a dark slot tile. ── */
+html[data-ui="osrs"] .osrs-tiermark {
+  flex-shrink: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'RSBold', sans-serif; letter-spacing: .5px; text-shadow: 1px 1px 0 #000; white-space: nowrap;
+}
+html[data-ui="osrs"] .osrs-tiermark:is(.is-chip, .is-row) { font-size: calc(16px * var(--osrs-ts, 1)) !important; line-height: 1 !important; }
+html[data-ui="osrs"] .osrs-tiermark.is-hero { font-size: 32px !important; line-height: 1 !important; }
+html[data-ui="osrs"] .osrs-tiermark.is-chip { min-width: 18px; height: 16px; }
+html[data-ui="osrs"] .osrs-tiermark.is-row { min-width: calc(34px * var(--osrs-ts, 1)); height: calc(28px * var(--osrs-ts, 1)); }
+html[data-ui="osrs"] .osrs-tiermark.is-hero { min-width: 52px; height: 44px; padding: 0 4px; }
+html[data-ui="osrs"] .osrs-tiermark.is-framed {
+  background: var(--osrs-well, #1f1a14); border: 1px solid #000;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, .5), inset -1px -1px 0 var(--osrs-slot-lo, #5c5244);
+}

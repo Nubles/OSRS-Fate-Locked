@@ -16,11 +16,6 @@ export const CASKET_ICON = osrsItem('20546.png');
 export const BANK_ICON = `${BASE}osrs-ui/bank_icon.png`;
 export const QUEST_ICON = `${import.meta.env.BASE_URL}osrs-ui/quest_point_icon.png`;
 
-/** Tier I..X gem ladder. */
-const GEMS = ['opal', 'jade', 'red_topaz', 'sapphire', 'emerald', 'ruby', 'diamond', 'dragonstone', 'onyx', 'zenyte'];
-export const tierGem = (tier: number): string | null =>
-  tier > 0 ? `${BASE}osrs-ui/gems/${GEMS[Math.min(tier, GEMS.length) - 1]}.png` : null;
-
 /** One item sprite per unlock table, as the World and SpendRoll boards draw them. */
 export const TABLE_SPRITE: Partial<Record<TableType, string>> = {
   [TableType.EQUIPMENT]: osrsItem('1127.png'),

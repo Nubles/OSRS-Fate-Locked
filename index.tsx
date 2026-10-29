@@ -7,6 +7,7 @@ import App from './App';
 import './styles.css';
 import './components/osrs/osrs-skin.css';
 import { applyUiStyle } from './utils/uiStyle';
+import { hashView, watchHashView } from './utils/hashView';
 import { moveRole, pairingForwardUrl, readMovedRecord } from './utils/moveRole';
 import { NEW_TRACKER_URL } from './config/trackerAddress';
 // NOTE: deliberately no `vite:preloadError` handler here. Calling
@@ -20,7 +21,11 @@ import { NEW_TRACKER_URL } from './config/trackerAddress';
 // badge bar instead of the app (hash-based so it works on GitHub Pages with
 // no router, lazy so the main bundle doesn't pay for it).
 const StreamOverlay = lazyWithRetry(() => import('./components/StreamOverlay'));
-const isOverlay = window.location.hash.startsWith('#/overlay');
+// A run's public Adventurer's Log: `#/log/<run id>`, read-only, lazy like the overlay.
+const AdventurersLog = lazyWithRetry(() => import('./components/AdventurersLog'));
+const view = hashView(window.location.hash);
+// A link to another page pasted into this tab only changes the hash: reload to show it.
+watchHashView(view);
 
 // The address move (utils/originMove.ts), inert while NEW_TRACKER_URL is empty.
 // The new address shows the move screen at `?move-in`; the old one passes a
@@ -43,10 +48,12 @@ const start = () => {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      {isOverlay
+      {view.kind === 'overlay'
         ? <Suspense fallback={null}><StreamOverlay /></Suspense>
         : isMoveIn
           ? <Suspense fallback={null}><MoveInScreen /></Suspense>
+        : view.kind === 'log'
+          ? <Suspense fallback={null}><AdventurersLog id={view.id} /></Suspense>
           : <App />}
     </React.StrictMode>
   );

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NoteTrigger } from '../NoteTrigger';
 import { SLOT_CONFIG } from '../../constants';
 import { gemColor, gemSmallSrc, itemSrc, roman, slotUiSrc, wikiImageSrc } from './OsrsDashGems';
+import { useTierMarks } from '../../utils/uiStyle';
 import './osrs-char.css';
 
 /**
@@ -10,8 +11,9 @@ import './osrs-char.css';
  * tracker: the wiki slot icon when empty, the item's wiki image when worn,
  * drawn near their own size inside a bigger slot box so they stay sharp.
  * Each slot carries its tier on the box: a numeral in the top-left corner, where the game draws stack
- * counts, and a gem in the bottom-right (the same Opal..Onyx ladder as the
- * skills, coloured alike); tier 0 has neither and its icon is faded.
+ * counts, plus a gem in the bottom-right when Settings > Tier marks is Gems
+ * (the same Opal..Onyx ladder as the skills, coloured alike); tier 0 has
+ * neither and its icon is faded.
  *
  * Drawn at a scale (`--s`) that osrs-char.css picks from the space the
  * doll's container has, so it fills the panel.
@@ -71,61 +73,64 @@ const SlotItem: React.FC<{ slot: string; imageFile?: string }> = ({ slot, imageF
 
 const px = (n: number) => `calc(var(--s) * ${n}px)`;
 
-export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean; className?: string }> = ({ slots, suspendModals = false, className }) => (
-  <div
-    className={`osrs-char-doll${className ? ` ${className}` : ''}`}
-    style={{
-      '--osrs-char-line-v': `url(${slotUiSrc('line-v')})`,
-      '--osrs-char-line-h': `url(${slotUiSrc('line-h')})`,
-    } as React.CSSProperties}
-  >
-    {LINES.map(([x, y, len, v], i) => (
-      <span
-        key={i}
-        aria-hidden="true"
-        className={v ? 'osrs-char-line is-v' : 'osrs-char-line is-h'}
-        style={v
-          ? { left: px(x), top: px(y), height: px(len) }
-          : { left: px(x), top: px(y), width: px(len) }}
-      />
-    ))}
-    {slots.map((s) => {
-      const pos = DOLL_POS[s.slot];
-      if (!pos) return null;
-      return (
-        <div
-          key={s.slot}
-          className="osrs-char-dollcell"
-          style={{ left: px(pos[0]), top: px(pos[1]) }}
-          data-examine-name={`${s.slot} slot`}
-          data-examine={s.examine}
-        >
-          <button
-            type="button"
-            className={[
-              'osrs-char-slot',
-              s.dim ? 'is-dim' : '',
-              s.itemId != null ? 'has-item' : '',
-              s.selected ? 'is-sel' : '',
-            ].filter(Boolean).join(' ')}
-            onClick={s.onClick}
-            disabled={s.disabled}
-            title={s.label}
-            aria-label={s.label}
+export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean; className?: string }> = ({ slots, suspendModals = false, className }) => {
+  const gems = useTierMarks() === 'gems';
+  return (
+    <div
+      className={`osrs-char-doll${className ? ` ${className}` : ''}`}
+      style={{
+        '--osrs-char-line-v': `url(${slotUiSrc('line-v')})`,
+        '--osrs-char-line-h': `url(${slotUiSrc('line-h')})`,
+      } as React.CSSProperties}
+    >
+      {LINES.map(([x, y, len, v], i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          className={v ? 'osrs-char-line is-v' : 'osrs-char-line is-h'}
+          style={v
+            ? { left: px(x), top: px(y), height: px(len) }
+            : { left: px(x), top: px(y), width: px(len) }}
+        />
+      ))}
+      {slots.map((s) => {
+        const pos = DOLL_POS[s.slot];
+        if (!pos) return null;
+        return (
+          <div
+            key={s.slot}
+            className="osrs-char-dollcell"
+            style={{ left: px(pos[0]), top: px(pos[1]) }}
+            data-examine-name={`${s.slot} slot`}
+            data-examine={s.examine}
           >
-            {s.itemId != null
-              ? <SlotItem key={s.itemId} slot={s.slot} imageFile={s.imageFile} />
-              : <img className="osrs-char-slotsil" src={slotIconSrc(s.slot)} alt="" aria-hidden="true" />}
-            {s.gem > 0 && <span className="osrs-char-slottier" style={{ color: gemColor(s.gem) }} aria-hidden="true">{roman(s.gem)}</span>}
-            {s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}
-            {s.omni && <img className="osrs-px osrs-char-slotomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" title="An Omni-Key can raise this slot" />}
-            {s.srText && <span className="sr-only">{s.srText}</span>}
-          </button>
-          {s.note && <span className="osrs-dash-note is-corner"><NoteTrigger id={`Equip_${s.slot}`} title={s.slot} suspendModals={suspendModals} /></span>}
-        </div>
-      );
-    })}
-  </div>
-);
+            <button
+              type="button"
+              className={[
+                'osrs-char-slot',
+                s.dim ? 'is-dim' : '',
+                s.itemId != null ? 'has-item' : '',
+                s.selected ? 'is-sel' : '',
+              ].filter(Boolean).join(' ')}
+              onClick={s.onClick}
+              disabled={s.disabled}
+              title={s.label}
+              aria-label={s.label}
+            >
+              {s.itemId != null
+                ? <SlotItem key={s.itemId} slot={s.slot} imageFile={s.imageFile} />
+                : <img className="osrs-char-slotsil" src={slotIconSrc(s.slot)} alt="" aria-hidden="true" />}
+              {s.gem > 0 && <span className="osrs-char-slottier" style={{ color: gemColor(s.gem) }} aria-hidden="true">{roman(s.gem)}</span>}
+              {gems && s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}
+              {s.omni && <img className="osrs-px osrs-char-slotomni" src={itemSrc('omni_key')} alt="" aria-hidden="true" title="An Omni-Key can raise this slot" />}
+              {s.srText && <span className="sr-only">{s.srText}</span>}
+            </button>
+            {s.note && <span className="osrs-dash-note is-corner"><NoteTrigger id={`Equip_${s.slot}`} title={s.slot} suspendModals={suspendModals} /></span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default OsrsCharDoll;

@@ -42,11 +42,36 @@ sent.
 until the player runs `/unlink`; meanwhile `/progress` says the run isn't
 shared. An unrefreshed summary expires after 90 days.
 
+## Adventurer's Log
+
+In the same window, **Adventurer's Log → Public** makes the run's summary a
+public page at `#/log/<run id>` (`components/AdventurersLog.tsx`). Turning it
+on turns sharing on too, and publishes straight away. A public summary adds
+`public: true` and `map`: the land chunks the run owns, one bit per cell of
+the tracker's 48 x 34 chunk grid (`utils/chunkMapBits.ts`), row by row from
+the north-west corner, low bit first, in base64. Anyone with the link can read
+it through `GET /p/<id>`; a private summary and a missing one both answer
+`404`, so a private run can't be found by guessing. Turning it off republishes
+without the flag, and **Stop sharing** deletes the summary, page and all.
+
+## Clan feed
+
+The OSRS layout's chatbox has a **Clan** tab (Settings → Clan broadcasts, on
+by default) showing the newest posts in `#live-unlocks`. The tracker asks the
+relay's `GET /clan`; the relay asks the bot's `/api/clan-feed` on the origin
+of `DISCORD_EVENTS_URL`, with the bot's secret, and passes on only each post's
+shown name, mode, unlocks and time (`workers/fate-relay/clan.js`). The bot
+reads the posts back from the channel, so nothing is stored anywhere new and
+no KV write is made. The names are the ones the feed already shows in the
+Discord.
+
 ## Relay API
 
 ```text
 Browser POST   /p/<id>            publish the summary (Bearer write token; 8 KiB; once a minute)
 Browser DELETE /p/<id>            delete it (Bearer write token)
+Anyone  GET    /p/<id>            a public Adventurer's Log: {snapshot, updatedAt}, else 404
+Anyone  GET    /clan              the clan feed: {entries: [{name, mode?, items, more?, at}]}
 Browser POST   /p/<id>/link-code  a one-time code, valid ten minutes (needs a published summary)
 Bot     POST   /l/<discordId>     {code}: link that Discord user to the code's run
 Bot     GET    /l/<discordId>     {linked, snapshot, updatedAt}, or 404 {linked:false}
@@ -59,7 +84,9 @@ isn't a snowflake, is answered `400` before the relay looks anything up. The
 browser's publishes, deletes and link codes count toward the relay's per-IP
 write limit, and a new run or link code toward its claim limit; the bot's
 `/l/` requests are not limited (see "Abuse limits" in
-[online-relay.md](online-relay.md)). There is no public read: summaries are served only to the bot,
+[online-relay.md](online-relay.md)). The two public reads may be cached for a minute
+(`Cache-Control: public, max-age=60`, and `caches.default` on a custom domain; on workers.dev the
+edge cache does nothing, so `/clan` also keeps its last answer in the Worker's memory for a minute). Apart from a public Adventurer's Log, summaries are served only to the bot,
 which authenticates with the `PROGRESS_BOT_SECRET` Worker secret (the bot holds
 the same value as `FATE_RELAY_BOT_SECRET`). With the secret unset, every `/l/`
 request is refused. The relay keeps only the fields that

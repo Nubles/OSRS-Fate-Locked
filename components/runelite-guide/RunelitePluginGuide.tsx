@@ -16,6 +16,8 @@ import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { GuideFigure, GuideGalleryPicture } from './GuideFigure';
 import { GuideSettings } from './GuideSettings';
 import { GuideGlossary, GuidePresets, GuideResources, GuideTroubleshooting } from './GuideReference';
+import '../osrs/osrs-windows-a.css';
+import '../osrs/osrs-windows-c.css';
 
 export interface RunelitePluginGuideProps {
   readonly onClose: () => void;
@@ -190,7 +192,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
   return (
     <div
       data-runelite-guide-backdrop
-      className="fixed inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-sm sm:p-4"
+      className="osrs-wa-overlay fixed inset-0 z-[220] flex items-center justify-center bg-black/80 backdrop-blur-sm sm:p-4"
     >
       <div
         ref={dialogRef}
@@ -200,7 +202,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
         aria-describedby="runelite-guide-summary"
         tabIndex={-1}
         data-runelite-guide-shell
-        className="flex h-[100dvh] w-full max-w-[88rem] flex-col overflow-hidden border-white/10 bg-[#141414] text-gray-200 shadow-2xl sm:h-[calc(100dvh-2rem)] sm:rounded-xl sm:border"
+        className="osrs-wa-win flex h-[100dvh] w-full max-w-[88rem] flex-col overflow-hidden border-white/10 bg-[#141414] text-gray-200 shadow-2xl sm:h-[calc(100dvh-2rem)] sm:rounded-xl sm:border"
       >
         <header data-runelite-guide-header className="shrink-0 border-b border-white/10 bg-[#181818]">
           <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
