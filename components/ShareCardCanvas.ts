@@ -424,7 +424,7 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
   // Footer: run ID, the local history check (only when it passed), any restores, and where to find the tracker.
   const fy = CARD_H - 18;
   if (!p.osrs) { ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(0, CARD_H - 48, CARD_W, 1); }
-  const left = [d.runId ?? 'New run', d.history.ok ? 'History checked' : null, d.restored].filter(Boolean).join('  ·  ');
+  const left = [d.runId ?? 'New run', d.history.ok ? 'History intact (self-reported)' : null, d.restored].filter(Boolean).join('  ·  ');
   write(ctx, p, left, 24, fy, p.osrs ? p.small(16) : p.num(11), p.osrs ? p.muted : '#6b7280');
   write(ctx, p, SITE, CARD_W - 24, fy, p.osrs ? p.small(16) : p.small(11), p.site, 'right', p.osrs ? 0 : 1);
 }

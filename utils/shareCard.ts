@@ -20,7 +20,8 @@ import { chunkUnlocked } from './chunkLocations';
 import { completionPercent } from './completion';
 import { bankLocksActive } from './reachability';
 import { COMBAT_POWERS_LABEL } from './tableDisplay';
-import { auditHistory, computeRunId } from './integrity';
+import { computeRunId } from './integrity';
+import { auditHistory } from './runAudit';
 import { restoredLabel } from './restoreCount';
 import { CHUNK_TILES, MAP_BOUNDS, type ChunkCoord } from './mapCoords';
 import { buildProgressSnapshot } from './progressSnapshot';
@@ -150,15 +151,19 @@ export function buildShareCardStats(source: ShareCardSource): ShareCardStats {
   const { unlocks, history, gameModeId, customMode, linkedAccount } = source;
   const snapshot = buildProgressSnapshot({ unlocks, history, gameModeId, customMode, linkedAccount });
   const rules = resolveModeRules(gameModeId, customMode);
-  const audit = auditHistory([...history], rules);
+  const audit = auditHistory([...history], rules, {
+    keys: source.keys, specialKeys: source.specialKeys, chaosKeys: source.chaosKeys, fatePoints: source.fatePoints, unlocks,
+  });
   const first = history[0]?.timestamp ?? source.now;
   const levels = unlocks.levels as Record<string, number>;
   const historyDetail = history.length === 0 ? 'No recorded history to check yet'
     : audit.verdict === 'tampered'
       ? `${audit.chain.brokenAt.length} broken history link${audit.chain.brokenAt.length === 1 ? '' : 's'}`
       : audit.verdict === 'warning'
-        ? `${audit.violations.length} replay warning${audit.violations.length === 1 ? '' : 's'}`
-        : 'History checks passed in this browser';
+        ? `${audit.reasons.length} problem${audit.reasons.length === 1 ? '' : 's'}: ${audit.reasons[0] ?? ''}`
+        : audit.totals.status === 'match'
+          ? 'Self-reported: Keys and unlocks match the history'
+          : 'Self-reported: hash links and rolls check out';
   return {
     name: linkedAccount?.trim() || source.profileName,
     mode: getGameMode(gameModeId).name,
@@ -182,7 +187,7 @@ export function buildShareCardStats(source: ShareCardSource): ShareCardStats {
     latest: latestLandUnlock(history),
     owned: ownedChunks(unlocks, gameModeId),
     runId: computeRunId([...history]),
-    history: { ok: history.length > 0 && audit.verdict === 'verified', detail: historyDetail },
+    history: { ok: history.length > 0 && audit.verdict === 'intact', detail: historyDetail },
     restored: restoredLabel(source.restoreCount),
   };
 }
