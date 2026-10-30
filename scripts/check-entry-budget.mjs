@@ -28,7 +28,8 @@ import { gzipSync } from 'node:zlib';
 // 226: the combined update's Key, roll, save and Slayer changes in the reducer and game engine: Chaos table picks, roll text, the run's hidden salt, Set level, Sync & Roll baselines, Slayer gates and fewer relay writes (225.1 on 2026-10-24).
 // 227: the hope list (stars on unlock cards and areas, the saved list and its reveal line) and the save check for Sync & Roll's kill baseline; Spend Keys' outlook and hope lines, the welcome-back note and the kill sync itself load on demand, as do the Clan tab and the Adventurer's Log page (226.8 on 2026-10-26).
 // 228: Spend Keys refuses a click that lands just after the page moved (utils/clickGuard.ts), so a late-loading line can't turn a click into a spend (227.0 on 2026-10-26).
-export const ENTRY_GZIP_BUDGET_KB = 228;
+// 229: First Steps' small progress store and switches, the Effects switches (Fate fill, pity glow, dry run lines, sounds) and the platform's palette shortcut; the guide, the sounds and the dry-run check load on demand (227.7 on 2026-10-30).
+export const ENTRY_GZIP_BUDGET_KB = 229;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

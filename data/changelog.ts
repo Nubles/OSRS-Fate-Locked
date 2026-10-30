@@ -37,6 +37,25 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-30-every-roll-lands',
+    title: 'First Steps, and every roll lands',
+    date: '2026-10-30',
+    sections: {
+      added: [
+        'New runs get First Steps: a short guide through your first Keys, the Journal, a roll, Fate and the Void Altar. Skip it or turn it off in Settings.',
+        "The Fate orb's ring fills as a miss adds Fate and glows near your Pity Key, and a Key after a long dry run gets its own chat line.",
+        'Optional sounds: a soft thunk on a miss, a chime on a Key and a fanfare on an unlock. They stay off unless you turn them on in Settings.',
+      ],
+      changed: [
+        'The share card shows your Combat Achievement points, follows your Tier marks setting, and shows Chunked sites and seals.',
+        'Mixed hide cape and boots are now tier 6, matching the 60 Ranged and 50 Defence they need in game.',
+      ],
+      fixed: [
+        'OSRS layout: Fate shows once in the header, the Boss Task card has no odds tier, the tour says Ctrl+K on Windows, and Settings shows your pick clearly.',
+      ],
+    },
+  },
+  {
     id: '2026-10-29-share-card-and-sites',
     title: 'A new share card, Fated sites and fixes',
     date: '2026-10-29',

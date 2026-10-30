@@ -118,7 +118,6 @@ import { openOsrsScreen, setOsrsKeysTab, useOsrsNav, type OsrsKeysTab } from './
 import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb } from './components/OsrsIcon';
 import { describeRollOutcome } from './utils/rollOutcomeText';
 import { BookOpen } from './components/OsrsIcon';
-
 import { DISCORD_INVITE_URL } from './constants';
 import { paletteShortcut } from './utils/paletteShortcut';
 import { soundsPref } from './utils/viewerPrefs';
