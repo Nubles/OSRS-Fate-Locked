@@ -195,10 +195,9 @@ html[data-ui="osrs"] .osrs-lvl-cont { all: unset; cursor: pointer; font: var(--o
 html[data-ui="osrs"] .osrs-lvl-cont:hover { color: #ffffff; }
 html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
 
-/* Narrower windows: the header drops its least-needed text before anything wraps. */
+/* Narrower windows: the header tightens its gaps before anything wraps. */
 @media (max-width: 1399px) {
   html[data-ui="osrs"] .osrs-hdr { gap: 12px; }
-  html[data-ui="osrs"] .osrs-hdr-fate-text { display: none; }
 }
 /* Below about 1,366 px the run title and every control no longer fit on one
    row: Jump to shrinks to its magnifier, and if that is still not enough the
@@ -210,7 +209,6 @@ html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
 /* The fixed client's frame is about 1,370 px inside, whatever the window. */
 @media (min-width: 900px) {
   html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-hdr { gap: 12px; }
-  html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-hdr-fate-text { display: none; }
   html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-jump { width: 34px; min-width: 34px; padding: 0; justify-content: center; }
   html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-jump > span { display: none; }
 }

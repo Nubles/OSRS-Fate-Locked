@@ -45,6 +45,12 @@ html[data-ui="osrs"] .osrs-opt-seg .osrs-btn {
   line-height: calc(var(--osrs-fs, 16px) + 2px);
   white-space: nowrap;
 }
+/* The chosen option is pressed in: dark well fill, white text, bevel reversed. */
+html[data-ui="osrs"] .osrs-opt-seg .osrs-btn.is-on {
+  background: var(--osrs-well, #1f1a14);
+  color: #ffffff;
+  box-shadow: inset 1px 1px 0 #000, inset -1px -1px 0 var(--osrs-btn-hi, #6b5f4d);
+}
 
 /* ── Right-click menu ("Choose Option") ─────────────────────────────────── */
 html[data-ui="osrs"] .osrs-ctx {
