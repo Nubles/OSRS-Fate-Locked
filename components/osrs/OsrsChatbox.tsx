@@ -13,6 +13,7 @@ import { relaySync } from '../../services/relaySync';
 import { clanBroadcastsPref, dryRunLinesPref } from '../../utils/viewerPrefs';
 import { dryRunEnds } from '../../utils/dryRun';
 import { CLAN_POLL_MS, CLAN_TAG, clanLines, fetchClanFeed, type ClanEntry } from '../../utils/clanFeed';
+import { useFirstHourView, type FirstHourView } from '../../utils/firstHourStore';
 import './osrs-shell.css';
 
 const TimelapseModal = lazyWithRetry(() => import('../TimelapseModal').then(m => ({ default: m.TimelapseModal })));
@@ -125,6 +126,39 @@ const ChatLine: React.FC<{ entry: LogEntry }> = ({ entry }) => {
 };
 
 /**
+ * The guided first hour's instruction, as Tutorial Island gives them: it
+ * fills the chatbox, title in blue, what to do in black, and a progress bar.
+ * A finished step says what it taught and waits for "Click here to continue".
+ */
+const FirstHourInstruction: React.FC<{ view: FirstHourView }> = ({ view }) => (
+  <div className="osrs-fh" role="status" aria-live="polite" aria-label={`First steps, step ${view.stepNumber} of ${view.stepCount}: ${view.title}`}>
+    <div className="osrs-fh-side">
+      <img className="osrs-px" src={view.icon} alt="" aria-hidden="true" />
+    </div>
+    <div className="osrs-fh-text">
+      <span className="osrs-fh-title">{view.title}</span>
+      <span className="osrs-fh-body">{view.body}</span>
+      {view.phase === 'done' ? (
+        <button type="button" className="osrs-lvl-cont" onClick={view.next}>Click here to continue</button>
+      ) : (
+        <span className="osrs-fh-foot">
+          {view.counter && <span style={{ color: '#7f0000' }}>{view.counter}</span>}
+          {view.optional && <button type="button" className="osrs-chat-link" onClick={view.skipStep}>Skip this step</button>}
+        </span>
+      )}
+    </div>
+    <div className="osrs-fh-meta">
+      <span className="osrs-fh-step">Step {view.stepNumber} of {view.stepCount}</span>
+      <span className="osrs-fh-bar" role="img" aria-label={`${view.percent}% done`}>
+        <span style={{ width: `${view.percent}%` }} />
+        <span className="osrs-fh-pct">{view.percent}%</span>
+      </span>
+      <button type="button" className="osrs-chat-link" onClick={view.skipGuide} title="Stop the guide for this run. Settings can turn it back on.">Skip guide</button>
+    </div>
+  </div>
+);
+
+/**
  * The OSRS layout's chatbox, docked at the bottom of the page: the run's
  * history (the same entries the History panel shows) as parchment chat lines,
  * with the History panel's filters as chat tabs. Clicking the selected tab
@@ -143,6 +177,7 @@ export const OsrsChatbox: React.FC = () => {
   const tabs: ChatTab[] = clanOn ? [...TABS, 'Clan'] : TABS;
   const { screen, progressionWide } = useOsrsNav();
   const notices = useOsrsChatNotices();
+  const guide = useFirstHourView();
   // Home keeps the saved open/closed choice. The wide Keys and Journal screens
   // and the full-width Progression tabs are drawn without a chatbox, so there
   // it starts folded to its tab row.
@@ -172,6 +207,15 @@ export const OsrsChatbox: React.FC = () => {
     const message = levelUpMessage({ id: lastEvent.id, ...unlock }, unlocks);
     setQueue(current => [...current, { id: lastEvent.id, message }].slice(-5));
   }, [lastEvent, history, unlocks]);
+
+  // Each new instruction unfolds the chatbox once; folding it again is respected.
+  const guideBeat = guide ? `${guide.title}|${guide.phase}` : null;
+  useEffect(() => {
+    if (!guideBeat) return;
+    setTab('All');
+    setHomeCollapsed(false);
+    setOtherCollapsed(false);
+  }, [guideBeat]);
 
   const dismissLevelUp = useCallback(() => setQueue(current => current.slice(1)), []);
   const levelUp = queue[0];
@@ -222,6 +266,8 @@ export const OsrsChatbox: React.FC = () => {
           <div className="osrs-chat osrs-chat-body">
             {levelUp ? (
               <OsrsLevelUp key={levelUp.id} message={levelUp.message} onContinue={dismissLevelUp} />
+            ) : guide && tab === 'All' ? (
+              <FirstHourInstruction view={guide} />
             ) : (
               <>
                 <div className="osrs-chat-log" role="log" aria-label={tab === 'Clan' ? 'Clan broadcasts' : `Fate Timeline, ${tab}`}>

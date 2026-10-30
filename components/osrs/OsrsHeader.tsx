@@ -19,6 +19,7 @@ import { FateMapOptions } from '../FateMapOptions';
 import { OffDeviceCopyStatus } from '../OffDeviceCopyStatus';
 import { OsrsXpDrops } from './OsrsXpDrops';
 import { CHUNKED_OMNI_LAND_TEXT } from '../../config/economy';
+import { useFirstHourView, writeFirstHourEnabled } from '../../utils/firstHourStore';
 import './osrs-shell.css';
 
 const OsrsInterfaceOptions = lazyWithRetry(() => import('./OsrsInterfaceOptions'));
@@ -113,6 +114,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   useEscapeKey(() => { setShowRlMenu(false); runeliteRef.current?.focus(); }, showRlMenu);
   const relayDot = useRelayDot();
   const settingsRef = useRef<HTMLButtonElement>(null);
+  const firstHourRunning = useFirstHourView() !== null;
   const mode = getGameMode(gameModeId);
   const runName = [`${mode.name} mode${mode.beta ? ' (Beta)' : ''}`, linkedAccount || activeProfileName].filter(Boolean).join(' · ');
 
@@ -139,7 +141,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
       <div className="osrs-hdr-profile" style={{ flexShrink: 0 }}><ProfileSwitcher /></div>
 
       {/* Fate Points orb: the number box is the only count, the full "Fate 12/50" is in its tooltip */}
-      <div className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={`${fateText}. ${fateTitle}`} role="img" aria-label={`${fateText}. ${fateTitle}`}>
+      <div data-first-hour="fate" className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={`${fateText}. ${fateTitle}`} role="img" aria-label={`${fateText}. ${fateTitle}`}>
         <div className="osrs-orb-num" style={nearPity ? { color: '#ff0000' } : undefined}>{fatePoints}</div>
         <div className={orbClass} style={{ '--osrs-fate-fill': `${fill}%`, '--osrs-fate-ring': nearPity ? '#c42f2f' : '#8a3fc4' } as React.CSSProperties}>
           <img className="osrs-px" src={sprite('void_seal.png')} alt="" aria-hidden="true" width={27} height={24} />
@@ -271,6 +273,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={() => confirmSpendPref.set(!confirmSpend)} aria-pressed={confirmSpend} title="On: a Yes or No box comes up before a click spends a Key or rolls for one.">Ask before Key clicks {onOff(confirmSpend)}</button>
                   <button type="button" className="osrs-menu-item" onClick={() => welcomeBackPref.set(!welcomeBack)} aria-pressed={welcomeBack} title="On: after 12 hours or more away, a short note in the chatbox says what your last session did.">Welcome back note {onOff(welcomeBack)}</button>
                   <button type="button" className="osrs-menu-item" onClick={() => clanBroadcastsPref.set(!clanBroadcasts)} aria-pressed={clanBroadcasts} title="On: the chatbox has a Clan tab showing other players' unlocks from the Fate Locked Discord's #live-unlocks.">Clan broadcasts {onOff(clanBroadcasts)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => writeFirstHourEnabled(!firstHourRunning)} aria-pressed={firstHourRunning} title="Step-by-step help for a new run. Turning it on starts it again for this run.">First steps guide {onOff(firstHourRunning)}</button>
                   <div className="osrs-menu-sep" />
                   <OffDeviceCopyStatus osrs />
                   <button type="button" className="osrs-menu-item" onClick={closeThen(onImportSave)}>Import save</button>

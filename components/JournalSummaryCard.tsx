@@ -403,6 +403,7 @@ const ClassicJournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
           <button
             key={row.key}
             role="listitem"
+            data-first-hour={idx === 0 ? 'journal-card' : undefined}
             onClick={() => onNavClick(row.key)}
             aria-label={`${row.label}: ${row.headline}, ${row.sub}`}
             style={{ animationDelay: `${idx * 40}ms` }}
