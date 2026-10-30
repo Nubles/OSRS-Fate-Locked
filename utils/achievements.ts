@@ -236,9 +236,9 @@ const questsDone: Metric = ({ u }) => QUEST_CAPE_QUEST_IDS.filter(id => u.quests
 const questPoints: Metric = ({ u }) =>
   QUEST_CAPE_QUEST_IDS.filter(id => u.quests.includes(id)).reduce((acc, qid) => acc + (QUEST_DATA[qid]?.points ?? 0), 0);
 const skillsStarted: Metric = ({ u }) => Object.values(u.skills).filter((t) => t > 0).length;
-// Every run starts with Hitpoints at tier 1, so only a skill a Key opened counts.
+// Every run has Hitpoints free, so only a skill a Key opened counts.
 const skillsRolled: Metric = ({ u }) =>
-  Object.entries(u.skills).filter(([skill, tier]) => tier > (skill === 'Hitpoints' ? 1 : 0)).length;
+  Object.entries(u.skills).filter(([skill, tier]) => skill !== 'Hitpoints' && tier > 0).length;
 const skillTiers: Metric = ({ u }) => sum(Object.values(u.skills));
 const totalLevel: Metric = ({ u }) => sum(SKILLS_LIST.map((s) => u.levels[s] ?? 1));
 const skillsAt99: Metric = ({ u }) => Object.values(u.levels).filter((l) => l >= 99).length;

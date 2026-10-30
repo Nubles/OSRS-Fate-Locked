@@ -1,6 +1,7 @@
 import { LogEntry, TableType, type UnlockState } from '../types';
 import { CUSTOM_RULE_BOUNDS, type GameModeRules } from '../config/gameModes';
 import { PET_COMPENSATION_ID } from './petCompensation';
+import { FREE_HITPOINTS_TIER, hitpointsRefund } from './hitpointsMigration';
 import { RETIRED_BOSSES, RETIRED_MINIGAMES } from '../data/items';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import { mergedBankId } from './bankUnlockMerges';
@@ -391,7 +392,7 @@ const UNLOCK_LISTS = [
   'regions', 'chunks', 'mobility', 'arcana', 'housing', 'merchants', 'minigames',
   'bosses', 'storage', 'guilds', 'farming', 'slayerUnlocks', 'banks',
 ] as const;
-/** A fresh run starts with Hitpoints at tier 1 and nothing else. */
+/** A run from before Hitpoints was free started with it at tier 1 and nothing else. */
 const STARTING_UNLOCKS = 1;
 
 /** The run's paid-for unlocks: every skill and gear tier plus every owned entry. */
@@ -421,8 +422,10 @@ interface UntrackedCredits {
  * integrity history", utils/areaUnlockMigration.ts and utils/saveSchema.ts):
  * a retired unlock is paid back in what it cost; an area or bank unlock that
  * merged into one the run already owned pays a Standard Key back; Port
- * Khazard and Chaos Temple each brought their neighbour area along; and a
- * Hitpoints tier Fate took comes back as the starting tier.
+ * Khazard and Chaos Temple each brought their neighbour area along; a
+ * Hitpoints tier Fate took comes back as the starting tier; and since
+ * Hitpoints is free (utils/hitpointsMigration.ts) every run owns all its tiers
+ * and has back what it paid for them.
  */
 const untrackedCredits = (history: LogEntry[], saved: UnlockState): UntrackedCredits => {
   const credits: UntrackedCredits = { keys: 0, specialKeys: 0, chaosKeys: 0, unlocksRemoved: 0, keysAllowance: 0, unlocksAllowance: 0 };
@@ -447,6 +450,15 @@ const untrackedCredits = (history: LogEntry[], saved: UnlockState): UntrackedCre
     if (seen.has(id)) credits.keysAllowance += 1;
     seen.add(id);
     if (e.meta?.category === TableType.REGIONS && (item === 'Port Khazard' || item === 'Chaos Temple')) credits.unlocksAllowance += 1;
+  }
+  if (saved.skills?.Hitpoints === FREE_HITPOINTS_TIER) {
+    const refund = hitpointsRefund(history);
+    credits.keys += refund.keys;
+    credits.specialKeys += refund.specialKeys;
+    credits.chaosKeys += refund.chaosKeys;
+    credits.unlocksRemoved += refund.paidTiers;
+    credits.unlocksAllowance += refund.sacrificedTiers + FREE_HITPOINTS_TIER - STARTING_UNLOCKS;
+    return credits;
   }
   for (const e of history) {
     const taken = e.type === 'ALTAR' && e.meta?.ritual === 'SACRIFICE' && Array.isArray(e.meta?.taken) ? e.meta.taken : [];

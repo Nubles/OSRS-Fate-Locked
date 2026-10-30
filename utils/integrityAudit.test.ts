@@ -59,7 +59,7 @@ describe('run check: saved totals must match the history', () => {
     expect(result.reasons).toEqual(expect.arrayContaining([
       'Saved Keys: 999, but the history adds up to 3.',
       'Saved Omni-Keys: 99, but the history adds up to 0.',
-      `Saved unlocks: ${countUnlocks(edited.unlocks)}, but the history pays for 1.`,
+      `Saved unlocks: ${countUnlocks(edited.unlocks)}, but the history pays for 10.`,
     ]));
   });
 
@@ -239,15 +239,17 @@ const SEEDS = Number(env.AUDIT_SEEDS ?? 1);
 const STEPS = Number(env.AUDIT_STEPS ?? 200);
 
 describe('run check: honest play never reads as a mismatch', () => {
+  // The first seed is picked so one run reaches a Void Gambit: Chunked's seed 0
+  // stopped casting one when Hitpoints left the Skills pool (30 October 2026).
   it.each([
-    ['vanilla', undefined],
-    ['xtreme', undefined],
-    ['chunked', undefined],
-    ['custom', { ...resolveModeRules('vanilla'), pityEnabled: false, ritualCostMultiplier: 0.5 }],
-  ] as const)('%s: every step of a long mixed run stays intact with matching totals', (modeId, custom) => {
+    ['vanilla', undefined, 0],
+    ['xtreme', undefined, 0],
+    ['chunked', undefined, 1],
+    ['custom', { ...resolveModeRules('vanilla'), pityEnabled: false, ritualCostMultiplier: 0.5 }, 0],
+  ] as const)('%s: every step of a long mixed run stays intact with matching totals', (modeId, custom, firstSeed) => {
     const problems: string[] = [];
     const seen = new Set<string>();
-    for (let seed = 0; seed < SEEDS; seed++) {
+    for (let seed = firstSeed; seed < firstSeed + SEEDS; seed++) {
       const { problems: found, run } = playHonestly(modeId, custom as GameModeRules | undefined, seed * 7919 + modeId.length, STEPS);
       problems.push(...found);
       for (const e of run.history) seen.add(e.type + (typeof e.meta?.ritual === 'string' ? `:${e.meta.ritual}` : ''));

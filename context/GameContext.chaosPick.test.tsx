@@ -46,7 +46,8 @@ const chaosDraws = async (mode: string, rngVersion: 1 | 2 | 3 | undefined, count
 // Chaos Keys picked a table first must keep drawing that way.
 // (Chunked pools also depend on map data the provider loads in the background,
 // so context/chaosReplay.test.ts pins Chunked with that data loaded.)
-const OLD_VANILLA_FIRST = 'Bosses: Hespori';
+// Re-recorded when Hitpoints became free and left the Skills pool (30 October 2026).
+const OLD_VANILLA_FIRST = 'Bosses: Kalphite Queen';
 
 it.each([2, 1, undefined] as const)('spends a Chaos Key on an old seeded Vanilla save (rngVersion %s) exactly as before', async version => {
   // Later draws also depend on what the app logs between spends, so the

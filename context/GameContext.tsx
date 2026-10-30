@@ -81,6 +81,7 @@ import {
   petCompensationResult,
   validCompensationPets,
 } from '../utils/petCompensation';
+import { FREE_HITPOINTS_TIER } from '../utils/hitpointsMigration';
 import { isPetId } from '../data/petIds';
 import { normalizeAccountName } from '../utils/accountName';
 import { pendingBaseline, planDetectedLevel, recordBaseline, skillBaseline } from '../utils/syncBaseline';
@@ -354,7 +355,8 @@ interface GameContextType extends GameState {
 // --- Initial State ---
 const getInitialUnlocks = (): UnlockState => ({
   equipment: EQUIPMENT_SLOTS.reduce((acc, slot) => ({ ...acc, [slot]: 0 }), {} as Record<string, number>),
-  skills: { 'Hitpoints': 1 },
+  // Hitpoints is free: every run has it at its top tier (utils/hitpointsMigration.ts).
+  skills: { 'Hitpoints': FREE_HITPOINTS_TIER },
   levels: SKILLS_LIST.reduce((acc, skill) => ({
     ...acc,
     [skill]: skill === 'Hitpoints' ? 10 : 1
@@ -384,6 +386,7 @@ export const initialState: GameState = {
   runeProofProgress: emptyRuneProofProgress(),
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
+  hitpointsRevision: 1,
   runId: newRunId(),
   rngSalt: newRunId(),
   runRevision: 0,

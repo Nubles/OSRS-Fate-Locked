@@ -272,6 +272,8 @@ export interface GameState {
   pendingUnlock?: PendingUnlock;
   /** Ownership splits applied; absent on saves from before the map correction. */
   areaUnlockRevision?: 1;
+  /** Hitpoints made free and its paid tiers refunded; absent on saves from before 30 October 2026. */
+  hitpointsRevision?: 1;
   /** Canonical reducer states are stamped at the strict save boundary. */
   version: number;
   /** Stable identity for one run across exports, restarts, and relay delivery. */

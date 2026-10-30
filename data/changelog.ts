@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-10-30-free-hitpoints',
+    title: 'Hitpoints is free',
+    date: '2026-10-30',
+    sections: {
+      balance: [
+        'Hitpoints is now fully open on every run, so it never comes up on the Skills table and Sacrifice never takes it.',
+        'Already spent Keys on Hitpoints tiers? You get each one back, in the kind of Key you spent.',
+        "Chunked: Hitpoints levels always roll now, and Fate's Mercy no longer waits on Hitpoints.",
+      ],
+    },
+  },
+  {
     id: '2026-10-29-share-card-and-sites',
     title: 'A new share card, Fated sites and fixes',
     date: '2026-10-29',
