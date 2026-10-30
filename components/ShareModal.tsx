@@ -12,7 +12,7 @@ import { BANK_IDS } from '../data/banks';
 import { completionPercent } from '../utils/completion';
 import { chunkTotals } from '../utils/runProgress';
 import { buildShareCardStats } from '../utils/shareCard';
-import { useIsOsrsUi } from '../utils/uiStyle';
+import { useIsOsrsUi, useTierMarks } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { RS_BOLD, RS_FONT, RS_SMALL, loadRitualFonts } from './rituals/ritualAssets';
 import { CARD_H, CARD_W, describeShareCard, drawShareCard, type ShareCardStyle } from './ShareCardCanvas';
@@ -37,6 +37,7 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const game = useGame();
   const { activeProfileName } = useProfiles();
   const osrs = useIsOsrsUi();
+  const tierMarks = useTierMarks();
   const { unlocks, history, gameModeId, customMode, linkedAccount } = game;
   const dialogRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -55,9 +56,10 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     profileName: activeProfileName,
     keys: game.keys, specialKeys: game.specialKeys, chaosKeys: game.chaosKeys, fatePoints: game.fatePoints,
     restoreCount: game.restoreCount,
+    fateLand: game.fateLand,
     now: Date.now(),
   }), [unlocks, history, gameModeId, customMode, linkedAccount, activeProfileName,
-    game.keys, game.specialKeys, game.chaosKeys, game.fatePoints, game.restoreCount]);
+    game.keys, game.specialKeys, game.chaosKeys, game.fatePoints, game.restoreCount, game.fateLand]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -70,7 +72,7 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       if (cancelled) return;
       // Draw off to the side, then copy in, so a half-drawn card never shows.
       const work = document.createElement('canvas');
-      await drawShareCard(work, stats, { style, zoom, fonts: { plain: RS_FONT, bold: RS_BOLD, small: RS_SMALL } });
+      await drawShareCard(work, stats, { style, zoom, tierMarks, fonts: { plain: RS_FONT, bold: RS_BOLD, small: RS_SMALL } });
       if (cancelled) return;
       canvas.width = work.width;
       canvas.height = work.height;
@@ -78,7 +80,7 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       setDrawn(true);
     })().catch(() => { if (!cancelled) setDrawError(true); });
     return () => { cancelled = true; };
-  }, [stats, style, zoom, redraw]);
+  }, [stats, style, zoom, tierMarks, redraw]);
 
   const pickStyle = (next: ShareCardStyle) => { setStyle(next); writeChoice(STYLE_KEY, next); };
   const toggleZoom = () => setZoom(z => { writeChoice(ZOOM_KEY, z ? 'off' : 'on'); return !z; });

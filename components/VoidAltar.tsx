@@ -161,7 +161,7 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
   const slot = 'w-[76px] h-[68px] grid place-items-center bg-[#1d1913] border border-[#0d0b08] shadow-[inset_1px_1px_0_#000,inset_-1px_-1px_0_#4a4034]';
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Void altar" tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Void altar" tabIndex={-1} data-first-hour="altar-open" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 animate-in fade-in duration-300">
       <div className="bg-[#3e3529] border-2 border-black w-full max-w-5xl max-h-[90vh] flex flex-col p-1.5 gap-1.5 shadow-[inset_1px_1px_0_#5c5244,inset_-1px_-1px_0_#14110d,0_10px_40px_rgba(0,0,0,0.6)]">
 
         {/* Title bar */}

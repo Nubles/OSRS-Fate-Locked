@@ -362,7 +362,7 @@ const ClassicGachaSection: React.FC = () => {
 
       <Suspense fallback={null}><SpendNotesBridge onNotes={setNotes} /></Suspense>
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">
+      <div data-first-hour="spend-table" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2.5 custom-scrollbar content-start">
         {SPEND_CATEGORIES.map((c, i) => (
           <SpendCard
             key={c.label}

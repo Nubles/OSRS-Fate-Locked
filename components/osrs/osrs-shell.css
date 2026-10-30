@@ -86,6 +86,20 @@ html[data-ui="osrs"] .osrs-orb-num {
 html[data-ui="osrs"] .osrs-orb {
   width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; border: 2px solid #000; box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi);
   display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(var(--osrs-fate-ring, #8a3fc4) 0 var(--osrs-fate-fill, 0%), #2a1f33 var(--osrs-fate-fill, 0%) 100%);
+}
+/* Every roll lands (Settings: Fate fills on a miss, Glow near the Pity Key). The
+   fill is a registered property so the ring sweeps to its new size. */
+@property --osrs-fate-fill { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+html[data-ui="osrs"] .osrs-orb.is-filling { transition: --osrs-fate-fill 700ms ease-out; }
+html[data-ui="osrs"] .osrs-orb.is-gain { animation: osrs-orb-gain 700ms ease-out; }
+@keyframes osrs-orb-gain { 0% { filter: brightness(1.8); } 100% { filter: none; } }
+html[data-ui="osrs"] .osrs-orb.is-near { box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi), 0 0 6px 2px rgba(255, 48, 48, 0.75); }
+html[data-ui="osrs"] .osrs-orb.is-near.is-pulsing { animation: osrs-orb-glow 1.4s ease-in-out infinite alternate; }
+html[data-ui="osrs"] .osrs-orb.is-near.is-pulsing.is-gain { animation: osrs-orb-gain 700ms ease-out, osrs-orb-glow 1.4s ease-in-out infinite alternate; }
+@keyframes osrs-orb-glow {
+  from { box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi), 0 0 3px 1px rgba(255, 48, 48, 0.45); }
+  to { box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi), 0 0 9px 3px rgba(255, 48, 48, 0.9); }
 }
 
 /* Jump to: drawn as the board's search box, but it is a button that opens
@@ -195,10 +209,23 @@ html[data-ui="osrs"] .osrs-lvl-cont { all: unset; cursor: pointer; font: var(--o
 html[data-ui="osrs"] .osrs-lvl-cont:hover { color: #ffffff; }
 html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
 
-/* Narrower windows: the header drops its least-needed text before anything wraps. */
+/* ── Guided first hour: Tutorial Island's instruction box (OsrsChatbox) ──── */
+html[data-ui="osrs"] .osrs-fh { height: 100%; display: grid; grid-template-columns: 120px minmax(0, 1fr) 150px; align-items: center; }
+html[data-ui="osrs"] .osrs-fh-side { display: flex; align-items: center; justify-content: center; }
+html[data-ui="osrs"] .osrs-fh-side img { max-width: 72px; max-height: 64px; object-fit: contain; }
+html[data-ui="osrs"] .osrs-fh-text { display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; line-height: 20px; font: var(--osrs-fs) 'RS', sans-serif; color: #000; text-shadow: none; padding: 0 8px; }
+html[data-ui="osrs"] .osrs-fh-title { font: var(--osrs-fs) 'RSBold', sans-serif; color: #000080; }
+html[data-ui="osrs"] .osrs-fh-body { max-width: 640px; }
+html[data-ui="osrs"] .osrs-fh-foot { display: flex; gap: 14px; margin-top: 4px; }
+html[data-ui="osrs"] .osrs-fh-meta { align-self: stretch; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; padding: 6px 10px 6px 0; font: var(--osrs-fs) 'RSSmall', sans-serif; color: #000; }
+html[data-ui="osrs"] .osrs-fh-step { color: #5c4a2a; }
+html[data-ui="osrs"] .osrs-fh-bar { position: relative; width: 130px; height: 16px; background: #8c0b0b; border: 1px solid #000; box-shadow: inset 1px 1px 0 rgba(255,255,255,.15); }
+html[data-ui="osrs"] .osrs-fh-bar > span:first-child { position: absolute; inset: 0 auto 0 0; background: #0b8c12; transition: width .4s; }
+html[data-ui="osrs"] .osrs-fh-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; text-shadow: 1px 1px 0 #000; font: var(--osrs-fs) 'RSSmall', sans-serif; }
+
+/* Narrower windows: the header tightens its gaps before anything wraps. */
 @media (max-width: 1399px) {
   html[data-ui="osrs"] .osrs-hdr { gap: 12px; }
-  html[data-ui="osrs"] .osrs-hdr-fate-text { display: none; }
 }
 /* Below about 1,366 px the run title and every control no longer fit on one
    row: Jump to shrinks to its magnifier, and if that is still not enough the
@@ -210,7 +237,6 @@ html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
 /* The fixed client's frame is about 1,370 px inside, whatever the window. */
 @media (min-width: 900px) {
   html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-hdr { gap: 12px; }
-  html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-hdr-fate-text { display: none; }
   html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-jump { width: 34px; min-width: 34px; padding: 0; justify-content: center; }
   html[data-ui="osrs"][data-osrs-client="fixed"] .osrs-jump > span { display: none; }
 }
@@ -225,6 +251,8 @@ html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
 
 @media (max-width: 640px) {
   html[data-ui="osrs"] .osrs-lvl { grid-template-columns: 72px minmax(0, 1fr) 48px; }
+  html[data-ui="osrs"] .osrs-fh { grid-template-columns: 56px minmax(0, 1fr) 96px; }
+  html[data-ui="osrs"] .osrs-fh-bar { width: 84px; }
   html[data-ui="osrs"] .osrs-ctab { width: auto; flex: 1; padding: 0 4px; }
   html[data-ui="osrs"] .osrs-chat-note { display: none; }
 }

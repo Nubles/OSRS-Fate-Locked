@@ -8,6 +8,7 @@ import { completionDenominator } from './completion';
 import { unlockableAreas } from './freeAreas';
 import { BANK_IDS } from '../data/banks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { REGION_CHUNKS } from '../data/regionChunks';
 import type { LogEntry, UnlockState } from '../types';
 import { CHUNKED_START_KEY, chunkLabel } from './chunkAdjacency';
 import { GRID, buildShareCardStats, cellToChunk, chunkToCell, latestLandUnlock, mapWindow, ownedChunks, unlockedContent } from './shareCard';
@@ -100,6 +101,24 @@ describe('buildShareCardStats', () => {
     expect(card.areas.unit).toBe('chunks');
     expect(card.areas.unlocked).toBe(1);
     expect(card.owned.has(CHUNKED_START_KEY)).toBe(true);
+  });
+
+  it('adds Chunked’s fated sites reached and seals broken to the content boxes, and nothing in Vanilla', () => {
+    const fateLand = {
+      fulfilled: 0, marks: {}, gilded: [],
+      sites: { [CHUNKED_START_KEY]: 'SHRINE' as const, '20,40': 'HOARD' as const, '21,40': 'RIFT' as const },
+      seals: { Misthalin: '', Asgarnia: '30,50' },
+    };
+    const content = stats({ gameModeId: 'chunked', fateLand }).content;
+    expect(content.slice(-2)).toEqual([
+      { label: 'Fated sites', done: 1, total: 3 },
+      { label: 'Seals', done: 2, total: Object.keys(REGION_CHUNKS).length },
+    ]);
+    expect(stats({ fateLand }).content.map(c => c.label)).not.toContain('Seals');
+  });
+
+  it('shows Combat Achievement points', () => {
+    expect(stats().ca).toEqual({ points: 0, tier: null });
   });
 });
 

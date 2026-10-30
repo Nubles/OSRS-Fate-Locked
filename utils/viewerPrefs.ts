@@ -53,3 +53,15 @@ export const welcomeBackPref = makePref('fate_welcome_back_v1', true);
 
 /** The OSRS chatbox's Clan tab: other players' unlocks from the Fate Locked Discord. */
 export const clanBroadcastsPref = makePref('fate_clan_broadcasts_v1', true);
+
+/** Effects: the Fate orb's ring fills (and flashes) as a miss adds Fate. Follows the Animations switch too. */
+export const fateFillPref = makePref('fate_effect_fate_fill_v1', true);
+
+/** Effects: the Fate orb glows once the run is close to its Pity Key. */
+export const pityGlowPref = makePref('fate_effect_pity_glow_v1', true);
+
+/** Effects: a chat line when a Key ends a long run of misses ("Dry run over: 41 rolls."). */
+export const dryRunLinesPref = makePref('fate_effect_dry_runs_v1', true);
+
+/** Effects: a soft sound on a miss, a chime on a Key and a short fanfare on an unlock (utils/fateSounds.ts). Off unless chosen. */
+export const soundsPref = makePref('fate_effect_sounds_v1', false);

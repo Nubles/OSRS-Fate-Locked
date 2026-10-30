@@ -13,7 +13,7 @@ import {
 import { BANK_IDS } from '../data/banks';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
-import type { LogEntry, UnlockState } from '../types';
+import type { FateLand, LogEntry, UnlockState } from '../types';
 import { TableType } from '../types';
 import { chunkLabel, parseChunkKey } from './chunkAdjacency';
 import { chunkUnlocked } from './chunkLocations';
@@ -51,6 +51,8 @@ export interface ShareCardSource {
   fatePoints: number;
   /** How many times the run was restored (GameState.restoreCount). */
   restoreCount?: number;
+  /** Chunked: fate's sites and region seals (GameState.fateLand). */
+  fateLand?: FateLand;
   now: number;
 }
 
@@ -63,13 +65,15 @@ export interface ShareCardStats {
   areas: { unlocked: number; total: number; unit: 'areas' | 'chunks' };
   quests: { done: number; total: number };
   diary: { done: number; total: number };
+  /** Combat Achievement points and the highest tier earned, or null. */
+  ca: { points: number; tier: string | null };
   totalLevel: number;
   skills: { skill: string; tier: number; level: number }[];
   /** Highest skill tier (10) and gear tier (9). */
   skillTierMax: number;
   gear: { slot: string; file: string; tier: number }[];
   gearTierMax: number;
-  /** Unlocked content tables, counted the way completion counts them. */
+  /** Unlocked content tables, counted the way completion counts them, then Chunked's sites and seals. */
   content: { label: string; done: number; total: number }[];
   keys: number;
   omni: number;
@@ -144,6 +148,16 @@ export const unlockedContent = (unlocks: UnlockState, banksLocked: boolean): Sha
   { label: 'Slayer', done: owned(unlocks.slayerUnlocks, SLAYER_UNLOCKS_LIST), total: SLAYER_UNLOCKS_LIST.length },
 ];
 
+/** Chunked: the fated sites the run has reached and the region seals it has broken, once fate has placed them. */
+export const chunkedFinds = (land: FateLand | undefined, held: ReadonlySet<string>): ShareCardStats['content'] => {
+  if (!land) return [];
+  const sites = Object.keys(land.sites ?? {});
+  return [
+    ...(sites.length ? [{ label: 'Fated sites', done: sites.filter(key => held.has(key)).length, total: sites.length }] : []),
+    ...(land.seals ? [{ label: 'Seals', done: Object.keys(land.seals).length, total: Object.keys(REGION_CHUNKS).length }] : []),
+  ];
+};
+
 const DAY_MS = 86_400_000;
 const SKILL_TIER_MAX = 10;
 
@@ -156,6 +170,7 @@ export function buildShareCardStats(source: ShareCardSource): ShareCardStats {
   });
   const first = history[0]?.timestamp ?? source.now;
   const levels = unlocks.levels as Record<string, number>;
+  const ownedLand = ownedChunks(unlocks, gameModeId);
   const historyDetail = history.length === 0 ? 'No recorded history to check yet'
     : audit.verdict === 'tampered'
       ? `${audit.chain.brokenAt.length} broken history link${audit.chain.brokenAt.length === 1 ? '' : 's'}`
@@ -173,19 +188,23 @@ export function buildShareCardStats(source: ShareCardSource): ShareCardStats {
     areas: snapshot.areas,
     quests: snapshot.quests,
     diary: snapshot.diaryTasks,
+    ca: snapshot.ca,
     totalLevel: (Object.values(levels) as number[]).reduce((sum, level) => sum + level, 0),
     skills: SKILLS_LIST.map(skill => ({ skill, tier: unlocks.skills[skill] || 0, level: levels[skill] || 1 })),
     skillTierMax: SKILL_TIER_MAX,
     gearTierMax: EQUIPMENT_TIER_MAX,
     gear: EQUIPMENT_SLOTS.map(slot => ({ slot, file: SLOT_CONFIG[slot]?.file ?? '', tier: unlocks.equipment[slot] || 0 })),
-    content: unlockedContent(unlocks, bankLocksActive(gameModeId, customMode)),
+    content: [
+      ...unlockedContent(unlocks, bankLocksActive(gameModeId, customMode)),
+      ...(gameModeId === 'chunked' ? chunkedFinds(source.fateLand, ownedLand) : []),
+    ],
     keys: source.keys,
     omni: source.specialKeys,
     chaos: source.chaosKeys,
     fate: source.fatePoints,
     fateMax: rules.pityEnabled ? rules.pityThreshold : null,
     latest: latestLandUnlock(history),
-    owned: ownedChunks(unlocks, gameModeId),
+    owned: ownedLand,
     runId: computeRunId([...history]),
     history: { ok: history.length > 0 && audit.verdict === 'intact', detail: historyDetail },
     restored: restoredLabel(source.restoreCount),

@@ -349,6 +349,11 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     visibleResult: 'A stopped teleport shows a banner with the tracker’s reason, a teleport to try instead when there is one, and Pause Strict Mode for 60s. The Strict Mode card says Active, Paused, Off, or Inactive with why.',
     changeWhen: 'Turn it on for a safety net against taking a teleport your rules don’t allow by mistake.',
   },
+  blockNetworks: {
+    purpose: 'Has Strict Mode also stop a network or boat trip that goes to one place your rules lock: a fairy ring’s Zanaris or Last-destination or a code dialled on it, a charter’s Charter-to, or a glider, ferry or boat option that names one place.',
+    visibleResult: 'A stopped trip shows the same banner as a stopped teleport. Options where you pick the place after the click, such as Travel, Glider or Fly, are never stopped. With it off, these trips are only tagged (Locked).',
+    changeWhen: 'Turn it on if you want Strict Mode’s safety net on fairy rings, charters and boats too.',
+  },
   pauseStrictModeHotkey: {
     purpose: 'Pauses Strict Mode for 60 seconds from the keyboard, like the Pause 60s button on its card.',
     visibleResult: 'The Strict Mode card and the HUD count the pause down, then Strict Mode comes back by itself.',
@@ -388,6 +393,11 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     purpose: 'Says when a sync brings something new, such as an area, a bank or a skill tier.',
     visibleResult: 'A chat line names what opened, a banner shows it for a few seconds, and new land glows gold on the world map until you stand in it.',
     changeWhen: 'Turn it off if you’d rather check the tracker yourself.',
+  },
+  fairyRingDialStatus: {
+    purpose: 'Names the fairy ring code you’ve dialled and what your rules say about where it goes.',
+    visibleResult: 'While a fairy ring’s dials are open, one line beside them reads like CKS: Unlocked. It only tells you; it never stops anything.',
+    changeWhen: 'Turn it off if you know your codes by heart.',
   },
   hudMode: {
     purpose: 'A box over the game. Compact shows where you are, its status and why, Strict Mode, and the nearest bank and shop.',
@@ -453,6 +463,26 @@ const SETTING_PROSE: Readonly<Record<string, Pick<GuideSetting, 'purpose' | 'vis
     purpose: 'RuneLite infoboxes for your Keys, Fate Points and unlock progress.',
     visibleResult: 'Each box has its own OSRS icon and moves on its own. One with nothing to count isn’t shown.',
     changeWhen: 'Turn it on to keep your Keys in sight without the Detailed HUD.',
+  },
+  fateOrb: {
+    purpose: 'An orb by the minimap, drawn like the game’s Hitpoints, Prayer and Run orbs, that shows your Fate Points and Keys.',
+    visibleResult: 'Your Fate Points sit in the box beside it and its ring fills toward a guaranteed Pity Key, with your Keys inside. When a sync brings more Fate Points, the gain rises into it, like +1. It only shows the pity your run already has; it changes no odds.',
+    changeWhen: 'Turn it off if you’d rather keep the space by the minimap clear.',
+  },
+  fateOrbGlow: {
+    purpose: 'With Fate orb on, warns you when your next miss is close to a guaranteed Pity Key.',
+    visibleResult: 'Once your Fate Points are most of the way to the Pity Key, the ring and the number turn red and the orb glows softly.',
+    changeWhen: 'Turn it off if you’d rather the orb never moved.',
+  },
+  itemTierMarks: {
+    purpose: 'Shows each piece of gear’s tier on its slot, as the tracker marks it, in your inventory, bank and worn equipment.',
+    visibleResult: 'A Roman numeral, I to X, in the item’s bottom-left corner: green when your unlocked tier for its slot allows it, red when it’s above. Items the tracker doesn’t rate show nothing.',
+    changeWhen: 'Turn it off if the numerals crowd your item slots.',
+  },
+  skillTierMarks: {
+    purpose: 'Shows your unlocked tier for each skill in the Skills tab.',
+    visibleResult: 'The tier’s numeral sits in each skill’s corner in its gem’s colour, orange once your level is past what that tier allows. A skill you haven’t unlocked yet is darkened with a small padlock.',
+    changeWhen: 'Turn it off if you’d rather keep the Skills tab as the game draws it.',
   },
   colourPreset: {
     purpose: 'The plugin’s colours: the default set, a set safe for colour-blind players, or your own.',

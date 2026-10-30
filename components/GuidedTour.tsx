@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Compass } from './OsrsIcon';
 import { STARTING_KEYS } from '../config/economy';
+import { paletteShortcut } from '../utils/paletteShortcut';
 
 /**
  * A replayable, spotlight-style guided tour. Each step highlights a real element
@@ -23,13 +24,13 @@ interface Step {
 
 const STEPS: Step[] = [
   { sel: null, title: 'Welcome to Fate Locked', body: `You start with ${STARTING_KEYS} Keys, Misthalin (or one Lumbridge chunk in Chunked) and almost everything else locked. Here’s a short tour of where everything is.` },
-  { sel: '[data-tour="farm"]', title: '1 · Farm Keys', body: 'Roll here when you finish a Slayer task, a clue, a boss kill or a minigame. Each roll has a chance at a Key, and Keys pay for unlocks. Failed rolls build Fate Points.', place: 'right' },
-  { sel: '[data-tour="spend"]', title: '2 · Spend Keys', body: 'Spend a Key on a table (gear, areas, bosses, skills and more) to unlock a random entry from it.',
+  { sel: '[data-tour="farm"]', title: 'Farm Keys', body: 'Roll here when you finish a Slayer task, a clue, a boss kill or a minigame. Each roll has a chance at a Key, and Keys pay for unlocks. Failed rolls build Fate Points.', place: 'right' },
+  { sel: '[data-tour="spend"]', title: 'Spend Keys', body: 'Spend a Key on a table (gear, areas, bosses, skills and more) to unlock a random entry from it.',
     chunkedBody: 'Spend a Key on a table (chunks, gear, bosses, skills and more) to unlock a random entry from it. The Chunks table opens a chunk next to the ones you own.', place: 'right' },
   { sel: '[data-tour="keys"]', title: 'Keys & Fate Points', body: 'Your Keys, Omni-Keys and Fate Points are shown here.', place: 'bottom' },
-  { sel: '[data-tour="altar"]', title: '3 · The Void Altar', body: 'Spend Fate Points on rituals: roll twice and keep the better, try to double your next Key, buy a Chaos Key, or stake it all on a coin flip.', place: 'bottom' },
+  { sel: '[data-tour="altar"]', title: 'The Void Altar', body: 'Spend Fate Points on rituals: roll twice and keep the better, try to double your next Key, buy a Chaos Key, or stake it all on a coin flip.', place: 'bottom' },
   { sel: '[data-tour="dashtabs"]', title: 'Your account', body: 'Everything you’ve unlocked lives on the right: gear & skills, the world map, activities, your journal and collection log. Each tab has a “?” for details.', place: 'bottom' },
-  { sel: '[data-tour="palette"]', title: 'Jump to anything', body: 'Press ⌘K (or click here) anytime to open the command palette and jump straight to any tab or tool. That’s the tour. Good luck!', place: 'bottom' },
+  { sel: '[data-tour="palette"]', title: 'Jump to anything', body: `Press ${paletteShortcut()} (or click here) anytime to open the command palette and jump straight to any tab or tool. That’s the tour. Good luck!`, place: 'bottom' },
 ];
 
 const TIP_W = 330;
