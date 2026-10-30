@@ -5,6 +5,8 @@
  */
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { GRID, cellToChunk, mapWindow, type ShareCardStats } from '../utils/shareCard';
+import type { TierMarks } from '../utils/uiStyle';
+import { gemColor, gemSrc, roman } from './osrs/OsrsDashGems';
 
 export type ShareCardStyle = 'osrs' | 'tracker';
 
@@ -244,10 +246,24 @@ const CONTENT_ICONS: Record<string, string> = {
 
 const fmt = (n: number) => n.toLocaleString('en-GB');
 
+/** Splits n boxes into at most two even rows of up to `most` each, so the last row never ends in a gap: 11 -> 6 + 5. */
+const evenRows = (n: number, most: number): number => Math.ceil(n / Math.max(1, Math.ceil(n / most)));
+/** The x and width of box i when rows of `per` boxes each fill `width`; a shorter last row stretches its boxes to fill it. */
+const boxAt = (i: number, n: number, per: number, left: number, width: number, gap: number) => {
+  const row = Math.floor(i / per);
+  const inRow = Math.min(per, n - row * per);
+  const w = (width - (inRow - 1) * gap) / inRow;
+  return { x: left + (i - row * per) * (w + gap), w, row };
+};
+
 /** Short label for a skill whose icon could not load. */
 const abbrev = (skill: string) => skill.slice(0, 3);
 
-export interface DrawOptions { style: ShareCardStyle; zoom: boolean; fonts: ShareCardFonts; scale?: number }
+export interface DrawOptions {
+  style: ShareCardStyle; zoom: boolean; fonts: ShareCardFonts; scale?: number;
+  /** Settings > Tier marks: the OSRS card marks tiers the way the OSRS layout does (the tracker card keeps T1..T10). */
+  tierMarks?: TierMarks;
+}
 
 /** Paints the card; resolves once every picture has loaded or been given up on. */
 export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats, opts: DrawOptions): Promise<void> {
@@ -256,13 +272,33 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
   if (!ctx) throw new Error('Canvas is unavailable');
   const p = paintFor(opts.style, opts.fonts);
 
-  const [skillImgs, gearImgs, keyImgs, rowImgs, contentImgs] = await Promise.all([
+  const gems = p.osrs && opts.tierMarks === 'gems';
+  const [skillImgs, gearImgs, keyImgs, rowImgs, contentImgs, gemImgs] = await Promise.all([
     Promise.all(d.skills.map(s => loadImage(wikiImage(`${s.skill}_icon.png`)))),
     Promise.all(d.gear.map(g => (g.file ? loadImage(wikiImage(g.file)) : Promise.resolve(null)))),
     Promise.all(['Brass_key.png', 'Crystal_key.png', 'Sinister_key.png'].map(f => loadImage(wikiImage(f)))),
-    Promise.all(['World_map_icon.png', 'Quest_point_icon.png', 'Achievement_Diaries_icon.png', 'Stats_icon.png'].map(f => loadImage(wikiImage(f)))),
+    Promise.all(['World_map_icon.png', 'Quest_point_icon.png', 'Achievement_Diaries_icon.png', 'Stats_icon.png', 'Combat_Achievements_icon.png'].map(f => loadImage(wikiImage(f)))),
     Promise.all(d.content.map(c => (CONTENT_ICONS[c.label] ? loadImage(wikiImage(CONTENT_ICONS[c.label])) : Promise.resolve(null)))),
+    Promise.all(gems ? Array.from({ length: 10 }, (_, i) => loadImage(gemSrc(i + 1))) : []),
   ]);
+
+  /**
+   * A skill or gear tier: the OSRS card draws the Roman numeral in its gem's
+   * colour, or the cut gem, and leaves a locked one to its dimmed icon; the
+   * tracker card writes T0..T10.
+   */
+  const tierMark = (tier: number, x: number, y: number, align: 'right' | 'center', font: string, color: string): void => {
+    if (!p.osrs) { write(ctx, p, `T${tier}`, x, y, font, color, align); return; }
+    if (tier <= 0) return;
+    const gem = gems ? gemImgs[Math.min(tier, 10) - 1] : null;
+    if (gem && gem.naturalWidth) {
+      const gx = align === 'right' ? x - 18 : x - 9;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(gem, gx, y - 14, 18, 16);
+      return;
+    }
+    write(ctx, p, roman(tier), x, y, p.body16, gemColor(tier), align);
+  };
 
   canvas.width = CARD_W * scale;
   canvas.height = CARD_H * scale;
@@ -314,19 +350,20 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
   ctx.fillStyle = p.barOn; ctx.fillRect(bar.x, bar.y, Math.round(bar.w * Math.min(1, d.completion / 100)), bar.h);
   if (p.osrs) { ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(bar.x - 0.5, bar.y - 0.5, bar.w + 1, bar.h + 1); }
 
-  // Progress, two by two.
+  // Progress: three over two, the second row stretched to fill.
   y += 112;
   const rows: [string, string][] = [
     [d.areas.unit === 'chunks' ? 'Chunks' : 'Areas', `${fmt(d.areas.unlocked)}/${fmt(d.areas.total)}`],
     ['Quests', `${d.quests.done}/${d.quests.total}`],
     ['Diary tasks', `${d.diary.done}/${d.diary.total}`],
     ['Total level', fmt(d.totalLevel)],
+    ['Combat Achievements', `${fmt(d.ca.points)} pts${d.ca.tier ? ` · ${d.ca.tier}` : ''}`],
   ];
-  const halfW = (RW - 8) / 2;
+  const perProgressRow = evenRows(rows.length, 3);
   rows.forEach(([label, value], i) => {
-    const x = RX + (i % 2) * (halfW + 8);
-    const top = y + Math.floor(i / 2) * 52;
-    inset(ctx, p, x, top, halfW, 46);
+    const { x, w, row } = boxAt(i, rows.length, perProgressRow, RX, RW, 8);
+    const top = y + row * 52;
+    inset(ctx, p, x, top, w, 46);
     icon(ctx, rowImgs[i], x + 22, top + 23, 24);
     if (p.osrs) {
       write(ctx, p, label, x + 44, top + 20, p.body16, p.label);
@@ -377,7 +414,7 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
       write(ctx, p, abbrev(s.skill), x + 4, top + 25, p.small(10), locked ? p.muted : p.text);
     }
     if (!locked) write(ctx, p, String(s.level), x + sw - 4, top + 18, p.osrs ? p.body16 : p.num(12), p.value, 'right');
-    write(ctx, p, `T${s.tier}`, x + sw - 4, top + 36, p.osrs ? p.small(16) : p.num(10), locked ? p.muted : p.label, 'right');
+    tierMark(s.tier, x + sw - 4, top + 36, 'right', p.osrs ? p.small(16) : p.num(10), locked ? p.muted : p.label);
   });
 
   // Gear, one slot each with its tier (T0 = locked, dimmed).
@@ -390,18 +427,17 @@ export async function drawShareCard(canvas: HTMLCanvasElement, d: ShareCardStats
     const x = RX + i * (gw + 3);
     inset(ctx, p, x, y, gw, 50);
     icon(ctx, gearImgs[i], x + gw / 2, y + 19, 26, g.tier === 0);
-    write(ctx, p, `T${g.tier}`, x + gw / 2, y + 45, p.osrs ? p.small(16) : p.num(10), g.tier === 0 ? p.muted : p.label, 'center');
+    tierMark(g.tier, x + gw / 2, y + 45, 'center', p.osrs ? p.small(16) : p.num(10), g.tier === 0 ? p.muted : p.label);
   });
 
-  // Unlocked content under the map: one box per table, held/total, six to a row.
+  // Unlocked content under the map: one box per table, held/total, in two even rows.
   const cy = MAP.y + MAP.h + 12;
   heading(ctx, p, 'Unlocked content', MAP.x, cy + 4);
-  const perRow = 6;
-  const cw = (MAP.w - (perRow - 1) * 6) / perRow;
+  const perRow = evenRows(d.content.length, Math.max(6, Math.ceil(d.content.length / 2)));
   const ch = 40;
   d.content.forEach((c, i) => {
-    const x = MAP.x + (i % perRow) * (cw + 6);
-    const top = cy + 12 + Math.floor(i / perRow) * (ch + 4);
+    const { x, w: cw, row } = boxAt(i, d.content.length, perRow, MAP.x, MAP.w, 6);
+    const top = cy + 12 + row * (ch + 4);
     inset(ctx, p, x, top, cw, ch);
     // Tracker labels are letter-spaced; a long one gets tighter and smaller rather than cut.
     const label = p.osrs ? c.label : c.label.toUpperCase();
