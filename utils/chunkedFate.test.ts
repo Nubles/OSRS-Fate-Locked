@@ -6,7 +6,8 @@ import { chunkLabelWithCoords } from './chunkLabelWithCoords';
 import { BREAKTHROUGH_CHANCE } from '../config/economy';
 import { validateAndMigrateSave } from './saveSchema';
 import { replayInvariants } from './runAudit';
-import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, MERCY_QUIET_MS, mercyBlocker, mercyEnablers, mercyPool, mercyQuietLeft, mercyRitualInReach, pendingBreakthroughs } from './chunkedFate';
+import { breakthroughTier, chunkedSkillHasRoom, levelPastTierCap, MERCY_QUIET_MS, mercyBlocker, mercyEnablers, mercyPool, mercyQuietLeft, mercyRitualInReach, omniKeyHasTarget, pendingBreakthroughs } from './chunkedFate';
+import { getPoolAndStateKey, isValidUnlock, randomUnlockTables } from './gameEngine';
 import { FARMING_PATCH_LIST, MERCHANTS_LIST, SKILLS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { ALL_CHUNK_KEYS, CHUNKED_START_KEY, getChunkFrontier } from './chunkAdjacency';
@@ -73,6 +74,26 @@ describe('Chunked Breakthrough', () => {
 });
 
 describe("Fate's Mercy", () => {
+  it('opens past an Omni-Key that has nothing left to name but land', () => {
+    expect(mercyBlocker({ ...dry(), specialKeys: 1 })).toBe('keys');
+    // Name every entry but land with Omni-Keys, as a player who spreads their Keys does by the end.
+    let run: ReturnType<typeof dry> = { ...dry(), chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 }, specialKeys: 5000 };
+    for (const table of randomUnlockTables('chunked')) {
+      if (table === TableType.CHUNKS) continue;
+      for (const item of getPoolAndStateKey(table, 'chunked').pool) {
+        while (isValidUnlock(table, item, run.unlocks)) {
+          const next = gameReducer(run, { type: 'UNLOCK', payload: { table, item, costType: 'specialKey', cost: 1 } });
+          if (next === run) break;
+          run = { ...next, pendingUnlock: null } as typeof run;
+        }
+      }
+    }
+    expect(omniKeyHasTarget(run.unlocks)).toBe(false);
+    const holding = { ...run, specialKeys: 1, keys: 0, chaosKeys: 0 };
+    expect(mercyBlocker(holding)).not.toBe('keys');
+    expect(mercyBlocker({ ...holding, chaosKeys: 1 })).toBe('keys');
+  });
+
   it('stays shut while the run has a Key, a skill with room, or a Breakthrough waiting', () => {
     expect(mercyBlocker({ ...dry(), keys: 1 })).toBe('keys');
     expect(mercyBlocker({ ...dry(), chaosKeys: 1 })).toBe('keys');

@@ -47,11 +47,11 @@ export const CHANGELOG_RELEASES = [
         'Optional sounds: a soft thunk on a miss, a chime on a Key and a fanfare on an unlock. They stay off unless you turn them on in Settings.',
       ],
       changed: [
-        'The share card shows your Combat Achievement points, follows your Tier marks setting, and shows Chunked sites and seals.',
+        'The share card shows your Combat Achievement points, your Tier marks setting, and Chunked sites and seals.',
         'Mixed hide cape and boots are now tier 6, matching the 60 Ranged and 50 Defence they need in game.',
       ],
       fixed: [
-        'OSRS layout: Fate shows once in the header, the Boss Task card has no odds tier, the tour says Ctrl+K on Windows, and Settings shows your pick clearly.',
+        "Fate shows once in the OSRS header and the Boss Task has no odds tier. In Chunked, an Omni-Key with only land left no longer blocks Fate's Mercy.",
       ],
     },
   },

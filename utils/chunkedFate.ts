@@ -24,7 +24,7 @@
 import { TableType, type GameState } from '../types';
 import { SKILLS_LIST } from '../data/items';
 import { chunkedTrainableTier, chunkedSkillRollable } from './chunkedSkillPool';
-import { randomUnlockPool, type RandomUnlockCandidate } from './gameEngine';
+import { getPoolAndStateKey, isValidUnlock, randomUnlockPool, randomUnlockTables, type RandomUnlockCandidate } from './gameEngine';
 import { exploreWaiting } from './chunkExplore';
 import { getChunkFrontier } from './chunkAdjacency';
 import { getActivityAccess } from './activityAccess';
@@ -208,9 +208,19 @@ export const skillsWithRoom = (state: FateState): string[] =>
  * they need the chunk content, so the caller passes them in. Without them the
  * quest condition is not checked: the reducer refuses a call that brings none.
  */
+/**
+ * Whether an Omni-Key still has something to name in Chunked. It can't name
+ * land there, so once every other table is complete it has nothing, and
+ * holding it must not keep Fate's Mercy shut for good (2026-10-30 play-test:
+ * 7 of 30 runs ended on one such Omni-Key with land still to open).
+ */
+export const omniKeyHasTarget = (unlocks: GameState['unlocks']): boolean =>
+  randomUnlockTables('chunked').some(table => table !== TableType.CHUNKS && table !== TableType.REGIONS
+    && getPoolAndStateKey(table, 'chunked').pool.some(item => isValidUnlock(table, item, unlocks)));
+
 export const mercyBlocker = (state: FateState, doableQuests?: readonly string[], now: number = Date.now()): MercyBlocker | null => {
   if (state.gameModeId !== 'chunked') return 'not_chunked';
-  if (state.keys > 0 || state.specialKeys > 0 || state.chaosKeys > 0) return 'keys';
+  if (state.keys > 0 || state.chaosKeys > 0 || (state.specialKeys > 0 && omniKeyHasTarget(state.unlocks))) return 'keys';
   if (state.pendingUnlock) return 'pending_unlock';
   if (mercyRitualInReach(state)) return 'fate';
   // Keys, Fate and a Breakthrough always do something. The rest are the
