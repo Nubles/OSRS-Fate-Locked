@@ -6,6 +6,7 @@ import { resolveModeRules } from '../config/gameModes';
 import { relaySync } from '../services/relaySync';
 import { getRollInboxStore } from '../services/rollInboxRuntime';
 import { isRollEntry } from '../utils/logEntry';
+import { pityHintText } from '../utils/pityHint';
 import { LogEntry } from '../types';
 
 /**
@@ -90,7 +91,7 @@ export const CoachStrip: React.FC = () => {
     if (rules.pityEnabled && fatePoints >= rules.pityThreshold * 0.8) {
       return {
         id: 'pity',
-        text: `${rules.pityThreshold - fatePoints} Fate Point${rules.pityThreshold - fatePoints === 1 ? '' : 's'} from a guaranteed Pity Key. Failed rolls count toward it.`,
+        text: pityHintText(rules.pityThreshold - fatePoints),
         cta: 'Farm Keys: harder rolls pay more Fate',
         act: () => nav('ctrl:FARM'),
       };
@@ -115,9 +116,10 @@ export const CoachStrip: React.FC = () => {
 
   return (
     <div className="max-w-[1600px] mx-auto px-4">
-      <div className="flex items-center gap-2.5 px-3 py-2 mt-2 rounded-lg bg-amber-950/25 border border-amber-500/20 animate-in fade-in slide-in-from-top-1 duration-300">
+      {/* Wraps on a phone: a long button drops to its own line rather than squeezing the hint to one word a line. */}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 px-3 py-2 mt-2 rounded-lg bg-amber-950/25 border border-amber-500/20 animate-in fade-in slide-in-from-top-1 duration-300">
         <Lightbulb size={13} className="text-amber-400 shrink-0" />
-        <p className="text-[12px] text-amber-100/90 leading-snug flex-1 min-w-0">{hint.text}</p>
+        <p className="text-[12px] text-amber-100/90 leading-snug flex-1 min-w-[12rem]">{hint.text}</p>
         <button
           onClick={hint.act}
           className="shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-md bg-amber-600/80 hover:bg-amber-500 text-white flex items-center gap-1 transition-colors"

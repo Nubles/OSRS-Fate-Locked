@@ -6,6 +6,7 @@ import { getRollInboxStore } from '../../services/rollInboxRuntime';
 import { isRollEntry } from '../../utils/logEntry';
 import type { LogEntry } from '../../types';
 import { useWelcomeBack } from '../../hooks/useWelcomeBack';
+import { pityHintText } from '../../utils/pityHint';
 
 /**
  * Game messages the OSRS chatbox pins under the log, in place of the classic
@@ -76,9 +77,8 @@ export const useOsrsChatNotices = (): OsrsChatNotice[] => {
       };
     }
     if (rules.pityEnabled && fatePoints >= rules.pityThreshold * 0.8) {
-      const left = rules.pityThreshold - fatePoints;
       return {
-        id: 'pity', text: `${left} Fate Point${left === 1 ? '' : 's'} from a guaranteed Pity Key. Failed rolls count toward it.`,
+        id: 'pity', text: pityHintText(rules.pityThreshold - fatePoints),
         cta: 'Farm Keys: harder rolls pay more Fate', act: () => nav('ctrl:FARM'),
       };
     }

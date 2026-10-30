@@ -10,7 +10,8 @@ import { useOsrsNav } from '../../utils/osrsNav';
 import { OsrsLevelUp, levelUpMessage, unlockCostType, type LevelUpMessage } from './OsrsLevelUp';
 import { useOsrsChatNotices } from './OsrsShellChatNotices';
 import { relaySync } from '../../services/relaySync';
-import { clanBroadcastsPref } from '../../utils/viewerPrefs';
+import { clanBroadcastsPref, dryRunLinesPref } from '../../utils/viewerPrefs';
+import { dryRunEnds } from '../../utils/dryRun';
 import { CLAN_POLL_MS, CLAN_TAG, clanLines, fetchClanFeed, type ClanEntry } from '../../utils/clanFeed';
 import './osrs-shell.css';
 
@@ -135,6 +136,8 @@ export const OsrsChatbox: React.FC = () => {
   const { activeProfileName } = useProfiles();
   const [pickedTab, setTab] = useState<ChatTab>('All');
   const clanOn = clanBroadcastsPref.use();
+  const dryRunsOn = dryRunLinesPref.use();
+  const dryRuns = useMemo(() => (dryRunsOn ? dryRunEnds(history) : new Map<string, number>()), [history, dryRunsOn]);
   // Turning Clan broadcasts off while its tab is showing goes back to All.
   const tab: ChatTab = pickedTab === 'Clan' && !clanOn ? 'All' : pickedTab;
   const tabs: ChatTab[] = clanOn ? [...TABS, 'Clan'] : TABS;
@@ -225,7 +228,14 @@ export const OsrsChatbox: React.FC = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', padding: '2px 8px' }}>
                     {tab === 'Clan' ? <ClanLog entries={clan} /> : lines.length === 0
                       ? <div className="osrs-chat-line" style={{ color: '#000080' }}>Welcome to Fate Locked. Your rolls, unlocks and rituals will show here.</div>
-                      : lines.map(entry => <ChatLine key={entry.id} entry={entry} />)}
+                      : lines.map(entry => (
+                        <React.Fragment key={entry.id}>
+                          <ChatLine entry={entry} />
+                          {dryRuns.has(entry.id) && (
+                            <div className="osrs-chat-line"><span style={{ color: '#6a0090' }}>Dry run over: {dryRuns.get(entry.id)!.toLocaleString()} rolls.</span></div>
+                          )}
+                        </React.Fragment>
+                      ))}
                     {notices.map(notice => (
                       <div key={notice.id} className="osrs-chat-line osrs-chat-notice" title={notice.text}>
                         <span style={{ color: '#000080' }}>{notice.text}</span>

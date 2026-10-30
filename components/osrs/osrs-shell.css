@@ -86,6 +86,20 @@ html[data-ui="osrs"] .osrs-orb-num {
 html[data-ui="osrs"] .osrs-orb {
   width: 40px; height: 40px; box-sizing: border-box; border-radius: 50%; border: 2px solid #000; box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi);
   display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(var(--osrs-fate-ring, #8a3fc4) 0 var(--osrs-fate-fill, 0%), #2a1f33 var(--osrs-fate-fill, 0%) 100%);
+}
+/* Every roll lands (Settings: Fate fills on a miss, Glow near the Pity Key). The
+   fill is a registered property so the ring sweeps to its new size. */
+@property --osrs-fate-fill { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+html[data-ui="osrs"] .osrs-orb.is-filling { transition: --osrs-fate-fill 700ms ease-out; }
+html[data-ui="osrs"] .osrs-orb.is-gain { animation: osrs-orb-gain 700ms ease-out; }
+@keyframes osrs-orb-gain { 0% { filter: brightness(1.8); } 100% { filter: none; } }
+html[data-ui="osrs"] .osrs-orb.is-near { box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi), 0 0 6px 2px rgba(255, 48, 48, 0.75); }
+html[data-ui="osrs"] .osrs-orb.is-near.is-pulsing { animation: osrs-orb-glow 1.4s ease-in-out infinite alternate; }
+html[data-ui="osrs"] .osrs-orb.is-near.is-pulsing.is-gain { animation: osrs-orb-gain 700ms ease-out, osrs-orb-glow 1.4s ease-in-out infinite alternate; }
+@keyframes osrs-orb-glow {
+  from { box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi), 0 0 3px 1px rgba(255, 48, 48, 0.45); }
+  to { box-shadow: inset 0 0 0 2px var(--osrs-bevel-hi), 0 0 9px 3px rgba(255, 48, 48, 0.9); }
 }
 
 /* Jump to: drawn as the board's search box, but it is a button that opens

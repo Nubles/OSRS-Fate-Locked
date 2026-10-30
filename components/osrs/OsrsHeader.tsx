@@ -9,7 +9,9 @@ import { RESET_CONFIRM_MESSAGE } from '../../utils/backups';
 import { FATE_EXPORT_HINT } from '../../utils/fateSaveFile';
 import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
 import { setSkillOddsHover, useSkillOddsHover } from '../../utils/skillOddsPref';
-import { clanBroadcastsPref, confirmSpendPref, tableOutlookPref, welcomeBackPref } from '../../utils/viewerPrefs';
+import {
+  clanBroadcastsPref, confirmSpendPref, dryRunLinesPref, fateFillPref, pityGlowPref, soundsPref, tableOutlookPref, welcomeBackPref,
+} from '../../utils/viewerPrefs';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import { relaySync } from '../../services/relaySync';
 import { ProfileSwitcher } from '../ProfileSwitcher';
@@ -76,6 +78,10 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   const confirmSpend = confirmSpendPref.use();
   const welcomeBack = welcomeBackPref.use();
   const clanBroadcasts = clanBroadcastsPref.use();
+  const fateFill = fateFillPref.use();
+  const pityGlow = pityGlowPref.use();
+  const dryRunLines = dryRunLinesPref.use();
+  const sounds = soundsPref.use();
   const {
     keys, specialKeys, chaosKeys, fatePoints, activeBuff, animationsEnabled, toggleAnimations,
     advisorsEnabled, toggleAdvisors, resetGame, gameModeId, customMode, linkedAccount,
@@ -86,6 +92,20 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
   const pityCap = pityRules.pityEnabled ? pityRules.pityThreshold : 50; // 50 = visual-only fallback
   const nearPity = pityRules.pityEnabled && fatePoints >= pityRules.pityThreshold * 0.8;
   const fill = Math.max(0, Math.min(100, (fatePoints / pityCap) * 100));
+  // Every roll lands: the ring fills smoothly and flashes as a miss adds Fate.
+  const filling = fateFill && animationsEnabled;
+  const [gain, setGain] = useState(false);
+  const lastFate = useRef(fatePoints);
+  useEffect(() => {
+    const rose = fatePoints > lastFate.current;
+    lastFate.current = fatePoints;
+    if (!rose || !filling) return;
+    setGain(true);
+    const timer = window.setTimeout(() => setGain(false), 700);
+    return () => window.clearTimeout(timer);
+  }, [fatePoints, filling]);
+  const orbClass = `osrs-orb${filling ? ' is-filling' : ''}${gain ? ' is-gain' : ''}`
+    + `${nearPity && pityGlow ? ` is-near${animationsEnabled ? ' is-pulsing' : ''}` : ''}`;
   const [showMenu, setShowMenu] = useState(false);
   const [showRlMenu, setShowRlMenu] = useState(false);
   const runeliteRef = useRef<HTMLButtonElement>(null);
@@ -121,7 +141,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
       {/* Fate Points orb: the number box is the only count, the full "Fate 12/50" is in its tooltip */}
       <div className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={`${fateText}. ${fateTitle}`} role="img" aria-label={`${fateText}. ${fateTitle}`}>
         <div className="osrs-orb-num" style={nearPity ? { color: '#ff0000' } : undefined}>{fatePoints}</div>
-        <div className="osrs-orb" style={{ background: `conic-gradient(${nearPity ? '#c42f2f' : '#8a3fc4'} 0 ${fill}%, #2a1f33 ${fill}% 100%)` }}>
+        <div className={orbClass} style={{ '--osrs-fate-fill': `${fill}%`, '--osrs-fate-ring': nearPity ? '#c42f2f' : '#8a3fc4' } as React.CSSProperties}>
           <img className="osrs-px" src={sprite('void_seal.png')} alt="" aria-hidden="true" width={27} height={24} />
         </div>
       </div>
@@ -238,6 +258,10 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => onOpenChangelog(settingsRef.current))}>What's New</button>
                   <div className="osrs-menu-sep" />
                   <button type="button" className="osrs-menu-item" onClick={() => toggleAnimations()} aria-pressed={animationsEnabled}>Animations {onOff(animationsEnabled)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => fateFillPref.set(!fateFill)} aria-pressed={fateFill} title="On: the Fate orb's ring fills and flashes as a missed roll adds Fate. Needs Animations on.">Fate fills on a miss {onOff(fateFill)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => pityGlowPref.set(!pityGlow)} aria-pressed={pityGlow} title="On: the Fate orb glows once you're close to a guaranteed Pity Key.">Glow near the Pity Key {onOff(pityGlow)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => dryRunLinesPref.set(!dryRunLines)} aria-pressed={dryRunLines} title="On: when a Key ends a long run of misses, the chat says how long it was.">Dry run lines {onOff(dryRunLines)}</button>
+                  <button type="button" className="osrs-menu-item" onClick={() => soundsPref.set(!sounds)} aria-pressed={sounds} title="On: a soft sound on a missed roll, a chime on a Key and a short fanfare on an unlock.">Sounds {onOff(sounds)}</button>
                   {gameModeId === 'chunked' && <FateMapOptions osrs />}
                   <button type="button" className="osrs-menu-item" onClick={() => setUiStyle(uiStyle === 'osrs' ? 'classic' : 'osrs')} aria-pressed={uiStyle === 'osrs'}>OSRS layout {onOff(uiStyle === 'osrs')}</button>
                   {uiStyle === 'osrs' && <Suspense fallback={null}><OsrsInterfaceOptions /></Suspense>}

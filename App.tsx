@@ -13,6 +13,7 @@ const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m =>
 const RollInboxDriver = lazyWithRetry(() => import('./components/RollInboxDriver'));
 // The claimed pet that follows the player, with Your Pets; it loads once the run has a pet.
 const PetFollower = lazyWithRetry(() => import('./components/PetFollower'));
+const FateSounds = lazyWithRetry(() => import('./components/FateSounds'));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { WikiIcon } from './components/WikiIcon';
@@ -118,6 +119,7 @@ import { describeRollOutcome } from './utils/rollOutcomeText';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 import { paletteShortcut } from './utils/paletteShortcut';
+import { soundsPref } from './utils/viewerPrefs';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -779,6 +781,7 @@ const GameLayout = () => {
   // A pending offer from a balance change keeps What's New open until it's settled.
   const hasPendingOffer = fateCompensation.status === 'pending' || petCompensation.status === 'pending';
   const isOsrs = useIsOsrsUi();
+  const soundsOn = soundsPref.use();
   const {
     recentlyCreatedId,
     activeProfileId,
@@ -1134,6 +1137,7 @@ const GameLayout = () => {
       <Suspense fallback={null}><PersistentStorageDriver /></Suspense>
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
+      {soundsOn && <Suspense fallback={null}><FateSounds /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
