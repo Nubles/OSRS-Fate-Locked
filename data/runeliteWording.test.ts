@@ -78,7 +78,7 @@ describe('the RuneLite wording contract', () => {
   it('holds everything the plugin checks', () => {
     expect(Object.keys(RUNELITE_WORDING)).toEqual(['version', 'terms', 'avoidedWords', 'settingSections', 'settings',
       'sidebarCards']);
-    expect(RUNELITE_WORDING.settings).toHaveLength(28);
+    expect(RUNELITE_WORDING.settings).toHaveLength(34);
   });
 });
 

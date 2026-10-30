@@ -61,6 +61,7 @@ export interface RuneliteSetting {
 export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'trackerNetworkAccess', section: 'Tracker', name: 'Online sync', defaultValue: 'Off' },
   { key: 'strictMode', section: 'Strict Mode', name: 'Strict Mode', defaultValue: 'Off' },
+  { key: 'blockNetworks', section: 'Strict Mode', name: 'Block networks and boats', defaultValue: 'Off' },
   { key: 'pauseStrictModeHotkey', section: 'Strict Mode', name: 'Pause hotkey', defaultValue: 'Not set' },
   {
     key: 'lockedAreaAlert',
@@ -75,6 +76,7 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'rollNudges', section: 'Alerts', name: 'Roll reminders', defaultValue: 'On' },
   { key: 'useNotifier', section: 'Alerts', name: 'Also send RuneLite notifications', defaultValue: 'Off' },
   { key: 'announceUnlocks', section: 'Alerts', name: 'Announce new unlocks', defaultValue: 'On' },
+  { key: 'fairyRingDialStatus', section: 'Alerts', name: 'Fairy ring dial status', defaultValue: 'On' },
   {
     key: 'hudMode',
     section: 'Display',
@@ -112,6 +114,10 @@ export const RUNELITE_SETTINGS: readonly RuneliteSetting[] = [
   { key: 'outlineMonsters', section: 'Display', name: 'Outline monsters and bosses', defaultValue: 'On' },
   { key: 'outlineOpen', section: 'Display', name: 'Outline open ones too', defaultValue: 'On' },
   { key: 'showInfoBoxes', section: 'Display', name: 'Infoboxes', defaultValue: 'Off' },
+  { key: 'fateOrb', section: 'Display', name: 'Fate orb', defaultValue: 'On' },
+  { key: 'fateOrbGlow', section: 'Display', name: 'Glow near the Pity Key', defaultValue: 'On' },
+  { key: 'itemTierMarks', section: 'Display', name: 'Tier marks on items', defaultValue: 'On' },
+  { key: 'skillTierMarks', section: 'Display', name: 'Tier marks on skills', defaultValue: 'On' },
   {
     key: 'colourPreset',
     section: 'Display',
