@@ -38,8 +38,9 @@ const replay = (mode: string, rngVersion: 1 | 2 | 3 | undefined, pick: Picker, c
 
 // Recorded with the same replay and the old one-draw pick. Vanilla's pool
 // includes bosses and minigames you can't reach yet (Keys roll anything left).
+// Re-recorded when Hitpoints became free and left the Skills pool (30 October 2026).
 const OLD = {
-  vanilla: ['Bosses: Hespori', 'Farming Patches: Spirit Tree', 'Bosses: Vorkath', 'Regions: Zul-Andra'],
+  vanilla: ['Bosses: Kalphite Queen', 'Regions: Poison Waste', 'Banks: 6968', 'Skills: Strength'],
   chunked: ['Merchants: Halberd Shops', 'Mobility: Minigame Teleports', 'Slayer Unlocks: Task Storage', 'Arcana: Preserve'],
 };
 
