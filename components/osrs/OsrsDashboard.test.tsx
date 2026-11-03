@@ -89,6 +89,10 @@ describe('Dashboard in the OSRS layout', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: 'Journal' }));
     expect(getOsrsNav().screen).toBe('journal');
+    // The tab row shows on every screen (#23), so it marks the Journal there.
+    expect(screen.getByRole('tab', { name: 'Journal' }).getAttribute('aria-selected')).toBe('true');
+    expect(character.getAttribute('aria-selected')).toBe('false');
+    act(() => openOsrsScreen('home'));
     expect(character.getAttribute('aria-selected')).toBe('true');
   });
 
