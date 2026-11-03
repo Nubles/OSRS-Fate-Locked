@@ -183,6 +183,8 @@ html[data-ui="osrs"] .osrs-ctab {
   background: var(--osrs-btn); box-shadow: inset 1px 1px 0 var(--osrs-btn-hi), inset -1px -1px 0 var(--osrs-btn-lo);
 }
 html[data-ui="osrs"] .osrs-ctab:hover { color: #ffff00; }
+html[data-ui="osrs"] .osrs-chat-fold { width: 34px; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; }
+html[data-ui="osrs"] .osrs-chat-fold + .osrs-ctab { margin-left: 4px !important; }
 html[data-ui="osrs"] .osrs-ctab:focus-visible { outline: 1px solid #ffff00; }
 html[data-ui="osrs"] .osrs-ctab[aria-selected="true"] { background: #6b5a42; box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 #8a7656; }
 html[data-ui="osrs"] .osrs-chat-note { align-self: center; margin-left: 14px; font: var(--osrs-fs) 'RSSmall', sans-serif; color: var(--osrs-tan); text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
