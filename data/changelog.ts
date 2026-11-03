@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-03-mixed-hide-and-share-card',
+    title: 'Mixed hide tiers, share card and layout fixes',
+    date: '2026-11-03',
+    sections: {
+      changed: [
+        'The share card shows your Combat Achievement points, follows your Tier marks setting, and shows Chunked sites and seals.',
+        'Mixed hide cape and boots are now tier 6, matching the 60 Ranged and 50 Defence they need in game.',
+      ],
+      fixed: [
+        'OSRS layout: Fate shows once in the header, the Boss Task card has no odds tier, the tour says Ctrl+K on Windows, and Settings shows your pick clearly.',
+        'OSRS layout: the tab row stays in one place on every screen, and the chatbox starts folded on short screens, with an arrow to fold or open it.',
+      ],
+    },
+  },
+  {
     id: '2026-10-30-free-hitpoints',
     title: 'Hitpoints is free',
     date: '2026-10-30',

@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useOsrsNav, getOsrsNav, openOsrsScreen, screenForJump } from '../../utils/osrsNav';
 import { lazyWithRetry } from '../../utils/lazyRetry';
 import type { SaveDurabilitySnapshot, SaveRetryResult } from '../../utils/recoveryTypes';
@@ -6,6 +6,7 @@ import type { FateSaveDownloadResult } from '../../utils/fateSaveFile';
 import { OsrsShellNotice } from './OsrsShellNotice';
 import { OsrsChatbox } from './OsrsChatbox';
 import { PanelErrorBoundary } from '../PanelErrorBoundary';
+import { OsrsTabStripContext } from './osrsTabStrip';
 import './osrs-shell.css';
 
 const OsrsKeysWorkspace = lazyWithRetry(() => import('./OsrsKeysWorkspace'));
@@ -37,6 +38,8 @@ export interface OsrsShellFrameProps {
  *             the left column hides while a full-width Progression tab shows
  *   keys    - the wide Keys interface
  *   journal - the full Journal window
+ * The Progression tab row sits in one fixed strip above the body, the same on
+ * every screen (OsrsDashTabs portals it there).
  * Home stays mounted while another screen shows, so its tabs, filters and
  * scroll positions survive the round trip. Each region has its own Suspense
  * boundary, so a lazy chunk loading inside one never blanks the whole frame.
@@ -47,6 +50,8 @@ export const OsrsShellFrame: React.FC<OsrsShellFrameProps> = ({
 }) => {
   const { screen, progressionWide } = useOsrsNav();
   const home = screen === 'home';
+  // The fixed tab strip; the Progression tabs portal into it (osrsTabStrip.ts).
+  const [tabStrip, setTabStrip] = useState<HTMLDivElement | null>(null);
   // Jumps fired from the Journal or Keys screen (palette, chat hints, "Show on
   // map", "Plan a route") change the hidden home screen; bring it into view.
   // Capture phase, so the screen switches before the home screen's own
@@ -66,6 +71,7 @@ export const OsrsShellFrame: React.FC<OsrsShellFrameProps> = ({
     };
   }, []);
   return (
+    <OsrsTabStripContext.Provider value={tabStrip}>
     <div className="osrs-shell-frame">
       <Suspense fallback={<div style={{ height: 64 }} />}>{header}</Suspense>
       <OsrsShellNotice
@@ -75,6 +81,7 @@ export const OsrsShellFrame: React.FC<OsrsShellFrameProps> = ({
         exportBackup={exportBackup}
       />
       {criticalBanners}
+      <div className="osrs-shell-tabstrip" ref={setTabStrip} data-osrs-tabstrip="" />
       <div className="osrs-shell-body">
         <div
           className={`osrs-shell-grid${progressionWide ? ' is-wide' : ''}`}
@@ -100,6 +107,7 @@ export const OsrsShellFrame: React.FC<OsrsShellFrameProps> = ({
       </div>
       <PanelErrorBoundary name="Chatbox"><OsrsChatbox /></PanelErrorBoundary>
     </div>
+    </OsrsTabStripContext.Provider>
   );
 };
 

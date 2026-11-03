@@ -62,6 +62,8 @@ export interface RuneliteRunState {
   linkedAccount?: string;
   /** Per-slot unlocked equipment tier (e.g. { Head: 2, Weapon: 3 }). */
   equipment?: Record<string, number>;
+  /** The Fate a guaranteed Pity Key needs in this run's mode, or null when the mode has pity off (the plugin's Fate orb). */
+  pityThreshold?: number | null;
 }
 
 export async function buildRuneliteBundle(

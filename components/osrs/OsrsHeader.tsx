@@ -118,13 +118,12 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
       </div>
       <div className="osrs-hdr-profile" style={{ flexShrink: 0 }}><ProfileSwitcher /></div>
 
-      {/* Fate Points orb */}
-      <div className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={fateTitle} role="img" aria-label={`${fateText}. ${fateTitle}`}>
+      {/* Fate Points orb: the number box is the only count, the full "Fate 12/50" is in its tooltip */}
+      <div className="osrs-tip" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 10, flexShrink: 0 }} data-osrs-tip={`${fateText}. ${fateTitle}`} role="img" aria-label={`${fateText}. ${fateTitle}`}>
         <div className="osrs-orb-num" style={nearPity ? { color: '#ff0000' } : undefined}>{fatePoints}</div>
         <div className="osrs-orb" style={{ background: `conic-gradient(${nearPity ? '#c42f2f' : '#8a3fc4'} 0 ${fill}%, #2a1f33 ${fill}% 100%)` }}>
           <img className="osrs-px" src={sprite('void_seal.png')} alt="" aria-hidden="true" width={27} height={24} />
         </div>
-        <span className="osrs-sh osrs-hdr-fate-text" style={{ font: "var(--osrs-fs) 'RSSmall', sans-serif", color: nearPity ? '#ff3030' : 'var(--osrs-tan, #c8b897)', marginLeft: 4, whiteSpace: 'nowrap' }}>{fateText}</span>
       </div>
 
       {/* Key stacks, with the XP drops rising past them */}

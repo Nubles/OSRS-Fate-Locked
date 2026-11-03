@@ -117,6 +117,7 @@ import { Key, Sparkles, Dna, Swords, ShoppingBag, ScrollText, Compass, Lightbulb
 import { describeRollOutcome } from './utils/rollOutcomeText';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
+import { paletteShortcut } from './utils/paletteShortcut';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -569,7 +570,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
              >
                 <Search size={13} />
                 <span className="text-[11px] font-medium hidden sm:inline">Jump to…</span>
-                <kbd className="text-[9px] font-mono text-gray-500 border border-white/15 rounded px-1 py-0.5 hidden sm:inline group-hover:border-white/25">⌘K</kbd>
+                <kbd className="text-[9px] font-mono text-gray-500 border border-white/15 rounded px-1 py-0.5 hidden sm:inline group-hover:border-white/25">{paletteShortcut()}</kbd>
              </button>
 
              <button

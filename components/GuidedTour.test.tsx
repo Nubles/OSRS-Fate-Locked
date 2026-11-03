@@ -64,7 +64,7 @@ describe('GuidedTour keyboard', () => {
     fireEvent.keyDown(next, { key: 'Enter' });
     fireEvent.click(next);
 
-    expect(screen.getByText('1 · Farm Keys')).toBeTruthy();
+    expect(screen.getByText('Farm Keys')).toBeTruthy();
   });
 
   it('still advances on Enter when no control has focus', () => {
@@ -73,7 +73,7 @@ describe('GuidedTour keyboard', () => {
 
     fireEvent.keyDown(window, { key: 'Enter' });
 
-    expect(screen.getByText('1 · Farm Keys')).toBeTruthy();
+    expect(screen.getByText('Farm Keys')).toBeTruthy();
   });
 });
 
@@ -99,7 +99,7 @@ describe('GuidedTour focus', () => {
     expect(document.activeElement).toBe(next);
 
     await user.click(next);
-    expect(screen.getByText('1 · Farm Keys')).toBeTruthy();
+    expect(screen.getByText('Farm Keys')).toBeTruthy();
     expect(document.activeElement).toBe(next);
     await user.tab();
     expect(document.activeElement).toBe(end);

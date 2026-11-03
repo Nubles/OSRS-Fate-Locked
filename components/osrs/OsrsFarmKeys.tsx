@@ -187,6 +187,8 @@ interface CardModel {
   notReady?: string;
   /** Why it can't roll at all (a Slayer master the run can't use yet): greyed out and disabled. */
   blocked?: string;
+  /** The Boss Task card: it isn't a master, and its Keys come from the picked boss's stash, so it has no odds tier. */
+  untiered?: boolean;
   /** Shown in place of the rate (the Boss Task card before its boss is picked). */
   rateLabel?: string;
   /** The Boss Task card asks which boss the task was. */
@@ -218,17 +220,20 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
   const { isRolling, trigger } = useRollSuspense(card.onRoll);
   const gem = gemFor(card.rate);
   const live = !card.disabled;
-  const stageBg = live
+  const glow = live && !card.untiered;
+  const stageBg = glow
     ? `radial-gradient(ellipse at 50% 92%, ${rgba(gem.color, 0.32)} 0%, ${rgba(gem.color, 0.08)} 45%, rgba(0,0,0,0) 70%), linear-gradient(#2a231b, #1c1712)`
     : 'linear-gradient(#24201a, #171410)';
   const filter = live ? undefined : 'grayscale(.9) brightness(.45)';
   const art = card.art;
   return (
     <div className="okf-card" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc"
-      style={{ boxShadow: live ? `inset 0 0 0 2px ${gem.color}` : 'inset 0 0 0 2px var(--osrs-inner-ring, #4f4434)' }}>
+      style={{ boxShadow: glow ? `inset 0 0 0 2px ${gem.color}` : 'inset 0 0 0 2px var(--osrs-inner-ring, #4f4434)' }}>
       <div className="okf-card-head">
-        <img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
-        <span className="tier" style={{ color: gem.color }}>{gem.label}</span>
+        {card.untiered
+          ? <span className="tier" style={{ color: 'var(--osrs-tan, #c8b897)' }}>Boss Task</span>
+          : <><img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
+            <span className="tier" style={{ color: gem.color }}>{gem.label}</span></>}
         <span className="rate">{card.rateLabel ?? `${card.rate}%`}{card.rateLabel ? null : <BonusTag bonus={card.bonus} />}</span>
       </div>
       <div className="okf-stage" style={{ background: stageBg }}>
@@ -642,6 +647,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       sub: m.subText,
       rate,
       bonus: task ? 0 : bonusFor(m.source),
+      untiered: isBossTask,
       art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
       thumb: isBossTask ? { src: BOSS_TASK_IMG, item: true } : { src: head ?? m.image },
       status: task && !task.pick ? { text: 'Pick the boss, then roll', color: '#ffff00' } : ready,
@@ -651,7 +657,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       rateLabel: blocked || (task && !task.pick) ? '—' : undefined,
       picker: task && !blocked ? { value: task.pick, options: task.bosses, onChange: task.setPick } : undefined,
       btn: 'Roll',
-      title: blocked ? `${m.name}: ${blocked}` : `${m.name}: ${task && !task.pick ? 'pick the boss the task was' : `${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`}`,
+      title: blocked ? `${m.name}: ${blocked}`
+        : task ? `${m.name}: ${task.pick ? `${rate}% from ${task.pick}’s stash` : 'pick the boss the task was'}`
+        : `${m.name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% per roll`,
       examine: blocked ? `${m.subText}. ${blocked}.` : `${m.subText}. ${odds} chance of a Key per task.`,
       onRoll: task
         ? (pt: RollPoint) => { if (task.pick) { setPending({ who: task.pick, head: npcHead(task.pick) ?? BOSS_TASK_IMG, headIsItem: !npcHead(task.pick), source: m.source, at: Date.now() }); task.roll(pt); } }
@@ -809,7 +817,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   };
 
   const ladderRows: LadderRow[] = (() => {
-    if (subTab === 'SLAYER') return buildLadder(slayerCards.filter((c) => !c.rateLabel).map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
+    if (subTab === 'SLAYER') return buildLadder(slayerCards.filter((c) => !c.rateLabel && !c.untiered).map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));
     if (subTab === 'CLUES') return buildLadder(clueCards.map((c) => ({ label: c.name, rate: c.rate, live: true })));
     if (subTab === 'BOSSING') {
       if (reserves) return buildLadder(vanillaBossCards.map((c) => ({ label: c.name, rate: c.rate, live: !c.disabled })));

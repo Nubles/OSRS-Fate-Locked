@@ -83,8 +83,13 @@ const ClanLog: React.FC<{ entries: ClanEntry[] | null | undefined }> = ({ entrie
 const MAX_LINES = 150;
 const COLLAPSED_KEY = 'fate_osrs_chat_collapsed_v1';
 
-const readCollapsed = (): boolean => {
-  try { return localStorage.getItem(COLLAPSED_KEY) === '1'; } catch { return false; }
+/** Below this window height the chatbox starts folded, so a 1366 x 768 laptop keeps its panels. A saved choice always wins. */
+export const SHORT_SCREEN_PX = 850;
+export const readCollapsed = (): boolean => {
+  let saved: string | null = null;
+  try { saved = localStorage.getItem(COLLAPSED_KEY); } catch { /* storage blocked: fall back on the screen */ }
+  if (saved === '1' || saved === '0') return saved === '1';
+  return typeof window !== 'undefined' && window.innerHeight < SHORT_SCREEN_PX;
 };
 const writeCollapsed = (collapsed: boolean) => {
   try { localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0'); } catch { /* per-viewer convenience only */ }
@@ -259,6 +264,16 @@ export const OsrsChatbox: React.FC = () => {
             </button>
           ))}
           <span className="osrs-chat-note">{note}</span>
+          <button
+            type="button"
+            className="osrs-ctab osrs-chat-fold"
+            onClick={() => setCollapsedAndSave(!collapsed)}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Show the chatbox' : 'Hide the chatbox (clicking the chosen tab does this too)'}
+            aria-label={collapsed ? 'Show the chatbox' : 'Hide the chatbox'}
+          >
+            <svg aria-hidden="true" width="11" height="7" viewBox="0 0 11 7"><path d={collapsed ? 'M0 7h11L5.5 0z' : 'M0 0h11L5.5 7z'} fill="currentColor" /></svg>
+          </button>
           <button
             type="button"
             className="osrs-ctab"

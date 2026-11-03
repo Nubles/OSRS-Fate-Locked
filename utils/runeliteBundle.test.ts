@@ -174,6 +174,8 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
         'RFD: The Cook',
         "Witch's Potion",
       ]);
+      // The plugin's Fate orb fills toward the mode's Pity Key.
+      expect(bundle.state.pityThreshold).toBe(50);
     } finally {
       vi.unstubAllGlobals();
     }

@@ -15,7 +15,7 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { showToast } from './toast';
 import { UnlockState } from '../types';
 import { bankLocksActive } from './reachability';
-import type { GameModeRules } from '../config/gameModes';
+import { resolveModeRules, type GameModeRules } from '../config/gameModes';
 import { buildRuneliteRulesManifest } from './runeliteRulesManifest';
 import { isStartAreaFor } from './freeAreas';
 import { relayFingerprint } from './relayPublishFingerprint';
@@ -135,6 +135,10 @@ export async function buildBundlePayload(
     pinnedGoals: run.pinnedGoals ?? [],
     linkedAccount: run.linkedAccount,
     equipment: unlocks.equipment,
+    pityThreshold: (() => {
+      const rules = resolveModeRules(run.gameModeId, run.customMode);
+      return rules.pityEnabled ? rules.pityThreshold : null;
+    })(),
   };
   const rules = await buildRuneliteRulesManifest({ unlocks, run });
   const banksLocked = bankLocksActive(run.gameModeId, run.customMode);
