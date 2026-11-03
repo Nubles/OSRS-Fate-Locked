@@ -13,7 +13,6 @@ const LogViewer = lazyWithRetry(() => import('./components/LogViewer').then(m =>
 const RollInboxDriver = lazyWithRetry(() => import('./components/RollInboxDriver'));
 // The claimed pet that follows the player, with Your Pets; it loads once the run has a pet.
 const PetFollower = lazyWithRetry(() => import('./components/PetFollower'));
-const FateSounds = lazyWithRetry(() => import('./components/FateSounds'));
 import { SectionGuide, GUIDES } from './components/SectionGuide';
 import { PopOnChange } from './components/PopOnChange';
 import { WikiIcon } from './components/WikiIcon';
@@ -98,7 +97,6 @@ const VoidAltar = lazyWithRetry(() => import('./components/VoidAltar').then(m =>
 const RitualAnimation = lazyWithRetry(() => import('./components/RitualAnimation').then(m => ({ default: m.RitualAnimation })));
 const CommandPalette = lazyWithRetry(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
 const GuidedTour = lazyWithRetry(() => import('./components/GuidedTour').then(m => ({ default: m.GuidedTour })));
-const FirstHourGuide = lazyWithRetry(() => import('./components/FirstHourGuide'));
 const QuestCompleteOverlay = lazyWithRetry(() => import('./components/QuestCompleteOverlay').then(m => ({ default: m.QuestCompleteOverlay })));
 // The OSRS layout's shell (utils/uiStyle.ts): loaded only while that layout is on.
 const OsrsHeader = lazyWithRetry(() => import('./components/osrs/OsrsHeader').then(m => ({ default: m.OsrsHeader })));
@@ -120,7 +118,6 @@ import { describeRollOutcome } from './utils/rollOutcomeText';
 import { BookOpen } from './components/OsrsIcon';
 import { DISCORD_INVITE_URL } from './constants';
 import { paletteShortcut } from './utils/paletteShortcut';
-import { soundsPref } from './utils/viewerPrefs';
 
 // --- Error Boundary ---
 interface ErrorBoundaryState {
@@ -514,7 +511,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
 
           {/* Resources Bar */}
           <div className="flex flex-row items-center gap-2 lg:gap-6 bg-black/20 p-1 pr-1.5 lg:p-1.5 lg:pr-4 rounded-xl border border-white/5 flex-1 min-w-0 lg:flex-initial lg:min-w-[auto] lg:w-full xl:w-auto shadow-inner">
-            <div data-first-hour="fate" className="flex-1 min-w-0 lg:flex-initial lg:min-w-[auto] lg:w-64 px-1.5 lg:px-2" title={pityRules.pityEnabled
+            <div className="flex-1 min-w-0 lg:flex-initial lg:min-w-[auto] lg:w-64 px-1.5 lg:px-2" title={pityRules.pityEnabled
                 ? `Fate Points: failed rolls build these, and at ${pityRules.pityThreshold} you get a guaranteed Pity Key. You can also spend them on rituals at the Altar.`
                 : 'Fate Points: failed rolls build these. Spend them on rituals at the Altar.'}>
                <div className="flex justify-between text-[10px] mb-1.5 font-bold uppercase tracking-wider">
@@ -782,7 +779,6 @@ const GameLayout = () => {
   // A pending offer from a balance change keeps What's New open until it's settled.
   const hasPendingOffer = fateCompensation.status === 'pending' || petCompensation.status === 'pending';
   const isOsrs = useIsOsrsUi();
-  const soundsOn = soundsPref.use();
   const {
     recentlyCreatedId,
     activeProfileId,
@@ -1138,7 +1134,6 @@ const GameLayout = () => {
       <Suspense fallback={null}><PersistentStorageDriver /></Suspense>
       <Suspense fallback={null}><RollInboxDriver /></Suspense>
       {(petsClaimed?.length ?? 0) > 0 && <Suspense fallback={null}><PetFollower /></Suspense>}
-      {soundsOn && <Suspense fallback={null}><FateSounds /></Suspense>}
       {/* Progressive-disclosure watcher — always mounted (same rule as
           RollInboxDriver): detected events must queue from every screen. */}
       <FeatureRevealDriver />
@@ -1262,8 +1257,6 @@ const GameLayout = () => {
         </Suspense>
       )}
 
-      {/* The guided first hour: a card here (classic), the chatbox (OSRS). */}
-      <Suspense fallback={null}><FirstHourGuide /></Suspense>
       {/* One contextual "next step" hint under the header — teaches the loop. */}
       {/* After 12 hours or more away: what the last session did. */}
       {!isOsrs && <Suspense fallback={null}><WelcomeBackStrip /></Suspense>}
