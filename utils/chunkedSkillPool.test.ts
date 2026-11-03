@@ -53,7 +53,8 @@ describe('Chunked Skills rolls', () => {
     for (const skill of ['Sailing', 'Construction', 'Agility', 'Herblore', 'Slayer', 'Runecraft', 'Mining', 'Smithing', 'Hunter', 'Firemaking', 'Fletching', 'Prayer', 'Cooking', 'Ranged', 'Hitpoints']) {
       expect(pool).not.toContain(skill);
     }
-    expect(skillPool(withTiers({ Attack: 1 }), 'chunked')).toEqual(expect.arrayContaining(['Prayer', 'Cooking', 'Hitpoints']));
+    // Hitpoints is free, so it is never rolled.
+    expect(skillPool(withTiers({ Attack: 1 }), 'chunked')).toEqual(expect.arrayContaining(['Prayer', 'Cooking']));
   });
 
   it('needs a node the next tier can reach: the castle\'s level-20 fishing spot is out of reach at tier 0', () => {

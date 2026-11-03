@@ -232,7 +232,7 @@ describe('Sacrifice', () => {
     const s = cast(ready(), { type: 'RITUAL_SACRIFICE', payload: { taken } });
     expect(s.fatePoints).toBe(5);
     expect(s.specialKeys).toBe(1);
-    expect(s.unlocks.skills).toEqual({ Hitpoints: 1, Woodcutting: 4 });
+    expect(s.unlocks.skills).toEqual({ Hitpoints: 10, Woodcutting: 4 });
     expect(s.unlocks.equipment.Body).toBe(2);
     expect(s.rituals).toEqual({ sacrificesUsed: 1 });
     expect(s.lastEvent).toMatchObject({ type: 'RITUAL', meta: { type: 'SACRIFICE', taken, usesLeft: 2 } });

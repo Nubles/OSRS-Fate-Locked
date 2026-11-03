@@ -29,7 +29,7 @@ import { legacyRunSalt } from './seededRng';
 
 const baseUnlocks = (): UnlockState => ({
   equipment: { Head: 0, Body: 0 },
-  skills: { Hitpoints: 1 },
+  skills: { Hitpoints: 10 },
   levels: { Attack: 1, Hitpoints: 10 },
   regions: [],
   chunks: [],
@@ -56,6 +56,7 @@ const VALID_RUN_ID = '123e4567-e89b-42d3-a456-426614174000';
 const defaultsFixture = (): GameState => ({
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
+  hitpointsRevision: 1,
   runId: VALID_RUN_ID,
   runRevision: 0,
   keys: 3,
@@ -93,6 +94,7 @@ const fullStateFixture = (): GameState => ({
   collectionLogIdentity: { version: 1, quarantinedIds: [] },
   version: CURRENT_SAVE_VERSION,
   areaUnlockRevision: 1,
+  hitpointsRevision: 1,
   runId: VALID_RUN_ID,
   runRevision: 0,
   keys: 17,
@@ -114,7 +116,7 @@ const fullStateFixture = (): GameState => ({
   activeBuff: 'LUCK',
   unlocks: {
     equipment: { Head: 9, Body: 4 },
-    skills: { Hitpoints: 1, Attack: 10 },
+    skills: { Hitpoints: 10, Attack: 10 },
     levels: { Attack: 99, Hitpoints: 10 },
     regions: ['Karamja'],
     chunks: ['46,51'],

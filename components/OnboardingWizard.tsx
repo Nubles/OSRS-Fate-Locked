@@ -347,7 +347,7 @@ export const OnboardingWizard: React.FC = () => {
     {
       title: "Fate Locked",
       subtitle: "How it works",
-      desc: `You start with ${STARTING_KEYS} Keys and nearly everything locked: no gear slots, no skills except Hitpoints, no transport, no banks and no shops. In Vanilla you can go anywhere in Misthalin from the start. In Chunked you start in one chunk of Lumbridge.`,
+      desc: `You start with ${STARTING_KEYS} Keys and nearly everything locked: no gear slots, no skills except Hitpoints, which is always fully open, no transport, no banks and no shops. In Vanilla you can go anywhere in Misthalin from the start. In Chunked you start in one chunk of Lumbridge.`,
       visual: <ConceptVisual />,
       color: "text-red-500",
       bg: "from-red-900/20"

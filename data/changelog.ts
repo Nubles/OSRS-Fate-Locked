@@ -37,21 +37,28 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-10-30-every-roll-lands',
-    title: 'First Steps, and every roll lands',
-    date: '2026-10-30',
+    id: '2026-11-03-mixed-hide-and-share-card',
+    title: 'Mixed hide tiers, share card and layout fixes',
+    date: '2026-11-03',
     sections: {
-      added: [
-        'New runs get First Steps: a short guide through your first Keys, the Journal, a roll, Fate and the Void Altar. Skip it or turn it off in Settings.',
-        "The Fate orb's ring fills as a miss adds Fate and glows near your Pity Key, and a Key after a long dry run gets its own chat line.",
-        'Optional sounds: a soft thunk on a miss, a chime on a Key and a fanfare on an unlock. They stay off unless you turn them on in Settings.',
-      ],
       changed: [
         'The share card shows your Combat Achievement points, follows your Tier marks setting, and shows Chunked sites and seals.',
         'Mixed hide cape and boots are now tier 6, matching the 60 Ranged and 50 Defence they need in game.',
       ],
       fixed: [
         'OSRS layout: Fate shows once in the header, the Boss Task card has no odds tier, the tour says Ctrl+K on Windows, and Settings shows your pick clearly.',
+      ],
+    },
+  },
+  {
+    id: '2026-10-30-free-hitpoints',
+    title: 'Hitpoints is free',
+    date: '2026-10-30',
+    sections: {
+      balance: [
+        'Hitpoints is now fully open on every run, so it never comes up on the Skills table and Sacrifice never takes it.',
+        'Already spent Keys on Hitpoints tiers? You get each one back, in the kind of Key you spent.',
+        "Chunked: Hitpoints levels always roll now, and Fate's Mercy no longer waits on Hitpoints.",
       ],
     },
   },

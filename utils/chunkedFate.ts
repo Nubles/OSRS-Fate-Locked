@@ -198,9 +198,13 @@ export const mercyRitualInReach = (state: FateState): { id: typeof MERCY_RITUALS
   return null;
 };
 
-/** Skills the run can still level for Keys, in the Skills table's order. */
+/**
+ * Skills the run can still level for Keys, in the Skills table's order.
+ * Hitpoints is free (tier 10) and levels only with combat, so it would have
+ * room for as long as the run can fight: it never holds Mercy shut.
+ */
 export const skillsWithRoom = (state: FateState): string[] =>
-  SKILLS_LIST.filter(skill => chunkedSkillHasRoom(skill, state.unlocks));
+  SKILLS_LIST.filter(skill => skill !== 'Hitpoints' && chunkedSkillHasRoom(skill, state.unlocks));
 
 /**
  * Why Fate's Mercy is not available, or null when it is. `doableQuests` are

@@ -111,10 +111,6 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const more = explore.length - shown.length;
   const exploreIntro = `The first time you do something new in a chunk you unlocked, roll once at ${exploreChance}%. Tick what you did.`;
   const breakthroughIntro = `A skill at its tier cap gets one ${chance}% roll to open its next tier, if your chunks give you a way to train it. Each tier rolls once. Levels past the cap roll no Keys.`;
-  // Every Chunked run starts with Hitpoints at level 10, its tier 1 cap.
-  const hitpointsNote = waiting.includes('Hitpoints') && (unlocks.skills.Hitpoints ?? 0) === 1
-    ? 'Hitpoints starts at level 10, the cap of tier 1, so every run starts with this roll.'
-    : null;
 
   const things = (chunk: string) => exploreThings(chunk)
     .filter(thing => !exploredIn(game, chunk).includes(thing.fact))
@@ -194,7 +190,6 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
                 </div>
               );
             })}
-            {hitpointsNote && <span className="ofate-more">{hitpointsNote}</span>}
           </div>
         )}
         {(showMercy || shutReason) && (
@@ -295,7 +290,6 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
               );
             })}
           </ul>
-          {hitpointsNote && <p className="text-[11px] text-amber-200/60">{hitpointsNote}</p>}
         </div>
       )}
 

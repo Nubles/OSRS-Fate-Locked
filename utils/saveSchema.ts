@@ -3,6 +3,7 @@ import { EQUIPMENT_TIER_MAX } from '../config/rules';
 import { EQUIPMENT_SLOTS, SKILLS_LIST, RETIRED_BOSSES, RETIRED_MINIGAMES, RETIRED_POH_ITEMS, RETIRED_STORAGE_ITEMS } from '../data/items';
 import { CHUNK_SKILL_FACTS } from '../data/chunkSkillNodes';
 import { migrateAreaUnlocks } from './areaUnlockMigration';
+import { migrateFreeHitpoints } from './hitpointsMigration';
 import { mergedBankId, settleMergedBanks } from './bankUnlockMerges';
 import { settleCanonicalAreaUnlocks } from '../data/areaMapPolicy';
 import type { CollectionLogIdentity, FateCompensationState, FateMark, FateSite, GameState, PetCompensationState, LogEntry, PendingUnlock, RivalState, RuneProofProgress, SyncBaseline, SyncScores, UnlockState } from '../types';
@@ -1107,7 +1108,7 @@ const TOP_LEVEL_KEYS = new Set([
   'bossStandardKeysAwarded', 'clueStandardKeysAwarded', 'minigameStandardKeysAwarded',
   'unlocks', 'history', 'animationsEnabled', 'advisorsEnabled', 'revealAllFeatures',
   'hasSeenOnboarding', 'pinnedGoals', 'userNotes', 'gameModeId', 'customMode',
-  'gameModeLocked', 'rngSeed', 'rngVersion', 'rngSalt', 'restoreCount', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'syncScores', 'pendingUnlock', 'areaUnlockRevision',
+  'gameModeLocked', 'rngSeed', 'rngVersion', 'rngSalt', 'restoreCount', 'loadout', 'rival', 'linkedAccount', 'syncBaseline', 'syncScores', 'pendingUnlock', 'areaUnlockRevision', 'hitpointsRevision',
   'xtremeMilestoneClaimed', 'chunkedMilestoneClaimed', 'chunkedBreakthroughs', 'chunkExplore', 'cartographerOffer', 'chunkedProgressAt', 'fateLand', 'fateCompensation',
   'petCompensation', 'petsClaimed', 'keysOwed', 'rituals',
   'achievementsClaimed', 'achievementTitle', 'freeRituals', 'freeClarity', 'hopes',
@@ -1627,12 +1628,17 @@ const normalizeState = (
   }
   state.areaUnlockRevision = own(input, 'areaUnlockRevision') ? 1 : undefined;
   const areaMigrated = migrateAreaUnlocks(state, MAX_COUNTER);
+  if (own(input, 'hitpointsRevision') && readOwn(input, 'hitpointsRevision') !== 1) {
+    return invalid('invalid_field', 'hitpointsRevision');
+  }
+  state.hitpointsRevision = own(input, 'hitpointsRevision') ? 1 : undefined;
+  const hitpointsMigrated = migrateFreeHitpoints(state, MAX_COUNTER);
 
   return {
     ok: true,
     value: {
       state,
-      migrated: areaMigrated || pendingMerged || retiredBossCounters || sourceVersion < CURRENT_SAVE_VERSION
+      migrated: areaMigrated || hitpointsMigrated || pendingMerged || retiredBossCounters || sourceVersion < CURRENT_SAVE_VERSION
         || unlocks.value.migrated
         || !own(input, 'runId')
         || !own(input, 'runRevision')

@@ -254,10 +254,10 @@ export const wardApplies = (costType: 'key' | 'chaosKey', table: TableType | und
 
 export interface SacrificeTier { table: 'skill' | 'gear'; name: string; tier: number }
 
-/** The top tiers fate may take: every skill or gear slot above its free starting tier. */
+/** The top tiers fate may take: every skill or gear slot tier a Key opened. Hitpoints is free, so never. */
 export const sacrificeCandidates = (unlocks: UnlockState): SacrificeTier[] => [
   ...Object.entries(unlocks.skills)
-    .filter(([skill, tier]) => tier > (skill === 'Hitpoints' ? 1 : 0))
+    .filter(([skill, tier]) => skill !== 'Hitpoints' && tier > 0)
     .map(([name, tier]) => ({ table: 'skill' as const, name, tier })),
   ...Object.entries(unlocks.equipment)
     .filter(([, tier]) => tier > 0)
