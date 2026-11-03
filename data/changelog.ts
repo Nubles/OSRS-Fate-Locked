@@ -47,6 +47,7 @@ export const CHANGELOG_RELEASES = [
       ],
       fixed: [
         'OSRS layout: Fate shows once in the header, the Boss Task card has no odds tier, the tour says Ctrl+K on Windows, and Settings shows your pick clearly.',
+        'OSRS layout: the tab row stays in one place on every screen, and the chatbox starts folded on short screens, with an arrow to fold or open it.',
       ],
     },
   },

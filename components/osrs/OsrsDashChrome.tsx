@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
-import { setOsrsProgressionTabs } from '../../utils/osrsNav';
+import { openOsrsScreen, setOsrsProgressionTabs, useOsrsNav } from '../../utils/osrsNav';
+import { useOsrsTabStrip } from './osrsTabStrip';
 import { SectionGuide } from '../SectionGuide';
 import { ActivityAccessWarning } from '../ActivityAccessWarning';
 import { TableType, type UnlockState } from '../../types';
@@ -104,8 +106,16 @@ export const OsrsDashTabs: React.FC<TabsProps> = ({
     setOsrsProgressionTabs(tabs.map((t) => ({ id: t.id, label: TAB_LABEL[t.id] ?? t.label })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabKey]);
-  return (
-  <div className="osrs-dash-tabrow shrink-0">
+  const strip = useOsrsTabStrip();
+  const { screen } = useOsrsNav();
+  // In the shell the buttons live in the fixed strip, so they show on every
+  // screen: from Keys or the Journal a click comes back home first.
+  const selected = (id: string) => (screen === 'journal' ? id === 'JOURNAL' : screen === 'home' && activeTab === id);
+  const click = (id: string) => {
+    if (screen !== 'home' && id !== 'JOURNAL') openOsrsScreen('home');
+    onTab(id);
+  };
+  const tablist = (
     <div data-tour="dashtabs" role="tablist" aria-label="Dashboard sections" className="osrs-dash-tablist no-scrollbar">
       {tabs.map((tab) => (
         <button
@@ -113,14 +123,18 @@ export const OsrsDashTabs: React.FC<TabsProps> = ({
           type="button"
           role="tab"
           data-dash-tab={TAB_LABEL[tab.id] ?? tab.label}
-          aria-selected={activeTab === tab.id}
+          aria-selected={selected(tab.id)}
           className="osrs-tab"
-          onClick={() => onTab(tab.id)}
+          onClick={() => click(tab.id)}
         >
           {TAB_LABEL[tab.id] ?? tab.label}
         </button>
       ))}
     </div>
+  );
+  return (
+  <div className="osrs-dash-tabrow shrink-0">
+    {strip ? createPortal(tablist, strip) : tablist}
     <div className="osrs-dash-filter">
       <label className="osrs-dash-search">
         <svg aria-hidden="true" width="13" height="13" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="#c8b897" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="#c8b897" strokeWidth="2" /></svg>

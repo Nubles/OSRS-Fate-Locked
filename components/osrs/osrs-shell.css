@@ -12,6 +12,10 @@ html[data-ui="osrs"] .osrs-shell-frame {
 }
 html[data-ui="osrs"] .osrs-shell-frame > * { flex-shrink: 0; }
 html[data-ui="osrs"] .osrs-shell-frame > .osrs-shell-body { flex: 1 1 0; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+/* The fixed tab strip (OSRS layout #23): the Progression tabs sit here on
+   every screen, so the row never moves; the panels below it change. */
+html[data-ui="osrs"] .osrs-shell-frame > .osrs-shell-tabstrip { display: flex; align-items: flex-end; min-width: 0; margin-bottom: -8px; padding-left: 8px; position: relative; z-index: 1; }
+html[data-ui="osrs"] .osrs-shell-frame > .osrs-shell-tabstrip:empty { display: none; }
 html[data-ui="osrs"] .osrs-shell-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: min(calc(420px * var(--osrs-ts, 1)), 40%) minmax(0, 1fr); gap: 8px; }
 html[data-ui="osrs"] .osrs-shell-grid.is-wide { grid-template-columns: minmax(0, 1fr); }
 html[data-ui="osrs"] .osrs-shell-grid[hidden], html[data-ui="osrs"] .osrs-shell-left[hidden] { display: none; }
