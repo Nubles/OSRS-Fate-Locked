@@ -24,9 +24,9 @@ const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   'fa71ed3b207e6a501444987dee23b875ec27cacd',
   CURRENT_CHUNK_SOURCE_COMMIT,
 ]);
-const RUNTIME_QUEST_COUNT = 193;
-const RUNTIME_MINIQUEST_COUNT = 20;
-const OFFICIAL_PARSED_QUEST_COUNT = 194;
+const RUNTIME_QUEST_COUNT = 196;
+const RUNTIME_MINIQUEST_COUNT = 19;
+const OFFICIAL_PARSED_QUEST_COUNT = 197;
 const REVIEWED_AT = new Date().toISOString().slice(0, 10);
 const USER_AGENT = 'OSRS-Fate-Locked quest provenance refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
 const WIKI_PAGE_TITLES = {
@@ -172,11 +172,12 @@ function assertExistingSnapshotsForRefresh(official, audit) {
 
   const questCount = official.entries.filter(entry => entry.kind === 'quest').length;
   const miniquestCount = official.entries.filter(entry => entry.kind === 'miniquest').length;
-  // The baseline may be one miniquest short while a new one is being added.
-  if (![RUNTIME_MINIQUEST_COUNT - 1, RUNTIME_MINIQUEST_COUNT].includes(miniquestCount)
-    || ![191, 192, RUNTIME_QUEST_COUNT].includes(questCount)
+  // The baseline is the last reviewed one, so it may trail the runtime by a few
+  // entries while a game update adds quests or turns a miniquest into a quest.
+  if (Math.abs(questCount - RUNTIME_QUEST_COUNT) > 3
+    || Math.abs(miniquestCount - RUNTIME_MINIQUEST_COUNT) > 1
     || official.entries.length !== questCount + miniquestCount) {
-    errors.push(`refresh baseline must contain either ${RUNTIME_QUEST_COUNT - 1} or ${RUNTIME_QUEST_COUNT} quests and ${RUNTIME_MINIQUEST_COUNT - 1} or ${RUNTIME_MINIQUEST_COUNT} miniquests; found ${questCount}/${miniquestCount}`);
+    errors.push(`refresh baseline must be within 3 quests and 1 miniquest of ${RUNTIME_QUEST_COUNT}/${RUNTIME_MINIQUEST_COUNT}; found ${questCount}/${miniquestCount}`);
   }
 
   const declaredChunkSourceCommits = audit.schemaVersion === 1

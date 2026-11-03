@@ -14,7 +14,7 @@ export type BoostActivity =
 /** Each activity's achievements by what they add, in tenths of a percent (utils/achievementBoosts.test pins this to their Fate). */
 const BOOST_TENTHS: Readonly<Record<BoostActivity, Readonly<Record<number, readonly string[]>>>> = {
   skills: { 2: ['skills-start-1', 'skills-start-5'], 3: ['skills-start-12', 'total-level-500', 'skill-tiers-50'], 5: ['skills-start-24', 'total-level-1000', 'total-level-1500', 'total-level-2000', 'skill-tiers-100', 'skill-tiers-150', 'skill-tiers-240', 'skills-99-1', 'skills-99-24'] },
-  quests: { 2: ['quests-1', 'qp-32'], 3: ['quests-10', 'quests-25', 'qp-50', 'qp-107'], 5: ['quests-50', 'quests-100', 'quests-150', 'quests-193', 'qp-150', 'qp-250'] },
+  quests: { 2: ['quests-1', 'qp-32'], 3: ['quests-10', 'quests-25', 'qp-50', 'qp-107'], 5: ['quests-50', 'quests-100', 'quests-150', 'quests-196', 'qp-150', 'qp-250'] },
   diaries: { 2: ['diaries-1', 'diary-tasks-25'], 3: ['diary-tasks-100', 'diary-region-all', 'diary-easy-all', 'diary-medium-all'], 5: ['diaries-12', 'diaries-24', 'diaries-48', 'diary-tasks-250', 'diary-tasks-400', 'diary-hard-all', 'diary-elite-all'] },
   ca: { 2: ['ca-tasks-10'], 3: ['ca-1', 'ca-2', 'ca-tasks-50'], 5: ['ca-3', 'ca-4', 'ca-5', 'ca-6', 'ca-tasks-150', 'ca-tasks-300', 'ca-tasks-500'] },
   collection: { 2: ['collection-1', 'collection-25'], 3: ['collection-50', 'collection-100'], 5: ['collection-250', 'collection-500', 'collection-750', 'collection-1000'] },

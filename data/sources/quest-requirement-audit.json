@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-10-29",
+  "reviewedAt": "2026-11-03",
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
     "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
@@ -1423,17 +1423,17 @@
     },
     {
       "id": "Daddy's Home",
-      "kind": "miniquest",
+      "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-11-03",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15233724",
-        "revision": 15233724,
-        "revisionTimestamp": "2026-06-14T23:34:03Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15392336",
+        "revision": 15392336,
+        "revisionTimestamp": "2026-11-03T17:25:04Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Marlo at Varrock's Estate Agent\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-center\",\"label\":\"Old Man Yarlo's house in Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Sawmill Operators\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":54}],\"id\":\"varrock-palace\",\"label\":\"Marlo at Varrock's Estate Agent\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":53}],\"id\":\"varrock-center\",\"label\":\"Old Man Yarlo's house in Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"lumber-yard\",\"label\":\"Lumber Yard\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[],\"merchants\":[\"Sawmill Operators\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "50,53",
@@ -1454,7 +1454,8 @@
       "notes": {
         "items": [
           "Planks, bolts of cloth, nails, a hammer, and a saw are required; item possession is not machine-enforced.",
-          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the bolts of cloth (and the planks) come from the Varrock sawmill (Wiki revision 15337234); the quest now needs Sawmill Operators."
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the bolts of cloth (and the planks) come from the Varrock sawmill (Wiki revision 15337234); the quest now needs Sawmill Operators.",
+          "Review 2026-11-03: the 3 November 2026 update made Daddy's Home a quest worth 1 quest point (Wiki revision 15392336); its route, items and requirements are unchanged."
         ],
         "travel": [
           "Marlo at Varrock's Estate Agent, Old Man Yarlo's house, and the Lumber Yard are all unavoidable and match the pinned first/step chunks."
@@ -4790,6 +4791,33 @@
           "Agility 65 is a recommendation rather than a mandatory quest requirement; Part I remains required."
         ]
       }
+    },
+    {
+      "id": "Mudfoot's Big Adventure",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-03",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mudfoot's_Big_Adventure&oldid=15392295",
+        "revision": 15392295,
+        "revisionTimestamp": "2026-11-03T17:03:46Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-general-store\",\"label\":\"Lumbridge General Store\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":51}],\"id\":\"lumbridge-cow-field\",\"label\":\"Cow field across the River Lum\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":51}],\"id\":\"lumbridge-chicken-field\",\"label\":\"Chicken field south of the windmill\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":50}],\"id\":\"ham-hideout\",\"label\":\"H.A.M. hideout\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15392295 lists no required items; it recommends Magic or Ranged combat gear for the final outlaw."
+        ],
+        "travel": [
+          "Wiki revision 15392295 starts at Captain Harlan outside the Lumbridge General Store and visits the cow field across the River Lum, the chicken field south of the windmill, the H.A.M. hideout and the Lumbridge graveyard."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "Mudfoot's Big Adventure uses the locations policy with the Lumbridge General Store (50,50), the cow field across the River Lum (50,51), the chicken field south of the windmill (49,51) and the H.A.M. hideout (49,50), and runtime regions [Misthalin]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The locations follow the stable Wiki revision's route around Lumbridge.",
+      "conservativeReason": "Keeping Mudfoot's Big Adventure's current locations policy requirements (the Lumbridge General Store, the cow field across the River Lum, the chicken field south of the windmill and the H.A.M. hideout; it has no quest or skill prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "Murder Mystery",
@@ -8867,6 +8895,33 @@
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
       }
+    },
+    {
+      "id": "The Writing's on the Wall",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-03",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15392368",
+        "revision": 15392368,
+        "revisionTimestamp": "2026-11-03T17:50:12Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":2}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15392368 lists no required items."
+        ],
+        "travel": [
+          "Wiki revision 15392368 starts with Betty at Land's End and keeps the quest at Land's End."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "The Writing's on the Wall uses the locations policy with the Land's End location (23,53) and runtime regions [Kourend & Kebos]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The stable Wiki revision starts and keeps the quest at Land's End.",
+      "conservativeReason": "Keeping The Writing's on the Wall's current locations policy requirements (the Land's End location, 22 Agility and 20 Thieving; it has no quest prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "Throne of Miscellania",

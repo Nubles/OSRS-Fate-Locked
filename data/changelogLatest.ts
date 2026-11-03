@@ -4,4 +4,4 @@
  * data/changelog.test.ts pins it to CHANGELOG_RELEASES[0]; update it whenever
  * a release is added.
  */
-export const LATEST_CHANGELOG_ID = '2026-11-03-mixed-hide-and-share-card';
+export const LATEST_CHANGELOG_ID = '2026-11-03-quest-month-quests';
