@@ -150,12 +150,15 @@ const EXPECTED_TZ_SURFACE_ONLY = [
   'The Feud',
   'The Hand in the Sand',
   'The Ribbiting Tale',
+  "The Writing's on the Wall",
   'Throne of Miscellania',
   'Tree Gnome Village',
   'Tribal Totem',
   "Witch's Potion",
   'X Marks the Spot',
 ];
+/** Released 3 Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
+const NEWER_THAN_CHUNK_PICKER = ["Mudfoot's Big Adventure", "The Writing's on the Wall"];
 const expectReviewedBatch = (start: string, end?: string) => {
   const rows = audit.entries.filter(entry =>
     entry.kind === 'quest' &&
@@ -174,7 +177,8 @@ const expectReviewedBatch = (start: string, end?: string) => {
     }
     const expectedChunkSourceCommit = ['A Ruff Situation', 'Crab Quest', 'Family Crest'].includes(entry.id)
       ? 'fa71ed3b207e6a501444987dee23b875ec27cacd' : entry.id === 'Fallen From Grace'
-      ? 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746'
+      ? 'a9a5c74760eb76dbe39f90d2b04f023fc1de3746' : NEWER_THAN_CHUNK_PICKER.includes(entry.id)
+      ? '629e9fee6183773e8df26d7e4bc5db792290ce0b'
       : 'ba2fcebf8b26c84c74f8d9ab328a0ede802be926';
     if (entry.chunkSourceCommit !== expectedChunkSourceCommit) {
       return [`${entry.id}:wrong-chunk-source`];
@@ -215,12 +219,12 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries).toHaveLength(213);
-    expect(audit.entries).toHaveLength(213);
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(193);
-    expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(20);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(193);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(20);
+    expect(official.entries).toHaveLength(215);
+    expect(audit.entries).toHaveLength(215);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(196);
+    expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(196);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
   });
 
   it('pins schema-2 Chunk Picker provenance to the commits used by the audit entries', () => {
@@ -308,7 +312,7 @@ describe('official quest and miniquest audit coverage', () => {
         entry.id.localeCompare('T') >= 0 &&
         entry.status === 'unresolved')
       .map(entry => entry.id))
-      .toEqual([]);
+      .toEqual(NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('T') >= 0));
   });
 
   it('pins concrete non-surface evidence for every reviewed T-Z quest', () => {
@@ -347,7 +351,7 @@ describe('official quest and miniquest audit coverage', () => {
         entry.id.localeCompare('N') < 0 &&
         entry.status === 'unresolved')
       .map(entry => entry.id))
-      .toEqual([]);
+      .toEqual(NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('G') >= 0 && id.localeCompare('N') < 0));
   });
 
   it('leaves only the concrete A-F alternative-requirement conflict unresolved', () => {
@@ -361,9 +365,9 @@ describe('official quest and miniquest audit coverage', () => {
       .toEqual(['Desert Treasure I']);
   });
 
-  it('has reviewed evidence and matching requirements for all 20 miniquests', () => {
+  it('has reviewed evidence and matching requirements for all 19 miniquests', () => {
     const rows = audit.entries.filter(entry => entry.kind === 'miniquest');
-    expect(rows).toHaveLength(20);
+    expect(rows).toHaveLength(19);
     expect(rows.flatMap(entry => {
       if (entry.status !== 'unresolved') return [];
       return entry.discrepancy && entry.conservativeReason ? [] : [entry.id];

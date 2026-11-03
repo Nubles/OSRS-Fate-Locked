@@ -401,6 +401,34 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1, series: 'Great Kourend',
     difficulty: DropSource.QUEST_NOVICE
   },
+  'Mudfoot\'s Big Adventure': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'Mudfoot\'s Big Adventure', name: 'Mudfoot\'s Big Adventure',
+    regions: ['Misthalin'],
+    // Released 3 Nov 2026. Starts with Captain Harlan outside the Lumbridge General
+    // Store (the final outlaw is in the graveyard), finds Mudfoot by the cow field
+    // across the River Lum, visits the chicken field south of the windmill and
+    // confronts an outlaw in the H.A.M. hideout.
+    locations: [
+      { id: 'lumbridge-general-store', label: 'Lumbridge General Store', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 50 }] },
+      { id: 'lumbridge-cow-field', label: 'Cow field across the River Lum', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 51 }] },
+      { id: 'lumbridge-chicken-field', label: 'Chicken field south of the windmill', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 51 }] },
+      { id: 'ham-hideout', label: 'H.A.M. hideout', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 50 }] },
+    ],
+    skills: {}, prereqs: [], points: 1,
+    difficulty: DropSource.QUEST_NOVICE
+  },
+  'The Writing\'s on the Wall': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
+    regions: ['Kourend & Kebos'],
+    // Released 3 Nov 2026: starts with Betty at Land's End and stays there.
+    locations: [
+      { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
+    ],
+    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 2,
+    difficulty: DropSource.QUEST_INTERMEDIATE
+  },
 
   // --- P2P Quests ---
   'Druidic Ritual': {
@@ -2670,11 +2698,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Daddy\'s Home': {
-    kind: 'miniquest', accessPolicy: 'locations',
+    // A quest worth 1 quest point since 3 Nov 2026 (it was a miniquest).
+    kind: 'quest', accessPolicy: 'locations',
     id: 'Daddy\'s Home', name: 'Daddy\'s Home',
     regions: ['Misthalin'],
     locations: [LOCATIONS.varrockPalace, LOCATIONS.varrockCenter, LOCATIONS.lumberYard],
-    skills: {}, prereqs: [], points: 0,
+    skills: {}, prereqs: [], points: 1,
     // The bolts of cloth and planks come from the Varrock sawmill.
     merchants: ['Sawmill Operators'],
     difficulty: DropSource.QUEST_NOVICE

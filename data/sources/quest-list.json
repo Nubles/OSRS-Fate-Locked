@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-10-29",
+  "reviewedAt": "2026-11-03",
   "listSource": {
     "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15366661",
     "revision": 15366661,
     "revisionTimestamp": "2026-10-06T09:31:48Z"
   },
   "parsedCounts": {
-    "quests": 194,
-    "miniquests": 20
+    "quests": 197,
+    "miniquests": 19
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 193/20 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 196/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -328,12 +328,12 @@
     },
     {
       "id": "Daddy's Home",
-      "kind": "miniquest",
+      "kind": "quest",
       "pageTitle": "Daddy's Home",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15233724",
-        "revision": 15233724,
-        "revisionTimestamp": "2026-06-14T23:34:03Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Daddy's_Home&oldid=15392336",
+        "revision": 15392336,
+        "revisionTimestamp": "2026-11-03T17:25:04Z"
       }
     },
     {
@@ -1054,6 +1054,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Mourning's_End_Part_II&oldid=15351344",
         "revision": 15351344,
         "revisionTimestamp": "2026-09-19T18:48:25Z"
+      }
+    },
+    {
+      "id": "Mudfoot's Big Adventure",
+      "kind": "quest",
+      "pageTitle": "Mudfoot's Big Adventure",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mudfoot's_Big_Adventure&oldid=15392295",
+        "revision": 15392295,
+        "revisionTimestamp": "2026-11-03T17:03:46Z"
       }
     },
     {
@@ -1944,6 +1954,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Tourist_Trap&oldid=15350316",
         "revision": 15350316,
         "revisionTimestamp": "2026-09-18T12:46:11Z"
+      }
+    },
+    {
+      "id": "The Writing's on the Wall",
+      "kind": "quest",
+      "pageTitle": "The Writing's on the Wall",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15392368",
+        "revision": 15392368,
+        "revisionTimestamp": "2026-11-03T17:50:12Z"
       }
     },
     {

@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-03-quest-month-quests',
+    title: 'Two new quests, and Daddy’s Home is a quest',
+    date: '2026-11-03',
+    sections: {
+      added: [
+        'Mudfoot’s Big Adventure (Novice, 1 quest point) starts with Captain Harlan outside the Lumbridge General Store.',
+        'The Writing’s on the Wall (Intermediate, 2 quest points) starts with Betty at Land’s End and needs 22 Agility and 20 Thieving.',
+      ],
+      changed: [
+        'Daddy’s Home is now a quest worth 1 quest point, as in the game, so it counts toward the Quest Cape.',
+      ],
+    },
+  },
+  {
     id: '2026-11-03-mixed-hide-and-share-card',
     title: 'Mixed hide tiers, share card and layout fixes',
     date: '2026-11-03',

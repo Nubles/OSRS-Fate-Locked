@@ -42,10 +42,12 @@ const QUEST_HELPER_NAME: Record<string, string> = {
 const WIKI_RATING: Record<string, string> = {
   // Wiki infobox and Quests/List say Intermediate (roll data audit, 7 October 2026).
   'At First Light': 'INTERMEDIATE',
+  // A quest since 3 Nov 2026; the pinned snapshot still lists it as a miniquest.
+  "Daddy's Home": 'NOVICE',
 };
 
 /** Released after the pinned snapshot; review their ratings when it is refreshed. */
-const NOT_IN_SNAPSHOT = ['A Ruff Situation', 'Crab Quest', 'Learning the Ropes'];
+const NOT_IN_SNAPSHOT = ['A Ruff Situation', 'Crab Quest', 'Learning the Ropes', "Mudfoot's Big Adventure", "The Writing's on the Wall"];
 
 const enumName = (name: string): string => name
   .toUpperCase()
