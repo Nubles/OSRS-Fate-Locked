@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Copy, Download, Image as ImageIcon, X } from 'lucide-react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Copy, Download, Film, Image as ImageIcon, X } from 'lucide-react';
+import { lazyWithRetry } from '../utils/lazyRetry';
 import { useGame } from '../context/GameContext';
 import { useProfiles } from '../context/ProfileContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -16,6 +17,9 @@ import { useIsOsrsUi, useTierMarks } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { RS_BOLD, RS_FONT, RS_SMALL, loadRitualFonts } from './rituals/ritualAssets';
 import { CARD_H, CARD_W, describeShareCard, drawShareCard, type ShareCardStyle } from './ShareCardCanvas';
+
+// The Run Film and its video encoder load only when a player asks for a film.
+const RunFilmModal = lazyWithRetry(() => import('./RunFilmModal').then(m => ({ default: m.RunFilmModal })));
 
 /** Per-viewer choices for the card, kept outside the save. */
 const STYLE_KEY = 'fate_share_card_style_v1';
@@ -41,8 +45,9 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { unlocks, history, gameModeId, customMode, linkedAccount } = game;
   const dialogRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showFilm, setShowFilm] = useState(false);
   useFocusTrap(dialogRef);
-  useEscapeKey(onClose, true);
+  useEscapeKey(onClose, !showFilm);
 
   const [style, setStyle] = useState<ShareCardStyle>(() => (readChoice(STYLE_KEY) === 'tracker' ? 'tracker' : 'osrs'));
   const [zoom, setZoom] = useState(() => readChoice(ZOOM_KEY) !== 'off');
@@ -168,6 +173,13 @@ ${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
     </label>
   );
 
+
+  const filmWindow = showFilm && (
+    <Suspense fallback={null}>
+      <RunFilmModal onClose={() => setShowFilm(false)} />
+    </Suspense>
+  );
+
   if (osrs) {
     // OSRS layout: one stone window with the Journal's title bar and stone tabs for the two looks.
     return (
@@ -198,11 +210,13 @@ ${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
               <button type="button" className="osrs-btn" onClick={copySummary}>
                 {copyStatus === 'copied' ? <span className="owb-ok">Copied!</span> : 'Copy Summary'}
               </button>
+              <button type="button" className="osrs-btn" onClick={() => setShowFilm(true)}>Make a film</button>
               {drawError && <button type="button" className="osrs-btn" onClick={() => setRedraw(n => n + 1)}>Try again</button>}
             </div>
             {footNote}
           </div>
         </div>
+        {filmWindow}
       </div>
     );
   }
@@ -258,6 +272,9 @@ ${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
             <button type="button" onClick={copySummary} className={`${button} bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10`}>
               {copyStatus === 'copied' ? <span className="text-green-400">Copied!</span> : <><Copy size={15} /> Copy Summary</>}
             </button>
+            <button type="button" onClick={() => setShowFilm(true)} className={`${button} bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10`}>
+              <Film size={15} /> Make a film
+            </button>
             {drawError && (
               <button type="button" onClick={() => setRedraw(n => n + 1)} className={`${button} bg-white/5 hover:bg-white/10 text-amber-300 border border-white/10`}>
                 Try again
@@ -268,6 +285,7 @@ ${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
           {footNote}
         </div>
       </div>
+      {filmWindow}
     </div>
   );
 };

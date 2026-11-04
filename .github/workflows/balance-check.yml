@@ -1,0 +1,67 @@
+# Fate balance check: plays thousands of simulated runs on the rules and
+# content on main and reports how many Key rolls a run takes to reach 100%,
+# against scripts/balance/baseline.json. Any play style whose median moves
+# more than 5% gets a warning, and the report lists every rule or content
+# number that changed since the baseline, so a game update or a rule change
+# shows its effect on the economy the night it lands.
+#
+# Report only: read-only permissions, no pushes, no pull requests, nothing on
+# main changes. The report is the run's job summary (Actions tab > Fate
+# balance check > latest run) and a downloadable artifact. After a deliberate
+# balance change, refresh the baseline in that change's pull request with
+# `node scripts/balance/report.mjs --write-baseline`.
+name: Fate balance check
+
+on:
+  schedule:
+    - cron: '30 4 * * *' # every night at 04:30 UTC
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'Simulated runs per play style'
+        required: false
+        default: '1000'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: balance-check
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Simulate runs and write the report
+        env:
+          RUNS: ${{ github.event.inputs.runs || '1000' }}
+        run: |
+          node scripts/balance/report.mjs --out balance-report.md --json balance-results.json
+          cat balance-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: balance-report
+          path: |
+            balance-report.md
+            balance-results.json
+          retention-days: 30

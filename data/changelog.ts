@@ -37,6 +37,19 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-04-run-film',
+    title: 'Turn your run into a film',
+    date: '2026-11-04',
+    sections: {
+      added: [
+        'Share Run has a new Make a film button. It plays your run back day by day as a video: the map’s fog lifts as your land opens.',
+        'Your skills tab and gear slots fill in too, each tier flashing gold as you unlock it.',
+        'Pick Wide for YouTube and Discord, or Tall for phones and Shorts.',
+        'The film is made on your own device. Nothing is uploaded.',
+      ],
+    },
+  },
+  {
     id: '2026-11-03-quest-month-quests',
     title: 'Two new quests, and Daddy’s Home is a quest',
     date: '2026-11-03',

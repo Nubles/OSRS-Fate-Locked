@@ -184,3 +184,7 @@ html[data-ui="osrs"] .owb-petpick-list [role="option"] { color: var(--osrs-orang
 html[data-ui="osrs"] .owb-petpick-list [role="option"].is-active { background: var(--osrs-selected); color: var(--osrs-white); }
 html[data-ui="osrs"] .owb-petpick-list [role="option"] .owb-petpick-src { color: var(--osrs-text-dim); }
 html[data-ui="osrs"] .owb-petpick-list .owb-petpick-group { color: var(--osrs-yellow); font-family: 'RSBold', sans-serif; }
+
+/* Run Film (components/RunFilmModal.tsx): stone progress bar. */
+html[data-ui="osrs"] .owb-film-bar { height: 12px; background: #1a1510; border: 1px solid #000; box-shadow: inset 1px 1px 0 #000; }
+html[data-ui="osrs"] .owb-film-fill { height: 100%; background: linear-gradient(#21b221, #117711); }

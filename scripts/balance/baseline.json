@@ -1,0 +1,1359 @@
+{
+ "runs": 1000,
+ "inputs": {
+  "rules": {
+   "startingKeys": 3,
+   "pity": {
+    "vanilla": 50,
+    "chunked": 50
+   },
+   "omniBase": {
+    "vanilla": 2,
+    "chunked": 2
+   },
+   "levelChaosChance": 2,
+   "chaosMilestones": [
+    30,
+    40,
+    50,
+    60,
+    70,
+    80,
+    90,
+    99
+   ],
+   "levelChance": [
+    0,
+    0,
+    0.4,
+    0.6,
+    0.8,
+    1,
+    1.2,
+    1.4,
+    1.6,
+    1.8,
+    2,
+    2.2,
+    2.4,
+    2.6,
+    2.8,
+    3,
+    3.2,
+    3.4,
+    3.6,
+    3.8,
+    4,
+    4.2,
+    4.4,
+    4.6,
+    4.8,
+    5,
+    5.2,
+    5.4,
+    5.6,
+    5.8,
+    6,
+    6.2,
+    6.4,
+    6.6,
+    6.8,
+    7,
+    7.2,
+    7.4,
+    7.6,
+    7.8,
+    8,
+    8.2,
+    8.4,
+    8.6,
+    8.8,
+    9,
+    9.2,
+    9.4,
+    9.6,
+    9.8,
+    10,
+    10.2,
+    10.4,
+    10.6,
+    10.8,
+    11,
+    11.2,
+    11.4,
+    11.6,
+    11.8,
+    12,
+    12.2,
+    12.4,
+    12.6,
+    12.8,
+    13,
+    13.2,
+    13.4,
+    13.6,
+    13.8,
+    14,
+    14.2,
+    14.4,
+    14.6,
+    14.8,
+    15,
+    15.2,
+    15.4,
+    15.6,
+    15.8,
+    16,
+    16.2,
+    16.4,
+    16.6,
+    16.8,
+    17,
+    17.2,
+    17.4,
+    17.6,
+    17.8,
+    18,
+    18.2,
+    18.4,
+    18.6,
+    18.8,
+    19,
+    19.2,
+    19.4,
+    19.6,
+    19.8
+   ],
+   "levelFate": [
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "quest": {
+    "Quest (Novice)": {
+     "rate": 25,
+     "fate": 1,
+     "omni": 0
+    },
+    "Quest (Intermediate)": {
+     "rate": 50,
+     "fate": 1,
+     "omni": 0
+    },
+    "Quest (Experienced)": {
+     "rate": 75,
+     "fate": 2,
+     "omni": 0
+    },
+    "Quest (Master)": {
+     "rate": 95,
+     "fate": 3,
+     "omni": 0
+    },
+    "Quest (Grandmaster)": {
+     "rate": 100,
+     "fate": 1,
+     "omni": 20
+    }
+   },
+   "diary": {
+    "Diary (Easy)": {
+     "rate": 20,
+     "fate": 1,
+     "omni": 0
+    },
+    "Diary (Medium)": {
+     "rate": 40,
+     "fate": 1,
+     "omni": 0
+    },
+    "Diary (Hard)": {
+     "rate": 65,
+     "fate": 2,
+     "omni": 0
+    },
+    "Diary (Elite)": {
+     "rate": 85,
+     "fate": 3,
+     "omni": 10
+    }
+   },
+   "ca": {
+    "Easy": {
+     "rate": 8,
+     "fate": 1,
+     "omni": 0
+    },
+    "Medium": {
+     "rate": 15,
+     "fate": 1,
+     "omni": 0
+    },
+    "Hard": {
+     "rate": 25,
+     "fate": 2,
+     "omni": 0
+    },
+    "Elite": {
+     "rate": 30,
+     "fate": 2,
+     "omni": 0
+    },
+    "Master": {
+     "rate": 40,
+     "fate": 3,
+     "omni": 0
+    },
+    "Grandmaster": {
+     "rate": 55,
+     "fate": 3,
+     "omni": 0
+    }
+   },
+   "slayer": {
+    "turael": {
+     "rate": 5,
+     "fate": 1,
+     "omni": 0
+    },
+    "mazchna": {
+     "rate": 10,
+     "fate": 1,
+     "omni": 0
+    },
+    "vannaka": {
+     "rate": 20,
+     "fate": 1,
+     "omni": 0
+    },
+    "chaeldar": {
+     "rate": 25,
+     "fate": 1,
+     "omni": 0
+    },
+    "konar": {
+     "rate": 35,
+     "fate": 2,
+     "omni": 0
+    },
+    "nieve": {
+     "rate": 45,
+     "fate": 2,
+     "omni": 0
+    },
+    "krystilia": {
+     "rate": 65,
+     "fate": 2,
+     "omni": 0
+    },
+    "duradel": {
+     "rate": 70,
+     "fate": 2,
+     "omni": 0
+    },
+    "boss": {
+     "rate": 80,
+     "fate": 3,
+     "omni": 0
+    }
+   },
+   "clue": {
+    "beginner": {
+     "rate": 5,
+     "fate": 1,
+     "omni": 0
+    },
+    "easy": {
+     "rate": 10,
+     "fate": 1,
+     "omni": 0
+    },
+    "medium": {
+     "rate": 20,
+     "fate": 1,
+     "omni": 0
+    },
+    "hard": {
+     "rate": 35,
+     "fate": 2,
+     "omni": 0
+    },
+    "elite": {
+     "rate": 65,
+     "fate": 2,
+     "omni": 0
+    },
+    "master": {
+     "rate": 80,
+     "fate": 3,
+     "omni": 0
+    }
+   },
+   "clueMinimums": [
+    25,
+    15,
+    10
+   ],
+   "boss": {
+    "low": {
+     "rate": 15,
+     "fate": 1,
+     "omni": 0
+    },
+    "mid": {
+     "rate": 30,
+     "fate": 2,
+     "omni": 0
+    },
+    "high": {
+     "rate": 50,
+     "fate": 2,
+     "omni": 10
+    },
+    "raid": {
+     "rate": 65,
+     "fate": 3,
+     "omni": 15
+    },
+    "brutus": {
+     "rate": 15,
+     "fate": 1,
+     "omni": 0
+    }
+   },
+   "bossStash": {
+    "brutus": [
+     10
+    ],
+    "low": [
+     15
+    ],
+    "mid": [
+     30,
+     15
+    ],
+    "high": [
+     50,
+     25
+    ],
+    "raid": [
+     65,
+     32.5,
+     16.25
+    ]
+   },
+   "minigame": {
+    "rate": 10,
+    "fate": 1,
+    "omni": 0
+   },
+   "minigameMissFateMinRate": 5,
+   "clog": {
+    "rate": 8,
+    "fate": 1,
+    "omni": 0
+   },
+   "chunkExplore": {
+    "rate": 10,
+    "fate": 1,
+    "omni": 0,
+    "rolls": 3
+   }
+  },
+  "content": {
+   "unlocks": {
+    "vanilla": 962,
+    "chunked": 1406
+   },
+   "chunks": 622,
+   "skills": 24,
+   "quests": {
+    "Quest (Novice)": 54,
+    "Quest (Intermediate)": 88,
+    "Quest (Experienced)": 42,
+    "Quest (Master)": 23,
+    "Quest (Grandmaster)": 8
+   },
+   "diaryTasks": {
+    "Diary (Easy)": 135,
+    "Diary (Medium)": 153,
+    "Diary (Hard)": 127,
+    "Diary (Elite)": 77
+   },
+   "caTasks": {
+    "Easy": 41,
+    "Medium": 64,
+    "Hard": 89,
+    "Elite": 166,
+    "Master": 173,
+    "Grandmaster": 122
+   },
+   "clogSlots": 1944,
+   "bosses": [
+    "raid",
+    "raid",
+    "raid",
+    "high",
+    "high",
+    "high",
+    "high",
+    "high",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "high",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "low",
+    "low",
+    "low",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "mid",
+    "low",
+    "high",
+    "high",
+    "high",
+    "high",
+    "high",
+    "low",
+    "low",
+    "low",
+    "low",
+    "low",
+    "low",
+    "mid",
+    "low",
+    "low",
+    "low",
+    "mid",
+    "low",
+    "low",
+    "mid",
+    "low",
+    "low",
+    "low",
+    "mid",
+    "high",
+    "mid",
+    "mid",
+    "low",
+    "low",
+    "high",
+    "high",
+    "low",
+    "low",
+    "high",
+    "mid",
+    "raid"
+   ],
+   "minigames": [
+    {
+     "name": "Shooting Stars",
+     "minutes": 50,
+     "rates": [
+      50,
+      25,
+      13
+     ]
+    },
+    {
+     "name": "Barbarian Assault",
+     "minutes": 25,
+     "rates": [
+      42,
+      21
+     ]
+    },
+    {
+     "name": "Bounty Hunter",
+     "minutes": 8,
+     "rates": [
+      13,
+      7,
+      3
+     ]
+    },
+    {
+     "name": "Castle Wars",
+     "minutes": 25,
+     "rates": [
+      42
+     ]
+    },
+    {
+     "name": "Clan Wars",
+     "minutes": 15,
+     "rates": [
+      25,
+      13,
+      6
+     ]
+    },
+    {
+     "name": "Emir's Arena",
+     "minutes": 4,
+     "rates": [
+      7,
+      4,
+      2
+     ]
+    },
+    {
+     "name": "Intelligence Gathering",
+     "minutes": 5,
+     "rates": [
+      8,
+      4,
+      2
+     ]
+    },
+    {
+     "name": "Last Man Standing",
+     "minutes": 10,
+     "rates": [
+      17
+     ]
+    },
+    {
+     "name": "Mage Arena",
+     "minutes": 60,
+     "rates": [
+      100
+     ]
+    },
+    {
+     "name": "Nightmare Zone",
+     "minutes": 180,
+     "rates": [
+      50,
+      25,
+      13
+     ]
+    },
+    {
+     "name": "Pest Control",
+     "minutes": 5,
+     "rates": [
+      8,
+      4
+     ]
+    },
+    {
+     "name": "Soul Wars",
+     "minutes": 18,
+     "rates": [
+      30,
+      15,
+      8
+     ]
+    },
+    {
+     "name": "Temple Trekking",
+     "minutes": 2.4,
+     "rates": [
+      4,
+      2,
+      1
+     ]
+    },
+    {
+     "name": "TzHaar Fight Pit",
+     "minutes": 6,
+     "rates": [
+      10,
+      5,
+      3
+     ]
+    },
+    {
+     "name": "Archery Competition",
+     "minutes": 0.6,
+     "rates": [
+      1,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "Blast Furnace",
+     "minutes": 0.5,
+     "rates": [
+      1,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "Fishing Trawler",
+     "minutes": 6.5,
+     "rates": [
+      11,
+      6,
+      3
+     ]
+    },
+    {
+     "name": "Giants' Foundry",
+     "minutes": 4,
+     "rates": [
+      7,
+      4
+     ]
+    },
+    {
+     "name": "Gnome Ball",
+     "minutes": 2,
+     "rates": [
+      3,
+      2,
+      1
+     ]
+    },
+    {
+     "name": "Gnome Restaurant",
+     "minutes": 4,
+     "rates": [
+      7,
+      4,
+      2
+     ]
+    },
+    {
+     "name": "Guardians of the Rift",
+     "minutes": 10,
+     "rates": [
+      17,
+      9
+     ]
+    },
+    {
+     "name": "Impetuous Impulses",
+     "minutes": 2,
+     "rates": [
+      3,
+      2,
+      1
+     ]
+    },
+    {
+     "name": "Mage Training Arena",
+     "minutes": 0.75,
+     "rates": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "Mahogany Homes",
+     "minutes": 2,
+     "rates": [
+      3,
+      2
+     ]
+    },
+    {
+     "name": "Mastering Mixology",
+     "minutes": 0.5,
+     "rates": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "Mess",
+     "minutes": 2.5,
+     "rates": [
+      4,
+      2,
+      1
+     ]
+    },
+    {
+     "name": "Pyramid Plunder",
+     "minutes": 5,
+     "rates": [
+      8,
+      4,
+      2
+     ]
+    },
+    {
+     "name": "Rogues' Den",
+     "minutes": 3,
+     "rates": [
+      5,
+      3,
+      1
+     ]
+    },
+    {
+     "name": "Sorceress's Garden",
+     "minutes": 0.75,
+     "rates": [
+      1,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "Stealing Artefacts",
+     "minutes": 1.25,
+     "rates": [
+      2,
+      1,
+      1
+     ]
+    },
+    {
+     "name": "Tithe Farm",
+     "minutes": 19,
+     "rates": [
+      32,
+      16
+     ]
+    },
+    {
+     "name": "Trouble Brewing",
+     "minutes": 23,
+     "rates": [
+      38
+     ]
+    },
+    {
+     "name": "Vale Totems",
+     "minutes": 4,
+     "rates": [
+      7,
+      4,
+      2
+     ]
+    },
+    {
+     "name": "Volcanic Mine",
+     "minutes": 11,
+     "rates": [
+      18,
+      9
+     ]
+    },
+    {
+     "name": "Shades of Mort'ton",
+     "minutes": 15,
+     "rates": [
+      25,
+      13
+     ]
+    },
+    {
+     "name": "Tai Bwo Wannai Cleanup",
+     "minutes": 20,
+     "rates": [
+      33,
+      17,
+      8
+     ]
+    },
+    {
+     "name": "Warriors' Guild",
+     "minutes": 10,
+     "rates": [
+      17,
+      9
+     ]
+    },
+    {
+     "name": "Burthorpe Games Room",
+     "minutes": 8,
+     "rates": [
+      13,
+      7,
+      3
+     ]
+    },
+    {
+     "name": "Forestry",
+     "minutes": 2,
+     "rates": [
+      3
+     ]
+    },
+    {
+     "name": "Tears of Guthix",
+     "minutes": 5,
+     "rates": [
+      50
+     ]
+    },
+    {
+     "name": "Brimhaven Agility Arena",
+     "minutes": 1,
+     "rates": [
+      2,
+      1
+     ]
+    },
+    {
+     "name": "Hallowed Sepulchre",
+     "minutes": 8.5,
+     "rates": [
+      14,
+      7
+     ]
+    },
+    {
+     "name": "Barracuda Trials",
+     "minutes": 5,
+     "rates": [
+      8,
+      4
+     ]
+    },
+    {
+     "name": "Pete Kayer's Challenges",
+     "minutes": 3,
+     "rates": [
+      5,
+      3,
+      1
+     ]
+    }
+   ],
+   "pets": 72
+  }
+ },
+ "results": {
+  "vanilla/bare": {
+   "unlocks": 962,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 3148,
+    "med": 3184,
+    "p90": 3221
+   },
+   "rolls": {
+    "p10": 3163,
+    "med": 3200,
+    "p90": 3238
+   },
+   "farmRolls": {
+    "p10": 113,
+    "med": 150,
+    "p90": 188
+   },
+   "keysWon": {
+    "p10": 688,
+    "med": 699,
+    "p90": 711
+   },
+   "pity": {
+    "p10": 12,
+    "med": 16,
+    "p90": 19
+   },
+   "chaos": {
+    "p10": 230,
+    "med": 238,
+    "p90": 247
+   },
+   "omni": {
+    "p10": 15,
+    "med": 21,
+    "p90": 26
+   },
+   "maxMiss": {
+    "p10": 93,
+    "med": 135,
+    "p90": 217
+   },
+   "miss200": 15,
+   "keysFrom": {
+    "chaos (levels)": 24.4,
+    "levels": 24.2,
+    "diaries": 24.2,
+    "quests": 12.2,
+    "farmed slayer": 10.9,
+    "omni": 2.1,
+    "pity": 1.6,
+    "starting keys": 0.3
+   }
+  },
+  "vanilla/lean": {
+   "unlocks": 962,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 3514,
+    "med": 3612,
+    "p90": 3732
+   },
+   "rolls": {
+    "p10": 4458,
+    "med": 4547,
+    "p90": 4663
+   },
+   "farmRolls": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "keysWon": {
+    "p10": 1044,
+    "med": 1073,
+    "p90": 1103
+   },
+   "pity": {
+    "p10": 12,
+    "med": 15,
+    "p90": 19
+   },
+   "chaos": {
+    "p10": 229,
+    "med": 239,
+    "p90": 248
+   },
+   "omni": {
+    "p10": 23,
+    "med": 29,
+    "p90": 36
+   },
+   "maxMiss": {
+    "p10": 95,
+    "med": 134,
+    "p90": 207
+   },
+   "miss200": 13,
+   "keysFrom": {
+    "slayer": 25.7,
+    "chaos (levels)": 17.5,
+    "levels": 17.3,
+    "diaries": 17.3,
+    "quests": 8.7,
+    "clues": 3.9,
+    "bosses": 2.5,
+    "omni": 2.2,
+    "collection log": 1.8,
+    "pity": 1.1,
+    "combat achievements": 0.9,
+    "minigames": 0.5,
+    "starting keys": 0.2,
+    "pets": 0.2
+   }
+  },
+  "vanilla/main": {
+   "unlocks": 962,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 3861,
+    "med": 4040,
+    "p90": 4282
+   },
+   "rolls": {
+    "p10": 5873,
+    "med": 6076,
+    "p90": 6334
+   },
+   "farmRolls": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "keysWon": {
+    "p10": 1272,
+    "med": 1308,
+    "p90": 1342
+   },
+   "pity": {
+    "p10": 12,
+    "med": 15,
+    "p90": 19
+   },
+   "chaos": {
+    "p10": 230,
+    "med": 239,
+    "p90": 248
+   },
+   "omni": {
+    "p10": 28,
+    "med": 36,
+    "p90": 44
+   },
+   "maxMiss": {
+    "p10": 112,
+    "med": 163,
+    "p90": 240
+   },
+   "miss200": 26,
+   "keysFrom": {
+    "slayer": 21.8,
+    "chaos (levels)": 14.8,
+    "levels": 14.7,
+    "diaries": 14.6,
+    "clues": 8.9,
+    "quests": 7.4,
+    "bosses": 4.9,
+    "collection log": 4,
+    "combat achievements": 3.7,
+    "omni": 2.2,
+    "minigames": 1.2,
+    "pity": 1,
+    "pets": 0.6,
+    "starting keys": 0.2
+   }
+  },
+  "vanilla/completionist": {
+   "unlocks": 962,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 4555,
+    "med": 4972,
+    "p90": 5424
+   },
+   "rolls": {
+    "p10": 10132,
+    "med": 10448,
+    "p90": 10792
+   },
+   "farmRolls": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "keysWon": {
+    "p10": 1884,
+    "med": 1926,
+    "p90": 1967
+   },
+   "pity": {
+    "p10": 13,
+    "med": 16,
+    "p90": 20
+   },
+   "chaos": {
+    "p10": 230,
+    "med": 239,
+    "p90": 248
+   },
+   "omni": {
+    "p10": 41,
+    "med": 49,
+    "p90": 58
+   },
+   "maxMiss": {
+    "p10": 189,
+    "med": 264,
+    "p90": 374
+   },
+   "miss200": 85,
+   "keysFrom": {
+    "clues": 18.8,
+    "slayer": 15.4,
+    "chaos (levels)": 10.5,
+    "levels": 10.4,
+    "diaries": 10.4,
+    "combat achievements": 9.7,
+    "collection log": 6,
+    "quests": 5.2,
+    "bosses": 5.2,
+    "minigames": 3.6,
+    "omni": 2.2,
+    "pets": 1.8,
+    "pity": 0.7,
+    "starting keys": 0.1
+   }
+  },
+  "vanilla/main/chaos": {
+   "unlocks": 962,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 3734,
+    "med": 3899,
+    "p90": 4139
+   },
+   "rolls": {
+    "p10": 5873,
+    "med": 6076,
+    "p90": 6334
+   },
+   "farmRolls": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "keysWon": {
+    "p10": 1272,
+    "med": 1308,
+    "p90": 1342
+   },
+   "pity": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "chaos": {
+    "p10": 293,
+    "med": 304,
+    "p90": 315
+   },
+   "omni": {
+    "p10": 28,
+    "med": 36,
+    "p90": 44
+   },
+   "maxMiss": {
+    "p10": 112,
+    "med": 163,
+    "p90": 240
+   },
+   "miss200": 26,
+   "keysFrom": {
+    "slayer": 21.1,
+    "chaos (levels)": 14.4,
+    "levels": 14.3,
+    "diaries": 14.2,
+    "clues": 8.6,
+    "quests": 7.2,
+    "bosses": 4.7,
+    "chaos ritual": 3.9,
+    "collection log": 3.9,
+    "combat achievements": 3.6,
+    "omni": 2.2,
+    "minigames": 1.2,
+    "pets": 0.6,
+    "starting keys": 0.2
+   }
+  },
+  "chunked/main": {
+   "unlocks": 1406,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 6506,
+    "med": 6734,
+    "p90": 7001
+   },
+   "rolls": {
+    "p10": 7723,
+    "med": 7949,
+    "p90": 8218
+   },
+   "farmRolls": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "keysWon": {
+    "p10": 1451,
+    "med": 1489,
+    "p90": 1530
+   },
+   "pity": {
+    "p10": 12,
+    "med": 16,
+    "p90": 20
+   },
+   "chaos": {
+    "p10": 230,
+    "med": 239,
+    "p90": 248
+   },
+   "omni": {
+    "p10": 31,
+    "med": 39,
+    "p90": 47
+   },
+   "maxMiss": {
+    "p10": 106,
+    "med": 161,
+    "p90": 228
+   },
+   "miss200": 23,
+   "keysFrom": {
+    "slayer": 19.5,
+    "chaos (levels)": 13.3,
+    "levels": 13.1,
+    "diaries": 13.1,
+    "chunk exploring": 10.3,
+    "clues": 7.9,
+    "quests": 6.6,
+    "bosses": 4.3,
+    "collection log": 3.6,
+    "combat achievements": 3.3,
+    "omni": 2.2,
+    "minigames": 1.1,
+    "pity": 0.9,
+    "pets": 0.6,
+    "starting keys": 0.2
+   }
+  },
+  "chunked/completionist": {
+   "unlocks": 1406,
+   "finished": 100,
+   "rollsAt100": {
+    "p10": 7502,
+    "med": 7982,
+    "p90": 8510
+   },
+   "rolls": {
+    "p10": 11948,
+    "med": 12312,
+    "p90": 12651
+   },
+   "farmRolls": {
+    "p10": 0,
+    "med": 0,
+    "p90": 0
+   },
+   "keysWon": {
+    "p10": 2066,
+    "med": 2111,
+    "p90": 2154
+   },
+   "pity": {
+    "p10": 13,
+    "med": 17,
+    "p90": 21
+   },
+   "chaos": {
+    "p10": 230,
+    "med": 239,
+    "p90": 248
+   },
+   "omni": {
+    "p10": 44,
+    "med": 53,
+    "p90": 62
+   },
+   "maxMiss": {
+    "p10": 185,
+    "med": 258,
+    "p90": 357
+   },
+   "miss200": 84,
+   "keysFrom": {
+    "clues": 17.3,
+    "slayer": 14.2,
+    "chaos (levels)": 9.7,
+    "levels": 9.6,
+    "diaries": 9.6,
+    "combat achievements": 9,
+    "chunk exploring": 7.5,
+    "collection log": 5.5,
+    "quests": 4.8,
+    "bosses": 4.8,
+    "minigames": 3.3,
+    "omni": 2.1,
+    "pets": 1.6,
+    "pity": 0.7,
+    "starting keys": 0.1
+   }
+  }
+ }
+}
