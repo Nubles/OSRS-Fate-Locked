@@ -42,7 +42,8 @@ export const CHANGELOG_RELEASES = [
     date: '2026-11-04',
     sections: {
       added: [
-        'Share Run has a new Make a film button. It plays your log back as the world map’s fog lifting, day by day, and saves it as a video.',
+        'Share Run has a new Make a film button. It plays your run back day by day as a video: the map’s fog lifts as your land opens.',
+        'Your skills tab and gear slots fill in too, each tier flashing gold as you unlock it.',
         'Pick Wide for YouTube and Discord, or Tall for phones and Shorts.',
         'The film is made on your own device. Nothing is uploaded.',
       ],

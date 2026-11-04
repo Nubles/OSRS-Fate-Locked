@@ -8,7 +8,9 @@ import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { buildFilmTimeline } from '../utils/runFilm/timeline';
-import { FilmPainter, GLOW_FRAMES, type FilmShape } from '../utils/runFilm/painter';
+import { FilmPainter, GLOW_FRAMES, type FilmShape, type FilmSprites } from '../utils/runFilm/painter';
+import { gemSmallSrc, skillIconSrc, slotSilhouetteSrc, slotUiSrc } from './osrs/OsrsDashGems';
+import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../data/items';
 import { encodeFilm, FilmCancelled, FILM_FPS, type FilmFile } from '../utils/runFilm/encode';
 import { loadRitualFonts, RS_BOLD, RS_FONT } from './rituals/ritualAssets';
 import { getGameMode } from '../config/gameModes';
@@ -33,6 +35,22 @@ let mapLoading: Promise<HTMLImageElement> | null = null;
 const loadMap = (): Promise<HTMLImageElement> => {
   mapLoading ??= loadImage(MAP_IMAGE.sizes[0].src).catch(err => { mapLoading = null; throw err; });
   return mapLoading;
+};
+
+/** The skills-tab and equipment sprites. One that fails to load is left out; the film draws without it. */
+let spritesLoading: Promise<FilmSprites> | null = null;
+const loadSprites = (): Promise<FilmSprites> => {
+  const soft = (src: string) => loadImage(src).catch(() => undefined);
+  spritesLoading ??= (async () => {
+    const [skills, slots, tile, gems] = await Promise.all([
+      Promise.all(SKILLS_LIST.map(async s => [s, await soft(skillIconSrc(s))] as const)),
+      Promise.all(EQUIPMENT_SLOTS.map(async s => [s, await soft(slotSilhouetteSrc(s))] as const)),
+      soft(slotUiSrc('tile')),
+      Promise.all(Array.from({ length: 10 }, (_, i) => soft(gemSmallSrc(i + 1)))),
+    ]);
+    return { skills: Object.fromEntries(skills), slots: Object.fromEntries(slots), tile, gems };
+  })();
+  return spritesLoading;
 };
 
 const loadImage = (src: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
@@ -65,7 +83,9 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     chunked,
     finalRegions: unlocks.regions ?? [],
     finalChunks: unlocks.chunks ?? [],
-  }), [history, chunked, unlocks.regions, unlocks.chunks]);
+    finalSkills: unlocks.skills,
+    finalGear: unlocks.equipment,
+  }), [history, chunked, unlocks.regions, unlocks.chunks, unlocks.skills, unlocks.equipment]);
   const frames = LEAD_FRAMES + timeline.steps.length + HOLD_FRAMES;
   const seconds = Math.round(frames / FILM_FPS);
   const title = `${activeProfileName || 'My run'} · Fate Locked ${getGameMode(gameModeId).name}`;
@@ -80,13 +100,13 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     let cancelled = false;
     (async () => {
       await loadRitualFonts(3000);
-      const map = await loadMap();
+      const [map, sprites] = await Promise.all([loadMap(), loadSprites()]);
       const canvas = canvasRef.current;
       if (cancelled || !canvas) return;
       const owned = new Set(timeline.start);
       for (const step of timeline.steps) for (const k of step.added) owned.add(k);
-      new FilmPainter(canvas, map, shape, { regular: RS_FONT, bold: RS_BOLD })
-        .paint(owned, new Map(), timeline.steps[timeline.steps.length - 1], title);
+      new FilmPainter(canvas, map, shape, { regular: RS_FONT, bold: RS_BOLD }, sprites)
+        .paint(owned, new Map(), timeline.steps[timeline.steps.length - 1] ?? timeline.opening, title);
     })().catch(() => { /* the Make button reports a map that won't load */ });
     return () => { cancelled = true; };
   }, [phase.kind, shape, timeline, title]);
@@ -100,8 +120,8 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     setPhase({ kind: 'making', done: 0, total: frames });
     try {
       await loadRitualFonts(3000);
-      const map = await loadMap();
-      const painter = new FilmPainter(canvas, map, shape, { regular: RS_FONT, bold: RS_BOLD });
+      const [map, sprites] = await Promise.all([loadMap(), loadSprites()]);
+      const painter = new FilmPainter(canvas, map, shape, { regular: RS_FONT, bold: RS_BOLD }, sprites);
       const owned = new Set(timeline.start);
       let glow = new Map<string, number>();
       let applied = -1;
@@ -113,9 +133,12 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         glow = next;
         while (applied < stepIndex) {
           applied += 1;
-          for (const k of timeline.steps[applied].added) { owned.add(k); glow.set(k, GLOW_FRAMES); }
+          const step = timeline.steps[applied];
+          for (const k of step.added) { owned.add(k); glow.set(k, GLOW_FRAMES); }
+          for (const k of step.raised) glow.set(k, GLOW_FRAMES);
         }
-        painter.paint(owned, glow, timeline.steps[Math.max(0, stepIndex)], title);
+        // Before the first step the film shows the run as it began.
+        painter.paint(owned, glow, stepIndex < 0 ? timeline.opening : timeline.steps[stepIndex], title);
       };
       const file = await encodeFilm({
         canvas, frames, draw, signal: abort.signal,

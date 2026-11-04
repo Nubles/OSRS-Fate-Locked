@@ -38,7 +38,7 @@ describe('buildFilmTimeline', () => {
     expect(t.steps).toHaveLength(5);
     const last = t.steps[4];
     expect(last).toMatchObject({ day: 3, rolls: 3, keysWon: 2, unlocks: 2 });
-    expect(last.ticker[0]).toEqual({ text: 'Strength', kind: 'skill' });
+    expect(last.ticker[0]).toEqual({ text: 'Strength I', kind: 'skill' });
     expect(last.ticker[1]).toEqual({ text: 'Falador', kind: 'area' });
     const falador = SUB_AREA_CHUNKS['Falador'].map(key);
     expect(t.steps[2].added.sort()).toEqual([...falador].sort());
@@ -77,6 +77,29 @@ describe('buildFilmTimeline', () => {
     expect(t.steps[0].added).toEqual(['50,49']);
     expect(t.steps[1].added).toEqual(['51,50']);
     expect(t.steps).toHaveLength(2);
+  });
+
+  it('raises skill and gear tiers as they are unlocked, ending on the run’s tiers now', () => {
+    const skill = (day: number, name: string) => entry(day, 'UNLOCK', `Unlocked ${name}`, { item: name, category: 'Skills' });
+    const gear = (day: number, slot: string) => entry(day, 'UNLOCK', `Unlocked ${slot}`, { item: slot, category: 'Equipment' });
+    const log = [skill(0, 'Attack'), gear(1, 'Legs'), skill(2, 'Attack'), skill(2, 'Hitpoints')];
+    const t = buildFilmTimeline(log, {
+      ...vanilla,
+      // Attack 3 now but the log shows only 2: it started at 1. The log never
+      // shows the Ring's tiers, so the run had them from the start. Hitpoints is free.
+      finalSkills: { Attack: 3, Hitpoints: 10 },
+      finalGear: { Legs: 1, Ring: 2 },
+    });
+    expect(t.opening.skills).toMatchObject({ Attack: 1, Hitpoints: 10, Mining: 0 });
+    expect(t.opening.gear).toMatchObject({ Legs: 0, Ring: 2 });
+    expect(t.steps[0]).toMatchObject({ raised: ['skill:Attack'], skills: { Attack: 2 } });
+    expect(t.steps[0].ticker[0].text).toBe('Attack II');
+    expect(t.steps[1]).toMatchObject({ raised: ['gear:Legs'], gear: { Legs: 1 } });
+    expect(t.steps[2].skills.Attack).toBe(3);
+    expect(t.steps[3].skills.Hitpoints).toBe(10);
+    expect(t.steps[3].raised).toEqual([]);
+    expect(t.steps).toHaveLength(4);
+    expect(t.steps[3]).toMatchObject({ skills: { Attack: 3 }, gear: { Legs: 1, Ring: 2 } });
   });
 
   it('makes no steps for an empty log', () => {
