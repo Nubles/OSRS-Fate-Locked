@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-11-gated-quest-items',
+    title: 'Quest items behind locked doors',
+    date: '2026-11-11',
+    sections: {
+      fixed: [
+        'Chunked: owning the Lumbridge Swamp shed no longer counts Zanaris’s dairy cow, mill and wheat for quests until you’ve done Lost City.',
+        'Quest item checks now ask for the way in to cows, mills, sheep and rocks inside places like the Mining Guild, Keldagrim and Prifddinas.',
+      ],
+    },
+  },
+  {
     id: '2026-11-10-phone-and-first-screen-fixes',
     title: 'Fixes for phones, tablets and laptops',
     date: '2026-11-10',
