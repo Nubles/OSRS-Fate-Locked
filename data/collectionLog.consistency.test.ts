@@ -104,6 +104,13 @@ describe('collection log data integrity', () => {
     expect(slots).toBeGreaterThanOrEqual(1921);
   });
 
+  // The game renamed the wyrms' dragon sword on 3 November 2026 (Wiki: Dragon shortsword, Changes).
+  // A rename keeps the slot's id, so a run that already logged it keeps it.
+  it('lists the dragon shortsword under the dragon sword\'s id', () => {
+    const swords = COLLECTION_LOG_DATA.Other.pages.Slayer.items.filter(item => /^Dragon (short)?sword$/.test(item.name));
+    expect(swords).toEqual([{ id: 528040, name: 'Dragon shortsword' }]);
+  });
+
   it('tracks the Wyrmscraig collection-log additions', () => {
     expect(COLLECTION_LOG_DATA.Bosses.pages['The Mad Angel'].items.map(item => ({ id: item.id, name: item.name }))).toEqual([
       { id: 157001, name: 'Granite dust' },

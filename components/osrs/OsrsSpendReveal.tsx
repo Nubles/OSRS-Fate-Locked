@@ -153,7 +153,7 @@ const OsrsSpendReveal: React.FC<OsrsSpendRevealProps> = ({ itemName, itemType, i
             )}
             <span style={{ ...RS(16, 'RSBold'), color: isChaos ? '#ff3030' : '#c77dff', ...sh }}>{isChaos ? 'Chaos roll' : 'Altering Fate...'}</span>
             <span style={{ ...RS(), color: 'var(--osrs-tan, #c8b897)', ...sh, textAlign: 'center', padding: '0 12px' }}>
-              {isChaos ? 'Your Chaos Key is spent on every table at once.'
+              {isChaos ? 'Fate picks the table your Chaos Key is spent on.'
                 : freeDraw ? `${FREE_DRAW_NAME[freeDraw]}: fate draws for you, and nothing is spent.`
                 : `Your Key is spent on the ${display} table.`}
             </span>

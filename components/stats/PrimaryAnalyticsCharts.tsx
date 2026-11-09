@@ -234,7 +234,11 @@ export const PrimaryAnalyticsCharts: React.FC<PrimaryAnalyticsChartsProps> = ({ 
                 {patternDefinitions}
                 <Tooltip content={<AnalyticsTooltip />} />
                 <Pie data={outcomeData.filter(item => item.count > 0)} dataKey="count" nameKey="name" innerRadius="66%" outerRadius="96%" paddingAngle={1.5} stroke="none" startAngle={90} endAngle={-270} isAnimationActive={animationActive}>
-                  {outcomeData.filter(item => item.count > 0).map(item => <Cell key={item.outcome} fill={outcomePatterns[item.outcome]} />)}
+                  {/* The chart library draws every sector with an image role, so each one needs a name: the legend's own line. */}
+                  {outcomeData.filter(item => item.count > 0).map(item => (
+                    <Cell key={item.outcome} fill={outcomePatterns[item.outcome]}
+                      aria-label={`${item.name}: ${integer.format(item.count)} (${percent(item.count, summary.attempts)})`} />
+                  ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>

@@ -294,7 +294,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
       { tier: 'Low boss',  source: DropSource.BOSS_LOW,  rate: DROP_RATES[DropSource.BOSS_LOW] },
       { tier: 'Mid boss',  source: DropSource.BOSS_MID,  rate: DROP_RATES[DropSource.BOSS_MID] },
       { tier: 'High boss', source: DropSource.BOSS_HIGH, rate: DROP_RATES[DropSource.BOSS_HIGH], omni: 10 },
-      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'Raids (CoX, ToB and ToA) have the best Omni-Key chance of any boss.' },
+      { tier: 'Raid',      source: DropSource.RAID,      rate: DROP_RATES[DropSource.RAID], omni: 15, bonus: 'The four raids (CoX, ToB, ToA and The Fractured Archive) have the best Omni-Key chance of any boss.' },
     ],
   },
   {
@@ -423,7 +423,7 @@ export const KEY_TYPES: KeyTypeInfo[] = [
     name: 'Chaos Key',
     icon: `${WIKI}Eternal_crystal.png`,
     accent: 'text-red-400',
-    tagline: 'A random unlock from every table.',
+    tagline: 'One random unlock from any table.',
     earn: [
       `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}: ${SKILL_CHAOS_MILESTONES.length} per skill.`,
       `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
@@ -504,7 +504,7 @@ export const GREED_REFUND_FRACTION = 0.5;
 export const RITUALS: Ritual[] = [
   { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll twice, keep the better.', fateCost: 8,  effect: 'Your next Key roll is made twice and the better result is kept.' },
   { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a Vanilla boss with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
-  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Buy a Chaos Key.',       fateCost: 25, effect: 'Get 1 Chaos Key now: a random unlock from every table at once.' },
+  { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Buy a Chaos Key.',       fateCost: 25, effect: 'Get 1 Chaos Key now: one random unlock from any table.' },
   { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
   { id: 'CARTOGRAPHER', name: 'Ritual of the Cartographer', tagline: 'Choose your next chunk.', fateCost: 40, chunkedOnly: true,

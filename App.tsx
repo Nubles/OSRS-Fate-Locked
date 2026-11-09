@@ -805,10 +805,19 @@ const GameLayout = () => {
     && hasRuneliteGuideQuery(window.location.search);
   const [showRuneliteGuide, setShowRuneliteGuide] = useState(directGuideRequested);
   const runeliteGuideReturnFocusTarget = useRef<HTMLElement | null>(null);
+  // ?open=rules opens the Rules with the page: the Discord's /rules button links here.
+  const directRulesRequested = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('open') === 'rules';
 
   useEffect(() => {
-    if (!directGuideRequested) return;
-    const search = removeRuneliteGuideQuery(window.location.search);
+    if (!directGuideRequested && !directRulesRequested) return;
+    let search = removeRuneliteGuideQuery(window.location.search);
+    if (directRulesRequested) {
+      const params = new URLSearchParams(search);
+      params.delete('open');
+      const query = params.toString();
+      search = query ? `?${query}` : '';
+    }
     window.history.replaceState(
       null,
       '',
@@ -824,7 +833,7 @@ const GameLayout = () => {
       releaseIsUnseen: hasUnseenReleaseForRun(readSeenChangelog(), LATEST_CHANGELOG_ID, history.length),
       startupHash: typeof window === 'undefined' ? '' : window.location.hash,
       hasPendingGameModePrompt: recentlyCreatedId === activeProfileId,
-      hasPendingGuidePrompt: directGuideRequested,
+      hasPendingGuidePrompt: directGuideRequested || directRulesRequested,
       hasPendingCompensation: hasPendingOffer,
     }),
   );
@@ -914,7 +923,7 @@ const GameLayout = () => {
   // UI States
   const [showStats, setShowStats] = useState(false);
   const [showFateThread, setShowFateThread] = useState(false);
-  const [showReference, setShowReference] = useState(false);
+  const [showReference, setShowReference] = useState(directRulesRequested);
   const [showAltar, setShowAltar] = useState(false);
   const [showOracle, setShowOracle] = useState(false);
   const [showStrategy, setShowStrategy] = useState(false);
@@ -1047,7 +1056,8 @@ const GameLayout = () => {
         startupHash,
         hasPendingGameModePrompt,
         hasPendingSyncPrompt,
-        hasPendingGuidePrompt: showRuneliteGuide,
+        // The Rules opened from a link count too: What's New waits behind them.
+        hasPendingGuidePrompt: showRuneliteGuide || showReference,
         hasPendingCompensation: hasPendingOffer,
       })
     ) return;
@@ -1063,6 +1073,7 @@ const GameLayout = () => {
     hasSeenOnboarding,
     recentlyCreatedId,
     showChangelog,
+    showReference,
     showRuneliteGuide,
     startupHash,
   ]);
@@ -1148,7 +1159,8 @@ const GameLayout = () => {
       <ToastNotification />
 
       <Suspense fallback={null}>
-        {!hasSeenOnboarding && !topLevelGuideOpen && <OnboardingWizard />}
+        {/* A new visitor who followed a link to the Rules reads them first. */}
+        {!hasSeenOnboarding && !topLevelGuideOpen && !showReference && <OnboardingWizard />}
 
         {activeRitual && (
           <RitualAnimation key={activeRitual.id} ritual={activeRitual.ritual} meta={activeRitual.meta}

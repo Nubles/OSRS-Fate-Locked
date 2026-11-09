@@ -67,6 +67,28 @@ describe('Fate save file export bounds', () => {
     expect(deobfuscateFateSave(exported.value)).toEqual({ ok: true, value: JSON.parse(JSON.stringify(live)) });
   });
 
+  it('restores a save file right up to the save cap', () => {
+    // A regular expression used to check the decoded Base64 here. Browsers run
+    // out of stack on one that long, so every save file above about 3.3 MB
+    // exported fine and then could not be imported again.
+    const live = structuredClone(initialState);
+    live.userNotes = Object.fromEntries(Array.from(
+      { length: 245 },
+      (_, index) => [`note-${index}`, 'x'.repeat(20_000)],
+    ));
+    const bytes = new TextEncoder().encode(JSON.stringify(live)).byteLength;
+    expect(bytes).toBeGreaterThan(4_800_000);
+    expect(bytes).toBeLessThan(MAX_SAVE_BYTES);
+
+    const exported = encodeFateSaveExport(live);
+    expect(exported.ok).toBe(true);
+    if (!exported.ok) return;
+    const restored = deobfuscateFateSave(exported.value);
+    expect(restored.ok).toBe(true);
+    if (!restored.ok) return;
+    expect(restored.value).toEqual(JSON.parse(JSON.stringify(live)));
+  }, 30_000);
+
   it('still refuses to export a save larger than the save cap', () => {
     expect(encodeFateSaveExport({ note: 'x'.repeat(MAX_SAVE_BYTES) })).toEqual({
       ok: false,
@@ -97,6 +119,15 @@ describe('Fate save file decoding', () => {
     });
     for (const alias of ['e31=', 'e32=', 'e33=']) {
       expect(deobfuscateFateSave(legacyCipherForBase64(alias))).toMatchObject({
+        ok: false,
+        code: 'decode_failed',
+      });
+    }
+  });
+
+  it('rejects Base64 with characters outside the alphabet or misplaced padding', () => {
+    for (const malformed of ['e3=0', '=e30', 'e30', 'e3 0', 'e3\n0', 'e3-_', 'e===', '====', 'e30=e30=']) {
+      expect(deobfuscateFateSave(legacyCipherForBase64(malformed))).toMatchObject({
         ok: false,
         code: 'decode_failed',
       });

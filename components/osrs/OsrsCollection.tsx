@@ -170,7 +170,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
   const reachPanel = (
     <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: '0 1 auto', minHeight: 120 }}>
       <h2 style={{ margin: '2px 0', textAlign: 'center', ...RS(16, 'RSBold'), color: '#ff981f', ...sh }}>Unlock coverage</h2>
-      <div ref={reachRef} className={`osrs-inner oscroll${reachMore ? ' is-more' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', minHeight: 0, overflowY: 'auto', ...sh }}>
+      <div ref={reachRef} tabIndex={0} role="group" aria-label="Unlock coverage" className={`osrs-inner oscroll${reachMore ? ' is-more' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 10px', minHeight: 0, overflowY: 'auto', ...sh }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ ...RS(32, 'RSBold'), lineHeight: '28px', color: '#00ff00' }}>{reach.pct}%</span>
           <span style={{ ...RS(), color: 'var(--osrs-tan, #c8b897)' }}><span style={{ color: '#ffffff' }}>{reach.obtainable}</span> / {reach.total} slots covered by source unlocks</span>
@@ -215,7 +215,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
     <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: wide ? '1 0 170px' : undefined, height: wide ? undefined : 150, minHeight: 0, flexShrink: 0 }}>
       <h2 style={{ margin: '2px 0', textAlign: 'center', ...RS(16, 'RSBold'), color: '#ff981f', ...sh }}>Collection log rolls</h2>
       <div className="osrs-chat" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 0 }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1, padding: '6px 8px' }}>
+      <div tabIndex={0} role="group" aria-label="Collection log rolls" style={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 1, padding: '6px 8px' }}>
         {rolls.length === 0 && <div style={{ flexShrink: 0, lineHeight: '18px' }}>No collection log rolls yet. Each new item you log rolls for a Key.</div>}
         {rolls.map(e => {
           const ok = e.type === 'ROLL_SUCCESS' || e.type === 'PITY' || e.type === 'ROLL_OMNI';

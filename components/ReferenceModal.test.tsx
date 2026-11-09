@@ -55,6 +55,11 @@ describe('ReferenceModal Core Rules', () => {
     expect(core).toMatch(/class="osrs-wa-side [^"]*\bhidden min-\[720px\]:flex\b/);
   });
 
+  it('lets the keyboard scroll a section, named after it, since most hold no controls', () => {
+    expect(renderCodex('core')).toMatch(/class="osrs-wa-content [^"]*" tabindex="0" role="region" aria-label="Core Rules"/);
+    expect(renderCodex('economy')).toContain('tabindex="0" role="region" aria-label="Key Economy"');
+  });
+
   it('says how many Keys a new run starts with', () => {
     expect(renderCodex('core')).toContain(`You start with ${STARTING_KEYS} Keys`);
   });

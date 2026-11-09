@@ -2,7 +2,9 @@
 
 Everything in flight, everything planned, and every gotcha learned the hard
 way — written so the project can keep moving without any particular
-contributor. Last updated: 3 October 2026.
+contributor. Last updated: 3 October 2026. Everything released since then is
+in the app's What's New (`data/changelog.ts`, newest first); section 0 below
+is the list as it stood on that date.
 
 ---
 

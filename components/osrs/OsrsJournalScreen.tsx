@@ -604,10 +604,13 @@ export const OsrsJournalScreen: React.FC = () => {
           </button>
         </div>
 
-        <div role="tablist" className="ojs-tabs">
-          {TABS.map(([id, label]) => (
-            <button key={id} type="button" role="tab" aria-selected={tab === id} className="ojs-tab" onClick={() => setOsrsJournalTab(id)}>{label}</button>
-          ))}
+        <div className="ojs-tabs">
+          {/* A tablist may hold only tabs: the search box and Filters sit beside it. `contents` keeps the row's layout. */}
+          <div role="tablist" aria-label="Journal sections" style={{ display: 'contents' }}>
+            {TABS.map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={tab === id} className="ojs-tab" onClick={() => setOsrsJournalTab(id)}>{label}</button>
+            ))}
+          </div>
           <label className="ojs-search" title={'Search quests, series and start points, diary tasks and areas, combat tasks, bosses and tiers.\nPress / to search, Up and Down to move, Enter to open, Escape to clear.\nRight-click an entry for options.'}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M9.5 9.5l3.5 3.5" stroke="currentColor" strokeWidth="2" /></svg>
             <input

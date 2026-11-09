@@ -2409,7 +2409,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         <button
           onClick={() => setShowGrid(g => !g)}
           className={`p-2 border rounded text-white shadow-lg active:scale-95 transition-transform ${showGrid ? 'bg-emerald-900/80 border-emerald-500/60' : 'bg-black/80 border-white/20 hover:bg-white/10'}`}
-          title="Toggle chunk grid (64-tile)"
+          title="Toggle chunk grid (64-tile)" aria-pressed={showGrid}
         >
           <Grid3x3 size={20} />
         </button>
@@ -2425,12 +2425,14 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
         <button
           onClick={() => applyTransform({ ...transformRef.current, scale: Math.min(transformRef.current.scale + 0.5, 5) })}
           className="p-2 bg-black/80 border border-white/20 rounded hover:bg-white/10 text-white shadow-lg active:scale-95 transition-transform"
+          title="Zoom in" aria-label="Zoom in"
         >
           <ZoomIn size={20} />
         </button>
         <button
           onClick={() => applyTransform({ ...transformRef.current, scale: Math.max(transformRef.current.scale - 0.5, 0.2) })}
           className="p-2 bg-black/80 border border-white/20 rounded hover:bg-white/10 text-white shadow-lg active:scale-95 transition-transform"
+          title="Zoom out" aria-label="Zoom out"
         >
           <ZoomOut size={20} />
         </button>

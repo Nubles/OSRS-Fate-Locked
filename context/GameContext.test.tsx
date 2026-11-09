@@ -1777,7 +1777,7 @@ describe('ordinary save recovery', () => {
     act(() => game.current().saveNote('goal', 'local-only'));
     expect(game.current().hasPendingChanges).toBe(true);
     let result: ImportResult | undefined;
-    act(() => { result = game.current().reloadLatestSave(); });
+    act(() => { result = game.current().reloadLatestSave() as ImportResult; });
 
     expect(result?.ok).toBe(true);
     expect(game.current().userNotes.goal).toBe('durable');
@@ -1795,7 +1795,7 @@ describe('ordinary save recovery', () => {
     storage.values.set('profile', '{bad');
 
     let result: ImportResult | undefined;
-    act(() => { result = game.current().reloadLatestSave(); });
+    act(() => { result = game.current().reloadLatestSave() as ImportResult; });
 
     expect(result?.ok).toBe(false);
     expect(game.current().getExportData()).toBe(stateBefore);

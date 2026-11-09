@@ -59,9 +59,10 @@ Two scheduled jobs keep the bundled data current. Neither touches `main`.
 2. **A weekly Claude routine** runs a few hours later. It reads that branch's
    report and the week's game update notes on the Wiki, does the curation the
    tests and notes call for (the boss, quest or minigame cascade, Diary or CA
-   snapshot updates, the Discord area guide, golden bundles), adds the What's
-   New entry and opens one draft pull request. A maintainer reviews and
-   merges; the merge deploys. Weeks with nothing to change open nothing.
+   snapshot updates, the skill lists, the Discord area guide, golden bundles),
+   adds the What's New entry and opens one draft pull request. A maintainer
+   reviews and merges; the merge deploys. Weeks with nothing to change open
+   nothing.
 
 The install, sync, check and tests run in a read-only job that keeps no git
 credentials, from the lockfile (`npm ci`). Only the generated files, the CA
@@ -215,6 +216,7 @@ its generator, run the appropriate sync command, and review the resulting diff.
 | **Quests** | — | ✅ **Detected** by `content:check` (wiki `{{Globals\|quests}}` count) → curate: skill reqs, prereqs, region, QP, difficulty tier |
 | **Combat Achievements** | ✅ Offline render from the committed, reviewed snapshot via `ca:sync` | ✅ Network drift detection via `content:check` → explicitly fetch/review/update the snapshot, then run `ca:sync` |
 | **Diaries** | — | ✅ Reviewed 492-row snapshot; regenerate with `diary:sync` |
+| **Skill lists** | ⚠️ **Not detected.** `data/skillUnlocks.ts` is written by hand → add what the week's update unlocks (a monster, a resource, a Slayer master, a house location), reading each level from the skill's `Level_up_table` page on the Wiki | Same as left; a new skill needs its own list |
 
 The curation gate is **intentional**, not a limitation:
 

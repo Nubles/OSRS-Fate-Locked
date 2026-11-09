@@ -56,6 +56,12 @@ export interface SaveBootstrapResult {
   maxDurablePersistenceRevision: number;
   source: 'empty' | 'pending' | 'mirror' | 'journal' | 'recovery';
   needsJournalImport: boolean;
+  /**
+   * The journal held newer progress than the browser save (or the only copy):
+   * the browser lost its last writes in a crash, or its storage was full. The
+   * provider writes the loaded state back so both copies agree again.
+   */
+  needsMirrorRepair?: boolean;
 }
 
 export interface SaveBootstrapReplacement {
@@ -684,6 +690,7 @@ const decisionResult = (
     maxDurablePersistenceRevision: decision.maxDurablePersistenceRevision,
     source: decision.source,
     needsJournalImport: decision.needsJournalImport,
+    needsMirrorRepair: decision.source === 'journal',
   };
 };
 
