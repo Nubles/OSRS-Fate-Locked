@@ -41,6 +41,7 @@ import {
   getBackupDataById,
   listBackups as readBackups,
   pushBackup,
+  reclaimBackupSpace,
   type BackupMeta,
 } from '../utils/backups';
 import {
@@ -62,6 +63,7 @@ import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/
 import { emptyRuneProofProgress, migrateLocalRuneProofProgress, updateRuneProofProgress, type RuneProofMutation } from '../utils/runeProofProgress';
 import { checksumSave } from '../utils/saveIntegrity';
 import { openRecoveryDatabase } from '../utils/recoveryDatabase';
+import { readNewestDurableSave, type NewestDurableSave } from '../utils/newestDurableSave';
 import type {
   RecoveryCheckpointReason,
   RecoveryRepository,
@@ -238,7 +240,7 @@ interface GameContextType extends GameState {
   retrySave: () => SaveRetryResult | Promise<SaveRetryResult>;
   stageForProfileEviction: () => void;
   takeOverSaveOwnership: () => Promise<boolean>;
-  reloadLatestSave: () => ImportResult;
+  reloadLatestSave: () => ImportResult | Promise<ImportResult>;
   rollForKey: (
     source: string,
     threshold: number,
@@ -2346,6 +2348,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const {
     status: leaseStatus,
     blockedReason: leaseBlockReason,
+    blockedEpisodes: leaseBlockedEpisodesRef,
     authorizeWrite: authorizeOwnership,
     takeOver: takeOverOwnership,
     release: releaseOwnership,
@@ -2355,12 +2358,28 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   // until the player keeps this tab's progress or loads the newer save.
   const [newerSaveConflict, setNewerSaveConflict] = useState(false);
   const newerSaveConflictRef = useRef(false);
-  const blockedSinceOwnedRef = useRef(false);
-  if (leaseStatus === 'blocked') blockedSinceOwnedRef.current = true;
-  const saveOwnershipStatus: SaveOwnershipStatus = newerSaveConflict ? 'blocked' : leaseStatus;
+  // Every time this tab was without the lease, another tab may have saved.
+  // The count the lease reports is compared with the last one checked, not
+  // with rendered `blocked` states: React can batch those away, or render a
+  // stale one again after the player has already settled it by taking over.
+  const checkedBlockedEpisodesRef = useRef(0);
+  const leaseBlockedEpisodes = leaseBlockedEpisodesRef.current;
+  // With a recovery journal, a regained lease is first checked against it
+  // (the effect below reloadLatestSave). That read is asynchronous, so this
+  // tab stays held exactly as it was while blocked until the check settles.
+  const journalBacked = (suppliedCoordinator ?? null) === null && bootstrap !== undefined;
+  const [, renderSettledLease] = useReducer((count: number) => count + 1, 0);
+  const reconcilingRegainedLease = journalBacked
+    && leaseStatus === 'owner'
+    && leaseBlockedEpisodes !== checkedBlockedEpisodesRef.current;
+  const saveOwnershipStatus: SaveOwnershipStatus = newerSaveConflict || reconcilingRegainedLease
+    ? 'blocked'
+    : leaseStatus;
   const saveOwnershipBlockReason: SaveOwnershipBlockReason = newerSaveConflict
     ? 'newer_save'
-    : leaseBlockReason;
+    : reconcilingRegainedLease
+      ? 'foreign_owner'
+      : leaseBlockReason;
   const saveOwnershipStatusRef = useRef(saveOwnershipStatus);
   saveOwnershipStatusRef.current = saveOwnershipStatus;
   const saveOwnershipBlockReasonRef = useRef(saveOwnershipBlockReason);
@@ -2523,6 +2542,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       initialPersistenceRevision: bootstrap === undefined
         ? 0
         : bootstrap.maxDurablePersistenceRevision,
+      reclaimStorage: () => reclaimBackupSpace(storageKey),
     });
   }
   const coordinator = coordinatorRef.current;
@@ -2924,6 +2944,38 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     stageCoordinatedSnapshot,
   ]);
 
+  // The journal and the browser save can fall out of step: the browser
+  // commits localStorage lazily, so a crash loses its last writes, and a full
+  // storage stops them. Whichever copy is behind, this tab already holds the
+  // newest state, so save it once more and both agree again. Left alone, the
+  // next page-hide save could not be told from another app's (the recovery
+  // screen), and the older copy would sit there waiting to be read as newest.
+  const [storeResyncDue, setStoreResyncDue] = useState(bootstrap?.needsMirrorRepair === true);
+  useEffect(() => {
+    if (
+      !storeResyncDue
+      || coordinator === null
+      || readOnly
+      || saveOwnershipStatus !== 'owner'
+    ) return;
+    setStoreResyncDue(false);
+    if (persistedSnapshotRef.current === null || profileEvictedRef.current) return;
+    if (saveTimeoutRef.current !== null) {
+      window.clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    stageCoordinatedSnapshot(serializeCurrent());
+    void settleCoordinatedFlush();
+  }, [
+    coordinator,
+    readOnly,
+    saveOwnershipStatus,
+    serializeCurrent,
+    settleCoordinatedFlush,
+    stageCoordinatedSnapshot,
+    storeResyncDue,
+  ]);
+
   const legacyMigrationRunningRef = useRef(false);
   const legacyMigrationGenerationRef = useRef(0);
   useEffect(() => {
@@ -3010,9 +3062,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (!owned) return false;
       // The player chose this tab's progress, so the regained lease needs no
       // newer-save check, and any earlier conflict is resolved.
-      blockedSinceOwnedRef.current = false;
+      checkedBlockedEpisodesRef.current = leaseBlockedEpisodesRef.current;
       newerSaveConflictRef.current = false;
       setNewerSaveConflict(false);
+      renderSettledLease();
+      // The save below rewrites the journal and the browser save together.
+      setStoreResyncDue(false);
       void coordinator?.resyncRevision?.();
       takeoverFlushAuthorizedRef.current = true;
       try {
@@ -3461,7 +3516,62 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     setStateReplacements(count => count + 1);
     dispatch({ type: 'LOAD_SAVE', payload: replacement });
   }, []);
-  const reloadLatestSave = useCallback((): ImportResult => {
+  const acceptLatestSave = useCallback((latest: GameState): void => {
+    persistedSnapshotRef.current = serializeGameState(latest);
+    discardPendingSave(storageKey);
+    setSaveStatus('saved');
+    newerSaveConflictRef.current = false;
+    setNewerSaveConflict(false);
+    replaceState(latest);
+  }, [replaceState, storageKey]);
+  // Async, so a browser that refuses storage access rejects instead of throwing.
+  const readNewestSave = useCallback(async (
+    repository: RecoveryRepository,
+  ): Promise<NewestDurableSave> => readNewestDurableSave({
+    profileId,
+    storageKey,
+    storage: localStorage,
+    repository,
+    defaults: createFreshState(),
+  }), [profileId, storageKey]);
+  const reloadLatestSave = useCallback((): ImportResult | Promise<ImportResult> => {
+    const repository = recoveryRepositoryRef.current;
+    if (repository !== null) {
+      // The journal says which copy is newest, as it does at startup. The
+      // browser save alone can be an older one (utils/newestDurableSave.ts).
+      return readNewestSave(repository).then(
+        (newest): ImportResult => {
+          if (
+            !mountedRef.current
+            || profileEvictedRef.current
+            || profileIdentityRef.current !== storageKey
+          ) return replacementStaleResult();
+          if (newest.kind === 'empty') {
+            return {
+              ok: false,
+              code: 'invalid_json',
+              message: 'No saved run was found. Your current run is unchanged.',
+            };
+          }
+          if (newest.kind === 'undecided') {
+            return {
+              ok: false,
+              code: 'storage_unavailable',
+              message: 'The saved copies of this run disagree. Reload the page to choose which one to keep. Your current run is unchanged.',
+            };
+          }
+          acceptLatestSave(newest.state);
+          setStoreResyncDue(!newest.storesAgree);
+          return { ok: true, warnings: [] };
+        },
+        (): ImportResult => ({
+          ok: false,
+          code: 'storage_unavailable',
+          message: 'The latest saved run could not be read. Your current run is unchanged.',
+        }),
+      );
+    }
+
     let durable: string | null;
     try {
       durable = localStorage.getItem(storageKey);
@@ -3482,57 +3592,109 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const parsed = parseAndMigrateSave(durable, createFreshState());
     if (parsed.ok === false) return parsed;
 
-    const accepted = serializeGameState(parsed.state);
-    persistedSnapshotRef.current = accepted;
-    discardPendingSave(storageKey);
-    setSaveStatus('saved');
-    newerSaveConflictRef.current = false;
-    setNewerSaveConflict(false);
-    replaceState(parsed.state);
+    acceptLatestSave(parsed.state);
     return { ok: true, warnings: parsed.warnings };
-  }, [replaceState, storageKey]);
+  }, [acceptLatestSave, readNewestSave, storageKey]);
 
   // When a tab that was blocked regains the lease on its own (the other tab
-  // closed or its lease expired), the other tab may have saved newer
-  // progress. Load it if this tab has nothing unsaved; otherwise keep writes
+  // closed or its lease expired), newer progress may have been saved
+  // meanwhile. Load it if this tab has nothing unsaved; otherwise keep writes
   // blocked and let the player choose, as a manual takeover would.
+  //
+  // "Newer" is the journal's call. The browser save can be an older copy (a
+  // crash loses its last writes, a full storage stops them), and loading it
+  // here as the newer progress quietly undid everything saved after it.
   useEffect(() => {
-    if (leaseStatus !== 'owner' || !blockedSinceOwnedRef.current) return;
-    blockedSinceOwnedRef.current = false;
-    if (takeoverRequestedRef.current || profileEvictedRef.current) return;
-
-    let stored: string | null;
-    try {
-      stored = localStorage.getItem(storageKey);
-    } catch {
+    if (leaseStatus !== 'owner' || checkedBlockedEpisodesRef.current === leaseBlockedEpisodes) return;
+    const settle = (): void => {
+      checkedBlockedEpisodesRef.current = leaseBlockedEpisodes;
+      // Ends the hold on a journal-backed tab; elsewhere nothing was held.
+      if (journalBacked) renderSettledLease();
+    };
+    if (takeoverRequestedRef.current || profileEvictedRef.current) {
+      settle();
       return;
     }
-    const baseline = persistedSnapshotRef.current;
-    if (stored === null || stored === baseline) return;
-    const parsed = parseAndMigrateSave(stored, createFreshState());
-    if (parsed.ok === false) return;
-    const latest = serializeGameState(parsed.state);
-    if (latest === baseline) return;
 
-    const unsavedChanges = getPendingSave(storageKey) !== null
-      || (baseline !== null && serializeCurrent() !== baseline);
-    if (!unsavedChanges) {
-      persistedSnapshotRef.current = latest;
+    const holdForPlayer = (): void => {
+      newerSaveConflictRef.current = true;
+      saveOwnershipStatusRef.current = 'blocked';
+      saveOwnershipBlockReasonRef.current = 'newer_save';
+      if (saveTimeoutRef.current !== null) {
+        window.clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      blockPendingSave(storageKey, 'ownership_conflict');
+      setNewerSaveConflict(true);
+    };
+    /** True when this tab now holds `latest`, because it already did or just loaded it. */
+    const adoptUnlessUnsaved = (latest: GameState): boolean => {
+      const baseline = persistedSnapshotRef.current;
+      const serialized = serializeGameState(latest);
+      if (serialized === baseline) return true;
+      const unsavedChanges = getPendingSave(storageKey) !== null
+        || (baseline !== null && serializeCurrent() !== baseline);
+      if (unsavedChanges) {
+        holdForPlayer();
+        return false;
+      }
+      persistedSnapshotRef.current = serialized;
       discardPendingSave(storageKey);
-      replaceState(parsed.state);
+      replaceState(latest);
       showToast('Loaded newer progress saved in another tab');
+      return true;
+    };
+    /** The browser save, when it holds something other than what this tab last saved or loaded. */
+    const differingBrowserSave = (): GameState | null => {
+      let stored: string | null;
+      try {
+        stored = localStorage.getItem(storageKey);
+      } catch {
+        return null;
+      }
+      if (stored === null || stored === persistedSnapshotRef.current) return null;
+      const parsed = parseAndMigrateSave(stored, createFreshState());
+      if (parsed.ok === false) return null;
+      return serializeGameState(parsed.state) === persistedSnapshotRef.current ? null : parsed.state;
+    };
+
+    const repository = journalBacked ? recoveryRepositoryRef.current : null;
+    if (repository === null) {
+      // No journal: the browser save is the only saved copy there is.
+      settle();
+      const stored = differingBrowserSave();
+      if (stored !== null) adoptUnlessUnsaved(stored);
       return;
     }
-    newerSaveConflictRef.current = true;
-    saveOwnershipStatusRef.current = 'blocked';
-    saveOwnershipBlockReasonRef.current = 'newer_save';
-    if (saveTimeoutRef.current !== null) {
-      window.clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-    }
-    blockPendingSave(storageKey, 'ownership_conflict');
-    setNewerSaveConflict(true);
-  }, [leaseStatus, replaceState, serializeCurrent, storageKey]);
+
+    let cancelled = false;
+    // Not settled meanwhile by the player's own takeover, nor blocked again.
+    const stillPending = (): boolean => !cancelled
+      && checkedBlockedEpisodesRef.current !== leaseBlockedEpisodes
+      && leaseBlockedEpisodesRef.current === leaseBlockedEpisodes;
+    void readNewestSave(repository).then(
+      newest => {
+        if (!stillPending()) return;
+        if (newest.kind === 'ready') {
+          if (adoptUnlessUnsaved(newest.state)) setStoreResyncDue(!newest.storesAgree);
+        } else if (newest.kind === 'undecided') {
+          // Startup would ask the player which copy to keep. Write nothing
+          // over the evidence from here; keeping this tab or reloading settles it.
+          holdForPlayer();
+        }
+        settle();
+      },
+      () => {
+        if (!stillPending()) return;
+        // The journal could not be read, so a browser save that differs cannot
+        // be told from an older copy. It is never loaded unasked: the player
+        // keeps this tab's progress or reloads.
+        if (differingBrowserSave() !== null) holdForPlayer();
+        settle();
+      },
+    );
+    return () => { cancelled = true; };
+  }, [journalBacked, leaseBlockedEpisodes, leaseBlockedEpisodesRef, leaseStatus, readNewestSave, replaceState, serializeCurrent, storageKey]);
 
   const writeReplacement = useCallback((data: string) => {
     writeReplacementNow(

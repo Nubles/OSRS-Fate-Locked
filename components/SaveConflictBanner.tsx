@@ -20,7 +20,7 @@ interface SaveConflictBannerViewProps {
   reason?: SaveOwnershipBlockReason;
   hasPendingChanges: boolean;
   takeOver: () => Promise<boolean>;
-  reloadLatest: () => ImportResult;
+  reloadLatest: () => ImportResult | Promise<ImportResult>;
   exportBackup: () => FateSaveDownloadResult;
   confirmAction?: (message: string) => boolean;
 }
@@ -69,7 +69,7 @@ export const SaveConflictBannerView: FC<SaveConflictBannerViewProps> = ({
     setReloading(true);
     await Promise.resolve();
     try {
-      const result = reloadLatest();
+      const result = await reloadLatest();
       showToast(result.ok === true ? 'Latest saved progress loaded' : result.message);
     } catch {
       showToast('The latest saved run could not be read. Your current run is unchanged.');

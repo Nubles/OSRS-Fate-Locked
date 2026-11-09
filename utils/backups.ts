@@ -17,6 +17,26 @@ import { simpleHash } from './integrity';
 import { checksumSave } from './saveIntegrity';
 import type { RecoveryCheckpoint, RecoveryRepository } from './recoveryTypes';
 const MAX_BACKUPS = 8;
+/**
+ * The ring's share of the browser's storage, about half of the 5 MB a site
+ * gets. The save itself, its growth and the caches need the rest: a long run's
+ * ring used to fill the storage, and the save beside it then stopped updating.
+ * The newest copy is always kept; every copy is also a journal checkpoint.
+ */
+const MAX_BACKUP_RING_CHARS = 2_500_000;
+/** A copy's stored size: its JSON is quoted again inside the ring's JSON. */
+const storedSize = (entry: { data: string }): number => Math.ceil(entry.data.length * 1.2) + 512;
+
+const withinRingBudget = <T extends { data: string }>(entries: T[]): T[] => {
+  let size = 0;
+  const kept: T[] = [];
+  for (const entry of entries) {
+    size += storedSize(entry);
+    if (kept.length > 0 && size > MAX_BACKUP_RING_CHARS) break;
+    kept.push(entry);
+  }
+  return kept;
+};
 
 /** Asked before Reset all progress, which keeps a "Before reset" backup here first. */
 export const RESET_CONFIRM_MESSAGE =
@@ -235,7 +255,7 @@ export const pushBackup = (
     summary: summarizeSave(data),
     data,
   };
-  const next = [entry, ...entries].slice(0, MAX_BACKUPS);
+  const next = withinRingBudget([entry, ...entries].slice(0, MAX_BACKUPS));
   const writeAuthorization = authorizeWrite();
   if (writeAuthorization.ok === false) {
     return { stored: false, reason: writeAuthorization.reason };
@@ -255,6 +275,56 @@ export const pushBackup = (
       return { stored: false, reason: 'storage_unavailable' };
     }
   }
+};
+
+const BACKUP_RING_KEY = /^FATE_PROFILE_.+__backups$/;
+
+const dropOldestCopy = (key: string): boolean => {
+  let raw: string | null;
+  try {
+    raw = localStorage.getItem(key);
+  } catch {
+    return false;
+  }
+  if (raw === null) return false;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 1) {
+      localStorage.setItem(key, JSON.stringify(parsed.slice(0, -1)));
+      return true;
+    }
+  } catch {
+    // An unreadable ring restores nothing, so it goes whole.
+  }
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Give up one ring copy so the save itself can be written: the oldest of this
+ * profile's, then, once those are gone, the oldest of the largest ring another
+ * profile keeps in this browser. Nothing is lost by it, because each copy is
+ * also a checkpoint in the recovery journal, which the Backups list reads.
+ * Returns false when no ring is left to shrink.
+ */
+export const reclaimBackupSpace = (storageKey: string): boolean => {
+  if (dropOldestCopy(profileBackupKey(storageKey))) return true;
+  let largest: { key: string; size: number } | null = null;
+  try {
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key === null || !BACKUP_RING_KEY.test(key)) continue;
+      const size = localStorage.getItem(key)?.length ?? 0;
+      if (largest === null || size > largest.size) largest = { key, size };
+    }
+  } catch {
+    return false;
+  }
+  return largest !== null && dropOldestCopy(largest.key);
 };
 
 /** The serialized save for a given backup timestamp, or null if gone. */
