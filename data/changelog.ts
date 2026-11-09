@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-09-safer-saves',
+    title: 'Safer saves for long runs, and a round of fixes',
+    date: '2026-11-09',
+    sections: {
+      fixed: [
+        'Long runs save safely. A run with a very long history could reload onto an older copy of itself. You now always get your newest progress.',
+        'If a reload recently set your run back, open Sync Code, then Backups: a checkpoint from before it may still be there to restore.',
+        'A tab left open through an update no longer ignores Key clicks. If the Yes / No box can’t load, your browser’s own box asks instead.',
+        'Importing a save no longer celebrates quests and areas you finished long ago, and save files over about 3.3 MB import again.',
+        'Quest Points now total 346 like the game (The Writing’s on the Wall gives 1), and Sailing 62 lists the Wyrmscraig dock.',
+        'Sync & Roll says plainly when the hiscores can’t be reached, and the Rules are corrected on Chaos Keys, raids and gear names.',
+      ],
+    },
+  },
+  {
     id: '2026-11-04-run-film',
     title: 'Turn your run into a film',
     date: '2026-11-04',
@@ -56,7 +71,7 @@ export const CHANGELOG_RELEASES = [
     sections: {
       added: [
         'Mudfoot’s Big Adventure (Novice, 1 quest point) starts with Captain Harlan outside the Lumbridge General Store.',
-        'The Writing’s on the Wall (Intermediate, 2 quest points) starts with Betty at Land’s End and needs 22 Agility and 20 Thieving.',
+        'The Writing’s on the Wall (Intermediate, 1 quest point) starts with Betty at Land’s End and needs 22 Agility and 20 Thieving.',
       ],
       changed: [
         'Daddy’s Home is now a quest worth 1 quest point, as in the game, so it counts toward the Quest Cape.',
