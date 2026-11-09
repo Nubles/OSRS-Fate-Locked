@@ -216,16 +216,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Mahogany Homes (Beginner)',
       'Lvl 1: Move to Rimmington',
       'Lvl 5: Kitchen',
-      'Lvl 10: Basic Stone Decor, Dining Room'
+      'Lvl 10: Basic Stone Decor, Dining Room',
+      'Lvl 10: Move to Taverley'
     ],
     2: [
-      'Move to Taverley',
       'Lvl 12: STASH Units (Beginner)',
       'Lvl 15: Workshop, Repair Bench',
       'Lvl 16: Crafting Table 1',
       'Lvl 17: Water Pump (Sailing)',
       'Lvl 20: Bedroom, Whitewashed Stone Decor',
-      'Lvl 20: Mahogany Homes (Novice)'
+      'Lvl 20: Mahogany Homes (Novice)',
+      'Lvl 20: Move to Pollnivneach'
     ],
     3: [
       'Sailing: Teak Hull, Cannons',
@@ -239,7 +240,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 32: Combat Room',
       'Lvl 32: Oak Workbench',
       'Lvl 33: Oak Larder',
-      'Lvl 35: Quest Hall',
+      'Lvl 35: Quest Hall, Move to Aldarin',
       'Lvl 37: Menagerie',
       'Lvl 38: Pet List, Teak Table',
       'Lvl 40: Servant (Butler), Move to Brimhaven',
@@ -1100,6 +1101,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     8: [
       'Lvl 71: Crystal Pickaxe',
       'Lvl 72: Basalt & Salts',
+      'Lvl 74: Nickel Ore',
       'Lvl 75: Ancient Essence'
     ],
     9: [
@@ -1460,7 +1462,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 32: Mogres (Fishing Explosive)',
       'Lvl 33: Harpie Bug Swarms (Lit Lantern)',
       'Lvl 35: Wall Beasts, Slayer Helmet',
+      'Lvl 35: Witchwood Icon',
       'Lvl 37: Killerwatts, Insulated Boots',
+      'Lvl 38: Vyrewatch',
       'Lvl 39: Molanisks, Slayer Bell',
       'Lvl 40: Basilisks, Terror Dogs, Sea Snakes'
     ],
@@ -1479,7 +1483,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: Turoth, Broad Ammo, Leaf-Bladed Weapons',
       'Lvl 56: Warped Terrorbirds/Tortoises',
       'Lvl 57: Mutated Zygomites (Fungicide)',
-      'Lvl 58: Cave Horrors (Black Mask)',
+      'Lvl 58: Cave Horrors (Witchwood Icon), Black Mask',
       'Lvl 60: Aberrant Spectres, Basilisk Knights, Nose Peg'
     ],
     7: [
@@ -1489,10 +1493,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 66: Fossil Island Wyverns',
       'Lvl 67: Mature Custodian Stalkers',
       'Lvl 68: Spiritual Warriors',
-      'Lvl 70: Kurasks'
+      'Lvl 70: Kurasks, Master: Mortimer'
     ],
     8: [
       'Lvl 72: Skeletal Wyverns',
+      'Lvl 74: Venators',
       'Lvl 75: Gargoyles, Grotesque Guardians',
       'Lvl 76: Elder Custodian Stalkers',
       'Lvl 77: Brutal Black Dragons',
