@@ -226,6 +226,36 @@ describe('Auto-Roll name change', () => {
     expect(screen.getByRole('status').textContent).toContain('This run now uses New Name');
   });
 
+  it('says the lookup could not be reached, without blaming the name, when the request itself fails', async () => {
+    game.linkedAccount = 'Old Name';
+    // What a browser throws when it is offline or the request is blocked.
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+
+    render(<AutoRollPanel />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText(/Couldn't reach the hiscores lookup/)).toBeTruthy();
+    expect(screen.queryByText(/Failed to fetch/)).toBeNull();
+    expect(screen.queryByText(/If you changed your OSRS name/)).toBeNull();
+  });
+
+  it('keeps the name hint off a rate limit', async () => {
+    game.linkedAccount = 'Old Name';
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) })));
+
+    render(<AutoRollPanel />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText(/Rate-limited/)).toBeTruthy();
+    expect(screen.queryByText(/If you changed your OSRS name/)).toBeNull();
+  });
+
   it("turns away a name that can't exist in game", () => {
     game.linkedAccount = 'Old Name';
     game.renameLinkedAccount.mockClear();

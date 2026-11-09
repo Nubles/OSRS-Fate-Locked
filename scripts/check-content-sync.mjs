@@ -13,6 +13,8 @@
 //   • Combat Achievements — per-tier `data-ca-task-id` rows on each tier page.
 //   • Quest names — the live Quests/List rows against data/questData.ts, so the
 //     report names a new quest or miniquest instead of only counting it.
+//   • Quest points — the wiki's {{Globals|quest points}} total against the sum
+//     of every entry's `points`, so one quest with the wrong reward shows up.
 //   • Chunk Picker — whether the upstream branch has moved past the reviewed pin
 //     (map/chunk content changes arrive there).
 //   • Diaries — no clean wiki marker, so the app side is self-audited (diary
@@ -97,8 +99,12 @@ const read = (f) => readFileSync(new URL(`../data/${f}`, import.meta.url), 'utf8
 
 function appQuestCount() {
   const src = read('questData.ts');
+  // Every entry's `points`, miniquests (0) and the ten Recipe for Disaster stages included.
+  let questPoints = 0;
+  for (const m of src.matchAll(/\bpoints: (\d+)/g)) questPoints += Number(m[1]);
   return { entries: (src.match(/^\s*id: '(?:[^'\\]|\\.)*', name:/gm) || []).length,
-    official: (src.match(/kind: 'quest'/g) || []).length - 9 }; // ten RFD stages represent one official quest
+    official: (src.match(/kind: 'quest'/g) || []).length - 9, // ten RFD stages represent one official quest
+    questPoints };
 }
 function appCaCounts() {
   const src = read('caTasks.ts');
@@ -128,6 +134,11 @@ export function buildReport({ quests, cas, diaries, questNames = undefined, chun
   if (quests.wiki) {
     lines.push(`- Wiki: **${quests.wiki.total}** quests (${quests.wiki.p2p} members + ${quests.wiki.f2p} F2P), ${quests.wiki.questPoints} quest points.`);
     lines.push(`- App: **${quests.app}** quest entries (includes miniquests / sub-quests, so a higher number is expected).`);
+    if (Number.isFinite(quests.appQuestPoints)) {
+      // A quest with the wrong reward leaves the counts equal, so the totals are compared too.
+      lines.push(`- Quest points: Wiki **${quests.wiki.questPoints}**, app **${quests.appQuestPoints}**.`);
+      if (quests.appQuestPoints !== quests.wiki.questPoints) actions.push(`Quest points: wiki ${quests.wiki.questPoints}, app ${quests.appQuestPoints} — a quest's \`points\` in data/questData.ts differs from its Wiki reward; check the newest quests first.`);
+    }
     if (!Number.isFinite(quests.official)) unavailable.push('Comparable official quest baseline unavailable');
     else if (quests.official !== quests.wiki.total) actions.push(`Quests: wiki ${quests.wiki.total}, app ${quests.official} official quests — reconcile newly released or missing quests.`);
     lines.push('- Watch the wiki total: an increase means a new quest was released — add it to `data/questData.ts`.');
@@ -215,7 +226,7 @@ export function buildReport({ quests, cas, diaries, questNames = undefined, chun
 // ---------- main ----------------------------------------------------------
 async function main() {
   const counts = appQuestCount();
-  const quests = { app: counts.entries, official: counts.official, wiki: null };
+  const quests = { app: counts.entries, official: counts.official, appQuestPoints: counts.questPoints, wiki: null };
   const cas = { app: appCaCounts(), wiki: null };
   const diaries = { app: appDiaryCounts() };
 

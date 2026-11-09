@@ -1391,7 +1391,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     7: [
       'Lvl 61: Dock Tear of the Soul, Rename Boat',
-      'Lvl 62: Dock Rellekka',
+      'Lvl 62: Dock Rellekka, Wyrmscraig',
       'Lvl 63: Dock Wintumber Island',
       'Lvl 64: Dock Crown Jewel, Salvage Pirate Shipwrecks',
       'Lvl 65: Dock Etceteria, Recruit Oarswoman Olga',

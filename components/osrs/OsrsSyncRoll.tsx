@@ -33,7 +33,7 @@ const LockGlyph = ({ size = 12 }: { size?: number }) => (
 
 const OsrsSyncRoll: React.FC = () => {
   const {
-    linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    linkedAccount, name, setName, status, error, errorNameNotFound, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
     plans, holds, baselineTaken, activity, activityRolls,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
@@ -126,7 +126,7 @@ const OsrsSyncRoll: React.FC = () => {
       {status === 'error' && (
         <span role="alert" style={{ color: '#ff3030' }}>
           {error}
-          {linkedAccount && !renameOpen && ' If you changed your OSRS name, use "Change name" above.'}
+          {linkedAccount && !renameOpen && errorNameNotFound && ' If you changed your OSRS name, use "Change name" above.'}
         </span>
       )}
 

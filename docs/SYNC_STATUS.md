@@ -8,6 +8,7 @@
 
 - Wiki: **187** quests (161 members + 25 F2P), 346 quest points.
 - App: **215** quest entries (includes miniquests / sub-quests, so a higher number is expected).
+- Quest points: Wiki **346**, app **346**.
 - Watch the wiki total: an increase means a new quest was released — add it to `data/questData.ts`.
 
 ### Quest list by name
