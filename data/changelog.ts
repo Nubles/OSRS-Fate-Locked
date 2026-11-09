@@ -47,7 +47,7 @@ export const CHANGELOG_RELEASES = [
         'A tab left open through an update no longer ignores Key clicks. If the Yes / No box can’t load, your browser’s own box asks instead.',
         'Importing a save no longer celebrates quests and areas you finished long ago, and save files over about 3.3 MB import again.',
         'Quest Points now total 346 like the game. Skill lists catch up with Sailing and The Blood Moon Rises: new fish, coral, ship cannons, Venators and more.',
-        'Sync & Roll says plainly when the hiscores can’t be reached, and the Rules are corrected on Chaos Keys, raids and gear names.',
+        'Sync & Roll says when the hiscores can’t be reached, and Rules wording is corrected. The keyboard can now scroll the Rules, History and Forecast.',
       ],
     },
   },

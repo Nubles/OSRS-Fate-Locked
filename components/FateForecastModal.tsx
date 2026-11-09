@@ -149,7 +149,8 @@ export const FateForecastModal: React.FC<Props> = ({ onClose }) => {
             </div>
 
             {/* Detail */}
-            <div className="osrs-wa-content flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
+            <div className="osrs-wa-content flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4"
+              tabIndex={0} role="region" aria-label="Forecast detail">
               {active?.table === TableType.CHUNKS && <p className="text-sm text-gray-300">There are {active.remaining} adjacent chunks eligible now. Your next Chunk unlock has a 1 in {active.remaining} chance for each. The frontier changes after every roll, so a fixed waiting-time estimate would be misleading.</p>}
               {active && forecast && (
                 <div className="space-y-4 animate-in fade-in duration-200">

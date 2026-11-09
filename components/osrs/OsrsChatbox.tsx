@@ -246,23 +246,27 @@ export const OsrsChatbox: React.FC = () => {
             )}
           </div>
         )}
-        <div role="tablist" aria-label="Chat filters" className={`osrs-chat-tabs${bodyOpen ? '' : ' is-collapsed'}`}>
-          {tabs.map(label => (
-            <button
-              key={label}
-              type="button"
-              role="tab"
-              className="osrs-ctab"
-              aria-selected={tab === label}
-              aria-expanded={tab === label ? !collapsed : undefined}
-              title={tab === label ? (collapsed ? 'Show the chatbox' : 'Hide the chatbox')
-                : label === 'Clan' ? 'Show unlocks from other players in the Fate Locked Discord'
-                : `Show ${label === 'All' ? 'every entry' : `${label} only`}`}
-              onClick={() => pickTab(label)}
-            >
-              {label}
-            </button>
-          ))}
+        <div className={`osrs-chat-tabs${bodyOpen ? '' : ' is-collapsed'}`}>
+          {/* A tablist may hold only tabs, so the note and the two buttons after it sit beside it.
+              `contents` keeps every tab a flex item of the row, so nothing moves. */}
+          <div role="tablist" aria-label="Chat filters" style={{ display: 'contents' }}>
+            {tabs.map(label => (
+              <button
+                key={label}
+                type="button"
+                role="tab"
+                className="osrs-ctab"
+                aria-selected={tab === label}
+                aria-expanded={tab === label ? !collapsed : undefined}
+                title={tab === label ? (collapsed ? 'Show the chatbox' : 'Hide the chatbox')
+                  : label === 'Clan' ? 'Show unlocks from other players in the Fate Locked Discord'
+                  : `Show ${label === 'All' ? 'every entry' : `${label} only`}`}
+                onClick={() => pickTab(label)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <span className="osrs-chat-note">{note}</span>
           <button
             type="button"

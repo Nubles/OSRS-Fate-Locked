@@ -222,8 +222,10 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                 </div>
             </div>
 
-            {/* Scrollable Content Area */}
-            <div className="osrs-wa-content flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative">
+            {/* Scrollable Content Area. Most sections hold no controls, so the scroller itself takes
+                keyboard focus: the arrow keys, Page Up / Down and Space then scroll the text in every browser. */}
+            <div className="osrs-wa-content flex-1 overflow-y-auto custom-scrollbar bg-[#1a1a1a] relative"
+                tabIndex={0} role="region" aria-label={tabs.find(t => t.id === activeTab)?.label ?? 'Rules'}>
                 <div className="p-4 sm:p-8 max-w-4xl mx-auto">
                     
                     {activeTab === 'core' && (
