@@ -46,7 +46,7 @@ export const CHANGELOG_RELEASES = [
         'If a reload recently set your run back, open Sync Code, then Backups: a checkpoint from before it may still be there to restore.',
         'A tab left open through an update no longer ignores Key clicks. If the Yes / No box can’t load, your browser’s own box asks instead.',
         'Importing a save no longer celebrates quests and areas you finished long ago, and save files over about 3.3 MB import again.',
-        'Quest Points now total 346 like the game (The Writing’s on the Wall gives 1). Skill lists gain newer unlocks such as Venators, Mortimer and nickel ore.',
+        'Quest Points now total 346 like the game. Skill lists catch up with Sailing and The Blood Moon Rises: new fish, coral, ship cannons, Venators and more.',
         'Sync & Roll says plainly when the hiscores can’t be reached, and the Rules are corrected on Chaos Keys, raids and gear names.',
       ],
     },

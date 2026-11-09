@@ -40,6 +40,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     8: [
       'Lvl 74: Heal +13 HP with Saradomin Brew',
       'Lvl 75: Wear Enchanted Zenyte Jewellery',
+      'Lvl 75: Heal +15 HP with Anglerfish',
       'Lvl 80: Heal +14 HP with Saradomin Brew',
       'Lvl 80: Heal +16 HP with Anglerfish'
     ],
@@ -47,7 +48,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 87: Heal +15 HP with Saradomin Brew',
       'Lvl 90: Heal +17 HP with Anglerfish',
       'Lvl 90: Wear Amulet of Rancour',
-      'Lvl 90: Wear Confliction Gauntlets'
+      'Lvl 90: Wear Confliction Gauntlets',
+      'Lvl 90: Wear Necklace of Rupture'
     ],
     10: [
       'Lvl 93: Heal +22 HP with Anglerfish',
@@ -326,6 +328,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 53: Lava Eel (Heroes\' Quest)',
       'Lvl 55: Anchovy Pizza',
+      'Lvl 56: Swordtip Squid',
       'Lvl 58: Pitta Bread',
       'Lvl 60: Curry, Mushroom Pie'
     ],
@@ -333,21 +336,28 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 62: Monkfish (Swan Song)',
       'Lvl 65: Pineapple Pizza, Wine of Zamorak',
       'Lvl 68: Tuna Potato',
+      'Lvl 69: Giant Krill',
       'Lvl 70: Admiral Pie'
     ],
     8: [
+      'Lvl 71: Jumbo Squid',
       'Lvl 72: Sacred Eel (Zulrah Scales)',
       'Lvl 73: Dragonfruit Pie',
+      'Lvl 73: Haddock',
+      'Lvl 79: Yellowfin',
       'Lvl 80: Shark'
     ],
     9: [
       'Lvl 82: Sea Turtle',
+      'Lvl 83: Halibut',
       'Lvl 84: Anglerfish',
       'Lvl 85: Wild Pie',
+      'Lvl 87: Bluefin',
       'Lvl 90: Dark Crab'
     ],
     10: [
       'Lvl 91: Manta Ray',
+      'Lvl 91: Marlin',
       'Lvl 95: Summer Pie',
       'Lvl 99: Skill Mastery (Cooking Cape)'
     ],
@@ -360,6 +370,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 10: Bowstrings, Crossbow Strings'
     ],
     2: [
+      'Lvl 12: Linen Yarn, Bolts of Linen',
       'Lvl 13: Jade, Jade Jewelry',
       'Lvl 14: Leather Bodies',
       'Lvl 16: Red Topaz, Unstrung Symbols',
@@ -375,6 +386,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 33: Vials',
       'Lvl 34: Rubies, Ruby Rings',
       'Lvl 38: Coifs',
+      'Lvl 39: Hemp Yarn, Bolts of Canvas',
       'Lvl 40: Crafting Guild Access'
     ],
     5: [
@@ -399,6 +411,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     8: [
       'Lvl 71: Blue D\'hide Bodies',
       'Lvl 73: Red D\'hide Vambraces',
+      'Lvl 73: Cotton Yarn, Bolts of Cotton',
       'Lvl 75: Magic Bird Houses, Slayer Rings',
       'Lvl 77: Red D\'hide Bodies',
       'Lvl 80: Dragonstone Amulet (Glory)'
@@ -516,6 +529,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 26: Harralander, Limpwurt',
       'Lvl 27: Apple Trees',
       'Lvl 28: Wildblood Hops',
+      'Lvl 28: Elkhorn Coral',
       'Lvl 29: Goutweed',
       'Lvl 30: Willow Trees'
     ],
@@ -526,6 +540,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 34: Tithe Farm (Golovanova)',
       'Lvl 35: Teak Trees',
       'Lvl 36: Dwellberries, Grapes',
+      'Lvl 37: Hemp',
       'Lvl 38: Toadflax',
       'Lvl 39: Orange Trees'
     ],
@@ -539,6 +554,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     6: [
       'Lvl 51: Pineapple Trees',
+      'Lvl 52: Pillar Coral',
       'Lvl 53: Bittercap Mushrooms',
       'Lvl 54: Tithe Farm (Bologano)',
       'Lvl 55: Cactus, Mahogany Trees',
@@ -554,17 +570,22 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 63: Nightshade',
       'Lvl 64: Potato Cactus',
       'Lvl 65: Hespori, Farming Guild (Intermediate)',
+      'Lvl 65: Huasca',
+      'Lvl 66: Camphor Trees',
       'Lvl 67: Cadantine',
       'Lvl 68: Palm Trees',
       'Lvl 70: Poison Ivy Berries'
     ],
     8: [
+      'Lvl 71: Cotton',
       'Lvl 72: Calquat Trees',
       'Lvl 73: Lantadyme',
       'Lvl 74: Crystal Trees, Tithe Farm (Logavano)',
       'Lvl 75: Magic Trees',
       'Lvl 76: Anima Seeds (Attas, Iasor, Kronos)',
-      'Lvl 79: Dwarf Weed'
+      'Lvl 77: Umbral Coral',
+      'Lvl 79: Dwarf Weed',
+      'Lvl 80: Ironwood Trees'
     ],
     9: [
       'Lvl 81: Dragonfruit',
@@ -574,6 +595,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 90: Redwood Trees'
     ],
     10: [
+      'Lvl 92: Rosewood Trees',
       'Lvl 99: Skill Mastery (Farming Cape)'
     ],
   },
@@ -641,6 +663,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     10: [
       'Lvl 92: Rosewood Logs',
       'Lvl 95: Redwood Pyre Logs/Ship',
+      'Lvl 97: Rosewood Pyre Logs/Ship',
       'Lvl 99: Skill Mastery (Firemaking Cape)'
     ],
   },
@@ -687,24 +710,31 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 62: Monkfish',
       'Lvl 65: Karambwan',
       'Lvl 68: Fishing Guild Access',
+      'Lvl 69: Giant Krill, Jumbo Squid',
       'Lvl 70: Leaping Sturgeon'
     ],
     8: [
       'Lvl 71: Crystal Harpoon',
       'Lvl 73: Mottled Eel',
+      'Lvl 73: Haddock',
       'Lvl 75: Infernal Harpoon',
       'Lvl 76: Sharks',
+      'Lvl 78: Leechfin (The Blood Moon Rises)',
+      'Lvl 79: Yellowfin, Sea Turtles',
       'Lvl 80: Infernal Eels'
     ],
     9: [
       'Lvl 81: Manta Rays',
       'Lvl 82: Anglerfish, Minnows',
+      'Lvl 83: Halibut',
       'Lvl 85: Dark Crabs',
       'Lvl 87: Sacred Eels',
+      'Lvl 87: Bluefin',
       'Lvl 90: Kyren Fish'
     ],
     10: [
       'Lvl 91: Greater Sirens',
+      'Lvl 91: Marlin',
       'Lvl 96: Barehanded Sharks',
       'Lvl 99: Skill Mastery (Fishing Cape)'
     ],
@@ -721,7 +751,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 15: Iron Arrows, Oak Arrow Shafts',
       'Lvl 17: Iron Javelins',
       'Lvl 18: Iron Brutal Arrows',
-      'Lvl 20: Oak Shortbows'
+      'Lvl 20: Oak Shortbows',
+      'Lvl 20: Vale Totems'
     ],
     3: [
       'Lvl 22: Iron Darts',
@@ -753,6 +784,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: Maple Longbows, Broad Bolts',
       'Lvl 56: Sapphire Bolts',
       'Lvl 57: Maple Shields',
+      'Lvl 58: Camphor Blowpipe',
       'Lvl 59: Mithril Grapples',
       'Lvl 60: Adamant Arrows, Yew Arrow Shafts'
     ],
@@ -763,11 +795,13 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 65: Yew Shortbows, Diamond Bolts',
       'Lvl 67: Adamant Darts',
       'Lvl 69: Rune Crossbows/Bolts',
-      'Lvl 70: Yew Longbows'
+      'Lvl 70: Yew Longbows',
+      'Lvl 70: Blisterwood Stakes (The Blood Moon Rises)'
     ],
     8: [
       'Lvl 71: Dragonstone Bolts',
       'Lvl 72: Heavy Ballista, Yew Shields',
+      'Lvl 72: Ironwood Blowpipe, Moonlight Antler Bolts',
       'Lvl 73: Onyx Bolts',
       'Lvl 74: Sunlight Crossbows, Atlatl Darts',
       'Lvl 75: Rune Arrows, Magic Arrow Shafts',
@@ -779,6 +813,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 81: Rune Darts',
       'Lvl 82: Amethyst Arrows',
       'Lvl 84: Dragon Bolts, Amethyst Javelins',
+      'Lvl 84: Rosewood Blowpipe',
       'Lvl 85: Magic Longbows',
       'Lvl 87: Magic Shields',
       'Lvl 90: Dragon Arrows, Amethyst Darts'
@@ -825,15 +860,19 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 53: Hunter Potion',
       'Lvl 54: Clean Kwuarm',
       'Lvl 55: Super Strength Potion',
+      'Lvl 56: Haemostatic Dressing',
       'Lvl 58: Clean Huasca',
       'Lvl 59: Clean Snapdragon',
       'Lvl 60: Weapon Poison'
     ],
     7: [
+      'Lvl 62: Super Fishing Potion',
       'Lvl 63: Super Restore Potion',
       'Lvl 65: Clean Cadantine',
       'Lvl 66: Super Defence Potion',
+      'Lvl 66: Extreme Energy',
       'Lvl 67: Clean Lantadyme',
+      'Lvl 67: Super Hunter Potion',
       'Lvl 68: Antidote+',
       'Lvl 69: Antifire Potion',
       'Lvl 70: Clean Dwarf Weed',
@@ -852,6 +891,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 84: Extended Antifire',
       'Lvl 85: Ancient Brew, Extended Stamina',
       'Lvl 87: Anti-venom',
+      'Lvl 89: Armadyl Brew',
       'Lvl 90: Super Combat Potion'
     ],
     10: [
@@ -921,6 +961,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 54: Gloves of Silence',
       'Lvl 55: Sabre-toothed Kyatts',
       'Lvl 57: Dark Kebbits, Rumours (Adept)',
+      'Lvl 57: Pyre Foxes',
       'Lvl 58: Nature Implings',
       'Lvl 59: Red Salamanders, Yew Bird Houses',
       'Lvl 60: Maniacal Monkeys, 4 Traps',
@@ -940,11 +981,13 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 73: Black Chinchompas',
       'Lvl 74: Ninja Implings, Magic Bird Houses',
       'Lvl 75: Moonlight Moths',
+      'Lvl 76: Letvek (The Blood Moon Rises)',
       'Lvl 77: Rainbow Crabs',
       'Lvl 79: Tecu Salamanders',
       'Lvl 80: Crystal Implings, 5 Traps, Herbiboar'
     ],
     9: [
+      'Lvl 82: Stymphikes (The Blood Moon Rises)',
       'Lvl 83: Dragon Implings',
       'Lvl 87: Greater Sirens',
       'Lvl 89: Lucky Implings, Redwood Bird Houses',
@@ -1187,32 +1230,38 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Crossbows, Knives, Darts',
       'Lvl 1: Shortbows, Longbows',
+      'Lvl 1: Bronze Cannon (Sailing 28), Iron Cannon (Sailing 35)',
       'Lvl 5: Oak Bows, Steel Thrown',
+      'Lvl 5: Steel Cannon (Sailing 47)',
       'Lvl 10: Black Knives/Darts'
     ],
     2: [
       'Lvl 16: Blurite Crossbow',
       'Lvl 19: Falador Wall Shortcut',
       'Lvl 20: Studded Leather, Mithril Thrown',
-      'Lvl 20: Willow Bows, Coifs'
+      'Lvl 20: Willow Bows, Coifs',
+      'Lvl 20: Mithril Cannon (Sailing 57)'
     ],
     3: [
       'Lvl 26: Iron Crossbow',
       'Lvl 28: Dorgeshuun Crossbow',
       'Lvl 30: Adamant Thrown, Snakeskin',
       'Lvl 30: Ava\'s Attractor',
-      'Lvl 30: Maple Bows, Ogre Bows'
+      'Lvl 30: Maple Bows, Ogre Bows',
+      'Lvl 30: Adamant Cannon (Sailing 69)'
     ],
     4: [
       'Lvl 31: Steel Crossbow',
       'Lvl 36: Mithril Crossbow',
       'Lvl 40: Ranging Guild',
       'Lvl 40: Rune Thrown, Spined Armour',
-      'Lvl 40: Yew Bows, Green D\'hide'
+      'Lvl 40: Yew Bows, Green D\'hide',
+      'Lvl 40: Rune Cannon (Sailing 80)'
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
       'Lvl 45: Chinchompas (Grey)',
+      'Lvl 45: Camphor Blowpipe',
       'Lvl 50: Ava\'s Accumulator',
       'Lvl 50: Broad Arrows, Amethyst Darts',
       'Lvl 50: Hunters\' Crossbow',
@@ -1220,14 +1269,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     6: [
       'Lvl 55: Red Chinchompas',
+      'Lvl 55: Ironwood Blowpipe',
       'Lvl 60: Dragon Thrown',
-      'Lvl 60: Red D\'hide, Dark Bow'
+      'Lvl 60: Red D\'hide, Dark Bow',
+      'Lvl 60: Dragon Cannon (Sailing 92)'
     ],
     7: [
       'Lvl 61: Rune Crossbow, Broad Bolts',
       'Lvl 64: Dragon Crossbow',
       'Lvl 65: 3rd Age Range',
       'Lvl 65: 3rd Age Bow',
+      'Lvl 65: Rosewood Blowpipe',
       'Lvl 70: Armadyl Armour, Crystal Bow',
       'Lvl 70: Ava\'s Assembler',
       'Lvl 70: Black D\'hide, Karil\'s',
@@ -1255,6 +1307,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Small Pouch',
       'Lvl 2: Mind Runes',
       'Lvl 5: Water Runes',
+      'Lvl 6: Mist Runes',
       'Lvl 9: Earth Runes',
       'Lvl 10: Dust Runes, Temple of the Eye'
     ],
@@ -1316,7 +1369,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 84: 7 Mind Runes',
       'Lvl 85: Colossal Pouch (40)',
       'Lvl 88: 9 Air Runes',
-      'Lvl 90: Soul Runes'
+      'Lvl 90: Soul Runes',
+      'Lvl 90: Aether Runes'
     ],
     10: [
       'Lvl 91: 2 Nature Runes',
@@ -1614,6 +1668,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 72: Adamant Mace, Crystal Legs',
       'Lvl 73: Adamant Med Helm, Shayzien T3 Body',
       'Lvl 74: Adamant Sword/Keel, Crystal Body',
+      'Lvl 74: Cupronickel Bars',
       'Lvl 75: Adamant Scimitar/Arrows/C-balls',
       'Lvl 75: Dragon Kiteshield',
       'Lvl 76: Adamant Longsword, Crystal Tools',
@@ -1814,6 +1869,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     8: [
       'Lvl 71: Crystal Axes',
       'Lvl 75: Magic Logs, Sturdy Harness',
+      'Lvl 77: Bloodwood Trees (The Blood Moon Rises)',
       'Lvl 80: Infected Roots, Ironwood Logs'
     ],
     9: [
