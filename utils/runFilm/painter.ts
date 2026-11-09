@@ -11,6 +11,14 @@ import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
  */
 
 export type FilmShape = 'wide' | 'tall';
+/** What the skills tab shows: tier numerals (I..X), OSRS levels, or both. */
+export type FilmSkillView = 'tiers' | 'levels' | 'both';
+
+export interface FilmPaintOptions {
+  skillView?: FilmSkillView;
+  /** 1 makes 1280 × 720 (wide) or 720 × 1280 (tall); 1.5 makes 1080p. */
+  scale?: number;
+}
 
 interface Box { x: number; y: number; w: number; h: number }
 
@@ -112,6 +120,9 @@ export const GLOW_FRAMES = 18;
 
 export interface FilmFonts { regular: string; bold: string }
 
+/** Film sizes: 720p, or 1080p for creators. */
+export const FILM_SCALES = [1, 1.5] as const;
+
 export class FilmPainter {
   readonly layout: FilmLayout;
   private readonly ctx: CanvasRenderingContext2D;
@@ -119,6 +130,8 @@ export class FilmPainter {
   private readonly fog: HTMLCanvasElement;
   /** Skill icons in grey, for skills the run hasn't opened. */
   private readonly greySkills = new Map<string, HTMLCanvasElement>();
+  private readonly scale: number;
+  private readonly skillView: FilmSkillView;
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -126,14 +139,18 @@ export class FilmPainter {
     readonly shape: FilmShape,
     private readonly fonts: FilmFonts,
     private readonly sprites: FilmSprites = {},
+    options: FilmPaintOptions = {},
   ) {
     this.layout = filmLayout(shape);
-    canvas.width = this.layout.width;
-    canvas.height = this.layout.height;
+    this.scale = Math.max(0.25, options.scale ?? 1);
+    this.skillView = options.skillView ?? 'tiers';
+    // Everything is laid out at 720p and drawn scaled, so 1080p is the same film, sharper.
+    canvas.width = Math.round(this.layout.width * this.scale);
+    canvas.height = Math.round(this.layout.height * this.scale);
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('This browser cannot draw on a canvas.');
     this.ctx = ctx;
-    const { w, h } = this.layout.map;
+    const w = Math.round(this.layout.map.w * this.scale), h = Math.round(this.layout.map.h * this.scale);
     this.colour = document.createElement('canvas');
     this.colour.width = w; this.colour.height = h;
     const cc = this.colour.getContext('2d')!;
@@ -192,24 +209,43 @@ export class FilmPainter {
   private drawSkills(step: FilmStep | undefined, glow: ReadonlyMap<string, number>) {
     const { ctx, layout } = this;
     const tall = this.shape === 'tall';
-    const font = `${tall ? 24 : 18}px ${this.fonts.bold}`;
+    const size = tall ? 24 : 18;
+    const font = `${size}px ${this.fonts.bold}`;
+    const view = this.skillView;
     ctx.imageSmoothingEnabled = false;
     for (const skill of SKILLS_LIST) {
       const r = skillCellRect(skill, layout.skills);
       const tier = step?.skills?.[skill] ?? 0;
+      const level = step?.levels?.[skill] ?? (skill === 'Hitpoints' ? 10 : 1);
       this.bevel(r, tier ? C.cell : C.cellLocked);
       const icon = tier ? this.sprites.skills?.[skill] : (this.greySkills.get(skill) ?? this.sprites.skills?.[skill]);
       const iconX = r.x + (tall ? 22 : 16);
       if (icon) this.sprite(icon, iconX, r.y + r.h / 2, tall ? 1.2 : 0.9);
-      // Tier as a numeral in its gem's colour, and a bar of ten.
       const textX = r.x + r.w - (tall ? 10 : 6);
-      if (tier) this.text(romanTier(tier), textX, r.y + (r.h - (tall ? 24 : 18)) / 2 - 1, font, gemColour(tier), 'right');
-      else this.text('–', textX, r.y + (r.h - (tall ? 24 : 18)) / 2 - 1, font, C.dim, 'right');
-      const barX = r.x + (tall ? 42 : 32), barW = r.w - (tall ? 42 : 32) - (tall ? 64 : 40), barY = r.y + r.h / 2 - 2;
-      if (barW > 24) {
-        ctx.fillStyle = 'rgba(0,0,0,0.55)';
-        ctx.fillRect(barX, barY, barW, 4);
-        if (tier) { ctx.fillStyle = gemColour(tier); ctx.fillRect(barX, barY, barW * tier / 10, 4); }
+      const textY = r.y + (r.h - size) / 2 - 1;
+      const barX = r.x + (tall ? 42 : 32);
+      if (view === 'tiers') {
+        // Tier as a numeral in its gem's colour, and a bar of ten.
+        if (tier) this.text(romanTier(tier), textX, textY, font, gemColour(tier), 'right');
+        else this.text('–', textX, textY, font, C.dim, 'right');
+        const barW = r.w - (tall ? 42 : 32) - (tall ? 64 : 40), barY = r.y + r.h / 2 - 2;
+        if (barW > 24) {
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(barX, barY, barW, 4);
+          if (tier) { ctx.fillStyle = gemColour(tier); ctx.fillRect(barX, barY, barW * tier / 10, 4); }
+        }
+      } else {
+        // The level in yellow, as the OSRS skills tab shows it; dim while the skill is locked.
+        this.text(String(level), textX, textY, font, tier ? C.yellow : C.dim, 'right');
+        if (view === 'both') {
+          const small = tall ? 20 : 14;
+          if (tier) this.text(romanTier(tier), barX - (tall ? 2 : 3), r.y + (r.h - small) / 2 - 1, `${small}px ${this.fonts.bold}`, gemColour(tier));
+          // A thin bar of ten along the cell's foot.
+          const footW = r.w - (barX - r.x) - 4, footY = r.y + r.h - (tall ? 6 : 4);
+          ctx.fillStyle = 'rgba(0,0,0,0.55)';
+          ctx.fillRect(barX - (tall ? 2 : 3), footY, footW, tall ? 3 : 2);
+          if (tier) { ctx.fillStyle = gemColour(tier); ctx.fillRect(barX - (tall ? 2 : 3), footY, footW * tier / 10, tall ? 3 : 2); }
+        }
       }
       const left = glow.get(`skill:${skill}`);
       if (left) this.glowBox(r, left);
@@ -272,16 +308,17 @@ export class FilmPainter {
   paint(owned: ReadonlySet<string>, glow: ReadonlyMap<string, number>, step: FilmStep | undefined, title: string) {
     const { ctx, layout } = this;
     const { map, panel } = layout;
+    ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
     ctx.fillStyle = C.page;
     ctx.fillRect(0, 0, layout.width, layout.height);
-    ctx.drawImage(this.fog, map.x, map.y);
+    ctx.drawImage(this.fog, map.x, map.y, map.w, map.h);
 
     // Owned land in colour.
     ctx.save();
     ctx.beginPath();
     for (const k of owned) { const r = chunkRect(k, map); ctx.rect(r.x, r.y, r.w, r.h); }
     ctx.clip();
-    ctx.drawImage(this.colour, map.x, map.y);
+    ctx.drawImage(this.colour, map.x, map.y, map.w, map.h);
     ctx.restore();
 
     // New land glows gold, fading out.
@@ -326,11 +363,12 @@ export class FilmPainter {
       this.text(this.fit(title, panel.w, `${mid}px ${bold}`), panel.x, panel.y, `${mid}px ${bold}`, C.orange);
       this.text(`Day ${step?.day ?? 1}`, panel.x, panel.y + 30, `${big}px ${bold}`, C.yellow);
     }
-    // Counters in one row of three.
+    // Counters in one row: three, or four with the total level.
     const { stats, ticker } = layout;
     const rows: [string, number][] = [['Unlocks', step?.unlocks ?? 0], ['Key rolls', step?.rolls ?? 0], ['Keys won', step?.keysWon ?? 0]];
+    if (this.skillView !== 'tiers') rows.push(['Total level', step?.totalLevel ?? 0]);
     const label = tall ? 24 : 16, value = tall ? 28 : 22;
-    const colW = stats.w / 3;
+    const colW = stats.w / rows.length;
     rows.forEach(([k, v], i) => {
       this.text(k, stats.x + i * colW, stats.y, `${label}px ${regular}`, C.tan);
       this.text(v.toLocaleString('en-GB'), stats.x + i * colW, stats.y + label + 4, `${value}px ${bold}`, C.yellow);

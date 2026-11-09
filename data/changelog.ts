@@ -37,6 +37,19 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-09-run-film-controls',
+    title: 'More control over your Run Film',
+    date: '2026-11-09',
+    sections: {
+      added: [
+        'Pick a speed for your film, from ¼× for a slow, detailed replay up to 4× for a quick one.',
+        'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
+        'Your skills tab can show your levels and total level, your tiers, or both.',
+        'Write your own title, make it in 1080p, and drag the preview to see any moment before you make it.',
+      ],
+    },
+  },
+  {
     id: '2026-11-04-run-film',
     title: 'Turn your run into a film',
     date: '2026-11-04',
