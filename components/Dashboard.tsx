@@ -481,7 +481,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const omniInFlightRef = useRef(false);
   const [selectedSkillForDetails, setSelectedSkillForDetails] = useState<{name: string, tier: number} | null>(null);
 
-  const [unlockReveal, dismissReveal, unlockRevealId] = useUnlockReveal(unlocks, gameModeId);
+  const [unlockReveal, dismissReveal, unlockRevealId] = useUnlockReveal(unlocks, gameModeId, stateReplacements);
   const [achievementReveal, dismissAchievementReveal, achievementRevealId] = useAchievementReveal(
     { unlocks, history, gameModeId, customMode, petsClaimed },
     { claimed: achievementsClaimed, settle: settleAchievements, replacements: stateReplacements },

@@ -94,25 +94,36 @@ export function getUnlockRevealTransition(
  *
  * Every reveal gets a new id. Key the panel by it so a reveal that replaces
  * one still on screen remounts with its own slide-in and auto-dismiss timer.
+ *
+ * `replacements` is the game's count of wholesale run replacements (import,
+ * sync code, restore, reset). When it moves, the new run becomes the baseline
+ * and any reveal on screen goes: an imported save's quests and areas were not
+ * just earned, so they are not announced as if they were.
  */
 export function useUnlockReveal(
   unlocks: UnlockState,
   gameModeId?: string,
+  replacements = 0,
 ): [UnlockRevealData | null, () => void, number] {
-  const prevRef = useRef<UnlockState | null>(null);
+  const prevRef = useRef<{ unlocks: UnlockState; replacements: number } | null>(null);
   const idRef = useRef(0);
   const [reveal, setReveal] = useState<{ id: number; data: UnlockRevealData } | null>(null);
 
   useEffect(() => {
     const previous = prevRef.current;
-    prevRef.current = unlocks;
+    prevRef.current = { unlocks, replacements };
 
     // First mount — establish baseline, no reveal.
     if (!previous) return;
+    // The run was replaced — the new one is the baseline, and nothing was earned.
+    if (previous.replacements !== replacements) {
+      setReveal(null);
+      return;
+    }
 
-    const nextReveal = getUnlockRevealTransition(previous, unlocks, gameModeId);
+    const nextReveal = getUnlockRevealTransition(previous.unlocks, unlocks, gameModeId);
     if (nextReveal) setReveal({ id: ++idRef.current, data: nextReveal });
-  }, [unlocks, gameModeId]);
+  }, [unlocks, gameModeId, replacements]);
 
   const revealId = reveal?.id ?? 0;
   // Only dismiss the reveal this render showed, so a replaced panel's
