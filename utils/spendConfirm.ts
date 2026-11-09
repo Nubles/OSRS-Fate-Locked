@@ -1,3 +1,4 @@
+import { importWithRetry } from './lazyRetry';
 import { confirmSpendPref } from './viewerPrefs';
 
 /**
@@ -8,11 +9,32 @@ import { confirmSpendPref } from './viewerPrefs';
  */
 let asking: Promise<boolean> | null = null;
 
+/** The same module the box is opened from, so warming it and opening it share one download. */
+const loadBox = () => import('../components/SpendConfirm');
+
+/**
+ * Fetch the box ahead of the first Key click (utils/prefetch.ts), while the
+ * setting is on. A tab left open across a new version can no longer fetch it,
+ * because each version's files have their own names.
+ */
+export function warmSpendConfirm(): Promise<unknown> {
+  return confirmSpendPref.read() ? loadBox() : Promise.resolve();
+}
+
+/**
+ * The browser's own box, for when the in-game one can't be fetched (a new
+ * version went live under this tab, or the connection dropped). The click
+ * still asks and still works; doing nothing looked like a dead button.
+ */
+const askPlainly = (question: string): boolean => {
+  try { return window.confirm(question); } catch { return false; }
+};
+
 /** True when the player picks Yes. A second ask while the box is open is a No. */
 export function askBeforeSpending(question: string): Promise<boolean> {
   if (asking) return Promise.resolve(false);
-  asking = import('../components/SpendConfirm')
-    .then(m => m.openSpendConfirm(question))
+  asking = importWithRetry(loadBox, 2, 300)
+    .then(m => m.openSpendConfirm(question), () => askPlainly(question))
     .catch(() => false)
     .finally(() => { asking = null; });
   return asking;

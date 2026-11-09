@@ -6,9 +6,12 @@
  * time, and never blocks — if the browser is busy, idle callbacks simply wait.
  */
 
+import { warmSpendConfirm } from './spendConfirm';
+
 // Same module specifiers the lazy() call sites use, so they resolve to the
 // exact same chunks (no duplicate fetch).
 const IMPORTERS: Array<() => Promise<unknown>> = [
+  warmSpendConfirm, // the Yes / No box before a Key click: tiny, and the first roll shouldn't wait on it
   () => import('../components/HeaderSettingsMenu'), // the classic gear menu, small and opened by click
   () => import('../components/RegionMap'),
   () => import('../components/StatsModal'),
