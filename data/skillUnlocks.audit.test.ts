@@ -104,6 +104,7 @@ describe('unlocks added in the 9 November 2026 review', () => {
     ['Herblore', 'Super Hunter Potion', 67], ['Herblore', 'Armadyl Brew', 89],
     ['Hitpoints', 'Heal +15 HP with Anglerfish', 75], ['Hitpoints', 'Necklace of Rupture', 90],
     ['Hunter', 'Pyre Foxes', 57], ['Hunter', 'Letvek', 76], ['Hunter', 'Stymphikes', 82],
+    ['Magic', 'Teleport to Boat', 67],
     ['Mining', 'Nickel Ore', 74],
     ['Ranged', 'Bronze Cannon (Sailing 28), Iron Cannon (Sailing 35)', 1], ['Ranged', 'Steel Cannon (Sailing 47)', 5],
     ['Ranged', 'Mithril Cannon (Sailing 57)', 20], ['Ranged', 'Adamant Cannon (Sailing 69)', 30], ['Ranged', 'Rune Cannon (Sailing 80)', 40],

@@ -1059,6 +1059,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 64: Shadow Burst',
       'Lvl 65: Water Wave, Lunar Spells (Bake Pie)',
       'Lvl 66: Charge Air Orb, Vulnerability',
+      'Lvl 67: Teleport to Boat (Pandemonium)',
       'Lvl 68: Blood Burst, Humidify, Lvl-5 Enchant',
       'Lvl 70: Earth Wave, Ice Burst, Ahrim\'s, Occult Necklace'
     ],
