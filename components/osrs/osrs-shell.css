@@ -227,10 +227,21 @@ html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
   html[data-ui="osrs"] .osrs-hdr-controls { flex-wrap: wrap; }
 }
 
+/* The six chat tabs, the fold button and Timelapse need 788 px at their fixed
+   widths. The layout starts at 720 px (OSRS_MIN_WIDTH), so on a window or an
+   upright tablet narrower than that the row ran past the screen and the whole
+   page scrolled sideways. Here the tabs share the row instead. */
+@media (max-width: 819px) {
+  html[data-ui="osrs"] .osrs-ctab { width: auto; flex: 1 1 0; min-width: 0; padding: 0 4px; }
+  html[data-ui="osrs"] .osrs-chat-fold { flex: 0 0 34px; }
+}
+/* The note beside the tabs ("Fate Timeline · 1,219 entries") has room from
+   about 940 px. Just above 820 px it was 20 px wide and read "F…". */
+@media (max-width: 899px) {
+  html[data-ui="osrs"] .osrs-chat-note { display: none; }
+}
 @media (max-width: 640px) {
   html[data-ui="osrs"] .osrs-lvl { grid-template-columns: 72px minmax(0, 1fr) 48px; }
-  html[data-ui="osrs"] .osrs-ctab { width: auto; flex: 1; padding: 0 4px; }
-  html[data-ui="osrs"] .osrs-chat-note { display: none; }
 }
 
 /* The Keys panel's guide button (SectionGuide) in the tab strip, in the skin's colours. */
