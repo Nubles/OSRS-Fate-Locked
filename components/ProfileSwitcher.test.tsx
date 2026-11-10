@@ -269,6 +269,57 @@ describe('ProfileSwitcher', () => {
     );
   });
 
+  it('closes the menu on Escape and hands focus back to its button', async () => {
+    profileContext.current = context();
+    render(<ProfileSwitcher />);
+    await openMenu();
+    expect(screen.getByRole('button', { name: 'Switch to Beta' })).toBeTruthy();
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(screen.queryByRole('button', { name: 'Switch to Beta' })).toBeNull();
+    const trigger = screen.getByRole('button', { name: 'Switch profile. Current profile: Alpha' });
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('lets Escape leave a rename first, and only then close the menu', async () => {
+    profileContext.current = context();
+    render(<ProfileSwitcher />);
+    await openRename();
+    await userEvent.type(screen.getByRole('textbox', { name: 'Rename Alpha' }), ' the Second');
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(screen.queryByRole('textbox', { name: 'Rename Alpha' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Rename Alpha' })).toBeTruthy();
+    expect(profileContext.current.renameProfile).not.toHaveBeenCalled();
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(screen.queryByRole('button', { name: 'Rename Alpha' })).toBeNull();
+  });
+
+  it('does not let Escape hide a create form while its transaction is unresolved', async () => {
+    const pending = deferred<ProfileTransactionResult>();
+    profileContext.current = context({ createProfile: vi.fn(() => pending.promise) });
+    render(<ProfileSwitcher />);
+    await openCreate();
+    const input = screen.getByRole('textbox', { name: 'New profile name' });
+    await userEvent.type(input, 'New runner');
+
+    fireEvent.submit(input.closest('form') as HTMLFormElement);
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.getByRole('textbox', { name: 'New profile name' })).toHaveProperty('value', 'New runner');
+
+    await act(async () => {
+      pending.resolve(failure('backup_failed'));
+    });
+
+    expect(screen.getByRole('textbox', { name: 'New profile name' })).toHaveProperty('value', 'New runner');
+  });
+
   it('keeps the exact create input and form open after a failed transaction', async () => {
     profileContext.current = context({
       createProfile: vi.fn().mockResolvedValue(failure('backup_failed')),

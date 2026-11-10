@@ -123,6 +123,28 @@ export const ProfileSwitcher: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [open, pendingAction]);
 
+  // Escape steps back, under the same guard as the trigger: out of a rename
+  // or the new-profile row first, then the list closes and focus returns to
+  // the button that opened it.
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (actionGuardRef.current || pendingAction !== null) return;
+      if (editingId !== null || showCreate) {
+        setEditingId(null);
+        setEditName('');
+        setShowCreate(false);
+        setNewName('');
+        return;
+      }
+      setOpen(false);
+      dropdownRef.current?.querySelector<HTMLElement>('[data-profile-switcher-trigger]')?.focus();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, pendingAction, editingId, showCreate]);
+
   // Focus inputs when they appear.
   useEffect(() => {
     if (editingId) editInputRef.current?.focus();
@@ -307,7 +329,7 @@ export const ProfileSwitcher: React.FC = () => {
               >
                 {editingId === p.id ? (
                   <form
-                    className="flex items-center gap-1 flex-1"
+                    className="flex items-center gap-1 flex-1 min-w-0"
                     onSubmit={e => { e.preventDefault(); void handleRename(p.id); }}
                   >
                     <input
@@ -317,7 +339,7 @@ export const ProfileSwitcher: React.FC = () => {
                       onChange={e => setEditName(e.target.value)}
                       maxLength={30}
                       disabled={mutationsDisabled}
-                      className="flex-1 bg-black/30 border border-white/10 rounded px-2 py-0.5 text-xs text-white outline-none focus:border-amber-500/50 disabled:cursor-wait disabled:opacity-60"
+                      className="flex-1 min-w-0 bg-black/30 border border-white/10 rounded px-2 py-0.5 text-xs text-white outline-none focus:border-amber-500/50 disabled:cursor-wait disabled:opacity-60"
                     />
                     <button
                       type="submit"
@@ -398,7 +420,7 @@ export const ProfileSwitcher: React.FC = () => {
                   placeholder="Profile name..."
                   maxLength={30}
                   disabled={mutationsDisabled}
-                  className="flex-1 bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-amber-500/50 placeholder:text-gray-600 disabled:cursor-wait disabled:opacity-60"
+                  className="flex-1 min-w-0 bg-black/30 border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-amber-500/50 placeholder:text-gray-600 disabled:cursor-wait disabled:opacity-60"
                 />
                 <button
                   type="submit"
