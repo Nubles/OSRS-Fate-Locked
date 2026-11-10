@@ -270,8 +270,9 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     return (
         <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Strategy guide" tabIndex={-1} className="osrs-wa-overlay fixed inset-0 z-[150] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in zoom-in-95 duration-200">
             <div data-osrs-win="strategy" className="osrs-wa-win bg-[#121212] border border-gray-700 w-full max-w-5xl h-[85vh] rounded-xl flex flex-col shadow-2xl overflow-hidden">
-                <div className="osrs-wa-head bg-[#1a1a1a] p-4 border-b border-gray-700 flex justify-between items-center shrink-0">
-                    <div className="flex items-center gap-3">
+                {/* On a phone the three tabs take a line of their own under the title, so the close button stays on screen. */}
+                <div className="osrs-wa-head bg-[#1a1a1a] p-4 border-b border-gray-700 flex justify-between items-center shrink-0 max-sm:flex-wrap max-sm:gap-3">
+                    <div className="flex items-center gap-3 max-sm:flex-1 max-sm:min-w-0">
                         <div className="osrs-wa-hicon p-2 bg-emerald-900/30 rounded border border-emerald-500/30">
                             <Compass className="w-5 h-5 text-emerald-400" />
                         </div>
@@ -281,25 +282,25 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                         </div>
                     </div>
                     
-                    <div className="ost-tabs flex bg-black/40 rounded-lg p-1 border border-white/10">
+                    <div className="ost-tabs flex bg-black/40 rounded-lg p-1 border border-white/10 max-sm:order-last max-sm:w-full">
                         <button 
                             onClick={() => setActiveTab('PLAYABLE')}
                             data-osrs-on={activeTab === 'PLAYABLE' ? 'true' : undefined}
-                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'PLAYABLE' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all max-sm:flex-1 max-sm:px-1 ${activeTab === 'PLAYABLE' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             Available
                         </button>
                         <button 
                             onClick={() => setActiveTab('PLANNER')}
                             data-osrs-on={activeTab === 'PLANNER' ? 'true' : undefined}
-                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'PLANNER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all max-sm:flex-1 max-sm:px-1 ${activeTab === 'PLANNER' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             Locked
                         </button>
                         <button 
                             onClick={() => setActiveTab('PROPHECY')}
                             data-osrs-on={activeTab === 'PROPHECY' ? 'true' : undefined}
-                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${activeTab === 'PROPHECY' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`osrs-wa-btn px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-2 max-sm:flex-1 max-sm:justify-center max-sm:px-1 ${activeTab === 'PROPHECY' ? 'bg-purple-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             <Sparkles size={12} /> Closest
                         </button>
@@ -326,7 +327,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             </button>
                         )}
                     </div>
-                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 sm:flex-wrap">
                         <div className="flex items-center text-gray-500 mr-2 shrink-0">
                             <SlidersHorizontal size={14} />
                         </div>
