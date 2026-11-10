@@ -468,7 +468,7 @@ function ClassicAutoRollPanel() {
 
       {/* Username input — locked to the bound account once set */}
       <div className="flex items-center gap-2 max-w-md">
-        <div className={`flex items-center gap-2 flex-1 bg-black/40 border rounded-lg px-3 py-2 ${linkedAccount ? 'border-white/10' : 'border-white/15 focus-within:border-fuchsia-500/60'}`}>
+        <div className={`flex items-center gap-2 flex-1 min-w-0 bg-black/40 border rounded-lg px-3 py-2 ${linkedAccount ? 'border-white/10' : 'border-white/15 focus-within:border-fuchsia-500/60'}`}>
           {linkedAccount ? <Lock size={14} className="text-fuchsia-400 shrink-0" /> : <Search size={14} className="text-gray-500 shrink-0" />}
           <input
             value={linkedAccount ?? name}

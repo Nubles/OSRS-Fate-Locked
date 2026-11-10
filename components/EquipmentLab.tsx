@@ -77,9 +77,11 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex flex-wrap lg:flex-nowrap gap-2 lg:gap-0 justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
-        <div className="flex items-center gap-3">
+      {/* Header. One row while it fits with the title on two lines; when it
+          does not, the counter and Plan move to a second row. Before, on a
+          laptop, the counter broke onto two lines and touched the toggle. */}
+      <div className="flex flex-wrap gap-2 items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
+        <div className="flex items-center gap-3 grow basis-[min-content]">
           <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" suspendModals={suspendModals} /></h3>
           {/* Tiers / Gear mode toggle */}
           <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
@@ -96,10 +98,10 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto shrink-0">
           {mode === 'tiers' && (
             <>
-              <span className="text-xs text-gray-500 font-mono">{totalEquipTiers}/{maxPossible} Tiers</span>
+              <span className="text-xs text-gray-500 font-mono whitespace-nowrap">{totalEquipTiers}/{maxPossible} Tiers</span>
               <button
                 onClick={() => (planMode ? setPlanMode(false) : enterPlan())}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${
