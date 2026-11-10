@@ -31,6 +31,12 @@ html[data-ui="osrs"] .okf-cat img { width: 18px; height: 18px; object-fit: conta
 html[data-ui="osrs"] .okf-cat .count { font-family: 'RSSmall', sans-serif; color: #ffff00; }
 html[data-ui="osrs"] .okf-cats.wide .okf-cat { height: 32px; gap: 6px; }
 html[data-ui="osrs"] .okf-cats.wide .okf-cat img { width: 20px; height: 20px; }
+/* Beside the Progression panel in a window under 1024 px, four equal tabs are
+   82 to 94 px each and "Activities 4" needs 96, so its count was cut. There a
+   tab takes its label's width plus an equal share of what is left. */
+@media (min-width: 900px) and (max-width: 1023px) {
+  html[data-ui="osrs"] .okf-cats:not(.wide) .okf-cat { flex: 1 1 auto; gap: 3px; }
+}
 
 html[data-ui="osrs"] .okf-search { flex-shrink: 0; width: 100%; box-sizing: border-box; height: 26px; padding: 0 8px; border: 1px solid #000; background: var(--osrs-well, #1f1a14); color: #fff; font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: none; }
 html[data-ui="osrs"] .okf-search:focus { outline: 1px solid #ffff00; }
@@ -45,7 +51,11 @@ html[data-ui="osrs"] .okf-wtitle { margin: 2px 0; text-align: center; font: var(
 html[data-ui="osrs"] .okf-row { display: grid; grid-template-columns: minmax(0, 1fr) calc(54px * var(--osrs-ts, 1)) calc(64px * var(--osrs-ts, 1)); align-items: center; column-gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
 html[data-ui="osrs"] .okf-row .who { min-width: 0; }
 html[data-ui="osrs"] .okf-row .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The line under the name wraps when the row has no room for it on one line.
+   "Not ready: needs Weiss, Desert Treasure II" needs 216 px, and the row has
+   214 at 1366 px and 144 at 900 px, so it ended in "…" at every window size.
+   Balanced, so the second line is not one short word. */
+html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: normal; text-wrap: balance; }
 html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; line-height: 15px; font-variant-numeric: tabular-nums; }
 /* The bonus sits under the odds, so every row's % lines up on the right edge. */
 html[data-ui="osrs"] .okf-row .okf-bonus { font-family: 'RSSmall', sans-serif; line-height: 13px; }
