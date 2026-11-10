@@ -84,3 +84,17 @@ export const toRunDay = (timestamp: number, firstTimestamp: number): number => {
   const diffMs = cur.getTime() - firstDay.getTime();
   return Math.floor(diffMs / 86_400_000) + 1;
 };
+
+/** One bar of the timelapse's strip with the gap beside it, in px. */
+export const TIMELAPSE_BAR_PX = 3;
+
+/**
+ * Whether every entry of a run can have its own 2px bar and 1px gap in a
+ * strip this wide. A 1,392px strip (a 1440px screen) holds 464 entries and a
+ * phone's about 110, so a long run's bars ran off the right edge and took
+ * the marker for the current entry with them. When they do not fit, the
+ * strip packs them edge to edge instead. A strip that has not been measured
+ * yet (0) counts as fitting.
+ */
+export const timelapseBarsFit = (entries: number, stripWidth: number): boolean =>
+  stripWidth <= 0 || entries * TIMELAPSE_BAR_PX <= stripWidth;
