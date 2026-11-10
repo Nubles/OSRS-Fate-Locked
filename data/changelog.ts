@@ -38,16 +38,16 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-11-10-phone-and-first-screen-fixes',
-    title: 'Small fixes for phones and the first screen',
+    title: 'Fixes for phones, tablets and laptops',
     date: '2026-11-10',
     sections: {
       fixed: [
-        'On a phone, Achievements shows every reward line in full. The Wear title link no longer drops off the end of a long one.',
-        'On a phone, the collection log shows all five tabs. Other used to sit off the right edge.',
-        'On a phone, the collection log shows two or three items a row instead of four, so item names have room. At four a row most were cut short.',
-        'On a computer, a long collection log page no longer scrolls sideways as well as down.',
-        'The first screen waits a moment for your routes before it says what’s ready, so those counts no longer start too high and then drop.',
-        'Escape closes a skill’s odds box, including right after you open it.',
+        'On a phone, the Strategy Guide’s close button and Closest tab are back on screen, so you can close it again.',
+        'On a phone, nothing is cut off any more in the Quest Journal, the collection log, Achievements or the Run timelapse.',
+        'On a tablet, the OSRS layout no longer scrolls sideways, and the unlock lists in Activities & Utility show their names in full.',
+        'History’s search box is full width and all five filters show. On a laptop, a skill card’s Key chance is no longer cut off.',
+        'A long run’s timelapse strip no longer runs off the side of the screen.',
+        'The first screen waits a moment for your routes before it says what’s ready. Escape closes a skill’s odds box and the profile list.',
       ],
     },
   },
