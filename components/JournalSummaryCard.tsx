@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import { BookOpen, Map as MapIcon, Swords, Sparkles, Target, PartyPopper } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useGame } from '../context/GameContext';
-import { useAreaRoutes } from '../hooks/useAreaRoutes';
+import { useAreaRoutesState } from '../hooks/useAreaRoutes';
 import { QUEST_DATA, type QuestData } from '../data/questData';
 import { DIARY_DATA, type DiaryTier } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
@@ -273,24 +273,45 @@ export function useJournalSummaryModel() {
   // follow-up render lets an unlock's reveal draw first instead of waiting.
   const unlocks = useDeferredValue(liveUnlocks);
   // The map's transport data is large; a first visit's onboarding covers this card.
-  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
+  const { routes: areaRoutes, pending: routesPending } = useAreaRoutesState(unlocks, gameModeId, hasSeenOnboarding);
 
   const { stats, recommendation } = journalSummaryFor(unlocks, gameModeId, areaRoutes, advisorsEnabled);
-  return { stats, recommendation, advisorsEnabled };
+  // While the routes load, what is ready, what is doable and what to do next
+  // would count places no route reaches, then drop a moment later. Screens
+  // hold those (ROUTES_PENDING_LABEL) until the routes are in.
+  return { stats, recommendation, advisorsEnabled, routesPending };
 }
 
 export type JournalSummaryModel = ReturnType<typeof useJournalSummaryModel>;
 
+/** Stands in for a count that needs the routes, for the moment before they load. */
+export const ROUTES_PENDING_LABEL = 'Checking routes…';
+
 /** "6 quests and 1 miniquest ready to complete", or the empty state. */
-export const journalSummaryQuestSub = (stats: JournalSummaryModel['stats']): string =>
-  stats.quests.available > 0
+export const journalSummaryQuestSub = (stats: JournalSummaryModel['stats'], routesPending = false): string =>
+  routesPending ? ROUTES_PENDING_LABEL
+    : stats.quests.available > 0
     ? `${questsReadyLabel(stats.quests.available, stats.quests.miniquests)} ready to complete`
     : 'None available yet';
 
-export const journalSummaryDiarySub = (stats: JournalSummaryModel['stats']): string =>
-  stats.diaries.doable > 0
+export const journalSummaryDiarySub = (stats: JournalSummaryModel['stats'], routesPending = false): string =>
+  routesPending ? ROUTES_PENDING_LABEL
+    : stats.diaries.doable > 0
     ? `${stats.diaries.doable} task${stats.diaries.doable !== 1 ? 's' : ''} doable now`
     : 'No new tasks accessible yet';
+
+/**
+ * The recommendation a screen shows: the worked-out one, or a holding line
+ * while the routes load. "Everything's done" does not depend on routes, so
+ * it shows at once.
+ */
+export const shownRecommendation = (
+  recommendation: JournalSummaryModel['recommendation'], routesPending: boolean,
+): JournalSummaryModel['recommendation'] => (
+  routesPending && recommendation.tab !== null
+    ? { tab: recommendation.tab, headline: ROUTES_PENDING_LABEL, detail: 'Working out what you can reach' }
+    : recommendation
+);
 
 export const journalSummaryCASub = (stats: JournalSummaryModel['stats']): string =>
   stats.ca.nextTier
@@ -311,7 +332,8 @@ export const JournalSummaryCard: React.FC<Props> = (props) => (
 );
 
 const ClassicJournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
-  const { stats, recommendation, advisorsEnabled } = useJournalSummaryModel();
+  const { stats, recommendation: worked, advisorsEnabled, routesPending } = useJournalSummaryModel();
+  const recommendation = shownRecommendation(worked, routesPending);
 
   const rows: Array<{
     key: 'QUESTS' | 'DIARIES' | 'CA';
@@ -333,9 +355,9 @@ const ClassicJournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       barColor: 'bg-blue-500/50',
       badgeColor: 'bg-blue-900/40 text-blue-300 border-blue-500/30',
       headline: `${stats.quests.done}/${stats.quests.total} done`,
-      sub: journalSummaryQuestSub(stats),
+      sub: journalSummaryQuestSub(stats, routesPending),
       pct: Math.round((stats.quests.done / stats.quests.total) * 100),
-      badgeValue: stats.quests.available,
+      badgeValue: routesPending ? 0 : stats.quests.available,
     },
     {
       key: 'DIARIES',
@@ -345,9 +367,9 @@ const ClassicJournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
       barColor: 'bg-green-500/50',
       badgeColor: 'bg-green-900/40 text-green-300 border-green-500/30',
       headline: `${stats.diaries.done}/${stats.diaries.total} tasks done`,
-      sub: journalSummaryDiarySub(stats),
+      sub: journalSummaryDiarySub(stats, routesPending),
       pct: Math.round((stats.diaries.done / stats.diaries.total) * 100),
-      badgeValue: stats.diaries.doable,
+      badgeValue: routesPending ? 0 : stats.diaries.doable,
     },
     {
       key: 'CA',
@@ -386,6 +408,7 @@ const ClassicJournalSummaryCard: React.FC<Props> = ({ onNavClick }) => {
         <button
           onClick={() => recommendation.tab && onNavClick(recommendation.tab)}
           aria-label={`Recommended: ${recommendation.headline} — ${recommendation.detail}`}
+          aria-busy={routesPending || undefined}
           className="mb-3 w-full text-left rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-900/20 to-transparent px-3 py-2.5 flex items-center gap-2.5 hover:from-amber-900/35 hover:border-amber-400/50 transition-all group outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
         >
           <Target size={15} className="text-amber-400 shrink-0 group-hover:scale-110 transition-transform" aria-hidden />
