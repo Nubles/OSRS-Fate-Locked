@@ -191,7 +191,18 @@ html[data-ui="osrs"] .osrs-chat-fold { width: 34px; margin-left: auto; display: 
 html[data-ui="osrs"] .osrs-chat-fold + .osrs-ctab { margin-left: 4px !important; }
 html[data-ui="osrs"] .osrs-ctab:focus-visible { outline: 1px solid #ffff00; }
 html[data-ui="osrs"] .osrs-ctab[aria-selected="true"] { background: #6b5a42; box-shadow: inset 1px 1px 0 var(--osrs-slot-hi, #2a231a), inset -1px -1px 0 #8a7656; }
-html[data-ui="osrs"] .osrs-chat-note { align-self: center; margin-left: 14px; font: var(--osrs-fs) 'RSSmall', sans-serif; color: var(--osrs-tan); text-shadow: 1px 1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* The note beside the tabs shows only where the row has room for all of it.
+   It gets what the tabs and the two buttons leave. Its first item is an empty
+   one that holds the line, so a note wider than that room wraps onto a second
+   line, which is clipped. It used to end in "…": "Fate Timeline · 1,219
+   entries" was cut under 945 px (to "F…" just above 820 px) and the Clan
+   tab's longer note under 1022 px, both later at Medium and Large text. */
+html[data-ui="osrs"] .osrs-chat-note {
+  align-self: center; margin-left: 14px; min-width: 0; font: var(--osrs-fs) 'RSSmall', sans-serif; line-height: var(--osrs-lh);
+  color: var(--osrs-tan); text-shadow: 1px 1px 0 #000; white-space: nowrap;
+  display: flex; flex-wrap: wrap; align-content: flex-start; height: var(--osrs-lh); overflow: hidden;
+}
+html[data-ui="osrs"] .osrs-chat-note::before { content: ''; height: 100%; }
 
 /* ── Level-up message (fills the chatbox, like the game's) ──────────────── */
 html[data-ui="osrs"] .osrs-lvl { height: 100%; display: grid; grid-template-columns: 140px minmax(0, 1fr) 140px; align-items: center; }
@@ -230,14 +241,11 @@ html[data-ui="osrs"] .osrs-lvl-cont:focus-visible { outline: 1px solid #000; }
 /* The six chat tabs, the fold button and Timelapse need 788 px at their fixed
    widths. The layout starts at 720 px (OSRS_MIN_WIDTH), so on a window or an
    upright tablet narrower than that the row ran past the screen and the whole
-   page scrolled sideways. Here the tabs share the row instead. */
+   page scrolled sideways. Here the tabs share the row instead, and the note
+   beside them is left out, since the tabs take all of it. */
 @media (max-width: 819px) {
   html[data-ui="osrs"] .osrs-ctab { width: auto; flex: 1 1 0; min-width: 0; padding: 0 4px; }
   html[data-ui="osrs"] .osrs-chat-fold { flex: 0 0 34px; }
-}
-/* The note beside the tabs ("Fate Timeline · 1,219 entries") has room from
-   about 940 px. Just above 820 px it was 20 px wide and read "F…". */
-@media (max-width: 899px) {
   html[data-ui="osrs"] .osrs-chat-note { display: none; }
 }
 @media (max-width: 640px) {
