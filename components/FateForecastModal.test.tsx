@@ -58,12 +58,14 @@ describe('FateForecastModal keyboard access', () => {
       const dialog = screen.getByRole('dialog', { name: 'Fate Forecast' });
       expect(dialog.contains(document.activeElement)).toBe(true);
 
-      const buttons = Array.from(dialog.querySelectorAll<HTMLElement>('button'));
-      const last = buttons[buttons.length - 1];
+      // The detail pane scrolls and holds no controls of its own, so it is a Tab stop too: the last one.
+      const stops = Array.from(dialog.querySelectorAll<HTMLElement>('button, [tabindex="0"]'));
+      const last = stops[stops.length - 1];
+      expect(last).toBe(screen.getByRole('region', { name: 'Forecast detail' }));
       last.focus();
       fireEvent.keyDown(last, { key: 'Tab' });
-      expect(document.activeElement).toBe(buttons[0]);
-      fireEvent.keyDown(buttons[0], { key: 'Tab', shiftKey: true });
+      expect(document.activeElement).toBe(stops[0]);
+      fireEvent.keyDown(stops[0], { key: 'Tab', shiftKey: true });
       expect(document.activeElement).toBe(last);
 
       fireEvent.keyDown(window, { key: 'Escape' });

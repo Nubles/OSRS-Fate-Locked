@@ -12,6 +12,7 @@ import {
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
+import { BOSS_TIERS } from '../data/bossKeyTiers';
 import { BANKS } from '../data/banks';
 import { describeVanillaRandomAccessPolicy, formatVanillaBossSchedule } from '../components/ReferenceModal';
 import { skillLevelKeyChance } from '../utils/keyRoll';
@@ -287,6 +288,18 @@ describe('economy ↔ engine consistency', () => {
     expect(BOSSES_LIST).not.toContain(BRUTUS_BOSS_NAME);
     for (const boss of BOSSES_LIST) expect(vanillaBossKeySchedule(boss).length).toBeGreaterThan(0);
     expect(vanillaBossKeySchedule('The Mad Angel')).toEqual([30, 15]);
+  });
+
+  it('names every raid in the Raid row of the Rules', () => {
+    // The row once said "CoX, ToB and ToA" after a fourth raid had joined the tier.
+    const SHORT_NAMES: Record<string, string> = {
+      'Chambers of Xeric': 'CoX', 'Theatre of Blood': 'ToB', 'Tombs of Amascut': 'ToA',
+    };
+    const raids = Object.entries(BOSS_TIERS).filter(([, tier]) => tier === 'raid').map(([name]) => name);
+    const bonus = EARN_METHODS.flatMap(m => m.tiers).find(t => t.source === DropSource.RAID)?.bonus ?? '';
+    for (const raid of raids) expect(bonus, raid).toContain(SHORT_NAMES[raid] ?? raid);
+    const counts = ['', 'one', 'two', 'three', 'four', 'five', 'six'];
+    expect(bonus).toMatch(new RegExp(`^The ${counts[raids.length]} raids \\(`));
   });
 
   it('formats Codex policy directly from the shared Vanilla configuration', () => {

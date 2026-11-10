@@ -49,6 +49,26 @@ describe('content-sync report builder', () => {
     expect(markdown).toMatch(/new quest was released/);
   });
 
+  it('flags a quest point total that differs from the Wiki', () => {
+    const { actions, markdown } = buildReport({
+      ...base,
+      quests: { ...base.quests, appQuestPoints: 336 },
+      cas: { app: {}, wiki: {} },
+    });
+    expect(markdown).toMatch(/Quest points: Wiki \*\*335\*\*, app \*\*336\*\*\./);
+    expect(actions).toEqual([expect.stringMatching(/Quest points: wiki 335, app 336/)]);
+  });
+
+  it('reports matching quest point totals without an action', () => {
+    const { actions, markdown } = buildReport({
+      ...base,
+      quests: { ...base.quests, appQuestPoints: 335 },
+      cas: { app: {}, wiki: {} },
+    });
+    expect(markdown).toMatch(/Quest points: Wiki \*\*335\*\*, app \*\*335\*\*\./);
+    expect(actions).toEqual([]);
+  });
+
   it('names a quest the Wiki lists but the app lacks', () => {
     const { actions, markdown } = buildReport({
       ...base,

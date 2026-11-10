@@ -30,6 +30,12 @@ export interface ProfileWriterLeaseHandle {
   authorizeWrite: () => SaveWriteAuthorization;
   takeOver: () => Promise<boolean>;
   release: () => boolean;
+  /**
+   * How many times this tab has lost (or failed to get) the lease. Another tab
+   * may have saved during each one. Counted as it happens, so a loss still
+   * shows when React batches the `status` values around it into one render.
+   */
+  blockedEpisodes: { readonly current: number };
 }
 
 type LeaseState = {
@@ -91,7 +97,14 @@ export const useProfileWriterLease = (
   if (storageRef.current === null) storageRef.current = getStorage(options.storage);
   leaseStateRef.current = leaseState;
 
+  const blockedEpisodesRef = useRef(0);
+  // Not reset from rendered state like leaseStateRef, which can trail behind.
+  const liveStatusRef = useRef<SaveOwnershipStatus>('checking');
   const updateState = useCallback((nextState: LeaseState) => {
+    if (nextState.status === 'blocked' && liveStatusRef.current !== 'blocked') {
+      blockedEpisodesRef.current += 1;
+    }
+    liveStatusRef.current = nextState.status;
     leaseStateRef.current = nextState;
     if (mountedRef.current) setLeaseState(nextState);
   }, []);
@@ -244,5 +257,6 @@ export const useProfileWriterLease = (
     authorizeWrite,
     takeOver,
     release,
+    blockedEpisodes: blockedEpisodesRef,
   };
 };

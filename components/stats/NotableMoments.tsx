@@ -85,11 +85,13 @@ export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => 
         summary={availableFacts === 0 ? 'Nothing notable in this selection yet.' : `${availableFacts} of 6 highlights are ready for this selection.`}
         icon={<AnalyticsIcon art="moments" size={22} />}
       >
-        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {/* Each tile is its own one-term list, beside its picture: a term and its description
+            have to be the list's own children, so one list around all six tiles was not valid. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {facts.map(fact => (
             <div key={fact.label} className="osrs-wa-well flex gap-3 rounded-lg border border-white/[0.06] bg-black/20 p-3">
               <span aria-hidden="true" className={`osrs-wa-ico grid h-9 w-9 shrink-0 place-items-center rounded-lg ${fact.tint}`}>{fact.icon}</span>
-              <div className="min-w-0">
+              <dl className="min-w-0">
                 <dt className="osrs-wa-label text-[10px] font-bold uppercase tracking-wider text-gray-500">{fact.label}</dt>
                 {fact.value === null
                   ? <dd className="mt-1 text-sm italic text-gray-500">{fact.unavailable}</dd>
@@ -97,10 +99,10 @@ export const NotableMoments: React.FC<NotableMomentsProps> = ({ analytics }) => 
                       <span className="block truncate text-sm font-semibold text-gray-100">{fact.value}</span>
                       <span className="block text-[11px] text-gray-500">{fact.detail}</span>
                     </dd>}
-              </div>
+              </dl>
             </div>
           ))}
-        </dl>
+        </div>
       </AnalyticsChartCard>
     </section>
   );

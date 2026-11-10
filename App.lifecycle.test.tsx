@@ -704,6 +704,41 @@ describe('App changelog lifecycle', () => {
     })).toBeNull();
   }, 15_000);
 
+  it('opens the Rules from a direct link, as the Discord bot\'s /rules button uses', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    window.history.replaceState(null, '', '/?open=rules&foo=bar#player-help');
+    render(<App />);
+
+    const user = userEvent.setup();
+    const rules = await screen.findByRole('dialog', { name: 'Rules' }, { timeout: 10_000 });
+    expect(window.location.search).toBe('?foo=bar');
+    expect(window.location.hash).toBe('#player-help');
+    // The link asked for the Rules, so What's New waits behind them.
+    expect(screen.queryByRole('dialog', { name: "What's New" })).toBeNull();
+
+    await user.click(within(rules).getByRole('button', { name: 'Close the Rules' }));
+    expect(await screen.findByRole('dialog', { name: "What's New" }, { timeout: 10_000 })).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
+  }, 25_000);
+
+  it('shows a new visitor the Rules they followed a link to before the intro', async () => {
+    storage.setItem(profileBaseKey(PROFILE_ID), seedOnboardingRun(false));
+    window.history.replaceState(null, '', '/?open=rules');
+    const user = userEvent.setup();
+    render(<App />);
+
+    const rules = await screen.findByRole('dialog', { name: 'Rules' }, { timeout: 10_000 });
+    // The intro covers the whole page, so it waits until the Rules are closed.
+    expect(screen.queryByRole('button', { name: 'Next' })).toBeNull();
+    expect(window.location.search).toBe('');
+
+    await user.click(within(rules).getByRole('button', { name: 'Close the Rules' }));
+    expect(await screen.findByRole('button', { name: 'Next' }, { timeout: 10_000 })).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
+  }, 25_000);
+
   it('opens the RuneLite guide from the persistent settings menu', async () => {
     // A finished onboarding: the wizard is a modal with its own focus trap, so
     // while it is open, closing the guide rightly lands focus back inside it.

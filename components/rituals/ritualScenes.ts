@@ -206,7 +206,7 @@ const chaos: Scene = (k) => {
     end: fly + 950,
     title: getRitual('CHAOS').name,
     icon: () => spriteImg('chaos_key', 2),
-    text: 'You receive a Chaos Key: one random unlock from every table at once.',
+    text: 'You receive a Chaos Key: one random unlock from any table.',
   };
 };
 

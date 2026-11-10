@@ -4,6 +4,7 @@ import {
   listBackups,
   listCombinedBackups,
   pushBackup,
+  reclaimBackupSpace,
   summarizeSave,
 } from './backups';
 import { checksumSave } from './saveIntegrity';
@@ -261,5 +262,88 @@ describe('backup ring', () => {
     });
 
     expect(list).toEqual([]);
+  });
+});
+
+describe('the ring leaves the browser room for the save itself', () => {
+  const OTHER = 'FATE_PROFILE_other';
+  // A long run: each copy is about 1.6 million characters, as real saves reach.
+  const longRun = (keys: number) => save({ keys, pad: 'x'.repeat(1_600_000) });
+  const install = () => {
+    const store = new Map<string, string>();
+    (globalThis as any).localStorage = {
+      getItem: (key: string) => (store.has(key) ? store.get(key)! : null),
+      setItem: (key: string, value: string) => { store.set(key, value); },
+      removeItem: (key: string) => { store.delete(key); },
+      clear: () => store.clear(),
+      key: (index: number) => [...store.keys()][index] ?? null,
+      get length() { return store.size; },
+    };
+    return store;
+  };
+
+  it('keeps only the newest copy of a long run, where two used to fill the storage', () => {
+    pushBackup(KEY, longRun(1), 'yesterday', () => ({ ok: true }));
+    pushBackup(KEY, longRun(2), 'today', () => ({ ok: true }));
+    const list = listBackups(KEY);
+    expect(list.map(entry => entry.reason)).toEqual(['today']);
+    expect(localStorage.getItem(`${KEY}__backups`)!.length).toBeLessThan(2_500_000);
+  });
+
+  it('still keeps eight copies of an ordinary save', () => {
+    for (let i = 0; i < 9; i++) pushBackup(KEY, save({ keys: i, pad: 'x'.repeat(200_000) }), `r${i}`, () => ({ ok: true }));
+    expect(listBackups(KEY).length).toBe(8);
+  });
+
+  it('keeps the newest copy even when that copy alone is over the budget', () => {
+    const huge = save({ keys: 1, pad: 'x'.repeat(3_000_000) });
+    expect(pushBackup(KEY, huge, 'huge', () => ({ ok: true }))).toEqual({ stored: true });
+    expect(getBackupData(KEY, listBackups(KEY)[0].ts)).toBe(huge);
+  });
+
+  it('gives up this profile\'s copies oldest first, then says when nothing is left', () => {
+    install();
+    for (let i = 0; i < 3; i++) pushBackup(KEY, save({ keys: i }), `r${i}`, () => ({ ok: true }));
+
+    expect(reclaimBackupSpace(KEY)).toBe(true);
+    expect(listBackups(KEY).map(entry => entry.reason)).toEqual(['r2', 'r1']);
+    expect(reclaimBackupSpace(KEY)).toBe(true);
+    expect(listBackups(KEY).map(entry => entry.reason)).toEqual(['r2']);
+    expect(reclaimBackupSpace(KEY)).toBe(true);
+    expect(localStorage.getItem(`${KEY}__backups`)).toBeNull();
+    expect(reclaimBackupSpace(KEY)).toBe(false);
+  });
+
+  it('turns to the largest ring of another profile once its own is gone', () => {
+    const store = install();
+    pushBackup(OTHER, save({ keys: 1, pad: 'x'.repeat(5_000) }), 'other old', () => ({ ok: true }));
+    pushBackup(OTHER, save({ keys: 2, pad: 'x'.repeat(5_000) }), 'other new', () => ({ ok: true }));
+    pushBackup('FATE_PROFILE_small', save({ keys: 3 }), 'small', () => ({ ok: true }));
+    store.set('FATE_PROFILE_other', 'the other run itself');
+    store.set('fate_settings', 'not a ring');
+
+    expect(reclaimBackupSpace(KEY)).toBe(true);
+    expect(listBackups(OTHER).map(entry => entry.reason)).toEqual(['other new']);
+    expect(listBackups('FATE_PROFILE_small').length).toBe(1);
+    expect(store.get('FATE_PROFILE_other')).toBe('the other run itself');
+    expect(store.get('fate_settings')).toBe('not a ring');
+  });
+
+  it('removes a ring it cannot read rather than report space it did not free', () => {
+    const store = install();
+    store.set(`${KEY}__backups`, '{not json');
+    expect(reclaimBackupSpace(KEY)).toBe(true);
+    expect(store.has(`${KEY}__backups`)).toBe(false);
+  });
+
+  it('reports nothing to give up when the browser refuses storage access', () => {
+    (globalThis as any).localStorage = {
+      getItem: () => { throw new DOMException('blocked', 'SecurityError'); },
+      setItem: () => { throw new DOMException('blocked', 'SecurityError'); },
+      removeItem: () => { throw new DOMException('blocked', 'SecurityError'); },
+      key: () => { throw new DOMException('blocked', 'SecurityError'); },
+      get length(): number { throw new DOMException('blocked', 'SecurityError'); },
+    };
+    expect(reclaimBackupSpace(KEY)).toBe(false);
   });
 });

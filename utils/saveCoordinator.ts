@@ -21,6 +21,7 @@ import {
 import { createLifecycleMark, profileLifecycleMarkKey } from './lifecycleMark';
 
 const MAX_SAFE_REVISION = Number.MAX_SAFE_INTEGER;
+const MAX_RECLAIM_STEPS = 64;
 
 const nextRevision = (revision: number): number => (
   revision >= MAX_SAFE_REVISION ? revision : revision + 1
@@ -113,13 +114,16 @@ type StorageWriteResult = {
 
 /**
  * Write one exact string to storage and only report success after a byte-for-
- * byte readback. Quota recovery deliberately removes only the disposable
- * caches enumerated by storageRecovery.ts and retries this one write once.
+ * byte readback. Quota recovery removes the disposable caches enumerated by
+ * storageRecovery.ts and retries. If the storage is still full, `reclaim`
+ * (SaveCoordinatorOptions.reclaimStorage) gives up one step of less important
+ * data per retry until the write fits or nothing is left to give up.
  */
 const writeAndVerify = (
   storage: SaveStorage,
   key: string,
   data: string,
+  reclaim?: () => boolean,
 ): StorageWriteResult => {
   const attempt = (): boolean => {
     storage.setItem(key, data);
@@ -133,11 +137,22 @@ const writeAndVerify = (
       return { verified: false, quotaRetried: false };
     }
     removeDisposableCaches(storage as Pick<Storage, 'removeItem'>);
-    try {
-      return { verified: attempt(), quotaRetried: true };
-    } catch {
-      return { verified: false, quotaRetried: true };
+    // Bounded in case a reclaim step ever reports progress it did not make.
+    for (let step = 0; step <= MAX_RECLAIM_STEPS; step += 1) {
+      try {
+        return { verified: attempt(), quotaRetried: true };
+      } catch (retryError) {
+        if (!isQuotaExceededError(retryError)) break;
+        let reclaimed = false;
+        try {
+          reclaimed = reclaim?.() === true;
+        } catch {
+          reclaimed = false;
+        }
+        if (!reclaimed) break;
+      }
     }
+    return { verified: false, quotaRetried: true };
   }
 };
 
@@ -198,6 +213,12 @@ export interface SaveCoordinatorOptions {
   checksum: (data: string) => Promise<string>;
   now: () => number;
   initialPersistenceRevision: number;
+  /**
+   * Frees browser storage that matters less than the save, one step per call
+   * (utils/backups.ts reclaimBackupSpace). Called only when the save does not
+   * fit even without the disposable caches. False: nothing left to give up.
+   */
+  reclaimStorage?: () => boolean;
 }
 
 const initialRevision = (value: number): number => (
@@ -321,7 +342,7 @@ export const createSaveCoordinator = (
       };
     }
 
-    const primary = writeAndVerify(options.storage, options.storageKey, data);
+    const primary = writeAndVerify(options.storage, options.storageKey, data, options.reclaimStorage);
     if (!primary.verified) {
       return { primaryVerified: false, mirrorMetadataVerified: false };
     }
@@ -349,6 +370,7 @@ export const createSaveCoordinator = (
       options.storage,
       profileMirrorMetadataKey(options.storageKey),
       JSON.stringify(metadata),
+      options.reclaimStorage,
     );
     return {
       primaryVerified: true,
@@ -712,13 +734,16 @@ export const createSaveCoordinator = (
     }
     // Written first, so a primary that lands is always covered. Recovery
     // accepts a primary newer than the journal only with this mark (SAVE-1);
-    // if it can't be stored, the next load asks the player instead.
-    try {
-      options.storage.setItem(profileLifecycleMarkKey(options.storageKey), createLifecycleMark(data));
-    } catch {
-      // The save itself matters more than its mark.
-    }
-    const result = writeAndVerify(options.storage, options.storageKey, data);
+    // if it can't be stored, the next load asks the player instead. A full
+    // storage makes room here, so the save below never lands without it.
+    // The save itself matters more than its mark, so a failure is not fatal.
+    writeAndVerify(
+      options.storage,
+      profileLifecycleMarkKey(options.storageKey),
+      createLifecycleMark(data),
+      options.reclaimStorage,
+    );
+    const result = writeAndVerify(options.storage, options.storageKey, data, options.reclaimStorage);
     if (!result.verified) {
       setSnapshot({ primary: 'failed', recovery: 'degraded', savedAt: snapshot.savedAt });
       return false;

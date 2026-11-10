@@ -81,16 +81,36 @@ interface Fetched {
   updatedAt: string | null;
 }
 
+/**
+ * A hiscores lookup that failed, in words for the player. `nameNotFound` marks
+ * the one failure a changed OSRS name explains, so only it gets that hint.
+ */
+export class HiscoresLookupError extends Error {
+  readonly nameNotFound: boolean;
+
+  constructor(message: string, nameNotFound = false) {
+    super(message);
+    this.name = 'HiscoresLookupError';
+    this.nameNotFound = nameNotFound;
+  }
+}
+
 export async function fetchPlayer(name: string): Promise<Fetched> {
   const url = WOM_BASE + encodeURIComponent(name.trim());
   // POST refreshes an existing account as well as tracking a new one. Never
   // silently present a cached GET as a successful Refresh.
-  const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+  let res: Response;
+  try {
+    res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+  } catch {
+    // The browser's own text here is "Failed to fetch" or "Load failed".
+    throw new HiscoresLookupError("Couldn't reach the hiscores lookup (Wise Old Man). Check your connection, then try again.");
+  }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 429) throw new Error('Rate-limited by the API — wait a moment and retry.');
-    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new Error(`"${name}" isn't on the OSRS hiscores — check the spelling.`);
-    throw new Error(`Could not refresh Wise Old Man hiscores (${res.status}).`);
+    if (res.status === 429) throw new HiscoresLookupError('Rate-limited by the API — wait a moment and retry.');
+    if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new HiscoresLookupError(`"${name}" isn't on the OSRS hiscores — check the spelling.`, true);
+    throw new HiscoresLookupError(`Could not refresh Wise Old Man hiscores (${res.status}).`);
   }
 
   const snap = data?.latestSnapshot?.data?.skills;
@@ -137,6 +157,8 @@ export function useAutoRoll() {
   const refetchAfterRename = useRef(false);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
   const [error, setError] = useState('');
+  // Only a name the hiscores don't know is worth pointing at Change name.
+  const [errorNameNotFound, setErrorNameNotFound] = useState(false);
   const [fetched, setFetched] = useState<Fetched | null>(null);
   // Wise Old Man calls a group iron a regular account, so a group iron picks their title.
   const [groupTitle, setGroupTitle] = useState<GroupIronTitle | null>(null);
@@ -227,7 +249,7 @@ export function useAutoRoll() {
     // Once bound, only that account can be fetched for this run.
     const query = (linkedAccount ?? name).trim();
     if (!query) return;
-    setStatus('loading'); setError(''); setFetched(null); setRolledTo(0); setApplied(false);
+    setStatus('loading'); setError(''); setErrorNameNotFound(false); setFetched(null); setRolledTo(0); setApplied(false);
     setSkillRollingState(false); setSkillKeysGained(null); setBaselineTaken(false);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
@@ -246,6 +268,7 @@ export function useAutoRoll() {
       setStatus('loaded');
     } catch (e: any) {
       setError(e?.message ?? 'Failed to reach the hiscores API.');
+      setErrorNameNotFound(e instanceof HiscoresLookupError && e.nameNotFound);
       setStatus('error');
     }
   }, [name, linkedAccount, setLinkedAccount, recordSyncBaseline, recordSyncScores, syncBaseline, setSkillRollingState]);
@@ -360,7 +383,7 @@ export function useAutoRoll() {
   const totalGain = gains.reduce((a, s) => a + s.count, 0);
 
   return {
-    linkedAccount: linkedAccount as string | null | undefined, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    linkedAccount: linkedAccount as string | null | undefined, name, setName, status, error, errorNameNotFound, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
     plans, holds, baselineTaken, activity, activityRolls,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
@@ -419,7 +442,7 @@ export function AutoRollPanel() {
 
 function ClassicAutoRollPanel() {
   const {
-    linkedAccount, name, setName, status, error, fetched, groupTitle, chooseGroupTitle, title,
+    linkedAccount, name, setName, status, error, errorNameNotFound, fetched, groupTitle, chooseGroupTitle, title,
     rolledTo, applied, skillRolling, skillKeysGained, currentLevels, isUnlocked, gains, onFetch, autoRoll, totalGain,
     plans, holds, baselineTaken, activity, activityRolls,
     renameOpen, newName, setNewName, renameError, renamedTo, onRename, openRename, cancelRename,
@@ -533,7 +556,7 @@ function ClassicAutoRollPanel() {
           <AlertTriangle size={15} className="shrink-0 mt-0.5" />
           <span>
             {error}
-            {linkedAccount && !renameOpen && ' If you changed your OSRS name, use "Change name" above.'}
+            {linkedAccount && !renameOpen && errorNameNotFound && ' If you changed your OSRS name, use "Change name" above.'}
           </span>
         </div>
       )}

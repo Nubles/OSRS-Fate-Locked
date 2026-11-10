@@ -21,6 +21,8 @@ vi.mock('recharts', () => {
   );
   const Container = ({ children }: React.PropsWithChildren) => <div>{children}</div>;
   const Primitive = ({ children }: React.PropsWithChildren) => <>{children}</>;
+  // Recharts copies a Cell's ARIA attributes onto the sector it draws.
+  const Cell = (props: Record<string, unknown>) => <span data-cell-label={props['aria-label'] as string | undefined} />;
   // Recharts renders raw SVG elements and its own components, and silently drops anything else.
   const known = new Set<unknown>([Series, Primitive]);
   const Chart = ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
@@ -69,7 +71,7 @@ vi.mock('recharts', () => {
     Scatter: Series,
     Pie: Series,
     Bar: Series,
-    Cell: Primitive,
+    Cell,
     CartesianGrid: Primitive,
     XAxis: Primitive,
     YAxis: Primitive,
@@ -409,6 +411,19 @@ describe('complete analytics dashboard', () => {
     expect(secondary.querySelector('[aria-label="Verified Standard Key and separate Omni-Key acquisition chart"] pattern#reward-normal')).not.toBeNull();
   });
 
+  it('names every donut sector with its legend line, since Recharts draws each one as an image', async () => {
+    const primary = await mount(<PrimaryAnalyticsCharts analytics={analyticsFor(history)} />);
+    const labels = [...primary.querySelectorAll('[aria-label="Outcome composition donut chart"] [data-cell-label]')]
+      .map(cell => cell.getAttribute('data-cell-label'));
+    expect(labels.length).toBeGreaterThan(1);
+    for (const label of labels) expect(label).toMatch(/^[^:]+: [\d,]+ \([\d.]+%\)$/);
+    const legend = [...primary.querySelectorAll('[aria-label="Outcome pattern legend"] li')].map(row => row.textContent ?? '');
+    for (const label of labels) {
+      const name = label!.split(': ')[0];
+      expect(legend.some(row => row.startsWith(name))).toBe(true);
+    }
+  });
+
   it('provides unit-explicit calibration and reward tooltip copy', async () => {
     const calibration = await mount(<CalibrationTooltip active payload={[{ payload: {
       range: '20–30%', attempts: 4, meanPredictedRate: 25, actualRate: 50,
@@ -584,8 +599,15 @@ describe('OSRS artwork', () => {
       'Roll spread': 'Mystery_box.png',
       'Odds check': 'Law_rune.png',
     });
-    const facts = [...host.querySelectorAll('section[aria-label="Notable analytics"] dl > div')]
-      .map(fact => wikiFile(fact.querySelector('img')));
+    const tiles = [...host.querySelectorAll('section[aria-label="Notable analytics"] .osrs-wa-well')];
+    // Each tile is a valid one-term list: the term and its description are the list's own children.
+    for (const tile of tiles) {
+      const lists = tile.querySelectorAll('dl');
+      expect(lists).toHaveLength(1);
+      expect([...lists[0].children].map(child => child.tagName)).toEqual(['DT', 'DD']);
+    }
+    expect(host.querySelectorAll('section[aria-label="Notable analytics"] :is(dt, dd)')).toHaveLength(tiles.length * 2);
+    const facts = tiles.map(fact => wikiFile(fact.querySelector('img')));
     expect(facts).toEqual([
       'Lucky_impling_jar.png', 'Slayer_icon.png', 'Fire_rune.png', 'Waterskin(0).png',
       'Trailblazer_dragon_trophy.png', 'Watch.png',

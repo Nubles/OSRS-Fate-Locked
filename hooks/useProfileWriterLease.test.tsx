@@ -65,6 +65,39 @@ describe('useProfileWriterLease', () => {
     expect(lease.result.current.blockedReason).toBeNull();
   });
 
+  it('counts each time the lease is lost, and not the waiting in between', async () => {
+    const foreignLease = () => values.set(writerLeaseKey('profile'), JSON.stringify({
+      version: 1,
+      ownerId: 'tab-a',
+      expiresAt: nowRef.current + WRITER_LEASE_TTL_MS,
+    }));
+    foreignLease();
+    const lease = renderHook(() => useProfileWriterLease('profile', {
+      storage,
+      ownerId: 'tab-b',
+      now: () => nowRef.current,
+    }));
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS));
+    expect(lease.result.current.status).toBe('blocked');
+    expect(lease.result.current.blockedEpisodes.current).toBe(1);
+
+    // Still blocked on every recheck: the same wait, not a new loss.
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_RENEW_MS * 2));
+    expect(lease.result.current.blockedEpisodes.current).toBe(1);
+
+    nowRef.current += WRITER_LEASE_TTL_MS + 1;
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_RENEW_MS));
+    await act(async () => vi.advanceTimersByTimeAsync(WRITER_LEASE_ARBITRATION_MS));
+    expect(lease.result.current.status).toBe('owner');
+    expect(lease.result.current.blockedEpisodes.current).toBe(1);
+
+    // Another tab takes the profile: a second loss.
+    foreignLease();
+    act(() => { window.dispatchEvent(new StorageEvent('storage', { key: writerLeaseKey('profile') })); });
+    expect(lease.result.current.status).toBe('blocked');
+    expect(lease.result.current.blockedEpisodes.current).toBe(2);
+  });
+
   it('distinguishes unavailable storage from a foreign owner', async () => {
     const unavailableStorage = {
       getItem: () => { throw new DOMException('blocked', 'SecurityError'); },

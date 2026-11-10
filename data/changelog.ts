@@ -37,15 +37,30 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-11-09-run-film-controls',
+    id: '2026-11-10-run-film-controls',
     title: 'More control over your Run Film',
-    date: '2026-11-09',
+    date: '2026-11-10',
     sections: {
       added: [
         'Pick a speed for your film, from ¼× for a slow, detailed replay up to 4× for a quick one.',
         'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
         'Your skills tab can show your levels and total level, your tiers, or both.',
         'Write your own title, make it in 1080p, and drag the preview to see any moment before you make it.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-09-safer-saves',
+    title: 'Safer saves for long runs, and a round of fixes',
+    date: '2026-11-09',
+    sections: {
+      fixed: [
+        'Long runs save safely. A run with a very long history could reload onto an older copy of itself. You now always get your newest progress.',
+        'If a reload recently set your run back, open Sync Code, then Backups: a checkpoint from before it may still be there to restore.',
+        'A tab left open through an update no longer ignores Key clicks. If the Yes / No box can’t load, your browser’s own box asks instead.',
+        'Importing a save no longer celebrates quests and areas you finished long ago, and save files over about 3.3 MB import again.',
+        'Quest Points now total 346 like the game. Skill lists catch up with Sailing and The Blood Moon Rises: new fish, coral, ship cannons, Venators and more.',
+        'Sync & Roll says when the hiscores can’t be reached, and Rules wording is corrected. The keyboard can now scroll the Rules, History and Forecast.',
       ],
     },
   },
@@ -69,7 +84,7 @@ export const CHANGELOG_RELEASES = [
     sections: {
       added: [
         'Mudfoot’s Big Adventure (Novice, 1 quest point) starts with Captain Harlan outside the Lumbridge General Store.',
-        'The Writing’s on the Wall (Intermediate, 2 quest points) starts with Betty at Land’s End and needs 22 Agility and 20 Thieving.',
+        'The Writing’s on the Wall (Intermediate, 1 quest point) starts with Betty at Land’s End and needs 22 Agility and 20 Thieving.',
       ],
       changed: [
         'Daddy’s Home is now a quest worth 1 quest point, as in the game, so it counts toward the Quest Cape.',

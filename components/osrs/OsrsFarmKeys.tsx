@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import './osrs-farm.css';
 import { DropSource, TableType, type LogEntry } from '../../types';
 import { DROP_RATES, BOSSES_LIST } from '../../constants';
@@ -218,6 +218,7 @@ const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
 /** Wide: the NPC card (FarmKeys-NPCs board). */
 const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, reserveExtra = false }) => {
   const { isRolling, trigger } = useRollSuspense(card.onRoll);
+  const nameId = useId();
   const gem = gemFor(card.rate);
   const live = !card.disabled;
   const glow = live && !card.untiered;
@@ -253,14 +254,14 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
         )}
       </div>
       <div className="okf-card-foot">
-        <span className="name">{card.name}</span>
+        <span className="name" id={nameId}>{card.name}</span>
         <span className="small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>{card.sub}</span>
         <span className="small" style={{ color: card.blocked ? BLOCKED_COLOR : card.notReady ? '#ffff00' : card.status.color }} title={card.blocked}>{card.blocked ?? card.notReady ?? card.status.text}</span>
         {card.extra ? <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>
           : reserveExtra && <span className="small" aria-hidden="true">&nbsp;</span>}
         <span className="small" style={{ color: '#ffffff' }}>{card.stats}</span>
         {card.picker && <BossTaskPicker picker={card.picker} />}
-        <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>
+        <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} aria-describedby={nameId} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>
           {isRolling ? 'Rolling...' : card.btn}
         </button>
       </div>
@@ -279,16 +280,18 @@ const RowThumb: React.FC<{ thumb: Thumb; dim?: boolean }> = ({ thumb, dim }) => 
 /** Compact: one list row (Main board), with the source's picture. */
 const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
   const { isRolling, trigger } = useRollSuspense(card.onRoll);
+  // Every row's button reads "Roll"; this tells a screen reader which one.
+  const nameId = useId();
   return (
     <div className="okf-row has-thumb" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc">
       <RowThumb thumb={card.thumb} dim={card.disabled} />
       <div className="who">
-        <div className="name">{card.name}</div>
+        <div className="name" id={nameId}>{card.name}</div>
         <div className="where" style={card.blocked ? { color: BLOCKED_COLOR } : card.notReady ? { color: '#ffff00' } : undefined} title={card.blocked}>{card.blocked ?? card.notReady ?? card.extra?.text ?? card.sub}</div>
         {card.picker && <BossTaskPicker picker={card.picker} />}
       </div>
       <span className="rate">{card.disabled && card.stash ? 'Spent' : card.blocked ? '—' : card.rateLabel ?? `${card.rate}%`}{card.blocked || card.rateLabel ? null : <BonusTag bonus={card.bonus} />}</span>
-      <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
+      <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} aria-describedby={nameId} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>{isRolling ? '...' : card.btn}</button>
     </div>
   );
 };
@@ -296,16 +299,17 @@ const SourceRow: React.FC<{ card: CardModel }> = ({ card }) => {
 /** A row of the long all-boss list outside Vanilla and Chunked (both sizes). */
 const BossRow: React.FC<{ name: string; rate: number; bonus: number; tierLabel: string; onRoll: (p: RollPoint) => void }> = ({ name, rate, bonus, tierLabel, onRoll }) => {
   const { isRolling, trigger } = useRollSuspense(onRoll);
+  const nameId = useId();
   const head = npcHead(name);
   return (
     <div className="okf-row has-thumb" data-examine={`${tierLabel}-tier boss. ${rate}% chance of a Key per kill.`} data-examine-name={name} data-examine-kind="npc">
       <RowThumb thumb={head ? { src: head } : { wikiName: name }} />
       <div className="who">
-        <div className="name">{name}</div>
+        <div className="name" id={nameId}>{name}</div>
         <div className="where">{tierLabel}-tier boss</div>
       </div>
       <span className="rate">{rate}%<BonusTag bonus={bonus} /></span>
-      <button type="button" className="osrs-btn" disabled={isRolling} onClick={trigger}>{isRolling ? '...' : 'Roll'}</button>
+      <button type="button" className="osrs-btn" aria-describedby={nameId} disabled={isRolling} onClick={trigger}>{isRolling ? '...' : 'Roll'}</button>
     </div>
   );
 };

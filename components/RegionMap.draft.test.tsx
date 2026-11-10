@@ -87,3 +87,37 @@ describe('World map with a stored authoring draft', () => {
     expect(toggle.textContent).toContain('Authoring ON');
   });
 });
+
+describe('World map controls', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+    localStorage.clear();
+  });
+  afterEach(() => {
+    cleanup();
+    localStorage.clear();
+    vi.unstubAllGlobals();
+  });
+
+  it('gives every button on the map a name a screen reader can read', async () => {
+    let view!: ReturnType<typeof render>;
+    await act(async () => { view = render(<RegionMap />); });
+
+    // The two zoom buttons are icons only: they had no name at all.
+    expect(view.getByRole('button', { name: 'Zoom in' }).getAttribute('title')).toBe('Zoom in');
+    expect(view.getByRole('button', { name: 'Zoom out' }).getAttribute('title')).toBe('Zoom out');
+    const unnamed = Array.from(view.container.querySelectorAll('button'))
+      .filter(button => !(button.getAttribute('aria-label') || button.getAttribute('title') || button.textContent?.trim()));
+    expect(unnamed).toEqual([]);
+  });
+
+  it('says whether the chunk grid is on', async () => {
+    let view!: ReturnType<typeof render>;
+    await act(async () => { view = render(<RegionMap />); });
+    const grid = view.getByTitle('Toggle chunk grid (64-tile)');
+    const before = grid.getAttribute('aria-pressed');
+    expect(['true', 'false']).toContain(before);
+    await act(async () => { fireEvent.click(grid); });
+    expect(grid.getAttribute('aria-pressed')).toBe(before === 'true' ? 'false' : 'true');
+  });
+});

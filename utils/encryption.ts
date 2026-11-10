@@ -45,8 +45,32 @@ const looksLikePlainJson = (value: string): boolean => {
     || value === 'null';
 };
 
-const isStrictBase64 = (value: string): boolean =>
-  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value);
+const BASE64_ALPHABET = new Uint8Array(128);
+for (const symbol of 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/') {
+  BASE64_ALPHABET[symbol.charCodeAt(0)] = 1;
+}
+const BASE64_PADDING = '='.charCodeAt(0);
+
+/**
+ * Padded Base64 and nothing else: groups of four alphabet characters, the last
+ * of which may end in one or two `=`. Checked character by character because a
+ * regular expression over a string this long (a long run's save is several
+ * million characters) overflows the browser's stack, which made every save
+ * file above about 3.3 MB impossible to import.
+ */
+const isStrictBase64 = (value: string): boolean => {
+  const length = value.length;
+  if (length % 4 !== 0) return false;
+  let end = length;
+  if (length > 0 && value.charCodeAt(length - 1) === BASE64_PADDING) {
+    end -= value.charCodeAt(length - 2) === BASE64_PADDING ? 2 : 1;
+  }
+  for (let index = 0; index < end; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code >= 128 || BASE64_ALPHABET[code] !== 1) return false;
+  }
+  return true;
+};
 
 /**
  * Obfuscates a game state object into a "Fate Locked" string format.

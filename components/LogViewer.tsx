@@ -18,6 +18,13 @@ const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => 
 type FilterType = 'ALL' | 'ROLLS' | 'UNLOCKS' | 'RITUALS' | 'PROGRESS';
 type SortOrder = 'ASC' | 'DESC';
 
+// The virtual list's own scroller. Its rows hold no controls, so the scroller takes keyboard
+// focus: the arrow keys, Page Up / Down and Space then scroll the log in every browser.
+const LogListOuter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>((props, ref) => (
+  <div ref={ref} tabIndex={0} role="region" aria-label="History entries" {...props} />
+));
+LogListOuter.displayName = 'LogListOuter';
+
 // --- Helper: Get Style Config based on Log Type ---
 const getLogStyle = (entry: LogEntry) => {
   switch (entry.type) {
@@ -339,6 +346,7 @@ const ClassicLogViewer: React.FC = () => {
                 itemSize={64} 
                 width={width}
                 className="custom-scrollbar"
+                outerElementType={LogListOuter}
                 itemData={{ entries: filteredHistory }}
               >
                 {LogRow}
