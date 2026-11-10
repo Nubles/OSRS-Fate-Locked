@@ -65,6 +65,8 @@ const GEMS: readonly { name: string; file: string; color: string; max: number }[
   { name: 'Zenyte', file: 'zenyte', color: '#f5a623', max: 100 },
 ];
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+/** A source's tally line before its first roll. */
+const NOTHING_ROLLED = '0 rolled';
 const gemFor = (rate: number) => {
   const i = GEMS.findIndex((g) => rate <= g.max);
   const idx = i < 0 ? GEMS.length - 1 : i;
@@ -227,6 +229,9 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
     : 'linear-gradient(#24201a, #171410)';
   const filter = live ? undefined : 'grayscale(.9) brightness(.45)';
   const art = card.art;
+  const statusText = card.blocked ?? card.notReady ?? card.status.text;
+  const statusColor = card.blocked ? BLOCKED_COLOR : card.notReady ? '#ffff00' : card.status.color;
+  const spareLine = Boolean(card.blocked) && card.stats === NOTHING_ROLLED;
   return (
     <div className="okf-card" title={card.title} data-examine={card.examine} data-examine-name={card.name} data-examine-kind="npc"
       style={{ boxShadow: glow ? `inset 0 0 0 2px ${gem.color}` : 'inset 0 0 0 2px var(--osrs-inner-ring, #4f4434)' }}>
@@ -234,7 +239,7 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
         {card.untiered
           ? <span className="tier" style={{ color: 'var(--osrs-tan, #c8b897)' }}>Boss Task</span>
           : <><img className="osrs-px" src={gem.src} alt="" aria-hidden="true" />
-            <span className="tier" style={{ color: gem.color }}>{gem.label}</span></>}
+            <span className="tier" style={{ color: gem.color }}><span className="okf-tier-word">Tier </span>{ROMAN[gem.idx]}</span></>}
         <span className="rate">{card.rateLabel ?? `${card.rate}%`}{card.rateLabel ? null : <BonusTag bonus={card.bonus} />}</span>
       </div>
       <div className="okf-stage" style={{ background: stageBg }}>
@@ -256,10 +261,22 @@ const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, 
       <div className="okf-card-foot">
         <span className="name" id={nameId}>{card.name}</span>
         <span className="small" style={{ color: 'var(--osrs-tan, #c8b897)' }}>{card.sub}</span>
-        <span className="small" style={{ color: card.blocked ? BLOCKED_COLOR : card.notReady ? '#ffff00' : card.status.color }} title={card.blocked}>{card.blocked ?? card.notReady ?? card.status.text}</span>
+        {/* A blocked card that has never rolled has nothing to say in its
+            tally line. On a narrow card (osrs-farm.css) the status takes that
+            line too, so "Needs the Tree Gnome Stronghold area" reads in full
+            on two lines instead of ending in "…". The hidden two-line spacer
+            holds the slot at two lines, so the pictures in a row stay level. */}
+        {spareLine ? (
+          <span className="small okf-two" style={{ color: statusColor }} title={card.blocked}>
+            <span>{statusText}</span>
+            <span aria-hidden="true">x<br />x</span>
+          </span>
+        ) : (
+          <span className="small" style={{ color: statusColor }} title={card.blocked}>{statusText}</span>
+        )}
         {card.extra ? <span className="small" style={{ color: card.extra.color }}>{card.extra.text}</span>
           : reserveExtra && <span className="small" aria-hidden="true">&nbsp;</span>}
-        <span className="small" style={{ color: '#ffffff' }}>{card.stats}</span>
+        <span className={spareLine ? 'small okf-zero' : 'small'} style={{ color: '#ffffff' }}>{card.stats}</span>
         {card.picker && <BossTaskPicker picker={card.picker} />}
         <button type="button" className={`osrs-btn${card.notReady ? ' is-muted' : ''}`} aria-describedby={nameId} disabled={card.disabled || isRolling || (card.picker && !card.picker.value)} onClick={trigger}>
           {isRolling ? 'Rolling...' : card.btn}
@@ -630,7 +647,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
     return bySource;
   }, [history]);
   const tallyText = (t: { rolled: number; keys: number } | undefined) =>
-    t && t.rolled ? `${t.rolled} rolled · ${t.keys} Key${t.keys === 1 ? '' : 's'}` : '0 rolled';
+    t && t.rolled ? `${t.rolled} rolled · ${t.keys} Key${t.keys === 1 ? '' : 's'}` : NOTHING_ROLLED;
 
   const ready = { text: 'Ready to roll', color: '#0dc10d' };
 
@@ -655,7 +672,10 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       art: isBossTask ? { kind: 'item', src: BOSS_TASK_IMG } : body ? { kind: 'body', src: body } : { kind: 'wiki', src: m.image },
       thumb: isBossTask ? { src: BOSS_TASK_IMG, item: true } : { src: head ?? m.image },
       status: task && !task.pick ? { text: 'Pick the boss, then roll', color: '#ffff00' } : ready,
-      stats: shared ? `Shares ${sharer!.name}’s odds` : tallyText(tally.get(m.source)),
+      // A straight apostrophe: the RuneScape fonts have no curly one, and the
+      // typeface that stood in for it made this line 6 px taller, which lifted
+      // Spria's picture above her neighbours'.
+      stats: shared ? `Shares ${sharer!.name}'s odds` : tallyText(tally.get(m.source)),
       blocked,
       disabled: Boolean(blocked),
       rateLabel: blocked || (task && !task.pick) ? '—' : undefined,
@@ -939,7 +959,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         {subTab === 'BOSSING' && !reserves ? (
           <div className="osrs-inner okf-tiers">{tierGroups}</div>
         ) : (
-          <div className="okf-grid" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          <div className="okf-grid" style={{ '--okf-cols': cols } as React.CSSProperties}>
             {/* One card with an extra line keeps a blank one on the rest, so
                 every picture in the grid sits at the same height. */}
             {cards.map((c) => <NpcCard key={c.id} card={c} reserveExtra={cards.some((o) => o.extra)} />)}
