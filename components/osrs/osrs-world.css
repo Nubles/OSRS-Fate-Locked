@@ -103,11 +103,9 @@ html[data-ui="osrs"] .oact-root {
 @media (max-width: 1180px) { html[data-ui="osrs"] .oact-root { grid-template-columns: 230px minmax(0, 1fr) 330px; } }
 /* Under 900 px the page is one column (osrs-shell.css) and the name list is
    what these two panels leave: 110 px of a 720 px window. A little off each
-   gives the names room for one readable column. The board has no fixed height
-   there, so it is capped: a long table scrolls inside its list, as it does on
-   a computer, instead of pushing the buttons under the picture far down the page. */
+   gives the names room for one readable column. */
 @media (max-width: 899px) {
-  html[data-ui="osrs"] .oact-root { grid-template-columns: 220px minmax(0, 1fr) 300px; grid-template-rows: minmax(0, 1fr); max-height: 720px; }
+  html[data-ui="osrs"] .oact-root { grid-template-columns: 220px minmax(0, 1fr) 300px; }
 }
 html[data-ui="osrs"] .oact-h { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
 html[data-ui="osrs"] .oact-small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 15px; }
@@ -139,6 +137,12 @@ html[data-ui="osrs"] .oact-list-head h3 { margin: 0; font: var(--osrs-fs, 16px) 
 html[data-ui="osrs"] .oact-list-head > span { white-space: nowrap; }
 html[data-ui="osrs"] .oact-legend { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 12px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
 html[data-ui="osrs"] .oact-names { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; align-content: start; column-gap: 6px; padding: 6px 6px 0; overflow-y: auto; }
+/* Under 900 px the board has no fixed height: it is as tall as the screen
+   leaves. A zero basis keeps the names out of that sum, so the list takes the
+   board's height and scrolls inside it, as it does on a computer. Sized by its
+   names, one column of a long table made the board a different height for
+   each table and pushed the buttons under the picture far down the page. */
+@media (max-width: 899px) { html[data-ui="osrs"] .oact-names { flex-basis: 0px; } }
 html[data-ui="osrs"] .oact-name-row {
   all: unset; box-sizing: border-box; cursor: pointer; display: block; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: 1px 1px 0 #000;
