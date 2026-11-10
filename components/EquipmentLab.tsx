@@ -204,9 +204,9 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
                     ))}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => setTarget(slot, tgt - 1)} disabled={tgt <= cur} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Minus size={10} /></button>
+                    <button onClick={() => setTarget(slot, tgt - 1)} disabled={tgt <= cur} aria-label={`Lower ${slot} target`} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Minus size={10} /></button>
                     <span className="text-[10px] font-mono font-bold w-6 text-center text-cyan-200">T{tgt}</span>
-                    <button onClick={() => setTarget(slot, tgt + 1)} disabled={tgt >= EQUIPMENT_TIER_MAX} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Plus size={10} /></button>
+                    <button onClick={() => setTarget(slot, tgt + 1)} disabled={tgt >= EQUIPMENT_TIER_MAX} aria-label={`Raise ${slot} target`} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Plus size={10} /></button>
                   </div>
                 </div>
               );
