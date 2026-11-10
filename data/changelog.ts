@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-10-phone-and-first-screen-fixes',
+    title: 'Small fixes for phones and the first screen',
+    date: '2026-11-10',
+    sections: {
+      fixed: [
+        'On a phone, Achievements shows every reward line in full. The Wear title link no longer drops off the end of a long one.',
+        'On a phone, the collection log shows all five tabs. Other used to sit off the right edge.',
+        'On a phone, the collection log shows two or three items a row instead of four, so item names have room. At four a row most were cut short.',
+        'On a computer, a long collection log page no longer scrolls sideways as well as down.',
+        'The first screen waits a moment for your routes before it says what’s ready, so those counts no longer start too high and then drop.',
+        'Escape closes a skill’s odds box, including right after you open it.',
+      ],
+    },
+  },
+  {
     id: '2026-11-09-safer-saves',
     title: 'Safer saves for long runs, and a round of fixes',
     date: '2026-11-09',
