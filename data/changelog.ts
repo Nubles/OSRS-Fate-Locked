@@ -46,7 +46,7 @@ export const CHANGELOG_RELEASES = [
         'On a phone, quest and diary names, the collection log’s tabs and items, Achievements and the Run timelapse’s buttons now fit the screen.',
         'In the OSRS layout on a tablet or in a small window, the page no longer scrolls sideways and every skill shows its tier mark.',
         'On a tablet, most unlock names in Activities & Utility show in full. Slayer master cards and Farm Keys status lines are no longer cut off.',
-        'History’s search box is full width and all five filters show. A skill card’s Key chance is no longer cut off, and a long timelapse strip stays on screen.',
+        'History’s search box is full width and all five filters show. A skill card’s Key chance is no longer cut off, and its Omni-Key button no longer covers the name.',
         'The first screen waits a moment for your routes before it says what’s ready. Escape closes a skill’s odds box and the profile list.',
       ],
     },
