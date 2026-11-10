@@ -109,12 +109,14 @@ export const JournalFilterBar: React.FC<JournalFilterBarProps> = ({
 
   return (
     <div className="p-3 border-b border-white/10 bg-[#1a1a1a] shrink-0 space-y-2">
-      {/* Top row: title + progress + extras */}
-      <div className="flex items-center gap-3">
-        <h2 className={`text-sm font-bold flex items-center gap-2 ${accent.split(' ').find((c) => c.startsWith('text-')) || ''}`}>
+      {/* Top row: title + progress + extras. Where the column is too narrow
+          for all of it (a phone), the extras move to a line of their own
+          instead of running off the edge. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <h2 className={`text-sm font-bold flex items-center gap-2 whitespace-nowrap ${accent.split(' ').find((c) => c.startsWith('text-')) || ''}`}>
           {icon} {title}
         </h2>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-[2rem]">
           <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${pct === 100 ? 'bg-green-500' : pct > 75 ? 'bg-green-600' : pct > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
@@ -125,7 +127,7 @@ export const JournalFilterBar: React.FC<JournalFilterBarProps> = ({
         <span className="text-[10px] text-gray-500 font-mono shrink-0">
           {completed}/{total} <span className="opacity-70">({pct}%)</span>
         </span>
-        {rightExtras}
+        {rightExtras && <div className="ml-auto flex min-w-0 max-w-full">{rightExtras}</div>}
       </div>
 
       {/* Search */}
@@ -143,12 +145,12 @@ export const JournalFilterBar: React.FC<JournalFilterBarProps> = ({
       {/* One tidy row: status as a segmented control, region + tier as compact
           dropdowns (long pill rows were the messy part). */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex bg-black/40 rounded-lg p-0.5 gap-0.5 shrink-0">
+        <div className="flex flex-wrap max-w-full bg-black/40 rounded-lg p-0.5 gap-0.5">
           {STATUSES.map((s) => (
             <button
               key={s.value}
               onClick={() => onStatusChange(s.value)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide transition-colors ${
+              className={`px-2.5 max-sm:px-1 py-1 rounded-md text-[11px] max-sm:text-[10px] font-bold uppercase tracking-wide whitespace-nowrap transition-colors ${
                 status === s.value ? accent : 'text-gray-500 hover:text-gray-200'
               }`}
             >
@@ -158,7 +160,7 @@ export const JournalFilterBar: React.FC<JournalFilterBarProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex flex-wrap justify-end items-center gap-1.5 ml-auto max-w-full">
           {regions && regions.length > 1 && onRegionChange && (
             <Dropdown value={activeRegion ?? 'ALL'} onChange={onRegionChange} allLabel="All regions" options={regions} active={activeRegion !== 'ALL'} accent={accent} aria="Filter by region" />
           )}
@@ -191,12 +193,14 @@ interface DropdownProps {
 const Dropdown: React.FC<DropdownProps> = ({ value, onChange, allLabel, options, active, accent, aria }) => {
   const accentText = accent.split(' ').find((c) => c.startsWith('text-')) || 'text-gray-300';
   return (
-    <div className="relative shrink-0">
+    <div className="relative shrink-0 max-w-full">
+      {/* On a phone the box is no wider than a short name: it is as wide as
+          its longest choice otherwise, and two of them ran off the edge. */}
       <select
         aria-label={aria}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`appearance-none bg-black/40 border rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-semibold focus:outline-none transition-colors ${
+        className={`appearance-none max-w-full max-sm:max-w-[9.5rem] truncate bg-black/40 border rounded-lg pl-2.5 pr-6 py-1 text-[11px] font-semibold focus:outline-none transition-colors ${
           active ? `border-current ${accentText}` : 'border-white/10 text-gray-400 hover:border-white/30'
         }`}
       >

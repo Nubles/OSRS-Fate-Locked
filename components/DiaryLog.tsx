@@ -376,8 +376,9 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                 aria-label={`${diary.id} diary`}
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`font-bold text-sm truncate ${isCompleted ? 'text-green-400 line-through' : 'text-gray-200'}`}>
+                  {/* As on a quest card: the tags move down before the name is cut short. */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+                    <h3 className={`font-bold text-sm min-w-0 break-words ${isCompleted ? 'text-green-400 line-through' : 'text-gray-200'}`}>
                       {diary.id}
                     </h3>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold uppercase tracking-wide ${color} border-current opacity-70`}>

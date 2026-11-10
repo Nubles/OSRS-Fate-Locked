@@ -213,8 +213,11 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
           <div className={`absolute left-0 top-0 bottom-0 w-1 ${getDifficultyAccent(quest.difficulty)} ${isCompleted ? 'opacity-40' : 'opacity-80 group-hover:opacity-100'}`} />
           <div className="flex justify-between items-start gap-4">
               <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                      <h3 className={`font-bold text-sm truncate ${isCompleted ? 'text-green-400 line-through' : isAvailable ? 'text-blue-300' : 'text-gray-400'}`}>
+                  {/* The name comes first: where the card is too narrow for the
+                      name and its tags on one line (a phone), the tags move
+                      down. On one line the name was cut to "D.." to fit them. */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+                      <h3 className={`font-bold text-sm min-w-0 break-words ${isCompleted ? 'text-green-400 line-through' : isAvailable ? 'text-blue-300' : 'text-gray-400'}`}>
                           {quest.name}
                       </h3>
                       <a
