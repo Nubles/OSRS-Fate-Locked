@@ -179,6 +179,10 @@ html[data-ui="osrs"] .ojr-sum-row {
   display: grid; grid-template-columns: 18px minmax(0, 1fr) auto auto; column-gap: 8px; align-items: center;
   height: 26px; padding: 0 10px; border-bottom: 1px solid var(--osrs-well, #1f1a14); font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: var(--osrs-shadow, 1px 1px 0 #000);
 }
+/* Beside the Progression panel the summary is at its narrowest in a window
+   900 to 911 px wide, where "Quests & miniquests" was 5 px short and ended in
+   "…". Two pixels off each gap give it 6. */
+@media (min-width: 900px) and (max-width: 919px) { html[data-ui="osrs"] .ojr-sum-row { column-gap: 6px; } }
 html[data-ui="osrs"] .ojr-sum-row:last-child { border-bottom: 0; }
 html[data-ui="osrs"] .ojr-sum-row:hover { background: rgba(255, 236, 196, 0.06); }
 html[data-ui="osrs"] .ojr-sum-row:hover .ojr-sum-label { color: #fff; }
