@@ -128,7 +128,9 @@ export const OsrsJournalScreen: React.FC = () => {
   const quest = useQuestJournal();
   const diary = useDiaryJournal();
   const ca = useCAJournal();
-  const { stats } = useJournalSummaryModel();
+  const { stats, routesPending } = useJournalSummaryModel();
+  // What is ready or doable needs the routes: held for the moment they take to load.
+  const held = (text: string) => (routesPending ? 'checking routes' : text);
   const doability = useQuestDoabilityRows();
   const { unlocks, gameModeId } = quest;
   const areaRoutes = diary.areaRoutes;
@@ -578,14 +580,14 @@ export const OsrsJournalScreen: React.FC = () => {
       {/* Summary bar */}
       <div className="osrs-win ojs-bar">
         <span className="ojs-bar-title"><JournalIcon kind="quest" />Journal</span>
-        <span className="ojs-stat" data-examine={`${stats.quests.done} of ${stats.quests.total} quests and miniquests done, ${stats.quests.available} ready to complete.`} data-examine-name="Quests">
-          <span style={{ color: ORANGE }}>Quests &amp; miniquests</span> <span className="w">{stats.quests.done}/{stats.quests.total}</span> · <span className="y">{stats.quests.available} ready</span>
+        <span className="ojs-stat" data-examine={`${stats.quests.done} of ${stats.quests.total} quests and miniquests done, ${held(`${stats.quests.available} ready to complete`)}.`} data-examine-name="Quests">
+          <span style={{ color: ORANGE }}>Quests &amp; miniquests</span> <span className="w">{stats.quests.done}/{stats.quests.total}</span> · <span className="y">{held(`${stats.quests.available} ready`)}</span>
         </span>
-        <span className="ojs-stat" data-examine={`${stats.diaries.done} of ${stats.diaries.total} Achievement Diary tasks done, ${stats.diaries.doable} doable now.`} data-examine-name="Diary tasks">
-          <span style={{ color: ORANGE }}>Diary tasks</span> <span className="w">{stats.diaries.done}/{stats.diaries.total}</span> · <span className="y">{stats.diaries.doable} doable</span>
+        <span className="ojs-stat" data-examine={`${stats.diaries.done} of ${stats.diaries.total} Achievement Diary tasks done, ${held(`${stats.diaries.doable} doable now`)}.`} data-examine-name="Diary tasks">
+          <span style={{ color: ORANGE }}>Diary tasks</span> <span className="w">{stats.diaries.done}/{stats.diaries.total}</span> · <span className="y">{held(`${stats.diaries.doable} doable`)}</span>
         </span>
-        <span className="ojs-stat" data-examine={`${stats.ca.points} of ${stats.ca.pointsTotal} Combat Achievement points, ${stats.ca.tasksDone} of ${stats.ca.tasksTotal} tasks, ${stats.ca.done} of ${stats.ca.total} reward tiers. ${stats.ca.doable} tasks at a boss you can reach.`} data-examine-name="Combat">
-          <span style={{ color: ORANGE }}>Combat</span> <span className="w">{caPointsLabel(stats)}</span> · <span className="y">{stats.ca.doable} doable</span>
+        <span className="ojs-stat" data-examine={`${stats.ca.points} of ${stats.ca.pointsTotal} Combat Achievement points, ${stats.ca.tasksDone} of ${stats.ca.tasksTotal} tasks, ${stats.ca.done} of ${stats.ca.total} reward tiers. ${held(`${stats.ca.doable} tasks at a boss you can reach`)}.`} data-examine-name="Combat">
+          <span style={{ color: ORANGE }}>Combat</span> <span className="w">{caPointsLabel(stats)}</span> · <span className="y">{held(`${stats.ca.doable} doable`)}</span>
         </span>
         <div className="ojs-bar-keys">
           <span className="ojs-small" style={{ color: '#c8b897' }}>Keys</span>

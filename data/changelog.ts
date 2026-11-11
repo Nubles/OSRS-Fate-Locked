@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-10-phone-and-first-screen-fixes',
+    title: 'Fixes for phones, tablets and laptops',
+    date: '2026-11-10',
+    sections: {
+      fixed: [
+        'On a phone, the Strategy Guide’s close button and Closest tab are back on screen, so you can close it again.',
+        'On a phone, quest and diary names, the collection log’s tabs and items, Achievements and the Run timelapse’s buttons now fit the screen.',
+        'In the OSRS layout on a tablet or in a small window, the page no longer scrolls sideways and every skill shows its tier mark.',
+        'On a tablet, most unlock names in Activities & Utility show in full. Slayer master cards and Farm Keys status lines are no longer cut off.',
+        'History’s search box is full width and all five filters show. A skill card’s Key chance is no longer cut off, and its Omni-Key button no longer covers the name.',
+        'The first screen waits a moment for your routes before it says what’s ready. Escape closes a skill’s odds box and the profile list.',
+      ],
+    },
+  },
+  {
     id: '2026-11-09-safer-saves',
     title: 'Safer saves for long runs, and a round of fixes',
     date: '2026-11-09',

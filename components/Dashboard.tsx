@@ -704,37 +704,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                 <NoteTrigger id={skill} title={skill} suspendModals={suspendModals} />
                             </div>
 
-                            {/* Omni Upgrade Button */}
-                            {isUnlocked && canOmniUpgrade && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleSpecialUnlock(TableType.SKILLS, skill);
-                                    }}
-                                    className={`
-                                        absolute top-1 right-8 w-5 h-5 flex items-center justify-center rounded border transition-all z-20
-                                        bg-purple-900/20 text-purple-400 border-purple-500/30 hover:bg-purple-600 hover:text-white hover:border-purple-400
-                                    `}
-                                    title={`Unlock Tier ${tier + 1} (1 Omni-Key)`}
-                                    aria-label={`Unlock Tier ${tier + 1} of ${skill} (1 Omni-Key)`}
-                                >
-                                    <ChevronsUp size={12} strokeWidth={3} aria-hidden="true" />
-                                </button>
-                            )}
-
                             <div className="flex items-center gap-2 mb-2 w-full">
-                                {/* Skill Icon as Details Button */}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedSkillForDetails({ name: skill, tier });
-                                    }}
-                                    className="shrink-0 transition-transform hover:scale-110 z-20 cursor-pointer p-0.5 rounded hover:bg-white/5"
-                                    title="View Skill Details"
-                                    aria-label={`${skill} details`}
-                                >
-                                    <img src={getSkillIcon(skill)} alt="" className={`w-5 h-5 ${isUnlocked ? '' : 'grayscale opacity-40'}`} />
-                                </button>
+                                {/* Skill Icon as Details Button. With an Omni-Key in hand the
+                                    upgrade button sits under it, in room the card already has:
+                                    in the top corner it covered the end of the skill's name.
+                                    The pair is 46px tall, the height of the four lines beside it. */}
+                                <div className="shrink-0 flex flex-col items-center gap-0.5">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedSkillForDetails({ name: skill, tier });
+                                        }}
+                                        className="transition-transform hover:scale-110 z-20 cursor-pointer p-0.5 rounded hover:bg-white/5"
+                                        title="View Skill Details"
+                                        aria-label={`${skill} details`}
+                                    >
+                                        <img src={getSkillIcon(skill)} alt="" className={`w-5 h-5 ${isUnlocked ? '' : 'grayscale opacity-40'}`} />
+                                    </button>
+                                    {isUnlocked && canOmniUpgrade && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleSpecialUnlock(TableType.SKILLS, skill);
+                                            }}
+                                            className="w-5 h-5 flex items-center justify-center rounded border transition-all z-20 bg-purple-900/20 text-purple-400 border-purple-500/30 hover:bg-purple-600 hover:text-white hover:border-purple-400"
+                                            title={`Unlock Tier ${tier + 1} (1 Omni-Key)`}
+                                            aria-label={`Unlock Tier ${tier + 1} of ${skill} (1 Omni-Key)`}
+                                        >
+                                            <ChevronsUp size={12} strokeWidth={3} aria-hidden="true" />
+                                        </button>
+                                    )}
+                                </div>
                                 
                                 <div className="min-w-0 flex-1 pointer-events-none">
                                     <div className={`text-[10px] font-bold truncate ${tierColorText}`}>{skill}</div>

@@ -58,7 +58,7 @@ export const DiaryHeatmap: React.FC<{ onPick: (diaryId: string) => void }> = ({ 
       </button>
       {open && (
         <div className="px-2 pb-2 overflow-x-auto">
-          <div className="grid gap-1 min-w-[300px]" style={{ gridTemplateColumns: '78px repeat(4, 1fr)' }}>
+          <div className="grid gap-1 min-w-[220px]" style={{ gridTemplateColumns: '78px repeat(4, 1fr)' }}>
             <div />
             {TIERS.map(t => <div key={t} className="text-[9px] text-gray-600 text-center pb-0.5">{t}</div>)}
             {areas.map(area => (

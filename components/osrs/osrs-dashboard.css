@@ -106,12 +106,32 @@ html[data-ui="osrs"] .osrs-dash-chartab { height: 100%; min-height: 0; display: 
 
 /* Skills */
 html[data-ui="osrs"] .osrs-dash-skills { padding: 8px; display: flex; flex-direction: column; gap: 6px; min-width: 0; min-height: 0; }
-html[data-ui="osrs"] .osrs-dash-skills > .osrs-dash-panelhead { padding: 0; }
+/* The title, the total level, Advisor and the tier count need 292 px on one
+   line. In a narrower panel the last two move onto a second line; held to
+   one, the tier count ran out of the panel and was cut. */
+html[data-ui="osrs"] .osrs-dash-skills > .osrs-dash-panelhead { padding: 0; flex-wrap: wrap; row-gap: 2px; }
+html[data-ui="osrs"] .osrs-dash-skills > .osrs-dash-panelhead > :last-child { margin-left: auto; }
 html[data-ui="osrs"] .osrs-dash-skillwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* Three columns, or fewer where a cell would be narrower than its first line:
+   the icon, the level, the note button and the tier mark, 118 px at Normal
+   text, 128 at Medium and 138 at Large with the widest level and mark. Six
+   pixels under that the mark still ends inside the cell, and that is the least
+   a cell gets. Beside the side column in a window 900 to about 1150 px wide,
+   three columns left a cell 49 to 109 px: every tier mark slid under the next
+   cell and the grid scrolled sideways. There the grid shows two columns, and
+   one under about 1020 px. The Equipment Lab keeps its 300 px: its DPS list
+   and a slot's tier ladder need them. The half pixel keeps a rounded-up share
+   from costing a column. */
 html[data-ui="osrs"] .osrs-dash-skillgrid {
-  flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  --osrs-skill-min: calc(72px + 40px * var(--osrs-ts, 1));
+  flex: 1; min-height: 0; overflow-y: auto; display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(max(var(--osrs-skill-min), calc((100% - 8px) / 3 - 0.5px)), 1fr));
   grid-auto-rows: minmax(39px, 76px); gap: 3px 4px;
 }
+/* With an Omni-Key in hand, every skill it can raise shows a button for it:
+   24 px more on the line. Three columns then need a window of about 1232 px
+   (1366 at Medium text), and under that the marks were pushed out again. */
+html[data-ui="osrs"] .osrs-dash-skillgrid:has(.osrs-dash-omni) { --osrs-skill-min: calc(96px + 40px * var(--osrs-ts, 1)); }
 html[data-ui="osrs"] .osrs-dash-skill {
   position: relative; display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; min-height: 0; padding: 2px 8px;
   background: var(--osrs-window, #3e3529); border: 1px solid #000;

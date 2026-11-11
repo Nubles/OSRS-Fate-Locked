@@ -1,6 +1,6 @@
 
 import { confirmThen } from '../utils/spendConfirm';
-import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useRef, Suspense } from 'react';
 import { lazyWithRetry } from '../utils/lazyRetry';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { useGame } from '../context/GameContext';
@@ -17,6 +17,7 @@ import { priceService } from '../services/PriceService';
 import { collectionLogSync, collectionIdentityReview } from '../services/CollectionLogSyncService';
 import { WikiLink } from './WikiLink';
 import { collogReachability } from '../utils/collogReach';
+import { collectionGridColumns } from '../utils/collectionGrid';
 
 interface CollectionLogProps {
   searchTerm?: string;
@@ -54,8 +55,8 @@ const LogItemImage = ({ name }: { name: string }) => {
 };
 
 const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
-  const { items, unlocks, searchTerm, handleItemClick, blockedIds } = data;
-  const index = rowIndex * 4 + columnIndex; // 4 columns
+  const { items, unlocks, searchTerm, handleItemClick, blockedIds, cols = 4 } = data;
+  const index = rowIndex * cols + columnIndex;
   if (index >= items.length) return null;
   
   const item = items[index];
@@ -90,7 +91,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
              </div>
            )}
          </div>
-         <span className={`text-[8px] mt-1 text-center leading-tight line-clamp-2 w-full ${isUnlocked ? 'text-green-400' : 'text-[#887]'} ${isHighlighted ? 'text-white font-bold' : ''}`}>
+         <span className={`text-[8px] mt-1 text-center leading-tight line-clamp-2 break-words w-full ${isUnlocked ? 'text-green-400' : 'text-[#887]'} ${isHighlighted ? 'text-white font-bold' : ''}`}>
            <WikiLink name={item.name} className="relative z-20 hover:underline decoration-dotted underline-offset-2" />
          </span>
          {item.sourcePage && (
@@ -294,6 +295,18 @@ const ClassicCollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
   } = useCollectionLogModel(searchTerm);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const gridCols = collectionGridColumns(containerSize.width);
+  const gridData = useMemo(() => ({ ...itemData, cols: gridCols }), [itemData, gridCols]);
+  const gridRows = Math.ceil(activeItems.length / gridCols);
+  // The room the grid's own scrollbar takes on a page long enough to scroll (none on a
+  // phone, or when the page fits). The columns share what is left: sized to the full
+  // width, a long page also scrolled sideways by the width of its scrollbar.
+  const gridOuterRef = useRef<HTMLDivElement>(null);
+  const [gridBarWidth, setGridBarWidth] = useState(0);
+  useLayoutEffect(() => {
+    const outer = gridOuterRef.current;
+    setGridBarWidth(outer ? outer.offsetWidth - outer.clientWidth : 0);
+  }, [gridRows, containerSize.width, containerSize.height]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -384,13 +397,15 @@ const ClassicCollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
         </div>
       )}
 
-      {/* Tabs Row */}
+      {/* Tabs Row. On a phone each tab is as wide as its name needs, so all five fit from 320
+          wide, as in the game. At a fixed 80px the fifth, Other, sat off the right edge with
+          nothing to show it was there. Wider screens keep five equal tabs. */}
       <div className="flex bg-[#3e3529] border-b border-[#5a5245] overflow-x-auto no-scrollbar shrink-0">
         {Object.keys(COLLECTION_LOG_DATA).map(tab => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setViewMode('PAGE'); }}
-            className={`flex-1 min-w-[80px] py-1.5 text-center text-[10px] font-bold border-r border-[#5a5245] hover:bg-[#4b4236] transition-colors uppercase tracking-wide
+            className={`flex-auto px-1 sm:px-0 sm:flex-1 sm:min-w-[80px] whitespace-nowrap py-1.5 text-center text-[10px] font-bold border-r border-[#5a5245] hover:bg-[#4b4236] transition-colors uppercase tracking-wide
               ${activeTab === tab && !searchTerm ? 'bg-[#4b4236] text-white shadow-[inset_0_0_5px_rgba(0,0,0,0.5)]' : 'text-[#ff981f] bg-[#3e3529]'}
               ${searchTerm ? 'opacity-50' : 'opacity-100'}
             `}
@@ -461,13 +476,14 @@ const ClassicCollectionLog: React.FC<CollectionLogProps> = ({ searchTerm = '' })
            <div className="flex-1 bg-gradient-to-br from-[#25221d] to-[#191714]" ref={containerRef}>
              {activeItems.length > 0 && containerSize.width > 0 ? (
                <Grid
-                 columnCount={4}
-                 columnWidth={containerSize.width / 4}
+                 columnCount={gridCols}
+                 columnWidth={(containerSize.width - gridBarWidth) / gridCols}
                  height={containerSize.height}
-                 rowCount={Math.ceil(activeItems.length / 4)}
+                 rowCount={gridRows}
                  rowHeight={90}
                  width={containerSize.width}
-                 itemData={itemData}
+                 itemData={gridData}
+                 outerRef={gridOuterRef}
                >
                  {Cell}
                </Grid>

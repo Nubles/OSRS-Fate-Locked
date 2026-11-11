@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MENU_EDGE_MARGIN, MENU_MIN_HEIGHT, nextMenuIndex, placeMenuBelow } from './dropdownMenu';
+import { MENU_EDGE_MARGIN, MENU_MIN_HEIGHT, nextMenuIndex, placeMenuBelow, slideMenuInside } from './dropdownMenu';
 
 describe('placeMenuBelow', () => {
   const viewport = { width: 1440, height: 900 };
@@ -23,6 +23,34 @@ describe('placeMenuBelow', () => {
   it('never shrinks below a usable height on a short window', () => {
     expect(placeMenuBelow({ top: 300, bottom: 332, left: 0, right: 300 }, { width: 800, height: 400 }, 224).maxHeight)
       .toBe(MENU_MIN_HEIGHT);
+  });
+});
+
+describe('slideMenuInside', () => {
+  // The Journal panel on a 390px phone, and the 224px menu under a chip.
+  const panel = { left: 13, right: 377 };
+
+  it('leaves a menu that fits where it is', () => {
+    expect(slideMenuInside({ left: 33, right: 257 }, panel)).toBe(0);
+    expect(slideMenuInside({ left: 145, right: 369 }, panel)).toBe(0);
+  });
+
+  it('moves a menu left by what would be cut off, keeping the margin', () => {
+    // Under the second chip of a row: 224px from 179 runs to 403, past the panel's 377.
+    const slide = slideMenuInside({ left: 179, right: 403 }, panel);
+    expect(slide).toBe(-34);
+    expect(403 + slide).toBe(panel.right - MENU_EDGE_MARGIN);
+  });
+
+  it('never moves a menu past the left edge of a box narrower than the menu', () => {
+    const narrow = { left: 13, right: 200 };
+    const slide = slideMenuInside({ left: 60, right: 284 }, narrow);
+    expect(60 + slide).toBe(narrow.left + MENU_EDGE_MARGIN);
+    expect(slideMenuInside({ left: 13, right: 237 }, narrow)).toBe(0);
+  });
+
+  it('gives a plain zero before anything has a size', () => {
+    expect(Object.is(slideMenuInside({ left: 0, right: 0 }, { left: 0, right: 0 }), 0)).toBe(true);
   });
 });
 

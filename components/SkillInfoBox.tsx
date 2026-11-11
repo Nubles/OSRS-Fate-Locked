@@ -9,8 +9,8 @@ import './skill-info.css';
 /**
  * The box a skill's info button opens (components/SkillInfoButton.tsx),
  * loaded on first use. It sits beside the card, not over it: to the right,
- * or to the left when there's no room. While pinned, a click anywhere else,
- * Escape or a scroll closes it.
+ * or to the left when there's no room. Escape closes it. While pinned, a
+ * click anywhere else or a scroll closes it too.
  */
 
 const GAP = 6;
@@ -40,6 +40,16 @@ export const SkillInfoBox: React.FC<BoxProps> = ({ id, variant, anchorRef, pinne
 
   useLayoutEffect(place, [place]);
 
+  // Escape is heard on its way down (capture). The info button keeps its key
+  // presses from the card behind it, so a listener for the way back up never
+  // heard Escape while the button had focus, which is where focus is right
+  // after the box is opened.
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', esc, true);
+    return () => document.removeEventListener('keydown', esc, true);
+  }, [onClose]);
+
   useEffect(() => {
     if (!pinned) return;
     const away = (e: PointerEvent) => {
@@ -47,13 +57,10 @@ export const SkillInfoBox: React.FC<BoxProps> = ({ id, variant, anchorRef, pinne
       if (anchorRef.current?.contains(target) || boxRef.current?.contains(target)) return;
       onClose();
     };
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('pointerdown', away, true);
-    document.addEventListener('keydown', esc);
     window.addEventListener('scroll', onClose, true);
     return () => {
       document.removeEventListener('pointerdown', away, true);
-      document.removeEventListener('keydown', esc);
       window.removeEventListener('scroll', onClose, true);
     };
   }, [pinned, onClose, anchorRef]);

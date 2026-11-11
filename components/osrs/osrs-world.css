@@ -82,8 +82,11 @@ html[data-ui="osrs"] .owm-tip {
   font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #000; line-height: 16px; white-space: nowrap; text-shadow: none;
 }
 html[data-ui="osrs"] .owm-author { position: absolute; top: 6px; right: 6px; z-index: 30; }
+/* The hint and the buttons share a line while both fit. Under a narrow map
+   the buttons move to a second line: on one line the hint was cut to
+   "Darkened c…" in a 1024 px window. */
 html[data-ui="osrs"] .owm-foot {
-  flex-shrink: 0; display: flex; align-items: center; gap: 12px; min-height: 32px; box-sizing: border-box; padding: 3px 8px;
+  flex-shrink: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 3px 12px; min-height: 32px; box-sizing: border-box; padding: 3px 8px;
   background: var(--osrs-well, #1f1a14); border: 1px solid #000;
   font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); text-shadow: 1px 1px 0 #000;
 }
@@ -98,6 +101,12 @@ html[data-ui="osrs"] .oact-root {
   font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange, #ff981f); text-shadow: 1px 1px 0 #000; -webkit-font-smoothing: none;
 }
 @media (max-width: 1180px) { html[data-ui="osrs"] .oact-root { grid-template-columns: 230px minmax(0, 1fr) 330px; } }
+/* Under 900 px the page is one column (osrs-shell.css) and the name list is
+   what these two panels leave: 110 px of a 720 px window. A little off each
+   gives the names room for one readable column. */
+@media (max-width: 899px) {
+  html[data-ui="osrs"] .oact-root { grid-template-columns: 220px minmax(0, 1fr) 300px; }
+}
 html[data-ui="osrs"] .oact-h { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); }
 html[data-ui="osrs"] .oact-small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; line-height: 15px; }
 html[data-ui="osrs"] .oact-tan { color: var(--osrs-tan, #c8b897); }
@@ -121,10 +130,19 @@ html[data-ui="osrs"] .oact-bar { position: relative; display: block; height: 8px
 html[data-ui="osrs"] .oact-bar > span { position: absolute; left: 0; top: 0; bottom: 0; background: #0dc10d; box-shadow: inset 0 -2px 0 rgba(0,0,0,.35); }
 
 html[data-ui="osrs"] .oact-list { min-height: 0; min-width: 0; display: flex; flex-direction: column; }
-html[data-ui="osrs"] .oact-list-head { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid #000; background: var(--osrs-slot, #3b3226); flex-shrink: 0; }
+/* The title, the count and the colour key wrap onto more lines when the list
+   is narrow. Held to one line, the count broke in two and the key was cut off. */
+html[data-ui="osrs"] .oact-list-head { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; padding: 6px 10px; border-bottom: 1px solid #000; background: var(--osrs-slot, #3b3226); flex-shrink: 0; }
 html[data-ui="osrs"] .oact-list-head h3 { margin: 0; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: var(--osrs-orange, #ff981f); white-space: nowrap; }
-html[data-ui="osrs"] .oact-legend { margin-left: auto; display: flex; gap: 12px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; white-space: nowrap; }
+html[data-ui="osrs"] .oact-list-head > span { white-space: nowrap; }
+html[data-ui="osrs"] .oact-legend { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0 12px; font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
 html[data-ui="osrs"] .oact-names { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; align-content: start; column-gap: 6px; padding: 6px 6px 0; overflow-y: auto; }
+/* Under 900 px the board has no fixed height: it is as tall as the screen
+   leaves. A zero basis keeps the names out of that sum, so the list takes the
+   board's height and scrolls inside it, as it does on a computer. Sized by its
+   names, one column of a long table made the board a different height for
+   each table and pushed the buttons under the picture far down the page. */
+@media (max-width: 899px) { html[data-ui="osrs"] .oact-names { flex-basis: 0px; } }
 html[data-ui="osrs"] .oact-name-row {
   all: unset; box-sizing: border-box; cursor: pointer; display: block; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: 1px 1px 0 #000;

@@ -68,6 +68,37 @@ describe('TimelapseModal replay under the run mode', () => {
   });
 });
 
+describe('TimelapseModal strip and slider', () => {
+  const longRun = () => ensureChain(Array.from({ length: 40 }, (_, index): LogEntry => ({
+    id: `fail-${index}`, timestamp: index + 1, type: 'ROLL_FAIL', message: 'No Key.',
+  })));
+
+  it.each(['classic', 'osrs'])('keeps the one-bar-per-entry strip out of the Tab order and names the slider (%s layout)', (layout) => {
+    localStorage.setItem(UI_STYLE_KEY, layout);
+    mode.current = { gameModeId: 'vanilla', customMode: undefined, ...SAVED };
+    render(<TimelapseModal history={longRun()} onClose={vi.fn()} />);
+
+    // 40 entries, 40 bars: none of them is a Tab stop, and a screen reader skips the strip.
+    const bars = [...document.querySelectorAll<HTMLButtonElement>('button[title^="#"]')];
+    expect(bars).toHaveLength(40);
+    expect(bars.every((bar) => bar.tabIndex === -1)).toBe(true);
+    expect(bars[0].closest('[aria-hidden="true"]')).toBeTruthy();
+
+    // The slider does the same job and says where it is.
+    const slider = screen.getByRole('slider', { name: 'Position in the run' });
+    expect(slider.getAttribute('aria-valuetext')).toBe('Entry 40 of 40');
+    localStorage.removeItem(UI_STYLE_KEY);
+  });
+
+  it('gives each entry its own spaced bar until the strip is measured too narrow for them', () => {
+    mode.current = { gameModeId: 'vanilla', customMode: undefined, ...SAVED };
+    render(<TimelapseModal history={longRun()} onClose={vi.fn()} />);
+    // jsdom measures every box as 0 wide, which counts as "not measured yet".
+    const strip = document.querySelector('button[title^="#"]')!.parentElement!;
+    expect(strip.className).toContain('gap-[1px]');
+  });
+});
+
 describe('TimelapseModal in the OSRS layout', () => {
   afterEach(() => localStorage.removeItem(UI_STYLE_KEY));
 

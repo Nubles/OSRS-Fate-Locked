@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   useJournalSummaryModel, caPointsLabel, journalSummaryQuestSub, journalSummaryDiarySub, journalSummaryCASub,
+  shownRecommendation, ROUTES_PENDING_LABEL,
 } from '../JournalSummaryCard';
 import { JournalIcon, type JournalKind } from './OsrsJournalParts';
 import { openOsrsJournal, type OsrsJournalTab } from './OsrsJournalNav';
@@ -25,7 +26,12 @@ const KIND: Record<Tab, JournalKind> = { QUESTS: 'quest', DIARIES: 'diary', CA: 
 const TAB: Record<Tab, OsrsJournalTab> = { QUESTS: 'quests', DIARIES: 'diaries', CA: 'combat' };
 
 export const OsrsJournalSummary: React.FC<Props> = () => {
-  const { stats, recommendation, advisorsEnabled } = useJournalSummaryModel();
+  const { stats, recommendation: worked, advisorsEnabled, routesPending } = useJournalSummaryModel();
+  const recommendation = shownRecommendation(worked, routesPending);
+  // What is ready or doable needs the routes: held for the moment they take to load.
+  const ready = (count: number, some: string, none: string) => (
+    routesPending ? { sub: ROUTES_PENDING_LABEL, active: false } : { sub: count > 0 ? some : none, active: count > 0 }
+  );
 
   const rows: Array<{ key: Tab; label: string; value: string; sub: string; active: boolean; examine: string }> = [
     {
@@ -33,25 +39,22 @@ export const OsrsJournalSummary: React.FC<Props> = () => {
       // The count includes miniquests, so the label says so (the Quest list counts them apart).
       label: 'Quests & miniquests',
       value: `${stats.quests.done}/${stats.quests.total}`,
-      sub: stats.quests.available > 0 ? `${stats.quests.available} ready to complete` : 'None ready yet',
-      active: stats.quests.available > 0,
-      examine: `Quests and miniquests: ${stats.quests.done} of ${stats.quests.total} done. ${journalSummaryQuestSub(stats)}.`,
+      ...ready(stats.quests.available, `${stats.quests.available} ready to complete`, 'None ready yet'),
+      examine: `Quests and miniquests: ${stats.quests.done} of ${stats.quests.total} done. ${journalSummaryQuestSub(stats, routesPending)}.`,
     },
     {
       key: 'DIARIES',
       label: 'Diary tasks',
       value: `${stats.diaries.done}/${stats.diaries.total}`,
-      sub: stats.diaries.doable > 0 ? `${stats.diaries.doable} doable now` : 'None doable yet',
-      active: stats.diaries.doable > 0,
-      examine: `Achievement Diary tasks: ${stats.diaries.done} of ${stats.diaries.total} done. ${journalSummaryDiarySub(stats)}.`,
+      ...ready(stats.diaries.doable, `${stats.diaries.doable} doable now`, 'None doable yet'),
+      examine: `Achievement Diary tasks: ${stats.diaries.done} of ${stats.diaries.total} done. ${journalSummaryDiarySub(stats, routesPending)}.`,
     },
     {
       key: 'CA',
       label: 'Combat Achievements',
       value: caPointsLabel(stats),
-      sub: stats.ca.doable > 0 ? `${stats.ca.doable} doable now` : 'None at an unlocked boss',
-      active: stats.ca.doable > 0,
-      examine: `Combat Achievements: ${stats.ca.points} of ${stats.ca.pointsTotal} points, ${stats.ca.tasksDone} of ${stats.ca.tasksTotal} tasks, ${stats.ca.done} of ${stats.ca.total} reward tiers. ${journalSummaryCASub(stats)}. ${stats.ca.doable} tasks at a boss you have unlocked.`,
+      ...ready(stats.ca.doable, `${stats.ca.doable} doable now`, 'None at an unlocked boss'),
+      examine: `Combat Achievements: ${stats.ca.points} of ${stats.ca.pointsTotal} points, ${stats.ca.tasksDone} of ${stats.ca.tasksTotal} tasks, ${stats.ca.done} of ${stats.ca.total} reward tiers. ${journalSummaryCASub(stats)}.${routesPending ? '' : ` ${stats.ca.doable} tasks at a boss you have unlocked.`}`,
     },
   ];
 

@@ -261,7 +261,7 @@ const ClassicLogViewer: React.FC = () => {
       key={type}
       onClick={() => setFilterType(type)}
       className={`
-        flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all shrink-0
+        flex items-center gap-1.5 px-3 sm:px-2 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wide border transition-all shrink-0
         ${filterType === type 
           ? 'bg-white text-black border-white shadow-[0_0_10px_rgba(255,255,255,0.2)]' 
           : 'bg-black/30 text-gray-500 border-white/10 hover:border-white/30 hover:text-gray-300'}
@@ -305,9 +305,14 @@ const ClassicLogViewer: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-2">
+        {/* Search and filters share a line only where both fit. The History
+            column is narrow on every screen, so side by side the search box
+            shrank to its icon and the last filter needed a scrollbar. On a
+            computer the five filters are a little tighter than on a phone,
+            so they fit the column in one row under the search box. */}
+        <div className="flex flex-wrap gap-2">
           {/* Search Input */}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-[12rem]">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 w-3.5 h-3.5" />
             <input 
               type="text" 
@@ -319,7 +324,7 @@ const ClassicLogViewer: React.FC = () => {
           </div>
           
           {/* Filters */}
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+          <div className="flex flex-wrap gap-2 sm:gap-1.5">
              {filterButton('ALL', 'All', Filter)}
              {filterButton('ROLLS', 'Rolls', Dices)}
              {filterButton('UNLOCKS', 'Unlocks', Unlock)}
