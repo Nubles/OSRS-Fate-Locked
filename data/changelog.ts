@@ -38,12 +38,11 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-11-11-run-film-controls',
-    title: 'Run Film gets captions, lengths and more',
+    title: 'Run Film gets lengths, an end card and more',
     date: '2026-11-11',
     sections: {
       added: [
         'Pick a length: 10s for Discord, 15s for an intro, 30s for TikTok or 60s for YouTube. Or set a speed from ¼× to 4×.',
-        'Cards pop up for big moments: a share of the map, your first boss, a 99, a Key won against long odds.',
         'An end card sums it up: unlocks, Key rolls, your luckiest roll and longest dry run, plus where to find Fate Locked.',
         'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
         'Show your levels, tiers or both, write your own title, make it in 1080p, and drag the preview to see any moment.',

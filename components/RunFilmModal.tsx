@@ -9,7 +9,6 @@ import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { buildFilmTimeline, DEFAULT_MAX_STEPS, filmDays, filmFramePlan } from '../utils/runFilm/timeline';
 import { FilmPainter, GLOW_FRAMES, type FilmFrameExtras, type FilmShape, type FilmSkillView, type FilmSprites } from '../utils/runFilm/painter';
-import { directFilm } from '../utils/runFilm/director';
 import { SITE } from './ShareCardCanvas';
 import { gemSmallSrc, skillIconSrc, slotSilhouetteSrc, slotUiSrc } from './osrs/OsrsDashGems';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../data/items';
@@ -60,17 +59,15 @@ interface FilmChoices {
   skillView: FilmSkillView | null;
   /** Seconds, or 0 to follow the speed. */
   length: number;
-  captions: 'on' | 'off';
   endCard: 'on' | 'off';
 }
-const DEFAULT_CHOICES: FilmChoices = { shape: 'wide', speed: 1, scale: 1, skillView: null, length: 0, captions: 'on', endCard: 'on' };
+const DEFAULT_CHOICES: FilmChoices = { shape: 'wide', speed: 1, scale: 1, skillView: null, length: 0, endCard: 'on' };
 const cleanChoices = (c: Partial<FilmChoices> | null | undefined): FilmChoices => ({
   shape: c?.shape === 'tall' ? 'tall' : 'wide',
   speed: SPEEDS.some(s => s.id === c?.speed) ? c!.speed! : 1,
   scale: c?.scale === 1.5 ? 1.5 : 1,
   skillView: SKILL_VIEWS.some(v => v.id === c?.skillView) ? c!.skillView! : null,
   length: LENGTHS.some(l => l.id === c?.length) ? c!.length! : 0,
-  captions: c?.captions === 'off' ? 'off' : 'on',
   endCard: c?.endCard === 'off' ? 'off' : 'on',
 });
 
@@ -173,12 +170,8 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const plan = useMemo(() => filmFramePlan(timeline.steps.length, stepFrames, LEAD_FRAMES, HOLD_FRAMES + endFrames), [timeline, stepFrames, endFrames]);
   const frames = plan.total;
   const endStart = frames - endFrames;
-  const cut = useMemo(() => directFilm(timeline, {
-    captions: choices.captions === 'on', total: endStart, stepAt: plan.stepAt,
-  }), [timeline, plan, endStart, choices.captions]);
   const showLevels = skillView !== 'tiers';
   const extrasAt = (i: number): FilmFrameExtras => ({
-    caption: cut.caption(i),
     endCard: endFrames && i >= endStart ? { summary: timeline.summary, age: i - endStart, showLevels, site: SITE } : null,
   });
   const seconds = Math.round(frames / FILM_FPS);
@@ -212,8 +205,8 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       painterRef.current.painter.paint(owned, new Map(), stepIndex < 0 ? timeline.opening : timeline.steps[stepIndex], filmTitle, extrasAt(previewFrame));
     })().catch(() => { /* the Make button reports a map that won't load */ });
     return () => { cancelled = true; };
-    // extrasAt reads cut, endStart, endFrames and showLevels, listed here.
-  }, [phase.kind, shape, scale, skillView, timeline, plan, previewFrame, filmTitle, cut, endStart, endFrames, showLevels]);
+    // extrasAt reads endStart, endFrames and showLevels, listed here.
+  }, [phase.kind, shape, scale, skillView, timeline, plan, previewFrame, filmTitle, endStart, endFrames, showLevels]);
 
   const make = async () => {
     const canvas = canvasRef.current;
@@ -362,7 +355,6 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         {seg('Length', LENGTHS, length, id => { choose({ length: id }); setPreviewAt(null); }, true)}
         {seg('Speed', SPEEDS, length ? -1 : speed, id => { choose({ speed: id, length: 0 }); setPreviewAt(null); })}
         {seg('Skills', SKILL_VIEWS, skillView, id => choose({ skillView: id }))}
-        {seg('Captions', ON_OFF, choices.captions, id => choose({ captions: id }))}
         {seg('End card', ON_OFF, choices.endCard, id => { choose({ endCard: id }); setPreviewAt(null); })}
         {days.length > 1 && (
           <div className="flex flex-wrap items-center gap-2 min-w-0 sm:col-span-2">

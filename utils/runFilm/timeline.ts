@@ -41,16 +41,6 @@ export interface FilmStep {
   totalLevel: number;
   /** Share of the world map's land open after this step, 0..1. */
   mapShare: number;
-  /** Big moments at this step, most important first, for the film's caption cards. */
-  moments: FilmMoment[];
-}
-
-export type FilmMomentKind = 'map' | 'boss' | 'max-level' | 'luck' | 'total-level' | 'max-tier' | 'unlocks';
-
-export interface FilmMoment {
-  kind: FilmMomentKind;
-  title: string;
-  text: string;
 }
 
 /** What the film's end card sums up: the counts are over the filmed days, the rest is where the run ended. */
@@ -192,14 +182,6 @@ const mapShareOf = (owned: ReadonlySet<string>): number => {
   for (const k of owned) if (MAP_LAND.has(k)) n += 1;
   return MAP_LAND.size ? n / MAP_LAND.size : 0;
 };
-const MAP_MARKS = [0.1, 0.25, 0.5, 0.75, 1];
-const TOTAL_LEVEL_MARKS = [500, 1000, 1500, 2000];
-const UNLOCK_MARK = 50;
-/** A won Key at or under this chance (percent) gets a caption. */
-export const LUCKY_CHANCE = 3;
-const MOMENT_ORDER: FilmMomentKind[] = ['map', 'boss', 'max-level', 'luck', 'total-level', 'max-tier', 'unlocks'];
-const fmt = (n: number) => n.toLocaleString('en-GB');
-const pctText = (n: number) => (n < 10 ? n.toFixed(1).replace(/\.0$/, '') : String(Math.round(n)));
 const isKeyWon = (e: LogEntry) => e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI' || e.type === 'PITY';
 /** The chance a won roll had, as a percent, when the log line says. */
 const rollChance = (e: LogEntry): number | null => {
@@ -315,38 +297,12 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
   }
   const hasLevels = seenLevel.size > 0 || SKILLS_LIST.some(n => finalLevels[n] > minLevel(n));
 
-  const snapshot = (day: number, added: string[], moments: FilmMoment[] = []): FilmStep => ({
+  const snapshot = (day: number, added: string[]): FilmStep => ({
     day, unlocks, rolls, keysWon, added, ticker: ticker.slice(0, TICKER_LINES),
     skills: { ...skills }, gear: { ...gear }, raised, levels: { ...levels }, totalLevel: sumLevels(levels),
-    mapShare: mapShareOf(owned), moments,
+    mapShare: mapShareOf(owned),
   });
   let opening: FilmStep = snapshot(1, []);
-
-  // Moments found in this step's log lines (a first boss, a Key won at long odds); the
-  // rest are found by comparing the step with the one before.
-  let pending: FilmMoment[] = [];
-  let bossSeen = false;
-  const crossed = (marks: readonly number[], before: number, after: number) => marks.filter(m => before < m && after >= m);
-  const momentsOf = (prev: FilmStep, next: FilmStep): FilmMoment[] => {
-    const out = [...pending];
-    for (const m of crossed(MAP_MARKS, prev.mapShare, next.mapShare)) {
-      out.push(m === 1
-        ? { kind: 'map', title: 'The whole map', text: 'Every chunk of land is open' }
-        : { kind: 'map', title: `${Math.round(m * 100)}% of the map`, text: 'is open' });
-    }
-    for (const m of crossed(TOTAL_LEVEL_MARKS, prev.totalLevel, next.totalLevel)) {
-      out.push({ kind: 'total-level', title: `Total level ${fmt(m)}`, text: 'reached' });
-    }
-    for (const n of SKILLS_LIST) {
-      if (prev.levels[n] < MAX_LEVEL && next.levels[n] >= MAX_LEVEL) out.push({ kind: 'max-level', title: `99 ${n}`, text: 'Skill maxed' });
-      if (n !== FREE_SKILL && prev.skills[n] < SKILL_TIER_MAX && next.skills[n] >= SKILL_TIER_MAX) {
-        out.push({ kind: 'max-tier', title: `${n} tier X`, text: 'Every tier open' });
-      }
-    }
-    const u = Math.floor(next.unlocks / UNLOCK_MARK);
-    if (u > Math.floor(prev.unlocks / UNLOCK_MARK) && u > 0) out.push({ kind: 'unlocks', title: `${fmt(u * UNLOCK_MARK)} unlocks`, text: 'and counting' });
-    return out.sort((a, b) => MOMENT_ORDER.indexOf(a.kind) - MOMENT_ORDER.indexOf(b.kind));
-  };
 
   const pushStep = (day: number) => {
     let added: string[] = [];
@@ -356,10 +312,7 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
       owned = next;
       landChanged = false;
     }
-    const step = snapshot(day, added);
-    step.moments = momentsOf(steps[steps.length - 1] ?? opening, step);
-    steps.push(step);
-    pending = [];
+    steps.push(snapshot(day, added));
     raised = [];
   };
 
@@ -402,8 +355,6 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
     if (typeof charted === 'string' && CHUNK_KEY.test(charted)) { chunks.add(charted); landChanged = true; }
     const lv = loggedLevel(e);
     if (lv && lv.level > levels[lv.skill]) levels[lv.skill] = lv.level;
-    const firstBoss = e.type === 'UNLOCK' && category === 'Bosses' && !bossSeen;
-    if (e.type === 'UNLOCK' && category === 'Bosses') bossSeen = true;
 
     if (i + 1 === before) {
       // The last line before the film: the film opens on the run as it stood.
@@ -416,15 +367,11 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
       return;
     }
     if (i < before) return;
-    if (firstBoss) pending.push({ kind: 'boss', title: 'First boss', text: tickerText(e) });
     if (isRollEntry(e)) {
       if (isKeyWon(e)) {
         dry = 0;
         const chance = rollChance(e);
         if (chance !== null && (!luckiest || chance < luckiest.chance)) luckiest = { chance, source: rollSource(e) };
-        if (chance !== null && chance <= LUCKY_CHANCE) {
-          pending.push({ kind: 'luck', title: 'Against the odds!', text: `Key won at ${pctText(chance)}%${rollSource(e) ? ` · ${rollSource(e)}` : ''}` });
-        }
       } else if (e.type === 'ROLL_FAIL') {
         dry += 1;
         if (dry > longestDry) longestDry = dry;

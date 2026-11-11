@@ -1,5 +1,4 @@
 import type { FilmStep, FilmSummary, FilmTickerKind } from './timeline';
-import type { FilmCaptionFrame } from './director';
 import { romanTier } from './timeline';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
 
@@ -96,9 +95,8 @@ export const chunkRect = (key: string, map: Box): Box => {
   return { x: map.x + (cx - MAP_CHUNKS.minX) * s, y: map.y + (MAP_CHUNKS.maxY - cy) * s, w: s, h: s };
 };
 
-/** What a frame shows besides the run: a caption card and the end card. */
+/** What a frame shows besides the run: the end card. */
 export interface FilmFrameExtras {
-  caption?: FilmCaptionFrame | null;
   endCard?: { summary: FilmSummary; age: number; showLevels: boolean; site: string } | null;
 }
 /** Frames the end card takes to fade in. */
@@ -321,7 +319,7 @@ export class FilmPainter {
     ctx.fillStyle = C.page;
     ctx.fillRect(0, 0, layout.width, layout.height);
 
-    // Everything on the map, caption cards included, stays inside its box.
+    // Everything on the map stays inside its box.
     ctx.save();
     ctx.beginPath();
     ctx.rect(map.x, map.y, map.w, map.h);
@@ -364,7 +362,6 @@ export class FilmPainter {
       if (!owned.has(`${cx + 1},${cy}`)) { ctx.moveTo(r.x + s, r.y); ctx.lineTo(r.x + s, r.y + s); }
     }
     ctx.stroke();
-    if (extras.caption) this.drawCaption(extras.caption);
     ctx.restore();
     ctx.strokeStyle = C.frame;
     ctx.lineWidth = 3;
@@ -416,32 +413,6 @@ export class FilmPainter {
     ctx.strokeStyle = C.cellLight;
     ctx.lineWidth = 1;
     ctx.strokeRect(r.x + 3.5, r.y + 3.5, r.w - 7, r.h - 7);
-  }
-
-  /** A caption card over the foot of the map: slides up and fades in, holds, fades out. */
-  private drawCaption(c: FilmCaptionFrame) {
-    const { ctx, layout } = this;
-    const { map } = layout;
-    const tall = this.shape === 'tall';
-    const fadeIn = Math.min(1, c.age / 8), fadeOut = Math.min(1, (c.length - c.age) / 10);
-    const a = Math.max(0, Math.min(fadeIn, fadeOut));
-    if (a <= 0) return;
-    const w = Math.min(map.w - 40, tall ? 520 : 560), h = tall ? 84 : 80;
-    const r = { x: map.x + (map.w - w) / 2, y: map.y + map.h - h - 18 + Math.round((1 - fadeIn) * 14), w, h };
-    ctx.save();
-    ctx.globalAlpha = a;
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 12;
-    this.stone(r);
-    ctx.shadowBlur = 0;
-    // A gold rule under the title, as OSRS's quest scroll has.
-    ctx.fillStyle = 'rgba(255,152,31,0.55)';
-    ctx.fillRect(r.x + 40, r.y + (tall ? 46 : 44), r.w - 80, 1);
-    const titleFont = `${tall ? 30 : 28}px ${this.fonts.bold}`, textFont = `${tall ? 22 : 20}px ${this.fonts.regular}`;
-    const colour = c.moment.kind === 'luck' ? C.yellow : C.orange;
-    this.text(this.fit(c.moment.title, r.w - 32, titleFont), r.x + r.w / 2, r.y + 10, titleFont, colour, 'center');
-    this.text(this.fit(c.moment.text, r.w - 32, textFont), r.x + r.w / 2, r.y + (tall ? 52 : 50), textFont, C.tan, 'center');
-    ctx.restore();
   }
 
   /** The last few seconds: the run summed up on a stone panel over the finished map. */
