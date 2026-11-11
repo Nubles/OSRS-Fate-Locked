@@ -1,5 +1,5 @@
 import type { FilmStep, FilmSummary, FilmTickerKind } from './timeline';
-import { FULL_VIEW, type FilmCamera, type FilmCaptionFrame } from './director';
+import type { FilmCaptionFrame } from './director';
 import { romanTier } from './timeline';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
 
@@ -89,16 +89,15 @@ export const skillCellRect = (skill: string, skills: Box): Box => {
   return { x: skills.x + (i % 3) * colW, y: skills.y + Math.floor(i / 3) * rowH, w: colW - gap, h: rowH - gap };
 };
 
-/** A chunk's rectangle inside the map box, with the camera on `view` (the whole map unless it says). */
-export const chunkRect = (key: string, map: Box, view: FilmCamera = FULL_VIEW): Box => {
+/** A chunk's rectangle inside the map box. */
+export const chunkRect = (key: string, map: Box): Box => {
   const [cx, cy] = key.split(',').map(Number);
-  const s = map.w / view.w;
-  return { x: map.x + (cx - MAP_CHUNKS.minX - view.x) * s, y: map.y + (MAP_CHUNKS.maxY - cy - view.y) * s, w: s, h: s };
+  const s = map.w / MAP_CHUNKS.cols;
+  return { x: map.x + (cx - MAP_CHUNKS.minX) * s, y: map.y + (MAP_CHUNKS.maxY - cy) * s, w: s, h: s };
 };
 
-/** What a frame shows besides the run: the camera, a caption card and the end card. */
+/** What a frame shows besides the run: a caption card and the end card. */
 export interface FilmFrameExtras {
-  camera?: FilmCamera;
   caption?: FilmCaptionFrame | null;
   endCard?: { summary: FilmSummary; age: number; showLevels: boolean; site: string } | null;
 }
@@ -160,11 +159,7 @@ export class FilmPainter {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('This browser cannot draw on a canvas.');
     this.ctx = ctx;
-    // The map at its own size (up to 2304 px across), so the camera can zoom in and stay sharp.
-    const iw = Number((mapImage as HTMLImageElement).width) || this.layout.map.w;
-    const ih = Number((mapImage as HTMLImageElement).height) || this.layout.map.h;
-    const fit = Math.min(1, 2304 / iw);
-    const w = Math.max(1, Math.round(iw * fit)), h = Math.max(1, Math.round(ih * fit));
+    const w = Math.round(this.layout.map.w * this.scale), h = Math.round(this.layout.map.h * this.scale);
     this.colour = document.createElement('canvas');
     this.colour.width = w; this.colour.height = h;
     const cc = this.colour.getContext('2d')!;
@@ -322,28 +317,24 @@ export class FilmPainter {
   paint(owned: ReadonlySet<string>, glow: ReadonlyMap<string, number>, step: FilmStep | undefined, title: string, extras: FilmFrameExtras = {}) {
     const { ctx, layout } = this;
     const { map, panel } = layout;
-    const view = extras.camera ?? FULL_VIEW;
     ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
     ctx.fillStyle = C.page;
     ctx.fillRect(0, 0, layout.width, layout.height);
 
-    // Everything on the map stays inside its box, wherever the camera is.
+    // Everything on the map, caption cards included, stays inside its box.
     ctx.save();
     ctx.beginPath();
     ctx.rect(map.x, map.y, map.w, map.h);
     ctx.clip();
-    const px = this.colour.width / MAP_CHUNKS.cols;
-    const src = [view.x * px, view.y * px, view.w * px, view.h * px] as const;
-    ctx.drawImage(this.fog, ...src, map.x, map.y, map.w, map.h);
-    const s = map.w / view.w;
-    const inView = (r: Box) => r.x + r.w >= map.x && r.x <= map.x + map.w && r.y + r.h >= map.y && r.y <= map.y + map.h;
+    ctx.drawImage(this.fog, map.x, map.y, map.w, map.h);
+    const s = map.w / MAP_CHUNKS.cols;
 
     // Owned land in colour.
     ctx.save();
     ctx.beginPath();
-    for (const k of owned) { const r = chunkRect(k, map, view); if (inView(r)) ctx.rect(r.x, r.y, r.w, r.h); }
+    for (const k of owned) { const r = chunkRect(k, map); ctx.rect(r.x, r.y, r.w, r.h); }
     ctx.clip();
-    ctx.drawImage(this.colour, ...src, map.x, map.y, map.w, map.h);
+    ctx.drawImage(this.colour, map.x, map.y, map.w, map.h);
     ctx.restore();
 
     // New land glows gold, fading out.
@@ -353,21 +344,20 @@ export class FilmPainter {
       ctx.shadowBlur = s;
       for (const [k, left] of glow) {
         if (k.includes(':')) continue; // a skill or gear tier
-        const r = chunkRect(k, map, view);
+        const r = chunkRect(k, map);
         ctx.fillStyle = `rgba(255,220,60,${(0.75 * left / GLOW_FRAMES).toFixed(3)})`;
         ctx.fillRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
       }
       ctx.restore();
     }
 
-    // Orange edge round owned land, a little bolder when the camera is in close.
+    // Orange edge round owned land.
     ctx.strokeStyle = C.orange;
-    ctx.lineWidth = Math.min(3, 1.5 * Math.max(1, MAP_CHUNKS.cols / view.w / 1.5));
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     for (const k of owned) {
       const [cx, cy] = k.split(',').map(Number);
-      const r = chunkRect(k, map, view);
-      if (!inView(r)) continue;
+      const r = chunkRect(k, map);
       if (!owned.has(`${cx},${cy + 1}`)) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + s, r.y); }
       if (!owned.has(`${cx},${cy - 1}`)) { ctx.moveTo(r.x, r.y + s); ctx.lineTo(r.x + s, r.y + s); }
       if (!owned.has(`${cx - 1},${cy}`)) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x, r.y + s); }

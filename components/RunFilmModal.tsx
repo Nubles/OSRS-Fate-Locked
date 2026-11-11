@@ -41,10 +41,6 @@ const LENGTHS: { id: number; label: string; hint: string }[] = [
   { id: 60, label: '60s', hint: 'A full YouTube segment' },
 ];
 const ON_OFF: { id: 'on' | 'off'; label: string }[] = [{ id: 'on', label: 'On' }, { id: 'off', label: 'Off' }];
-const CAMERAS: { id: 'follow' | 'still'; label: string; hint: string }[] = [
-  { id: 'follow', label: 'Follow', hint: 'Zooms in on new land, then pulls back' },
-  { id: 'still', label: 'Still', hint: 'The whole map, the whole time' },
-];
 const SIZES: { id: 1 | 1.5; label: string; hint: string }[] = [
   { id: 1, label: '720p', hint: 'Quicker to make, smaller file' },
   { id: 1.5, label: '1080p', hint: 'Sharper, for YouTube and editing' },
@@ -64,18 +60,16 @@ interface FilmChoices {
   skillView: FilmSkillView | null;
   /** Seconds, or 0 to follow the speed. */
   length: number;
-  camera: 'follow' | 'still';
   captions: 'on' | 'off';
   endCard: 'on' | 'off';
 }
-const DEFAULT_CHOICES: FilmChoices = { shape: 'wide', speed: 1, scale: 1, skillView: null, length: 0, camera: 'follow', captions: 'on', endCard: 'on' };
+const DEFAULT_CHOICES: FilmChoices = { shape: 'wide', speed: 1, scale: 1, skillView: null, length: 0, captions: 'on', endCard: 'on' };
 const cleanChoices = (c: Partial<FilmChoices> | null | undefined): FilmChoices => ({
   shape: c?.shape === 'tall' ? 'tall' : 'wide',
   speed: SPEEDS.some(s => s.id === c?.speed) ? c!.speed! : 1,
   scale: c?.scale === 1.5 ? 1.5 : 1,
   skillView: SKILL_VIEWS.some(v => v.id === c?.skillView) ? c!.skillView! : null,
   length: LENGTHS.some(l => l.id === c?.length) ? c!.length! : 0,
-  camera: c?.camera === 'still' ? 'still' : 'follow',
   captions: c?.captions === 'off' ? 'off' : 'on',
   endCard: c?.endCard === 'off' ? 'off' : 'on',
 });
@@ -180,11 +174,10 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const frames = plan.total;
   const endStart = frames - endFrames;
   const cut = useMemo(() => directFilm(timeline, {
-    camera: choices.camera === 'follow', captions: choices.captions === 'on', total: endStart, stepAt: plan.stepAt,
-  }), [timeline, plan, endStart, choices.camera, choices.captions]);
+    captions: choices.captions === 'on', total: endStart, stepAt: plan.stepAt,
+  }), [timeline, plan, endStart, choices.captions]);
   const showLevels = skillView !== 'tiers';
   const extrasAt = (i: number): FilmFrameExtras => ({
-    camera: cut.camera(i),
     caption: cut.caption(i),
     endCard: endFrames && i >= endStart ? { summary: timeline.summary, age: i - endStart, showLevels, site: SITE } : null,
   });
@@ -368,7 +361,6 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         {seg('Size', SIZES, scale, id => choose({ scale: id }))}
         {seg('Length', LENGTHS, length, id => { choose({ length: id }); setPreviewAt(null); }, true)}
         {seg('Speed', SPEEDS, length ? -1 : speed, id => { choose({ speed: id, length: 0 }); setPreviewAt(null); })}
-        {seg('Camera', CAMERAS, choices.camera, id => choose({ camera: id }))}
         {seg('Skills', SKILL_VIEWS, skillView, id => choose({ skillView: id }))}
         {seg('Captions', ON_OFF, choices.captions, id => choose({ captions: id }))}
         {seg('End card', ON_OFF, choices.endCard, id => { choose({ endCard: id }); setPreviewAt(null); })}

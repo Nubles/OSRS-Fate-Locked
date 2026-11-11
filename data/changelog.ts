@@ -38,12 +38,11 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-11-11-run-film-controls',
-    title: 'Run Film gets a camera, captions and more',
+    title: 'Run Film gets captions, lengths and more',
     date: '2026-11-11',
     sections: {
       added: [
         'Pick a length: 10s for Discord, 15s for an intro, 30s for TikTok or 60s for YouTube. Or set a speed from ¼× to 4×.',
-        'The camera zooms in on new land as it opens, then pulls back. Pick Still for the whole map.',
         'Cards pop up for big moments: a share of the map, your first boss, a 99, a lucky Key.',
         'An end card sums it up: unlocks, Key rolls, your luckiest Key and longest dry run, plus where to find Fate Locked.',
         'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
