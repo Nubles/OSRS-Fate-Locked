@@ -42,7 +42,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-11-11',
     sections: {
       added: [
-        'Pick a length: 10s for Discord, 15s for an intro, 30s for TikTok or 60s for YouTube. Or set a speed from ¼× to 4×.',
+        'Pick a length: 10s for Discord, 15s for an intro, 30s for TikTok or 60s for YouTube. Or set a speed from 25% to 400%.',
         'An end card sums it up: unlocks, Key rolls, your luckiest roll and longest dry run, plus where to find Fate Locked.',
         'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
         'Show your levels, tiers or both, write your own title, make it in 1080p, and drag the preview to see any moment.',

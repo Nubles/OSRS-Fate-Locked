@@ -29,7 +29,7 @@ const SHAPES: { id: FilmShape; label: string; hint: string }[] = [
   { id: 'tall', label: 'Tall', hint: 'TikTok, Shorts, Reels' },
 ];
 const SPEEDS: { id: number; label: string }[] = [
-  { id: 0.25, label: '¼×' }, { id: 0.5, label: '½×' }, { id: 1, label: '1×' }, { id: 2, label: '2×' }, { id: 4, label: '4×' },
+  { id: 0.25, label: '25%' }, { id: 0.5, label: '50%' }, { id: 1, label: '100%' }, { id: 2, label: '200%' }, { id: 4, label: '400%' },
 ];
 /** Set lengths, in seconds, for where the film is going. 0: follow the speed. */
 const LENGTHS: { id: number; label: string; hint: string }[] = [
@@ -291,7 +291,7 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
             aria-pressed={value === o.id}
             disabled={making}
             onClick={() => onPick(o.id)}
-            className={osrs ? `osrs-btn${value === o.id ? ' is-on' : ''}` : `px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors disabled:opacity-40 ${value === o.id ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
+            className={osrs ? `osrs-btn${value === o.id ? ' is-on' : ''}` : `px-2 sm:px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors disabled:opacity-40 ${value === o.id ? 'bg-white text-black' : 'text-gray-400 hover:text-white'}`}
             style={osrs ? { height: 26, padding: '0 10px' } : undefined}
             title={o.hint}
           >
@@ -353,7 +353,7 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         {seg('Shape', SHAPES, shape, id => { choose({ shape: id }); setPreviewAt(null); })}
         {seg('Size', SIZES, scale, id => choose({ scale: id }))}
         {seg('Length', LENGTHS, length, id => { choose({ length: id }); setPreviewAt(null); }, true)}
-        {seg('Speed', SPEEDS, length ? -1 : speed, id => { choose({ speed: id, length: 0 }); setPreviewAt(null); })}
+        {seg('Speed', SPEEDS, length ? -1 : speed, id => { choose({ speed: id, length: 0 }); setPreviewAt(null); }, true)}
         {seg('Skills', SKILL_VIEWS, skillView, id => choose({ skillView: id }))}
         {seg('End card', ON_OFF, choices.endCard, id => { choose({ endCard: id }); setPreviewAt(null); })}
         {days.length > 1 && (
