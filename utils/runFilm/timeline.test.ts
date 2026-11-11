@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { LogEntry } from '../../types';
 import { SUB_AREA_CHUNKS } from '../../data/subAreaChunks';
-import { buildFilmTimeline, ownedChunksForAreas, TICKER_LINES } from './timeline';
+import { SKILLS_LIST } from '../../data/items';
+import { buildFilmTimeline, filmDays, filmFramePlan, ownedChunksForAreas, TICKER_LINES } from './timeline';
 import { chunkRect, filmLayout } from './painter';
 
 const DAY = 86_400_000;
@@ -102,8 +103,100 @@ describe('buildFilmTimeline', () => {
     expect(t.steps[3]).toMatchObject({ skills: { Attack: 3 }, gear: { Legs: 1, Ring: 2 } });
   });
 
+  it('climbs skill levels as the log records them, ending on the run’s levels now', () => {
+    const level = (day: number, skill: string, lvl: number) =>
+      entry(day, 'ROLL_FAIL', 'No Key.', { skill, level: lvl, totalLevel: 0 });
+    const log = [level(0, 'Attack', 5), level(0, 'Attack', 6), level(1, 'Hitpoints', 11), entry(2, 'ROLL_FAIL', 'No Key.')];
+    const t = buildFilmTimeline(log, { ...vanilla, finalLevels: { Attack: 7, Hitpoints: 11, Mining: 30 } });
+    expect(t.hasLevels).toBe(true);
+    // Attack's first logged level is 5, so it starts at 4. Mining is never
+    // logged, so it starts where it is now. Hitpoints starts at 10.
+    expect(t.opening.levels).toMatchObject({ Attack: 4, Hitpoints: 10, Mining: 30, Cooking: 1 });
+    expect(t.opening.totalLevel).toBe(4 + 10 + 30 + (SKILLS_LIST.length - 3));
+    expect(t.steps[0].levels.Attack).toBe(5);
+    expect(t.steps[1].levels.Attack).toBe(6);
+    expect(t.steps[2].levels.Hitpoints).toBe(11);
+    // The run is at Attack 7 now: the film ends there.
+    expect(t.steps[t.steps.length - 1].levels.Attack).toBe(7);
+    expect(t.steps[t.steps.length - 1].totalLevel).toBe(7 + 11 + 30 + (SKILLS_LIST.length - 3));
+  });
+
+  it('films only the chosen days, opening on the run as it stood', () => {
+    const log = [
+      unlockArea(0, 'Falador'),
+      entry(0, 'ROLL_SUCCESS', 'Key!'),
+      entry(1, 'UNLOCK', 'Unlocked Strength', { item: 'Strength', category: 'Skills' }),
+      unlockArea(2, 'Varrock'),
+      unlockArea(3, 'Karamja'),
+    ];
+    expect(filmDays(log).map(d => [d.day, d.lines])).toEqual([[1, 2], [2, 1], [3, 1], [4, 1]]);
+    const t = buildFilmTimeline(log, { ...vanilla, finalRegions: ['Falador', 'Varrock', 'Karamja', 'Asgarnia'], fromDay: 2, toDay: 3 });
+    // Falador was already open when day 2 began.
+    expect(t.start).toEqual(expect.arrayContaining(SUB_AREA_CHUNKS['Falador'].map(key)));
+    expect(t.opening).toMatchObject({ day: 2, unlocks: 1, rolls: 1, keysWon: 1 });
+    expect(t.opening.ticker[0].text).toBe('Falador');
+    expect(t.steps.map(s => s.day)).toEqual([2, 3]);
+    expect(t.days).toBe(3);
+    // Karamja (day 4) and the live map's extra Areas are left out of a film that stops early.
+    const all = new Set([...t.start, ...t.steps.flatMap(s => s.added)]);
+    expect(SUB_AREA_CHUNKS['Varrock'].map(key).every(k => all.has(k))).toBe(true);
+    expect(t.steps[1].unlocks).toBe(3);
+    expect(t.steps.at(-1)!.ticker[0].text).toBe('Varrock');
+  });
+
+  it('sums the film up for its end card', () => {
+    const won = (day: number, chance: number, source: string) =>
+      ({ ...entry(day, 'ROLL_SUCCESS', 'Key Found!', { source }), threshold: chance, source });
+    const log = [
+      entry(0, 'ROLL_FAIL', 'No Key.'), entry(0, 'ROLL_FAIL', 'No Key.'), entry(0, 'ROLL_FAIL', 'No Key.'),
+      won(0, 2.4, 'Cooking Level 12'),
+      entry(1, 'ROLL_FAIL', 'No Key.'),
+      won(1, 15, 'Quest'),
+      entry(1, 'UNLOCK', 'Unlocked Obor', { item: 'Obor', category: 'Bosses' }),
+      entry(2, 'UNLOCK', 'Unlocked Bryophyta', { item: 'Bryophyta', category: 'Bosses' }),
+    ];
+    const t = buildFilmTimeline(log, vanilla);
+    expect(t.summary).toMatchObject({
+      fromDay: 1, toDay: 3, wholeRun: true, unlocks: 2, rolls: 6, keysWon: 2,
+      luckiest: { chance: 2.4, source: 'Cooking Level 12' }, longestDry: 3,
+    });
+    expect(t.summary.mapShare).toBeGreaterThan(0);
+    expect(t.summary.mapShare).toBeLessThan(0.2);
+  });
+
+  it('tracks the share of the map that is open', () => {
+    const t = buildFilmTimeline([entry(0, 'ROLL_FAIL', 'No Key.')], { ...vanilla, finalRegions: ['Asgarnia', 'Kandarin', 'Morytania', 'Karamja', 'Kourend & Kebos', 'Fremennik Provinces', 'Wilderness', 'Desert'] });
+    const last = t.steps[t.steps.length - 1];
+    expect(last.mapShare).toBeGreaterThan(t.opening.mapShare);
+  });
+
   it('makes no steps for an empty log', () => {
     expect(buildFilmTimeline([], vanilla).steps).toEqual([]);
+  });
+});
+
+describe('filmFramePlan', () => {
+  it('holds each step for several frames in a slow film and shows every step once', () => {
+    const plan = filmFramePlan(10, 40, 12, 48);
+    expect(plan.total).toBe(12 + 40 + 48);
+    expect(plan.stepAt(0)).toBe(-1);
+    expect(plan.stepAt(11)).toBe(-1);
+    const shown = Array.from({ length: plan.total }, (_, i) => plan.stepAt(i)).filter(s => s >= 0);
+    expect(new Set(shown).size).toBe(10);
+    expect(shown.filter(s => s === 0)).toHaveLength(4);
+    expect(plan.stepAt(plan.total - 1)).toBe(9);
+  });
+
+  it('gives one frame a step when the steps already fill the film', () => {
+    const plan = filmFramePlan(105, 105, 12, 48);
+    expect(plan.total).toBe(165);
+    expect(plan.stepAt(12)).toBe(0);
+    expect(plan.stepAt(13)).toBe(1);
+    expect(plan.stepAt(116)).toBe(104);
+  });
+
+  it('has only the opening for an empty log', () => {
+    expect(filmFramePlan(0, 0, 12, 48).stepAt(30)).toBe(-1);
   });
 });
 
