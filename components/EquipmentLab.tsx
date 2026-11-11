@@ -77,9 +77,11 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex flex-wrap lg:flex-nowrap gap-2 lg:gap-0 justify-between items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
-        <div className="flex items-center gap-3">
+      {/* Header. One row while it fits with the title on two lines; when it
+          does not, the counter and Plan move to a second row. Before, on a
+          laptop, the counter broke onto two lines and touched the toggle. */}
+      <div className="flex flex-wrap gap-2 items-center bg-[#151515] p-2 rounded border border-white/5 mb-4 shrink-0">
+        <div className="flex items-center gap-3 grow basis-[min-content]">
           <h3 className="text-gray-300 font-bold text-sm flex items-center gap-1.5">Equipment Lab <SectionGuide id="EQUIPMENT_LAB" suspendModals={suspendModals} /></h3>
           {/* Tiers / Gear mode toggle */}
           <div className="flex items-center rounded-lg border border-white/10 bg-[#1f1f1f] p-0.5">
@@ -96,10 +98,10 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto shrink-0">
           {mode === 'tiers' && (
             <>
-              <span className="text-xs text-gray-500 font-mono">{totalEquipTiers}/{maxPossible} Tiers</span>
+              <span className="text-xs text-gray-500 font-mono whitespace-nowrap">{totalEquipTiers}/{maxPossible} Tiers</span>
               <button
                 onClick={() => (planMode ? setPlanMode(false) : enterPlan())}
                 className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] font-bold uppercase tracking-wide transition-colors ${
@@ -202,9 +204,9 @@ const ClassicEquipmentLab: React.FC<Props> = ({ onUpgrade, suspendModals = false
                     ))}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => setTarget(slot, tgt - 1)} disabled={tgt <= cur} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Minus size={10} /></button>
+                    <button onClick={() => setTarget(slot, tgt - 1)} disabled={tgt <= cur} aria-label={`Lower ${slot} target`} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Minus size={10} /></button>
                     <span className="text-[10px] font-mono font-bold w-6 text-center text-cyan-200">T{tgt}</span>
-                    <button onClick={() => setTarget(slot, tgt + 1)} disabled={tgt >= EQUIPMENT_TIER_MAX} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Plus size={10} /></button>
+                    <button onClick={() => setTarget(slot, tgt + 1)} disabled={tgt >= EQUIPMENT_TIER_MAX} aria-label={`Raise ${slot} target`} className="w-5 h-5 rounded bg-[#1f1f1f] border border-white/10 text-gray-400 disabled:opacity-30 hover:text-white flex items-center justify-center"><Plus size={10} /></button>
                   </div>
                 </div>
               );

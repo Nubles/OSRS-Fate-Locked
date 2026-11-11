@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { TableType } from '../../types';
 import type { ActivityReq } from '../../data/activityRequirements';
 import type { ActivityReadiness } from '../../utils/activityReadiness';
@@ -16,6 +16,7 @@ import type { BankDef } from '../../data/banks';
 import { bankFor } from '../../utils/bankPicture';
 import { OsrsBankStage } from './OsrsBankPicture';
 import { useGame } from '../../context/GameContext';
+import { activityNameColumns } from '../../utils/activityColumns';
 import './osrs-world.css';
 
 /**
@@ -272,8 +273,35 @@ export const OsrsDashActivities: React.FC<Props> = ({ categories, activeId, onSe
   const ownedAll = categories.reduce((n, c) => n + c.unlocked.length, 0);
   const tool = !searching && (selected.id === 'SLAYER' || selected.id === 'MOBILITY' || selected.id === 'MERCHANTS');
   const big = rows.length > 80;
-  const cols = big ? 4 : 3;
+  // The list is what the two side panels leave, so a narrow window gets
+  // fewer columns instead of names cut to three letters (utils/activityColumns.ts).
+  const namesRef = useRef<HTMLDivElement>(null);
+  const [namesWidth, setNamesWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = namesRef.current;
+    if (!el) return;
+    const measure = () => setNamesWidth(el.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  const cols = activityNameColumns(namesWidth, big ? 4 : 3);
   const rowH = big ? 18 : 20;
+  // With fewer columns the list scrolls, so the chosen name (the one the
+  // panel on the right describes) is brought into view. Only the list moves,
+  // never the page.
+  const currentKey = current ? `${current.cat.id}:${current.card.id}` : '';
+  useLayoutEffect(() => {
+    const list = namesRef.current;
+    const row = list?.querySelector<HTMLElement>('.oact-name-row.is-on');
+    if (!list || !row) return;
+    const box = list.getBoundingClientRect();
+    const at = row.getBoundingClientRect();
+    if (at.top < box.top) list.scrollTop -= box.top - at.top + rowH;
+    else if (at.bottom > box.bottom) list.scrollTop += at.bottom - box.bottom + rowH;
+  }, [currentKey, cols, rowH]);
 
   return (
     <div className="oact-root">
@@ -322,7 +350,7 @@ export const OsrsDashActivities: React.FC<Props> = ({ categories, activeId, onSe
             <span style={{ color: '#ff5050' }}>Locked</span>
           </span>
         </div>
-        <div className="oact-names" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${Math.max(1, Math.ceil(rows.length / cols))}, ${rowH}px)` }}>
+        <div ref={namesRef} className="oact-names" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${Math.max(1, Math.ceil(rows.length / cols))}, ${rowH}px)` }}>
           {rows.map(({ cat, card }) => {
             const st = statusOf(card);
             const on = current && current.card.id === card.id && current.cat.id === cat.id;

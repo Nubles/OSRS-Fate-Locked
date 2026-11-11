@@ -44,6 +44,23 @@ export function placeMenuBelow(
 }
 
 /**
+ * How far to slide a menu that hangs under its own button (not portalled, so
+ * a box with hidden overflow can cut it off) to keep it inside that box:
+ * negative moves it left. A menu that would run past the right edge moves
+ * left, but never past the left edge; one that already fits stays put.
+ */
+export function slideMenuInside(
+  menu: { left: number; right: number },
+  bounds: { left: number; right: number },
+  margin: number = MENU_EDGE_MARGIN,
+): number {
+  const pastRight = menu.right - (bounds.right - margin);
+  if (pastRight <= 0) return 0;
+  const roomOnLeft = Math.max(0, menu.left - (bounds.left + margin));
+  return roomOnLeft === 0 ? 0 : -Math.round(Math.min(pastRight, roomOnLeft));
+}
+
+/**
  * Which item a key moves focus to: arrows step and wrap, Home and End jump
  * to the ends. `current` is -1 when focus is not on an item yet. Returns
  * null for keys the menu does not handle.

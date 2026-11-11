@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { X, Play, Pause, SkipBack, SkipForward, FastForward, ShieldCheck, ShieldAlert, Download, ChevronsRight } from 'lucide-react';
 import { LogEntry } from '../types';
 import { computeRunId, ensureChain } from '../utils/integrity';
 import { auditHistory, replayInvariants, buildVerifiedBundle } from '../utils/runAudit';
-import { narrate, detectMilestones, toRunDay } from '../utils/timelapseNarration';
+import { narrate, detectMilestones, toRunDay, timelapseBarsFit } from '../utils/timelapseNarration';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useGame } from '../context/GameContext';
 import { WikiIcon } from './WikiIcon';
@@ -79,6 +79,23 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
   const [bundleBusy, setBundleBusy] = useState(false);
 
   const intervalRef = useRef<number | null>(null);
+
+  // The strip of bars, measured so a run with more entries than it has room
+  // for packs them edge to edge instead of running off the right edge.
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [stripWidth, setStripWidth] = useState(0);
+  const hasEntries = chained.length > 0;
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    const measure = () => setStripWidth(strip.clientWidth);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, [hasEntries]);
+  const barsFit = timelapseBarsFit(chained.length, stripWidth);
 
   useEffect(() => {
     if (!playing) {
@@ -166,12 +183,12 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
      <OsrsFrame osrs={osrs}>
       {osrs && <OsrsTitleBar title="Timelapse" onClose={onClose} closeLabel="Close timelapse" />}
       {/* Top banner — integrity status */}
-      <div data-integrity={osrs ? integrity : undefined} className={osrs ? 'owb-tl-banner' : `shrink-0 px-6 py-3 flex items-center justify-between border-b ${integrity === 'ok' ? 'border-emerald-500/40 bg-emerald-950/40' : integrity === 'warning' ? 'border-amber-500/40 bg-amber-950/30' : 'border-red-500/50 bg-red-950/40'}`}>
-        <div className="flex items-center gap-3">
+      <div data-integrity={osrs ? integrity : undefined} className={osrs ? 'owb-tl-banner' : `shrink-0 px-6 max-sm:px-3 py-3 flex items-center justify-between gap-3 border-b ${integrity === 'ok' ? 'border-emerald-500/40 bg-emerald-950/40' : integrity === 'warning' ? 'border-amber-500/40 bg-amber-950/30' : 'border-red-500/50 bg-red-950/40'}`}>
+        <div className="flex items-center gap-3 min-w-0">
           {integrity === 'ok'
-            ? <ShieldCheck size={22} className="text-emerald-400" />
-            : <ShieldAlert size={22} className={integrity === 'warning' ? 'text-amber-400' : 'text-red-400'} />}
-          <div>
+            ? <ShieldCheck size={22} className="shrink-0 text-emerald-400" />
+            : <ShieldAlert size={22} className={`shrink-0 ${integrity === 'warning' ? 'text-amber-400' : 'text-red-400'}`} />}
+          <div className="min-w-0">
             <div className={`text-sm font-bold ${integrity === 'ok' ? 'text-emerald-300' : integrity === 'warning' ? 'text-amber-300' : 'text-red-300'}`}>
               {integrity === 'ok'
                 ? 'HISTORY INTACT (SELF-REPORTED)'
@@ -189,7 +206,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={exportBundle}
             disabled={bundleBusy}
@@ -197,14 +214,15 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
             title="Download this run's history and replay totals as JSON, with a SHA-256 checksum. Nothing is signed."
           >
             {!osrs && <Download size={13} />}
-            {bundleBusy ? 'Exporting…' : 'Export run bundle'}
+            {/* A phone shows the icon alone; the words stay as the button's name. */}
+            <span className="max-sm:sr-only">{bundleBusy ? 'Exporting…' : 'Export run bundle'}</span>
           </button>
           {!osrs && <button onClick={onClose} aria-label="Close timelapse" className="p-1.5 text-gray-400 hover:text-white"><X size={20} /></button>}
         </div>
       </div>
 
       {/* Live stats strip */}
-      <div className={osrs ? 'owb-tl-stats' : 'shrink-0 px-6 py-3 flex items-center gap-6 border-b border-white/10 bg-black/40 text-xs'}>
+      <div className={osrs ? 'owb-tl-stats' : 'shrink-0 px-6 max-sm:px-3 py-3 flex flex-wrap items-center gap-x-6 max-sm:gap-x-4 gap-y-2 border-b border-white/10 bg-black/40 text-xs'}>
         <Stat label="Day" value={day} />
         <Stat label="Rolls" value={statsAtIdx.rolls} />
         <Stat label="Success" value={statsAtIdx.rolls === 0 ? '—' : `${Math.round((statsAtIdx.successes / statsAtIdx.rolls) * 100)}%`} />
@@ -266,8 +284,11 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
           </div>
         </div>
 
-        {/* density sparkline */}
-        <div className={osrs ? 'owb-tl-spark' : 'absolute bottom-24 left-6 right-6 h-12 flex items-end gap-[1px]'}>
+        {/* density sparkline: a picture of the run for the pointer. The slider
+            below does the same job for a keyboard or a screen reader, so the
+            bars (one per entry, over a thousand in a long run) stay out of
+            the Tab order. */}
+        <div ref={stripRef} aria-hidden="true" className={osrs ? 'owb-tl-spark' : `absolute bottom-24 left-6 right-6 max-sm:left-3 max-sm:right-3 h-12 flex items-end ${barsFit ? 'gap-[1px]' : 'gap-0'}`}>
           {chained.map((e, i) => {
             const bar = typeTheme[e.type] ?? typeTheme.ROLL;
             const active = i <= idx;
@@ -275,10 +296,11 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
             return (
               <button
                 key={e.id}
+                tabIndex={-1}
                 onClick={() => setIdx(i)}
                 data-tone={osrs ? (broken ? 'broken' : outcomeTone(e.type) ?? 'none') : undefined}
                 data-on={osrs && active ? true : undefined}
-                className={osrs ? `owb-tl-bar${i === idx ? ' is-cur' : ''}` : `flex-1 min-w-[2px] transition-all ${active ? bar.border.replace('border-', 'bg-') : 'bg-white/5'} ${broken ? '!bg-red-500' : ''} ${i === idx ? 'h-12' : 'h-6'} hover:h-10`}
+                className={osrs ? `owb-tl-bar${i === idx ? ' is-cur' : ''}` : `flex-1 ${barsFit || i === idx ? 'min-w-[2px]' : 'min-w-0'} transition-all ${active ? bar.border.replace('border-', 'bg-') : 'bg-white/5'} ${broken ? '!bg-red-500' : ''} ${i === idx ? 'h-12' : 'h-6'} hover:h-10`}
                 title={`#${i + 1} ${e.type}`}
                 style={osrs ? undefined : { opacity: active ? 1 : 0.4 }}
               />
@@ -288,7 +310,7 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
       </div>
 
       {/* Controls */}
-      <div className={osrs ? 'owb-tl-controls' : 'shrink-0 px-6 py-4 border-t border-white/10 bg-black/60 flex items-center gap-3'}>
+      <div className={osrs ? 'owb-tl-controls' : 'shrink-0 px-6 max-sm:px-3 py-4 border-t border-white/10 bg-black/60 flex flex-wrap items-center gap-x-3 max-sm:gap-x-2 gap-y-3'}>
         <button
           onClick={() => setIdx(i => Math.max(0, i - 1))}
           className={osrs ? 'osrs-btn owb-tl-ctl' : 'p-2 rounded bg-white/5 hover:bg-white/10 text-white'}
@@ -324,7 +346,9 @@ export const TimelapseModal: React.FC<Props> = ({ history, onClose }) => {
           max={chained.length - 1}
           value={idx}
           onChange={e => setIdx(Number(e.target.value))}
-          className={osrs ? 'owb-tl-range' : 'flex-1 accent-emerald-400'}
+          aria-label="Position in the run"
+          aria-valuetext={`Entry ${idx + 1} of ${chained.length}`}
+          className={osrs ? 'owb-tl-range' : 'flex-1 min-w-[8rem] max-sm:order-last max-sm:basis-full accent-emerald-400'}
         />
 
         <div className="flex items-center gap-1">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LogEntry } from '../types';
-import { detectMilestones, narrate } from './timelapseNarration';
+import { detectMilestones, narrate, timelapseBarsFit } from './timelapseNarration';
 
 const rollSuccess = (
   over: Partial<LogEntry> = {},
@@ -39,5 +39,26 @@ describe('timelapse roll narration', () => {
   it('preserves question marks for legacy missing roll fields', () => {
     expect(narrate(rollSuccess()))
       .toBe('Attack Level 41 yields a key. ? vs ?.');
+  });
+});
+
+describe('timelapseBarsFit', () => {
+  it('gives every entry its own bar while the strip is wide enough', () => {
+    // 1,392px: the strip on a 1440px screen.
+    expect(timelapseBarsFit(60, 1392)).toBe(true);
+    expect(timelapseBarsFit(464, 1392)).toBe(true);
+  });
+
+  it('packs the bars once a run is too long for the strip', () => {
+    expect(timelapseBarsFit(465, 1392)).toBe(false);
+    // A real run of 1,219 entries, on a desktop and on a 390px phone.
+    expect(timelapseBarsFit(1219, 1392)).toBe(false);
+    expect(timelapseBarsFit(1219, 342)).toBe(false);
+    expect(timelapseBarsFit(115, 342)).toBe(false);
+    expect(timelapseBarsFit(114, 342)).toBe(true);
+  });
+
+  it('keeps the spaced bars until the strip has been measured', () => {
+    expect(timelapseBarsFit(5000, 0)).toBe(true);
   });
 });

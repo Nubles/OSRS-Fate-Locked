@@ -208,8 +208,10 @@ const AchievementCard: React.FC<{
             <Lock size={10} className="text-gray-600 shrink-0" aria-hidden />
           )}
         </div>
-        <p className="osrs-wa-ach-desc text-[10px] text-gray-500 truncate">{secret ? 'A hidden achievement' : a.description}</p>
-        <p className="text-[10px] text-gray-500 truncate">
+        {/* Both lines wrap. Cut to one line, a phone hid the end of what to do and of the
+            reward, and with it the Wear title link. */}
+        <p className="osrs-wa-ach-desc text-[10px] text-gray-500 break-words">{secret ? 'A hidden achievement' : a.description}</p>
+        <p className="text-[10px] text-gray-500 break-words">
           <span className={a.earned ? 'text-cyan-300/80' : 'text-gray-600'}>{reward ? `${reward} · title` : 'Title'}</span>
           {a.earned && earnedAt !== undefined && <span className="text-gray-600"> · earned {formatDate(earnedAt)}</span>}
           {a.earned && (worn

@@ -13,7 +13,7 @@ describe('SkillRollOdds', () => {
     );
 
     expect(html).toContain('Next Lv 42');
-    expect(html).toContain('8.4% Key');
+    expect(html).toContain('8.4%\u00a0Key');
     expect(html).toContain('Each level-up also has a separate 2% chance of a Chaos Key.');
     expect(html).toContain('pointer-events-auto');
   });
@@ -32,7 +32,7 @@ describe('SkillRollOdds', () => {
       <SkillRollOdds currentLevel={41} isUnlocked descriptionId="attack-key-roll-description" chance={10.4} />,
     );
 
-    expect(html).toContain('10.4% Key');
+    expect(html).toContain('10.4%\u00a0Key');
     expect(html).toContain('8.4% base, +2% from your boosts.');
   });
 
@@ -42,7 +42,20 @@ describe('SkillRollOdds', () => {
     );
 
     expect(html).toContain('Next Lv 99');
-    expect(html).toContain('19.8% Key');
+    expect(html).toContain('19.8%\u00a0Key');
+  });
+
+  it('can wrap on a narrow card, with the chance and its word kept together', () => {
+    const html = renderToStaticMarkup(
+      <SkillRollOdds currentLevel={51} chance={11.7} isUnlocked descriptionId="attack-key-roll-description" />,
+    );
+
+    // The line may wrap: held to one line it ran past a narrow card's edge
+    // and lost its end ("Next Lv 52 · 11.7% Ke" on a 1280 wide laptop).
+    const line = html.slice(0, html.indexOf('<span'));
+    expect(line).not.toContain('whitespace-nowrap');
+    // A no-break space, so the second line is "11.7% Key" and never a lone "Key".
+    expect(line).toContain('Next Lv 52 · 11.7%\u00a0Key');
   });
 
   it('shows nothing for locked or maxed skills', () => {
@@ -94,9 +107,9 @@ describe('SkillRollOdds', () => {
     const html = renderToStaticMarkup(
       <SkillRollOdds currentLevel={10} chance={null} isUnlocked descriptionId="wc" pastCap={10} />,
     );
-    expect(html).toContain('Next Lv 11 · no roll');
+    expect(html).toContain('Next Lv 11 · no\u00a0roll');
     expect(html).toContain('levels past the cap roll no Keys');
-    expect(html).not.toContain('% Key');
+    expect(html).not.toMatch(/%\sKey/);
   });
 });
 

@@ -4,4 +4,4 @@
  * data/changelog.test.ts pins it to CHANGELOG_RELEASES[0]; update it whenever
  * a release is added.
  */
-export const LATEST_CHANGELOG_ID = '2026-11-10-run-film-controls';
+export const LATEST_CHANGELOG_ID = '2026-11-11-run-film-controls';

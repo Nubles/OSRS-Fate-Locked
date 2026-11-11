@@ -1,12 +1,13 @@
-import React, { Suspense, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useRef, useState } from 'react';
 import { lazyWithRetry } from '../utils/lazyRetry';
 
 /**
  * The small "i" in a skill card's corner. Pointing at it (or tapping it)
  * shows the card's roll odds in a box beside the card, so the card itself
  * stays in view while you click it to level up. A click pins the box open
- * until you click anywhere else or press Escape. The box loads on first use
- * (components/SkillInfoBox.tsx), keeping the entry chunk small.
+ * until you click anywhere else. Escape closes it however it was opened. The
+ * box loads on first use (components/SkillInfoBox.tsx), keeping the entry
+ * chunk small.
  */
 
 const SkillInfoBox = lazyWithRetry(() => import('./SkillInfoBox').then(m => ({ default: m.SkillInfoBox })));
@@ -36,6 +37,7 @@ export const SkillInfoButton: React.FC<Props> = ({ variant, ...odds }) => {
   const [pinned, setPinned] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const open = hover || pinned;
+  const close = useCallback(() => { setPinned(false); setHover(false); }, []);
   const boxId = `skill-info-${odds.skill.toLowerCase().replace(/\s+/g, '-')}`;
 
   return (
@@ -56,7 +58,7 @@ export const SkillInfoButton: React.FC<Props> = ({ variant, ...odds }) => {
       </button>
       {open && (
         <Suspense fallback={null}>
-          <SkillInfoBox {...odds} id={boxId} variant={variant} anchorRef={btnRef} pinned={pinned} onClose={() => setPinned(false)} />
+          <SkillInfoBox {...odds} id={boxId} variant={variant} anchorRef={btnRef} pinned={pinned} onClose={close} />
         </Suspense>
       )}
     </>

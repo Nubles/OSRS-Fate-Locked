@@ -31,6 +31,12 @@ html[data-ui="osrs"] .okf-cat img { width: 18px; height: 18px; object-fit: conta
 html[data-ui="osrs"] .okf-cat .count { font-family: 'RSSmall', sans-serif; color: #ffff00; }
 html[data-ui="osrs"] .okf-cats.wide .okf-cat { height: 32px; gap: 6px; }
 html[data-ui="osrs"] .okf-cats.wide .okf-cat img { width: 20px; height: 20px; }
+/* Beside the Progression panel in a window under 1024 px, four equal tabs are
+   82 to 94 px each and "Activities 4" needs 96, so its count was cut. There a
+   tab takes its label's width plus an equal share of what is left. */
+@media (min-width: 900px) and (max-width: 1023px) {
+  html[data-ui="osrs"] .okf-cats:not(.wide) .okf-cat { flex: 1 1 auto; gap: 3px; }
+}
 
 html[data-ui="osrs"] .okf-search { flex-shrink: 0; width: 100%; box-sizing: border-box; height: 26px; padding: 0 8px; border: 1px solid #000; background: var(--osrs-well, #1f1a14); color: #fff; font: var(--osrs-fs, 16px) 'RS', sans-serif; text-shadow: none; }
 html[data-ui="osrs"] .okf-search:focus { outline: 1px solid #ffff00; }
@@ -45,7 +51,11 @@ html[data-ui="osrs"] .okf-wtitle { margin: 2px 0; text-align: center; font: var(
 html[data-ui="osrs"] .okf-row { display: grid; grid-template-columns: minmax(0, 1fr) calc(54px * var(--osrs-ts, 1)) calc(64px * var(--osrs-ts, 1)); align-items: center; column-gap: 8px; padding: 4px 8px; border-bottom: 1px solid var(--osrs-well, #1f1a14); text-shadow: 1px 1px 0 #000; }
 html[data-ui="osrs"] .okf-row .who { min-width: 0; }
 html[data-ui="osrs"] .okf-row .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; line-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The line under the name wraps when the row has no room for it on one line.
+   "Not ready: needs Weiss, Desert Treasure II" needs 216 px, and the row has
+   214 at 1366 px and 144 at 900 px, so it ended in "…" at every window size.
+   Balanced, so the second line is not one short word. */
+html[data-ui="osrs"] .okf-row .where { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); line-height: 14px; white-space: normal; text-wrap: balance; }
 html[data-ui="osrs"] .okf-row .rate { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: #ffff00; text-align: right; white-space: nowrap; display: flex; flex-direction: column; align-items: flex-end; line-height: 15px; font-variant-numeric: tabular-nums; }
 /* The bonus sits under the odds, so every row's % lines up on the right edge. */
 html[data-ui="osrs"] .okf-row .okf-bonus { font-family: 'RSSmall', sans-serif; line-height: 13px; }
@@ -119,19 +129,36 @@ html[data-ui="osrs"] .okf-dialogue.big .chathead.item { width: 72px; height: 64p
 html[data-ui="osrs"] .okf-dialogue.empty { cursor: default; }
 
 /* ── Wide Keys screen (FarmKeys-NPCs board) ─────────────────────────────── */
-html[data-ui="osrs"] .okf-wide { height: 100%; min-height: 0; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 8px; }
+/* The side column is 400 px where the window has room (1358 px and wider) and
+   gives up to 70 px back below that, so five cards still fit a row at 1180 px. */
+html[data-ui="osrs"] .okf-wide { height: 100%; min-height: 0; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 1fr) clamp(330px, 30%, 400px); gap: 8px; }
 html[data-ui="osrs"] .okf-main { position: relative; min-height: 0; min-width: 0; padding: 4px; display: flex; flex-direction: column; gap: 5px; }
 html[data-ui="osrs"] .okf-blurb { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 6px; color: var(--osrs-tan, #c8b897); white-space: nowrap; }
 html[data-ui="osrs"] .okf-blurb > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* The full window's blurb wraps onto a second line on a narrow screen. */
+html[data-ui="osrs"] .okf-wide .okf-blurb > span:first-child { white-space: normal; }
 html[data-ui="osrs"] .okf-blurb .hint { margin-left: auto; font-family: 'RSSmall', sans-serif; }
 html[data-ui="osrs"] .okf-blurb .hint b { font-weight: 400; color: #ffff00; }
-html[data-ui="osrs"] .okf-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-auto-rows: minmax(250px, 1fr); gap: 6px; }
+/* --okf-cols (OsrsFarmKeys.tsx) is the most columns the grid shows: five
+   Slayer masters to a row, three of anything else. It shows fewer where a
+   card would be under 9.5em (152 px), the least its lines fit in: five fixed
+   columns left a tablet's cards 143 px, and the chance at the top ran off the
+   card. The half pixel keeps a rounded-up share from costing a column. */
+html[data-ui="osrs"] .okf-grid {
+  flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-auto-rows: minmax(250px, 1fr); gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(max(9.5em, calc((100% - (var(--okf-cols, 5) - 1) * 6px) / var(--okf-cols, 5) - 0.5px)), 1fr));
+}
 html[data-ui="osrs"] .okf-tiers { flex: 1; min-height: 0; overflow-y: auto; }
-html[data-ui="osrs"] .okf-card { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--osrs-window, #3e3529); border: 1px solid #000; }
+html[data-ui="osrs"] .okf-card { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--osrs-window, #3e3529); border: 1px solid #000; container-type: inline-size; }
 html[data-ui="osrs"] .okf-card-head { height: 26px; flex-shrink: 0; display: flex; align-items: center; gap: 5px; padding: 0 6px; background: var(--osrs-inner, #2e271e); border-bottom: 1px solid #000; }
 html[data-ui="osrs"] .okf-card-head img { width: 22px; height: 20px; flex-shrink: 0; }
 html[data-ui="osrs"] .okf-card-head .tier { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; white-space: nowrap; }
 html[data-ui="osrs"] .okf-card-head .rate { margin-left: auto; font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ffff00; white-space: nowrap; }
+/* "Tier VIII 65.2% +0.2" needs 167 px. On a narrower card (a tablet, or a
+   laptop where the side column takes its share) the word "Tier" drops out and
+   the gem and the numeral carry it, so the chance is not cut off at the edge.
+   That line needs 139 px, which the grid's 9.5em least width covers. */
+@container (max-width: 10.4em) { html[data-ui="osrs"] .okf-card-head .okf-tier-word { display: none; } }
 html[data-ui="osrs"] .okf-stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
 html[data-ui="osrs"] .okf-card:hover .okf-stage { filter: brightness(1.12); }
 html[data-ui="osrs"] .okf-stage .shadow { position: absolute; left: 50%; bottom: 8px; width: 70%; height: 14px; transform: translateX(-50%); border-radius: 50%; background: rgba(0, 0, 0, .45); }
@@ -147,6 +174,19 @@ html[data-ui="osrs"] .okf-stash .paid { opacity: .45; }
 html[data-ui="osrs"] .okf-stash .paid img { filter: grayscale(1); }
 html[data-ui="osrs"] .okf-card-foot { flex-shrink: 0; padding: 5px 7px 7px; display: flex; flex-direction: column; gap: 1px; border-top: 1px solid #000; background: var(--osrs-window, #3e3529); min-width: 0; }
 html[data-ui="osrs"] .okf-card-foot > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A blocked card that has never rolled (NpcCard). Where the card is too
+   narrow for "Needs the Tree Gnome Stronghold area" on one line (208 px), its
+   status takes the "0 rolled" line as well and wraps onto it. The text and a
+   hidden two-line spacer share one cell, so the slot is as tall as the two
+   lines it replaces (the pixel is the gap they had between them) and the
+   pictures in a row stay level. */
+html[data-ui="osrs"] .okf-card-foot > span.okf-two > span[aria-hidden] { display: none; }
+@container (max-width: 13em) {
+  html[data-ui="osrs"] .okf-card-foot > span.okf-two { display: grid; white-space: normal; padding-bottom: 1px; }
+  html[data-ui="osrs"] .okf-card-foot > span.okf-two > span { grid-area: 1 / 1; min-width: 0; }
+  html[data-ui="osrs"] .okf-card-foot > span.okf-two > span[aria-hidden] { display: block; visibility: hidden; }
+  html[data-ui="osrs"] .okf-card-foot > span.okf-two ~ .okf-zero { display: none; }
+}
 html[data-ui="osrs"] .okf-card-foot .name { font: var(--osrs-fs, 16px) 'RSBold', sans-serif; color: #ff981f; }
 html[data-ui="osrs"] .okf-card-foot .small { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; }
 html[data-ui="osrs"] .okf-card-foot .osrs-btn { height: 28px; margin-top: 4px; }

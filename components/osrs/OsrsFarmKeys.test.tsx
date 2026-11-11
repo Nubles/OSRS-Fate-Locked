@@ -69,6 +69,89 @@ describe('OSRS Farm Keys in Vanilla', () => {
   });
 });
 
+describe('OSRS Farm Keys cards on a narrow screen', () => {
+  afterEach(() => { cleanup(); });
+
+  beforeEach(async () => {
+    const { initialState } = await vi.importActual<typeof import('../../context/GameContext')>('../../context/GameContext');
+    game.current = {
+      ...initialState,
+      gameModeId: 'vanilla',
+      unlocks: { ...initialState.unlocks, minigames: [open] },
+      history: [],
+      rollForKey,
+      claimPet: vi.fn(),
+    };
+    const { setFarmTab } = await import('./OsrsKeysState');
+    setFarmTab('SLAYER');
+  });
+
+  it('names the most columns and leaves the count to the stylesheet', async () => {
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    render(<OsrsFarmKeys wide />);
+    const grid = document.querySelector('.okf-grid') as HTMLElement;
+    // A fixed five squeezed a tablet's cards to 143 px and cut the chance off.
+    expect(grid.style.getPropertyValue('--okf-cols')).toBe('5');
+    expect(grid.style.gridTemplateColumns).toBe('');
+  });
+
+  it('gives a blocked card that has never rolled a status that can take its tally line', async () => {
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    render(<OsrsFarmKeys wide />);
+    // A fresh run has no Slayer, so every master is blocked and unrolled.
+    const turael = cardFor('Turael');
+    const status = turael.querySelector('.okf-card-foot > .okf-two') as HTMLElement;
+    expect(status.getAttribute('title')).toBe('Unlock Slayer first');
+    expect(status.firstElementChild!.textContent).toBe('Unlock Slayer first');
+    // The spacer that holds the slot at two lines is not read out.
+    expect(status.lastElementChild!.getAttribute('aria-hidden')).toBe('true');
+    // The line it takes over on a narrow card is the empty tally, and only that.
+    const tally = turael.querySelector('.okf-card-foot > .okf-zero') as HTMLElement;
+    expect(tally.textContent).toBe('0 rolled');
+    expect(status.compareDocumentPosition(tally) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Spria's line says whose odds she shares, so it stays and her status keeps to one line.
+    const spria = cardFor('Spria');
+    expect(spria.querySelector('.okf-two')).toBeNull();
+    expect(spria.querySelector('.okf-zero')).toBeNull();
+    expect(within(spria).getByText("Shares Turael's odds")).toBeTruthy();
+  });
+
+  it('keeps to characters the RuneScape fonts have on a card', async () => {
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    render(<OsrsFarmKeys wide />);
+    // Curly quotes, the en dash, the minus sign and the arrow are not in the
+    // fonts. Another typeface draws them, and its taller line (18 px for 12)
+    // put Spria's picture 6 px above the rest of her row.
+    for (const card of document.querySelectorAll<HTMLElement>('.okf-card')) {
+      for (const line of card.querySelectorAll(':scope > .okf-card-foot > span')) {
+        expect(line.textContent, card.dataset.examineName).not.toMatch(/[\u2018\u2019\u201c\u201d\u2013\u2212\u2192]/);
+      }
+    }
+  });
+
+  it('leaves a card that can roll as it was', async () => {
+    const { setFarmTab } = await import('./OsrsKeysState');
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    setFarmTab('ACTIVITIES');
+    render(<OsrsFarmKeys wide />);
+    const card = cardFor(open);
+    expect(within(card).getByRole('button', { name: 'Roll' })).toBeTruthy();
+    expect(card.querySelector('.okf-two')).toBeNull();
+    expect(card.querySelector('.okf-zero')).toBeNull();
+  });
+
+  it('sets the word "Tier" apart, so a narrow card can drop it and keep the numeral', async () => {
+    const { setFarmTab } = await import('./OsrsKeysState');
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    setFarmTab('ACTIVITIES');
+    render(<OsrsFarmKeys wide />);
+    const tier = cardFor(open).querySelector('.okf-card-head .tier') as HTMLElement;
+    expect(tier.textContent).toMatch(/^Tier [IVX]+$/);
+    expect(tier.querySelector('.okf-tier-word')!.textContent).toBe('Tier ');
+  });
+});
+
 describe('OSRS Farm Keys in Chunked (play review 8)', () => {
   afterEach(() => { cleanup(); });
 

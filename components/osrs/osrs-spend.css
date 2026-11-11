@@ -182,6 +182,10 @@ html[data-ui="osrs"] button.ohsum-fact:not([disabled]) { cursor: pointer; }
 html[data-ui="osrs"] button.ohsum-fact:not([disabled]):hover .v { color: #ffffff; }
 html[data-ui="osrs"] button.ohsum-fact:focus-visible { outline: 1px solid var(--osrs-yellow, #ffff00); }
 html[data-ui="osrs"] .ohsum-fact > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The value and the line under it can hold a source's name, and the box is
+   132 px wide on a computer: "Combat Achievement (Medium)" ended in "…". They
+   wrap onto a second line instead; the label keeps to one. */
+html[data-ui="osrs"] .ohsum-fact > span:is(.v, .d) { white-space: normal; }
 html[data-ui="osrs"] .ohsum-fact .l { font: var(--osrs-fs, 16px) 'RSSmall', sans-serif; color: var(--osrs-tan, #c8b897); }
 html[data-ui="osrs"] .ohsum-fact .v { font: var(--osrs-fs, 16px) 'RS', sans-serif; color: var(--osrs-orange, #ff981f); }
 html[data-ui="osrs"] .ohsum-fact .v.dim { color: var(--osrs-text-dim, #a89878); }
