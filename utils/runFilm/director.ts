@@ -3,7 +3,7 @@ import type { FilmMoment, FilmTimeline } from './timeline';
 /**
  * Run Film director: which caption card shows on each frame. Pure, so the
  * same film always cuts the same way. A step's biggest moment (a share of the
- * map, a first boss, a 99, a lucky Key) gets a card. Cards queue for a moment
+ * map, a first boss, a 99, a Key won at long odds) gets a card. Cards queue for a moment
  * when they bunch up and are dropped when they'd come too late to still match
  * the map.
  */

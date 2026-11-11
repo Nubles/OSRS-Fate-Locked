@@ -156,7 +156,7 @@ describe('buildFilmTimeline', () => {
       entry(2, 'UNLOCK', 'Unlocked Bryophyta', { item: 'Bryophyta', category: 'Bosses' }),
     ];
     const t = buildFilmTimeline(log, vanilla);
-    expect(t.steps[3].moments[0]).toEqual({ kind: 'luck', title: 'Lucky Key!', text: '2.4% chance · Cooking Level 12' });
+    expect(t.steps[3].moments[0]).toEqual({ kind: 'luck', title: 'Against the odds!', text: 'Key won at 2.4% · Cooking Level 12' });
     expect(t.steps[5].moments).toEqual([]); // 15% is no surprise
     expect(t.steps[6].moments[0]).toEqual({ kind: 'boss', title: 'First boss', text: 'Obor' });
     expect(t.steps[7].moments).toEqual([]); // only the first boss

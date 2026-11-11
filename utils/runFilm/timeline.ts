@@ -322,7 +322,7 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
   });
   let opening: FilmStep = snapshot(1, []);
 
-  // Moments found in this step's log lines (a first boss, a lucky Key); the
+  // Moments found in this step's log lines (a first boss, a Key won at long odds); the
   // rest are found by comparing the step with the one before.
   let pending: FilmMoment[] = [];
   let bossSeen = false;
@@ -423,7 +423,7 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
         const chance = rollChance(e);
         if (chance !== null && (!luckiest || chance < luckiest.chance)) luckiest = { chance, source: rollSource(e) };
         if (chance !== null && chance <= LUCKY_CHANCE) {
-          pending.push({ kind: 'luck', title: 'Lucky Key!', text: `${pctText(chance)}% chance${rollSource(e) ? ` · ${rollSource(e)}` : ''}` });
+          pending.push({ kind: 'luck', title: 'Against the odds!', text: `Key won at ${pctText(chance)}%${rollSource(e) ? ` · ${rollSource(e)}` : ''}` });
         }
       } else if (e.type === 'ROLL_FAIL') {
         dry += 1;

@@ -482,7 +482,7 @@ export class FilmPainter {
       ['Keys won', sm.keysWon.toLocaleString('en-GB')],
     ];
     if (card.showLevels) tiles.push(['Total level', sm.totalLevel.toLocaleString('en-GB')]);
-    if (sm.luckiest) tiles.push(['Luckiest Key', `${sm.luckiest.chance < 10 ? sm.luckiest.chance.toFixed(1).replace(/\.0$/, '') : Math.round(sm.luckiest.chance)}%`, sm.luckiest.source]);
+    if (sm.luckiest) tiles.push(['Luckiest roll', `${sm.luckiest.chance < 10 ? sm.luckiest.chance.toFixed(1).replace(/\.0$/, '') : Math.round(sm.luckiest.chance)}%`, sm.luckiest.source]);
     if (sm.longestDry > 0) tiles.push(['Longest dry run', `${sm.longestDry.toLocaleString('en-GB')} rolls`]);
     const cols = 2, colW = (w - 80) / cols, rowH = tall ? 118 : 84;
     tiles.forEach(([label, value, note], i) => {
