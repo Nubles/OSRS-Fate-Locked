@@ -38,14 +38,16 @@ export interface ChangelogRelease {
 export const CHANGELOG_RELEASES = [
   {
     id: '2026-11-11-run-film-controls',
-    title: 'More control over your Run Film',
+    title: 'Run Film gets a camera, captions and more',
     date: '2026-11-11',
     sections: {
       added: [
-        'Pick a speed for your film, from ¼× for a slow, detailed replay up to 4× for a quick one.',
+        'Pick a length: 10s for Discord, 15s for an intro, 30s for TikTok or 60s for YouTube. Or set a speed from ¼× to 4×.',
+        'The camera zooms in on new land as it opens, then pulls back. Pick Still for the whole map.',
+        'Cards pop up for big moments: a share of the map, your first boss, a 99, a lucky Key.',
+        'An end card sums it up: unlocks, Key rolls, your luckiest Key and longest dry run, plus where to find Fate Locked.',
         'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
-        'Your skills tab can show your levels and total level, your tiers, or both.',
-        'Write your own title, make it in 1080p, and drag the preview to see any moment before you make it.',
+        'Show your levels, tiers or both, write your own title, make it in 1080p, and drag the preview to see any moment.',
       ],
     },
   },

@@ -144,6 +144,37 @@ describe('buildFilmTimeline', () => {
     expect(t.steps.at(-1)!.ticker[0].text).toBe('Varrock');
   });
 
+  it('finds the big moments and sums the film up for its end card', () => {
+    const won = (day: number, chance: number, source: string) =>
+      ({ ...entry(day, 'ROLL_SUCCESS', 'Key Found!', { source }), threshold: chance, source });
+    const log = [
+      entry(0, 'ROLL_FAIL', 'No Key.'), entry(0, 'ROLL_FAIL', 'No Key.'), entry(0, 'ROLL_FAIL', 'No Key.'),
+      won(0, 2.4, 'Cooking Level 12'),
+      entry(1, 'ROLL_FAIL', 'No Key.'),
+      won(1, 15, 'Quest'),
+      entry(1, 'UNLOCK', 'Unlocked Obor', { item: 'Obor', category: 'Bosses' }),
+      entry(2, 'UNLOCK', 'Unlocked Bryophyta', { item: 'Bryophyta', category: 'Bosses' }),
+    ];
+    const t = buildFilmTimeline(log, vanilla);
+    expect(t.steps[3].moments[0]).toEqual({ kind: 'luck', title: 'Lucky Key!', text: '2.4% chance · Cooking Level 12' });
+    expect(t.steps[5].moments).toEqual([]); // 15% is no surprise
+    expect(t.steps[6].moments[0]).toEqual({ kind: 'boss', title: 'First boss', text: 'Obor' });
+    expect(t.steps[7].moments).toEqual([]); // only the first boss
+    expect(t.summary).toMatchObject({
+      fromDay: 1, toDay: 3, wholeRun: true, unlocks: 2, rolls: 6, keysWon: 2,
+      luckiest: { chance: 2.4, source: 'Cooking Level 12' }, longestDry: 3,
+    });
+    expect(t.summary.mapShare).toBeGreaterThan(0);
+    expect(t.summary.mapShare).toBeLessThan(0.2);
+  });
+
+  it('marks shares of the map as they open', () => {
+    const t = buildFilmTimeline([entry(0, 'ROLL_FAIL', 'No Key.')], { ...vanilla, finalRegions: ['Asgarnia', 'Kandarin', 'Morytania', 'Karamja', 'Kourend & Kebos', 'Fremennik Provinces', 'Wilderness', 'Desert'] });
+    const last = t.steps[t.steps.length - 1];
+    expect(last.mapShare).toBeGreaterThan(t.opening.mapShare);
+    expect(last.moments.some(m => m.kind === 'map')).toBe(true);
+  });
+
   it('makes no steps for an empty log', () => {
     expect(buildFilmTimeline([], vanilla).steps).toEqual([]);
   });

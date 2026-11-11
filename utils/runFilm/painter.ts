@@ -1,4 +1,5 @@
-import type { FilmStep, FilmTickerKind } from './timeline';
+import type { FilmStep, FilmSummary, FilmTickerKind } from './timeline';
+import { FULL_VIEW, type FilmCamera, type FilmCaptionFrame } from './director';
 import { romanTier } from './timeline';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
 
@@ -88,12 +89,21 @@ export const skillCellRect = (skill: string, skills: Box): Box => {
   return { x: skills.x + (i % 3) * colW, y: skills.y + Math.floor(i / 3) * rowH, w: colW - gap, h: rowH - gap };
 };
 
-/** A chunk's rectangle inside the map box. */
-export const chunkRect = (key: string, map: Box): Box => {
+/** A chunk's rectangle inside the map box, with the camera on `view` (the whole map unless it says). */
+export const chunkRect = (key: string, map: Box, view: FilmCamera = FULL_VIEW): Box => {
   const [cx, cy] = key.split(',').map(Number);
-  const s = map.w / MAP_CHUNKS.cols;
-  return { x: map.x + (cx - MAP_CHUNKS.minX) * s, y: map.y + (MAP_CHUNKS.maxY - cy) * s, w: s, h: s };
+  const s = map.w / view.w;
+  return { x: map.x + (cx - MAP_CHUNKS.minX - view.x) * s, y: map.y + (MAP_CHUNKS.maxY - cy - view.y) * s, w: s, h: s };
 };
+
+/** What a frame shows besides the run: the camera, a caption card and the end card. */
+export interface FilmFrameExtras {
+  camera?: FilmCamera;
+  caption?: FilmCaptionFrame | null;
+  endCard?: { summary: FilmSummary; age: number; showLevels: boolean; site: string } | null;
+}
+/** Frames the end card takes to fade in. */
+export const END_CARD_FADE = 12;
 
 const C = {
   page: '#191512', frame: '#000000', fogTint: 'rgba(31,26,20,0.38)',
@@ -150,7 +160,11 @@ export class FilmPainter {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('This browser cannot draw on a canvas.');
     this.ctx = ctx;
-    const w = Math.round(this.layout.map.w * this.scale), h = Math.round(this.layout.map.h * this.scale);
+    // The map at its own size (up to 2304 px across), so the camera can zoom in and stay sharp.
+    const iw = Number((mapImage as HTMLImageElement).width) || this.layout.map.w;
+    const ih = Number((mapImage as HTMLImageElement).height) || this.layout.map.h;
+    const fit = Math.min(1, 2304 / iw);
+    const w = Math.max(1, Math.round(iw * fit)), h = Math.max(1, Math.round(ih * fit));
     this.colour = document.createElement('canvas');
     this.colour.width = w; this.colour.height = h;
     const cc = this.colour.getContext('2d')!;
@@ -305,50 +319,63 @@ export class FilmPainter {
   }
 
   /** Draws a frame: `owned` is every chunk open now, `glow` maps a chunk to its frames of glow left. */
-  paint(owned: ReadonlySet<string>, glow: ReadonlyMap<string, number>, step: FilmStep | undefined, title: string) {
+  paint(owned: ReadonlySet<string>, glow: ReadonlyMap<string, number>, step: FilmStep | undefined, title: string, extras: FilmFrameExtras = {}) {
     const { ctx, layout } = this;
     const { map, panel } = layout;
+    const view = extras.camera ?? FULL_VIEW;
     ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
     ctx.fillStyle = C.page;
     ctx.fillRect(0, 0, layout.width, layout.height);
-    ctx.drawImage(this.fog, map.x, map.y, map.w, map.h);
+
+    // Everything on the map stays inside its box, wherever the camera is.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(map.x, map.y, map.w, map.h);
+    ctx.clip();
+    const px = this.colour.width / MAP_CHUNKS.cols;
+    const src = [view.x * px, view.y * px, view.w * px, view.h * px] as const;
+    ctx.drawImage(this.fog, ...src, map.x, map.y, map.w, map.h);
+    const s = map.w / view.w;
+    const inView = (r: Box) => r.x + r.w >= map.x && r.x <= map.x + map.w && r.y + r.h >= map.y && r.y <= map.y + map.h;
 
     // Owned land in colour.
     ctx.save();
     ctx.beginPath();
-    for (const k of owned) { const r = chunkRect(k, map); ctx.rect(r.x, r.y, r.w, r.h); }
+    for (const k of owned) { const r = chunkRect(k, map, view); if (inView(r)) ctx.rect(r.x, r.y, r.w, r.h); }
     ctx.clip();
-    ctx.drawImage(this.colour, map.x, map.y, map.w, map.h);
+    ctx.drawImage(this.colour, ...src, map.x, map.y, map.w, map.h);
     ctx.restore();
 
     // New land glows gold, fading out.
     if ([...glow.keys()].some(k => !k.includes(':'))) {
       ctx.save();
       ctx.shadowColor = 'rgba(255,220,60,0.9)';
-      ctx.shadowBlur = map.w / MAP_CHUNKS.cols;
+      ctx.shadowBlur = s;
       for (const [k, left] of glow) {
         if (k.includes(':')) continue; // a skill or gear tier
-        const r = chunkRect(k, map);
+        const r = chunkRect(k, map, view);
         ctx.fillStyle = `rgba(255,220,60,${(0.75 * left / GLOW_FRAMES).toFixed(3)})`;
         ctx.fillRect(r.x - 1, r.y - 1, r.w + 2, r.h + 2);
       }
       ctx.restore();
     }
 
-    // Orange edge round owned land.
+    // Orange edge round owned land, a little bolder when the camera is in close.
     ctx.strokeStyle = C.orange;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = Math.min(3, 1.5 * Math.max(1, MAP_CHUNKS.cols / view.w / 1.5));
     ctx.beginPath();
-    const s = map.w / MAP_CHUNKS.cols;
     for (const k of owned) {
       const [cx, cy] = k.split(',').map(Number);
-      const r = chunkRect(k, map);
+      const r = chunkRect(k, map, view);
+      if (!inView(r)) continue;
       if (!owned.has(`${cx},${cy + 1}`)) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x + s, r.y); }
       if (!owned.has(`${cx},${cy - 1}`)) { ctx.moveTo(r.x, r.y + s); ctx.lineTo(r.x + s, r.y + s); }
       if (!owned.has(`${cx - 1},${cy}`)) { ctx.moveTo(r.x, r.y); ctx.lineTo(r.x, r.y + s); }
       if (!owned.has(`${cx + 1},${cy}`)) { ctx.moveTo(r.x + s, r.y); ctx.lineTo(r.x + s, r.y + s); }
     }
     ctx.stroke();
+    if (extras.caption) this.drawCaption(extras.caption);
+    ctx.restore();
     ctx.strokeStyle = C.frame;
     ctx.lineWidth = 3;
     ctx.strokeRect(map.x - 1.5, map.y - 1.5, map.w + 3, map.h + 3);
@@ -385,5 +412,100 @@ export class FilmPainter {
       this.text(this.fit(line.text, ticker.w, `${small}px ${regular}`), ticker.x, ticker.y + lineH * (i + 1), `${small}px ${regular}`, TICKER_COLOUR[line.kind]);
     });
     ctx.globalAlpha = 1;
+    if (extras.endCard) this.drawEndCard(extras.endCard, title);
+  }
+
+  /** An OSRS-style stone panel: dark fill, black edge, a light inner bevel. */
+  private stone(r: Box) {
+    const ctx = this.ctx;
+    ctx.fillStyle = '#2e271f';
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+    ctx.strokeStyle = C.cellLight;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(r.x + 3.5, r.y + 3.5, r.w - 7, r.h - 7);
+  }
+
+  /** A caption card over the foot of the map: slides up and fades in, holds, fades out. */
+  private drawCaption(c: FilmCaptionFrame) {
+    const { ctx, layout } = this;
+    const { map } = layout;
+    const tall = this.shape === 'tall';
+    const fadeIn = Math.min(1, c.age / 8), fadeOut = Math.min(1, (c.length - c.age) / 10);
+    const a = Math.max(0, Math.min(fadeIn, fadeOut));
+    if (a <= 0) return;
+    const w = Math.min(map.w - 40, tall ? 520 : 560), h = tall ? 84 : 80;
+    const r = { x: map.x + (map.w - w) / 2, y: map.y + map.h - h - 18 + Math.round((1 - fadeIn) * 14), w, h };
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 12;
+    this.stone(r);
+    ctx.shadowBlur = 0;
+    // A gold rule under the title, as OSRS's quest scroll has.
+    ctx.fillStyle = 'rgba(255,152,31,0.55)';
+    ctx.fillRect(r.x + 40, r.y + (tall ? 46 : 44), r.w - 80, 1);
+    const titleFont = `${tall ? 30 : 28}px ${this.fonts.bold}`, textFont = `${tall ? 22 : 20}px ${this.fonts.regular}`;
+    const colour = c.moment.kind === 'luck' ? C.yellow : C.orange;
+    this.text(this.fit(c.moment.title, r.w - 32, titleFont), r.x + r.w / 2, r.y + 10, titleFont, colour, 'center');
+    this.text(this.fit(c.moment.text, r.w - 32, textFont), r.x + r.w / 2, r.y + (tall ? 52 : 50), textFont, C.tan, 'center');
+    ctx.restore();
+  }
+
+  /** The last few seconds: the run summed up on a stone panel over the finished map. */
+  private drawEndCard(card: NonNullable<FilmFrameExtras['endCard']>, title: string) {
+    const { ctx, layout } = this;
+    const tall = this.shape === 'tall';
+    const a = Math.min(1, card.age / END_CARD_FADE);
+    const { summary: sm } = card;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(10,8,6,0.72)';
+    ctx.fillRect(0, 0, layout.width, layout.height);
+    const w = tall ? 620 : 760, h = tall ? 860 : 540;
+    const r = { x: (layout.width - w) / 2, y: (layout.height - h) / 2 + Math.round((1 - a) * 16), w, h };
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 24;
+    this.stone(r);
+    ctx.shadowBlur = 0;
+    const { bold, regular } = this.fonts;
+    const cx = r.x + w / 2;
+    let y = r.y + 28;
+    this.text(this.fit(title, w - 60, `${tall ? 30 : 28}px ${bold}`), cx, y, `${tall ? 30 : 28}px ${bold}`, C.orange, 'center');
+    y += tall ? 48 : 42;
+    const days = sm.toDay - sm.fromDay + 1;
+    const headline = sm.wholeRun || sm.fromDay === 1
+      ? `${days} ${days === 1 ? 'day' : 'days'} of fate`
+      : `Days ${sm.fromDay} to ${sm.toDay}`;
+    this.text(headline, cx, y, `${tall ? 56 : 52}px ${bold}`, C.yellow, 'center');
+    y += tall ? 84 : 76;
+    ctx.fillStyle = 'rgba(255,152,31,0.5)';
+    ctx.fillRect(r.x + 40, y - 14, w - 80, 1);
+
+    const pct = (n: number) => `${n < 0.1 && n > 0 ? (n * 100).toFixed(1) : Math.round(n * 100)}%`;
+    const tiles: [string, string, string?][] = [
+      ['Unlocks', sm.unlocks.toLocaleString('en-GB')],
+      ['Map open', pct(sm.mapShare)],
+      ['Key rolls', sm.rolls.toLocaleString('en-GB')],
+      ['Keys won', sm.keysWon.toLocaleString('en-GB')],
+    ];
+    if (card.showLevels) tiles.push(['Total level', sm.totalLevel.toLocaleString('en-GB')]);
+    if (sm.luckiest) tiles.push(['Luckiest Key', `${sm.luckiest.chance < 10 ? sm.luckiest.chance.toFixed(1).replace(/\.0$/, '') : Math.round(sm.luckiest.chance)}%`, sm.luckiest.source]);
+    if (sm.longestDry > 0) tiles.push(['Longest dry run', `${sm.longestDry.toLocaleString('en-GB')} rolls`]);
+    const cols = 2, colW = (w - 80) / cols, rowH = tall ? 118 : 84;
+    tiles.forEach(([label, value, note], i) => {
+      // A lone last tile sits in the middle.
+      const alone = i === tiles.length - 1 && i % cols === 0;
+      const tx = alone ? cx : r.x + 40 + (i % cols) * colW + colW / 2, ty = y + Math.floor(i / cols) * rowH;
+      this.text(label, tx, ty, `${tall ? 22 : 18}px ${regular}`, C.tan, 'center');
+      this.text(value, tx, ty + (tall ? 28 : 22), `${tall ? 40 : 32}px ${bold}`, C.yellow, 'center');
+      if (note) this.text(this.fit(note, colW - 16, `${tall ? 18 : 14}px ${regular}`), tx, ty + (tall ? 74 : 58), `${tall ? 18 : 14}px ${regular}`, C.dim, 'center');
+    });
+    const footY = r.y + h - (tall ? 76 : 64);
+    this.text('Made with Fate Locked', cx, footY, `${tall ? 24 : 20}px ${bold}`, C.orange, 'center');
+    this.text(card.site, cx, footY + (tall ? 32 : 26), `${tall ? 20 : 16}px ${regular}`, C.tan, 'center');
+    ctx.restore();
   }
 }

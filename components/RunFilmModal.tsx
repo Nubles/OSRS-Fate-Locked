@@ -8,7 +8,9 @@ import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { buildFilmTimeline, DEFAULT_MAX_STEPS, filmDays, filmFramePlan } from '../utils/runFilm/timeline';
-import { FilmPainter, GLOW_FRAMES, type FilmShape, type FilmSkillView, type FilmSprites } from '../utils/runFilm/painter';
+import { FilmPainter, GLOW_FRAMES, type FilmFrameExtras, type FilmShape, type FilmSkillView, type FilmSprites } from '../utils/runFilm/painter';
+import { directFilm } from '../utils/runFilm/director';
+import { SITE } from './ShareCardCanvas';
 import { gemSmallSrc, skillIconSrc, slotSilhouetteSrc, slotUiSrc } from './osrs/OsrsDashGems';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../data/items';
 import { encodeFilm, FilmCancelled, FILM_FPS, type FilmFile } from '../utils/runFilm/encode';
@@ -20,6 +22,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 /** Frames before the first step and after the last, so the film opens and ends on a still map. */
 const LEAD_FRAMES = 12;
 const HOLD_FRAMES = 48;
+/** The end card's frames, after the hold. */
+const END_FRAMES = 96;
 
 const SHAPES: { id: FilmShape; label: string; hint: string }[] = [
   { id: 'wide', label: 'Wide', hint: 'Discord, YouTube' },
@@ -27,6 +31,19 @@ const SHAPES: { id: FilmShape; label: string; hint: string }[] = [
 ];
 const SPEEDS: { id: number; label: string }[] = [
   { id: 0.25, label: '¼×' }, { id: 0.5, label: '½×' }, { id: 1, label: '1×' }, { id: 2, label: '2×' }, { id: 4, label: '4×' },
+];
+/** Set lengths, in seconds, for where the film is going. 0: follow the speed. */
+const LENGTHS: { id: number; label: string; hint: string }[] = [
+  { id: 0, label: 'By speed', hint: 'The speed below sets the length' },
+  { id: 10, label: '10s', hint: 'A Discord clip' },
+  { id: 15, label: '15s', hint: 'A YouTube intro' },
+  { id: 30, label: '30s', hint: 'TikTok, Shorts, Reels' },
+  { id: 60, label: '60s', hint: 'A full YouTube segment' },
+];
+const ON_OFF: { id: 'on' | 'off'; label: string }[] = [{ id: 'on', label: 'On' }, { id: 'off', label: 'Off' }];
+const CAMERAS: { id: 'follow' | 'still'; label: string; hint: string }[] = [
+  { id: 'follow', label: 'Follow', hint: 'Zooms in on new land, then pulls back' },
+  { id: 'still', label: 'Still', hint: 'The whole map, the whole time' },
 ];
 const SIZES: { id: 1 | 1.5; label: string; hint: string }[] = [
   { id: 1, label: '720p', hint: 'Quicker to make, smaller file' },
@@ -45,13 +62,22 @@ interface FilmChoices {
   scale: 1 | 1.5;
   /** null: levels when the run has any, else tiers. */
   skillView: FilmSkillView | null;
+  /** Seconds, or 0 to follow the speed. */
+  length: number;
+  camera: 'follow' | 'still';
+  captions: 'on' | 'off';
+  endCard: 'on' | 'off';
 }
-const DEFAULT_CHOICES: FilmChoices = { shape: 'wide', speed: 1, scale: 1, skillView: null };
+const DEFAULT_CHOICES: FilmChoices = { shape: 'wide', speed: 1, scale: 1, skillView: null, length: 0, camera: 'follow', captions: 'on', endCard: 'on' };
 const cleanChoices = (c: Partial<FilmChoices> | null | undefined): FilmChoices => ({
   shape: c?.shape === 'tall' ? 'tall' : 'wide',
   speed: SPEEDS.some(s => s.id === c?.speed) ? c!.speed! : 1,
   scale: c?.scale === 1.5 ? 1.5 : 1,
   skillView: SKILL_VIEWS.some(v => v.id === c?.skillView) ? c!.skillView! : null,
+  length: LENGTHS.some(l => l.id === c?.length) ? c!.length! : 0,
+  camera: c?.camera === 'still' ? 'still' : 'follow',
+  captions: c?.captions === 'off' ? 'off' : 'on',
+  endCard: c?.endCard === 'off' ? 'off' : 'on',
 });
 
 const shortDate = (ts: number) => new Date(ts).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
@@ -109,7 +135,8 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const [storedChoices, setChoices] = useLocalStorage<FilmChoices>('runFilm:choices', DEFAULT_CHOICES);
   const choices = cleanChoices(storedChoices);
-  const { shape, speed, scale } = choices;
+  const { shape, speed, scale, length } = choices;
+  const endFrames = choices.endCard === 'on' ? END_FRAMES : 0;
   const choose = (patch: Partial<FilmChoices>) => {
     setChoices(prev => ({ ...cleanChoices(prev), ...patch }));
     if (phase.kind !== 'making') setPhase({ kind: 'idle' });
@@ -125,9 +152,12 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     setRange(from <= firstDay && to >= lastDay ? null : { from, to: Math.max(from, to) });
     if (phase.kind !== 'making') setPhase({ kind: 'idle' });
   };
-  // Lines in the chosen days, spread over the film at the chosen speed.
+  // Lines in the chosen days, spread over the film at the chosen speed, or
+  // over whatever's left of a set length once the opening, hold and end card are in.
   const lines = days.reduce((n, d) => (d.day >= fromDay && d.day <= toDay ? n + d.lines : n), 0);
-  const stepFrames = Math.max(1, Math.round(Math.min(lines, DEFAULT_MAX_STEPS) / speed));
+  const stepFrames = length
+    ? Math.max(FILM_FPS, length * FILM_FPS - LEAD_FRAMES - HOLD_FRAMES - endFrames)
+    : Math.max(1, Math.round(Math.min(lines, DEFAULT_MAX_STEPS) / speed));
 
   const [title, setTitle] = useState('');
   const defaultTitle = `${activeProfileName || 'My run'} · Fate Locked ${getGameMode(gameModeId).name}`;
@@ -146,8 +176,18 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
     toDay,
   }), [history, chunked, unlocks.regions, unlocks.chunks, unlocks.skills, unlocks.equipment, unlocks.levels, stepFrames, fromDay, toDay]);
   const skillView: FilmSkillView = choices.skillView ?? (timeline.hasLevels ? 'both' : 'tiers');
-  const plan = useMemo(() => filmFramePlan(timeline.steps.length, stepFrames, LEAD_FRAMES, HOLD_FRAMES), [timeline, stepFrames]);
+  const plan = useMemo(() => filmFramePlan(timeline.steps.length, stepFrames, LEAD_FRAMES, HOLD_FRAMES + endFrames), [timeline, stepFrames, endFrames]);
   const frames = plan.total;
+  const endStart = frames - endFrames;
+  const cut = useMemo(() => directFilm(timeline, {
+    camera: choices.camera === 'follow', captions: choices.captions === 'on', total: endStart, stepAt: plan.stepAt,
+  }), [timeline, plan, endStart, choices.camera, choices.captions]);
+  const showLevels = skillView !== 'tiers';
+  const extrasAt = (i: number): FilmFrameExtras => ({
+    camera: cut.camera(i),
+    caption: cut.caption(i),
+    endCard: endFrames && i >= endStart ? { summary: timeline.summary, age: i - endStart, showLevels, site: SITE } : null,
+  });
   const seconds = Math.round(frames / FILM_FPS);
 
   // The preview: any frame of the film, drawn without making it. Starts on the last.
@@ -176,10 +216,11 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       const stepIndex = plan.stepAt(previewFrame);
       const owned = new Set(timeline.start);
       for (let s = 0; s <= stepIndex; s += 1) for (const k of timeline.steps[s].added) owned.add(k);
-      painterRef.current.painter.paint(owned, new Map(), stepIndex < 0 ? timeline.opening : timeline.steps[stepIndex], filmTitle);
+      painterRef.current.painter.paint(owned, new Map(), stepIndex < 0 ? timeline.opening : timeline.steps[stepIndex], filmTitle, extrasAt(previewFrame));
     })().catch(() => { /* the Make button reports a map that won't load */ });
     return () => { cancelled = true; };
-  }, [phase.kind, shape, scale, skillView, timeline, plan, previewFrame, filmTitle]);
+    // extrasAt reads cut, endStart, endFrames and showLevels, listed here.
+  }, [phase.kind, shape, scale, skillView, timeline, plan, previewFrame, filmTitle, cut, endStart, endFrames, showLevels]);
 
   const make = async () => {
     const canvas = canvasRef.current;
@@ -209,7 +250,7 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
           for (const k of step.raised) glow.set(k, GLOW_FRAMES);
         }
         // Before the first step the film shows the run as it began.
-        painter.paint(owned, glow, stepIndex < 0 ? timeline.opening : timeline.steps[stepIndex], filmTitle);
+        painter.paint(owned, glow, stepIndex < 0 ? timeline.opening : timeline.steps[stepIndex], filmTitle, extrasAt(i));
       };
       const file = await encodeFilm({
         canvas, frames, draw, signal: abort.signal,
@@ -253,8 +294,8 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
   const primary = osrs ? 'osrs-btn' : 'flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-40 bg-emerald-700 hover:bg-emerald-600 text-white';
   const sub = osrs ? 'owb-sub' : 'text-gray-400';
 
-  const seg = <T extends string | number>(label: string, options: { id: T; label: string; hint?: string }[], value: T, onPick: (id: T) => void) => (
-    <div className="flex flex-wrap items-center gap-2 min-w-0">
+  const seg = <T extends string | number>(label: string, options: { id: T; label: string; hint?: string }[], value: T, onPick: (id: T) => void, wide = false) => (
+    <div className={`flex flex-wrap items-center gap-2 min-w-0${wide ? ' sm:col-span-2' : ''}`}>
       <span className={`text-xs w-14 shrink-0 ${sub}`}>{label}</span>
       <div role="group" aria-label={label} className={osrs ? 'flex flex-wrap gap-1' : 'flex flex-wrap items-center gap-1 p-1 bg-black/40 rounded-full border border-white/10'}>
         {options.map(o => (
@@ -325,8 +366,12 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       <div className="w-full max-w-xl grid gap-2 sm:grid-cols-2">
         {seg('Shape', SHAPES, shape, id => { choose({ shape: id }); setPreviewAt(null); })}
         {seg('Size', SIZES, scale, id => choose({ scale: id }))}
-        {seg('Speed', SPEEDS, speed, id => { choose({ speed: id }); setPreviewAt(null); })}
+        {seg('Length', LENGTHS, length, id => { choose({ length: id }); setPreviewAt(null); }, true)}
+        {seg('Speed', SPEEDS, length ? -1 : speed, id => { choose({ speed: id, length: 0 }); setPreviewAt(null); })}
+        {seg('Camera', CAMERAS, choices.camera, id => choose({ camera: id }))}
         {seg('Skills', SKILL_VIEWS, skillView, id => choose({ skillView: id }))}
+        {seg('Captions', ON_OFF, choices.captions, id => choose({ captions: id }))}
+        {seg('End card', ON_OFF, choices.endCard, id => { choose({ endCard: id }); setPreviewAt(null); })}
         {days.length > 1 && (
           <div className="flex flex-wrap items-center gap-2 min-w-0 sm:col-span-2">
             <span className={`text-xs w-14 shrink-0 ${sub}`}>Days</span>

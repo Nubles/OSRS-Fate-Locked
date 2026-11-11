@@ -39,6 +39,35 @@ export interface FilmStep {
   /** Skill levels (1..99) after this step, as the run logged them. */
   levels: Record<string, number>;
   totalLevel: number;
+  /** Share of the world map's land open after this step, 0..1. */
+  mapShare: number;
+  /** Big moments at this step, most important first, for the film's caption cards. */
+  moments: FilmMoment[];
+}
+
+export type FilmMomentKind = 'map' | 'boss' | 'max-level' | 'luck' | 'total-level' | 'max-tier' | 'unlocks';
+
+export interface FilmMoment {
+  kind: FilmMomentKind;
+  title: string;
+  text: string;
+}
+
+/** What the film's end card sums up: the counts are over the filmed days, the rest is where the run ended. */
+export interface FilmSummary {
+  fromDay: number;
+  toDay: number;
+  /** The film covers the whole log. */
+  wholeRun: boolean;
+  unlocks: number;
+  rolls: number;
+  keysWon: number;
+  mapShare: number;
+  totalLevel: number;
+  /** The won Key with the lowest chance, as a percent, with what rolled it. */
+  luckiest: { chance: number; source: string } | null;
+  /** Most misses in a row. */
+  longestDry: number;
 }
 
 export interface FilmTimeline {
@@ -51,6 +80,7 @@ export interface FilmTimeline {
   days: number;
   /** Whether the log or the run shows any skill levels, so the film can show them. */
   hasLevels: boolean;
+  summary: FilmSummary;
   /** Areas the run unlocked that have no square on the world map (underground ones). */
   offMap: string[];
 }
@@ -148,6 +178,35 @@ const tierRecord = (names: readonly string[], from: Readonly<Record<string, numb
   Object.fromEntries(names.map(n => [n, Math.min(max, Math.max(0, Math.floor(Number(from?.[n]) || 0)))]));
 
 const MAX_LEVEL = 99;
+
+/** Every chunk of land on the world map picture, for the share of the map that's open. */
+const MAP_LAND = (() => {
+  const all = new Set<string>();
+  for (const chunks of Object.values(REGION_CHUNKS)) for (const c of chunks) {
+    if (c.cx >= 15 && c.cx <= 62 && c.cy >= 32 && c.cy <= 65) all.add(chunkKeyOf(c));
+  }
+  return all;
+})();
+const mapShareOf = (owned: ReadonlySet<string>): number => {
+  let n = 0;
+  for (const k of owned) if (MAP_LAND.has(k)) n += 1;
+  return MAP_LAND.size ? n / MAP_LAND.size : 0;
+};
+const MAP_MARKS = [0.1, 0.25, 0.5, 0.75, 1];
+const TOTAL_LEVEL_MARKS = [500, 1000, 1500, 2000];
+const UNLOCK_MARK = 50;
+/** A won Key at or under this chance (percent) gets a caption. */
+export const LUCKY_CHANCE = 3;
+const MOMENT_ORDER: FilmMomentKind[] = ['map', 'boss', 'max-level', 'luck', 'total-level', 'max-tier', 'unlocks'];
+const fmt = (n: number) => n.toLocaleString('en-GB');
+const pctText = (n: number) => (n < 10 ? n.toFixed(1).replace(/\.0$/, '') : String(Math.round(n)));
+const isKeyWon = (e: LogEntry) => e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI' || e.type === 'PITY';
+/** The chance a won roll had, as a percent, when the log line says. */
+const rollChance = (e: LogEntry): number | null => {
+  const t = Number(e.threshold ?? e.meta?.threshold);
+  return Number.isFinite(t) && t > 0 && t < 100 ? t : null;
+};
+const rollSource = (e: LogEntry): string => String(e.source ?? e.meta?.source ?? '').trim();
 /** The lowest level a skill can be: 10 for Hitpoints, 1 for the rest. */
 const minLevel = (skill: string): number => (skill === FREE_SKILL ? 10 : 1);
 /** A skill level a log line records (a level-up's roll, a capped level, a synced level), or null. */
@@ -256,11 +315,38 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
   }
   const hasLevels = seenLevel.size > 0 || SKILLS_LIST.some(n => finalLevels[n] > minLevel(n));
 
-  const snapshot = (day: number, added: string[]): FilmStep => ({
+  const snapshot = (day: number, added: string[], moments: FilmMoment[] = []): FilmStep => ({
     day, unlocks, rolls, keysWon, added, ticker: ticker.slice(0, TICKER_LINES),
     skills: { ...skills }, gear: { ...gear }, raised, levels: { ...levels }, totalLevel: sumLevels(levels),
+    mapShare: mapShareOf(owned), moments,
   });
   let opening: FilmStep = snapshot(1, []);
+
+  // Moments found in this step's log lines (a first boss, a lucky Key); the
+  // rest are found by comparing the step with the one before.
+  let pending: FilmMoment[] = [];
+  let bossSeen = false;
+  const crossed = (marks: readonly number[], before: number, after: number) => marks.filter(m => before < m && after >= m);
+  const momentsOf = (prev: FilmStep, next: FilmStep): FilmMoment[] => {
+    const out = [...pending];
+    for (const m of crossed(MAP_MARKS, prev.mapShare, next.mapShare)) {
+      out.push(m === 1
+        ? { kind: 'map', title: 'The whole map', text: 'Every chunk of land is open' }
+        : { kind: 'map', title: `${Math.round(m * 100)}% of the map`, text: 'is open' });
+    }
+    for (const m of crossed(TOTAL_LEVEL_MARKS, prev.totalLevel, next.totalLevel)) {
+      out.push({ kind: 'total-level', title: `Total level ${fmt(m)}`, text: 'reached' });
+    }
+    for (const n of SKILLS_LIST) {
+      if (prev.levels[n] < MAX_LEVEL && next.levels[n] >= MAX_LEVEL) out.push({ kind: 'max-level', title: `99 ${n}`, text: 'Skill maxed' });
+      if (n !== FREE_SKILL && prev.skills[n] < SKILL_TIER_MAX && next.skills[n] >= SKILL_TIER_MAX) {
+        out.push({ kind: 'max-tier', title: `${n} tier X`, text: 'Every tier open' });
+      }
+    }
+    const u = Math.floor(next.unlocks / UNLOCK_MARK);
+    if (u > Math.floor(prev.unlocks / UNLOCK_MARK) && u > 0) out.push({ kind: 'unlocks', title: `${fmt(u * UNLOCK_MARK)} unlocks`, text: 'and counting' });
+    return out.sort((a, b) => MOMENT_ORDER.indexOf(a.kind) - MOMENT_ORDER.indexOf(b.kind));
+  };
 
   const pushStep = (day: number) => {
     let added: string[] = [];
@@ -270,9 +356,16 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
       owned = next;
       landChanged = false;
     }
-    steps.push(snapshot(day, added));
+    const step = snapshot(day, added);
+    step.moments = momentsOf(steps[steps.length - 1] ?? opening, step);
+    steps.push(step);
+    pending = [];
     raised = [];
   };
+
+  // The end card's numbers, over the filmed lines.
+  let luckiest: FilmSummary['luckiest'] = null;
+  let dry = 0, longestDry = 0;
 
   let inFilm = 0;
   log.forEach((e, i) => {
@@ -309,6 +402,8 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
     if (typeof charted === 'string' && CHUNK_KEY.test(charted)) { chunks.add(charted); landChanged = true; }
     const lv = loggedLevel(e);
     if (lv && lv.level > levels[lv.skill]) levels[lv.skill] = lv.level;
+    const firstBoss = e.type === 'UNLOCK' && category === 'Bosses' && !bossSeen;
+    if (e.type === 'UNLOCK' && category === 'Bosses') bossSeen = true;
 
     if (i + 1 === before) {
       // The last line before the film: the film opens on the run as it stood.
@@ -321,6 +416,20 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
       return;
     }
     if (i < before) return;
+    if (firstBoss) pending.push({ kind: 'boss', title: 'First boss', text: tickerText(e) });
+    if (isRollEntry(e)) {
+      if (isKeyWon(e)) {
+        dry = 0;
+        const chance = rollChance(e);
+        if (chance !== null && (!luckiest || chance < luckiest.chance)) luckiest = { chance, source: rollSource(e) };
+        if (chance !== null && chance <= LUCKY_CHANCE) {
+          pending.push({ kind: 'luck', title: 'Lucky Key!', text: `${pctText(chance)}% chance${rollSource(e) ? ` · ${rollSource(e)}` : ''}` });
+        }
+      } else if (e.type === 'ROLL_FAIL') {
+        dry += 1;
+        if (dry > longestDry) longestDry = dry;
+      }
+    }
     inFilm += 1;
     if (inFilm % perStep === 0 || inFilm === shown) pushStep(day);
   });
@@ -351,12 +460,26 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
     const day = steps.length ? steps[steps.length - 1].day : opening.day;
     pushStep(day);
   }
+  const last = steps[steps.length - 1] ?? opening;
+  const days = steps.length ? last.day : opening.day;
   return {
     start: [...start],
     opening,
     steps,
-    days: steps.length ? steps[steps.length - 1].day : opening.day,
+    days,
     hasLevels,
+    summary: {
+      fromDay: opening.day,
+      toDay: days,
+      wholeRun: before === 0 && reachesEnd,
+      unlocks: last.unlocks - opening.unlocks,
+      rolls: last.rolls - opening.rolls,
+      keysWon: last.keysWon - opening.keysWon,
+      mapShare: last.mapShare,
+      totalLevel: last.totalLevel,
+      luckiest,
+      longestDry,
+    },
     offMap: [...offMap],
   };
 };
