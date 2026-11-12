@@ -2644,6 +2644,37 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { Sailing: 62, Crafting: 60, Runecraft: 47, Mining: 53 }, prereqs: ['Pandemonium'], points: 2,
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  'The Birds and the Wasps': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'The Birds and the Wasps', name: 'The Birds and the Wasps',
+    regions: ['Misthalin'],
+    // Released 11 Nov 2026. Starts with Farmer Bea at Bea's farm, on the ridge
+    // east of the south-east Varrock mine, and fetches a box of bees from the
+    // bee dealer inside the Grand Exchange's east entrance.
+    locations: [
+      { id: 'beas-farm', label: "Bea's farm, between Varrock and the Digsite", standardAreas: ['Varrock'], chunkOptions: [{ cx: 51, cy: 52 }] },
+      { id: 'grand-exchange', label: 'Grand Exchange', standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 54 }] },
+    ],
+    skills: {}, prereqs: [], points: 1,
+    // Slots checked on the Wiki (12 Nov): both come from the crate by Farmer Bea.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: "Wear the bee hunter's hat to catch the swarms of wasps" },
+      { slot: 'Weapon', tier: 1, reason: 'Wield the insect net to catch the swarms of wasps' },
+    ],
+    difficulty: DropSource.QUEST_NOVICE
+  },
+  'A Shell of a Friend': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'A Shell of a Friend', name: 'A Shell of a Friend',
+    regions: ['Morytania'],
+    // Released 11 Nov 2026: helps a juvenile snail on the island by fairy ring
+    // ALQ in the Haunted Woods and stays there. The axe spawns nearby.
+    locations: [
+      { id: 'haunted-woods-snail-island', label: 'Snail island in the Haunted Woods', standardAreas: ['Haunted Woods'], chunkOptions: [{ cx: 55, cy: 54 }] },
+    ],
+    skills: { 'Herblore': 16, 'Construction': 15 }, prereqs: ['Priest in Peril'], points: 2,
+    difficulty: DropSource.QUEST_INTERMEDIATE
+  },
 
   // --- Miniquests ---
   'Alfred Grimhand\'s Barcrawl': {

@@ -103,6 +103,8 @@ describe('unlocks added in the 9 November 2026 review', () => {
     ['Herblore', 'Haemostatic Dressing', 56], ['Herblore', 'Super Fishing Potion', 62], ['Herblore', 'Extreme Energy', 66],
     ['Herblore', 'Super Hunter Potion', 67], ['Herblore', 'Armadyl Brew', 89],
     ['Hitpoints', 'Heal +15 HP with Anglerfish', 75], ['Hitpoints', 'Necklace of Rupture', 90],
+    ['Fletching', 'Wasp Darts (The Birds and the Wasps)', 1], ['Fletching', 'Killer Wasp Darts', 15],
+    ['Hunter', 'Honey Buzzards, Wasps', 1], ['Hunter', 'Killer Wasps', 12], ['Hunter', 'Black Honey Buzzards', 17],
     ['Hunter', 'Pyre Foxes', 57], ['Hunter', 'Letvek', 76], ['Hunter', 'Stymphikes', 82],
     ['Magic', 'Teleport to Boat', 67],
     ['Mining', 'Nickel Ore', 74],

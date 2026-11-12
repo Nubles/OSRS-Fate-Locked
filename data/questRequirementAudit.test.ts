@@ -147,6 +147,7 @@ const EXPECTED_TZ_INSTANCE_EVIDENCE: Record<string, string[]> = {
 
 const EXPECTED_TZ_SURFACE_ONLY = [
   'Tai Bwo Wannai Trio',
+  'The Birds and the Wasps',
   'The Feud',
   'The Hand in the Sand',
   'The Ribbiting Tale',
@@ -157,8 +158,8 @@ const EXPECTED_TZ_SURFACE_ONLY = [
   "Witch's Potion",
   'X Marks the Spot',
 ];
-/** Released 3 Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
-const NEWER_THAN_CHUNK_PICKER = ["Mudfoot's Big Adventure", "The Writing's on the Wall"];
+/** Released 3 and 11 Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
+const NEWER_THAN_CHUNK_PICKER = ['A Shell of a Friend', "Mudfoot's Big Adventure", 'The Birds and the Wasps', "The Writing's on the Wall"];
 const expectReviewedBatch = (start: string, end?: string) => {
   const rows = audit.entries.filter(entry =>
     entry.kind === 'quest' &&
@@ -219,11 +220,11 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries).toHaveLength(215);
-    expect(audit.entries).toHaveLength(215);
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(196);
+    expect(official.entries).toHaveLength(217);
+    expect(audit.entries).toHaveLength(217);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(198);
     expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(196);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(198);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
   });
 
@@ -361,8 +362,9 @@ describe('official quest and miniquest audit coverage', () => {
         entry.id.localeCompare('A') >= 0 &&
         entry.id.localeCompare('G') < 0 &&
         entry.status === 'unresolved')
-      .map(entry => entry.id))
-      .toEqual(['Desert Treasure I']);
+      .map(entry => entry.id)
+      .sort())
+      .toEqual(['Desert Treasure I', ...NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('A') >= 0 && id.localeCompare('G') < 0)].sort());
   });
 
   it('has reviewed evidence and matching requirements for all 19 miniquests', () => {

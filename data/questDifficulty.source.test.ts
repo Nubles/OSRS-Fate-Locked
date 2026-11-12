@@ -47,7 +47,7 @@ const WIKI_RATING: Record<string, string> = {
 };
 
 /** Released after the pinned snapshot; review their ratings when it is refreshed. */
-const NOT_IN_SNAPSHOT = ['A Ruff Situation', 'Crab Quest', 'Learning the Ropes', "Mudfoot's Big Adventure", "The Writing's on the Wall"];
+const NOT_IN_SNAPSHOT = ['A Ruff Situation', 'A Shell of a Friend', 'Crab Quest', 'Learning the Ropes', "Mudfoot's Big Adventure", 'The Birds and the Wasps', "The Writing's on the Wall"];
 
 const enumName = (name: string): string => name
   .toUpperCase()

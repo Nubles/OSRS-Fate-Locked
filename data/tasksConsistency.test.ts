@@ -137,10 +137,10 @@ describe('Quest data integrity', () => {
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
 
-  it('classifies all 215 journal entries with an explicit kind and access policy', () => {
+  it('classifies all 217 journal entries with an explicit kind and access policy', () => {
     const quests = Object.values(QUEST_DATA);
-    expect(quests).toHaveLength(215);
-    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(196); // two 3 Nov 2026 quests, and Daddy's Home became one
+    expect(quests).toHaveLength(217);
+    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(198); // two quests each on 3 and 11 Nov 2026, and Daddy's Home became one
     expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
     expect(quests.filter(quest =>
       !['quest', 'miniquest'].includes(quest.kind),
