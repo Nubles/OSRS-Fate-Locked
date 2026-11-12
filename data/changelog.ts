@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-12-quest-month-week-two',
+    title: 'Two more Quest Month quests',
+    date: '2026-11-12',
+    sections: {
+      added: [
+        'The Birds and the Wasps (Novice, 1 quest point) starts with Farmer Bea on her farm between Varrock and the Digsite.',
+        'A Shell of a Friend (Intermediate, 2 quest points) starts on a little island in the Haunted Woods. It needs Priest in Peril, 16 Herblore and 15 Construction.',
+        'Hunter and Fletching now list the new wasps, honey buzzards and wasp darts, which need The Birds and the Wasps.',
+      ],
+    },
+  },
+  {
     id: '2026-11-11-run-film-controls',
     title: 'Run Film gets lengths, an end card and more',
     date: '2026-11-11',

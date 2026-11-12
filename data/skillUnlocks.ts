@@ -742,6 +742,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Fletching': {
     1: [
       'Lvl 1: Arrow Shafts, Bronze Arrows',
+      'Lvl 1: Wasp Darts (The Birds and the Wasps)',
       'Lvl 5: Shortbows, Ogre Arrows',
       'Lvl 9: Bronze Crossbows/Bolts',
       'Lvl 10: Longbows, Bronze Darts'
@@ -749,6 +750,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     2: [
       'Lvl 11: Opal Bolts',
       'Lvl 15: Iron Arrows, Oak Arrow Shafts',
+      'Lvl 15: Killer Wasp Darts (The Birds and the Wasps)',
       'Lvl 17: Iron Javelins',
       'Lvl 18: Iron Brutal Arrows',
       'Lvl 20: Oak Shortbows',
@@ -906,6 +908,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Hunter': {
     1: [
       'Lvl 1: Crimson Swifts, Bird Snares',
+      'Lvl 1: Honey Buzzards, Wasps (The Birds and the Wasps)',
       'Lvl 3: Common Kebbits',
       'Lvl 5: Golden Warblers, Bird Houses',
       'Lvl 7: Feldip Weasels',
@@ -914,10 +917,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     2: [
       'Lvl 11: Cerulean Twitches',
+      'Lvl 12: Killer Wasps (The Birds and the Wasps)',
       'Lvl 13: Desert Devils',
       'Lvl 14: Oak Bird Houses',
       'Lvl 15: Ruby Harvests, Sandworms',
       'Lvl 17: Puro-Puro, Baby Implings',
+      'Lvl 17: Black Honey Buzzards (The Birds and the Wasps)',
       'Lvl 19: Tropical Wagtails'
     ],
     3: [

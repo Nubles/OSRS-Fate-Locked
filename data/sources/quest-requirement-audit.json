@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-11-03",
+  "reviewedAt": "2026-11-12",
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
     "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
@@ -222,6 +222,33 @@
         ],
         "partialCompletion": []
       }
+    },
+    {
+      "id": "A Shell of a Friend",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-12",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Shell_of_a_Friend&oldid=15400784",
+        "revision": 15400784,
+        "revisionTimestamp": "2026-11-12T05:39:55Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":55,\"cy\":54}],\"id\":\"haunted-woods-snail-island\",\"label\":\"Snail island in the Haunted Woods\",\"standardAreas\":[\"Haunted Woods\"]}],\"skills\":{\"Construction\":15,\"Herblore\":16},\"prereqs\":[\"Priest in Peril\"],\"points\":2}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15400784 lists any woodcutting axe, with a bronze axe spawning by the island during the quest."
+        ],
+        "travel": [
+          "Wiki revision 15400784 starts with the juvenile snail on the island close to fairy ring ALQ in the eastern Haunted Woods and every step stays around that island."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "A Shell of a Friend uses the locations policy with the Snail island in the Haunted Woods (55,54), and runtime regions [Morytania]. It was released on 11 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The location follows the stable Wiki revision's walkthrough around the island.",
+      "conservativeReason": "Keeping A Shell of a Friend's current locations policy requirements (the Snail island in the Haunted Woods; Herblore 16, Construction 15; Priest in Peril) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "A Soul's Bane",
@@ -7297,6 +7324,33 @@
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
       }
+    },
+    {
+      "id": "The Birds and the Wasps",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-12",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Birds_and_the_Wasps&oldid=15400869",
+        "revision": 15400869,
+        "revisionTimestamp": "2026-11-12T10:17:11Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":52}],\"id\":\"beas-farm\",\"label\":\"Bea's farm, between Varrock and the Digsite\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":54}],\"id\":\"grand-exchange\",\"label\":\"Grand Exchange\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the bee hunter's hat to catch the swarms of wasps\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wield the insect net to catch the swarms of wasps\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15400869 lists insect repellent, a beekeeper's or bee hunter's hat, an insect net and bird snares, all obtainable during the quest from the crate next to Farmer Bea."
+        ],
+        "travel": [
+          "Wiki revision 15400869 starts with Farmer Bea at Bea's farm, east of the south-east Varrock mine, and makes one trip to the bee dealer inside the Grand Exchange's east entrance."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "The Birds and the Wasps uses the locations policy with Bea's farm (51,52) and the Grand Exchange (49,54), and runtime regions [Misthalin]. It was released on 11 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The locations follow the stable Wiki revision's route between Bea's farm and the Grand Exchange.",
+      "conservativeReason": "Keeping The Birds and the Wasps's current locations policy requirements (Bea's farm and the Grand Exchange; the bee hunter's hat and insect net slots; it has no quest or skill prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "The Blood Moon Rises",

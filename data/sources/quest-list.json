@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-11-03",
+  "reviewedAt": "2026-11-12",
   "listSource": {
     "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15366661",
     "revision": 15366661,
     "revisionTimestamp": "2026-10-06T09:31:48Z"
   },
   "parsedCounts": {
-    "quests": 197,
+    "quests": 199,
     "miniquests": 19
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 196/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 198/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -54,6 +54,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Ruff_Situation&oldid=15350582",
         "revision": 15350582,
         "revisionTimestamp": "2026-09-18T21:05:25Z"
+      }
+    },
+    {
+      "id": "A Shell of a Friend",
+      "kind": "quest",
+      "pageTitle": "A Shell of a Friend",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Shell_of_a_Friend&oldid=15400784",
+        "revision": 15400784,
+        "revisionTimestamp": "2026-11-12T05:39:55Z"
       }
     },
     {
@@ -1624,6 +1634,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Ascent_of_Arceuus&oldid=15241054",
         "revision": 15241054,
         "revisionTimestamp": "2026-06-27T15:18:11Z"
+      }
+    },
+    {
+      "id": "The Birds and the Wasps",
+      "kind": "quest",
+      "pageTitle": "The Birds and the Wasps",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Birds_and_the_Wasps&oldid=15400869",
+        "revision": 15400869,
+        "revisionTimestamp": "2026-11-12T10:17:11Z"
       }
     },
     {

@@ -24,9 +24,9 @@ const APPROVED_CHUNK_SOURCE_COMMITS = new Set([
   'fa71ed3b207e6a501444987dee23b875ec27cacd',
   CURRENT_CHUNK_SOURCE_COMMIT,
 ]);
-const RUNTIME_QUEST_COUNT = 196;
+const RUNTIME_QUEST_COUNT = 198;
 const RUNTIME_MINIQUEST_COUNT = 19;
-const OFFICIAL_PARSED_QUEST_COUNT = 197;
+const OFFICIAL_PARSED_QUEST_COUNT = 199;
 const REVIEWED_AT = new Date().toISOString().slice(0, 10);
 const USER_AGENT = 'OSRS-Fate-Locked quest provenance refresh/1.0 (https://github.com/Nubles/OSRS-Fate-Locked)';
 const WIKI_PAGE_TITLES = {

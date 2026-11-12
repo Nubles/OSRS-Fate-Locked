@@ -21,7 +21,7 @@ describe('authored changelog releases', () => {
 
     expect(new Set(ids).size).toBe(ids.length);
     expect(dates).toEqual([...dates].sort((left, right) => right.localeCompare(left)));
-    expect(LATEST_CHANGELOG.id).toBe('2026-11-11-run-film-controls');
+    expect(LATEST_CHANGELOG.id).toBe('2026-11-12-quest-month-week-two');
   });
 
   it('announces the pet search and the check before a pet is claimed', () => {
