@@ -2,6 +2,7 @@
 import {
   RESOURCE_MAP,
   RESOURCE_ENTITY_SKILLS,
+  currentResourceName,
   resourceUnlockDependency,
   type ResourceSource,
   type ResourceUnlockDependency,
@@ -467,7 +468,9 @@ export interface EngineItemProgress {
   totalSteps: number;
   completedSteps: number;
 }
-export const calculateEngineItemProgress = (itemName: string, gameState: GameState): EngineItemProgress | null => {
+export const calculateEngineItemProgress = (goalId: string, gameState: GameState): EngineItemProgress | null => {
+  // A goal pinned before an item was renamed keeps its stored id.
+  const itemName = currentResourceName(goalId);
   const sources = RESOURCE_MAP[itemName];
   if (!sources) return null;
   const ctx = buildAvailabilityContext(gameState);

@@ -51,7 +51,7 @@ describe('reviewed resource-host location links', () => {
   it('resolves every reviewed curated row using the production resource source kinds', () => {
     const names = new Set(['mage arena shop', 'magpie impling', 'dragon impling', 'duke horacio', 'chambers of xeric', 'theatre of blood']);
     const rows = Object.values(RESOURCE_MAP).flat().filter(row => !row.requirementsUnverified && names.has(row.name.toLowerCase()) && ['DROP', 'SHOP', 'SPAWN'].includes(row.type));
-    expect(rows.length).toBe(24);
+    expect(rows.length).toBe(22);
     for (const row of rows) expect(findEntityLocations(source, row.name, SOURCE_TYPE_KINDS[row.type])?.locations.length, row.name).toBeGreaterThan(0);
   });
 

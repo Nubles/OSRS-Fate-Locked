@@ -3,7 +3,7 @@ import { resourcePlanningKey, readResourceQuantities, hasLegacyResourcePlanning,
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
-import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
+import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY, currentResourceName } from '../data/resourceData';
 import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -17,6 +17,16 @@ const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const RECENT_KEY = 'FATE_RESOURCE_RECENT';
 const MAX_FAVORITES = 20;
 const MAX_RECENT = 10;
+// Stored quantities under the item's current name; plan targets keep only
+// items the engine knows, as the mount loader does.
+const currentQuantities = (stored: Record<string, number>, knownOnly: boolean): Record<string, number> => {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(stored)) {
+    const name = currentResourceName(k);
+    if (!knownOnly || RESOURCE_MAP[name]) out[name] = v;
+  }
+  return out;
+};
 
 interface SupplyChainCalculatorProps {
   onClose: () => void;
@@ -92,7 +102,9 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
     try {
       const raw = localStorage.getItem(FAVORITES_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string' && RESOURCE_MAP[x]) : [];
+      return Array.isArray(parsed)
+        ? parsed.filter((x): x is string => typeof x === 'string').map(currentResourceName).filter(x => RESOURCE_MAP[x])
+        : [];
     } catch {
       return [];
     }
@@ -107,7 +119,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         const cleaned: Record<string, number> = {};
         for (const [k, v] of Object.entries(parsed)) {
-          if (typeof v === 'number' && v > 0 && Number.isFinite(v)) cleaned[k] = v;
+          if (typeof v === 'number' && v > 0 && Number.isFinite(v)) cleaned[currentResourceName(k)] = v;
         }
         return cleaned;
       }
@@ -123,7 +135,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       const raw = localStorage.getItem(RECENT_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed)
-        ? parsed.filter((x) => typeof x === 'string' && RESOURCE_MAP[x]).slice(0, MAX_RECENT)
+        ? parsed.filter((x): x is string => typeof x === 'string').map(currentResourceName).filter((x) => RESOURCE_MAP[x]).slice(0, MAX_RECENT)
         : [];
     } catch {
       return [];
@@ -138,7 +150,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         const cleaned: Record<string, number> = {};
         for (const [k, v] of Object.entries(parsed)) {
-          if (typeof v === 'number' && v > 0 && Number.isFinite(v) && RESOURCE_MAP[k]) cleaned[k] = v;
+          const name = currentResourceName(k);
+          if (typeof v === 'number' && v > 0 && Number.isFinite(v) && RESOURCE_MAP[name]) cleaned[name] = v;
         }
         return cleaned;
       }
@@ -284,6 +297,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       if (exact) return calculateSupplyChain(exact, gameState, inventory, targetQty);
       return null;
   }, [query, availableItems, gameState, inventory, targetQty]);
+  // The stored pin for this item, which may still use a pre-rename name.
+  const pinnedId = selectedResult ? pinnedGoals.find(g => currentResourceName(g) === selectedResult.itemName) : undefined;
 
   // Calculate Reverse Dependencies ("Used In")
   const usedIn = useMemo(() => {
@@ -370,8 +385,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                 <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">The Resource Engine <SectionGuide id="SUPPLY" /></h2>
                 {legacyAvailable && <button type="button" className="text-xs text-amber-300 underline" onClick={() => {
                   if (copyLegacyResourcePlanning(localStorage, runId)) {
-                    setInventory(readResourceQuantities(localStorage, INVENTORY_KEY));
-                    setPlanTargets(readResourceQuantities(localStorage, PLAN_KEY));
+                    setInventory(currentQuantities(readResourceQuantities(localStorage, INVENTORY_KEY), false));
+                    setPlanTargets(currentQuantities(readResourceQuantities(localStorage, PLAN_KEY), true));
                     setLegacyAvailable(false);
                   }
                 }}>Copy previous shared inventory and plan into this run</button>}
@@ -466,13 +481,13 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                                     </button>
                                     <span className="text-xs text-gray-500">•</span>
                                     <button
-                                        onClick={() => togglePin(selectedResult.itemName)}
-                                        aria-pressed={pinnedGoals.includes(selectedResult.itemName)}
-                                        title={pinnedGoals.includes(selectedResult.itemName) ? 'Remove from Active Goals' : 'Track in Active Goals (Dashboard)'}
-                                        className={`text-xs transition-colors flex items-center gap-1 ${pinnedGoals.includes(selectedResult.itemName) ? 'text-purple-300 hover:text-purple-200' : 'text-gray-500 hover:text-purple-400'}`}
+                                        onClick={() => togglePin(pinnedId ?? selectedResult.itemName)}
+                                        aria-pressed={pinnedId !== undefined}
+                                        title={pinnedId !== undefined ? 'Remove from Active Goals' : 'Track in Active Goals (Dashboard)'}
+                                        className={`text-xs transition-colors flex items-center gap-1 ${pinnedId !== undefined ? 'text-purple-300 hover:text-purple-200' : 'text-gray-500 hover:text-purple-400'}`}
                                     >
-                                        <Pin size={12} className={pinnedGoals.includes(selectedResult.itemName) ? 'fill-purple-400' : ''} />
-                                        {pinnedGoals.includes(selectedResult.itemName) ? 'Pinned Goal' : 'Pin as Goal'}
+                                        <Pin size={12} className={pinnedId !== undefined ? 'fill-purple-400' : ''} />
+                                        {pinnedId !== undefined ? 'Pinned Goal' : 'Pin as Goal'}
                                     </button>
                                     <span className="text-xs text-gray-500">•</span>
                                     <button

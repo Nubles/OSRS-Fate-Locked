@@ -2451,7 +2451,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Boss Grind
     regions: ['Wilderness'],
     skills: {},
-    description: '1/1500 drop from King Black Dragon.'
+    description: '1/1,000 drop from King Black Dragon.'
   },
   'Dragon Pickaxe (KQ)': {
     id: 'Dragon Pickaxe (KQ)',
