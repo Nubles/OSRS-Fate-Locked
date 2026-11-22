@@ -27,7 +27,7 @@ export interface ShortcutRow {
   requirements: ShortcutNeed[];
   /** The levels still missing, for status 'level'. */
   missing: ShortcutNeed[];
-  /** The quest still to finish, for status 'quest'. */
+  /** The quest(s) still to finish, joined with "and", for status 'quest'. */
   quest: string | null;
   status: ShortcutStatus;
   loc: { cx: number; cy: number; unlocked: boolean } | null;
@@ -44,17 +44,22 @@ export interface ShortcutReach {
  * 22 November 2026), keyed by the shortcut's name in the picker's tables.
  * Partial-completion and diary requirements are not listed here.
  */
-export const SHORTCUT_QUESTS: Readonly<Record<string, string>> = {
-  'Access the Corsair Cove Dungeon shortcut': 'Dragon Slayer I',
-  'Access the rocks in the Corsair Cove Resource Area shortcut': 'Dragon Slayer I',
-  'Access the rock climb in the Temple of the Eye shortcut': 'Temple of the Eye',
-  'Access the Al Kharid Palace southern window shortcut': 'Prince Ali Rescue',
-  "Access the eastern Gu'Tanoth shortcut": 'Watchtower',
-  'Access the Troll Stronghold wall-climb shortcut': "My Arm's Big Adventure",
-  'Access the island crossing near Zul-Andra shortcut': 'Regicide',
-  'Access the Shilo Village rocks shortcut': 'Shilo Village',
-  'Access the Kharazi Jungle vine climb shortcut': "Legends' Quest",
-  'Access the Viyeldi caves shortcut': "Legends' Quest",
+export const SHORTCUT_QUESTS: Readonly<Record<string, readonly string[]>> = {
+  'Access the Corsair Cove Dungeon shortcut': ['Dragon Slayer I'],
+  'Access the rocks in the Corsair Cove Resource Area shortcut': ['Dragon Slayer I'],
+  'Access the rock climb in the Temple of the Eye shortcut': ['Temple of the Eye'],
+  'Access the Al Kharid Palace southern window shortcut': ['Prince Ali Rescue'],
+  "Access the eastern Gu'Tanoth shortcut": ['Watchtower'],
+  'Access the Troll Stronghold wall-climb shortcut': ["My Arm's Big Adventure"],
+  'Access the island crossing near Zul-Andra shortcut': ['Regicide'],
+  'Access the Shilo Village rocks shortcut': ['Shilo Village'],
+  'Access the Kharazi Jungle vine climb shortcut': ["Legends' Quest"],
+  'Access the Viyeldi caves shortcut': ["Legends' Quest"],
+  'Access the Shaman Caves crevice shortcut': ["Legends' Quest"],
+  'Access the Varrock Palace Garden trellis shortcut': ['Garden of Tranquillity'],
+  'Access the (mith grapple) scale the Observatory cliff shortcut': ['Observatory Quest'],
+  'Access the Darkmeyer north-eastern wall shortcut': ['Sins of the Father'],
+  'Access the Gnome Stronghold shortcut': ['The Grand Tree', 'Tree Gnome Village'],
 };
 
 /** Resolve a shortcut to a representative chunk via its trigger object(s). */
@@ -77,8 +82,8 @@ export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState
       const lvl = unlocks.levels?.[skill] ?? 1;
       return !(tier >= tierForLevel(level) && lvl >= level);
     });
-    const needQuest = SHORTCUT_QUESTS[main.name];
-    const quest = needQuest && !done.has(needQuest) ? needQuest : null;
+    const unfinished = (SHORTCUT_QUESTS[main.name] ?? []).filter(q => !done.has(q));
+    const quest = unfinished.length > 0 ? unfinished.join(' and ') : null;
     const loc = locate(main);
 
     let status: ShortcutStatus;

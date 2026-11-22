@@ -83,17 +83,36 @@ describe('shortcutReachability: every requirement of a shortcut', () => {
     expect(after.rows[0].status).toBe('ready');
   });
 
+  it('holds a two-quest shortcut until both quests are done and names the ones left', () => {
+    const GNOME: Shortcut[] = [{ name: 'Access the Gnome Stronghold shortcut', skill: 'Agility', level: 37, objects: [], chunks: [] }];
+    const skilled = { skills: { Agility: 8 }, levels: { Agility: 40 } };
+    expect(shortcutReachability(GNOME, base(skilled), here).rows[0])
+      .toMatchObject({ status: 'quest', quest: 'The Grand Tree and Tree Gnome Village' });
+    expect(shortcutReachability(GNOME, base({ ...skilled, quests: ['The Grand Tree'] }), here).rows[0])
+      .toMatchObject({ status: 'quest', quest: 'Tree Gnome Village' });
+    expect(shortcutReachability(GNOME, base({ ...skilled, quests: ['The Grand Tree', 'Tree Gnome Village'] }), here).rows[0].status)
+      .toBe('ready');
+  });
+
   it('names real shortcuts and real quests in the quest table', () => {
     const doc = JSON.parse(readFileSync(resolve('public/chunk-content.json'), 'utf8')) as { shortcuts: Shortcut[] };
     const names = new Set(doc.shortcuts.map(s => s.name));
-    for (const [shortcut, quest] of Object.entries(SHORTCUT_QUESTS)) {
+    for (const [shortcut, quests] of Object.entries(SHORTCUT_QUESTS)) {
       expect(names.has(shortcut), shortcut).toBe(true);
-      expect(QUEST_DATA[quest]?.id, quest).toBe(quest);
+      expect(quests.length, shortcut).toBeGreaterThan(0);
+      for (const quest of quests) expect(QUEST_DATA[quest]?.id, quest).toBe(quest);
     }
     // OSRS Wiki "Shortcuts": Rubble (Temple of the Eye) 56, Rocks (Shilo Village) 79,
     // Troll Stronghold wall-climb 73.
-    expect(SHORTCUT_QUESTS['Access the rock climb in the Temple of the Eye shortcut']).toBe('Temple of the Eye');
-    expect(SHORTCUT_QUESTS['Access the Shilo Village rocks shortcut']).toBe('Shilo Village');
-    expect(SHORTCUT_QUESTS['Access the Troll Stronghold wall-climb shortcut']).toBe("My Arm's Big Adventure");
+    expect(SHORTCUT_QUESTS['Access the rock climb in the Temple of the Eye shortcut']).toEqual(['Temple of the Eye']);
+    expect(SHORTCUT_QUESTS['Access the Shilo Village rocks shortcut']).toEqual(['Shilo Village']);
+    expect(SHORTCUT_QUESTS['Access the Troll Stronghold wall-climb shortcut']).toEqual(["My Arm's Big Adventure"]);
+    // Trellis (Varrock) 35, Crevice (Shaman Caves), Rocks (Observatory) grapple,
+    // Wall (Darkmeyer) north-eastern wall, Rocks (Tree Gnome Stronghold) 37.
+    expect(SHORTCUT_QUESTS['Access the Varrock Palace Garden trellis shortcut']).toEqual(['Garden of Tranquillity']);
+    expect(SHORTCUT_QUESTS['Access the Shaman Caves crevice shortcut']).toEqual(["Legends' Quest"]);
+    expect(SHORTCUT_QUESTS['Access the (mith grapple) scale the Observatory cliff shortcut']).toEqual(['Observatory Quest']);
+    expect(SHORTCUT_QUESTS['Access the Darkmeyer north-eastern wall shortcut']).toEqual(['Sins of the Father']);
+    expect(SHORTCUT_QUESTS['Access the Gnome Stronghold shortcut']).toEqual(['The Grand Tree', 'Tree Gnome Village']);
   });
 });
