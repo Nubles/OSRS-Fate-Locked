@@ -43,12 +43,12 @@ export const CHANGELOG_RELEASES = [
     sections: {
       added: [
         'A New Leaf and Rag and Bone Man III, from the 18 November update, are in the Quest Journal.',
+        'The skill guides list about 400 more unlocks from the Wiki’s level-up tables, across 19 skills.',
       ],
       fixed: [
         'A very long note can’t stop your run from saving any more, and coming back to a tab with Back no longer overwrites newer progress.',
-        'Ask before Key clicks now also covers Farm Keys cards, the Ritual of Transmutation and Sync & Roll in the OSRS layout.',
-        'Saradomin’s Ward no longer lands a Key on a bank or guild you can’t use yet, like a guild bank without its guild.',
-        'Over 100 facts were checked against the Wiki and corrected: bank, boss and goal requirements, Slayer tasks, gear tiers, diary routes and drop sources.',
+        'Saradomin’s Ward no longer lands a Key on a bank or guild you can’t use yet, and Ask before Key clicks now covers Farm Keys and Sync & Roll too.',
+        'Over 100 facts were checked against the Wiki and corrected: bank, boss, quest and goal requirements, Slayer tasks, gear tiers, diary routes and drop sources.',
         'On shorter laptop screens the classic World map now fits its pane, so every overlay and zoom button can be reached.',
       ],
     },
