@@ -42,7 +42,7 @@ import { OsrsKeysTabs } from './OsrsKeysTabs';
  * and the same GameContext; this file only draws them.
  */
 
-type RollPoint = { clientX: number; clientY: number };
+type RollPoint = { clientX: number; clientY: number; suspense?: () => Promise<void> };
 
 const UI = `${import.meta.env.BASE_URL}osrs-ui/`;
 const KEY_IMG = `${UI}items/key.png`;
@@ -139,13 +139,16 @@ const useRollSuspense = (onRoll: (p: RollPoint) => void) => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
-  const trigger = async (e: React.MouseEvent) => {
+  // useFarmModel's handleRoll asks first (Ask before Key clicks) and plays
+  // the pause only for a roll that happens, then rolls.
+  const trigger = (e: React.MouseEvent) => {
     if (isRolling) return;
-    const point = { clientX: e.clientX, clientY: e.clientY };
-    setIsRolling(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    if (mounted.current) setIsRolling(false);
-    onRoll(point);
+    const suspense = async () => {
+      if (mounted.current) setIsRolling(true);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      if (mounted.current) setIsRolling(false);
+    };
+    onRoll({ clientX: e.clientX, clientY: e.clientY, suspense });
   };
   return { isRolling, trigger };
 };
