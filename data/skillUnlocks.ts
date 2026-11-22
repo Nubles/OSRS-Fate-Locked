@@ -151,8 +151,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Attack': {
     1: [
+      'Lvl 1: Bone Club, Bone Dagger, Bone Spear & Mjolnirs',
       'Lvl 1: Bronze & Iron Weapons',
-      'Lvl 1: Quest Weapons (Silverlight, Wolfbane)',
+      'Lvl 1: Quest Weapons (Blurite & Shadow Swords, Blessed Axe, Dark Dagger)',
+      'Lvl 1: Quest Weapons (Silverlight, Wolfbane, Darklight, Gadderhammer)',
       'Lvl 5: Steel Weapons & Decorative Sword (Red)',
       'Lvl 10: Black Weapons',
       'Lvl 10: White Weapons (Wanted! Quest)'
@@ -166,44 +168,77 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     3: [
       'Lvl 30: Adamant Weapons',
       'Lvl 30: Battlestaves',
+      'Lvl 30: Bryophyta\'s Staff (Magic 30)',
       'Lvl 30: Decorative Sword (Gold)',
+      'Lvl 30: Fremennik Blades',
       'Lvl 30: Pharaoh\'s Sceptre',
       'Lvl 30: Swamp Lizards (Magic/Range 30)'
     ],
     4: [
+      'Lvl 40: Barronite Mace & Katanas',
       'Lvl 40: Brine Sabre & Hill Giant Club',
       'Lvl 40: Gilded Weapons',
+      'Lvl 40: Ivandis Flail (A Taste of Hope)',
       'Lvl 40: Mystic Staves (Magic 40)',
       'Lvl 40: Rune Weapons'
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
+      'Lvl 50: Ancient Sceptre (Str 60, Mag 70; Secrets of the North)',
+      'Lvl 50: Blisterwood Sickle & Flail (Sins of the Father)',
+      'Lvl 50: Bone Mace',
       'Lvl 50: Granite Weapons (Maul, Longsword, Hammer)',
+      'Lvl 50: Hallowed Flail & Sunspear (The Blood Moon Rises)',
       'Lvl 50: Iban\'s Staff & Ancient Staff',
+      'Lvl 50: Keris (Contact!)',
       'Lvl 50: Leaf-Bladed Sword/Spear (Slayer 55)',
-      'Lvl 50: Orange Salamander & Eclipse Atlatl'
+      'Lvl 50: Orange Salamander & Eclipse Atlatl',
+      'Lvl 50: Purging Staff (Mag 77, While Guthix Sleeps)'
     ],
     6: [
+      'Lvl 55: Glacial Temotli & Earthbound Tecpatl',
       'Lvl 55: Sulphur Blades',
+      'Lvl 60: Arkan Blade (The Final Dawn)',
+      'Lvl 60: Burning Claws & Colossal Blade',
+      'Lvl 60: Crimson Kisten (Str 85)',
       'Lvl 60: Dragon Weapons (Scimitar, Dagger, Mace)',
       'Lvl 60: Obsidian Weapons',
+      'Lvl 60: Red Salamander (Magic/Range 60)',
       'Lvl 60: Viggora\'s Chainmace & Barrelchest Anchor'
     ],
     7: [
       'Lvl 65: 3rd Age Weapons',
+      'Lvl 65: Belle\'s Folly',
+      'Lvl 65: Keris Partisan (Beneath Cursed Sands)',
       'Lvl 65: Leaf-Bladed Battleaxe',
       'Lvl 65: Sarachnis Cudgel & Zombie Axe',
       'Lvl 70: Abyssal Whip, Dagger & Bludgeon',
+      'Lvl 70: Avernic Defender (Def 70)',
       'Lvl 70: Barrows Equipment (Dharok, Guthan, etc)',
+      'Lvl 70: Black Salamander (Magic/Range 70)',
+      'Lvl 70: Blue Moon Spear (Magic 75)',
       'Lvl 70: Crystal Weapons (Halberd)',
-      'Lvl 70: Saradomin Sword & Zamorakian Spear'
+      'Lvl 70: Dual Macuahuitl (Str 75)',
+      'Lvl 70: Saradomin Sword & Zamorakian Spear',
+      'Lvl 70: Ursine Chainmace',
+      'Lvl 70: Zamorakian Hasta (Barbarian Training)'
     ],
     8: [
       'Lvl 75: Arclight, Abyssal Tentacle, Voidwaker',
+      'Lvl 75: Dinh\'s Bulwark (Def 75)',
+      'Lvl 75: Elder Maul (Str 75)',
       'Lvl 75: Godswords (AGS, BGS, SGS, ZGS)',
+      'Lvl 75: Hallowfell',
+      'Lvl 75: Saradomin\'s Blessed Sword',
+      'Lvl 75: Staves of the Dead (& Toxic), Light & Balance (Magic 75)',
+      'Lvl 77: Emberlight (Smithing 74, While Guthix Sleeps)',
+      'Lvl 78: Dragon Hunter Lance (Barbarian Training)',
       'Lvl 80: Ferocious Gloves',
       'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor\'s Mace',
-      'Lvl 80: Scythe of Vitur & Soulreaper Axe'
+      'Lvl 80: Keris Partisans (Amascut, Breaching, Corruption, Sun)',
+      'Lvl 80: Noxious Halberd',
+      'Lvl 80: Scythe of Vitur & Soulreaper Axe',
+      'Lvl 80: Tecu Salamander (Magic/Range 80)'
     ],
     9: [
       'Lvl 82: Osmumten\'s Fang',
@@ -1181,7 +1216,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 13: Superhuman Strength',
       'Lvl 16: Improved Reflexes',
       'Lvl 19: Rapid Restore',
-      'Lvl 20: Proselyte Armour'
+      'Lvl 20: Proselyte Armour',
+      'Lvl 20: Vestment Robe Tops & Legs'
     ],
     3: [
       'Lvl 22: Rapid Heal, Void Knight',
@@ -1196,6 +1232,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 31: Ultimate Strength, Monastery',
       'Lvl 34: Incredible Reflexes',
       'Lvl 37: Protect from Magic',
+      'Lvl 40: Ectoplasmators',
       'Lvl 40: Protect from Missiles',
       'Lvl 40: Vestment Cloaks, Mitres'
     ],
@@ -1205,7 +1242,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 45: Mystic Might',
       'Lvl 46: Retribution',
       'Lvl 49: Redemption',
-      'Lvl 50: Bless Symbols, Antler Guards'
+      'Lvl 50: Bless Symbols, Antler Guards',
+      'Lvl 50: Bologa\'s Blessings'
     ],
     6: [
       'Lvl 52: Smite',
@@ -1213,13 +1251,16 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: Preserve, Spirit Shields',
       'Lvl 60: Blessed Spirit Shields',
       'Lvl 60: Chivalry',
-      'Lvl 60: Devout Boots, Stoles'
+      'Lvl 60: Croziers',
+      'Lvl 60: Devout Boots, Stoles',
+      'Lvl 60: Sunfire Fanatic Armour (Defence 40)'
     ],
     7: [
       'Lvl 62: Deadeye',
       'Lvl 63: Mystic Vigour',
       'Lvl 65: 3rd Age Druidic',
       'Lvl 70: Arcane/Spectral Spirit Shields',
+      'Lvl 70: Bonecrusher & Dragonbone Necklaces',
       'Lvl 70: Piety',
       'Lvl 70: Soul Capes',
       'Lvl 70: Superior Dragon Bones'
@@ -1539,7 +1580,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     5: [
       'Lvl 42: Fever Spiders, Slayer Gloves',
-      'Lvl 44: Sulphur Lizards, Boots of Stone',
+      'Lvl 44: Sulphur Lizards, Boots of Stone, Boots of Brimstone',
       'Lvl 45: Infernal Mages',
       'Lvl 47: Brine Rats',
       'Lvl 48: Sulphur/Frost/Earthen Nagua',
@@ -1549,11 +1590,13 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 51: Gryphons, Shellbane Gryphon (Boss)',
       'Lvl 52: Jellies',
       'Lvl 54: Juvenile Custodian Stalkers',
+      'Lvl 55: Slayer\'s Staff & Magic Dart (Magic 50)',
       'Lvl 55: Turoth, Broad Ammo, Leaf-Bladed Weapons',
       'Lvl 56: Warped Terrorbirds/Tortoises',
       'Lvl 57: Mutated Zygomites (Fungicide)',
       'Lvl 58: Cave Horrors (Witchwood Icon), Black Mask',
-      'Lvl 60: Aberrant Spectres, Basilisk Knights, Nose Peg'
+      'Lvl 60: Aberrant Spectres, Basilisk Knights, Nose Peg',
+      'Lvl 60: V\'s Shield (Defence 40; The Fremennik Exiles)'
     ],
     7: [
       'Lvl 62: Wyrms, Lava Strykewyrms (Sailing 60)',
@@ -1731,14 +1774,18 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     2: [
       'Lvl 15: Adamant Halberds (Att 30)',
       'Lvl 15: Leaping Trout (Fish 48)',
+      'Lvl 19: Lumbridge Raft Grapple',
       'Lvl 20: Black Mask (Def 10)',
       'Lvl 20: Mithril Warhammers',
       'Lvl 20: Rune Halberds (Att 40)'
     ],
     3: [
+      'Lvl 21: Karamja Volcano Grapple',
+      'Lvl 22: Taverley Dungeon Grapple',
       'Lvl 28: Observatory Grapple',
       'Lvl 30: Adamant Warhammers',
       'Lvl 30: Dragon Halberd (Att 60)',
+      'Lvl 30: Hunter\'s Spear (Range 55)',
       'Lvl 30: Leaping Salmon (Fish 58)'
     ],
     4: [
@@ -1746,6 +1793,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 35: Catherby Grapple',
       'Lvl 35: Crystal Halberd (Att 70)',
       'Lvl 37: Falador Grapple',
+      'Lvl 38: Yanille Grapple',
       'Lvl 40: Barrelchest Anchor (Att 60)',
       'Lvl 40: Rune Warhammers'
     ],
@@ -1767,16 +1815,20 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 70: Abyssal Bludgeon',
       'Lvl 70: Bandos Stronghold (GWD)',
       'Lvl 70: Dharok\'s Greataxe/Torag\'s Hammers',
+      'Lvl 70: Dorgesh-Kaan Cave Crossing (Agil 70, Range 70)',
       'Lvl 70: Inquisitor\'s Armour'
     ],
     8: [
       'Lvl 75: Blood Moon Armour',
+      'Lvl 75: Dual Macuahuitl (Att 70)',
       'Lvl 75: Elder Maul, Primordial Boots',
+      'Lvl 75: Statius\'s Warhammer (BH)',
       'Lvl 76: Barehanded Sharks',
       'Lvl 80: Avernic Treads',
       'Lvl 80: Soulreaper Axe'
     ],
     9: [
+      'Lvl 85: Crimson Kisten (Att 60)',
       'Lvl 90: Scythe of Vitur'
     ],
     10: [
