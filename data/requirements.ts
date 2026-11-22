@@ -1093,7 +1093,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Morytania'],
     skills: {},
-    quests: ['A Taste of Hope'],
+    quests: ['Priest in Peril'],
     description: 'Bank near ToB.'
   },
   'Darkmeyer Bank': {

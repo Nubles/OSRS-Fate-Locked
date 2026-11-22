@@ -42,3 +42,10 @@ describe('Dark Beasts (Wiki: Dark beast, Mourner Tunnels)', () => {
   });
 });
 
+describe('Ver Sinhaza Bank (Wiki: Ver Sinhaza, List of banks)', () => {
+  it('needs only Priest in Peril; A Taste of Hope only adds the medallion teleport', () => {
+    expect(S['Ver Sinhaza Bank'].quests).toEqual(['Priest in Peril']);
+    expect(analyzeRequirement(S['Ver Sinhaza Bank'], maxed(['Priest in Peril']), 'vanilla').missingQuests).toEqual([]);
+  });
+});
+
