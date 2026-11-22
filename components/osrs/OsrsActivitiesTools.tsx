@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { MERCHANTS_LIST, MERCHANT_UNLOCK_DETAILS, wikiUrlFor } from '../../constants';
 import { chunkContentService } from '../../services/ChunkContentService';
@@ -99,9 +99,8 @@ const SHORTCUT_FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
 
 const ShortcutsTool: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
-  const [ready, setReady] = useState(chunkContentService.ready);
+  const { ready, error, retry } = useChunkContent();
   const [filter, setFilter] = useState<'all' | ShortcutStatus>('all');
-  useEffect(() => { if (!ready) chunkContentService.init().then(() => setReady(true)); }, [ready]);
   const reach = useMemo(() => {
     if (!ready) return null;
     const shortcuts = chunkContentService.shortcuts();
@@ -123,7 +122,7 @@ const ShortcutsTool: React.FC = () => {
     return shortcutReachability(shortcuts, unlocks, locate);
   }, [ready, unlocks, gameModeId]);
   const icon = skillIconSrc('agility');
-  if (!reach) return <Shell icon={icon} title="Agility Shortcuts"><div className="oact-tool-empty">Loading shortcuts...</div></Shell>;
+  if (!reach) return <Shell icon={icon} title="Agility Shortcuts"><div className="oact-tool-empty">{error ? <>Could not load the shortcuts. <button type="button" className="oact-link" onClick={retry}>Retry shortcuts</button></> : 'Loading shortcuts...'}</div></Shell>;
   if (reach.total === 0) return null;
   const rows = filter === 'all' ? reach.rows : reach.rows.filter((r) => r.status === filter);
   const TAG: Record<ShortcutStatus, [string, string]> = { 'ready': ['ready', '#00ff00'], 'area-locked': ['area locked', '#ffff00'], 'level': ['', '#c77dff'], 'no-location': ['-', '#8a7c66'] };

@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   service: {
     ready: true,
+    error: null as string | null,
+    subscribe: vi.fn(() => () => {}),
     init: vi.fn(async () => true),
     shortcuts: vi.fn(() => [
       { name: 'Mith grapple', skill: 'Agility', level: 10, objects: ['Mith grapple'], chunks: [] },
@@ -51,6 +53,24 @@ import { ShortcutsPanel } from './ShortcutsPanel';
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+});
+
+describe('ShortcutsPanel after a failed chunk-content load', () => {
+  it('offers Retry instead of disappearing', () => {
+    mocks.service.ready = false;
+    mocks.service.error = 'HTTP 503';
+    try {
+      render(<ShortcutsPanel />);
+      expect(screen.getByRole('alert').textContent).toContain('Could not load the Agility shortcuts.');
+      const calls = mocks.service.init.mock.calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'Retry shortcuts' }));
+      expect(mocks.service.init.mock.calls.length).toBe(calls + 1);
+      expect(mocks.service.shortcuts).not.toHaveBeenCalled();
+    } finally {
+      mocks.service.ready = true;
+      mocks.service.error = null;
+    }
+  });
 });
 
 describe('ShortcutsPanel duplicate-name rows', () => {

@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Footprints, MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { chunkContentService } from '../services/ChunkContentService';
+import { useChunkContent } from '../hooks/useChunkContent';
 import { chunkUnlocked, chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { shortcutReachability, ShortcutStatus } from '../utils/shortcutReach';
 
@@ -26,13 +27,9 @@ const FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
  */
 export const ShortcutsPanel: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
-  const [ready, setReady] = useState(chunkContentService.ready);
+  const { ready, error, retry } = useChunkContent();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | ShortcutStatus>('all');
-
-  useEffect(() => {
-    if (!ready) chunkContentService.init().then(() => setReady(true));
-  }, [ready]);
 
   const reach = useMemo(() => {
     if (!ready) return null;
@@ -55,6 +52,7 @@ export const ShortcutsPanel: React.FC = () => {
     return shortcutReachability(shortcuts, unlocks, locate);
   }, [ready, unlocks, gameModeId]);
 
+  if (!reach && error) return <div role="alert" className="mb-4 text-xs text-amber-300">Could not load the Agility shortcuts. <button type="button" onClick={retry} className="underline">Retry shortcuts</button></div>;
   if (!reach || reach.total === 0) return null;
   const rows = filter === 'all' ? reach.rows : reach.rows.filter(r => r.status === filter);
 

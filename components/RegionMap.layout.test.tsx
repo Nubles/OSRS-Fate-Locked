@@ -1,5 +1,5 @@
 /* @vitest-environment jsdom */
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const flags = vi.hoisted(() => ({ authoring: false }));
@@ -7,12 +7,13 @@ vi.mock('../utils/mapAuthoring', () => ({
   MAP_AUTHORING_FLAG: 'fate-map-authoring',
   mapAuthoringAvailable: () => flags.authoring,
 }));
+const load = vi.hoisted(() => ({ ready: true, error: null as string | null, init: vi.fn(async () => true) }));
 vi.mock('../services/ChunkContentService', () => ({
   chunkContentService: {
-    ready: true,
-    error: null,
+    get ready() { return load.ready; },
+    get error() { return load.error; },
     subscribe: vi.fn(() => () => {}),
-    init: vi.fn(async () => true),
+    init: load.init,
     contentFor: vi.fn(() => null),
     aggregate: vi.fn(() => null),
     entityLocations: vi.fn(() => null),
@@ -83,5 +84,31 @@ describe('World map box in the classic layout', () => {
     let view!: ReturnType<typeof render>;
     await act(async () => { view = render(<RegionMap osrs />); });
     expect(view.queryByTestId('world-map-box')).toBeNull();
+  });
+});
+
+// reach-map[1]: a failed chunk-content load keeps the lens and overlays off
+// and offers Retry, instead of working them out from an empty dataset.
+describe('World map after a failed chunk-content load', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+    load.ready = false;
+    load.error = 'HTTP 503';
+  });
+  afterEach(() => {
+    cleanup();
+    load.ready = true;
+    load.error = null;
+    vi.unstubAllGlobals();
+  });
+
+  it.each([['classic', false], ['OSRS', true]])('offers Retry in the %s layout', async (_layout, osrs) => {
+    let view!: ReturnType<typeof render>;
+    await act(async () => { view = render(<RegionMap osrs={osrs} />); });
+    expect(view.getByRole('alert').textContent).toContain('Could not load the map data.');
+    expect(view.queryByTestId('map-overlay-list')).toBeNull();
+    const calls = load.init.mock.calls.length;
+    await act(async () => { fireEvent.click(view.getByRole('button', { name: 'Retry map data' })); });
+    expect(load.init.mock.calls.length).toBeGreaterThan(calls);
   });
 });

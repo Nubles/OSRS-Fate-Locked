@@ -14,6 +14,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { consumePendingChunk, chunkUnlocked, chunkForPlace } from '../utils/chunkLocations';
 import { isFreeArea } from '../utils/freeAreas';
 import { chunkContentService, type OverlayPoint } from '../services/ChunkContentService';
+import { useChunkContent } from '../hooks/useChunkContent';
 import { travelReachability } from '../utils/travelReach';
 import { entryBlockedGate } from '../utils/questDoability';
 import { QUEST_DATA } from '../data/questData';
@@ -497,8 +498,9 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // rocks", "Yew tree"), or the best training node for a skill — unlocked chunks
   // brighter, locked ones dim, with a jump-to-match.
   const { unlocks, specialKeys, gameModeId, customMode, fateLand } = useGame();
-  const [lensReady, setLensReady] = useState(chunkContentService.ready);
-  useEffect(() => { if (!lensReady) chunkContentService.init().then(() => setLensReady(true)); }, [lensReady]);
+  // A failed load stays not-ready and offers Retry: the lens, overlays and the
+  // Chunked cut-off walk are never worked out from an empty dataset.
+  const { ready: lensReady, error: lensError, retry: retryLens } = useChunkContent();
   const [lensInput, setLensInput] = useState('');
   const [lens, setLens] = useState<{ kind: 'entity' | 'reach' | 'drop' | 'category'; key: string; label: string } | null>(null);
   const [onlyUnlocked, setOnlyUnlocked] = useState(false);
@@ -2070,6 +2072,9 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
           <label className="owm-check" title="Highlight every chunk with a bank">
             <input className="owm-box" type="checkbox" checked={banksOn} disabled={!lensReady} onChange={(e) => (e.target.checked ? pickLens('category', 'bank', 'Bank') : clearLens())} />Banks
           </label>
+          {!lensReady && lensError && (
+            <span role="alert" className="owm-small owm-tan">Could not load the map data. <button type="button" className="oact-link" onClick={retryLens}>Retry map data</button></span>
+          )}
           {canOmni && (
             <div className="owm-omni" data-testid="omni-panel">
               <label className="owm-check" title="Show the chunks an Omni-Key would open">
@@ -2240,6 +2245,12 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
                     <span className="text-[9px] text-amber-500/70 font-mono shrink-0">drop · {it.sources}</span>
                   </button>
                 ))}
+              </div>
+            )}
+
+            {!lensReady && lensError && (
+              <div role="alert" className="px-2 py-1.5 border-t border-white/5 text-[10px] text-amber-300">
+                Could not load the map data. <button type="button" onClick={retryLens} className="underline">Retry map data</button>
               </div>
             )}
 
