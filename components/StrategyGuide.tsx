@@ -16,7 +16,7 @@ import {
 import { CheckCircle, XCircle, Lock, AlertCircle, Search, Filter, Pin, SlidersHorizontal, Check, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { Map, Compass, Target, ScrollText, Sparkles, BrainCircuit } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
-import { evaluateDiaryTierEligibility, evaluateQuestEligibility, meetsSkillRequirement } from '../utils/journalStatus';
+import { currentQuestPoints, evaluateDiaryTierEligibility, evaluateQuestEligibility, meetsSkillRequirement } from '../utils/journalStatus';
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from '../utils/activityReadiness';
 import { effectiveSkillLevel } from '../utils/slayerReach';
@@ -64,6 +64,9 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         ...(req.manualRequirements ?? []),
         ...partlyHeld.map(area => `Check it is in your chunks: ${area}`),
         ...(req.diaries ?? []).filter(d => !unlocks.diaries.includes(d)).map(d => `${d} diary`),
+        // Quest entries take their points from the canonical journal above.
+        ...(!canonical && req.questPoints !== undefined && currentQuestPoints(unlocks) < req.questPoints
+            ? [`${req.questPoints} Quest Points`] : []),
         ...(req.accessRoutes?.length && !req.accessRoutes.some(route =>
             (route.diaries ?? []).every(d => unlocks.diaries.includes(d))
             && Object.entries(route.skills ?? {}).every(([skill, level]) => meetsSkillRequirement(unlocks, skill, level)))

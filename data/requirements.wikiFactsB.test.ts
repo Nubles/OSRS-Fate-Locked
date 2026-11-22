@@ -83,3 +83,45 @@ describe('requirements part B: quests', () => {
     for (const q of ['The Fremennik Trials', 'Bone Voyage']) expect(QUEST_DATA[q], q).toBeDefined();
   });
 });
+
+describe("requirements part B: Champions' Guild 32 Quest Points (Wiki: Champions' Guild)", () => {
+  const keys = ["Champions' Challenge", "Scavvo's Rune Store"];
+  const everythingButQuests = () => {
+    const u = createFreshState().unlocks;
+    u.skills = Object.fromEntries(SKILLS_LIST.map(s => [s, 10]));
+    u.levels = Object.fromEntries(SKILLS_LIST.map(s => [s, 99]));
+    u.regions = [...REGIONS_LIST];
+    return u;
+  };
+  const withQuestPoints = (need: number) => {
+    const u = everythingButQuests();
+    let points = 0;
+    for (const quest of Object.values(QUEST_DATA)) {
+      if (points >= need) break;
+      if (quest.kind !== 'quest' || !quest.points) continue;
+      u.quests.push(quest.id);
+      points += quest.points;
+    }
+    return u;
+  };
+
+  const stateWith = (unlocks: ReturnType<typeof everythingButQuests>) => ({ ...createFreshState(), unlocks, gameModeId: 'vanilla' });
+
+  it('both entries ask for 32 Quest Points', () => {
+    for (const key of keys) expect(entry(key).questPoints, key).toBe(32);
+  });
+  it('the Strategy Guide lists the Quest Points until they are met', () => {
+    for (const key of keys) {
+      expect(analyzeRequirement(entry(key), everythingButQuests(), 'vanilla').missingChecks, key).toContain('32 Quest Points');
+      expect(analyzeRequirement(entry(key), withQuestPoints(32), 'vanilla').missingChecks, key).not.toContain('32 Quest Points');
+    }
+  });
+  it('the Goal Tracker and the goal route count them', () => {
+    for (const key of keys) {
+      expect(calculateGoalProgress(entry(key), everythingButQuests(), 'vanilla').missing, key).toContain('Quest Points (0/32)');
+      const route = buildGoalRoute(key, stateWith(everythingButQuests()));
+      expect(route?.questPoints, key).toMatchObject({ need: 32, have: 0, met: false });
+      expect(buildGoalRoute(key, stateWith(withQuestPoints(32)))?.questPoints?.met, key).toBe(true);
+    }
+  });
+});

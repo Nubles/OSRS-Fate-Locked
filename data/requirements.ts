@@ -1583,7 +1583,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
-    quests: [], // 32 QP + Champion Scroll
+    questPoints: 32, // Champions' Guild entry
+    quests: [], // Plus a champion scroll
     description: 'Defeat champions for the cape.'
   },
   'Chompy Bird Hunting': {
@@ -2305,6 +2306,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
+    questPoints: 32,
     description: 'Champions\' Guild access requires 32 Quest Points. Sells rune chainbody, platelegs, plateskirt, weapons, and green d\'hide armour.'
   },
   'Fancy Clothes Store': {
