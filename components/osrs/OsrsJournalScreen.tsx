@@ -740,8 +740,9 @@ export const OsrsJournalScreen: React.FC = () => {
 
         <div className="ojs-foot">
           <span>Quest Points: <span style={{ color: '#ffffff' }}>{quest.currentQP}/{quest.maxQP}</span></span>
-          <span>Ready: <span style={{ color: '#ffffff' }}>{readyCount}</span></span>
-          <span>Keys waiting: <span style={{ color: YELLOW }}>{keysWaitingText}</span></span>
+          {/* Held with the bar's counts until the routes load (they come from the same ready lists). */}
+          <span>Ready: <span style={{ color: '#ffffff' }}>{held(String(readyCount))}</span></span>
+          <span>Keys waiting: <span style={{ color: YELLOW }}>{held(keysWaitingText)}</span></span>
           <span className="ojs-foot-note">Right-click an entry for options. A missed quest roll still gives a Fate Point.</span>
         </div>
       </section>
