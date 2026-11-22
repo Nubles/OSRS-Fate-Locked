@@ -1,4 +1,6 @@
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { bankChunks, bankFor, bankModelName } from './bankPicture';
