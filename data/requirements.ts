@@ -1055,16 +1055,18 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Tirannwn'],
     skills: {},
-    quests: ['Mourning\'s End Part I'],
-    description: 'Bank in the elven village.'
+    quests: [],
+    manualRequirements: ['Confirm you have started Mourning\'s End Part I'],
+    description: 'Bank in the elven village, open once Mourning\'s End Part I is started.'
   },
   'Burgh de Rott Bank': {
     id: 'Burgh de Rott Bank',
     category: TableType.MERCHANTS,
     regions: ['Morytania'],
     skills: {},
-    quests: ['In Aid of the Myreque'],
-    description: 'Bank near Barrows.'
+    quests: ['Priest in Peril'],
+    manualRequirements: ['Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque'],
+    description: 'Bank near Barrows, repaired partway through In Aid of the Myreque.'
   },
   'Ver Sinhaza Bank': {
     id: 'Ver Sinhaza Bank',

@@ -8,6 +8,7 @@ import { TableType } from '../types';
 import { analyzeRequirement } from '../components/StrategyGuide';
 import { createFreshState } from '../context/GameContext';
 import { REGIONS_LIST, SKILLS_LIST } from './items';
+import { BANK_ACCESS_GATES } from './bankAccess';
 
 const S = STRATEGY_DATABASE;
 // Every region and skill held at 99: only quests and unlocks can block.
@@ -46,6 +47,23 @@ describe('Ver Sinhaza Bank (Wiki: Ver Sinhaza, List of banks)', () => {
   it('needs only Priest in Peril; A Taste of Hope only adds the medallion teleport', () => {
     expect(S['Ver Sinhaza Bank'].quests).toEqual(['Priest in Peril']);
     expect(analyzeRequirement(S['Ver Sinhaza Bank'], maxed(['Priest in Peril']), 'vanilla').missingQuests).toEqual([]);
+  });
+});
+
+describe('Lletya and Burgh de Rott banks (Wiki: Lletya bank, Burgh de Rott bank)', () => {
+  // "Players must have partially completed Mourning's End Part I" (oldid 15361478); "The bank requires
+  // Priest in Peril and a partial completion of In Aid of the Myreque" (oldid 15211939).
+  const manualOf = (id: string) => BANK_ACCESS_GATES.find(gate => gate.id === id)?.accessOptions.flatMap(option => option.manual ?? []);
+  it('asks for the started quest, as the bank rows do', () => {
+    expect(S['Lletya Bank'].quests).toEqual([]);
+    expect(S['Lletya Bank'].manualRequirements).toEqual(manualOf('9265'));
+    expect(S['Burgh de Rott Bank'].quests).toEqual(['Priest in Peril']);
+    expect(S['Burgh de Rott Bank'].manualRequirements).toEqual(manualOf('13874'));
+    expect(manualOf('9265')).toEqual(["Confirm you have started Mourning's End Part I"]);
+    const partway = analyzeRequirement(S['Burgh de Rott Bank'], maxed(['Priest in Peril']), 'vanilla');
+    expect(partway.missingQuests).toEqual([]);
+    expect(partway.parts.manualChecks).toEqual(['Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque']);
+    expect(analyzeRequirement(S['Burgh de Rott Bank'], maxed([]), 'vanilla').missingQuests).toEqual(['Priest in Peril']);
   });
 });
 
