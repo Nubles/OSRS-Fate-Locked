@@ -131,6 +131,23 @@ describe('RuneLite guide, as the plugin does it', () => {
     RUNELITE_GUIDE_FIGURES.find(figure => figure.id === figureId)?.callouts.find(item => item.id === id)?.body ?? '';
   const glossary = (term: string): string => RUNELITE_GUIDE_GLOSSARY.find(item => item.term === term)?.definition ?? '';
 
+  it('gives the relay’s real profile lifetime for Tracker copy expired', async () => {
+    const { readFileSync } = await import('node:fs');
+    const worker = readFileSync('workers/fate-relay/worker.js', 'utf8');
+    const days = Number(/const PROFILE_TTL_SECONDS = (\d+) \* 86400;/.exec(worker)?.[1]);
+    expect(days).toBe(30);
+    const guide = JSON.stringify([RUNELITE_GUIDE_CHAPTERS, RUNELITE_GUIDE_TROUBLESHOOTING]);
+    expect(guide).toContain(`The tracker hasn’t sent your rules in ${days} days.`);
+    expect(guide).toContain(`the tracker hasn’t sent your rules in ${days} days, or the relay`);
+    expect(guide).not.toContain('24 hours');
+  });
+
+  it('says Strict Mode stops network and boat trips when Block networks and boats is on', () => {
+    const strict = chapter('strict-mode');
+    expect(strict).toContain('Spirit trees, and fairy rings, charters and boats unless Block networks and boats is on.');
+    expect(strict).not.toContain('Fairy rings, spirit trees, charters and boats. These get');
+  });
+
   it('says Strict Mode also stops a teleport of a kind not unlocked, and a worn item’s (owner’s call T6)', () => {
     const strict = chapter('strict-mode');
     expect(strict).toContain('when your run hasn’t unlocked that kind of teleport');
