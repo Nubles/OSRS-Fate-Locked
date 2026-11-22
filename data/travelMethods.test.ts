@@ -290,10 +290,12 @@ const NO_TELEPORT = new Set([
   'Desert amulet 1', "Explorer's ring 1", 'Kandarin headgear 1', 'Kandarin headgear 2', 'Karamja gloves 1',
   'Karamja gloves 2', 'Western banner 1', 'Western banner 2', 'Wilderness sword 1', 'Wilderness sword 2',
 ]);
-/** Ids the catalogue lacks, from the item's page: the max cape in the inventory, and a newer charged amulet. */
+/** Ids the catalogue lacks, from the item's page: the max cape in the inventory, a newer charged amulet, and the second charged sceptre. */
 const NOT_IN_CATALOGUE: Readonly<Record<string, readonly number[]>> = {
   'item:max-cape': [13280],
   "item:sailors-amulet": [32399],
+  // "Pharaoh's sceptre" (oldid 15374164) gives the charged version two ids, 26948 and 26950.
+  'item:pharaohs-sceptre': [26950],
 };
 /** Options that open a choice of every place the item goes. */
 const CHOOSING = ['Rub', 'Teleport', 'Last Destination', 'Last-Teleport', 'Reminisce'];

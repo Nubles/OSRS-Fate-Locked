@@ -354,10 +354,10 @@ const JEWELLERY: readonly TravelMethod[] = [
     Play: { to: ['41,56'], afterDiary: { diary: 'Fremennik Hard', to: ['39,58', '37,59', '36,59'] } },
     Rellekka: { to: ['41,56'] }, 'Waterbirth Island': { to: ['39,58'] }, Neitiznot: { to: ['36,59'] }, Jatiszo: { to: ['37,59'] },
   }, 'Enchanted lyre', 15351821),
-  item('item:pharaohs-sceptre', "Pharaoh's sceptre", [26948], ["Pharaoh's Sceptre"],
+  item('item:pharaohs-sceptre', "Pharaoh's sceptre", [26948, 26950], ["Pharaoh's Sceptre"],
     choice({ Jalsavrah: ['30,69'], Jaleustrophos: ['52,44'], Jaldraocht: ['50,45'], Jaltevas: ['51,42'] },
       'Teleport', 'Last-Teleport'),
-    "Pharaoh's sceptre", 15322386),
+    "Pharaoh's sceptre", 15374164),
   item('item:ectophial', 'Ectophial', [4251], ['Ectophial'], { Teleport: { to: ['57,55'] } }, 'Ectophial', 15195604),
   // It lands at the Grand Tree (2466,3492 on the Grand Tree's page, oldid 15114413).
   item('item:royal-seed-pod', 'Royal seed pod', [19564], ['Royal Seed Pod'], { Commune: { to: ['38,54'] } },
