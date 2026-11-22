@@ -16,7 +16,14 @@ const MAX_CONTENT_CHARS = 1900;
 const SUPPRESS_EMBEDS = 1 << 2;
 const WEBHOOK_RE = /^https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[A-Za-z0-9_-]+$/;
 
-const LIMITS = { build: 64, kind: 64, message: 1000, stack: 4000, path: 300 };
+const LIMITS = { build: 64, kind: 32, message: 1000, stack: 4000, path: 300 };
+/**
+ * The heading shows kind and build as they are, so they must not be able to
+ * form Markdown: a kind is lowercase letters (utils/errorReport.ts ErrorKind)
+ * and a build is a commit SHA or the dev build's random hex.
+ */
+const KIND_RE = /^[a-z]{1,32}$/;
+const BUILD_RE = /^[0-9A-Za-z.-]{1,64}$/;
 
 /** One line or block of text from a report: control characters dropped, code fences broken, cut to `max`. */
 function clean(value, max, multiline = false) {
@@ -37,12 +44,15 @@ export function errorReport(raw) {
     return null;
   }
   if (body === null || typeof body !== 'object' || Array.isArray(body)) return null;
+  const build = clean(body.build, LIMITS.build);
+  const kind = clean(body.kind, LIMITS.kind);
   const report = {
-    build: clean(body.build, LIMITS.build) || 'unknown',
-    kind: clean(body.kind, LIMITS.kind) || 'error',
+    build: BUILD_RE.test(build) ? build : 'unknown',
+    kind: KIND_RE.test(kind) ? kind : 'error',
     message: clean(body.message, LIMITS.message),
     stack: clean(body.stack, LIMITS.stack, true),
-    path: clean(body.path, LIMITS.path),
+    // Shown in inline code, so no backticks of its own.
+    path: clean(body.path, LIMITS.path).replace(/`/g, "'"),
   };
   return report.message || report.stack ? report : null;
 }
@@ -74,9 +84,13 @@ export function resetErrorDedupe() {
   recent.clear();
 }
 
-/** The report as a short Discord message: a heading line, then the message and stack as literal text. */
+/**
+ * The report as a short Discord message: a heading line, then the message and
+ * stack as literal text. The path is the sender's text, so it goes in inline
+ * code, where Discord shows Markdown and links as they are.
+ */
 export function errorSummary(report) {
-  const heading = `Fate Locked ${report.kind} · build ${report.build}${report.path ? ` · ${report.path}` : ''}`;
+  const heading = `Fate Locked ${report.kind} · build ${report.build}${report.path ? ` · \`${report.path}\`` : ''}`;
   const room = MAX_CONTENT_CHARS - heading.length - '\n```\n\n```'.length;
   let detail = [report.message, report.stack].filter(Boolean).join('\n');
   if (detail.length > room) detail = `${detail.slice(0, Math.max(0, room - 1))}…`;
