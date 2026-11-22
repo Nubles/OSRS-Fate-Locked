@@ -820,13 +820,12 @@ describe('canonical diary tier eligibility', () => {
     const regions = [
       ...ALL_DIARY_TASKS.flatMap(task => task.regions ?? []),
       ...ALL_DIARY_TASKS.flatMap(task => task.anyOfRegions ?? []),
-      ...Object.values(DIARY_DATA).flatMap(diary => [diary.region, ...diary.requiredRegions]),
+      ...Object.values(DIARY_DATA).map(diary => diary.region),
     ];
     const quests = [
       ...Object.keys(QUEST_DATA),
 
       ...ALL_DIARY_TASKS.flatMap(task => task.quests ?? []),
-      ...Object.values(DIARY_DATA).flatMap(diary => diary.quests),
     ];
     return unlocked({
       equipment: Object.fromEntries(EQUIPMENT_SLOTS.map(slot => [slot, 9])),
@@ -866,18 +865,19 @@ describe('canonical diary tier eligibility', () => {
     })).toBe('LOCKED_QUEST');
   });
 
-  it('ignores all 48 stale aggregate requirement payloads', () => {
+  it('reads all 48 tiers from their canonical tasks, not the tier region', () => {
     const unlocks = canonicalUnlocks();
 
     for (const diary of Object.values(DIARY_DATA)) {
       expect(getDiaryStatus(diary, unlocks)).toBe('AVAILABLE');
-      expect(getDiaryStatus({
-        ...diary,
-        region: 'Impossible aggregate region',
-        skills: { NotASkill: 99 },
-        quests: ['Impossible aggregate quest'],
-        requiredRegions: ['Impossible aggregate region'],
-      }, unlocks)).toBe('AVAILABLE');
+      expect(getDiaryStatus({ ...diary, region: 'Impossible aggregate region' }, unlocks)).toBe('AVAILABLE');
+    }
+  });
+
+  it('keeps no per-tier skill, quest or region aggregate on the diary tiers', () => {
+    // Canonical tasks own every diary requirement; the old per-tier aggregates were unused and stale.
+    for (const diary of Object.values(DIARY_DATA)) {
+      expect(Object.keys(diary).sort(), diary.id).toEqual(['difficulty', 'id', 'region', 'tier']);
     }
   });
 
