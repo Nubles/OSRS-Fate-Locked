@@ -1863,45 +1863,68 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Thieving': {
     1: [
       'Lvl 1: Pickpocket Man/Woman',
+      'Lvl 1: Winter Sq\'irk',
       'Lvl 2: Vegetable Stalls',
-      'Lvl 5: Bakery & Tea Stalls',
+      'Lvl 5: Bakery, Tea & Crafting Stalls',
+      'Lvl 5: Monkey Food & General Stalls (Monkey Madness I)',
       'Lvl 10: Pickpocket Farmers'
     ],
     2: [
+      'Lvl 13: Chest (10 Coins)',
       'Lvl 15: HAM Members',
-      'Lvl 20: Silk Stalls'
+      'Lvl 20: Silk Stalls, Ogre Coffins'
     ],
     3: [
       'Lvl 21: Pyramid Plunder (Room 1)',
-      'Lvl 25: Warriors, Fruit Stalls',
+      'Lvl 22: Wine Stalls',
+      'Lvl 25: Warriors, Digsite Workmen, Fruit Stalls, Spring Sq\'irk',
+      'Lvl 27: Seed Stalls',
+      'Lvl 28: Chest (Nature Runes), Dark Chest, Isle of Souls Chest',
+      'Lvl 30: Pickpocket Villagers',
       'Lvl 30: The Feud (Blackjack)'
     ],
     4: [
       'Lvl 31: Pyramid Plunder (Room 2)',
       'Lvl 32: Pickpocket Rogues',
+      'Lvl 33: Rusty Chest',
+      'Lvl 35: Fur Stalls',
+      'Lvl 36: Cave Goblins (Death to the Dorgeshuun)',
+      'Lvl 36: Aldarin Villas Chest (Children of the Sun)',
       'Lvl 38: Master Farmers',
       'Lvl 40: Pickpocket Guards'
     ],
     5: [
       'Lvl 41: Pyramid Plunder (Room 3)',
+      'Lvl 42: Fish Stalls',
+      'Lvl 43: Chest (50 Coins)',
       'Lvl 45: Bandits, Fremennik Citizens, Autumn Sq\'irk',
+      'Lvl 47: Chest (Steel Arrowtips)',
+      'Lvl 49: Crossbow Stalls',
       'Lvl 50: Rogues\' Den (Wall Safes)',
       'Lvl 50: Wealthy Citizens, Silver Stalls'
     ],
     6: [
       'Lvl 51: Pyramid Plunder (Room 4)',
+      'Lvl 52: Dorgesh-Kaan Average Chests (Death to the Dorgeshuun)',
       'Lvl 53: Desert Bandits',
-      'Lvl 55: Ardougne Knights'
+      'Lvl 54: Tarnished Chest',
+      'Lvl 55: Ardougne Knights',
+      'Lvl 59: Chest (Blood Runes)',
+      'Lvl 60: Pickpocket Pirates'
     ],
     7: [
       'Lvl 61: Pyramid Plunder (Room 5)',
       'Lvl 64: Stone Chests',
       'Lvl 65: Menaphite Thugs, Magic Stalls, Summer Sq\'irk',
+      'Lvl 65: Watchmen, Spice & Scimitar Stalls',
+      'Lvl 66: Hallowed Sepulchre Coffins (Sins of the Father)',
       'Lvl 70: Paladins'
     ],
     8: [
       'Lvl 71: Pyramid Plunder (Room 6)',
+      'Lvl 72: Chest (Ardougne Castle)',
       'Lvl 75: Gnomes, Gem Stalls',
+      'Lvl 76: Reinforced Chest',
       'Lvl 78: Dorgesh-Kaan Rich Chests',
       'Lvl 80: Heroes'
     ],
@@ -1909,7 +1932,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 81: Pyramid Plunder (Room 7)',
       'Lvl 82: Vyres, Ore Stalls',
       'Lvl 84: Rogues\' Castle Chests',
+      'Lvl 84: Grand Hallowed Coffin (Sins of the Father)',
       'Lvl 85: Elves',
+      'Lvl 87: Cannonball Stalls',
       'Lvl 90: TzHaar-Hurs'
     ],
     10: [

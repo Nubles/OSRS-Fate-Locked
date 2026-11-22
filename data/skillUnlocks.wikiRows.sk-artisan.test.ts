@@ -82,6 +82,20 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Herblore', 'Goading Potion', 54], ['Herblore', 'Mastering Mixology', 60],
     ['Herblore', 'Sanfew Serum (Zogre Flesh Eaters)', 65], ['Herblore', 'Surge Potion', 81],
     ['Herblore', 'Menaphite Remedy', 88],
+    ['Thieving', "Winter Sq'irk", 1], ['Thieving', 'Bakery, Tea & Crafting Stalls', 5],
+    ['Thieving', 'Monkey Food & General Stalls (Monkey Madness I)', 5], ['Thieving', 'Chest (10 Coins)', 13],
+    ['Thieving', 'Ogre Coffins', 20], ['Thieving', 'Wine Stalls', 22], ['Thieving', 'Digsite Workmen', 25],
+    ['Thieving', "Spring Sq'irk", 25], ['Thieving', 'Seed Stalls', 27], ['Thieving', 'Isle of Souls Chest', 28],
+    ['Thieving', 'Pickpocket Villagers', 30], ['Thieving', 'Rusty Chest', 33], ['Thieving', 'Fur Stalls', 35],
+    ['Thieving', 'Cave Goblins (Death to the Dorgeshuun)', 36],
+    ['Thieving', 'Aldarin Villas Chest (Children of the Sun)', 36], ['Thieving', 'Fish Stalls', 42],
+    ['Thieving', 'Chest (50 Coins)', 43], ['Thieving', 'Chest (Steel Arrowtips)', 47],
+    ['Thieving', 'Crossbow Stalls', 49], ['Thieving', 'Dorgesh-Kaan Average Chests', 52],
+    ['Thieving', 'Tarnished Chest', 54], ['Thieving', 'Chest (Blood Runes)', 59],
+    ['Thieving', 'Pickpocket Pirates', 60], ['Thieving', 'Watchmen, Spice & Scimitar Stalls', 65],
+    ['Thieving', 'Hallowed Sepulchre Coffins (Sins of the Father)', 66], ['Thieving', 'Chest (Ardougne Castle)', 72],
+    ['Thieving', 'Reinforced Chest', 76], ['Thieving', 'Grand Hallowed Coffin (Sins of the Father)', 84],
+    ['Thieving', 'Cannonball Stalls', 87],
     // @next-skill
   ] as const)('%s: %s appears once, at its Wiki level and tier', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));
