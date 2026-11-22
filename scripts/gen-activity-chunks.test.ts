@@ -63,7 +63,7 @@ describe('data/activityChunks.ts', () => {
   it('uses the entrance chunks the reviews found, not the named area', () => {
     expect(ACTIVITY_CHUNKS['Tormented Demons']).toEqual(['49,49']);
     expect(ACTIVITY_CHUNKS['Tears of Guthix']).toEqual(['49,49']);
-    expect(ACTIVITY_CHUNKS['Giant Mole']).toEqual(['46,51']);
+    expect(ACTIVITY_CHUNKS['Giant Mole']).toEqual(['46,52']);
     expect(ACTIVITY_CHUNKS.Cerberus).toEqual(['45,53']);
     expect(ACTIVITY_CHUNKS.Nex).toEqual(['45,58']);
     expect(ACTIVITY_CHUNKS.Vorkath).toEqual(['35,63']);

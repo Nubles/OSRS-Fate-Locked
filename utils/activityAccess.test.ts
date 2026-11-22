@@ -183,7 +183,7 @@ describe('getActivityAccess in Chunked', () => {
     expect(getActivityAccess('Scurrius', chunked(['50,51', '50,52']), 'chunked').eligible).toBe(false);
     expect(getActivityAccess('Scurrius', chunked(['50,51', '50,52', '50,53', '50,54']), 'chunked').eligible).toBe(true);
     // Any one of several entrances is enough.
-    expect(getActivityAccess('Callisto', chunked(['51,58']), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Castle Wars', chunked(['38,48']), 'chunked').eligible).toBe(true);
   });
 
   it('opens nothing located from the start chunk alone', () => {

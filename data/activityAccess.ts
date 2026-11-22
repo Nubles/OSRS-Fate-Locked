@@ -27,8 +27,9 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   Spindel: ['Graveyard of Shadows'],
   'Crazy Archaeologist': ['Forgotten Cemetery'],
   'Chaos Fanatic': ['Lava Maze'],
-  // The Escape Caves entrances (50,59 51,58 51,59) open with Chaos Temple, beside the Bone Yard.
-  Callisto: ['Chaos Temple'],
+  // Callisto's cave entrance is in 51,60 (Rogues' Castle). The Silk Chasm entrance (51,59) and the
+  // Vet'ion crevice (50,59) are Chaos Temple chunks. The Escape Caves are only the lairs' exits.
+  Callisto: ["Rogues' Castle"],
   Venenatis: ['Chaos Temple'],
   "Vet'ion": ['Chaos Temple'],
   Scorpia: ["Scorpia's Cave"],
