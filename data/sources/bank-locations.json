@@ -7,7 +7,8 @@
     { "id": "13354", "name": "Bank Camel", "kind": "npc", "requirements": ["Beneath Cursed Sands Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Bank_Camel?oldid=15261945" },
     { "id": "15151", "name": "Deposit Box", "kind": "object", "requirements": ["Cabin Fever Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Deposit_Box?oldid=15329931" },
     { "id": "15151", "name": "Bank chest", "kind": "object", "requirements": ["Cabin Fever Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Trouble_Brewing?oldid=15351684" },
-    { "id": "9778", "name": "Eniola", "kind": "npc", "wiki": "https://oldschool.runescape.wiki/w/Eniola?oldid=15353166" }
+    { "id": "9778", "name": "Eniola", "kind": "npc", "wiki": "https://oldschool.runescape.wiki/w/Eniola?oldid=15353166" },
+    { "id": "14907", "name": "Bank chest", "kind": "object", "wiki": "https://oldschool.runescape.wiki/w/Fossil_Island_bank?oldid=15315035" }
   ],
   "sourceRevisions": [
     { "title": "Peer the Seer", "revision": 15351041, "url": "https://oldschool.runescape.wiki/w/Peer_the_Seer" },

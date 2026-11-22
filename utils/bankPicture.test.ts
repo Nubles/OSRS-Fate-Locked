@@ -30,6 +30,10 @@ describe('bankPicture', () => {
     // chest there (List of banks, 'Trouble Brewing chest' at 3810,3020; Trouble Brewing: 'Items can be
     // deposited at the bank chest near Honest Jimmy'), recorded in the registry's reviewedFacilities.
     expect(bankModelName(bankFor('15151')!)).toBe('Bank chest');
+    // Museum Camp: the chunk data holds no bank facility there, because the player builds it. The Wiki
+    // has "Number of tellers 0" and a bank chest built once from the chest pieces (Fossil Island bank
+    // oldid 15315035), recorded in the registry's reviewedFacilities.
+    expect(bankModelName(bankFor('14907')!)).toBe('Bank chest');
   });
 
   it('keeps the label rule where the facility data cannot tell', () => {

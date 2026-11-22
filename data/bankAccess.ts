@@ -13,6 +13,7 @@ export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind
   {"id":"15151","name":"Deposit Box","kind":"object","requirements":["Cabin Fever Complete the quest"]},
   {"id":"15151","name":"Bank chest","kind":"object","requirements":["Cabin Fever Complete the quest"]},
   {"id":"9778","name":"Eniola","kind":"npc"},
+  {"id":"14907","name":"Bank chest","kind":"object"},
 ];
 
 /** The registry's reviewed locations (their names are their BANKS labels), with a service's own ways in. */
