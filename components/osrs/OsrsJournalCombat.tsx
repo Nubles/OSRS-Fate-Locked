@@ -5,7 +5,7 @@ import type { UnlockState } from '../../types';
 import type { AreaRoutes } from '../../utils/areaRoutes';
 import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { CA_TASK_POINTS, isCATierId } from '../../utils/caProgress';
-import { caTaskBlocker, caTaskBlockerText, type CATaskBlocker } from '../../utils/caTaskAccess';
+import { caTaskBlocker, caTaskBlockerHint, caTaskBlockerText, type CATaskBlocker } from '../../utils/caTaskAccess';
 import { EntityLocations } from '../EntityLocations';
 import { Legend, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
 
@@ -228,7 +228,7 @@ const TaskDetail: React.FC<{
         <div className={isDone ? 'ojr-met' : undefined}>{task.description}</div>
         <div className="ojr-gap">{task.monster}, {task.tierId} tier, {plural(pointsOf(task.tierId), 'point')}.</div>
         {blocker && (
-          <div className="ojr-gap ojr-red">{caTaskBlockerText(blocker)} You can still log the task by hand.</div>
+          <div className="ojr-gap ojr-red">{caTaskBlockerHint(blocker, task, unlocks, gameModeId)}</div>
         )}
       </div>
 

@@ -16,7 +16,7 @@ import {
   completedCAPoints,
   earnedCATiers,
 } from '../utils/caProgress';
-import { caTaskBlocker, caTaskBlockerText } from '../utils/caTaskAccess';
+import { caTaskBlocker, caTaskBlockerHint } from '../utils/caTaskAccess';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -316,7 +316,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                                 {blocker && (
                                                   <span
                                                     className="text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-1.5 rounded"
-                                                    title={`${caTaskBlockerText(blocker)} You can still log the task by hand.`}
+                                                    title={caTaskBlockerHint(blocker, task, unlocks, gameModeId)}
                                                   >
                                                     {blocker.kind === 'boss' ? 'Boss not unlocked' : "Can't reach yet"}
                                                   </span>
