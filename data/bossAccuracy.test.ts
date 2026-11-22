@@ -132,6 +132,27 @@ describe('boss access, from the roll data audit (7 October 2026)', () => {
   });
 });
 
+describe('boss access items (fix phase, 22 November 2026)', () => {
+  // Wiki: Kree'arra, General Graardor, Commander Zilyana, Mole Hole, Kalphite Queen and Sarachnis pages.
+  const manual = (boss: string) => ACTIVITY_REQUIREMENTS[boss]?.manualRequirements ?? [];
+  it('names the item each lair needs to get in', () => {
+    expect(manual("Kree'arra")).toContainEqual(expect.stringContaining('mith grapple'));
+    expect(manual('General Graardor')).toContainEqual(expect.stringContaining('hammer'));
+    expect(manual('Commander Zilyana')).toContainEqual(expect.stringContaining('two ropes'));
+    expect(manual('Giant Mole')).toContainEqual(expect.stringContaining('spade'));
+    expect(manual('Giant Mole')).toContainEqual(expect.stringContaining('light source'));
+    expect(manual('Kalphite Queen')).toContainEqual(expect.stringContaining('two ropes'));
+    expect(manual('Sarachnis')).toContainEqual(expect.stringContaining('slash weapon or a knife'));
+  });
+
+  it('keeps the God Wars entry and chamber lines on the generals', () => {
+    for (const boss of ["Kree'arra", 'General Graardor', 'Commander Zilyana']) {
+      expect(manual(boss)[0]).toContain('God Wars Dungeon');
+      expect(manual(boss).at(-1)).toContain('kill-count');
+    }
+  });
+});
+
 describe('Galvek leaves the boss table', () => {
   // He is fought once, inside Dragon Slayer II (owner decision B3).
   const migrate = (state: ReturnType<typeof createFreshState>) => {
