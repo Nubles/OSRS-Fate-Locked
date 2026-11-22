@@ -984,7 +984,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Crimson Swifts, Bird Snares',
       'Lvl 1: Honey Buzzards, Wasps (The Birds and the Wasps)',
+      'Lvl 1: Guanic Bats, Polar Kebbits, Noose Wands, Insect Nets',
+      'Lvl 1: Polar & Woodland Camouflage',
       'Lvl 3: Common Kebbits',
+      'Lvl 4: Jungle Camouflage',
       'Lvl 5: Golden Warblers, Bird Houses',
       'Lvl 7: Feldip Weasels',
       'Lvl 9: Copper Longtails',
@@ -995,7 +998,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 12: Killer Wasps (The Birds and the Wasps)',
       'Lvl 13: Desert Devils',
       'Lvl 14: Oak Bird Houses',
-      'Lvl 15: Ruby Harvests, Sandworms',
+      'Lvl 15: Ruby Harvests, Sandworms, Prael Bats, Butterfly Jars',
       'Lvl 17: Puro-Puro, Baby Implings',
       'Lvl 17: Black Honey Buzzards (The Birds and the Wasps)',
       'Lvl 19: Tropical Wagtails'
@@ -1004,9 +1007,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 21: Red Crabs',
       'Lvl 22: Young Implings',
       'Lvl 23: Wild Kebbits',
-      'Lvl 24: Willow Bird Houses',
+      'Lvl 24: Willow Bird Houses, Strung Rabbit Foot',
       'Lvl 25: Sapphire Glacialis',
       'Lvl 27: Eagle Transport, Box Traps, Rabbit Snares',
+      'Lvl 27: Ferrets, White Rabbits (Eagles\' Peak)',
       'Lvl 28: Gourmet Implings, Larupia Gear',
       'Lvl 29: Swamp Lizards',
       'Lvl 30: Giral Bats'
@@ -1027,15 +1031,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 42: Essence Implings',
       'Lvl 43: Spotted Kebbits',
       'Lvl 44: Fish Shoals, Maple Bird Houses',
-      'Lvl 45: Black Warlocks',
+      'Lvl 45: Black Warlocks, Phluxia Bats',
       'Lvl 46: Hunter Guild, Rumours (Basic)',
       'Lvl 47: Orange Salamanders',
       'Lvl 48: Blue Crabs',
       'Lvl 49: Razor-backed Kebbits, Mahogany Bird Houses',
-      'Lvl 50: Eclectic Implings, Sunlight Crossbow'
+      'Lvl 50: Eclectic Implings, Sunlight Crossbow, Horn of Plenty'
     ],
     6: [
-      'Lvl 51: Sabre-toothed Kebbits',
+      'Lvl 51: Sabre-toothed Kebbits, Common Tench (Fishing 56)',
       'Lvl 52: Kyatt Gear',
       'Lvl 53: Grey Chinchompas',
       'Lvl 54: Gloves of Silence',
@@ -1044,10 +1048,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 57: Pyre Foxes',
       'Lvl 58: Nature Implings',
       'Lvl 59: Red Salamanders, Yew Bird Houses',
-      'Lvl 60: Maniacal Monkeys, 4 Traps',
+      'Lvl 60: Maniacal Monkeys, Kryket Bats, 4 Traps',
       'Lvl 60: Goat Hunting (Wyrmscraig; Sheep Herder)'
     ],
     7: [
+      'Lvl 62: Wild Broavs (While Guthix Sleeps)',
       'Lvl 63: Red Chinchompas',
       'Lvl 65: Magpie Implings, Sunlight Moths',
       'Lvl 66: Spottier Cape',
@@ -1060,7 +1065,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 72: Sunlight Antelope, Rumours (Expert)',
       'Lvl 73: Black Chinchompas',
       'Lvl 74: Ninja Implings, Magic Bird Houses',
-      'Lvl 75: Moonlight Moths',
+      'Lvl 75: Moonlight Moths, Murng Bats',
       'Lvl 76: Letvek (The Blood Moon Rises)',
       'Lvl 77: Rainbow Crabs',
       'Lvl 79: Tecu Salamanders',

@@ -96,6 +96,13 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Thieving', 'Hallowed Sepulchre Coffins (Sins of the Father)', 66], ['Thieving', 'Chest (Ardougne Castle)', 72],
     ['Thieving', 'Reinforced Chest', 76], ['Thieving', 'Grand Hallowed Coffin (Sins of the Father)', 84],
     ['Thieving', 'Cannonball Stalls', 87],
+    ['Hunter', 'Guanic Bats, Polar Kebbits, Noose Wands, Insect Nets', 1],
+    ['Hunter', 'Polar & Woodland Camouflage', 1], ['Hunter', 'Jungle Camouflage', 4],
+    ['Hunter', 'Prael Bats, Butterfly Jars', 15], ['Hunter', 'Strung Rabbit Foot', 24],
+    ['Hunter', "Ferrets, White Rabbits (Eagles' Peak)", 27], ['Hunter', 'Phluxia Bats', 45],
+    ['Hunter', 'Horn of Plenty', 50], ['Hunter', 'Common Tench (Fishing 56)', 51], ['Hunter', 'Kryket Bats', 60],
+    ['Hunter', 'Wild Broavs (While Guthix Sleeps)', 62], ['Hunter', 'Murng Bats', 75], ['Hunter', 'Giral Bats', 30],
+    ['Hunter', 'Psykk Bats', 90],
     // @next-skill
   ] as const)('%s: %s appears once, at its Wiki level and tier', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));
