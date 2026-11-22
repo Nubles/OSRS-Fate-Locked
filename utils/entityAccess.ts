@@ -97,6 +97,10 @@ export function bankGateAccess(bankId: string, unlocks: UnlockState, mode?: stri
   return options?.length ? bankOptionsAccess(options, unlocks, mode) : { status: 'ALLOWED', reasons: [] };
 }
 
+/** A gate's "Complete X" repeats a quest X the place's own entry already names, so it is dropped. */
+const gateReasonsBeyond = (own: string[], gate: string[]): string[] =>
+  gate.filter(reason => !own.some(r => reason === `Complete ${r}`));
+
 function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: UnlockState, source: EntityAccessSource, mode?: string): EntityAccessResult {
   const bankId = String(coord.cx * 256 + coord.cy);
   const bank = BANK_REVIEWED_LOCATIONS.find(entry => entry.id === bankId);
@@ -109,8 +113,7 @@ function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: Un
     : { status: 'UNKNOWN', reasons: [`${name ?? 'Bank facility'} access requirements need review`] };
   return { status: entry.status === 'NOT_READY' || access.status === 'NOT_READY' ? 'NOT_READY'
     : entry.status === 'UNKNOWN' || access.status === 'UNKNOWN' ? 'UNKNOWN' : 'ALLOWED',
-    // A gate's "Complete X" repeats a quest X the place's own entry already names.
-    reasons: [...new Set([...entry.reasons, ...access.reasons.filter(reason => !entry.reasons.some(r => reason === `Complete ${r}`))])] };
+    reasons: [...new Set([...entry.reasons, ...gateReasonsBeyond(entry.reasons, access.reasons)])] };
 }
 
 interface BankFacility { name: string; kind: EntityKind; requirements?: string[] }
@@ -152,7 +155,7 @@ export function evaluateBankRequirements(
     const extra = evaluateRouteGates(compileRawRequirements((requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
     const facility = combineAccess(access, { status: !extra.blockers.length ? 'ALLOWED' : extra.hasDataGap ? 'UNKNOWN' : 'NOT_READY',
       reasons: extra.blockers.map(blocker => blocker.label) });
-    return gate ? combineAccess(facility, gate) : facility;
+    return gate ? combineAccess(facility, { ...gate, reasons: gateReasonsBeyond(facility.reasons, gate.reasons) }) : facility;
   });
   // Reviewed NPC services may not have a generic bank object in the source.
   if (!results.length) return registryBankRequirements(coord, unlocks, source, mode);
