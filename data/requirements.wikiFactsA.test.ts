@@ -118,6 +118,22 @@ describe('Quest strategy keys match the quest list', () => {
   });
 });
 
+describe('Specific bank access entries (Wiki: Corsair Cove, Farming Guild, Myths\' Guild)', () => {
+  it('Corsair Cove is on the Feldip Hills shore, in Kandarin only', () => {
+    expect(S['Corsair Cove Bank'].regions).toEqual(['Kandarin']);
+    const u = maxed(['The Corsair Curse']);
+    u.regions = ['Kandarin'];
+    expect(analyzeRequirement(S['Corsair Cove Bank'], u, 'vanilla').missingRegions).toEqual([]);
+  });
+  it('the guild banks need the guild itself, like the Crafting Guild bank', () => {
+    const u = maxed(['Dragon Slayer II']);
+    expect(analyzeRequirement(S['Farming Guild Bank'], u, 'vanilla').isCategoryUnlocked).toBe(false);
+    expect(analyzeRequirement(S["Myths' Guild Bank"], u, 'vanilla').isCategoryUnlocked).toBe(false);
+    u.guilds = ['Farming Guild', "Myths' Guild"];
+    expect(analyzeRequirement(S['Farming Guild Bank'], u, 'vanilla').isFullyPlayable).toBe(true);
+    expect(analyzeRequirement(S["Myths' Guild Bank"], u, 'vanilla').isFullyPlayable).toBe(true);
+  });
+});
 
 describe('Saves that pinned a removed or renamed entry', () => {
   // The save schema keeps any pinned id as a plain string (utils/saveSchema.test.ts

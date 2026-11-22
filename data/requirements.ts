@@ -1005,14 +1005,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Members bank: Falador Hard diary or 99 Crafting. Wear an apron or suitable cape/hood to enter the guild.'
   },
   'Farming Guild Bank': {
-    id: 'Farming Guild Bank',
+    id: 'Farming Guild',
     category: TableType.GUILDS,
     regions: ['Kourend & Kebos'],
     skills: { 'Farming': 45 },
     description: 'Requires 45 Farming to enter guild.'
   },
   'Myths\' Guild Bank': {
-    id: 'Myths\' Guild Bank',
+    id: 'Myths\' Guild',
     category: TableType.GUILDS,
     regions: ['Kandarin'],
     skills: {},
@@ -1093,7 +1093,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Corsair Cove Bank': {
     id: 'Corsair Cove Bank',
     category: TableType.MERCHANTS,
-    regions: ['Kandarin', 'Fremennik'], // Accessed via Rellekka or Feldip
+    regions: ['Kandarin'], // Feldip Hills
     skills: {},
     quests: ['The Corsair Curse'],
     description: 'Bank in the Corsair Cove.'
