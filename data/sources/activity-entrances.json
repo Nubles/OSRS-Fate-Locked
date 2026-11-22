@@ -14,7 +14,7 @@
     "Commander Zilyana": [{ "monster": "Commander Zilyana" }],
     "Kree'arra": [{ "monster": "Kree'arra" }],
     "K'ril Tsutsaroth": [{ "monster": "K'ril Tsutsaroth" }],
-    "Abyssal Sire": [{ "monster": "Abyssal Sire" }],
+    "Abyssal Sire": [{ "monster": "Abyssal Sire" }, { "interior": "Abyss", "reason": "The Abyss, through the Mage of Zamorak north of the Edgeville ditch (48,55), has a one-way entrance to the Abyssal Nexus (Wiki: Abyssal Nexus)." }],
     "Alchemical Hydra": [{ "monster": "Alchemical Hydra" }],
     "Cerberus": [{ "monster": "Cerberus" }],
     "Grotesque Guardians": [{ "interior": "Grotesque Guardians' Lair" }],

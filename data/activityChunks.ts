@@ -4,7 +4,7 @@
 
 /** Bosses, minigames and guilds (and Brutus): their entrance chunks. */
 export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
-  "Abyssal Sire": ["50,49"],
+  "Abyssal Sire": ["48,55", "50,49"],
   "Alchemical Hydra": ["20,59"],
   "Amoxliatl": ["26,50"],
   "Araxxor": ["57,53"],

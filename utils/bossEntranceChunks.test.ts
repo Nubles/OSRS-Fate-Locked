@@ -36,6 +36,14 @@ describe('lair bosses open from their entrance chunk', () => {
     }
   });
 
+  it('Chunked: the Abyssal Sire opens from the fairy ring chunk or the Mage of Zamorak (Abyss) chunk', () => {
+    // Wiki: Abyssal Nexus, a one-way entrance from the Abyss's outer ring, or fairy ring DIP.
+    // Mage of Zamorak (Wilderness) 3107,3555.
+    for (const chunk of ['50,49', chunkOf(3107, 3555)]) {
+      expect(getActivityAccess('Abyssal Sire', run({ chunks: [chunk], bosses: ['Abyssal Sire'] }), 'chunked').eligible, chunk).toBe(true);
+    }
+  });
+
   it("Vanilla: Callisto opens with Rogues' Castle, which owns 51,60, and not with Chaos Temple", () => {
     expect(ACTIVITY_ACCESS_AREAS.Callisto).toEqual(["Rogues' Castle"]);
     const regions = initialState.unlocks.regions ?? [];
