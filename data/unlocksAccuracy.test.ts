@@ -178,6 +178,21 @@ describe('B2: a town bank built in a quest needs the quest', () => {
     expect(without.reasons).toContain(`Complete ${quest}`);
   });
 
+  // Partway through a quest: Lunar Isle bank oldid 15345927 (started Lunar Diplomacy and a Seal of Passage, or Dream Mentor),
+  // Bank Deposit Box oldid 15378951 (Lunar Isle; the Great Conch needs Troubled Tortugans partly done),
+  // The Great Conch oldid 15376235 (starting Troubled Tortugans), Red Rock oldid 15248903 (The Red Reef partly done).
+  it.each([
+    ['8253', 'Lunar Isle bank', 'Dream Mentor'], ['8508', 'Lunar Isle dock deposit box', 'Lunar Diplomacy'],
+    ['12581', 'Great Conch bank', 'Troubled Tortugans'], ['12838', 'Great Conch Sacred Grove deposit box', 'Troubled Tortugans'],
+    ['11047', 'Red Rock bank chest', 'The Red Reef'],
+  ])('bank %s (%s) opens after %s, and asks a run partway through to confirm', (id, _bank, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const partway = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(partway.status).toBe('UNKNOWN');
+    expect(partway.reasons.join(' ')).toMatch(/Confirm you have/);
+    expect(bankAccess(id, createFreshState().unlocks).status).not.toBe('ALLOWED');
+  });
+
   // Throne of Miscellania oldid 15403898: "the bank in Etceteria is available for use" before the quest starts.
   it('opens the Etceteria bank after The Fremennik Trials, before Throne of Miscellania', () => {
     expect(bankAccess('10300', everything(99, { quests: questsWithout('Throne of Miscellania') })))

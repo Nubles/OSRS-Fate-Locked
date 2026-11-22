@@ -32,7 +32,11 @@
     { "title": "Bank chest (amenity)", "revision": 15402269, "url": "https://oldschool.runescape.wiki/w/Bank_chest_(amenity)" },
     { "title": "Mos Le'Harmless bank", "revision": 15211938, "url": "https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank" },
     { "title": "Mor Ul Rek", "revision": 15394862, "url": "https://oldschool.runescape.wiki/w/Mor_Ul_Rek" },
-    { "title": "Chest pieces (Wyrmscraig)", "revision": 15402131, "url": "https://oldschool.runescape.wiki/w/Chest_pieces_(Wyrmscraig)" }
+    { "title": "Chest pieces (Wyrmscraig)", "revision": 15402131, "url": "https://oldschool.runescape.wiki/w/Chest_pieces_(Wyrmscraig)" },
+    { "title": "Lunar Isle bank", "revision": 15345927, "url": "https://oldschool.runescape.wiki/w/Lunar_Isle_bank" },
+    { "title": "Lunar Isle", "revision": 15375264, "url": "https://oldschool.runescape.wiki/w/Lunar_Isle" },
+    { "title": "The Great Conch", "revision": 15376235, "url": "https://oldschool.runescape.wiki/w/The_Great_Conch" },
+    { "title": "Red Rock", "revision": 15248903, "url": "https://oldschool.runescape.wiki/w/Red_Rock" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -113,6 +117,11 @@
     { "id": "13874", "accessOptions": [{ "quests": ["In Aid of the Myreque"] }], "note": "Burgh de Rott bank; reaching the town needs only Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "14388", "accessOptions": [{ "quests": ["Sins of the Father"] }], "note": "Darkmeyer bank; the chunk asks only for Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "9273", "accessOptions": [{ "quests": ["Swan Song"] }], "note": "Piscatoris bank and deposit box: the bank needs Swan Song to use.", "wiki": ["https://oldschool.runescape.wiki/w/Piscatoris_bank", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "8253", "accessOptions": [{ "quests": ["Dream Mentor"] }, { "manual": ["Confirm you have started Lunar Diplomacy and carry a Seal of Passage"] }], "note": "Lunar Isle bank: started Lunar Diplomacy with a Seal of Passage, or Dream Mentor, after which Birds-Eye Jack banks without the seal.", "wiki": ["https://oldschool.runescape.wiki/w/Lunar_Isle_bank"] },
+    { "id": "8508", "accessOptions": [{ "quests": ["Lunar Diplomacy"] }, { "manual": ["Confirm you have progressed Lunar Diplomacy far enough to reach Lunar Isle"] }], "note": "Lunar Isle dock deposit box: reaching Lunar Isle needs Lunar Diplomacy partly done.", "wiki": ["https://oldschool.runescape.wiki/w/Lunar_Isle", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "12581", "accessOptions": [{ "quests": ["Troubled Tortugans"] }, { "manual": ["Confirm you have started Troubled Tortugans"] }], "note": "The Great Conch bank at the Summer Shore: the Great Conch needs Troubled Tortugans started.", "wiki": ["https://oldschool.runescape.wiki/w/The_Great_Conch", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "12838", "accessOptions": [{ "quests": ["Troubled Tortugans"] }, { "manual": ["Confirm you have started Troubled Tortugans"] }], "note": "Great Conch deposit box by the Sacred Grove: the Great Conch needs Troubled Tortugans started.", "wiki": ["https://oldschool.runescape.wiki/w/The_Great_Conch", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "11047", "accessOptions": [{ "quests": ["The Red Reef"] }, { "manual": ["Confirm you have partly completed The Red Reef"] }], "note": "Red Rock bank chest: Red Rock needs The Red Reef partly done.", "wiki": ["https://oldschool.runescape.wiki/w/Red_Rock", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "8757", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "Gwenith deposit box: the village needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Gwenith", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "8499", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "The deposit box west of Prifddinas needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "5678", "accessOptions": [{ "quests": ["Children of the Sun"] }], "note": "Aldarin dock deposit box: Varlamore needs Children of the Sun.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
