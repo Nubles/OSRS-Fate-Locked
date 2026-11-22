@@ -45,7 +45,7 @@ export function parseClanFeed(body: unknown): ClanEntry[] | null {
 
 /**
  * One chat line per unlock, oldest first, as the chatbox lists them:
- * "Whim unlocked Lava Maze (Regions)." An entry that left some out says how
+ * "Runner unlocked Lava Maze (Regions)." An entry that left some out says how
  * many on its last line.
  */
 export function clanLines(entries: readonly ClanEntry[]): { key: string; name: string; text: string; at: number; mode?: string }[] {

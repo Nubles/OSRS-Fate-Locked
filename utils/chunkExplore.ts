@@ -1,5 +1,5 @@
 /**
- * Chunked mode's exploring rolls (Alex picked "Every chunk pays", 2026-10-17):
+ * Chunked mode's exploring rolls (the owner picked "Every chunk pays", 2026-10-17):
  * each chunk a run unlocks gives one Key roll for each new thing the player
  * does there for the first time, up to CHUNK_EXPLORE_ROLLS per chunk. The
  * things come from data/chunkSkillNodes.ts (generated): the skills the chunk

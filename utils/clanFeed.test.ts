@@ -3,7 +3,7 @@ import { clanFeed as relayClanFeed } from '../workers/fate-relay/clan.js';
 import { clanLines, fetchClanFeed, parseClanFeed, resetClanFeedCache } from './clanFeed';
 
 const entry = (overrides: Record<string, unknown> = {}) => ({
-  name: 'Whim',
+  name: 'Runner',
   mode: 'Vanilla',
   items: ['Unlocked Lava Maze (Areas)'],
   at: 1_790_000_000_000,
@@ -33,8 +33,8 @@ describe('the clan feed', () => {
       entry({ items: ['Unlocked Varrock (Areas)', 'Unlocked Vorkath (Bosses)'], more: 4, at: 2 }),
     ]);
     expect(lines.map(line => `${line.name} ${line.text}`)).toEqual([
-      'Whim unlocked Varrock (Areas).',
-      'Whim unlocked Vorkath (Bosses), and 4 more.',
+      'Runner unlocked Varrock (Areas).',
+      'Runner unlocked Vorkath (Bosses), and 4 more.',
       'Mo unlocked Prayer tier 2 · Breakthrough.',
     ]);
     expect(new Set(lines.map(line => line.key)).size).toBe(3);

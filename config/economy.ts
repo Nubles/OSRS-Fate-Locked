@@ -117,7 +117,7 @@ export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guarante
 // no run stuck, with Mercy needed about 14 times over an 80-chunk run.
 export const BREAKTHROUGH_CHANCE = 0.5;
 
-// Exploring (Alex picked "Every chunk pays", 2026-10-17): each chunk a Chunked
+// Exploring (the owner picked "Every chunk pays", 2026-10-17): each chunk a Chunked
 // run unlocks gives a Key roll for each new thing done there for the first
 // time (training a skill it has, fighting its monsters, its Slayer master or
 // herb patch), up to this many rolls per chunk, at DROP_RATES' Exploring rate.
@@ -126,7 +126,7 @@ export const BREAKTHROUGH_CHANCE = 0.5;
 // tasks, with waits between unlocks no longer than before.
 export const CHUNK_EXPLORE_ROLLS = 3;
 
-// Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; Alex, 2026-10-18).
+// Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; the owner, 2026-10-18).
 /** Fate ties its thread to a chunk this many frontiers past the run's land, at least... */
 export const FATE_THREAD_MIN_STEPS = 2;
 /** ...and at most. */
@@ -161,7 +161,7 @@ export const FATE_MARK_WITHERED_FATE = 10;
 /** Key rolls a Clouded chunk leaves without Fate when they fail. */
 export const FATE_MARK_CLOUDED_ROLLS = 3;
 /**
- * Fated sites and region seals (utils/fateLand.ts; Alex, 2026-10-22). Fate
+ * Fated sites and region seals (utils/fateLand.ts; the owner, 2026-10-22). Fate
  * hides this many sites in a run's fog when the run starts...
  */
 export const FATE_SITE_COUNT = 16;

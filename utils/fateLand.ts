@@ -1,5 +1,5 @@
 /**
- * Chunked's own fate (Alex picked these on 18 October 2026): Fate's Thread and
+ * Chunked's own fate (the owner picked these on 18 October 2026): Fate's Thread and
  * fate's marks. Fate ties a thread to a place a few chunks past the run's
  * border, on a boss, minigame, guild or bank chunk where it can; one Chunks
  * draw in six goes to the frontier chunks nearest the thread, the rest to the
@@ -8,7 +8,7 @@
  * gains draws one of fate's eight omens at even odds: a boon (Blessed, Gilded,
  * Fortunate, Chaotic) or a bane (Cursed, Withered, Clouded, Tangled).
  *
- * Fated sites and region seals (Alex picked these on 22 October 2026): when a
+ * Fated sites and region seals (the owner picked these on 22 October 2026): when a
  * run starts, fate hides FATE_SITE_COUNT sites in the fog (a Shrine, Hoard,
  * Rift or Waystone each). Gaining a site's chunk sets off the site instead of
  * an omen. The first chunk the run gains in each region breaks that region's

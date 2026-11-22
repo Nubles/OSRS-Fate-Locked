@@ -1,6 +1,6 @@
 import { usesActivityKeyReserves } from '../config/gameModes';
 /**
- * Activity Key boosts (Alex, 2026-10-15): every tier of an activity's
+ * Activity Key boosts (the owner, 2026-10-15): every tier of an activity's
  * achievements adds a little to that activity's own Key rolls, by how hard
  * it is: first steps 0.2%, 10-Fate tiers 0.3%, bigger ones 0.5%. Only
  * settled achievements count, so the boost is known without loading the
@@ -54,7 +54,7 @@ export const boostActivityOf = (source: string): BoostActivity | null => {
 
 /**
  * Vanilla and Chunked minigames roll from their own Key reserves, paced at
- * about an hour per Key, so minigame achievements don't speed them up (Alex,
+ * about an hour per Key, so minigame achievements don't speed them up (the owner,
  * 2026-10-15; Chunked since 2026-10-17).
  */
 export const boostApplies = (activity: BoostActivity, gameModeId: string | undefined): boolean =>
