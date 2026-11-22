@@ -80,6 +80,7 @@ export const RESOURCE_UNLOCK_TABLES: Readonly<Record<string, TableType>> = {
   'Skotizo': TableType.BOSSES,
   'Spindel': TableType.BOSSES,
   'Tempoross': TableType.BOSSES,
+  'The Fractured Archive': TableType.BOSSES,
   'The Gauntlet': TableType.BOSSES,
   'The Hueycoatl': TableType.BOSSES,
   'The Leviathan': TableType.BOSSES,

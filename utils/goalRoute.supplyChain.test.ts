@@ -102,7 +102,9 @@ describe('Supply Chain typed unlock blockers', () => {
           .flatMap(source => (!source.unlockTable && source.unlockId ? [source.unlockId] : [])),
       ),
     ];
-    expect(untypedUnlockIds).toHaveLength(66);
+    // 65 since the 22 Nov 2026 Wiki refresh: Pest Control, Bryophyta, K'ril Tsutsaroth and Commander Zilyana
+    // left the list; Theatre of Blood, General Graardor and The Fractured Archive joined it.
+    expect(untypedUnlockIds).toHaveLength(65);
     expect(untypedUnlockIds.filter(id => !RESOURCE_UNLOCK_TABLES[id])).toEqual([]);
   });
 
