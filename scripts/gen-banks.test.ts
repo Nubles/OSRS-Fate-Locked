@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { readBankLocationRegistry } from './bank-locations.mjs';
-import { buildBankDefinitions, generateBankSource } from './gen-banks.mjs';
+import { buildBankDefinitions, generateBankAccessSource, generateBankSource } from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 describe('bank source generator', () => {
@@ -67,6 +67,25 @@ describe('bank source generator', () => {
       readFileSync('data/banks.ts', 'utf8'),
       generateBankSource(doc, registry),
     )).toBe(true);
+    expect(generatedTextMatches(
+      readFileSync('data/bankAccess.ts', 'utf8'),
+      generateBankAccessSource(registry),
+    )).toBe(true);
+  });
+
+  it('keeps the access rules out of the bank list, which loads with the first screen', () => {
+    // data/banks.ts is in the start-up download; the rules are read only by utils/entityAccess.ts,
+    // which loads on demand. They cost about 5 kB there, and the start-up budget has no room for them.
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    expect(generateBankSource(doc, readBankLocationRegistry())).not.toMatch(/accessOptions|BANK_ACCESS_GATES|BANK_REVIEWED/);
+    const sources = import.meta.glob<string>(
+      ['../{components,context,hooks,services,utils,data,config}/**/*.{ts,tsx}', '../*.{ts,tsx}', '!../**/*.test.{ts,tsx}'],
+      { query: '?raw', import: 'default', eager: true },
+    );
+    const importers = Object.entries(sources)
+      .filter(([, text]) => /from '[^']*data\/bankAccess'/.test(text))
+      .map(([path]) => path.replace(/^\.\.\//, ''));
+    expect(importers).toEqual(['utils/entityAccess.ts']);
   });
 
   it("gives the app the registry's access rules without its evidence, each location labelled by its name", () => {
@@ -79,7 +98,7 @@ describe('bank source generator', () => {
     for (const location of registry.locations) {
       expect(labels[location.id], location.id).toBe(merged.has(location.id) ? undefined : location.name);
     }
-    const source = generateBankSource(doc, registry);
+    const source = generateBankAccessSource(registry);
     expect(source).not.toContain('{"id":"11572"}');
     expect(source).toContain('{"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]}');
     expect(source).toContain('{"id":"10553","accessOptions":[{"diaries":["Fremennik Easy"]}');

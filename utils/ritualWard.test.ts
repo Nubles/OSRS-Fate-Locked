@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
-import { BANK_ACCESS_GATES } from '../data/banks';
+import { BANK_ACCESS_GATES } from '../data/bankAccess';
 import { QUEST_DATA } from '../data/questData';
 import { SKILLS_LIST } from '../data/items';
 import { TableType, type UnlockState } from '../types';
