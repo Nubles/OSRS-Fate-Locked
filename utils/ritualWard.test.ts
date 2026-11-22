@@ -52,10 +52,11 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
   it('keeps a bank whose other way in is confirmed by hand, as it does for Peer the Seer', () => {
     // Partway through a quest is something the tracker cannot see, so the Ward does not rule these out.
     const partway = BANK_ACCESS_GATES.filter(gate => gate.accessOptions.some(byHand));
-    expect(partway.map(gate => gate.id).sort()).toEqual(['11047', '12581', '12838', '8253', '8508']);
+    expect(partway.map(gate => gate.id).sort()).toEqual(['11047', '12581', '12838', '7216', '8253', '8508', '9265']);
     for (const { id, accessOptions } of partway) {
       const gateQuests = accessOptions.flatMap(option => option.quests ?? []);
-      expect(gateQuests.length, `${id} names a quest`).toBeGreaterThan(0);
+      // The Fortis Colosseum chest (7216) waits on Glory earned, which no quest stands for.
+      if (id !== '7216') expect(gateQuests.length, `${id} names a quest`).toBeGreaterThan(0);
       const withoutQuest = maxed({ ...landOf(id), quests: Object.keys(QUEST_DATA).filter(quest => !gateQuests.includes(quest)) });
       expect(wardUsable(TableType.BANKS, id, withoutQuest, 'vanilla'), `${id} without ${gateQuests.join(', ')}`).toBe(true);
     }
