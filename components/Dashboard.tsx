@@ -64,6 +64,7 @@ import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
+import { BANK_IDS_BY_NAME } from '../utils/bankDisplayOrder';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { bossTier, TIER_LABEL } from '../data/bossKeyTiers';
 import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
@@ -1049,9 +1050,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: ROLLABLE_STORAGE_ITEMS, unlocked: ROLLABLE_STORAGE_ITEMS.filter(item => unlocks.storage.includes(item)), type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS, details: MERCHANT_UNLOCK_DETAILS },
         { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },
-        // Banks are keyed by chunk id but shown by place name; only present when
-        // the run locks banks (see bankLocksActive).
-        ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
+        // Banks are keyed by chunk id but shown by place name, A to Z (the roll pool
+        // keeps its own fixed order); only present when the run locks banks (see bankLocksActive).
+        ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS_BY_NAME, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
       ];
 
       if (isOsrs) {
