@@ -13,6 +13,7 @@ import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
 import { chaosPicksTableFirst } from '../utils/seededRng';
+import { EQUIP_TIER_TEXT_COLORS } from '../utils/equipTiers';
 import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
@@ -770,19 +771,19 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        <tr><td className="p-4 font-bold text-gray-500">Tier 1</td><td className="p-4">Bronze / Iron / Leather / Basic staves</td><td className="p-4 text-xs text-gray-500">Elemental staves, Wooden shield</td></tr>
-                                        <tr><td className="p-4 font-bold text-orange-800">Tier 2</td><td className="p-4">Steel / Black / White / Studded</td><td className="p-4 text-xs text-gray-500">Oak shortbow, Steel scimitar</td></tr>
-                                        <tr><td className="p-4 font-bold text-gray-400">Tier 3</td><td className="p-4">Mithril / Initiate</td><td className="p-4 text-xs text-gray-500">Willow bow, Xerician robes</td></tr>
-                                        <tr><td className="p-4 font-bold text-green-700">Tier 4</td><td className="p-4">Adamant / Green D'hide</td><td className="p-4 text-xs text-gray-500">Maple bow, Mystic robes</td></tr>
-                                        <tr><td className="p-4 font-bold text-cyan-500">Tier 5</td><td className="p-4">Rune / Blue D'hide</td><td className="p-4 text-xs text-gray-500">Yew bow, Iban's staff</td></tr>
-                                        <tr><td className="p-4 font-bold text-red-500">Tier 6</td><td className="p-4">Dragon / Red D'hide</td><td className="p-4 text-xs text-gray-500">Magic bow, Ancient staff</td></tr>
-                                        <tr><td className="p-4 font-bold text-purple-500">Tier 7</td><td className="p-4">Barrows / Black &amp; Blessed D'hide</td><td className="p-4 text-xs text-gray-500">Ahrim's, Karil's, Obsidian</td></tr>
-                                        <tr><td className="p-4 font-bold text-yellow-500">Tier 8</td><td className="p-4">God Wars / Zenyte</td><td className="p-4 text-xs text-gray-500">Bandos, Armadyl, Trident</td></tr>
-                                        <tr><td className="p-4 font-bold text-blue-400">Tier 9</td><td className="p-4">Raids / Endgame</td><td className="p-4 text-xs text-gray-500">Ancestral, Torva, Masori, T-Bow</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[0]}`}>Tier 1</td><td className="p-4">Bronze / Iron / Leather / Basic staves</td><td className="p-4 text-xs text-gray-500">Elemental staves, Wooden shield</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[1]}`}>Tier 2</td><td className="p-4">Steel / Black / White / Studded</td><td className="p-4 text-xs text-gray-500">Oak shortbow, Steel scimitar</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[2]}`}>Tier 3</td><td className="p-4">Mithril / Initiate</td><td className="p-4 text-xs text-gray-500">Willow bow, Xerician robes</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[3]}`}>Tier 4</td><td className="p-4">Adamant / Green D'hide</td><td className="p-4 text-xs text-gray-500">Maple bow, Mystic robes</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[4]}`}>Tier 5</td><td className="p-4">Rune / Blue D'hide</td><td className="p-4 text-xs text-gray-500">Yew bow, Iban's staff</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[5]}`}>Tier 6</td><td className="p-4">Dragon / Red D'hide</td><td className="p-4 text-xs text-gray-500">Magic bow, Ancient staff</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[6]}`}>Tier 7</td><td className="p-4">Barrows / Black &amp; Blessed D'hide</td><td className="p-4 text-xs text-gray-500">Ahrim's, Karil's, Obsidian</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[7]}`}>Tier 8</td><td className="p-4">God Wars / Zenyte</td><td className="p-4 text-xs text-gray-500">Bandos, Armadyl, Trident</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[8]}`}>Tier 9</td><td className="p-4">Raids / Endgame</td><td className="p-4 text-xs text-gray-500">Ancestral, Torva, Masori, T-Bow</td></tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <p className="text-sm text-gray-400">Gear with no metal sits with the metal that needs the same level to wear, so level 50 Granite is Tier 5 like rune. Gear an activity hands you and takes back, like the Gauntlet's, is never locked.</p>
+                            <p className="text-sm text-gray-400">Gear with no metal sits with the metal whose level band it falls in, so level 50 granite armour is Tier 5 with rune (level 40). A few weapons sit higher for what they do, like the granite maul at Tier 6. Gear an activity hands you and takes back, like the Gauntlet's, is never locked.</p>
                         </div>
                     )}
 

@@ -9,6 +9,8 @@ import { STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
 import { DROP_RATES } from '../config/rules';
+import { EQUIP_TIER_TEXT_COLORS } from '../utils/equipTiers';
+import { reviewedTier } from '../utils/equipmentReviewTiers';
 
 const CHUNKED_LAND = 'In Chunked an Omni-Key can&#x27;t pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate&#x27;s Mercy.';
 
@@ -226,6 +228,15 @@ describe('ReferenceModal Vanilla policy', () => {
     const altar = renderCodex('altar', 'chunked');
     expect(altar).toContain('(a boss or minigame with 1 Key left gives 1)');
     expect(altar).toContain('Odds boosts stop at 95%.');
+  });
+
+  it('colours each Equipment Tier like its gear badge and places granite by its level band', () => {
+    const gear = renderCodex('equipment' as CodexTab);
+    EQUIP_TIER_TEXT_COLORS.forEach((cls, i) => expect(gear).toContain(`p-4 font-bold ${cls}">Tier ${i + 1}<`));
+    expect(gear).toContain('level 50 granite armour is Tier 5 with rune (level 40). A few weapons sit higher for what they do, like the granite maul at Tier 6.');
+    expect(reviewedTier({ name: 'Granite body', slot: 'Body' })).toBe(5);
+    expect(reviewedTier({ name: 'Granite maul', slot: 'Weapon' })).toBe(6);
+    expect(reviewedTier({ name: 'Rune platebody', slot: 'Body' })).toBe(5);
   });
 
   it('says every chunk gained in Chunked draws an omen', () => {
