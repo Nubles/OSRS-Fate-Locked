@@ -13,8 +13,9 @@ const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
 
 describe('bank data', () => {
   it('has 125 uniquely-named, uniquely-keyed banks', () => {
-    // Two of the Chunk Picker's 127 bank chunks open no bank and are merged into
-    // the bank each leads to (data/sources/bank-locations.json merges).
+    // Three of the 127 bank chunks in public/chunk-content.json open no bank and are
+    // merged into the bank each leads to (data/sources/bank-locations.json merges),
+    // leaving 124 physical places plus the one virtual registry entry.
     expect(BANKS.length).toBe(125);
     expect(new Set(BANK_IDS).size).toBe(125);
     expect(new Set(BANKS.map(b => b.name)).size).toBe(125);
