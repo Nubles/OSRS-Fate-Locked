@@ -539,6 +539,7 @@ describe('Achievement Diary id-classification audit', () => {
 
     expect(alternativeIds).toEqual([
       'ard_elite_5',
+      'ard_hard_11',
       'ard_hard_12',
       'ard_hard_9',
       'ard_med_10',

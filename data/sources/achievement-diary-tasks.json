@@ -887,6 +887,44 @@
           "quest": "Plague City",
           "label": "Reached the required progress in Plague City for: Smith a Dragon sq shield in West Ardougne."
         }
+      ],
+      "oneOf": [
+        {
+          "label": "Buy the right half in the Legends' Guild",
+          "items": [
+            "Shield right half"
+          ],
+          "quests": [
+            "Legends' Quest"
+          ],
+          "regions": [
+            "Legends' Guild"
+          ],
+          "guilds": [
+            "Legends' Guild"
+          ],
+          "merchants": [
+            "General Stores"
+          ]
+        },
+        {
+          "label": "Buy the right half in the Myths' Guild",
+          "items": [
+            "Shield right half"
+          ],
+          "quests": [
+            "Dragon Slayer II"
+          ],
+          "regions": [
+            "Corsair Cove"
+          ],
+          "guilds": [
+            "Myths' Guild"
+          ],
+          "merchants": [
+            "Platebody Shops"
+          ]
+        }
       ]
     },
     {

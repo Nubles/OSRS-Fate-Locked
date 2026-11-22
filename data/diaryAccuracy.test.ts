@@ -360,6 +360,23 @@ describe('Diary tasks that use a shop or a service', () => {
     expect(task(id).merchants).toEqual([merchant]);
   });
 
+  it('buys the dragon sq shield right half in the Legends\' Guild or the Myths\' Guild', () => {
+    // Shield right half rev 15184183: "can be bought in the Legends' Guild or the Myths' Guild"; nothing drops it.
+    // The tracker files the Legends' Guild shop under General Stores and the Myths' Guild Armoury under Platebody Shops.
+    expect(task('ard_hard_11').oneOf).toEqual([
+      expect.objectContaining({ quests: ["Legends' Quest"], guilds: ["Legends' Guild"], merchants: ['General Stores'] }),
+      expect.objectContaining({ quests: ['Dragon Slayer II'], guilds: ["Myths' Guild"], merchants: ['Platebody Shops'] }),
+    ]);
+    const smith = account({ skills: { Smithing: 10 }, levels: { Smithing: 99 }, regions: ['East Ardougne'] });
+    expect(evaluateDiaryTaskEligibility(task('ard_hard_11'), smith).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('ard_hard_11'), {
+      ...smith, regions: ['East Ardougne', "Legends' Guild"], quests: ["Legends' Quest"], merchants: ['General Stores'], guilds: ["Legends' Guild"],
+    }).machineEligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('ard_hard_11'), {
+      ...smith, regions: ['East Ardougne', 'Corsair Cove'], quests: ['Dragon Slayer II'], merchants: ['Platebody Shops'], guilds: ["Myths' Guild"],
+    }).machineEligible).toBe(true);
+  });
+
   it('asks des_elite_4 for Taxidermists, because the Canifis taxidermist stuffs the KQ head, and Stonemasons for the gold leaves', () => {
     expect(task('des_elite_4').merchants).toEqual(['Taxidermists', 'Stonemasons']);
   });
