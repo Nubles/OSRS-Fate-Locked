@@ -674,6 +674,8 @@ describe('Diary tasks that use a farming patch', () => {
     ['ard_elite_6', 'Herb'], ['kan_elite_2', 'Herb'], ['mor_elite_3', 'Herb'],
     ['fal_med_4', 'Flower'], ['kan_med_8', 'Flower'], ['mor_easy_8', 'Flower'],
     ['fal_elite_3', 'Wood Tree'], ['var_hard_8', 'Wood Tree'], ['west_elite_3', 'Wood Tree'],
+    // Willow branch rev 15366185: cut with secateurs from a willow grown in a tree patch, and nowhere else.
+    ['fal_med_13', 'Wood Tree'],
     ['kan_easy_5', 'Hops'],
     ['karamja_elite_5', 'Calquat'],
     ['kou_elite_8', 'Celastrus'],
