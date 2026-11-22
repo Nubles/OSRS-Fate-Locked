@@ -124,11 +124,23 @@ const recordFor = (method: (typeof TRAVEL_METHODS)[number]) => CHUNK_PICKER_SPEL
 const REVIEWED_AGAINST_CHUNK_PICKER: Readonly<Record<string, string>> = {
   'spell:ancient:senntisten-teleport': 'The Chunk Picker names the Exam Centre (52,52); the wiki lands at 3320,3337, in 51,52.',
 };
+/** Spells the Chunk Picker has no record for, checked against their wiki pages instead. */
+const NO_CHUNK_PICKER_RECORD: Readonly<Record<string, readonly string[]>> = {
+  // Each page marks one landing square: 3221,3218; 3087-3090,3501-3504; 2094,3913; 1700,3882.
+  'spell:standard:lumbridge-home-teleport': ['50,50'],
+  'spell:ancient:edgeville-home-teleport': ['48,54'],
+  'spell:lunar:lunar-home-teleport': ['32,61'],
+  'spell:arceuus:arceuus-home-teleport': ['26,60'],
+};
 
 describe('teleport spells', () => {
   it('each have a Chunk Picker record, and go where it says, or differ as reviewed', () => {
     for (const method of spells()) {
       const record = recordFor(method);
+      if (method.id in NO_CHUNK_PICKER_RECORD) {
+        expect(record, method.id).toBeUndefined();
+        continue;
+      }
       expect(record, method.id).toBeDefined();
       const to = new Set(castTo(method));
       const agrees = record!.every((chunk) => {
@@ -148,6 +160,15 @@ describe('teleport spells', () => {
     const somewhere = [...CHUNK_PICKER_SPELLS.entries()].filter(([, chunks]) => chunks.some((chunk) =>
       !NOT_A_PLACE.has(chunk) && keyOf(chunk) !== ARCEUUS_TEACHER)).map(([name]) => name);
     expect(somewhere.filter((name) => !covered.has(name))).toEqual([]);
+  });
+
+  it('cover the four Home Teleports, which the Chunk Picker leaves out, each to its one landing square', () => {
+    const byId = new Map(spells().map((method) => [method.id, method]));
+    for (const [id, to] of Object.entries(NO_CHUNK_PICKER_RECORD)) {
+      expect(byId.get(id)?.options, id).toEqual({ Cast: { to } });
+    }
+    expect(spells().filter((method) => /home teleport/i.test(spellOf(method).name)).map((method) => method.id).sort())
+      .toEqual(Object.keys(NO_CHUNK_PICKER_RECORD).sort());
   });
 
   it('put the spells the old table got wrong in the right places (G7)', () => {

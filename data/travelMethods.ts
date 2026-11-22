@@ -89,6 +89,8 @@ const SPELLS: readonly TravelMethod[] = [
   spell('standard', 'Ape Atoll Teleport', ['43,43'], 14906055, { page: 'Ape Atoll Teleport (standard)' }),
   spell('standard', 'Kourend Castle Teleport', ['25,57'], 15311656),
   spell('standard', 'Civitas illa Fortis Teleport', ['26,48', '26,49'], 15019227),
+  // The Home Teleports need no runes and land in one place each; the Chunk Picker has no record for them.
+  spell('standard', 'Lumbridge Home Teleport', ['50,50'], 15362019),
 
   spell('ancient', 'Paddewwa Teleport', ['48,154'], 15331334),
   // The wiki's landing square (3320,3337) is west of the Exam Centre's chunk.
@@ -99,6 +101,7 @@ const SPELLS: readonly TravelMethod[] = [
   spell('ancient', 'Carrallanger Teleport', ['49,57'], 15331347),
   spell('ancient', 'Annakarl Teleport', ['51,60'], 15331346),
   spell('ancient', 'Ghorrock Teleport', ['46,60'], 15329225),
+  spell('ancient', 'Edgeville Home Teleport', ['48,54'], 15362016),
 
   spell('lunar', 'Moonclan Teleport', ['32,61', '33,61'], 14863798),
   spell('lunar', 'Ourania Teleport', ['38,50'], 15345906),
@@ -115,6 +118,7 @@ const SPELLS: readonly TravelMethod[] = [
   spell('lunar', 'Tele Group Fishing Guild', ['40,52', '40,53'], 14863807),
   spell('lunar', 'Tele Group Catherby', ['43,53'], 14863809),
   spell('lunar', 'Tele Group Ice Plateau', ['46,61'], 14863811),
+  spell('lunar', 'Lunar Home Teleport', ['32,61'], 15362024),
 
   spell('arceuus', 'Arceuus Library Teleport', ['25,59'], 15343814),
   spell('arceuus', 'Draynor Manor Teleport', ['48,52'], 14863776),
@@ -126,6 +130,8 @@ const SPELLS: readonly TravelMethod[] = [
   spell('arceuus', 'Harmony Island Teleport', ['59,44'], 14863783),
   spell('arceuus', 'Cemetery Teleport', ['46,58'], 15266150),
   spell('arceuus', 'Barrows Teleport', ['55,51'], 15151762),
+  // Lands at the Dark Altar.
+  spell('arceuus', 'Arceuus Home Teleport', ['26,60'], 15362013),
   // The same name as the standard spell; the spellbook tells them apart. It
   // lands inside the Ape Atoll Dungeon (2771,9102, from the tablet's page): the
   // spell page draws that tile on the surface map, 6400 tiles north.
