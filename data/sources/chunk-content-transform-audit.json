@@ -179823,6 +179823,17 @@
     },
     {
       "category": "overrides",
+      "sourceKey": "quest-step/A Ruff Situation",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12342"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Outlaw_Camp?oldid=15394973"
+    },
+    {
+      "category": "overrides",
       "sourceKey": "quest/Mourning's End Part I",
       "terminal": false,
       "disposition": "normalized",

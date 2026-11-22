@@ -406,6 +406,20 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
     for (const id of targets) ((chunks[id] ??= {}).q ??= {})[override.name] = 'first';
     audit.add('overrides', `quest/${override.name}`, 'normalized', 'reviewed-content-override', targets, false, override.source);
   }
+  // A quest step the export files under the wrong chunk moves to its reviewed chunk.
+  for (const override of contentOverrides.questSteps ?? []) {
+    if (!entries.some(entry => override.name in (entry.q ?? {}))) continue;
+    const targets = override.toChunks.filter(id => validChunks.has(id));
+    if (!targets.length) continue;
+    for (const id of override.fromChunks) {
+      const q = chunks[id]?.q;
+      if (q?.[override.name] !== 'step') continue;
+      delete q[override.name];
+      if (!Object.keys(q).length) delete chunks[id].q;
+    }
+    for (const id of targets) ((chunks[id] ??= {}).q ??= {})[override.name] ??= 'step';
+    audit.add('overrides', `quest-step/${override.name}`, 'normalized', 'reviewed-content-override', targets, false, override.source);
+  }
   for (const override of contentOverrides.npcs) {
     if (!validChunks.has(override.chunkId)) continue;
     const expected = String(Math.floor(override.x / 64) * 256 + Math.floor(override.y / 64));
