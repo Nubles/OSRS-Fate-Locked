@@ -32,7 +32,9 @@ export const wardUsable = (table: TableType, item: string, unlocks: UnlockState,
       if (key === undefined) return true;
       const { cx, cy } = parseChunkKey(key);
       if (!chunkUnlocked(cx, cy, unlocks, modeId)) return false;
-      return bankGateAccess(item, unlocks, modeId).status !== 'NOT_READY';
+      if (bankGateAccess(item, unlocks, modeId).status === 'NOT_READY') return false;
+      // The Activities tab's bank requirement: a bank named for an area needs that area (the Zanaris bank).
+      return evaluateActivityReadiness(true, getUtilityActivityReq(item, table, modeId), unlocks, modeId).status !== 'NOT_READY';
     }
     default:
       return true;

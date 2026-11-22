@@ -39,6 +39,28 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
     }
   });
 
+  it("asks a reviewed bank's own ways in before its gate", () => {
+    const key = bankChunkKey('11578')!;
+    const area = chunkSubArea(key);
+    const land = { regions: [...initialState.unlocks.regions, ...(area ? [area] : [])], chunks: [key] };
+    const noDoor = maxed({ ...land, quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'The Frozen Door') });
+    for (const mode of ['vanilla', 'chunked']) {
+      expect(wardUsable(TableType.BANKS, '11578', noDoor, mode), `${mode} without The Frozen Door`).toBe(false);
+      expect(wardUsable(TableType.BANKS, '11578', maxed(land), mode), `${mode} with The Frozen Door`).toBe(true);
+    }
+    // Peer the Seer has a way in to confirm by hand, so his deposit box stays usable without the diary.
+    const peer = bankChunkKey('10553')!;
+    const peerArea = chunkSubArea(peer);
+    const peerLand = maxed({ regions: [...initialState.unlocks.regions, ...(peerArea ? [peerArea] : [])], chunks: [peer], diaries: [] });
+    expect(wardUsable(TableType.BANKS, '10553', peerLand, 'vanilla')).toBe(true);
+  });
+
+  it('asks the area a bank is named for in Vanilla, as the Activities tab does', () => {
+    expect(wardUsable(TableType.BANKS, '12849', maxed(), 'vanilla')).toBe(false);
+    const zanaris = maxed({ regions: [...initialState.unlocks.regions, 'Zanaris'] });
+    expect(wardUsable(TableType.BANKS, '12849', zanaris, 'vanilla')).toBe(true);
+  });
+
   it("asks a guild's own area in Vanilla, as the Activities tab does", () => {
     expect(wardUsable(TableType.GUILDS, 'Crafting Guild', maxed(), 'vanilla')).toBe(false);
     const withArea = maxed({ regions: [...initialState.unlocks.regions, 'Crafting Guild'] });
