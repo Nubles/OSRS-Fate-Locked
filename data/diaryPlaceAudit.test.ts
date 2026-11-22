@@ -182,7 +182,8 @@ describe('Diary tasks that named the wrong place', () => {
   });
 
   it.each([
-    ['des_med_9', { regions: ['Agility Pyramid'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }, "the Camulet lands in the Desert Quarry (49,45)"],
+    // The map filed the Desert Quarry (49,45) under the Bandit Camp on 8 October 2026.
+    ['des_med_9', { regions: ['Bandit Camp'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }, "the Camulet lands in Enakhra's Temple, under the Desert Quarry (49,45)"],
     ['ard_hard_9', { regions: ['East Ardougne'], skills: { Smithing: 10 }, levels: { Smithing: 99 } }, "West Ardougne's anvil is in 39,52"],
     ['west_hard_1', { regions: ['Iorwerth Camp'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } }, 'elves at Iorwerth Camp'],
   ] as const)('%s counts with %j: %s', (id, run, _why) => {
@@ -190,7 +191,10 @@ describe('Diary tasks that named the wrong place', () => {
   });
 
   it('no longer takes a place with nothing to do there', () => {
-    expect(doable('des_med_9', account({ regions: ['Bandit Camp'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }))).toBe(false);
+    expect(doable('des_med_9', account({ regions: ['Agility Pyramid'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }))).toBe(false);
+    // The Jaldraocht Pyramid (50,45) is a Bandit Camp chunk; Pollnivneach only borders it.
+    expect(doable('des_hard_7', account({ regions: ['Pollnivneach'], quests: ['Desert Treasure I'], arcana: ['Ancient Magicks'] }))).toBe(false);
+    expect(doable('des_hard_7', account({ regions: ['Bandit Camp'], quests: ['Desert Treasure I'], arcana: ['Ancient Magicks'] }))).toBe(true);
     expect(doable('west_hard_1', account({ regions: ['Isafdar'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } })))
       .toBe(false);
     expect(doable('des_med_2', account({ regions: ['Shantay Pass'], skills: { Slayer: 10 }, levels: { Slayer: 99 } }))).toBe(false);

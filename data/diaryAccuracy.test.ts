@@ -36,10 +36,11 @@ const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
 
 describe('Diary tasks are in the areas the game has them in', () => {
   it('puts the Jaldraocht Pyramid altar beside the pyramid, not in Sophanem', () => {
-    // The pyramid's chunk (50,45) has no area of its own; Bandit Camp and Pollnivneach border it.
-    // In Chunked the chunk itself counts too (the place audit, diaryPlaceAudit.test.ts).
+    // The pyramid's chunk (50,45) has been a Bandit Camp chunk since the map change of 8 October 2026;
+    // Pollnivneach only borders it. In Chunked the chunk itself counts too (diaryPlaceAudit.test.ts).
+    expect(SUB_AREA_CHUNKS['Bandit Camp']).toContainEqual({ cx: 50, cy: 45 });
     expect(task('des_hard_7').oneOf).toEqual([
-      { regions: ['Bandit Camp'] }, { regions: ['Pollnivneach'] },
+      { regions: ['Bandit Camp'] },
       { locations: [{ label: 'Jaldraocht Pyramid', chunkOptions: [{ cx: 50, cy: 45 }] }] },
     ]);
     expect(task('des_hard_7').regions).toBeUndefined();

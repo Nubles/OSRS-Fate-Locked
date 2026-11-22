@@ -2116,7 +2116,7 @@
         "Enakhra's Lament"
       ],
       "regions": [
-        "Agility Pyramid"
+        "Bandit Camp"
       ],
       "aliases": [],
       "classification": "preserved-semantic",
@@ -2125,9 +2125,9 @@
         "Camulet"
       ],
       "geographyVerification": {
-        "reviewedAt": "2026-10-04",
+        "reviewedAt": "2026-11-22",
         "source": "oldschool.runescape.wiki",
-        "notes": "The Camulet lands by Enakhra's Temple in 49,45 (the Desert Quarry), not at the Bandit Camp."
+        "notes": "The Camulet lands inside Enakhra's Temple, under the Desert Quarry (49,45), which the map has filed under the Bandit Camp since 8 October 2026."
       }
     },
     {
@@ -2560,11 +2560,6 @@
           ]
         },
         {
-          "regions": [
-            "Pollnivneach"
-          ]
-        },
-        {
           "locations": [
             {
               "label": "Jaldraocht Pyramid",
@@ -2579,9 +2574,9 @@
         }
       ],
       "geographyVerification": {
-        "reviewedAt": "2026-10-04",
+        "reviewedAt": "2026-11-22",
         "source": "oldschool.runescape.wiki",
-        "notes": "The Jaldraocht Pyramid is in 50,45, between the Bandit Camp and Pollnivneach."
+        "notes": "The Jaldraocht Pyramid is in 50,45, which the map has filed under the Bandit Camp since 8 October 2026; Pollnivneach only borders it."
       }
     },
     {
