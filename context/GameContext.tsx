@@ -56,7 +56,7 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave, type SaveValidationResult } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, MAX_COUNTER, clampNoteText, parseAndMigrateSave, validateAndMigrateSave, type SaveValidationResult } from '../utils/saveSchema';
 import { readRestoreCounts, rememberRun, stampRestoreCount, writeRestoreCounts, type RestoreKind } from '../utils/restoreCount';
 import { memoizeLast } from '../utils/memoizeLast';
 import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
@@ -1990,7 +1990,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         userNotes: {
           ...state.userNotes,
-          [action.payload.id]: action.payload.text
+          [action.payload.id]: clampNoteText(action.payload.text)
         }
       };
     }

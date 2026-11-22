@@ -69,6 +69,20 @@ export const MAX_IDENTIFIER_ARRAY = 25_000;
 export const MAX_COLLECTION_LOG_ENTRIES = 25_000;
 export const MAX_USER_NOTES = 5_000;
 export const MAX_NOTE_CHARS = 20_000;
+
+/**
+ * Keeps a run note within MAX_NOTE_CHARS. The note editor, the reducer and the
+ * loader all go through this, so nothing the app writes is refused by its own
+ * validator, and an older save that already holds a longer note keeps its text
+ * up to the limit instead of failing to load. A cut never splits a surrogate pair.
+ */
+export const clampNoteText = (text: string): string => {
+  if (text.length <= MAX_NOTE_CHARS) return text;
+  let end = MAX_NOTE_CHARS;
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+  return text.slice(0, end);
+};
 export const MAX_IDENTIFIER_CHARS = 512;
 export const MAX_HISTORY_DETAILS_CHARS = 20_000;
 export const MAX_SEED_CHARS = 256;
@@ -653,9 +667,9 @@ const normalizeNotes = (value: unknown): Outcome<Record<string, string>> => {
   if (inspected.ok === false) return inspected;
   const out: Record<string, string> = {};
   for (const key of Object.getOwnPropertyNames(inspected.value)) {
-    const note = stringValue(readOwn(inspected.value, key), pathOf('userNotes', key), MAX_NOTE_CHARS);
-    if (note.ok === false) return note;
-    out[key] = note.value;
+    const raw = readOwn(inspected.value, key);
+    if (typeof raw !== 'string') return invalid('invalid_field', pathOf('userNotes', key));
+    out[key] = clampNoteText(raw);
   }
   return { ok: true, value: out };
 };
