@@ -86,7 +86,8 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
       const matchesGroup = group.toLowerCase().includes(q);
       const shown = areas.filter((a) => {
         const free = isAreaReachable(a, unlocks, gameModeId);
-        if (searchQuery && !matchesGroup && !a.toLowerCase().includes(q)) return false;
+        // Match every name the row shows (the area and its aliases, e.g. Heroes' Guild).
+        if (searchQuery && !matchesGroup && !displayAreaName(a).toLowerCase().includes(q)) return false;
         if (showOnlyActionable && !free && !canOmni) return false;
         return true;
       });
