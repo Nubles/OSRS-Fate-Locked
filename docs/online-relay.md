@@ -429,9 +429,11 @@ An export built while the app's free-area baseline belongs to another run
 sends the new run.
 
 The `FLGZ:` relay request for every golden run is tested against 240 KiB,
-16 KiB under the relay's 256 KiB limit; the golden runs' requests are
-193-197 KiB, of which the travel section is about 9 KiB (tested against
-16 KiB). RuneLite continues to load v1-v3 bundles using legacy map
+16 KiB under the relay's 256 KiB limit. On 22 November 2026 the golden runs'
+requests measured about 224-237 KiB (Vanilla 224-228, Custom and Xtreme
+228-230, Chunked about 237), so the Chunked runs have only about 3 KiB left
+under the test budget and about 19 KiB under the relay limit. The travel
+section is tested against 16 KiB. RuneLite continues to load v1-v3 bundles using legacy map
 behavior; a malformed v4 or unsupported future version is rejected without
 replacing the last valid snapshot.
 
