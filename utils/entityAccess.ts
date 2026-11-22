@@ -35,6 +35,15 @@ function bestAccess(results: EntityAccessResult[]): EntityAccessResult {
   if (results.some(result => result.status === 'ALLOWED')) return { status: 'ALLOWED', reasons: [] };
   const status = (['UNKNOWN', 'NOT_READY', 'LOCKED'] as const)
     .find(candidate => results.some(result => result.status === candidate)) ?? 'UNKNOWN';
+  // Every way is blocked: name what the nearest ways still need, not all of them together.
+  if (status !== 'UNKNOWN') {
+    const blocked = results.filter(result => result.status === status).map(result => [...new Set(result.reasons)]);
+    const fewest = Math.min(...blocked.map(reasons => reasons.length));
+    const nearest = blocked.filter(reasons => reasons.length === fewest);
+    const shared = nearest[0].filter(reason => nearest.every(reasons => reasons.includes(reason)));
+    const rest = [...new Set(nearest.map(reasons => reasons.filter(reason => !shared.includes(reason)).join(' and ')))].filter(Boolean);
+    return { status, reasons: rest.length > 1 ? [...shared, `One of: ${rest.join(' or ')}`] : [...shared, ...rest] };
+  }
   return { status, reasons: [...new Set(results.flatMap(result => result.reasons))] };
 }
 

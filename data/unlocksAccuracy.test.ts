@@ -230,8 +230,7 @@ describe('B1b: the Crafting Guild bank needs 99 Crafting or the hard Falador Dia
   // level 99 Crafting will be able to use either" (the bank chest and the deposit box).
   it('stays shut to a run with the guild and 40 Crafting only', () => {
     const access = bankAccess('11571', everything(98));
-    expect(access.status).toBe('NOT_READY');
-    expect(access.reasons).toContain('Crafting level 99');
+    expect(access).toEqual({ status: 'NOT_READY', reasons: ['One of: Complete Falador Hard Diary or Crafting level 99'] });
   });
 
   it('opens with 99 Crafting, or with the hard Falador Diary', () => {
