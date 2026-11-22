@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RESOURCE_MAP, RESOURCE_CATEGORIES, type ResourceSource } from './resourceData';
+import { RESOURCE_MAP, RESOURCE_CATEGORIES, currentResourceName, type ResourceSource } from './resourceData';
 import { STRATEGY_DATABASE } from './requirements';
 
 // Reviewed OSRS Wiki facts from the November 2026 resource audit. Each row
@@ -141,5 +141,25 @@ describe('curated sources the game does have', () => {
     ['Chocolate Dust', 'Grand Tree Groceries', 'SHOP'],
   ] as const)('keeps a %s template row for %s', (item, name, type) => {
     expect(has(item, name, type)).toBe(true);
+  });
+});
+
+describe('metal shortswords (renamed in game on 3 November 2026)', () => {
+  const metals = ['Bronze', 'Iron', 'Steel', 'Mithril', 'Adamant', 'Rune'];
+  it.each(metals)('%s Shortsword replaces %s Sword', (metal) => {
+    expect(RESOURCE_MAP[`${metal} Sword`]).toBeUndefined();
+    expect(curated(`${metal} Shortsword`).length).toBeGreaterThan(0);
+    expect(Object.values(RESOURCE_CATEGORIES).flat()).toContain(`${metal} Shortsword`);
+    expect(currentResourceName(`${metal} Sword`)).toBe(`${metal} Shortsword`);
+  });
+
+  it('keeps the Wiki routes generated under the old names', () => {
+    expect(RESOURCE_MAP['Steel Shortsword'].some(s => s.requirementsUnverified)).toBe(true);
+  });
+
+  it('leaves current names alone', () => {
+    expect(currentResourceName('Dragon Sword')).toBe('Dragon Sword');
+    expect(currentResourceName('constructor')).toBe('constructor');
+    expect(currentResourceName('__proto__')).toBe('__proto__');
   });
 });

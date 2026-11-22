@@ -3,7 +3,7 @@ import { resourcePlanningKey, readResourceQuantities, hasLegacyResourcePlanning,
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
-import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from '../data/resourceData';
+import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY, currentResourceName } from '../data/resourceData';
 import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -92,7 +92,9 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
     try {
       const raw = localStorage.getItem(FAVORITES_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string' && RESOURCE_MAP[x]) : [];
+      return Array.isArray(parsed)
+        ? parsed.filter((x): x is string => typeof x === 'string').map(currentResourceName).filter(x => RESOURCE_MAP[x])
+        : [];
     } catch {
       return [];
     }
@@ -107,7 +109,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         const cleaned: Record<string, number> = {};
         for (const [k, v] of Object.entries(parsed)) {
-          if (typeof v === 'number' && v > 0 && Number.isFinite(v)) cleaned[k] = v;
+          if (typeof v === 'number' && v > 0 && Number.isFinite(v)) cleaned[currentResourceName(k)] = v;
         }
         return cleaned;
       }
@@ -123,7 +125,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       const raw = localStorage.getItem(RECENT_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed)
-        ? parsed.filter((x) => typeof x === 'string' && RESOURCE_MAP[x]).slice(0, MAX_RECENT)
+        ? parsed.filter((x): x is string => typeof x === 'string').map(currentResourceName).filter((x) => RESOURCE_MAP[x]).slice(0, MAX_RECENT)
         : [];
     } catch {
       return [];
@@ -138,7 +140,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         const cleaned: Record<string, number> = {};
         for (const [k, v] of Object.entries(parsed)) {
-          if (typeof v === 'number' && v > 0 && Number.isFinite(v) && RESOURCE_MAP[k]) cleaned[k] = v;
+          const name = currentResourceName(k);
+          if (typeof v === 'number' && v > 0 && Number.isFinite(v) && RESOURCE_MAP[name]) cleaned[name] = v;
         }
         return cleaned;
       }

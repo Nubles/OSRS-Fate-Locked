@@ -1631,7 +1631,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Adamant Sq Shield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 78 }, inputs: { 'Adamantite Bar': 2 } }
   ],
-  'Adamant Sword': [
+  'Adamant Shortsword': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 74 }, inputs: { 'Adamantite Bar': 1 } }
   ],
   'Adamant Warhammer': [
@@ -1760,7 +1760,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Bronze Sq Shield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 8 }, inputs: { 'Bronze Bar': 2 } }
   ],
-  'Bronze Sword': [
+  'Bronze Shortsword': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 4 }, inputs: { 'Bronze Bar': 1 } }
   ],
   'Bronze Warhammer': [
@@ -1939,7 +1939,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Iron Sq Shield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 23 }, inputs: { 'Iron Bar': 2 } }
   ],
-  'Iron Sword': [
+  'Iron Shortsword': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 19 }, inputs: { 'Iron Bar': 1 } }
   ],
   'Iron Warhammer': [
@@ -2051,7 +2051,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Mithril Sq Shield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 58 }, inputs: { 'Mithril Bar': 2 } }
   ],
-  'Mithril Sword': [
+  'Mithril Shortsword': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 54 }, inputs: { 'Mithril Bar': 1 } }
   ],
   'Mithril Warhammer': [
@@ -2194,7 +2194,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Rune Sq Shield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 93 }, inputs: { 'Rune Bar': 2 } }
   ],
-  'Rune Sword': [
+  'Rune Shortsword': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 89 }, inputs: { 'Rune Bar': 1 } }
   ],
   'Rune Warhammer': [
@@ -2291,7 +2291,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Steel Studs': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 36 }, inputs: { 'Steel Bar': 1 } }
   ],
-  'Steel Sword': [
+  'Steel Shortsword': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 34 }, inputs: { 'Steel Bar': 1 } }
   ],
   'Steel Warhammer': [
@@ -2897,8 +2897,18 @@ export const enrichResourceSource = (source: ResourceSource): ResourceSource => 
   return known ? { ...source, ...known, rarity: source.rarity, requirementsUnverified: true }
     : { ...source, requirementsUnverified: true };
 };
+// Item names the game has changed. Stored names (calculator favourites and
+// plans, Wiki rows generated before the rename) are read through this.
+export const RENAMED_RESOURCES: Readonly<Record<string, string>> = {
+  // 3 November 2026: the metal swords became shortswords.
+  'Bronze Sword': 'Bronze Shortsword', 'Iron Sword': 'Iron Shortsword',
+  'Steel Sword': 'Steel Shortsword', 'Mithril Sword': 'Mithril Shortsword',
+  'Adamant Sword': 'Adamant Shortsword', 'Rune Sword': 'Rune Shortsword',
+};
+export const currentResourceName = (name: string): string =>
+  Object.prototype.hasOwnProperty.call(RENAMED_RESOURCES, name) ? RENAMED_RESOURCES[name] : name;
 for (const [item, extra] of Object.entries(ENRICHED_SOURCES)) {
-  const target = RESOURCE_MAP[item];
+  const target = RESOURCE_MAP[currentResourceName(item)];
   if (target) target.push(...extra.map(enrichResourceSource));
 }
 
@@ -3158,7 +3168,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Adamant Plateskirt',
     'Adamant Scimitar',
     'Adamant Sq Shield',
-    'Adamant Sword',
+    'Adamant Shortsword',
     'Adamant Warhammer',
   ],
   'Bronze Smithing': [
@@ -3185,7 +3195,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Bronze Plateskirt',
     'Bronze Scimitar',
     'Bronze Sq Shield',
-    'Bronze Sword',
+    'Bronze Shortsword',
     'Bronze Warhammer',
     'Bronze Wire',
   ],
@@ -3233,7 +3243,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Iron Sheet',
     'Iron Spit',
     'Iron Sq Shield',
-    'Iron Sword',
+    'Iron Shortsword',
     'Iron Warhammer',
   ],
   'Jewellery': [
@@ -3349,7 +3359,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Mithril Plateskirt',
     'Mithril Scimitar',
     'Mithril Sq Shield',
-    'Mithril Sword',
+    'Mithril Shortsword',
     'Mithril Warhammer',
   ],
   'Rune Smithing': [
@@ -3373,7 +3383,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Rune Platelegs',
     'Rune Plateskirt',
     'Rune Sq Shield',
-    'Rune Sword',
+    'Rune Shortsword',
     'Rune Warhammer',
   ],
   'Steel Smithing': [
@@ -3401,7 +3411,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Steel Scimitar',
     'Steel Sq Shield',
     'Steel Studs',
-    'Steel Sword',
+    'Steel Shortsword',
     'Steel Warhammer',
   ],
 };
