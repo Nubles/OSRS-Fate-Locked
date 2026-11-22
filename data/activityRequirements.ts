@@ -179,8 +179,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Tai Bwo Wannai Cleanup': { quests: ['Jungle Potion'] },
   "Shades of Mort'ton": { quests: ["Shades of Mort'ton"] },
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
-  // Either way in is enough: a crop circle at 17 Hunter, or Zanaris's wheat-field portal.
-  'Impetuous Impulses': { oneOf: [{ skills: { Hunter: 17 } }, { manualRequirements: ['Completed Lost City, for the portal in Zanaris'] }] },
+  // 17 Hunter is needed by either way in; Lost City only opens the Zanaris portal.
+  'Impetuous Impulses': { skills: { Hunter: 17 }, note: 'Enter by a crop circle, or the Zanaris portal after Lost City.' },
   'Vale Totems': { skills: { Fletching: 20 }, quests: ['Children of the Sun', 'Vale Totems'], note: 'Vale Totems miniquest (Auburn Valley) first.' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
   // Anyone can take the challenges; claiming the rewards needs 750 total level.
@@ -198,7 +198,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   },
   "Sorceress's Garden": { quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
   'Stealing Artefacts': { skills: { Thieving: 49 }, manualRequirements: ['Have a lockpick or hair clip'], note: 'Piscarilius access (Kourend & Kebos).' },
-  'Mess': { note: "Hosidius kitchen — a cook's duties in Great Kourend." },
+  'Mess': { skills: { Cooking: 20 }, note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
   // ===== Player-Owned House (Construction room-build levels) ================
   // Only the standard room-build levels and Superior Garden features, which are

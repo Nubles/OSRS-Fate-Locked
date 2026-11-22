@@ -136,4 +136,12 @@ describe('activity rows follow the Wiki', () => {
     expect(ready('Mastering Mixology', u => { u.skills.Herblore = 10; u.levels.Herblore = 60; u.quests = ['Druidic Ritual']; }).status).toBe('NOT_READY');
   });
 
+  it('Impetuous Impulses needs 17 Hunter by either way in, and the Mess needs 20 Cooking', () => {
+    expect(ACTIVITY_REQUIREMENTS['Impetuous Impulses'].skills).toEqual({ Hunter: 17 });
+    expect(ACTIVITY_REQUIREMENTS['Impetuous Impulses'].oneOf).toBeUndefined();
+    expect(ACTIVITY_REQUIREMENTS.Mess.skills).toEqual({ Cooking: 20 });
+    expect(ready('Impetuous Impulses', u => { u.quests = ['Lost City']; }).status).toBe('NOT_READY');
+    expect(ready('Mess', () => {}).status).toBe('NOT_READY');
+  });
+
 });
