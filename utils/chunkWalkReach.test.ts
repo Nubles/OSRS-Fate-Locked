@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import content from '../public/chunk-content.json';
-import { SAILING_PORT_CHUNKS } from '../data/seaAccess';
+import { PORTS_BEYOND_CHUNK_CONTENT, SAILING_PORT_CHUNKS } from '../data/seaAccess';
 import type { UnlockState } from '../types';
 import { ALL_CHUNK_KEYS, CHUNKED_START, chunkKey, chunkedWalk, getChunkFrontier } from './chunkAdjacency';
 import { chunkReachability } from './chunkReach';
@@ -166,13 +166,20 @@ describe('reachedOwnedChunks', () => {
 });
 
 describe('sea data', () => {
-  it('names every chunk with a Port master as a port, all of them land', () => {
+  it('names every chunk with a Port master as a port, and the ports only the wiki has, all of them land', () => {
     const chunks = (content as unknown as { chunks: Record<string, { p?: string[] }> }).chunks;
     const withPortMaster = Object.entries(chunks)
       .filter(([, chunk]) => (chunk.p ?? []).includes('Port master'))
       .map(([id]) => keyOf(id)).sort();
-    expect([...SAILING_PORT_CHUNKS].sort()).toEqual(withPortMaster);
-    for (const key of withPortMaster) expect(ALL_CHUNK_KEYS, key).toContain(key);
+    expect([...SAILING_PORT_CHUNKS].sort()).toEqual([...withPortMaster, ...PORTS_BEYOND_CHUNK_CONTENT].sort());
+    // A wiki-only port is dropped from that list once the chunk content has its Port master.
+    expect(PORTS_BEYOND_CHUNK_CONTENT.filter(key => withPortMaster.includes(key))).toEqual([]);
+    // Hosidius, Piscatoris, Ardougne and Entrana, from the Port master page (oldid 15369854).
+    expect([...PORTS_BEYOND_CHUNK_CONTENT].sort()).toEqual(['26,54', '36,57', '41,51', '44,52']);
+    for (const key of SAILING_PORT_CHUNKS) expect(ALL_CHUNK_KEYS, key).toContain(key);
+    const idOf = (key: string) => { const [cx, cy] = key.split(',').map(Number); return String(cx * 256 + cy); };
+    // Each touches no open sea, so only this list makes it a place to sail from and land on.
+    for (const key of PORTS_BEYOND_CHUNK_CONTENT) expect(SEA_LANDING_IDS.has(idOf(key)), key).toBe(true);
   });
 
   it('lands on every port, the ones that touch no open sea included', () => {
