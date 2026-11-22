@@ -3,7 +3,8 @@
  * the gear picker shows no stat-based estimates for the pinned catalogue.
  *
  * - WIELD_LEVELS are OSRS Wiki facts (each item's page, checked 15 October
- *   2026). requirementTier() in utils/equipmentReviewTiers.ts places an item with the
+ *   2026; the Deadman Mode rows rechecked 22 November 2026).
+ *   requirementTier() in utils/equipmentReviewTiers.ts places an item with the
  *   Codex material that needs the same level: a level-50 Attack weapon sits
  *   with rune at T5.
  * - PLACED are Fate choices for items whose wield level doesn't decide their
@@ -20,8 +21,13 @@ const at = (tier: number, names: string[]): Record<string, number> =>
   Object.fromEntries(names.map(name => [name.toLowerCase(), tier]));
 
 const WIELD_LEVELS: Record<string, WieldLevels> = {
+  'amulet of air': { magic: 59 },
+  'amulet of earth': { magic: 59 },
+  'amulet of fire': { magic: 59 },
+  'amulet of water': { magic: 59 },
   'ancient mace': { attack: 15 },
   'ancient wyvern shield': { defence: 75, magic: 70 },
+  'aquanite hopper': { ranged: 60 },
   'archer helm': { defence: 45 },
   'arclight': { attack: 75 },
   'arkan blade': { attack: 60 },
@@ -50,6 +56,7 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'blurite crossbow': { ranged: 16 },
   'bone mace': { attack: 50 },
   'bone shortbow': { ranged: 50 },
+  'bone staff': { magic: 50 },
   'boots of brimstone': { defence: 70, ranged: 70, magic: 70 },
   'brine sabre': { attack: 40 },
   'broodoo shield (combat)': { defence: 25, magic: 25 },
@@ -57,6 +64,7 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'broodoo shield (poison)': { defence: 25, magic: 25 },
   'bryophyta\'s staff': { attack: 30, magic: 30 },
   'cabbage round shield': { defence: 30 },
+  'camphor blowpipe': { ranged: 45 },
   'cleaver': { attack: 40 },
   'coif': { ranged: 20 },
   'colossal blade': { attack: 60 },
@@ -98,6 +106,7 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'elder chaos robe (or)': { magic: 40 },
   'elder chaos top': { magic: 40 },
   'elder chaos top (or)': { magic: 40 },
+  'elemental amulet': { magic: 59 },
   'excalibur': { attack: 20 },
   'eye of ayak': { magic: 83 },
   'farseer helm': { defence: 45 },
@@ -140,6 +149,7 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'infinity gloves': { defence: 25, magic: 50 },
   'infinity hat': { defence: 25, magic: 50 },
   'infinity top': { defence: 25, magic: 50 },
+  'ironwood blowpipe': { ranged: 55 },
   'ivandis flail': { attack: 40 },
   'katana': { attack: 40 },
   'keris': { attack: 50 },
@@ -156,7 +166,7 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'lunar gloves': { defence: 40, magic: 65 },
   'lunar helm': { defence: 40, magic: 65 },
   'lunar legs': { defence: 40, magic: 65 },
-  'lunar staff': { magic: 65 },
+  'lunar staff': { magic: 65, defence: 40 },
   'lunar torso': { defence: 40, magic: 65 },
   'mage\'s book': { magic: 60 },
   'magic shield': { defence: 40 },
@@ -172,13 +182,15 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'mixed hide legs': { ranged: 60 },
   'mixed hide top': { defence: 50, ranged: 60 },
   'morrigan\'s coif (bh)': { defence: 78 },
-  'morrigan\'s coif (deadman mode)': { defence: 78 },
+  'morrigan\'s coif (deadman mode)': { defence: 20, ranged: 75 },
   'morrigan\'s javelin (bh)': { ranged: 75 },
   'morrigan\'s javelin (deadman mode)': { ranged: 78 },
   'morrigan\'s throwing axe (bh)': { ranged: 75 },
   'morrigan\'s throwing axe (deadman mode)': { ranged: 78 },
   'neitiznot shield': { defence: 25 },
   'noxious halberd': { attack: 80 },
+  'oak blackjack(d)': { defence: 10 },
+  'oak blackjack(o)': { attack: 10 },
   'oak shield': { defence: 10 },
   'odium ward': { defence: 60 },
   'odium ward (or)': { defence: 60 },
@@ -196,6 +208,7 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'redwood shield': { defence: 40 },
   'robin hood hat': { ranged: 40 },
   'rolling pin': { attack: 40 },
+  'rosewood blowpipe': { ranged: 65 },
   'runner boots': { defence: 40 },
   'runner hat': { defence: 45 },
   'samurai boots': { defence: 35 },
@@ -252,13 +265,13 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'splitbark legs': { defence: 40, magic: 40 },
   'spork': { attack: 10 },
   'statius\'s full helm (bh)': { defence: 78 },
-  'statius\'s full helm (deadman mode)': { defence: 78 },
+  'statius\'s full helm (deadman mode)': { defence: 20 },
   'statius\'s platebody (bh)': { defence: 78 },
-  'statius\'s platebody (deadman mode)': { defence: 78 },
+  'statius\'s platebody (deadman mode)': { defence: 20 },
   'statius\'s platelegs (bh)': { defence: 78 },
-  'statius\'s platelegs (deadman mode)': { defence: 78 },
+  'statius\'s platelegs (deadman mode)': { defence: 20 },
   'statius\'s warhammer (bh)': { strength: 75 },
-  'statius\'s warhammer (deadman mode)': { attack: 78 },
+  'statius\'s warhammer (deadman mode)': { strength: 78, attack: 20 },
   'sulphur blades': { attack: 55 },
   'swampbark body': { defence: 50, magic: 50 },
   'swampbark boots': { defence: 50, magic: 50 },
@@ -270,14 +283,15 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'v\'s shield': { defence: 40 },
   'vesta\'s blighted longsword': { attack: 75 },
   'vesta\'s chainbody (bh)': { defence: 78 },
-  'vesta\'s chainbody (deadman mode)': { defence: 78 },
+  'vesta\'s chainbody (deadman mode)': { defence: 20 },
   'vesta\'s longsword (bh)': { attack: 75 },
   'vesta\'s longsword (deadman mode)': { attack: 78 },
   'vesta\'s plateskirt (bh)': { defence: 78 },
-  'vesta\'s plateskirt (deadman mode)': { defence: 78 },
+  'vesta\'s plateskirt (deadman mode)': { defence: 20 },
   'vesta\'s spear (bh)': { attack: 75 },
   'vesta\'s spear (deadman mode)': { attack: 78 },
   'warrior helm': { defence: 45 },
+  'willow blackjack(d)': { defence: 20 },
   'willow blackjack(o)': { attack: 20 },
   'willow shield': { defence: 30 },
   'wizard boots': { magic: 20 },
@@ -287,13 +301,13 @@ const WIELD_LEVELS: Record<string, WieldLevels> = {
   'zombie axe': { attack: 65 },
   'zombie helmet': { strength: 50, defence: 50 },
   'zuriel\'s hood (bh)': { defence: 78 },
-  'zuriel\'s hood (deadman mode)': { defence: 78 },
+  'zuriel\'s hood (deadman mode)': { defence: 20, magic: 75 },
   'zuriel\'s robe bottom (bh)': { defence: 78 },
-  'zuriel\'s robe bottom (deadman mode)': { defence: 78 },
+  'zuriel\'s robe bottom (deadman mode)': { defence: 20, magic: 75 },
   'zuriel\'s robe top (bh)': { defence: 78 },
-  'zuriel\'s robe top (deadman mode)': { defence: 78 },
+  'zuriel\'s robe top (deadman mode)': { defence: 20, magic: 75 },
   'zuriel\'s staff (bh)': { attack: 30, magic: 75 },
-  'zuriel\'s staff (deadman mode)': { magic: 78 },
+  'zuriel\'s staff (deadman mode)': { magic: 78, attack: 60 },
 };
 
 const PLACED: Record<string, number> = {
@@ -371,7 +385,7 @@ const PLACED: Record<string, number> = {
     'Corrupted axe', 'Corrupted harpoon', 'Corrupted pickaxe', 'Crystal axe (The Gauntlet)',
     'Crystal dagger (perfected)', 'Crystal harpoon (The Gauntlet)', 'Crystal pickaxe (The Gauntlet)',
   ]),
-  // Ammunition sits with the metal ammunition of the same ranged strength, not its launcher's wield level (barbed, blurite, bone, silver and kebbit bolts are at or below iron bolts).
+  // Ammunition sits with the metal ammunition of the same ranged strength, not its launcher's wield level (barbed, blurite, silver and kebbit bolts are at or below iron bolts; bone bolts, +49 against iron's +46, are roughly equal to them).
   ...at(1, [
     'Barbed bolts', 'Blurite bolts', 'Bone bolts', 'Silver bolts', 'Kebbit bolts', 'Long kebbit bolts',
     'Ancient blessing', 'Holy blessing', 'Honourable blessing', 'Peaceful blessing', 'Unholy blessing',
@@ -392,7 +406,6 @@ const PLACED: Record<string, number> = {
     'Group ironman platelegs', 'Group ironman platebody (unranked)', 'Group ironman platelegs (unranked)',
     'Hardcore group ironman platebody', 'Hardcore group ironman platelegs', 'Ardougne knight platebody',
     'Ardougne knight platelegs', 'Deadman\'s chest', 'Deadman\'s legs', 'Carnillean armour', 'Blurite sword',
-    'Shadow sword',
   ]),
   // Diary rewards match iron gear at the easy tier.
   ...at(1, [
@@ -441,6 +454,7 @@ const PLACED: Record<string, number> = {
     'Lovakengj banner', // Steel spear
     'Morytania legs 2', // Steel platelegs
     'Piscarilius banner', // Steel spear
+    'Shadow sword', // Black 2h sword
     'Shayzien banner', // Steel spear
     'Silverlight', // Steel longsword
     'Western banner 1', // Steel spear
@@ -469,13 +483,13 @@ const PLACED: Record<string, number> = {
   ]),
   // Cosmetics, quest props and tools with no wield level and near-zero bonuses.
   ...at(1, [
-    '\'24-carat\' sword', '10th birthday balloons', 'Amulet of accuracy', 'Amulet of air', 'Amulet of earth',
-    'Amulet of fire', 'Amulet of magic', 'Amulet of magic (t)', 'Amulet of water', 'Amy\'s saw',
+    '\'24-carat\' sword', '10th birthday balloons', 'Amulet of accuracy',
+    'Amulet of magic', 'Amulet of magic (t)', 'Amy\'s saw',
     'Ancient ceremonial boots', 'Ancient ceremonial mask', 'Anger battleaxe', 'Anger mace', 'Anger spear',
-    'Anger sword', 'Aquanite hopper', 'Aranea boots', 'Archibald', 'Ardougne knight helm', 'Assorted flowers',
+    'Anger sword', 'Aranea boots', 'Archibald', 'Ardougne knight helm', 'Assorted flowers',
     'Banana cape', 'Beach boxing gloves', 'Beacon ring', 'Beads of the Dead', 'Birthday balloons',
     'Birthday cake', 'Blacksmith\'s helm', 'Blue boots', 'Blue cape', 'Blue flowers', 'Blue hat',
-    'Blue hat (Legends\' Quest)', 'Blue robe bottoms', 'Blue robe top', 'Bone dagger', 'Bone staff',
+    'Blue hat (Legends\' Quest)', 'Blue robe bottoms', 'Blue robe top', 'Bone dagger',
     'Bonesack', 'Boots of lightness', 'Boots of stone', 'Boxing gloves', 'Cabbage cape', 'Candy cane',
     'Carrot sword', 'Castlewars cloak (Saradomin)', 'Castlewars cloak (Zamorak)',
     'Castlewars hood (Saradomin)', 'Castlewars hood (Zamorak)', 'Cattleprod', 'Citizen shoes', 'Citizen top',
@@ -484,7 +498,7 @@ const PLACED: Record<string, number> = {
     'Crab helmet', 'Crabclaw hook', 'Cream boots', 'Cream hat', 'Cream robe bottoms', 'Cream robe top',
     'Crier bell', 'Crossbow', 'Cursed amulet of magic', 'Cursed banana', 'Cursed goblin hammer',
     'Dark dagger', 'Dark flippers', 'Dark squall hood', 'Dark squall robe bottom', 'Dark squall robe top',
-    'Deadman\'s cape', 'Diamond speedrun trophy', 'Easter basket', 'Eek', 'Egg whisk', 'Elemental amulet',
+    'Deadman\'s cape', 'Diamond speedrun trophy', 'Easter basket', 'Eek', 'Egg whisk',
     'Elemental helmet', 'Elemental shield', 'Falconer\'s glove', 'Fancier boots', 'Fancy boots',
     'Fighting boots', 'Fine mesh net', 'Fish sack', 'Fish sack barrel', 'Flippers', 'Fremennik beige shirt',
     'Fremennik blue cloak', 'Fremennik blue shirt', 'Fremennik boots', 'Fremennik brown cloak',
@@ -507,7 +521,7 @@ const PLACED: Record<string, number> = {
     'Mind helmet', 'Mind shield', 'Mining helmet', 'Mixed flowers',
     'Mooleta', 'Moonclan armour', 'Moonclan boots', 'Moonclan cape', 'Moonclan gloves', 'Moonclan hat',
     'Moonclan helm', 'Moonclan skirt', 'Mourner boots', 'Mourner gloves', 'Mouse toy', 'Mud pie',
-    'Necklace of fangs', 'Nutcracker staff', 'Oak blackjack', 'Oak blackjack(d)', 'Oak blackjack(o)',
+    'Necklace of fangs', 'Nutcracker staff', 'Oak blackjack',
     'Opal machete', 'Orange cape', 'Orange flowers', 'Ornate boots', 'Ornate cape', 'Ornate gloves',
     'Ornate helm', 'Pendant of Ates', 'Phoenix crossbow', 'Pink boots', 'Pink cape', 'Pink hat',
     'Pink robe bottoms', 'Pink robe top', 'Pirate\'s hook', 'Platinum speedrun trophy', 'Potato sack',
@@ -531,7 +545,7 @@ const PLACED: Record<string, number> = {
     'Team-50 cape', 'Team-6 cape', 'Team-7 cape', 'Team-8 cape', 'Team-9 cape', 'Trollweiss',
     'Turquoise boots', 'Turquoise hat', 'Turquoise robe bottoms', 'Turquoise robe top', 'Twitcher\'s gloves',
     'Ultimate ironman helm', 'Undead chicken (item)', 'Vyrewatch legs', 'Vyrewatch shoes', 'Vyrewatch top',
-    'White flowers', 'Willow blackjack', 'Willow blackjack(d)', 'Witchwood icon', 'Xeric\'s talisman',
+    'White flowers', 'Willow blackjack', 'Witchwood icon', 'Xeric\'s talisman',
     'Yellow boots', 'Yellow cape', 'Yellow flowers', 'Yellow gloves', 'Yellow hat', 'Yellow robe bottoms',
     'Yellow robe top', 'Zealot\'s boots', 'Zealot\'s helm',
   ]),
