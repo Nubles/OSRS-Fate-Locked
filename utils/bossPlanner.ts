@@ -93,8 +93,8 @@ const STANDARD_VERSIONS = ['Post-quest', 'Normal', 'Solo'];
 interface BossCombatLimit {
   /** The boss cannot be fought with combat at all. */
   noCombat?: string;
-  /** Melee cannot hurt it, except with weapons of `unlessCategory`. */
-  melee?: { note: string; unlessCategory?: string };
+  /** Melee cannot hurt it, except with weapons of the `unlessCategory` categories (lower case). */
+  melee?: { note: string; unlessCategory?: readonly string[] };
   ranged?: { note: string };
   /** A training boss with effectively endless hitpoints: no kill to time. */
   endless?: string;
@@ -108,14 +108,18 @@ export const BOSS_COMBAT_LIMITS: Readonly<Record<string, BossCombatLimit>> = {
     ranged: { note: 'Ranged deals only a seventh of its damage to the Kraken. Magic is the reliable way to fight it; choose a spell in the DPS tab.' },
   },
   // Wiki "Zulrah" (rev 15385964): cannot be reached with melee, with the exception of halberds (the Polearm category).
-  'Zulrah': { melee: { note: 'Zulrah cannot be reached with melee, except with a halberd.', unlessCategory: 'polearm' } },
+  'Zulrah': { melee: { note: 'Zulrah cannot be reached with melee, except with a halberd.', unlessCategory: ['polearm'] } },
+  // Wiki "Kree'arra" (rev 15410457): cannot be attacked with Melee, except when using Halberds or Salamanders.
+  "Kree'arra": { melee: { note: "Kree'arra cannot be attacked with melee, except with a halberd or a salamander.", unlessCategory: ['polearm', 'salamander'] } },
+  // Wiki "Grotesque Guardians" (rev 15387555): Dusk is completely immune to magic and ranged damage. The planner times Dusk.
+  'Grotesque Guardians': { ranged: { note: 'Dusk is immune to ranged and magic; only melee harms him.' } },
   // Wiki "Gemstone Crab" (rev 15404558): no defence and effectively infinite hitpoints, made for combat training.
   'Gemstone Crab': { endless: 'The Gemstone Crab is a training boss with effectively endless hitpoints, so there is no kill time to plan.' },
 };
 
 const styleBlock = (limit: BossCombatLimit | undefined, style: Style, category?: string): string | undefined => {
   if (!limit) return undefined;
-  if (style === 'melee' && limit.melee && limit.melee.unlessCategory !== (category ?? '').trim().toLowerCase()) return limit.melee.note;
+  if (style === 'melee' && limit.melee && !limit.melee.unlessCategory?.includes((category ?? '').trim().toLowerCase())) return limit.melee.note;
   if (style === 'ranged' && limit.ranged) return limit.ranged.note;
   return undefined;
 };

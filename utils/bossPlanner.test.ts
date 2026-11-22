@@ -288,6 +288,37 @@ describe('planner against the real catalogue', () => {
     expect(planBoss(STRONG_RANGED, monster, 'Zulrah').assessmentNote).toBeUndefined();
   });
 
+  it("plans melee on Kree'arra only with a halberd or a salamander", () => {
+    const { monster } = planned.find(entry => entry.boss === "Kree'arra")!;
+    const withCategory = (category: string) => planBoss({ ...STRONG_MELEE, gear: { ...STRONG_MELEE.gear, category } }, monster, "Kree'arra");
+    for (const category of ['Multi-melee', 'Whip', 'Slash Sword']) {
+      expect(withCategory(category)).toMatchObject({ readiness: 'unverified', dps: 0, assessmentNote: "Kree'arra cannot be attacked with melee, except with a halberd or a salamander." });
+    }
+    const halberd = withCategory('Polearm');
+    expect(halberd.assessmentNote).toBeUndefined();
+    expect(halberd).toMatchObject({ style: 'melee' });
+    expect(halberd.readiness).not.toBe('unverified');
+    const salamander = withCategory('Salamander');
+    expect(salamander.assessmentNote).toBeUndefined();
+    expect(salamander.readiness).not.toBe('unverified');
+    const bow = planBoss(STRONG_RANGED, monster, "Kree'arra");
+    expect(bow.assessmentNote).toBeUndefined();
+    expect(bow).toMatchObject({ style: 'ranged' });
+  });
+
+  it('gives no ranged readiness for the Grotesque Guardians (Dusk)', () => {
+    const { monster } = planned.find(entry => entry.boss === 'Grotesque Guardians')!;
+    expect(monster.name).toBe('Dusk');
+    for (const category of ['Bow', 'Crossbow']) {
+      expect(planBoss({ ...STRONG_MELEE, gear: { ...STRONG_MELEE.gear, category } }, monster, 'Grotesque Guardians'))
+        .toMatchObject({ readiness: 'unverified', dps: 0, assessmentNote: 'Dusk is immune to ranged and magic; only melee harms him.' });
+    }
+    const melee = planBoss(STRONG_MELEE, monster, 'Grotesque Guardians');
+    expect(melee.assessmentNote).toBeUndefined();
+    expect(melee).toMatchObject({ style: 'melee' });
+    expect(melee.readiness).not.toBe('unverified');
+  });
+
   it('never calls the Gemstone Crab Undergeared', () => {
     const { monster } = planned.find(entry => entry.boss === 'Gemstone Crab')!;
     for (const player of Object.values(SETUPS)) {
