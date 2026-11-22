@@ -2158,6 +2158,12 @@ const settleKeysOwed = (
   };
 };
 
+/** The record-keeping parts of the unlocks: ticking or logging them is not a Key, an unlock or a level. */
+const NOT_PROGRESS: ReadonlySet<string> = new Set(['quests', 'diaries', 'cas', 'completedTasks', 'collectionLog']);
+const unlocksProgressed = (prev: UnlockState, next: UnlockState): boolean =>
+  prev !== next && Object.keys({ ...prev, ...next }).some(key =>
+    !NOT_PROGRESS.has(key) && prev[key as keyof UnlockState] !== next[key as keyof UnlockState]);
+
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   if (action.type === 'COMMIT_STATE') return action.payload;
   const rawNext = rawReducer(state, action);
@@ -2172,8 +2178,9 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
     ? settled
     : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
   // A Chunked run's last progress (a Key, an unlock or a level) times Fate's
-  // Mercy's quiet spell (utils/chunkedFate.ts mercyQuietLeft).
-  const progressed = chained.gameModeId === 'chunked' && (chained.unlocks !== state.unlocks
+  // Mercy's quiet spell (utils/chunkedFate.ts mercyQuietLeft). Journal ticks and
+  // collection log entries are not progress, as the Codex says.
+  const progressed = chained.gameModeId === 'chunked' && (unlocksProgressed(state.unlocks, chained.unlocks)
     || chained.keys > state.keys || chained.specialKeys > state.specialKeys || chained.chaosKeys > state.chaosKeys);
   const next = progressed ? { ...chained, chunkedProgressAt: Date.now() } : chained;
   return { ...next, runRevision: state.runRevision + 1 };
