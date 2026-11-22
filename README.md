@@ -58,8 +58,10 @@ A run is stored in the browser (`localStorage`, with a recovery copy in
 IndexedDB). Some features talk to the Fate Locked relay in
 `workers/fate-relay/`, each only when you use it: RuneLite pairing
 ([docs/online-relay.md](./docs/online-relay.md)), the encrypted online backup
-([docs/online-backup.md](./docs/online-backup.md)) and Discord sharing
-([docs/shared-progress.md](./docs/shared-progress.md)). Production builds
+([docs/online-backup.md](./docs/online-backup.md)), Discord sharing
+([docs/shared-progress.md](./docs/shared-progress.md)), the stream overlay,
+and the Clan tab of the OSRS layout's chatbox, which shows other players'
+unlocks while it is open (Settings > Clan broadcasts, on by default). Production builds
 also send thin crash reports to the relay (`utils/errorReport.ts`): the build,
 the error and the page path, never save data.
 
