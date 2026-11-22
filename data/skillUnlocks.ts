@@ -1950,7 +1950,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Blood Moon Armour',
       'Lvl 75: Dual Macuahuitl (Att 70)',
       'Lvl 75: Elder Maul, Primordial Boots',
-      'Lvl 75: Statius\'s Warhammer (BH)',
+      'Lvl 75: Statius\'s Warhammer (Bounty Hunter, PvP Areas Only)',
       'Lvl 76: Barehanded Sharks',
       'Lvl 80: Avernic Treads',
       'Lvl 80: Soulreaper Axe'
