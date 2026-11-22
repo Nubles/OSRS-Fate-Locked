@@ -485,7 +485,15 @@ const NETWORK_NODES: Readonly<Record<string, RegExp>> = {
   'boat:port-sarim-ship': /^(customs officer|seaman morris)$/i,
   'boat:musa-point-ship': /^(captain tobias|seaman (lorris|thresnor|morris))$/i,
   'boat:pandemonium-ship': /^(captain tobias|seaman (lorris|thresnor)|customs officer)$/i,
+  // Veos stands at Port Sarim and Port Piscarilius, Captain Magoro at Land's End.
   "boat:lands-end-ship": /^veos$/i,
+  'boat:veos-ship': /^(veos|captain magoro)$/i,
+  'boat:entrana-boat': /^monk of entrana$/i,
+  'boat:corsair-cove-ship': /^(captain tock|cabin boy colin)$/i,
+  'boat:void-outpost-ship': /^squire \(void knights\)$/i,
+  'boat:void-outpost-return-ship': /^squire \(void knights\)$/i,
+  'boat:miscellania-boat': /^sailor$/i,
+  'boat:mos-le-harmless-ship': /^bill teach$/i,
   'boat:piscatoris-boat': /^kathy corkat$/i,
   'boat:harmony-boat': /^brother tranquility$/i,
   'boat:dragontooth-boat': /^ghost captain$/i,
@@ -541,6 +549,25 @@ describe('travel networks', () => {
     })).toEqual([]);
     expect([...byKind('network'), ...byKind('boat')].filter((method) => !(method.id in NETWORK_NODES)).map((method) => method.id))
       .toEqual([]);
+  });
+
+  it('know the crews with a one-click trip, each option going where its page says (travel-b F1)', () => {
+    const npcs = (id: string) => [...(itemRow(id).match as { npcs: readonly number[] }).npcs];
+    expect(itemRow('boat:veos-ship').options).toEqual({
+      'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] }, "Land's End": { to: ['23,53'] },
+    });
+    expect(npcs('boat:veos-ship')).toEqual([2850, 8484, 8630, 10723, 10724, 10726, 10727, 10949]);
+    expect(itemRow('boat:entrana-boat').options).toEqual({ 'Take-boat': { to: ['44,52', '47,50'] } });
+    expect(npcs('boat:corsair-cove-ship')).toEqual([7958, 7967]);
+    expect(itemRow('boat:void-outpost-ship').options).toEqual({ Travel: { to: ['41,41'] } });
+    expect(npcs('boat:void-outpost-ship')).toEqual([1770]);
+    expect(itemRow('boat:void-outpost-return-ship').options).toEqual({ Travel: { to: ['47,50'] } });
+    expect(npcs('boat:void-outpost-return-ship')).toEqual([1769]);
+    expect(itemRow('boat:miscellania-boat').options).toEqual({ Miscellania: { to: ['40,60'] }, Rellekka: { to: ['41,57'] } });
+    expect(itemRow('boat:mos-le-harmless-ship').options).toEqual({ Travel: { to: ['57,46', '57,54'] } });
+    // No NPC id is matched by two rows.
+    const all = TRAVEL_METHODS.flatMap((method) => 'npcs' in method.match ? [...method.match.npcs] : []);
+    expect(all.filter((id, i) => all.indexOf(id) !== i)).toEqual([]);
   });
 
   it('dial every fairy ring code to where the wiki marks it', () => {

@@ -642,7 +642,8 @@ const boat = (id: string, label: string, npcs: readonly number[], options: Reado
 /**
  * Boats whose crew offers a one-click trip. Each lands where the app's chunk
  * content has the crew for the way back; where the same crew works both
- * ends, the trip goes to one of the two. Left out: crews that only talk.
+ * ends, the trip goes to one of the two. Left out: crews that only talk, and
+ * Captain Barnaby, whose per-destination option texts no source gives.
  */
 const BOATS: readonly TravelMethod[] = [
   // Captain Tobias, Seaman Lorris (oldid 15315318) and Seaman Thresnor (oldid 15315315). Travel asks where.
@@ -655,7 +656,7 @@ const BOATS: readonly TravelMethod[] = [
   boat('pandemonium-ship', 'Ship from the Pandemonium', [8631], {
     'Port Sarim': { to: ['47,50'] }, 'Musa Point': { to: ['46,49'] },
   }, 'Seaman Morris', 15315347),
-  // Veos stands at both ends.
+  // Veos waits at both ports for the way back.
   boat('lands-end-ship', "Ship from Land's End", [7471], {
     'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] },
   }, 'Captain Magoro', 15353365),
@@ -680,6 +681,26 @@ const BOATS: readonly TravelMethod[] = [
   }, 'Jarvald', 15351198),
   // Between the dock north of Port Phasmatys and Slepe.
   boat('slepe-boat', "Andras's boat", [8267, 8268], { Travel: { to: ['57,51', '57,55'] } }, 'Andras', 15233277),
+  // Veos at Port Sarim and Port Piscarilius: one option for each other port, since his Travel option was split up.
+  boat('veos-ship', "Veos's ship", [2850, 8484, 8630, 10723, 10724, 10726, 10727, 10949], {
+    'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] }, "Land's End": { to: ['23,53'] },
+  }, 'Veos', 15365278),
+  boat('entrana-boat', 'Boat to Entrana', [1165, 1166, 1167, 1168, 1169, 1170], { 'Take-boat': { to: ['44,52', '47,50'] } },
+    'Monk of Entrana', 15258509),
+  // Between Rimmington and Corsair Cove: Captain Tock, then Cabin Boy Colin after The Corsair Curse.
+  boat('corsair-cove-ship', 'Ship to Corsair Cove', [7958, 7967], { Travel: { to: ['45,50', '40,44'] } },
+    'Captain Tock', 15168799),
+  // The squire at Port Sarim (1770) and the one at the Outpost's dock (1769).
+  boat('void-outpost-ship', "Ship to the Void Knights' Outpost", [1770], { Travel: { to: ['41,41'] } },
+    'Squire (Void Knights)', 15239656),
+  boat('void-outpost-return-ship', "Ship from the Void Knights' Outpost", [1769], { Travel: { to: ['47,50'] } },
+    'Squire (Void Knights)', 15239656),
+  // The sailor at Rellekka (3936) and the one at Miscellania (3680).
+  boat('miscellania-boat', "The sailor's boat", [3936, 3680], { Miscellania: { to: ['40,60'] }, Rellekka: { to: ['41,57'] } },
+    'Sailor', 15351110),
+  // Between Port Phasmatys and Mos Le'Harmless, after Cabin Fever.
+  boat('mos-le-harmless-ship', "Bill Teach's ship", [4011, 4012, 4014, 4015, 4016], { Travel: { to: ['57,46', '57,54'] } },
+    'Bill Teach', 15297848),
 ];
 
 export const TRAVEL_METHODS: readonly TravelMethod[] = [
