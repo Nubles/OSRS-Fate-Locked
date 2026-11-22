@@ -409,11 +409,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
     history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
-    hopes, toggleHope,
+    hopes, toggleHope, hasSeenOnboarding,
   } = game;
   const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
   // An owned area no route reaches leaves its boss or minigame Not ready, as in the Journal.
-  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  // Not behind the first-visit onboarding (PERF-4): owning an area is enough until then.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
   const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;

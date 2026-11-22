@@ -71,7 +71,9 @@ export const OsrsSkills: React.FC<Props> = ({
   const [checkedFor, setCheckedFor] = useState<unknown>(null);
   const checking = checkedFor === unlocks;
   // The same routes as the Advisor panel, so the button and the panel agree.
-  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  // Loaded only once the button is checked, so the panel never fetches the
+  // map's content behind the first-visit onboarding (PERF-4).
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, advisorsEnabled && checking);
   const advisorEmpty = useMemo(
     () => advisorsEnabled && checking && rankSkillBottlenecksCached(unlocks, gameModeId, areaRoutes).length === 0,
     [advisorsEnabled, checking, unlocks, gameModeId, areaRoutes],

@@ -37,10 +37,11 @@ interface AdvisorRow { id: string; title: string; meta?: string; region?: string
 
 /** Region Advisor (named-area modes) or Frontier Advisor (Chunked), ranked the classic way. */
 const useAdvisor = (): { heading: string; caption: string; sub: string; empty: string; rows: AdvisorRow[] } => {
-  const { unlocks, gameModeId } = useGame();
+  const { unlocks, gameModeId, advisorsEnabled, hasSeenOnboarding } = useGame();
   const chunked = gameModeId === 'chunked';
   const [tick, setTick] = useState(0);
-  const { routesFor } = useAreaRoutesState(unlocks, gameModeId, !chunked);
+  // Not behind the first-visit onboarding (PERF-4); owning an area is enough until then.
+  const { routesFor } = useAreaRoutesState(unlocks, gameModeId, !chunked && advisorsEnabled && hasSeenOnboarding);
   useEffect(() => {
     if (chunked && !chunkContentService.ready) chunkContentService.init().then((ok) => { if (ok) setTick((t) => t + 1); });
   }, [chunked]);

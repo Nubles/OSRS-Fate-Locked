@@ -620,7 +620,7 @@ const RecentRolls: React.FC<{ history: readonly LogEntry[] }> = ({ history }) =>
 
 // ── The panel ─────────────────────────────────────────────────────────────
 export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
-  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId } = useGame();
+  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId, hasSeenOnboarding } = useGame();
   const p = useFarmModel();
   const { farmTab: subTab, bossQuery } = useKeysView();
   const [pending, setPending] = useState<PendingRoll | null>(null);
@@ -630,7 +630,8 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   // Vanilla and Chunked: the Boss Task card asks which boss, and rolls from its stash.
   const bossTask = useBossTask(handleRoll);
   // An owned area no route reaches is Not ready, as in the Journal.
-  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  // Not behind the first-visit onboarding (PERF-4): owning an area is enough until then.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
   useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
