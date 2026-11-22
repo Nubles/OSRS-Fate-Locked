@@ -36,6 +36,9 @@ const NAMED_TIERS: [RegExp, number][] = [
   // Gauntlet equipment is made inside the Gauntlet and lost on leaving it, so it
   // never restricts. Its names would otherwise match the T8 crystal armour rule.
   [/^(?:crystal|corrupted) (?:helm|body|legs|bow|halberd|staff) \((?:basic|attuned|perfected)\)$/, 1],
+  // Nightmare Zone pickaxes and the Emir's Arena wrapped gloves stay inside their
+  // activity too. Their names would otherwise match the pickaxe and gloves rules.
+  [/^(?:(?:barrows|rune|mithril) gloves \(wrapped\)|(?:rune|mithril) pickaxe \(nz\))$/, 1],
   // Leather in the name, but not leather armour: wield levels set these.
   [/^frog-leather (?:body|chaps|boots)$|^hard leather shield$/, 2], // 25 Defence and Ranged; 20 Ranged
   [/^corrupted morrigan's leather (?:body|chaps) \(bh\)$/, 3], // 20 Defence

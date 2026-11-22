@@ -79,9 +79,23 @@ describe('reviewed equipment placements', () => {
     for (const name of ['Crystal bow (perfected)', 'Corrupted helm (basic)', 'Crystal body (attuned)', 'Crystal sceptre', 'Castle wars bolts', 'Dawnbringer']) {
       expect(tierOf(name, 'Weapon'), name).toBe(1);
     }
+    // Nightmare Zone pickaxes cannot leave the Nightmare Zone, and the wrapped gloves
+    // come from the Emir's Arena hospital chests (OSRS Wiki, checked 22 November 2026).
+    for (const name of ['Rune pickaxe (nz)', 'Mithril pickaxe (nz)']) {
+      expect(tierOf(name, 'Weapon'), name).toBe(1);
+    }
+    for (const name of ['Barrows gloves (wrapped)', 'Rune gloves (wrapped)', 'Mithril gloves (wrapped)']) {
+      expect(tierOf(name, 'Gloves'), name).toBe(1);
+    }
     // The real crystal armour and bow keep their God Wars-level tier.
     expect(tierOf('Crystal helm', 'Head')).toBe(8);
     expect(tierOf('Crystal bow', 'Weapon')).toBe(8);
+    // So do the real pickaxes and gloves the arena and Nightmare Zone copies.
+    expect(tierOf('Rune pickaxe', 'Weapon')).toBe(5);
+    expect(tierOf('Mithril pickaxe', 'Weapon')).toBe(3);
+    expect(tierOf('Barrows gloves', 'Gloves')).toBe(7);
+    expect(tierOf('Rune gloves', 'Gloves')).toBe(5);
+    expect(tierOf('Mithril gloves', 'Gloves')).toBe(3);
   });
 
   it('places diary rewards with the metal gear they copy', () => {
