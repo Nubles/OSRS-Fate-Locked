@@ -31,9 +31,11 @@ export interface ProfileWriterLeaseHandle {
   takeOver: () => Promise<boolean>;
   release: () => boolean;
   /**
-   * How many times this tab has lost (or failed to get) the lease. Another tab
-   * may have saved during each one. Counted as it happens, so a loss still
-   * shows when React batches the `status` values around it into one render.
+   * How many times this tab has lost (or failed to get) the lease, or given it
+   * up with release(). Another tab may have saved during each one: a page kept
+   * by the back-forward cache comes back after pagehide released its lease.
+   * Counted as it happens, so a loss still shows when React batches the
+   * `status` values around it into one render.
    */
   blockedEpisodes: { readonly current: number };
 }
@@ -191,6 +193,9 @@ export const useProfileWriterLease = (
     invalidateAttempt();
     const result = releaseWriterLease(storageRef.current!, storageKey, ownerId);
     if (result === 'released') {
+      // Without the lease from here on, so the next owner state must be
+      // checked for newer progress like a regained lease.
+      blockedEpisodesRef.current += 1;
       updateState({ status: 'checking', blockedReason: null });
       return true;
     }
