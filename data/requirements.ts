@@ -2068,6 +2068,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Fremennik'], // Etceteria
     skills: { 'Farming': 83 },
+    quests: ['The Fremennik Trials'], // Every way to the island
     description: 'Spirit Tree patch.'
   },
   'Brimhaven Spirit Tree': {
@@ -2201,6 +2202,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
     skills: { 'Mining': 22 },
+    quests: ['Bone Voyage'], // Fossil Island
     description: 'Mining Volcanic Ash for Ultracompost.'
   },
 
@@ -2408,8 +2410,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Sandstorm',
     category: TableType.MINIGAMES,
     regions: ['Kharidian Desert'], // Quarry
-    skills: { 'Mining': 35 },
-    quests: ['Beneath Cursed Sands'], // Access to Circlet helps
+    skills: { 'Mining': 35 }, // No quest needed
     description: 'Fastest sand gathering via Sandstone Grinder.'
   },
   'Zogre Bones': {

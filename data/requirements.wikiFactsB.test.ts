@@ -68,3 +68,18 @@ describe('requirements part B: regions and sources', () => {
     expect(req.description).toBe('Drop from Dagannoth Prime.');
   });
 });
+
+describe('requirements part B: quests', () => {
+  it('every way to Etceteria needs The Fremennik Trials (Wiki: Etceteria, Fairy ring CIP)', () => {
+    expect(entry('Etceteria Spirit Tree').quests).toEqual(['The Fremennik Trials']);
+  });
+  it('volcanic ash is only on Fossil Island, behind Bone Voyage (Wiki: Volcanic ash)', () => {
+    expect(entry('Fossil Island Phosphate').quests).toEqual(['Bone Voyage']);
+  });
+  it('the Sandstorm grinder needs no quest (Wiki: Sandstorm, quest = No)', () => {
+    expect(entry('Sand (Sandstorm)').quests ?? []).toEqual([]);
+  });
+  it('every quest named here is a real quest', () => {
+    for (const q of ['The Fremennik Trials', 'Bone Voyage']) expect(QUEST_DATA[q], q).toBeDefined();
+  });
+});
