@@ -231,3 +231,14 @@ describe('curated shops that do not sell the item', () => {
     expect(has('Nature Rune', 'Mage Arena Shop', 'SHOP')).toBe(true);
   });
 });
+
+describe('curated activity and spawn sources that do not give the item', () => {
+  it.each([
+    ['Toadflax', 'Brimstone Chest', 'MINIGAME'],
+    ['Gold Bar', 'Zalcano', 'MINIGAME'],
+    ['Raw Shark', 'Temple Trekking', 'MINIGAME'],
+    ['Giant Seaweed', 'Ground Spawn', 'SPAWN'],
+  ] as const)('%s does not come from %s', (item, name, type) => {
+    expect(has(item, name, type)).toBe(false);
+  });
+});

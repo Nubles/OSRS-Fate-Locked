@@ -165,7 +165,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Toadflax': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 },
-    { type: 'MINIGAME', name: 'Brimstone Chest', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Cave Horror', regions: ['Islands & Others'], skills: {'Slayer': 58}, quests: ['Cabin Fever'] }
   ],
   'Avantoe': [
@@ -358,8 +357,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Killerwatt', regions: ['Kandarin'], skills: {'Slayer': 37}, notes: 'Draynor Manor (Portal)' }
   ],
   'Giant Seaweed': [
-    { type: 'SKILL', name: 'Seaweed Patch', regions: ['Islands & Others'], skills: {'Farming': 23}, quests: ['Bone Voyage'], notes: 'Fossil Island Underwater', outputYield: 30 },
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kourend & Kebos'], notes: 'Piscarilius Shore (Regular Seaweed)' }
+    { type: 'SKILL', name: 'Seaweed Patch', regions: ['Islands & Others'], skills: {'Farming': 23}, quests: ['Bone Voyage'], notes: 'Fossil Island Underwater', outputYield: 30 }
   ],
   'Flax': [
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Massive quantities', outputYield: 100 },
@@ -557,8 +555,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Gold Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1}, notes: 'Instant with Goldsmith Gauntlets' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1} },
-    { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
+    { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
   ],
   'Mithril Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 50}, inputs: {'Mithril Ore': 1, 'Coal': 2}, notes: 'Requires 2 Coal at BF' },
@@ -666,7 +663,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Raw Shark': [
     { type: 'SKILL', name: 'Harpoon Fishing', regions: ['Kandarin', 'Fremennik', 'Kourend & Kebos'], skills: {'Fishing': 76}, notes: 'Fishing Guild / Catherby' },
-    { type: 'MINIGAME', name: 'Temple Trekking', regions: ['Morytania'], notes: 'Reward Token (Hard)' },
     { type: 'DROP', name: 'Kraken', regions: ['Kandarin'], unlockId: 'Kraken', skills: {'Slayer': 87} },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 100 }
   ],
