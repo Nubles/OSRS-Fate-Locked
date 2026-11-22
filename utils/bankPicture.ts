@@ -1,4 +1,5 @@
 import { BANKS, BANK_BY_ID, type BankDef } from '../data/banks';
+import { BANK_PICTURE_KINDS, type BankPictureKind } from '../data/bankPictureKinds';
 import type { ChunkCoord } from './mapCoords';
 
 /**
@@ -16,8 +17,17 @@ export const bankFor = (idOrName: string): BankDef | undefined =>
 export const bankChunks = (bank: BankDef): ChunkCoord[] =>
   /^\d+$/.test(bank.id) ? [{ cx: Math.floor(Number(bank.id) / 256), cy: Number(bank.id) % 256 }] : [];
 
-/** The model name (manifest slug) for the bank's kind. */
+const MODEL_FOR_KIND: Record<BankPictureKind, string> = {
+  booth: 'Bank booth', chest: 'Bank chest', box: 'Bank deposit box',
+};
+
+/**
+ * The model name (manifest slug) for the bank's kind: from the facilities at its place
+ * (scripts/gen-banks.mjs), else from its label.
+ */
 export const bankModelName = (bank: BankDef): string => {
+  const kind = BANK_PICTURE_KINDS[bank.id];
+  if (kind) return MODEL_FOR_KIND[kind];
   const n = bank.name.toLowerCase();
   if (n.includes('bank and')) return 'Bank booth'; // a full bank as well as a box or chest
   if (n.includes('deposit box')) return 'Bank deposit box';

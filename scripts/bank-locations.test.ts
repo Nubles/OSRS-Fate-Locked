@@ -29,7 +29,7 @@ const EXCLUSIONS = [
 // below fails on the check it names rather than on an unknown override id.
 const TEST_VALIDATION_OPTIONS = {
   validChunkIds: new Set(ADDITION_IDS),
-  validBankIds: new Set(['10275', '11830', '10292', '10547', '13361']),
+  validBankIds: new Set(['10275', '11830', '10292', '10547', '13361', '14638', '13618', '11313', '14644']),
 };
 
 describe('reviewed bank-location registry', () => {
@@ -266,9 +266,11 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       10804: [{ guilds: ["Legends' Guild"] }], 9772: [{ guilds: ["Myths' Guild"] }],
       6198: [{ guilds: ['Woodcutting Guild'] }], 6454: [{ guilds: ['Woodcutting Guild'] }],
       11310: [{ quests: ['Shilo Village'] }], 13099: [{ quests: ['Contact!'] }],
-      9265: [{ quests: ["Mourning's End Part I"] }], 10284: [{ quests: ['The Corsair Curse'] }],
-      10300: [{ quests: ['The Fremennik Trials'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
-      9531: [{ quests: ['The Fremennik Isles'] }], 13874: [{ quests: ['In Aid of the Myreque'] }],
+      9265: [{ quests: ["Mourning's End Part I"] }, { manual: ["Confirm you have started Mourning's End Part I"] }],
+      10284: [{ quests: ['The Corsair Curse'] }], 10300: [{ quests: ['The Fremennik Trials'] }],
+      9275: [{ quests: ['The Fremennik Isles'] }, { quests: ['The Fremennik Trials'], manual: ['Confirm you have started The Fremennik Isles'] }],
+      9531: [{ quests: ['The Fremennik Isles'] }, { quests: ['The Fremennik Trials'], manual: ['Confirm you have started The Fremennik Isles'] }],
+      13874: [{ quests: ['In Aid of the Myreque'] }, { quests: ['Priest in Peril'], manual: ['Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque'] }],
       14388: [{ quests: ['Sins of the Father'] }], 9273: [{ quests: ['Swan Song'] }],
       12337: [{ quests: ['Temple of the Eye'] }],
       8253: [{ quests: ['Dream Mentor'] }, { manual: ['Confirm you have started Lunar Diplomacy and carry a Seal of Passage'] }],
@@ -277,6 +279,7 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       12838: [{ quests: ['Troubled Tortugans'] }, { manual: ['Confirm you have started Troubled Tortugans'] }],
       11047: [{ quests: ['The Red Reef'] }, { manual: ['Confirm you have partly completed The Red Reef'] }],
       8757: [{ quests: ['Song of the Elves'] }], 8499: [{ quests: ['Song of the Elves'] }],
+      7216: [{ manual: ['Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt'] }],
       5678: [{ quests: ['Children of the Sun'] }], 13618: [{ quests: ['Haunted Mine'] }],
       11051: [{ quests: ['Monkey Madness II'] }], 11056: [{ quests: ['Jungle Potion'] }],
       14908: [{ quests: ['Bone Voyage'] }],

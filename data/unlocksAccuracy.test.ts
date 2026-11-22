@@ -156,9 +156,7 @@ describe('B2: a town bank built in a quest needs the quest', () => {
   // List of banks, oldid 15315317.
   it.each([
     ['11310', 'Shilo Village', 'Shilo Village'], ['13099', 'Sophanem', 'Contact!'],
-    ['9265', 'Lletya', "Mourning's End Part I"], ['10284', 'Corsair Cove', 'The Corsair Curse'],
-    ['10300', 'Etceteria', 'The Fremennik Trials'], ['9275', 'Neitiznot', 'The Fremennik Isles'],
-    ['9531', 'Jatizso', 'The Fremennik Isles'], ['13874', 'Burgh de Rott', 'In Aid of the Myreque'],
+    ['10284', 'Corsair Cove', 'The Corsair Curse'], ['10300', 'Etceteria', 'The Fremennik Trials'],
     ['14388', 'Darkmeyer', 'Sins of the Father'],
   ])('bank %s (%s) needs %s', (id, _bank, quest) => {
     expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
@@ -180,17 +178,34 @@ describe('B2: a town bank built in a quest needs the quest', () => {
 
   // Partway through a quest: Lunar Isle bank oldid 15345927 (started Lunar Diplomacy and a Seal of Passage, or Dream Mentor),
   // Bank Deposit Box oldid 15378951 (Lunar Isle; the Great Conch needs Troubled Tortugans partly done),
-  // The Great Conch oldid 15376235 (starting Troubled Tortugans), Red Rock oldid 15248903 (The Red Reef partly done).
+  // The Great Conch oldid 15376235 (starting Troubled Tortugans), Red Rock oldid 15248903 (The Red Reef partly done),
+  // The Fremennik Isles oldid 15402837 ("Both villages have a bank that can be used", travel "At any time during
+  // the quest"), Neitiznot oldid 15389735, Lletya bank oldid 15361478 ("partially completed Mourning's End Part I"),
+  // Lletya oldid 15379525 ("accessed after starting"), Burgh de Rott bank oldid 15211939 ("a partial completion of In Aid of
+  // the Myreque"; the quest repairs the bank partway through).
   it.each([
     ['8253', 'Lunar Isle bank', 'Dream Mentor'], ['8508', 'Lunar Isle dock deposit box', 'Lunar Diplomacy'],
     ['12581', 'Great Conch bank', 'Troubled Tortugans'], ['12838', 'Great Conch Sacred Grove deposit box', 'Troubled Tortugans'],
     ['11047', 'Red Rock bank chest', 'The Red Reef'],
+    ['9275', 'Neitiznot bank', 'The Fremennik Isles'], ['9531', 'Jatizso bank', 'The Fremennik Isles'],
+    ['9265', 'Lletya bank', "Mourning's End Part I"], ['13874', 'Burgh de Rott bank', 'In Aid of the Myreque'],
   ])('bank %s (%s) opens after %s, and asks a run partway through to confirm', (id, _bank, quest) => {
     expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
     const partway = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
     expect(partway.status).toBe('UNKNOWN');
     expect(partway.reasons.join(' ')).toMatch(/Confirm you have/);
     expect(bankAccess(id, createFreshState().unlocks).status).not.toBe('ALLOWED');
+  });
+
+  // Neitiznot oldid 15389735 and Jatizso oldid 15389736: the islands need The Fremennik Trials;
+  // Burgh de Rott bank oldid 15211939: the bank needs Priest in Peril.
+  it.each([
+    ['9275', 'The Fremennik Isles', 'The Fremennik Trials'], ['9531', 'The Fremennik Isles', 'The Fremennik Trials'],
+    ['13874', 'In Aid of the Myreque', 'Priest in Peril'],
+  ])('keeps bank %s shut to a run partway through %s without %s', (id, started, quest) => {
+    const without = bankAccess(id, everything(99, { quests: questsWithout(started, quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons.join(' ')).toContain(quest);
   });
 
   // Throne of Miscellania oldid 15403898: "the bank in Etceteria is available for use" before the quest starts.
@@ -220,6 +235,15 @@ describe('B3: a bank the Wiki names a requirement for states it, not "needs revi
     expect(access.status).toBe('UNKNOWN');
     expect(access.reasons.join(' ')).toMatch(/sacrifice/);
     expect(bankAccess('8751', everything(99, { quests: questsWithout('Regicide') })).reasons).toContain('Complete Regicide');
+  });
+
+  // Fortis Colosseum oldid 15404131: the bank chest is for "players who have obtained at least 2,000 glory",
+  // and "Only a player's highest Glory earned in a single Colosseum attempt" counts (the Brawler title).
+  it('asks a run at the Fortis Colosseum to confirm 2,000 Glory in one attempt', () => {
+    const access = bankAccess('7216', everything());
+    expect(access.status).toBe('UNKNOWN');
+    expect(access.reasons).toEqual(['Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt']);
+    expect(bankAccess('7216', createFreshState().unlocks).status).not.toBe('ALLOWED');
   });
 
   // Fossil Island bank oldid 15315035 (21 Construction); Bank chest (amenity) oldid 15402269 (70 Construction).

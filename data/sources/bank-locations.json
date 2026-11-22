@@ -5,7 +5,8 @@
     { "id": "5939", "name": "Bank buffalo", "kind": "npc", "wiki": "https://oldschool.runescape.wiki/w/Bank_buffalo?oldid=15201075" },
     { "id": "5427", "name": "Bank buffalo", "kind": "npc", "wiki": "https://oldschool.runescape.wiki/w/Bank_buffalo?oldid=15201075" },
     { "id": "13354", "name": "Bank Camel", "kind": "npc", "requirements": ["Beneath Cursed Sands Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Bank_Camel?oldid=15261945" },
-    { "id": "15151", "name": "Deposit Box", "kind": "object", "requirements": ["Cabin Fever Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Deposit_Box?oldid=15329931" }
+    { "id": "15151", "name": "Deposit Box", "kind": "object", "requirements": ["Cabin Fever Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Deposit_Box?oldid=15329931" },
+    { "id": "15151", "name": "Bank chest", "kind": "object", "requirements": ["Cabin Fever Complete the quest"], "wiki": "https://oldschool.runescape.wiki/w/Trouble_Brewing?oldid=15351684" }
   ],
   "sourceRevisions": [
     { "title": "Peer the Seer", "revision": 15351041, "url": "https://oldschool.runescape.wiki/w/Peer_the_Seer" },
@@ -35,7 +36,18 @@
     { "title": "Lunar Isle bank", "revision": 15345927, "url": "https://oldschool.runescape.wiki/w/Lunar_Isle_bank" },
     { "title": "Lunar Isle", "revision": 15375264, "url": "https://oldschool.runescape.wiki/w/Lunar_Isle" },
     { "title": "The Great Conch", "revision": 15376235, "url": "https://oldschool.runescape.wiki/w/The_Great_Conch" },
-    { "title": "Red Rock", "revision": 15248903, "url": "https://oldschool.runescape.wiki/w/Red_Rock" }
+    { "title": "Red Rock", "revision": 15248903, "url": "https://oldschool.runescape.wiki/w/Red_Rock" },
+    { "title": "Mos Le'Harmless bank", "revision": 15211938, "url": "https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank" },
+    { "title": "Mor Ul Rek", "revision": 15394862, "url": "https://oldschool.runescape.wiki/w/Mor_Ul_Rek" },
+    { "title": "Hallowed Sepulchre", "revision": 15387544, "url": "https://oldschool.runescape.wiki/w/Hallowed_Sepulchre" },
+    { "title": "Fortis Colosseum", "revision": 15404131, "url": "https://oldschool.runescape.wiki/w/Fortis_Colosseum" },
+    { "title": "Lletya bank", "revision": 15361478, "url": "https://oldschool.runescape.wiki/w/Lletya_bank" },
+    { "title": "Lletya", "revision": 15379525, "url": "https://oldschool.runescape.wiki/w/Lletya" },
+    { "title": "Neitiznot", "revision": 15389735, "url": "https://oldschool.runescape.wiki/w/Neitiznot" },
+    { "title": "Jatizso", "revision": 15389736, "url": "https://oldschool.runescape.wiki/w/Jatizso" },
+    { "title": "The Fremennik Isles", "revision": 15402837, "url": "https://oldschool.runescape.wiki/w/The_Fremennik_Isles" },
+    { "title": "Burgh de Rott bank", "revision": 15211939, "url": "https://oldschool.runescape.wiki/w/Burgh_de_Rott_bank" },
+    { "title": "In Aid of the Myreque", "revision": 15381138, "url": "https://oldschool.runescape.wiki/w/In_Aid_of_the_Myreque" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -82,7 +94,11 @@
     { "id": "11830", "name": "Ruins of Camdozaal (via Ice Mountain)", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "10292", "name": "Ardougne north bank", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "10547", "name": "Ardougne south bank", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "13361", "name": "Giants' Foundry bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
+    { "id": "13361", "name": "Giants' Foundry bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "14638", "name": "Mos Le'Harmless bank", "wiki": ["https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "13618", "name": "Tarn's Lair bank", "wiki": ["https://oldschool.runescape.wiki/w/Tarn%27s_Lair", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11313", "name": "Mor Ul Rek (TzHaar City) banks", "wiki": ["https://oldschool.runescape.wiki/w/Mor_Ul_Rek", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "14644", "name": "Hallowed Sepulchre bank chests", "wiki": ["https://oldschool.runescape.wiki/w/Hallowed_Sepulchre", "https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
   "exclusions": [
     { "name": "Tutorial Island bank", "reason": "Onboarding-only and absent from the walkable chunk registry." },
@@ -104,12 +120,12 @@
     { "id": "6454", "accessOptions": [{ "guilds": ["Woodcutting Guild"] }], "note": "The deposit box and the Ent dungeon chest are inside the Woodcutting Guild (60 Woodcutting).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "11310", "accessOptions": [{ "quests": ["Shilo Village"] }], "note": "Shilo Village bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "13099", "accessOptions": [{ "quests": ["Contact!"] }], "note": "Sophanem bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "9265", "accessOptions": [{ "quests": ["Mourning's End Part I"] }], "note": "Lletya bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9265", "accessOptions": [{ "quests": ["Mourning's End Part I"] }, { "manual": ["Confirm you have started Mourning's End Part I"] }], "note": "Lletya bank: Lletya opens once Mourning's End Part I is started, and the bank is usable from then on.", "wiki": ["https://oldschool.runescape.wiki/w/Lletya_bank", "https://oldschool.runescape.wiki/w/Lletya", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "10284", "accessOptions": [{ "quests": ["The Corsair Curse"] }], "note": "Corsair Cove bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "10300", "accessOptions": [{ "quests": ["The Fremennik Trials"] }], "note": "Etceteria bank: the boat to Miscellania needs The Fremennik Trials, and the bank is open before Throne of Miscellania starts (the List of banks column names the update it came in).", "wiki": ["https://oldschool.runescape.wiki/w/Throne_of_Miscellania", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
-    { "id": "9275", "accessOptions": [{ "quests": ["The Fremennik Isles"] }], "note": "Neitiznot bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "9531", "accessOptions": [{ "quests": ["The Fremennik Isles"] }], "note": "Jatizso bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "13874", "accessOptions": [{ "quests": ["In Aid of the Myreque"] }], "note": "Burgh de Rott bank; reaching the town needs only Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9275", "accessOptions": [{ "quests": ["The Fremennik Isles"] }, { "quests": ["The Fremennik Trials"], "manual": ["Confirm you have started The Fremennik Isles"] }], "note": "Neitiznot bank: the island needs The Fremennik Trials and The Fremennik Isles started, and its bank is usable during the quest.", "wiki": ["https://oldschool.runescape.wiki/w/Neitiznot", "https://oldschool.runescape.wiki/w/The_Fremennik_Isles", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "9531", "accessOptions": [{ "quests": ["The Fremennik Isles"] }, { "quests": ["The Fremennik Trials"], "manual": ["Confirm you have started The Fremennik Isles"] }], "note": "Jatizso bank: the island needs The Fremennik Trials, and its bank is usable during The Fremennik Isles.", "wiki": ["https://oldschool.runescape.wiki/w/Jatizso", "https://oldschool.runescape.wiki/w/The_Fremennik_Isles", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "13874", "accessOptions": [{ "quests": ["In Aid of the Myreque"] }, { "quests": ["Priest in Peril"], "manual": ["Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque"] }], "note": "Burgh de Rott bank: reaching the town needs only Priest in Peril, and the bank opens once it is repaired partway through In Aid of the Myreque.", "wiki": ["https://oldschool.runescape.wiki/w/Burgh_de_Rott_bank", "https://oldschool.runescape.wiki/w/In_Aid_of_the_Myreque", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "14388", "accessOptions": [{ "quests": ["Sins of the Father"] }], "note": "Darkmeyer bank; the chunk asks only for Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "12337", "accessOptions": [{ "quests": ["Temple of the Eye"] }], "note": "The bank chest and deposit pool are in the Temple of the Eye, which needs the quest.", "wiki": ["https://oldschool.runescape.wiki/w/Guardians_of_the_Rift"] },
     { "id": "9273", "accessOptions": [{ "quests": ["Swan Song"] }], "note": "Piscatoris bank and deposit box: the bank needs Swan Song to use.", "wiki": ["https://oldschool.runescape.wiki/w/Piscatoris_bank", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
@@ -120,6 +136,7 @@
     { "id": "11047", "accessOptions": [{ "quests": ["The Red Reef"] }, { "manual": ["Confirm you have partly completed The Red Reef"] }], "note": "Red Rock bank chest: Red Rock needs The Red Reef partly done.", "wiki": ["https://oldschool.runescape.wiki/w/Red_Rock", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "8757", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "Gwenith deposit box: the village needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Gwenith", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "8499", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "The deposit box west of Prifddinas needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "7216", "accessOptions": [{ "manual": ["Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt"] }], "note": "The bank chest below the Fortis Colosseum opens at 2,000 Glory (the Brawler title), and only the most Glory earned in one attempt counts.", "wiki": ["https://oldschool.runescape.wiki/w/Fortis_Colosseum"] },
     { "id": "5678", "accessOptions": [{ "quests": ["Children of the Sun"] }], "note": "Aldarin dock deposit box: Varlamore needs Children of the Sun.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "13618", "accessOptions": [{ "quests": ["Haunted Mine"] }], "note": "Tarn's Lair bank (Odovacar) needs Haunted Mine and takes 100 coins each use.", "wiki": ["https://oldschool.runescape.wiki/w/Tarn%27s_Lair", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "11051", "accessOptions": [{ "quests": ["Monkey Madness II"] }], "note": "Ape Atoll bank chest in Marim needs Monkey Madness II.", "wiki": ["https://oldschool.runescape.wiki/w/Ape_Atoll_bank", "https://oldschool.runescape.wiki/w/List_of_banks"] },

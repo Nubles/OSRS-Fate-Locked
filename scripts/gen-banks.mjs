@@ -14,18 +14,42 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DOC_PATH = resolve(ROOT, 'public', 'chunk-content.json');
 const OUTPUT_PATH = resolve(ROOT, 'data', 'banks.ts');
 const ACCESS_OUTPUT_PATH = resolve(ROOT, 'data', 'bankAccess.ts');
+const ROLL_ORDER_PATH = resolve(ROOT, 'data', 'sources', 'bank-roll-order.json');
+const PICTURE_OUTPUT_PATH = resolve(ROOT, 'data', 'bankPictureKinds.ts');
 
-export function buildBankDefinitions(doc, registry) {
+/** The Banks roll pool order: data/sources/bank-roll-order.json's ids. */
+export function readBankRollOrder(path = ROLL_ORDER_PATH) {
+  return JSON.parse(readFileSync(path, 'utf8')).ids;
+}
+
+/**
+ * Puts the banks in the roll pool's fixed order. Seeded runs replay their draws by
+ * position in BANK_IDS, so the order never follows the labels: a renamed bank keeps
+ * its place. Every bank needs a place, and a new bank goes at the end of the list.
+ */
+export function orderBanksForRolls(defs, rollOrder = readBankRollOrder()) {
+  const position = new Map(rollOrder.map((id, index) => [String(id), index]));
+  if (position.size !== rollOrder.length) throw new Error('data/sources/bank-roll-order.json lists a bank twice');
+  const ids = new Set(defs.map(({ id }) => id));
+  const unknown = rollOrder.filter(id => !ids.has(String(id)));
+  if (unknown.length) throw new Error(`data/sources/bank-roll-order.json lists ids that are not banks: ${unknown.join(', ')}`);
+  const missing = defs.filter(({ id }) => !position.has(id)).map(({ id }) => id);
+  if (missing.length) {
+    throw new Error(`Banks with no place in data/sources/bank-roll-order.json (add them at the end): ${missing.join(', ')}`);
+  }
+  return [...defs].sort((a, b) => position.get(a.id) - position.get(b.id));
+}
+
+export function buildBankDefinitions(doc, registry, rollOrder = readBankRollOrder()) {
   const chunks = doc.chunks ?? {};
   const labels = bankLocationLabels(registry);
   const merged = new Set(bankMerges(registry).map(({ id }) => id));
   const bankIds = [...new Set((doc.banks ?? []).map(String))].filter(id => !merged.has(id));
   const physicalDefs = bankIds
-    .map(id => ({ id, name: (labels.get(id) ?? chunks[id]?.n ?? chunks[id]?.name ?? `Bank ${id}`).trim() }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .map(id => ({ id, name: (labels.get(id) ?? chunks[id]?.n ?? chunks[id]?.name ?? `Bank ${id}`).trim() }));
   const virtualDefs = bankVirtualLocations(registry)
     .map(({ id, name }) => ({ id, name: name.trim() }));
-  const defs = [...physicalDefs, ...virtualDefs];
+  const defs = orderBanksForRolls([...physicalDefs, ...virtualDefs], rollOrder);
 
   const seen = new Set();
   for (const def of defs) {
@@ -54,7 +78,7 @@ export const BANKS: BankDef[] = [
 ${body}
 ];
 
-/** All bank ids, for the roll pool. */
+/** All bank ids, for the roll pool, in the fixed order of data/sources/bank-roll-order.json. */
 export const BANK_IDS: string[] = BANKS.map((b) => b.id);
 
 /** id → definition, for label lookups. */
@@ -70,6 +94,67 @@ export const bankId = (cx: number, cy: number): string => String(cx * 256 + cy);
  */
 export const MERGED_BANKS: Readonly<Record<string, string>> = {
 ${mergeBody}
+};
+`;
+}
+
+/**
+ * What a bank facility looks like, by its name: an object or NPC in the chunk data, or a facility
+ * the registry names ("Keldagrim bank"). None for a service such as an animal.
+ */
+export function facilityPictureKind(name, kind = 'object') {
+  const n = name.trim().toLowerCase();
+  if (kind === 'npc') return /banker$/.test(n) ? 'booth' : undefined;
+  if (/^(bank booth|private bank booth|bank table|bank counter)$/.test(n) || (kind === 'registry' && / banks?$/.test(n))) return 'booth';
+  if (/^(bank deposit box|deposit box|deposit pool)$/.test(n) || /deposit (box|boxes|pool)$/.test(n)) return 'box';
+  if (/^bank (deposit )?chest/.test(n) || /(bank|deposit) chests?$/.test(n)) return 'chest';
+  return undefined;
+}
+
+const PICTURE_RANK = ['booth', 'chest', 'box'];
+
+/**
+ * Each physical bank's picture: a booth where the place has a booth or a banker, else a chest,
+ * else a deposit box. It reads the place's chunk, the interiors entered from it, the chunks merged
+ * into it and the registry's facilities. A bank with none found is left out (the label decides).
+ * A deposit box in the chunk data alone decides nothing: several full banks have a teller with a
+ * name of their own (Jatizso's Magnus Gram, Corsair Cove's Yusuf) that the data does not mark.
+ */
+export function buildBankPictureKinds(doc, registry, defs = buildBankDefinitions(doc, registry)) {
+  const facilities = new Map();
+  const add = (id, name, kind, reviewed = false) => {
+    const picture = facilityPictureKind(name, kind);
+    if (!picture || (picture === 'box' && !reviewed)) return;
+    if (!facilities.has(id)) facilities.set(id, new Set());
+    facilities.get(id).add(picture);
+  };
+  const addContent = (id, content) => {
+    for (const [name] of content?.o ?? []) add(id, name, 'object');
+    for (const name of content?.p ?? []) add(id, name, 'npc');
+  };
+  for (const { id } of defs) addContent(id, doc.chunks?.[id]);
+  for (const { into, id } of bankMerges(registry)) addContent(into, doc.chunks?.[id]);
+  for (const interior of Object.values(doc.interiors ?? {})) {
+    for (const entrance of interior.entrances ?? []) addContent(String(entrance.chunkId), interior.content);
+  }
+  for (const location of registry.locations) for (const name of location.facilities ?? []) add(location.id, name, 'registry', true);
+  for (const facility of registry.reviewedFacilities ?? []) add(facility.id, facility.name, facility.kind, true);
+  return Object.fromEntries(defs.filter(({ id }) => /^\d+$/.test(id) && facilities.has(id))
+    .map(({ id }) => [id, PICTURE_RANK.find(kind => facilities.get(id).has(kind))]));
+}
+
+export function generateBankPictureSource(doc, registry) {
+  const kinds = buildBankPictureKinds(doc, registry);
+  const body = Object.entries(kinds).map(([id, kind]) => `  '${id}': '${kind}',`).join('\n');
+  return `// AUTO-GENERATED by scripts/gen-banks.mjs — do not edit by hand.
+// Each bank's picture in the OSRS layout, from the facilities at its place: its chunk, the
+// interiors entered from it and the registry. Only utils/bankPicture.ts reads it, so it stays out
+// of data/banks.ts, which loads with the app's first screen. A bank not listed is drawn by its label.
+
+export type BankPictureKind = 'booth' | 'chest' | 'box';
+
+export const BANK_PICTURE_KINDS: Readonly<Record<string, BankPictureKind>> = {
+${body}
 };
 `;
 }
@@ -125,6 +210,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const outputs = [
     [OUTPUT_PATH, 'data/banks.ts', generateBankSource(doc, registry)],
     [ACCESS_OUTPUT_PATH, 'data/bankAccess.ts', generateBankAccessSource(registry)],
+    [PICTURE_OUTPUT_PATH, 'data/bankPictureKinds.ts', generateBankPictureSource(doc, registry)],
   ];
   if (args.includes('--check')) {
     for (const [path, label, expected] of outputs) {

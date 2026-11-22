@@ -11,6 +11,7 @@ export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind
   {"id":"5427","name":"Bank buffalo","kind":"npc"},
   {"id":"13354","name":"Bank Camel","kind":"npc","requirements":["Beneath Cursed Sands Complete the quest"]},
   {"id":"15151","name":"Deposit Box","kind":"object","requirements":["Cabin Fever Complete the quest"]},
+  {"id":"15151","name":"Bank chest","kind":"object","requirements":["Cabin Fever Complete the quest"]},
 ];
 
 /** The registry's reviewed locations (their names are their BANKS labels), with a service's own ways in. */
@@ -54,12 +55,12 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"6454","accessOptions":[{"guilds":["Woodcutting Guild"]}]},
   {"id":"11310","accessOptions":[{"quests":["Shilo Village"]}]},
   {"id":"13099","accessOptions":[{"quests":["Contact!"]}]},
-  {"id":"9265","accessOptions":[{"quests":["Mourning's End Part I"]}]},
+  {"id":"9265","accessOptions":[{"quests":["Mourning's End Part I"]},{"manual":["Confirm you have started Mourning's End Part I"]}]},
   {"id":"10284","accessOptions":[{"quests":["The Corsair Curse"]}]},
   {"id":"10300","accessOptions":[{"quests":["The Fremennik Trials"]}]},
-  {"id":"9275","accessOptions":[{"quests":["The Fremennik Isles"]}]},
-  {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]}]},
-  {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]}]},
+  {"id":"9275","accessOptions":[{"quests":["The Fremennik Isles"]},{"quests":["The Fremennik Trials"],"manual":["Confirm you have started The Fremennik Isles"]}]},
+  {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]},{"quests":["The Fremennik Trials"],"manual":["Confirm you have started The Fremennik Isles"]}]},
+  {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]},{"quests":["Priest in Peril"],"manual":["Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque"]}]},
   {"id":"14388","accessOptions":[{"quests":["Sins of the Father"]}]},
   {"id":"12337","accessOptions":[{"quests":["Temple of the Eye"]}]},
   {"id":"9273","accessOptions":[{"quests":["Swan Song"]}]},
@@ -70,6 +71,7 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"11047","accessOptions":[{"quests":["The Red Reef"]},{"manual":["Confirm you have partly completed The Red Reef"]}]},
   {"id":"8757","accessOptions":[{"quests":["Song of the Elves"]}]},
   {"id":"8499","accessOptions":[{"quests":["Song of the Elves"]}]},
+  {"id":"7216","accessOptions":[{"manual":["Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt"]}]},
   {"id":"5678","accessOptions":[{"quests":["Children of the Sun"]}]},
   {"id":"13618","accessOptions":[{"quests":["Haunted Mine"]}]},
   {"id":"11051","accessOptions":[{"quests":["Monkey Madness II"]}]},

@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import content from '../public/chunk-content.json';
 import { initialState } from '../context/GameContext';
 import { BANKS } from '../data/banks';
+import { QUEST_DATA } from '../data/questData';
 import { ChunkContentService } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { bankDecisions } from './bankDecisions';
@@ -36,7 +37,7 @@ describe('bankDecisions', () => {
     // Lumbridge Castle's id also covers the bank in Dorgesh-Kaan, entered
     // from the castle's cellar, as its BANKS row already does.
     expect(decisions['12850'].physical).toEqual(['42,83', '50,50']);
-    // The Abandoned Mine's (Tarn's Lair) bank is one the facility data doesn't show.
+    // Tarn's Lair's bank (chunk Abandoned Mine) is one the facility data doesn't show.
     expect(decisions['13618'].physical).toEqual(['53,50']);
     // Merged into the banks they lead to, so they are no longer decided at all.
     expect(decisions['10810']).toBeUndefined();
@@ -48,6 +49,22 @@ describe('bankDecisions', () => {
     expect(bankDecisions(service, context(run({})))['11828']).toMatchObject({
       name: 'West Falador', at: '46,52', physical: ['45,52', '46,52'],
     });
+  });
+
+  it('names the Temple of the Eye once for the Guardians of the Rift bank on a fresh run', () => {
+    // The chest and pool sit in the temple, which the quest opens; the gate's "Complete Temple of
+    // the Eye" repeated the quest the facilities already name.
+    expect(bankDecisions(service, context(run({})))['12337']).toMatchObject({ status: 'LOCKED', reason: 'Temple of the Eye' });
+  });
+
+  it('names no quest twice in any bank reason', () => {
+    const named = (reason: string, quest: string) => reason.split('; ')
+      .filter(part => part === quest || part === `Complete ${quest}`).length;
+    for (const unlocks of [run({}), run({ quests: ['Priest in Peril', 'The Fremennik Trials', 'Children of the Sun'] })]) {
+      for (const [id, decision] of Object.entries(bankDecisions(service, context(unlocks)))) {
+        for (const quest of Object.keys(QUEST_DATA)) expect(named(decision.reason ?? '', quest), `${id} ${quest}`).toBeLessThan(2);
+      }
+    }
   });
 
   it('opens a bank only once it is rolled, in a bank-locked run', () => {
