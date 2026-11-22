@@ -200,7 +200,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Arclight, Abyssal Tentacle, Voidwaker',
       'Lvl 75: Godswords (AGS, BGS, SGS, ZGS)',
       'Lvl 80: Ferocious Gloves',
-      'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor Mace',
+      'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor\'s Mace',
       'Lvl 80: Scythe of Vitur & Soulreaper Axe'
     ],
     9: [
@@ -440,7 +440,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Wizard Robes, Leather',
       'Lvl 5: Steel Armour, Defenders',
       'Lvl 10: Black Armour, White Armour',
-      'Lvl 10: Hardleather Shield',
+      'Lvl 10: Hard Leather Shield',
       'Lvl 10: Slayer Helmet (Craft 55)',
       'Lvl 10: Xerician Robes'
     ],
@@ -464,7 +464,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
-      'Lvl 45: Berserker/Archer/Seer Helms',
+      'Lvl 45: Berserker/Archer/Farseer Helms',
       'Lvl 45: Spirit Shields (Prayer 55)',
       'Lvl 50: Granite Armour',
       'Lvl 50: Moons of Peril Armour (Blood/Blue/Eclipse)',
@@ -1371,7 +1371,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 74: 2 Chaos Runes',
       'Lvl 75: Giant Pouch, Colossal Pouch (27)',
       'Lvl 76: 5 Water Runes',
-      'Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Hands/Feet',
+      'Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Gauntlets/Boots',
       'Lvl 78: 4 Earth Runes',
       'Lvl 79: Bloodbark Helm'
     ],
@@ -1526,7 +1526,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 32: Mogres (Fishing Explosive)',
-      'Lvl 33: Harpie Bug Swarms (Lit Lantern)',
+      'Lvl 33: Harpie Bug Swarms (Lit Bug Lantern)',
       'Lvl 35: Wall Beasts, Slayer Helmet',
       'Lvl 35: Witchwood Icon',
       'Lvl 37: Killerwatts, Insulated Boots',

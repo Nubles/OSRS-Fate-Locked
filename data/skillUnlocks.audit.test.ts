@@ -157,6 +157,14 @@ describe('unlocks added in the 9 November 2026 review', () => {
     expect(STRATEGY_DATABASE.Wyrms.description).toBe('Source of Dragon Shortsword/Harpoon.');
   });
 
+  it('names items as the Wiki titles them', () => {
+    expect(SKILL_UNLOCK_DATA.Runecraft[8]).toContain('Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Gauntlets/Boots');
+    expect(SKILL_UNLOCK_DATA.Defence[1]).toContain('Lvl 10: Hard Leather Shield');
+    expect(SKILL_UNLOCK_DATA.Attack[8]).toContain("Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor's Mace");
+    expect(SKILL_UNLOCK_DATA.Defence[5]).toContain('Lvl 45: Berserker/Archer/Farseer Helms');
+    expect(SKILL_UNLOCK_DATA.Slayer[4]).toContain('Lvl 33: Harpie Bug Swarms (Lit Bug Lantern)');
+  });
+
   it('lists all nine house locations at their Construction levels', () => {
     const moves = rowsFor('Construction').filter(row => row.text.includes('Move to')).map(row => [row.text.match(/Move to (\w+)/)?.[1], row.level]);
     expect(moves).toEqual([
