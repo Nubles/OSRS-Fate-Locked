@@ -1500,7 +1500,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Wilderness'], // Deep Wildy
     skills: {},
-    description: 'Buys items at High Alch value. Sells blood runes.'
+    description: 'Buys items at High Alch value. Sells tools, pots and jugs.'
   },
   'Mage Arena Staff Shop': {
     id: 'Staff Shops',
@@ -1514,7 +1514,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Wilderness'], // Mage Arena
     skills: {},
-    description: 'Sells Cosmic, Nature, Law, Death, Soul runes.'
+    description: 'Sells Cosmic, Nature, Law, Death runes.'
   },
   'Wilderness Food Shop': {
     id: 'Food Shops',
@@ -1644,7 +1644,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'], // Rellekka
     skills: { 'Slayer': 40 },
     items: ['Mirror Shield'],
-    description: 'Drop Mystic Boots (light) and Nature runes.'
+    description: 'Drop Mystic Hat (light) and Nature runes.'
   },
   'Rockslugs': {
     id: 'Rockslugs',
@@ -1741,7 +1741,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // Dorgesh-Kaan
     skills: { 'Thieving': 52 },
     quests: ['Death to the Dorgeshuun'],
-    description: 'Source of Easy/Hard clues and gems.'
+    description: 'Source of Easy clues. Gems need rich chests (78).'
   },
   'Wall Safes': {
     id: 'Wall Safes',
@@ -1853,7 +1853,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kandarin'], // Catherby
     skills: {},
-    description: 'Sells Candles, Lit Candles, Black Candles.'
+    description: 'Sells Candles.'
   },
   'TzHaar Gem Store': {
     id: 'Gem Shops',
@@ -1901,7 +1901,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Barbarian Assault
     skills: { 'Defence': 50, 'Strength': 50 },
-    description: 'Buy with BA points or drop from Penance Queen.'
+    description: 'Buy for 95,000 coins after killing the Penance Queen.'
   },
   'Ancient Staff': {
     id: 'Ancient Staff',
@@ -2004,14 +2004,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Lovakengj
     skills: { 'Mining': 65 },
-    description: 'Mining for Lovakengj Favor/Dynamite.'
+    description: 'Smelted into Lovakite bars.'
   },
   'Volcanic Sulphur': {
     id: 'Volcanic Sulphur',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Lovakengj
     skills: { 'Mining': 42 },
-    description: 'Mining for Lovakengj Favor/Dynamite.'
+    description: 'Used to make Dynamite.'
   },
   'Myth\'s Guild Green Dragons': {
     id: 'Myth\'s Guild Green Dragons',
@@ -2235,7 +2235,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'],
     skills: {},
     quests: ['Royal Trouble'],
-    description: 'Giant Sea Snake (Hard Clues).'
+    description: 'Giant Sea Snake (Medium Clues).'
   },
   'Fisher Realm': {
     id: 'Fisher Realm',
@@ -2278,7 +2278,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Dwarven Mine
     skills: {},
-    description: 'Sells up to Adamant Pickaxe.'
+    description: 'Sells up to Rune Pickaxe.'
   },
   'Scavvo\'s Rune Store': {
     id: 'Chainbody Shops',
@@ -2314,7 +2314,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kourend & Kebos'],
     skills: {},
-    description: 'Spears/Hastae/Battleaxes.'
+    description: 'Spears/Battleaxes/Warhammers.'
   },
   'Dorgesh-Kaan Market': {
     id: 'Food Shops',
@@ -2400,7 +2400,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kandarin'], // Jiggig
     skills: { 'Ranged': 30 },
     quests: ['Zogre Flesh Eaters'],
-    description: 'Farming bones for secondary (Crushed Nest substitute?).'
+    description: 'Prayer bones from Zogres.'
   },
   'Unicorn Horns': {
     id: 'Unicorn Horns',
@@ -2455,7 +2455,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Firemaking': 50 },
-    description: '1/10,000 from supply crates.'
+    description: '1/10,000 from the reward cart.'
   },
   'Dragon Axe (Dagannoth)': {
     id: 'Dragon Axe (Dagannoth)',
@@ -2730,10 +2730,10 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Ferocious Gloves': {
     id: 'Ferocious Gloves',
     category: TableType.MINIGAMES,
-    regions: ['Kourend & Kebos'], // Lithkren machine
+    regions: ['Kourend & Kebos', 'Islands & Others'], // Hydra leather from Karuulm; Lithkren Vault machinery
     skills: {},
     quests: ['Dragon Slayer II'],
-    description: 'Combine Hydra Leather with Barrows Gloves.'
+    description: 'Use Hydra Leather on the Lithkren Vault machinery.'
   },
   'Neitiznot Faceguard': {
     id: 'Neitiznot Faceguard',

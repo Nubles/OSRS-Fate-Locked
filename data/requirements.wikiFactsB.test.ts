@@ -67,6 +67,40 @@ describe('requirements part B: regions and sources', () => {
     expect(req.regions).toEqual(['Fremennik']);
     expect(req.description).toBe('Drop from Dagannoth Prime.');
   });
+  it('ferocious gloves are hydra leather on the Lithkren Vault machinery, no Barrows gloves (Wiki: Ferocious gloves)', () => {
+    const req = entry('Ferocious Gloves');
+    expect(req.regions).toEqual(['Kourend & Kebos', 'Islands & Others']);
+    expect(req.description).toMatch(/Lithkren/);
+    expect(req.description).not.toMatch(/Barrows/i);
+  });
+});
+
+describe('requirements part B: shop stock, drops and removed systems', () => {
+  const cases: [string, RegExp, RegExp][] = [
+    // [entry, must match, must not match]. Wiki pages: Bandit Duty Free, Lundail's Arena-side Rune Shop,
+    // Basilisk, Chest (Dorgesh-Kaan Average/Rich), Candle maker, Granite body, Kourend Favour, Lovakite ore,
+    // Volcanic sulphur, Giant Sea Snake, Nurmof's Pickaxe Shop, Mount Karuulm Weapon Shop, Zogre bones,
+    // King Black Dragon, Reward cart, Supply crate (discontinued).
+    ['Bandit Duty Free', /tools/, /rune/i],
+    ["Lundail's Rune Shop", /Death/, /Soul/],
+    ['Basilisks', /Mystic Hat/, /Boots/],
+    ['Dorgesh-Kaan Chests', /Easy clues/, /Hard|clues and gems/],
+    ['Candle Maker', /^Sells Candles\.$/, /Lit|Black/],
+    ['Granite Body', /95,000 coins/, /BA points|drop from/i],
+    ['Lovakite Ore', /Lovakite bars/, /Favou?r|Dynamite/i],
+    ['Volcanic Sulphur', /Dynamite/, /Favou?r/i],
+    ['Miscellania Dungeon', /Medium Clues/, /Hard/],
+    ["Nurmof's Pickaxe Shop", /Rune Pickaxe/, /Adamant/],
+    ['Mount Karuulm Weapon Shop', /Warhammers/, /Hastae/],
+    ['Zogre Bones', /Prayer/, /Crushed Nest|\?/],
+    ['Dragon Pickaxe (KBD)', /1\/1,000/, /1\/1,500/],
+    ['Dragon Axe (Wintertodt)', /reward cart/, /supply crate/i],
+  ];
+  it.each(cases)('%s description matches the Wiki', (key, yes, no) => {
+    const { description } = entry(key);
+    expect(description).toMatch(yes);
+    expect(description).not.toMatch(no);
+  });
 });
 
 describe('requirements part B: quests', () => {
