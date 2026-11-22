@@ -55,6 +55,17 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
     expect(wardUsable(TableType.BANKS, '10553', peerLand, 'vanilla')).toBe(true);
   });
 
+  it('keeps the Guardians of the Rift bank for runs that have done Temple of the Eye', () => {
+    const key = bankChunkKey('12337')!;
+    const area = chunkSubArea(key);
+    const land = { regions: [...initialState.unlocks.regions, ...(area ? [area] : [])], chunks: [key] };
+    const noTemple = maxed({ ...land, quests: Object.keys(QUEST_DATA).filter(quest => quest !== 'Temple of the Eye') });
+    for (const mode of ['vanilla', 'chunked']) {
+      expect(wardUsable(TableType.BANKS, '12337', noTemple, mode), `${mode} without Temple of the Eye`).toBe(false);
+      expect(wardUsable(TableType.BANKS, '12337', maxed(land), mode), `${mode} with Temple of the Eye`).toBe(true);
+    }
+  });
+
   it('asks the area a bank is named for in Vanilla, as the Activities tab does', () => {
     expect(wardUsable(TableType.BANKS, '12849', maxed(), 'vanilla')).toBe(false);
     const zanaris = maxed({ regions: [...initialState.unlocks.regions, 'Zanaris'] });

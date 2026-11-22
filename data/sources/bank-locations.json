@@ -13,6 +13,7 @@
     { "title": "Keldagrim", "revision": 15147967, "url": "https://oldschool.runescape.wiki/w/Keldagrim" },
     { "title": "Blast Furnace", "revision": 15351681, "url": "https://oldschool.runescape.wiki/w/Blast_Furnace" },
     { "title": "List of banks", "revision": 15315317, "url": "https://oldschool.runescape.wiki/w/List_of_banks" },
+    { "title": "Guardians of the Rift", "revision": 15411291, "url": "https://oldschool.runescape.wiki/w/Guardians_of_the_Rift" },
     { "title": "Bank Deposit Box", "revision": 15345896, "url": "https://oldschool.runescape.wiki/w/Bank_Deposit_Box" },
     { "title": "Sangvesti bank", "revision": 15262093, "url": "https://oldschool.runescape.wiki/w/Sangvesti_bank" },
     { "title": "Castle Drakan", "revision": 15283343, "url": "https://oldschool.runescape.wiki/w/Castle_Drakan" },
@@ -94,7 +95,8 @@
     { "id": "9275", "accessOptions": [{ "quests": ["The Fremennik Isles"] }], "note": "Neitiznot bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "9531", "accessOptions": [{ "quests": ["The Fremennik Isles"] }], "note": "Jatizso bank.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "13874", "accessOptions": [{ "quests": ["In Aid of the Myreque"] }], "note": "Burgh de Rott bank; reaching the town needs only Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "14388", "accessOptions": [{ "quests": ["Sins of the Father"] }], "note": "Darkmeyer bank; the chunk asks only for Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
+    { "id": "14388", "accessOptions": [{ "quests": ["Sins of the Father"] }], "note": "Darkmeyer bank; the chunk asks only for Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "12337", "accessOptions": [{ "quests": ["Temple of the Eye"] }], "note": "The bank chest and deposit pool are in the Temple of the Eye, which needs the quest.", "wiki": ["https://oldschool.runescape.wiki/w/Guardians_of_the_Rift"] }
   ],
   "merges": [
     { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },
