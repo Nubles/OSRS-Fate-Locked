@@ -3627,11 +3627,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       blockPendingSave(storageKey, 'ownership_conflict');
       setNewerSaveConflict(true);
     };
+    /**
+     * True when `serialized` (a copy that went through the save validator)
+     * holds the same run as this tab's baseline. The validator rebuilds some
+     * records in its own key order (history entries), so the reducer's text
+     * and the validated text of one run can differ; compare the baseline in
+     * the same validated form, never the raw text alone.
+     */
+    const sameAsBaseline = (serialized: string, baseline: string | null): boolean => {
+      if (baseline === null) return false;
+      if (serialized === baseline) return true;
+      const parsedBaseline = parseAndMigrateSave(baseline, createFreshState());
+      return parsedBaseline.ok && serializeGameState(parsedBaseline.state) === serialized;
+    };
     /** True when this tab now holds `latest`, because it already did or just loaded it. */
     const adoptUnlessUnsaved = (latest: GameState): boolean => {
       const baseline = persistedSnapshotRef.current;
       const serialized = serializeGameState(latest);
-      if (serialized === baseline) return true;
+      if (sameAsBaseline(serialized, baseline)) return true;
       const unsavedChanges = getPendingSave(storageKey) !== null
         || (baseline !== null && serializeCurrent() !== baseline);
       if (unsavedChanges) {
@@ -3655,7 +3668,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (stored === null || stored === persistedSnapshotRef.current) return null;
       const parsed = parseAndMigrateSave(stored, createFreshState());
       if (parsed.ok === false) return null;
-      return serializeGameState(parsed.state) === persistedSnapshotRef.current ? null : parsed.state;
+      return sameAsBaseline(serializeGameState(parsed.state), persistedSnapshotRef.current) ? null : parsed.state;
     };
 
     const repository = journalBacked ? recoveryRepositoryRef.current : null;
