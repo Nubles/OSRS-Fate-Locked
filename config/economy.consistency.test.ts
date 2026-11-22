@@ -2,13 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import { DropSource, TableType } from '../types';
 import {
-  EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
-  SKILLS_TIER_CAP, LEVEL_ROLL_MAX,
-  VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
-  FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
-  failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
+  EARN_METHODS, RITUALS, SKILLS_TIER_CAP, LEVEL_ROLL_MAX, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule, FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES, failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone, gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
 } from './economy';
+import { KEY_TYPES, SPEND_TABLES } from './economyReference';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
@@ -378,5 +374,21 @@ describe('economy ↔ engine consistency', () => {
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).toContain('An Omni-Key follows the same rule.');
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('can still pick one');
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('with a warning');
+  });
+});
+
+describe("the Codex's Key and table summaries", () => {
+  it('load with the Codex, not with the first screen', () => {
+    // config/economy.ts is in the start-up download, which has no room to spare. Only the Codex shows
+    // KEY_TYPES and SPEND_TABLES, so they live in config/economyReference.ts and load with it.
+    const sources = import.meta.glob<string>(
+      ['../{components,context,hooks,services,utils,data,config}/**/*.{ts,tsx}', '../*.{ts,tsx}', '!../**/*.test.{ts,tsx}'],
+      { query: '?raw', import: 'default', eager: true },
+    );
+    const importers = Object.entries(sources)
+      .filter(([, text]) => /from '[^']*config\/economyReference'/.test(text) || /from '\.\/economyReference'/.test(text))
+      .map(([path]) => path.replace(/^\.\.\//, ''));
+    expect(importers).toEqual(['components/ReferenceModal.tsx']);
+    expect(sources['./economy.ts']).not.toMatch(/KEY_TYPES|SPEND_TABLES/);
   });
 });
