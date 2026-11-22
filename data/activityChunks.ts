@@ -4,7 +4,7 @@
 
 /** Bosses, minigames and guilds (and Brutus): their entrance chunks. */
 export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
-  "Abyssal Sire": ["50,49"],
+  "Abyssal Sire": ["48,55", "50,49"],
   "Alchemical Hydra": ["20,59"],
   "Amoxliatl": ["26,50"],
   "Araxxor": ["57,53"],
@@ -18,7 +18,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Brutus": ["50,51"],
   "Bryophyta": ["50,54"],
   "Burthorpe Games Room": ["45,55"],
-  "Callisto": ["50,59", "51,58", "51,59"],
+  "Callisto": ["51,60"],
   "Calvar'ion": ["49,57"],
   "Castle Wars": ["37,48", "38,48", "49,56"],
   "Cerberus": ["45,53"],
@@ -43,7 +43,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Fortis Colosseum": ["28,48"],
   "Gemstone Crab": ["19,47", "19,49", "21,48"],
   "General Graardor": ["45,58"],
-  "Giant Mole": ["46,51"],
+  "Giant Mole": ["46,52"],
   "Giants' Foundry": ["52,49"],
   "Gnome Ball": ["37,54"],
   "Gnome Restaurant": ["38,54"],
@@ -118,8 +118,8 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "TzHaar-Ket-Rak's Challenges": ["44,49"],
   "Vale Totems": ["21,51", "21,52", "22,51", "22,52", "23,52"],
   "Vardorvis": ["17,53"],
-  "Venenatis": ["50,59", "51,58", "51,59"],
-  "Vet'ion": ["50,59", "51,58", "51,59"],
+  "Venenatis": ["51,59"],
+  "Vet'ion": ["50,59"],
   "Volcanic Mine": ["59,59"],
   "Vorkath": ["35,63"],
   "Warriors' Guild": ["44,55"],

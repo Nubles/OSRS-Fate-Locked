@@ -7,6 +7,7 @@ import {
 import { CHUNK_ENTRY_QUESTS } from '../data/chunkSkillNodes';
 import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS } from '../data/activityChunks';
 import { BOSSES_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../data/items';
+import { CHUNKED_ACTIVITY_RULES } from '../data/activityAccess';
 import { BANK_IDS } from '../data/banks';
 
 const baseUnlocks: UnlockState = {
@@ -183,14 +184,14 @@ describe('getActivityAccess in Chunked', () => {
     expect(getActivityAccess('Scurrius', chunked(['50,51', '50,52']), 'chunked').eligible).toBe(false);
     expect(getActivityAccess('Scurrius', chunked(['50,51', '50,52', '50,53', '50,54']), 'chunked').eligible).toBe(true);
     // Any one of several entrances is enough.
-    expect(getActivityAccess('Callisto', chunked(['51,58']), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Castle Wars', chunked(['38,48']), 'chunked').eligible).toBe(true);
   });
 
   it('opens nothing located from the start chunk alone', () => {
     const start = chunked();
     const located = [...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST]
       .filter(activity => getActivityAccess(activity, start, 'chunked').eligible);
-    // The Mimic is fought from a clue casket, so no chunk holds it back.
+    // The Mimic waits on a clue casket, which the tracker does not follow, so no chunk holds it back.
     expect([...located].sort()).toEqual(['Forestry', 'Mimic']);
     expect(located.filter(activity => randomKeyActivityAccess(activity, start, 'chunked').eligible)).toEqual(['Forestry']);
   });
@@ -198,6 +199,8 @@ describe('getActivityAccess in Chunked', () => {
   it('follows the stated rule for places with no single chunk', () => {
     expect(getActivityAccess('Forestry', chunked(), 'chunked').eligible).toBe(true);
     // Random Keys skip the Mimic, but once an Omni-Key unlocks it, it can be fought (content audit fix 2).
+    // It is fought at the strange casket upstairs in Watson's house; the casket that starts it comes from a clue.
+    expect(CHUNKED_ACTIVITY_RULES.Mimic.reason).toContain("Watson's house");
     expect(randomKeyActivityAccess('Mimic', chunked(), 'chunked')).toEqual({
       eligible: false,
       requiredAreas: ['a Mimic casket from an Elite or Master clue'],

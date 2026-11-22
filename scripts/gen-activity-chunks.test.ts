@@ -63,12 +63,13 @@ describe('data/activityChunks.ts', () => {
   it('uses the entrance chunks the reviews found, not the named area', () => {
     expect(ACTIVITY_CHUNKS['Tormented Demons']).toEqual(['49,49']);
     expect(ACTIVITY_CHUNKS['Tears of Guthix']).toEqual(['49,49']);
-    expect(ACTIVITY_CHUNKS['Giant Mole']).toEqual(['46,51']);
+    expect(ACTIVITY_CHUNKS['Giant Mole']).toEqual(['46,52']);
     expect(ACTIVITY_CHUNKS.Cerberus).toEqual(['45,53']);
     expect(ACTIVITY_CHUNKS.Nex).toEqual(['45,58']);
     expect(ACTIVITY_CHUNKS.Vorkath).toEqual(['35,63']);
     expect(ACTIVITY_CHUNKS.Scurrius).toEqual(['50,54']);
-    expect(ACTIVITY_CHUNKS['Abyssal Sire']).toEqual(['50,49']);
+    // The fairy ring DIP or the Mage of Zamorak's Abyss (48,55).
+    expect(ACTIVITY_CHUNKS['Abyssal Sire']).toEqual(['48,55', '50,49']);
     expect(ACTIVITY_CHUNKS[BRUTUS_BOSS_NAME]).toEqual(['50,51']);
     // The brass-key door alone does not get a player in.
     expect(ACTIVITY_CHUNKS.Obor).toEqual(['48,54']);
