@@ -119,12 +119,15 @@ const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astra
 /**
  * Guild chunks whose skill content is inside the guild: it needs the guild's
  * own level (OSRS Wiki entry requirements) and, at roll time, the guild unlock.
+ * The Crafting Guild mine's rocks keep their own level (1): its entry level
+ * is in Crafting, which the guild unlock itself requires.
  */
 export const GUILD_CHUNKS: Readonly<Record<string, { skill: string; guild: string; level: number }>> = {
   '40,53': { skill: 'Fishing', guild: 'Fishing Guild', level: 68 },
   '19,58': { skill: 'Farming', guild: 'Farming Guild', level: 45 },
   '24,54': { skill: 'Woodcutting', guild: 'Woodcutting Guild', level: 60 },
   '25,54': { skill: 'Woodcutting', guild: 'Woodcutting Guild', level: 60 },
+  '45,51': { skill: 'Mining', guild: 'Crafting Guild', level: 1 },
 };
 
 /**
