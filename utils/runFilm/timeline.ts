@@ -4,6 +4,7 @@ import { SUB_AREA_CHUNKS } from '../../data/subAreaChunks';
 import { isRegionUnlocked } from '../reachability';
 import { CHUNKED_START_KEY } from '../chunkAdjacency';
 import { isRollEntry } from '../logEntry';
+import { rollTallyOf } from '../fateAnalytics';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
 import { EQUIPMENT_TIER_MAX } from '../../config/rules';
 
@@ -182,12 +183,9 @@ const mapShareOf = (owned: ReadonlySet<string>): number => {
   for (const k of owned) if (MAP_LAND.has(k)) n += 1;
   return MAP_LAND.size ? n / MAP_LAND.size : 0;
 };
-const isKeyWon = (e: LogEntry) => e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI' || e.type === 'PITY';
-/** The chance a won roll had, as a percent, when the log line says. */
-const rollChance = (e: LogEntry): number | null => {
-  const t = Number(e.threshold ?? e.meta?.threshold);
-  return Number.isFinite(t) && t > 0 && t < 100 ? t : null;
-};
+/** The chance a won roll had, as a percent, counted as the Stats page counts it, or null. */
+const luckyPercent = (chance: number | null): number | null =>
+  chance !== null && chance > 0 && chance < 1 ? Number((chance * 100).toFixed(10)) : null;
 const rollSource = (e: LogEntry): string => String(e.source ?? e.meta?.source ?? '').trim();
 /** The lowest level a skill can be: 10 for Hitpoints, 1 for the rest. */
 const minLevel = (skill: string): number => (skill === FREE_SKILL ? 10 : 1);
@@ -324,8 +322,8 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
   log.forEach((e, i) => {
     const day = dayOf(e.timestamp);
     if (day > toDay) return;
-    if (isRollEntry(e)) rolls += 1;
-    if (e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI' || e.type === 'PITY') keysWon += 1;
+    const tally = isRollEntry(e) ? rollTallyOf(e) : null;
+    if (tally) { rolls += 1; keysWon += tally.standardKeys; }
     const category = e.meta?.category;
     if (e.type === 'UNLOCK') {
       unlocks += 1;
@@ -367,12 +365,13 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
       return;
     }
     if (i < before) return;
-    if (isRollEntry(e)) {
-      if (isKeyWon(e)) {
+    // As the Stats page: a Pity Key is a miss, and a win counts at its real odds.
+    if (tally) {
+      if (tally.win) {
         dry = 0;
-        const chance = rollChance(e);
+        const chance = luckyPercent(tally.luckyChance);
         if (chance !== null && (!luckiest || chance < luckiest.chance)) luckiest = { chance, source: rollSource(e) };
-      } else if (e.type === 'ROLL_FAIL') {
+      } else {
         dry += 1;
         if (dry > longestDry) longestDry = dry;
       }
