@@ -473,58 +473,102 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Defence': {
     1: [
-      'Lvl 1: Bronze & Iron Armour',
+      'Lvl 1: Bronze & Iron Armour, Bronze & Iron Defenders',
       'Lvl 1: Wizard Robes, Leather',
-      'Lvl 5: Steel Armour, Defenders',
-      'Lvl 10: Black Armour, White Armour',
+      'Lvl 5: Steel Armour, Steel Defender, Red Decorative Armour',
+      'Lvl 10: Black Armour, Black Defender, White Armour',
+      'Lvl 10: Black Mask (Strength 20, Combat 40)',
       'Lvl 10: Hard Leather Shield',
+      'Lvl 10: Oak Shield',
       'Lvl 10: Slayer Helmet (Craft 55)',
       'Lvl 10: Xerician Robes'
     ],
     2: [
       'Lvl 20: Initiate Armour (Prayer 10)',
-      'Lvl 20: Mithril Armour',
-      'Lvl 20: Mystic Robes (Magic 40)'
+      'Lvl 20: Mithril Armour, Mithril Defender, White Decorative Armour',
+      'Lvl 20: Mystic Robes, Enchanted Robes, Robes of Darkness (Magic 40)',
+      'Lvl 20: Shayzien Armour, Yak-hide Armour',
+      'Lvl 20: Studded Body (Ranged 20)'
     ],
     3: [
       'Lvl 25: Infinity Robes, Frog Leather',
-      'Lvl 30: Adamant Armour',
+      'Lvl 25: Neitiznot Shield',
+      'Lvl 30: 3rd Age Mage Robes (Magic 65)',
+      'Lvl 30: Adamant Armour, Adamant Defender, Gold Decorative Armour',
+      'Lvl 30: Fremennik Helm & Shield (The Fremennik Trials)',
       'Lvl 30: Inquisitor\'s Armour',
       'Lvl 30: Masori Armour (Range 80)',
       'Lvl 30: Proselyte Armour',
-      'Lvl 30: Snakeskin Armour'
+      'Lvl 30: Ram Skull Helm (Rag and Bone Man II)',
+      'Lvl 30: Snakeskin Armour',
+      'Lvl 30: Willow Shield'
     ],
     4: [
-      'Lvl 40: Fighter Torso',
+      'Lvl 35: Samurai Armour',
+      'Lvl 40: Blessed D\'hide Body, Coif, Boots & Shield (Ranged 70)',
+      'Lvl 40: Blue/Red/Black D\'hide Bodies (Ranged 50/60/70)',
+      'Lvl 40: Dagon\'hai Robes (Magic 70)',
+      'Lvl 40: Fighter Torso, Penance Skirt & Gloves, Runner Boots',
+      'Lvl 40: Green/Blue/Red/Black D\'hide Shields (Ranged 40/50/60/70)',
+      'Lvl 40: Hueycoatl Hide Body & Coif (Ranged 70)',
+      'Lvl 40: Lunar Equipment (Magic 65, Lunar Diplomacy)',
+      'Lvl 40: Maple, Yew, Magic & Redwood Shields',
+      'Lvl 40: Rock-shell, Spined & Skeletal Armour (The Fremennik Trials)',
       'Lvl 40: Rune Armour, Green D\'hide Body',
-      'Lvl 40: Rune Defender'
+      'Lvl 40: Rune Defender',
+      'Lvl 40: Splitbark Armour (Magic 40)',
+      'Lvl 40: Sunfire Fanatic Armour (Prayer 60)',
+      'Lvl 40: V\'s Shield (Slayer 60, The Fremennik Exiles)'
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
-      'Lvl 45: Berserker/Archer/Farseer Helms',
+      'Lvl 45: 3rd Age Range Equipment (Ranged 65)',
+      'Lvl 45: Berserker/Warrior/Archer/Farseer Helms',
+      'Lvl 45: Fighter/Ranger/Healer/Runner Hats',
       'Lvl 45: Spirit Shields (Prayer 55)',
+      'Lvl 45: Zaryte Vambraces (Ranged 80)',
+      'Lvl 50: Dwarven Helmet (Grim Tales)',
       'Lvl 50: Granite Armour',
+      'Lvl 50: Mixed Hide Armour (Ranged 60)',
       'Lvl 50: Moons of Peril Armour (Blood/Blue/Eclipse)',
-      'Lvl 50: Swampbark Armour'
+      'Lvl 50: Swampbark Armour',
+      'Lvl 50: Zombie Helmet (Strength 50)'
     ],
     6: [
       'Lvl 55: Helm of Neitiznot',
+      'Lvl 60: Bloodbark Armour (Magic 60)',
       'Lvl 60: Dragon Armour',
       'Lvl 60: Dragon Defender',
-      'Lvl 60: Obsidian Armour'
+      'Lvl 60: Obsidian Armour',
+      'Lvl 60: Odium & Malediction Wards'
     ],
     7: [
+      'Lvl 65: 3rd Age Melee Equipment',
       'Lvl 65: Ancestral Robes',
       'Lvl 65: Bandos Armour',
+      'Lvl 65: Chivalry (Prayer 60)',
       'Lvl 70: Armadyl Armour',
+      'Lvl 70: Avernic Defender (Attack 70)',
       'Lvl 70: Barrows Equipment',
+      'Lvl 70: Blessed Spirit Shield (Prayer 60)',
+      'Lvl 70: Boots of Brimstone (Magic 70, Ranged 70)',
       'Lvl 70: Crystal Armour',
-      'Lvl 70: Piety (Prayer 70)'
+      'Lvl 70: Neitiznot Faceguard (The Fremennik Exiles)',
+      'Lvl 70: Piety (Prayer 70), Rigour (Prayer 74), Augury (Prayer 77)'
     ],
     8: [
+      'Lvl 75: Ancient Wyvern Shield (Magic 70)',
+      'Lvl 75: Arcane & Spectral Spirit Shields (Prayer 70, Magic 65)',
+      'Lvl 75: Dinh\'s Bulwark (Attack 75)',
       'Lvl 75: Dragonfire Shield / Ward',
+      'Lvl 75: Elysian Spirit Shield (Prayer 75)',
       'Lvl 75: Justiciar Armour',
-      'Lvl 75: Primordial/Pegasian/Eternal Boots',
+      'Lvl 75: Primordial/Pegasian/Eternal Boots, Guardian & Echo Boots',
+      'Lvl 75: Serpentine Helm',
+      'Lvl 75: Twisted Buckler (Ranged 75)',
+      'Lvl 75: Virtus Robes (Magic 78)',
+      'Lvl 78: Oathplate Armour',
+      'Lvl 80: Avernic Treads (Strength, Ranged & Magic 80)',
       'Lvl 80: Elidinis\' Ward',
       'Lvl 80: Ferocious Gloves',
       'Lvl 80: Fortified Masori',
@@ -533,6 +577,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     9: [],
     10: [
+      'Lvl 99: Rockslide to Mac\'s Island (Mining 99)',
       'Lvl 99: Skill Mastery (Defence Cape)'
     ],
   },
@@ -1358,7 +1403,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Runecraft': {
     1: [
-      'Lvl 1: Air Runes, Mind/Water/Earth/Fire/Body Tiaras',
+      'Lvl 1: Air Runes, Air/Mind/Water/Earth/Fire/Body Tiaras',
+      'Lvl 1: Cosmic/Chaos/Nature/Law/Death/Blood/Wrath Tiaras (Altar Access)',
+      'Lvl 1: Dark Essence Blocks',
+      'Lvl 1: Elemental & Catalytic Tiaras',
       'Lvl 1: Ourania Altar (ZMI)',
       'Lvl 1: Small Pouch',
       'Lvl 2: Mind Runes',
@@ -1371,17 +1419,21 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 11: 2 Air Runes',
       'Lvl 13: Mud Runes',
       'Lvl 14: Fire Runes, 2 Mind Runes',
+      'Lvl 14: Rune Case 1 (Construction 41)',
       'Lvl 15: Smoke Runes',
-      'Lvl 19: 2 Water Runes, Steam Runes',
-      'Lvl 20: Body Runes'
+      'Lvl 18: Amulet of Air',
+      'Lvl 19: 2 Water Runes, Steam Runes, Amulet of Water',
+      'Lvl 20: Body Runes, Amulet of Earth'
     ],
     3: [
+      'Lvl 21: Amulet of Fire',
       'Lvl 22: 3 Air Runes',
       'Lvl 23: Lava Runes',
       'Lvl 25: Medium Pouch, Colossal Pouch (8)',
       'Lvl 26: 2 Earth Runes',
       'Lvl 27: Cosmic Runes, Guardians of the Rift',
-      'Lvl 28: 3 Mind Runes'
+      'Lvl 28: 3 Mind Runes',
+      'Lvl 30: Elemental Amulets'
     ],
     4: [
       'Lvl 33: 4 Air Runes, Sunfire Runes',
@@ -1392,10 +1444,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     5: [
       'Lvl 42: 4 Mind Runes, Swampbark Gauntlets/Boots',
       'Lvl 44: 5 Air Runes, Nature Runes',
+      'Lvl 44: Rune Case 2 (Construction 41)',
       'Lvl 46: 2 Body Runes, Swampbark Helm',
       'Lvl 48: Swampbark Body/Legs',
       'Lvl 49: 2 Sunfire Runes',
-      'Lvl 50: Large Pouch, Colossal Pouch (16)'
+      'Lvl 50: Large Pouch, Colossal Pouch (16)',
+      'Lvl 50: Reinvigorate Pages (Burnt, Soaked, Soiled)'
     ],
     6: [
       'Lvl 52: 3 Earth Runes',
@@ -1426,13 +1480,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 85: Colossal Pouch (40)',
       'Lvl 88: 9 Air Runes',
       'Lvl 90: Soul Runes',
-      'Lvl 90: Aether Runes'
+      'Lvl 90: Aether Runes',
+      'Lvl 90: Rune Case 3 (Construction 41)'
     ],
     10: [
       'Lvl 91: 2 Nature Runes',
       'Lvl 92: 3 Body Runes',
       'Lvl 95: Wrath Runes, 2 Law Runes, 6 Water Runes',
       'Lvl 98: 8 Mind Runes, 3 Sunfire Runes',
+      'Lvl 99: 10 Air Runes, 2 Death Runes',
       'Lvl 99: Skill Mastery (Runecraft Cape)'
     ],
   },
