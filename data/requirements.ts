@@ -351,8 +351,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Mining Activity
     regions: ['Varlamore'], // Cam Torum
     skills: { 'Mining': 41 },
-    quests: ['Children of the Sun'], // Access to Cam Torum
-    description: 'AFK Mining for Calcified shards/Bone shards.'
+    quests: ['Perilous Moons'], // Partial: Cam Torum opens mid-quest
+    description: 'AFK Mining for blessed bone shards and calcified deposits.'
   },
   'Sulphur Naguas': {
     id: 'Sulphur Naguas',
