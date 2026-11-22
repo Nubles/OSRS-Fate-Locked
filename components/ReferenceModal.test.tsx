@@ -2,14 +2,14 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState, GameProvider, prepareKeyRollAction } from '../context/GameContext';
-import { ReferenceModal } from './ReferenceModal';
+import { EQUIP_TIER_TEXT_COLORS, ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
 import { STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
-import { DROP_RATES } from '../config/rules';
-import { EQUIP_TIER_TEXT_COLORS } from '../utils/equipTiers';
+import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
+import { EQUIP_TIER_COLORS } from '../utils/equipTiers';
 import { reviewedTier } from '../utils/equipmentReviewTiers';
 
 const CHUNKED_LAND = 'In Chunked an Omni-Key can&#x27;t pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate&#x27;s Mercy.';
@@ -228,6 +228,12 @@ describe('ReferenceModal Vanilla policy', () => {
     const altar = renderCodex('altar', 'chunked');
     expect(altar).toContain('(a boss or minigame with 1 Key left gives 1)');
     expect(altar).toContain('Odds boosts stop at 95%.');
+  });
+
+  it('gives the Codex tier names the same hue as the gear badges, tier by tier', () => {
+    const hue = (cls: string): string => cls.split(' ')[0].replace(/^(bg|text)-/, '').replace(/-\d+$/, '');
+    expect(EQUIP_TIER_TEXT_COLORS).toHaveLength(EQUIPMENT_TIER_MAX);
+    expect(EQUIP_TIER_TEXT_COLORS.map(hue)).toEqual(EQUIP_TIER_COLORS.map(hue));
   });
 
   it('colours each Equipment Tier like its gear badge and places granite by its level band', () => {

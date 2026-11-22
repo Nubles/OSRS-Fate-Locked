@@ -13,7 +13,6 @@ import { DROP_RATES } from '../config/rules';
 import { ALL_CHUNK_KEYS } from '../utils/chunkAdjacency';
 import { unlockableAreas } from '../utils/freeAreas';
 import { chaosPicksTableFirst } from '../utils/seededRng';
-import { EQUIP_TIER_TEXT_COLORS } from '../utils/equipTiers';
 import './osrs/osrs-windows-a.css';
 
 interface ReferenceModalProps {
@@ -50,6 +49,23 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   BARROWS:     { icon: Package,  color: 'text-stone-300',   border: 'border-stone-400/30' },
   SACRIFICE:   { icon: Key,      color: 'text-rose-400',    border: 'border-rose-500/30' },
 };
+
+/**
+ * The gear badges' tier hues (utils/equipTiers.ts EQUIP_TIER_COLORS) as text,
+ * for the tier names in the Codex's Equipment Tiers table. Kept here, not in
+ * utils/equipTiers.ts, because only this lazy window uses it.
+ */
+export const EQUIP_TIER_TEXT_COLORS = [
+  'text-stone-400',   // T1
+  'text-orange-700',  // T2
+  'text-slate-400',   // T3
+  'text-slate-300',   // T4
+  'text-emerald-500', // T5
+  'text-cyan-500',    // T6
+  'text-red-500',     // T7
+  'text-purple-500',  // T8
+  'text-yellow-400',  // T9
+];
 
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
   const label = `${bossClass.slice(0, 1).toUpperCase()}${bossClass.slice(1)}`;
