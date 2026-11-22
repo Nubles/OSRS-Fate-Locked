@@ -33,8 +33,11 @@ fragment. After the player approves the current profile, the browser:
    (`utils/relayPublishFingerprint.ts`) and skips it when the last publish
    for the pairing that worked had the same fingerprint, from the same or an
    earlier revision, under six hours ago (remembered in `fate_relay_published_v1`,
-   so a reload or a new tab doesn't send it again either). Retry and pairing
-   publish at once, whatever the relay holds.
+   so a reload or a new tab doesn't send it again either). A tab left open
+   sends the unchanged profile again by itself once the last publish is six
+   hours old, so its export time stays inside RuneLite's 12-hour limit while
+   the tracker is open. Retry and pairing publish at once, whatever the relay
+   holds.
 
 A publish that fails is tried again by itself after 15 seconds, then 1
 minute, then every 5 minutes until one works (`relayRetryDelayMs` in
