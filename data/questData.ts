@@ -418,6 +418,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
+  // A members' quest (3 Nov 2026), left here so the order of QUEST_DATA does not move.
   'The Writing\'s on the Wall': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
@@ -2625,6 +2626,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { Sailing: 52, Smithing: 48 }, prereqs: ['Troubled Tortugans'], points: 2, series: 'Tortugan',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  // Free-to-play (25 Feb 2026), left here so the order of QUEST_DATA does not move.
   'The Ides of Milk': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Ides of Milk', name: 'The Ides of Milk',
@@ -2776,6 +2778,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  // A quest, not a miniquest, since 3 Nov 2026; left here so the order of QUEST_DATA does not move.
   'Daddy\'s Home': {
     // A quest worth 1 quest point since 3 Nov 2026 (it was a miniquest).
     kind: 'quest', accessPolicy: 'locations',
