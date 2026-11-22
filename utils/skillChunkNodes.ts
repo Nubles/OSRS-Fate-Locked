@@ -155,7 +155,8 @@ const NPC_RULES: [RegExp, Req][] = [
   [/h\.?a\.?m\.? member/i, { skill: 'Thieving', level: 15 }],
   [/^rogue\b/i, { skill: 'Thieving', level: 32 }],
   [/cave goblin/i, { skill: 'Thieving', level: 36 }],
-  [/wealthy citizen|fremennik citizen/i, { skill: 'Thieving', level: 45 }],
+  [/wealthy citizen/i, { skill: 'Thieving', level: 50 }],
+  [/fremennik citizen/i, { skill: 'Thieving', level: 45 }],
   [/desert bandit|^bandit$|^bandit \(/i, { skill: 'Thieving', level: 53 }],
   [/menaphite (thug|guard)/i, { skill: 'Thieving', level: 65 }],
   // Only the canonical pickpocket knights (generic "Knight" = Black/White
