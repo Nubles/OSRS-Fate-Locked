@@ -12,7 +12,7 @@ const published = (publicLog: boolean) => JSON.stringify(validProgressSnapshot(J
     unlocks,
     history: [{ id: 'u', type: 'UNLOCK', message: 'Unlocked Varrock', timestamp: 5_000, meta: { category: 'Regions' } }],
     gameModeId: 'vanilla',
-    linkedAccount: 'Whim',
+    linkedAccount: 'Runner',
     publicLog,
   }),
 ))));
@@ -24,7 +24,7 @@ describe('the Adventurer\'s Log', () => {
     const log = parseAdventurersLog({ snapshot: publicProgress(published(true)), updatedAt: 9_000 });
     expect(log).toMatchObject({
       mode: 'Vanilla',
-      account: 'Whim',
+      account: 'Runner',
       recent: [{ text: 'Unlocked Varrock (Areas)', at: 5_000 }],
       updatedAt: 9_000,
     });

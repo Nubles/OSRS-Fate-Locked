@@ -29,11 +29,11 @@ describe('hope list in the reducer', () => {
 
 describe('kill baseline in the reducer', () => {
   it('records a reading only for the linked name', () => {
-    const linked = base({ linkedAccount: 'Whim' });
-    const s = gameReducerForTest(linked, { type: 'RECORD_SYNC_SCORES', payload: { account: 'whim', scores: { vorkath: 10 } } });
-    expect(s.syncScores).toMatchObject({ account: 'Whim', scores: { vorkath: 10 } });
+    const linked = base({ linkedAccount: 'Runner' });
+    const s = gameReducerForTest(linked, { type: 'RECORD_SYNC_SCORES', payload: { account: 'runner', scores: { vorkath: 10 } } });
+    expect(s.syncScores).toMatchObject({ account: 'Runner', scores: { vorkath: 10 } });
     expect(typeof s.syncScores!.takenAt).toBe('number');
     expect(gameReducerForTest(linked, { type: 'RECORD_SYNC_SCORES', payload: { account: 'Other', scores: { vorkath: 1 } } }).syncScores).toBeUndefined();
-    expect(gameReducerForTest(base(), { type: 'RECORD_SYNC_SCORES', payload: { account: 'Whim', scores: { vorkath: 1 } } }).syncScores).toBeUndefined();
+    expect(gameReducerForTest(base(), { type: 'RECORD_SYNC_SCORES', payload: { account: 'Runner', scores: { vorkath: 1 } } }).syncScores).toBeUndefined();
   });
 });

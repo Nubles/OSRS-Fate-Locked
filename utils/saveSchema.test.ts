@@ -1417,11 +1417,11 @@ describe('the hope list and the kill baseline (big ideas, October 2026)', () => 
   });
 
   it('keeps a kill baseline and refuses a broken one', () => {
-    const syncScores = { account: 'Whim', takenAt: 1_790_000_000_000, scores: { vorkath: 12, clue_scrolls_easy: 0, nex: null } };
+    const syncScores = { account: 'Runner', takenAt: 1_790_000_000_000, scores: { vorkath: 12, clue_scrolls_easy: 0, nex: null } };
     expect(expectAccepted(validateAndMigrateSave(candidate({ syncScores }), defaultsFixture())).state.syncScores).toEqual(syncScores);
     expectRejected(candidate({ syncScores: { ...syncScores, scores: { vorkath: -1 } } }), 'invalid_number', 'syncScores.scores.vorkath');
     expectRejected(candidate({ syncScores: { ...syncScores, scores: { 'Not a metric': 1 } } }), 'invalid_field', 'syncScores.scores.Not a metric');
-    expectRejected(candidate({ syncScores: { account: 'Whim', scores: {} } }), 'invalid_number', 'syncScores.takenAt');
+    expectRejected(candidate({ syncScores: { account: 'Runner', scores: {} } }), 'invalid_number', 'syncScores.takenAt');
     expectRejected(candidate({ syncScores: { ...syncScores, extra: 1 } }), 'invalid_field', 'syncScores.extra');
   });
 });

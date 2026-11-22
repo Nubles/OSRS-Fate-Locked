@@ -9,7 +9,7 @@ const call = (env: unknown, path: string, init: RequestInit = {}) =>
   worker.fetch(new Request(`https://relay.test${path}`, init), env as never);
 
 const entry = (overrides: Record<string, unknown> = {}) => ({
-  name: 'Whim',
+  name: 'Runner',
   mode: 'Vanilla',
   items: ['Unlocked Desert Battlefield'],
   at: 1_790_000_000_000,

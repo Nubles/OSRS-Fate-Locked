@@ -83,7 +83,7 @@ const getStarFeedUrl = (): string => {
   try { ls = localStorage.getItem('fate_star_feed') || ''; } catch { /* ignore */ }
   // Heal stale overrides that point at the retired workers.dev subdomain so they
   // fall through to the current default instead of failing to fetch.
-  if (ls.includes('.alexanderhaynes18.workers.dev')) {
+  if (pointsAtRetiredFeed(ls)) {
     try { localStorage.removeItem('fate_star_feed'); } catch { /* ignore */ }
     ls = '';
   }
@@ -118,6 +118,7 @@ import {
   tileToChunk,
 } from '../utils/mapCoords';
 import { mapImageIndexForScale } from '../utils/mapImageSize';
+import { pointsAtRetiredFeed } from '../utils/starFeedOverride';
 
 const REGION_COORDS: Record<string, { x: number; y: number }> = {
   'Misthalin': { x: 73.41, y: 41.69 },
