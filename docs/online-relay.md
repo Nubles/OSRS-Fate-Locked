@@ -73,8 +73,13 @@ RuneLite performs only the fixed `GET` request, with optional ETag caching. A
 valid response replaces its imported snapshot. A malformed or unsupported
 response is rejected without replacing the last valid snapshot.
 
-After the initial pairing check, RuneLite revalidates a connected profile no
-more than once per minute and backs off transient failures and rate limits. The
+How often RuneLite reads the relay (`SyncMachine.java`): once a minute while
+logged in and connected, every 5 minutes while logged out. While a new pairing
+waits for the browser, it checks every 5 seconds for the first 2 minutes, then
+every 15 seconds up to 10 minutes (about every 8 and 16 seconds in practice,
+since the poll runs on a 4-second tick), so one pairing can make about 45
+reads. A failure is retried after 30 seconds, doubling up to 5 minutes, and
+rate limits are honoured. **Check now** works at most every 10 seconds. The
 optional stream overlay checks every 30 seconds.
 
 The plugin does **not** upload gameplay, account names, detected events,
@@ -216,8 +221,9 @@ limit the relay answers `429` with `Retry-After: 60`, before touching KV:
 | `RELAY_CLAIM_LIMITER` | writes that create a record: a code's first publish, a new backup id or shared run, each Discord link code | 4 a minute | Turning on RuneLite, online backup and sharing, and asking for a link code, all in one minute, is 4. |
 | `RELAY_ERROR_LIMITER` | `POST /e` | 10 a minute | A page reports each error once (and the relay forwards each message once in 10 minutes anyway). |
 
-Reads are not limited: RuneLite checks at most once a minute and the stream
-overlay every 30 seconds. The Discord bot's `/l/` routes need its secret and
+Reads are not limited: a connected RuneLite checks once a minute (more often
+only while a pairing waits, for up to 10 minutes, and on Check now) and the
+stream overlay every 30 seconds. The Discord bot's `/l/` routes need its secret and
 are not limited. The app already treats a `429` like a relay outage: the
 profile and backups are tried again later, and shared progress a minute
 later. Cloudflare counts per location and approximately, so the limits are
