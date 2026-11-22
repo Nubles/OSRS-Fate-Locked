@@ -1532,7 +1532,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             timestamp: now,
             type: 'ROLL_FAIL',
             message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
-            details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${rollRules.pityThreshold}${ritualText}`,
+            details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}${rollRules.pityEnabled ? `/${rollRules.pityThreshold}` : ''}${ritualText}`,
             meta: { ...entryMeta(earned + greedRefund), ...missMeta },
             result: 'FAIL',
             source,
