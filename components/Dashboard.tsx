@@ -12,6 +12,7 @@ import {
 } from '../constants';
 import { useGame } from '../context/GameContext';
 import { useFeatureGates } from '../hooks/useFeatureGates';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import type { FeatureId } from '../utils/featureGates';
 import { Search, ExternalLink, Unlock, Lock, ChevronDown, ChevronsUp, AlertCircle, List, Filter, Info, Share2, Route, Star } from 'lucide-react';
 import { Sparkles, User, Map, Swords, Package, Compass, BookOpen, ScrollText, Globe, MapPin, Trophy, Skull } from './OsrsIcon';
@@ -411,6 +412,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     hopes, toggleHope,
   } = game;
   const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
+  // An owned area no route reaches leaves its boss or minigame Not ready, as in the Journal.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
@@ -836,6 +839,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               req,
               unlocks,
               gameModeId,
+              areaRoutes,
             );
 
             // Filter logic: Show if unlocked OR can unlock (Omni)

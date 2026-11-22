@@ -5,6 +5,8 @@ import { SKILLS_LIST } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { evaluateDiaryTaskEligibility } from './journalStatus';
+import { bossAreaBlocker } from './caTaskAccess';
+import type { AreaRoutes } from './areaRoutes';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
@@ -278,5 +280,27 @@ describe('evaluateActivityReadiness', () => {
     expect(evaluateActivityReadiness(true, getActivityReq('Barracuda Trials'), {
       ...trials, quests: ['Pandemonium'],
     }, 'vanilla')).toEqual({ status: 'READY' });
+  });
+});
+
+describe('evaluateActivityReadiness with routes', () => {
+  const zulrah = () => unlocked({ regions: ['Lumbridge', 'Zul-Andra'], quests: ['Regicide'], bosses: ['Zulrah'] });
+  const stranded: AreaRoutes = { strandedAreas: new Set(['Zul-Andra']), strandedChunks: new Set() };
+
+  it('is Not ready for an owned area no route reaches, as the Journal says', () => {
+    const unlocks = zulrah();
+    expect(evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla', stranded)).toEqual({
+      status: 'NOT_READY', blockers: [{ kind: 'area', label: 'a route to Zul-Andra' }],
+    });
+    expect(bossAreaBlocker('Zulrah', unlocks, 'vanilla', stranded)).toBe('No route to Zul-Andra yet');
+  });
+
+  it('is unchanged once a route reaches it, and while routes load', () => {
+    const unlocks = zulrah();
+    const reached: AreaRoutes = { strandedAreas: new Set(), strandedChunks: new Set() };
+    const withRoute = evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla', reached);
+    expect(withRoute.status).not.toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla')).toEqual(withRoute);
+    expect(bossAreaBlocker('Zulrah', unlocks, 'vanilla', reached)).toBeUndefined();
   });
 });
