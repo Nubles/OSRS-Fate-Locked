@@ -23,7 +23,7 @@ describe('Combat Achievement places', () => {
       Giants: 'One task across several giant areas',
       'N/A': 'A task with no monster',
       Galvek: 'Fought only inside Dragon Slayer II',
-      'The Mimic': 'Summoned from a casket, with no fixed place',
+      'The Mimic': 'Fought in Watson\'s house, which the source does not name for it',
       'Fragment of Seren': 'Fought only inside Song of the Elves',
       "TzHaar-Ket-Rak's Challenges": 'Inner Mor Ul Rek, which the source leaves unnamed',
     };

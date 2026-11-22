@@ -128,7 +128,7 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
 export const NO_HARD_LOCATION_GATE = new Set<string>([
   // Boss venues or entrances not represented by a single tracked named area.
   'Abyssal Sire', // no tracked named-area gate (fairy-ring interior)
-  'Mimic', // no tracked named-area gate (casket-triggered encounter)
+  'Mimic', // fought in Watson's house (Hosidius), but only once a clue gives a Mimic casket
 
   // Distributed, event, or untracked-content activities.
   'Shooting Stars', // no tracked named-area gate (world event)
@@ -157,7 +157,7 @@ export const CHUNKED_ACTIVITY_RULES: Readonly<Record<string, ChunkedActivityRule
   Mimic: {
     kind: 'not-random',
     needs: 'a Mimic casket from an Elite or Master clue',
-    reason: 'Fought from a casket out of an Elite or Master clue, which no chunk holds and the tracker does not follow, so random Keys skip it. An Omni-Key can still pick it.',
+    reason: "Fought at the strange casket in Watson's house, but only with a Mimic casket out of an Elite or Master clue, which the tracker does not follow, so random Keys skip it. An Omni-Key can still pick it.",
   },
 };
 
