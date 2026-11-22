@@ -270,6 +270,7 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       10300: [{ quests: ['The Fremennik Trials'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
       9531: [{ quests: ['The Fremennik Isles'] }], 13874: [{ quests: ['In Aid of the Myreque'] }],
       14388: [{ quests: ['Sins of the Father'] }], 9273: [{ quests: ['Swan Song'] }],
+      12337: [{ quests: ['Temple of the Eye'] }],
       8253: [{ quests: ['Dream Mentor'] }, { manual: ['Confirm you have started Lunar Diplomacy and carry a Seal of Passage'] }],
       8508: [{ quests: ['Lunar Diplomacy'] }, { manual: ['Confirm you have progressed Lunar Diplomacy far enough to reach Lunar Isle'] }],
       12581: [{ quests: ['Troubled Tortugans'] }, { manual: ['Confirm you have started Troubled Tortugans'] }],

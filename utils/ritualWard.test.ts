@@ -25,17 +25,39 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
     expect(wardUsable(TableType.BANKS, '8999', sailing, 'vanilla')).toBe(true);
   });
 
-  it("asks a gated bank's guild or quest, not only its land, in Vanilla and Chunked", () => {
+  // A way in with nothing the tracker can check: the player confirms it by hand.
+  const byHand = (option: (typeof BANK_ACCESS_GATES)[number]['accessOptions'][number]) =>
+    !option.quests?.length && !option.diaries?.length && !option.skills?.length && !option.guilds?.length;
+  const landOf = (id: string) => {
+    const key = bankChunkKey(id)!;
+    const area = chunkSubArea(key);
+    return { regions: [...initialState.unlocks.regions, ...(area ? [area] : [])], chunks: [key] };
+  };
+
+  it("asks a gated bank's guild, quest or level, not only its land, in Vanilla and Chunked", () => {
     expect(BANK_ACCESS_GATES.length).toBeGreaterThan(10);
+    const novice = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 1]));
     for (const { id, accessOptions } of BANK_ACCESS_GATES) {
-      const key = bankChunkKey(id)!;
-      const area = chunkSubArea(key);
-      const land = { regions: [...initialState.unlocks.regions, ...(area ? [area] : [])], chunks: [key] };
-      const unmet = maxed({ ...land, quests: [], guilds: [] });
-      expect(wardUsable(TableType.BANKS, id, unmet, 'vanilla'), `${id} Vanilla, gate unmet`).toBe(false);
-      expect(wardUsable(TableType.BANKS, id, unmet, 'chunked'), `${id} Chunked, gate unmet`).toBe(false);
+      const land = landOf(id);
       const met = maxed({ ...land, guilds: accessOptions.flatMap(option => option.guilds ?? []) });
       expect(wardUsable(TableType.BANKS, id, met, 'vanilla'), `${id} Vanilla, gate met`).toBe(true);
+      if (accessOptions.some(byHand)) continue;
+      // No quest, guild or diary, and level 1 in the skills the gate names.
+      const unmet = maxed({ ...land, quests: [], guilds: [], diaries: [], levels: novice });
+      expect(wardUsable(TableType.BANKS, id, unmet, 'vanilla'), `${id} Vanilla, gate unmet`).toBe(false);
+      expect(wardUsable(TableType.BANKS, id, unmet, 'chunked'), `${id} Chunked, gate unmet`).toBe(false);
+    }
+  });
+
+  it('keeps a bank whose other way in is confirmed by hand, as it does for Peer the Seer', () => {
+    // Partway through a quest is something the tracker cannot see, so the Ward does not rule these out.
+    const partway = BANK_ACCESS_GATES.filter(gate => gate.accessOptions.some(byHand));
+    expect(partway.map(gate => gate.id).sort()).toEqual(['11047', '12581', '12838', '8253', '8508']);
+    for (const { id, accessOptions } of partway) {
+      const gateQuests = accessOptions.flatMap(option => option.quests ?? []);
+      expect(gateQuests.length, `${id} names a quest`).toBeGreaterThan(0);
+      const withoutQuest = maxed({ ...landOf(id), quests: Object.keys(QUEST_DATA).filter(quest => !gateQuests.includes(quest)) });
+      expect(wardUsable(TableType.BANKS, id, withoutQuest, 'vanilla'), `${id} without ${gateQuests.join(', ')}`).toBe(true);
     }
   });
 
