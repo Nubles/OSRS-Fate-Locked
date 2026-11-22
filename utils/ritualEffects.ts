@@ -132,6 +132,10 @@ export const applyOddsBonus = (threshold: number, bonus: number): number => {
   return Math.max(threshold, Math.min(threshold + bonus, BOOST_CAP));
 };
 
+/** The roll history's note on what the rituals did to the odds: the points really applied. */
+export const ritualOddsNote = (nominal: number, applied: number): string =>
+  `Rituals ${applied >= 0 ? '+' : ''}${applied}% odds${nominal > 0 && applied < nominal ? ` (boosts stop at ${BOOST_CAP}%)` : ''}.`;
+
 export interface FailFate {
   /** Fate added to the bar. */
   earned: number;

@@ -515,7 +515,7 @@ export const RITUALS: Ritual[] = [
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
-    effect: 'Your next 3 rolls get +15% odds. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
+    effect: 'Your next 3 rolls get +15% odds, up to 95%. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
   { id: 'INVOCATIONS',  name: "Amascut's Invocations",   tagline: 'Take handicaps for Omni-Keys.', fateCost: 10,
     effect: 'Pick handicaps for your next 3 rolls. Each one raises the Omni-Key chance on those rolls.' },
   { id: 'BARROWS',      name: 'Barrows Chest',           tagline: 'A brother powers your next rolls.', fateCost: 20,
@@ -569,11 +569,11 @@ export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
 /** The Barrows brothers and the set effect each puts on your next rolls. */
 export interface BarrowsBrother { id: 'AHRIM' | 'DHAROK' | 'GUTHAN' | 'KARIL' | 'TORAG' | 'VERAC'; name: string; effect: string }
 export const BARROWS_BROTHERS: BarrowsBrother[] = [
-  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds' },
-  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (up to +25%)' },
+  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds, up to 95%' },
+  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (at most +25%), up to 95%' },
   { id: 'GUTHAN', name: 'Guthan the Infested', effect: 'Every fail heals 8 Fate back' },
   { id: 'KARIL',  name: 'Karil the Tainted',   effect: 'Every success has a 50% chance of a second Key' },
-  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, and the 20 Fate comes back if all 3 fail' },
+  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, up to 95%, and the 20 Fate comes back if all 3 fail' },
   { id: 'VERAC',  name: 'Verac the Defiled',   effect: 'Every fail has a 15% chance to become a success' },
 ];
 

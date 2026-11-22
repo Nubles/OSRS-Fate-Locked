@@ -99,7 +99,7 @@ export const isBaneMark = (mark: FateMark): boolean => BANE.has(mark);
 export const FATE_MARK_EFFECTS: Record<FateMark, string> = {
   BLESSED: `+${FATE_MARK_BLESSED_FATE} Fate, up to the pity line.`,
   GILDED: 'A free Key roll, waiting on the Keys screen.',
-  FORTUNATE: `Your next ${FATE_MARK_FORTUNATE_ROLLS} Key rolls are ${FATE_MARK_FORTUNATE_ODDS}% better.`,
+  FORTUNATE: `Your next ${FATE_MARK_FORTUNATE_ROLLS} Key rolls are ${FATE_MARK_FORTUNATE_ODDS}% better, up to 95%.`,
   CHAOTIC: `A ${FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key.`,
   CURSED: `Your next ${FATE_MARK_CURSED_ROLLS} Key rolls are ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`,
   WITHERED: `You lose ${FATE_MARK_WITHERED_FATE} Fate.`,
@@ -113,7 +113,7 @@ export const omenColor = (mark: FateMark): string => (BANE.has(mark) ? OMEN_BANE
 export const SEAL_BOON_EFFECTS: Partial<Record<FateMark, string>> = {
   BLESSED: `+${FATE_MARK_BLESSED_FATE * FATE_SEAL_BOON_FACTOR} Fate, up to the pity line.`,
   GILDED: `${FATE_SEAL_BOON_FACTOR} free Key rolls, waiting on the Keys screen.`,
-  FORTUNATE: `Your next ${FATE_MARK_FORTUNATE_ROLLS * FATE_SEAL_BOON_FACTOR} Key rolls are ${FATE_MARK_FORTUNATE_ODDS}% better.`,
+  FORTUNATE: `Your next ${FATE_MARK_FORTUNATE_ROLLS * FATE_SEAL_BOON_FACTOR} Key rolls are ${FATE_MARK_FORTUNATE_ODDS}% better, up to 95%.`,
   CHAOTIC: `A ${FATE_MARK_CHAOS_CHANCE * 100 * FATE_SEAL_BOON_FACTOR}% chance of a Chaos Key.`,
 };
 

@@ -15,7 +15,7 @@ import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
   afterRoll, castBarrows, castInvocations, castPact, castTears, failFate,
-  pickSacrifice, ritualAvailability, rollRitualActive, sacrificeCandidates, tidyRituals, wardApplies,
+  pickSacrifice, ritualAvailability, ritualOddsNote, rollRitualActive, sacrificeCandidates, tidyRituals, wardApplies,
   type RitualState, type SacrificeTier,
 } from '../utils/ritualEffects';
 import { tableDisplayName } from '../utils/tableDisplay';
@@ -458,6 +458,8 @@ interface PreparedRollResult {
 interface PreparedRitualRoll {
   /** Percentage points the rituals added to (or took from) the odds. */
   oddsBonus: number;
+  /** The points really applied, after boosts stop at BOOST_CAP. Older payloads lack it. */
+  appliedOdds?: number;
   /** A fail that Verac hit through into a success. */
   hitThrough?: boolean;
   /** Karil's second Key on a success. */
@@ -712,7 +714,7 @@ export function prepareKeyRollAction(
       y,
       meta,
       context,
-      ...(state.rituals ? { ritual: { oddsBonus: plan.oddsBonus, hitThrough, secondKey } } : {}),
+      ...(state.rituals ? { ritual: { oddsBonus: plan.oddsBonus, appliedOdds: Math.round((odds.threshold - odds.boostedThreshold) * 100) / 100, hitThrough, secondKey } } : {}),
     },
   };
 }
@@ -1408,7 +1410,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const missFate = success ? null : failFate(state.rituals, missBase, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
       const ritualNotes = [
         ...(!success && missBase === 0 && failureFate > 0 ? [`No Fate on a miss under ${MINIGAME_MISS_FATE_MIN_RATE}%.`] : []),
-        ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [`Rituals ${ritualRoll.oddsBonus > 0 ? '+' : ''}${ritualRoll.oddsBonus}% odds.`] : []),
+        ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [ritualOddsNote(ritualRoll.oddsBonus, ritualRoll.appliedOdds ?? ritualRoll.oddsBonus)] : []),
         ...(success && ritualRoll?.hitThrough ? ['Verac hit through the miss.'] : []),
         ...(secondKey && standardKeysAwarded === 2 ? ["Karil's bolt found a second Key."] : []),
         ...(missFate?.notes.length ? [`${missFate.notes.join(', ')}.`] : []),
