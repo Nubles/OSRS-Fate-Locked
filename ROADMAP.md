@@ -25,10 +25,10 @@ is the list as it stood on that date.
 
 The Plugin Hub entry
 [`plugins/fate-locked-ironman`](https://github.com/runelite/plugin-hub/blob/master/plugins/fate-locked-ironman)
-builds commit `4c53198dada2126af1823f00396fef939cc9c251` of
+builds commit `0ae842d14d0ed53b1c823ec188fd4aefee6b1ade` of
 [Nubles/OSRS-Fate-Locked-Runelite](https://github.com/Nubles/OSRS-Fate-Locked-Runelite)
-(the Stage 4 release, 2 October 2026,
-[runelite/plugin-hub#17653](https://github.com/runelite/plugin-hub/pull/17653)),
+(new pets in the Roll inbox, 5 October 2026,
+[runelite/plugin-hub#17794](https://github.com/runelite/plugin-hub/pull/17794)),
 not that repository's `main`; check the entry for the current pin.
 
 Plugin changes reach players only through a Plugin Hub pull request that
@@ -352,7 +352,8 @@ Follow-ups:
   A profile lasts 30 days after the last publish. Publishes wait for 15 s
   of quiet (at most 2 min; at once when the tab is hidden) and skip a
   profile the relay already holds (`utils/relayPublishFingerprint.ts`:
-  same fingerprint without export time and revision, under a day old). A
+  same fingerprint without export time and revision, under six hours old,
+  inside the plugin's 12-hour freshness limit). A
   failed publish is retried after 15 s, 1 min, then every 5 min, and
   `RelayPublishBanner` says so. Full contract in `docs/online-relay.md`. Deployed at
   `fate-relay.fatelocked.workers.dev`; redeploy with
@@ -461,9 +462,10 @@ of `chunked-sailing`).
   writes to fail for the record's TTL. The web app persists the current
   main-channel token in `fate_relay_session_v1`. Current RuneLite builds
   perform no relay writes and own no relay write-token.
-- **Quest reward scroll wording varies:** usually "You have completed The
-  Corsair Curse!" with NO trailing "quest" — regexes must handle both forms
-  (see `QUEST_COMPLETE_SUFFIXED` / `_BARE`).
+- **Quest completion is not read from chat:** the reward scroll's wording
+  varies, so the plugin matches no chat text. When the quest-completed widget
+  (`QUEST_COMPLETED_GROUP_ID`, group 153) loads, it reads the game's quest
+  states on the next tick.
 - **Diary varbits & login baselines:** a tier varbit that's 0 at login never
   fires VarbitChanged, so pure event-filtering misses its completion, and a
   login's first events can arrive before every tier has synced. From Stage 1
@@ -507,7 +509,8 @@ setting after the workflow first appears.
 
 Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
-in `scripts/check-entry-budget.mjs` (231 kB; about 217 kB after the 24 Sept
+in `scripts/check-entry-budget.mjs` (230 kB; the comments above
+`ENTRY_GZIP_BUDGET_KB` record every raise and why; about 217 kB after the 24 Sept
 2026 review moved on-demand screens and the release notes out of it, and
 about 224 kB in October 2026, after online backup and Paste from RuneLite;
 raised to 226 kB on 9 October 2026, when the entry sat at 224.9-225.0 kB and
