@@ -23,7 +23,13 @@
     { "title": "Crafting Guild", "revision": 15362001, "url": "https://oldschool.runescape.wiki/w/Crafting_Guild" },
     { "title": "Piscatoris bank", "revision": 15211946, "url": "https://oldschool.runescape.wiki/w/Piscatoris_bank" },
     { "title": "Gwenith", "revision": 15359762, "url": "https://oldschool.runescape.wiki/w/Gwenith" },
-    { "title": "Throne of Miscellania", "revision": 15403898, "url": "https://oldschool.runescape.wiki/w/Throne_of_Miscellania" }
+    { "title": "Throne of Miscellania", "revision": 15403898, "url": "https://oldschool.runescape.wiki/w/Throne_of_Miscellania" },
+    { "title": "Tarn's Lair", "revision": 15327755, "url": "https://oldschool.runescape.wiki/w/Tarn%27s_Lair" },
+    { "title": "Ape Atoll bank", "revision": 15360641, "url": "https://oldschool.runescape.wiki/w/Ape_Atoll_bank" },
+    { "title": "Rionasta", "revision": 15310502, "url": "https://oldschool.runescape.wiki/w/Rionasta" },
+    { "title": "Zul-Andra", "revision": 15402994, "url": "https://oldschool.runescape.wiki/w/Zul-Andra" },
+    { "title": "Fossil Island bank", "revision": 15315035, "url": "https://oldschool.runescape.wiki/w/Fossil_Island_bank" },
+    { "title": "Bank chest (amenity)", "revision": 15402269, "url": "https://oldschool.runescape.wiki/w/Bank_chest_(amenity)" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -101,7 +107,18 @@
     { "id": "14388", "accessOptions": [{ "quests": ["Sins of the Father"] }], "note": "Darkmeyer bank; the chunk asks only for Priest in Peril.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "9273", "accessOptions": [{ "quests": ["Swan Song"] }], "note": "Piscatoris bank and deposit box: the bank needs Swan Song to use.", "wiki": ["https://oldschool.runescape.wiki/w/Piscatoris_bank", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "8757", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "Gwenith deposit box: the village needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Gwenith", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
-    { "id": "8499", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "The deposit box west of Prifddinas needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] }
+    { "id": "8499", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "The deposit box west of Prifddinas needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "5678", "accessOptions": [{ "quests": ["Children of the Sun"] }], "note": "Aldarin dock deposit box: Varlamore needs Children of the Sun.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "13618", "accessOptions": [{ "quests": ["Haunted Mine"] }], "note": "Tarn's Lair bank (Odovacar) needs Haunted Mine and takes 100 coins each use.", "wiki": ["https://oldschool.runescape.wiki/w/Tarn%27s_Lair", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11051", "accessOptions": [{ "quests": ["Monkey Madness II"] }], "note": "Ape Atoll bank chest in Marim needs Monkey Madness II.", "wiki": ["https://oldschool.runescape.wiki/w/Ape_Atoll_bank", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11056", "accessOptions": [{ "quests": ["Jungle Potion"] }], "note": "Rionasta stands in Tai Bwo Wannai after Jungle Potion and banks items for 10 trading sticks each; the List of banks column names Tai Bwo Wannai Trio instead.", "wiki": ["https://oldschool.runescape.wiki/w/Rionasta"] },
+    { "id": "14908", "accessOptions": [{ "quests": ["Bone Voyage"] }], "note": "Bank Chest-wreck on the island north of the House on the Hill, by rowboat from Fossil Island (Bone Voyage).", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "8751", "accessOptions": [{ "quests": ["Regicide"], "manual": ["Confirm you have volunteered as a sacrifice to Zulrah with High Priestess Zul-Harcinqa"] }], "note": "Zul-Andra deposit chest: Regicide, then volunteering as Zulrah's sacrifice.", "wiki": ["https://oldschool.runescape.wiki/w/Zul-Andra", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "14907", "accessOptions": [{ "quests": ["Bone Voyage"], "skills": ["Construction 21"], "manual": ["Confirm you have built the bank chest from the chest pieces"] }], "note": "Fossil Island bank in the Museum Camp is built once from chest pieces with 21 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Fossil_Island_bank", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11811", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "The Onyx Crest bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
+    { "id": "10533", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Charred Island bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
+    { "id": "8740", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Sunbleak Island bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
+    { "id": "8249", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Buccaneers' Haven bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] }
   ],
   "merges": [
     { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },

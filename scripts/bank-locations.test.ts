@@ -254,6 +254,8 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
   const gatesOf = (registry: { accessGates: Array<{ id: string; accessOptions: unknown[] }> }) =>
     Object.fromEntries(registry.accessGates.map(({ id, accessOptions }) => [id, accessOptions]));
 
+  // The Sailing islands' bank chests (Bank chest (amenity), oldid 15402269).
+  const BUILT = [{ skills: ['Construction 70'], manual: ['Confirm you have built the bank chest here'] }];
   it('gate the guild banks by their guild and the town banks by their quest', () => {
     const registry = readBankLocationRegistry();
     expect(() => validateBankLocationRegistry(registry, options())).not.toThrow();
@@ -269,6 +271,12 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       9531: [{ quests: ['The Fremennik Isles'] }], 13874: [{ quests: ['In Aid of the Myreque'] }],
       14388: [{ quests: ['Sins of the Father'] }], 9273: [{ quests: ['Swan Song'] }],
       8757: [{ quests: ['Song of the Elves'] }], 8499: [{ quests: ['Song of the Elves'] }],
+      5678: [{ quests: ['Children of the Sun'] }], 13618: [{ quests: ['Haunted Mine'] }],
+      11051: [{ quests: ['Monkey Madness II'] }], 11056: [{ quests: ['Jungle Potion'] }],
+      14908: [{ quests: ['Bone Voyage'] }],
+      8751: [{ quests: ['Regicide'], manual: ['Confirm you have volunteered as a sacrifice to Zulrah with High Priestess Zul-Harcinqa'] }],
+      14907: [{ quests: ['Bone Voyage'], skills: ['Construction 21'], manual: ['Confirm you have built the bank chest from the chest pieces'] }],
+      11811: BUILT, 10533: BUILT, 8740: BUILT, 8249: BUILT,
     });
   });
 

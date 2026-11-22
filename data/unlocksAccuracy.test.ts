@@ -185,6 +185,46 @@ describe('B2: a town bank built in a quest needs the quest', () => {
   });
 });
 
+describe('B3: a bank the Wiki names a requirement for states it, not "needs review"', () => {
+  // Bank Deposit Box oldid 15378951, Tarn's Lair 15327755, Ape Atoll bank 15360641, Rionasta 15310502,
+  // List of banks 15402836 (Bank Chest-wreck: Bone Voyage).
+  it.each([
+    ['5678', 'Children of the Sun'], ['13618', 'Haunted Mine'], ['11051', 'Monkey Madness II'],
+    ['11056', 'Jungle Potion'], ['14908', 'Bone Voyage'],
+  ])('bank %s needs %s and nothing more', (id, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+
+  // Zul-Andra oldid 15402994: Regicide, then "volunteer themselves as sacrifice to Zulrah".
+  it('asks a run at Zul-Andra to confirm it volunteered as the sacrifice, after Regicide', () => {
+    const access = bankAccess('8751', everything());
+    expect(access.status).toBe('UNKNOWN');
+    expect(access.reasons.join(' ')).toMatch(/sacrifice/);
+    expect(bankAccess('8751', everything(99, { quests: questsWithout('Regicide') })).reasons).toContain('Complete Regicide');
+  });
+
+  // Fossil Island bank oldid 15315035 (21 Construction); Bank chest (amenity) oldid 15402269 (70 Construction).
+  it.each([
+    ['14907', 21], ['11811', 70], ['10533', 70], ['8740', 70], ['8249', 70],
+  ])('bank %s must be built, with %i Construction', (id, level) => {
+    const built = bankAccess(id, everything());
+    expect(built.status).toBe('UNKNOWN');
+    expect(built.reasons.join(' ')).toMatch(/built the bank/);
+    const short = bankAccess(id, everything(level - 1));
+    expect(short.status).toBe('NOT_READY');
+    expect(short.reasons).toContain(`Construction level ${level}`);
+  });
+
+  it('leaves none of these at "needs review" for a run that has everything', () => {
+    for (const id of ['5678', '13618', '11051', '11056', '14908', '8751', '14907', '11811', '10533', '8740', '8249']) {
+      expect(bankAccess(id, everything()).reasons.join(' '), id).not.toMatch(/need review/);
+    }
+  });
+});
+
 describe('B1b: the Crafting Guild bank needs 99 Crafting or the hard Falador Diary', () => {
   // Crafting Guild oldid 15362001: "Only players who have completed the hard Falador Diary or have
   // level 99 Crafting will be able to use either" (the bank chest and the deposit box).
