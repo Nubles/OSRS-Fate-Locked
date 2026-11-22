@@ -10,7 +10,14 @@
     { "title": "Krystilia", "revision": 15341834, "url": "https://oldschool.runescape.wiki/w/Krystilia?oldid=15341834" },
     { "title": "Konar quo Maten", "revision": 15343043, "url": "https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15343043" },
     { "title": "Slayer task/Frost dragons", "revision": 15384445, "url": "https://oldschool.runescape.wiki/w/Slayer_task/Frost_dragons?oldid=15384445" },
-    { "title": "Boss Slayer", "revision": 15359739, "url": "https://oldschool.runescape.wiki/w/Boss_Slayer?oldid=15359739" }
+    { "title": "Boss Slayer", "revision": 15359739, "url": "https://oldschool.runescape.wiki/w/Boss_Slayer?oldid=15359739" },
+    { "title": "Konar quo Maten", "revision": 15408174, "url": "https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174" },
+    { "title": "Duradel/Slayer assignments", "revision": 15384715, "url": "https://oldschool.runescape.wiki/w/Duradel/Slayer_assignments?oldid=15384715" },
+    { "title": "Mortimer", "revision": 15411099, "url": "https://oldschool.runescape.wiki/w/Mortimer?oldid=15411099" },
+    { "title": "Venator", "revision": 15387621, "url": "https://oldschool.runescape.wiki/w/Venator?oldid=15387621" },
+    { "title": "Chaeldar", "revision": 15372650, "url": "https://oldschool.runescape.wiki/w/Chaeldar?oldid=15372650" },
+    { "title": "Nieve/Slayer assignments", "revision": 15384714, "url": "https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15384714" },
+    { "title": "Slayer task/Fossil Island wyverns", "revision": 15410037, "url": "https://oldschool.runescape.wiki/w/Slayer_task/Fossil_Island_wyverns?oldid=15410037" }
   ],
   "corrections": [
     { "master": "Vannaka", "task": "Basilisks", "set": { "slayer": 40 }, "reason": "Basilisks need 40 Slayer, as Chaeldar's row already has.", "wiki": ["https://oldschool.runescape.wiki/w/Vannaka?oldid=15350577"] },
@@ -19,10 +26,6 @@
     { "master": "Nieve", "task": "Suqah", "set": { "combat": 85 }, "reason": "Nieve assigns suqah from combat level 85.", "wiki": ["https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565"] },
     { "master": "Nieve", "task": "Metal dragons", "set": { "combat": 85 }, "reason": "Nieve assigns metal dragons from combat level 85.", "wiki": ["https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565"] },
     { "master": "Nieve", "task": "Greater demons", "set": { "combat": 75 }, "reason": "Nieve assigns greater demons from combat level 75.", "wiki": ["https://oldschool.runescape.wiki/w/Nieve/Slayer_assignments?oldid=15347565"] },
-    { "master": "Chaeldar", "task": "Fossil Island Wyverns", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage; Elemental Workshop I is a skeletal wyvern requirement.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
-    { "master": "Konar quo Maten", "task": "Fossil Island Wyverns - Wyvern Cave", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
-    { "master": "Nieve", "task": "Fossil Island Wyverns", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
-    { "master": "Duradel", "task": "Fossil Island Wyverns", "removeReq": ["Elemental Workshop I Complete the quest"], "reason": "Fossil Island wyverns need only Bone Voyage.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Duradel", "task": "Waterfiends", "removeReq": ["Ancient Cavern access"], "reason": "Waterfiends also live in Kraken Cove and the Iorwerth Dungeon; only the Ancient Cavern needs its access.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Konar quo Maten", "task": "Waterfiends - Kraken Cove", "removeReq": ["Ancient Cavern access"], "reason": "Kraken Cove's waterfiends don't need the Ancient Cavern.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Konar quo Maten", "task": "Waterfiends - Iorwerth Dungeon", "removeReq": ["Ancient Cavern access"], "reason": "The Iorwerth Dungeon's waterfiends need Song of the Elves, not the Ancient Cavern.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
@@ -33,7 +36,23 @@
     { "master": "Nieve", "task": "Frost dragons", "set": { "req": ["Dragon Slayer I Complete the quest"] }, "reason": "Since the 28 October 2026 update, frost dragon tasks need Dragon Slayer I complete.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task/Frost_dragons?oldid=15384445"] },
     { "master": "Duradel", "task": "Frost dragons", "set": { "req": ["Dragon Slayer I Complete the quest"] }, "reason": "Since the 28 October 2026 update, frost dragon tasks need Dragon Slayer I complete.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task/Frost_dragons?oldid=15384445"] },
     { "master": "Krystilia", "task": "Magic axes", "set": { "skills": { "Thieving": 23 } }, "removeReq": ["Unlock the door (Magic axe hut)"], "reason": "The magic axe hut's door needs 23 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
-    { "master": "Krystilia", "task": "Pirates", "set": { "skills": { "Thieving": 39 } }, "removeReq": ["WildernessPirateAccess[+]"], "reason": "The Pirates' Hideout's door needs 39 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] }
+    { "master": "Krystilia", "task": "Pirates", "set": { "skills": { "Thieving": 39 } }, "removeReq": ["WildernessPirateAccess[+]"], "reason": "The Pirates' Hideout's door needs 39 Thieving to pick.", "wiki": ["https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
+    { "master": "Konar quo Maten", "task": "Metal dragons - Brimhaven Dungeon", "set": { "combat": 85, "weight": 3.75 }, "reason": "Konar assigns metal dragons from combat level 85, with the task's weight of 15 shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Metal dragons - Catacombs of Kourend", "set": { "combat": 85, "weight": 3.75 }, "reason": "Konar assigns metal dragons from combat level 85, with the task's weight of 15 shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Metal dragons - Isle of Souls Dungeon", "set": { "combat": 85, "weight": 3.75 }, "reason": "Konar assigns metal dragons from combat level 85, with the task's weight of 15 shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Metal dragons - Lithkren Vault", "set": { "combat": 85, "weight": 3.75 }, "reason": "Konar assigns metal dragons from combat level 85, with the task's weight of 15 shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Duradel", "task": "Metal dragons", "set": { "combat": 85 }, "reason": "Duradel assigns metal dragons from combat level 85.", "wiki": ["https://oldschool.runescape.wiki/w/Duradel/Slayer_assignments?oldid=15384715"] },
+    { "master": "Duradel", "task": "Greater demons", "set": { "combat": 75 }, "reason": "Duradel assigns greater demons from combat level 75.", "wiki": ["https://oldschool.runescape.wiki/w/Duradel/Slayer_assignments?oldid=15384715"] },
+    { "master": "Duradel", "task": "Suqah", "set": { "combat": 85 }, "reason": "Duradel assigns suqah from combat level 85.", "wiki": ["https://oldschool.runescape.wiki/w/Duradel/Slayer_assignments?oldid=15384715"] },
+    { "master": "Mortimer", "task": "Venators", "set": { "slayer": 74 }, "reason": "Venators need 74 Slayer.", "wiki": ["https://oldschool.runescape.wiki/w/Mortimer?oldid=15411099", "https://oldschool.runescape.wiki/w/Venator?oldid=15387621"] },
+    { "master": "Mortimer", "task": "Bloodvelds", "set": { "weight": 8 }, "reason": "Mortimer's bloodveld task has weight 8.", "wiki": ["https://oldschool.runescape.wiki/w/Mortimer?oldid=15411099"] },
+    { "master": "Konar quo Maten", "task": "Trolls - Troll Stronghold", "set": { "weight": 1 }, "reason": "Konar's troll task has weight 6, shared by her six places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Trolls - Keldagrim", "set": { "weight": 1 }, "reason": "Konar's troll task has weight 6, shared by her six places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Trolls - Death Plateau", "set": { "weight": 1 }, "reason": "Konar's troll task has weight 6, shared by her six places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Trolls - Mount Quidamortem", "set": { "weight": 1 }, "reason": "Konar's troll task has weight 6, shared by her six places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Wyrms - Karuulm Slayer Dungeon", "set": { "weight": 2.5 }, "reason": "Konar's wyrm task has weight 10, shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Wyrms - Neypotzli", "set": { "weight": 2.5 }, "reason": "Konar's wyrm task has weight 10, shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Wyrms - Charred Dungeon", "set": { "weight": 2.5 }, "reason": "Konar's wyrm task has weight 10, shared by her four places.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] }
   ],
   "additions": [
     { "master": "Chaeldar", "task": "Aviansies", "row": { "weight": 9, "unlock": "Watch the Birdie" }, "reason": "Chaeldar assigns aviansies once Watch the Birdie is bought.", "wiki": ["https://oldschool.runescape.wiki/w/Chaeldar?oldid=15319052"] },
@@ -77,6 +96,14 @@
     { "master": "Konar quo Maten", "task": "Vampyres - Slepe", "row": { "weight": 1, "combat": 35, "req": ["Priest in Peril Complete the quest"], "unlock": "Actual Vampyre Slayer", "locations": ["Slepe"] }, "reason": "Konar assigns vampyres in Slepe once Actual Vampyre Slayer is bought.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15343043", "https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Konar quo Maten", "task": "Vampyres - Vampyrium", "row": { "weight": 1, "combat": 35, "req": ["Priest in Peril Complete the quest"], "unlock": "Actual Vampyre Slayer", "locations": ["Vampyrium"] }, "reason": "Konar assigns vampyres in the Vampyrium once Actual Vampyre Slayer is bought.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15343043", "https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] },
     { "master": "Konar quo Maten", "task": "Warped creatures - Poison Waste Dungeon", "row": { "weight": 4, "slayer": 56, "req": ["The Path of Glouphrie Complete the quest"], "unlock": "Warped Reality", "locations": ["Poison Waste Dungeon"] }, "reason": "Konar assigns warped creatures in the Poison Waste Dungeon once Warped Reality is bought.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15343043", "https://oldschool.runescape.wiki/w/Slayer_task?oldid=15343835"] }
+  ],
+  "removals": [
+    { "master": "Konar quo Maten", "task": "Metal dragons - Ancient Cavern", "reason": "Konar sends players to metal dragons in the Brimhaven Dungeon, the Catacombs of Kourend, the Isle of Souls Dungeon and the Lithkren Vault only.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] }
+  ],
+  "places": [
+    { "master": "Konar quo Maten", "task": "Trolls - Fremennik Isles", "row": { "weight": 1, "combat": 60, "locations": ["9275", "9276", "9531", "9532", "Jatizso mine", "Ice Troll Caves"] }, "reason": "Konar assigns trolls on the Fremennik Isles: Neitiznot, Jatizso, the ice troll lands and their caves.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Trolls - Wyrmscraig Cavern", "row": { "weight": 1, "combat": 60, "locations": ["Wyrmscraig Cavern"] }, "reason": "Konar assigns trolls in the Wyrmscraig Cavern.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] },
+    { "master": "Konar quo Maten", "task": "Wyrms - Wyrmscraig Cavern", "row": { "weight": 2.5, "slayer": 62, "locations": ["Wyrmscraig Cavern"] }, "reason": "Konar assigns wyrms in the Wyrmscraig Cavern, its wyrmlings and lava strykewyrms included.", "wiki": ["https://oldschool.runescape.wiki/w/Konar_quo_Maten?oldid=15408174"] }
   ],
   "bossTasks": {
     "unlock": "Like a Boss",

@@ -151,9 +151,10 @@ function buildSlayerMasters(data, audit) {
 
 /**
  * Reviewed corrections to the source's Slayer rows, each with its wiki revision
- * (data/sources/slayer-corrections.json): fixes to its rows, the rows a Slayer
- * reward adds (the source has only the tasks a master gives without one), and
- * each master's boss task. utils/slayerAccuracy.test.ts checks every one reached
+ * (data/sources/slayer-corrections.json): fixes to its rows, rows it has that the
+ * master never gives, the rows a Slayer reward adds (the source has only the
+ * tasks a master gives without one), Konar's places it lacks, and each master's
+ * boss task. utils/slayerAccuracy.test.ts checks every one reached
  * the generated rows; small test sources simply lack the masters.
  */
 function applySlayerCorrections(masters) {
@@ -166,7 +167,10 @@ function applySlayerCorrections(masters) {
     }
     Object.assign(row, structuredClone(correction.set ?? {}));
   }
-  for (const addition of slayerCorrections.additions) {
+  // A place the source lists that the master never sends players to.
+  for (const removal of slayerCorrections.removals ?? []) delete masters[removal.master]?.[removal.task];
+  // Rewards' rows, then places the source lacks for a task it already has.
+  for (const addition of [...slayerCorrections.additions, ...(slayerCorrections.places ?? [])]) {
     const tasks = masters[addition.master];
     // A row the source has since gained keeps the source's values; the test flags any difference.
     if (!tasks || tasks[addition.task]) continue;
