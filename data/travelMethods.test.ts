@@ -417,6 +417,12 @@ describe('the other teleport items', () => {
 /** Every page the wiki's list of teleportation items links, pinned in data/sources. */
 const WIKI_TELEPORT_ITEMS = (JSON.parse(readFileSync(new URL('./sources/wiki-teleportation-items.json', import.meta.url), 'utf8')) as
   { pages: string[] }).pages;
+/**
+ * Teleport items the navbox does not link, found by the accuracy audit (Nov 2026), checked like its pages:
+ * Seed of growth (oldid 15410900), Archivist's folio (oldid 15395514) and Master scroll book (oldid 15408812).
+ */
+const BEYOND_THE_NAVBOX = ['Seed of growth', "Archivist's folio", 'Master scroll book'];
+const TELEPORT_ITEM_PAGES = [...WIKI_TELEPORT_ITEMS, ...BEYOND_THE_NAVBOX];
 const NO_LANDING_SQUARE = 'Its page marks no landing square.';
 /** Teleport items the table leaves out, and why. */
 const LEFT_OUT: Readonly<Record<string, string>> = {
@@ -451,6 +457,10 @@ const LEFT_OUT: Readonly<Record<string, string>> = {
   'Magic whistle': 'It works at one spot only, into the Fisher Realm.',
   'Rum (blue)': NO_LANDING_SQUARE,
   'Rum (red)': NO_LANDING_SQUARE,
+  // "Returns you to the Farming Guild", which spans more than one chunk; the page gives no landing square.
+  'Seed of growth': NO_LANDING_SQUARE,
+  "Archivist's folio": 'The app has no chunk for the Fractured Archive.',
+  'Master scroll book': 'Its Teleport uses whichever scroll the player set as the default; each scroll has a row.',
 };
 const pageOf = (source: string) => decodeURIComponent(/\/w\/([^?]+)/.exec(source)?.[1] ?? '').replace(/_/g, ' ');
 
@@ -459,9 +469,11 @@ describe('the whole table', () => {
     const cited = new Set(TRAVEL_METHODS.map((method) => pageOf(method.source)));
     const covered = (page: string) => cited.has(page) || byKind('item').some((method) => ofFamily(method, page));
     expect(WIKI_TELEPORT_ITEMS.length).toBeGreaterThan(150);
-    expect(WIKI_TELEPORT_ITEMS.filter((page) => !covered(page) && !(page in LEFT_OUT))).toEqual([]);
+    expect(TELEPORT_ITEM_PAGES.filter((page) => !covered(page) && !(page in LEFT_OUT))).toEqual([]);
     // A page left out must still be on the list, and not covered after all.
-    expect(Object.keys(LEFT_OUT).filter((page) => covered(page) || !WIKI_TELEPORT_ITEMS.includes(page))).toEqual([]);
+    expect(Object.keys(LEFT_OUT).filter((page) => covered(page) || !TELEPORT_ITEM_PAGES.includes(page))).toEqual([]);
+    // A page added beyond the navbox is dropped from that list once the navbox links it.
+    expect(BEYOND_THE_NAVBOX.filter((page) => WIKI_TELEPORT_ITEMS.includes(page))).toEqual([]);
   });
 });
 
