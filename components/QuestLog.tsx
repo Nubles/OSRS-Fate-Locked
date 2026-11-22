@@ -3,7 +3,8 @@ import { confirmThen } from '../utils/spendConfirm';
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
-import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
+import { SLOT_CONFIG } from '../constants';
+import { questWikiUrl } from '../utils/questWikiUrl';
 import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { BookOpen, MapPin, Sparkles, Scroll } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -72,14 +73,7 @@ export function splitJournalEntriesByKind<T extends Pick<QuestData, 'kind'>>(
 }
 
 // Helpers
-const getWikiUrl = (name: string) => {
-    // Special handling for Recipe for Disaster subquests to avoid broken links
-    if (name.startsWith('RFD:')) {
-        return 'https://oldschool.runescape.wiki/w/Recipe_for_Disaster';
-    }
-    if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-    return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-};
+const getWikiUrl = questWikiUrl;
 
 const getDifficultyColor = (difficulty: DropSource) => {
     if (difficulty === DropSource.QUEST_GRANDMASTER) return 'text-yellow-400 border-yellow-500/30 bg-yellow-900/10';

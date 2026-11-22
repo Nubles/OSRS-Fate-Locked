@@ -29,6 +29,7 @@ import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
 import { FATE_MARKS, FATE_SITES } from './fateLand';
 import { legacyRunSalt } from './seededRng';
 import { MAX_HOPES } from './hopeKey';
+import { migrateQuestCapeAchievementIds, migrateQuestCapeTitle } from './questCapeAchievement';
 import { REGION_CHUNKS } from '../data/regionChunks';
 
 /** The regions a Chunked run's seals name (utils/fateLand.ts). */
@@ -1478,12 +1479,12 @@ const normalizeState = (
   if (own(input, 'achievementsClaimed') && readOwn(input, 'achievementsClaimed') !== undefined) {
     const checked = normalizeAchievementsClaimed(readOwn(input, 'achievementsClaimed'));
     if (checked.ok === false) return checked;
-    state.achievementsClaimed = checked.value;
+    state.achievementsClaimed = migrateQuestCapeAchievementIds(checked.value);
   }
   if (own(input, 'achievementTitle') && readOwn(input, 'achievementTitle') !== undefined) {
     const checked = stringValue(readOwn(input, 'achievementTitle'), 'achievementTitle', MAX_IDENTIFIER_CHARS);
     if (checked.ok === false) return checked;
-    if (checked.value.length > 0) state.achievementTitle = checked.value;
+    if (checked.value.length > 0) state.achievementTitle = migrateQuestCapeTitle(checked.value);
   }
   if (own(input, 'freeRituals') && readOwn(input, 'freeRituals') !== undefined) {
     const raw = readOwn(input, 'freeRituals');

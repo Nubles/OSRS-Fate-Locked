@@ -1425,3 +1425,23 @@ describe('the hope list and the kill baseline (big ideas, October 2026)', () => 
     expectRejected(candidate({ syncScores: { ...syncScores, extra: 1 } }), 'invalid_field', 'syncScores.extra');
   });
 });
+
+describe('Quest Cape achievement id migration', () => {
+  it('loads an old save that claimed and wears Quest Cape under a roster-size id', () => {
+    const loaded = expectAccepted(validateAndMigrateSave(candidate({
+      achievementsClaimed: ['quests-1', 'quests-150', 'quests-196'],
+      achievementTitle: 'quests-196',
+    }), defaultsFixture()));
+    expect(loaded.state.achievementsClaimed).toEqual(['quests-1', 'quests-150', 'quests-196', 'quests-all']);
+    expect(loaded.state.achievementTitle).toBe('quests-all');
+  });
+
+  it('leaves a save without Quest Cape as it was', () => {
+    const loaded = expectAccepted(validateAndMigrateSave(candidate({
+      achievementsClaimed: ['quests-1', 'quests-150'],
+      achievementTitle: 'quests-150',
+    }), defaultsFixture()));
+    expect(loaded.state.achievementsClaimed).toEqual(['quests-1', 'quests-150']);
+    expect(loaded.state.achievementTitle).toBe('quests-150');
+  });
+});

@@ -418,6 +418,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
+  // A members' quest (3 Nov 2026), left here so the order of QUEST_DATA does not move.
   'The Writing\'s on the Wall': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
@@ -426,7 +427,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
     ],
-    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1,
+    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
 
@@ -2625,6 +2626,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { Sailing: 52, Smithing: 48 }, prereqs: ['Troubled Tortugans'], points: 2, series: 'Tortugan',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  // Free-to-play (25 Feb 2026), left here so the order of QUEST_DATA does not move.
   'The Ides of Milk': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Ides of Milk', name: 'The Ides of Milk',
@@ -2674,6 +2676,54 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Herblore': 16, 'Construction': 15 }, prereqs: ['Priest in Peril'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
+  },
+  'A New Leaf': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'A New Leaf', name: 'A New Leaf',
+    regions: ['Kourend & Kebos', 'Asgarnia', 'Kandarin', 'Morytania', 'Kharidian Desert'],
+    // Released 18 Nov 2026. Starts by eating a cabbage from the field in south
+    // Hosidius (the Wiki gives no start map; the chunk is the Cabbage page's
+    // Hosidius patch), then works for Dishop Dennis by the Farming Guild: stew
+    // for Jane, Mary, a sergeant and Konar, a potion from Allanna's book, and a
+    // sprout spy on five ranges around the world.
+    locations: [
+      { id: 'hosidius-cabbage-field', label: 'Cabbage field in south Hosidius', standardAreas: ['Hosidius'], chunkOptions: [{ cx: 27, cy: 55 }] },
+      { id: 'dishop-dennis-farm', label: "Dishop Dennis's farm, south-east of the Farming Guild", standardAreas: ['Mount Karuulm'], chunkOptions: [{ cx: 20, cy: 58 }] },
+      { id: 'farming-guild', label: 'Farming Guild', standardAreas: ['Farming Guild'], chunkOptions: [{ cx: 19, cy: 58 }] },
+      { id: 'kebos-farm-mary', label: "Mary's farm, south of the Farming Guild", standardAreas: ['Molch'], chunkOptions: [{ cx: 19, cy: 57 }] },
+      { id: 'mount-karuulm-konar', label: 'Konar on top of Mount Karuulm', standardAreas: ['Mount Karuulm'], chunkOptions: [{ cx: 20, cy: 59 }] },
+      { id: 'white-knights-castle-range', label: "Range in the White Knights' Castle", standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 52 }] },
+      { id: 'hosidius-mess-hall', label: 'Hosidius Mess Hall', standardAreas: ['Hosidius'], chunkOptions: [{ cx: 25, cy: 56 }] },
+      { id: 'gnome-restaurant-range', label: 'Gnome Restaurant range in the Tree Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 38, cy: 54 }] },
+      { id: 'port-phasmatys-range', label: 'Range in Port Phasmatys', standardAreas: ['Port Phasmatys'], chunkOptions: [{ cx: 57, cy: 54 }] },
+      { id: 'al-kharid-kebab-shop', label: 'Kebab shop in Al Kharid', standardAreas: ['Al Kharid'], chunkOptions: [{ cx: 51, cy: 49 }] },
+    ],
+    // Allanna only hands over her book once a farming contract from Guildmaster
+    // Jane is done, and both are inside the guild.
+    oneOf: [{ guilds: ['Farming Guild'], regions: ['Farming Guild'] }],
+    manualRequirements: ['Completed at least one farming contract'],
+    skills: { 'Farming': 45, 'Cooking': 35, 'Herblore': 32 }, prereqs: ['Priest in Peril'], points: 2,
+    difficulty: DropSource.QUEST_INTERMEDIATE
+  },
+  'Rag and Bone Man III': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'Rag and Bone Man III', name: 'Rag and Bone Man III',
+    regions: ['Misthalin'],
+    // Released 18 Nov 2026. Starts with the Odd Old Man in Silvarea. Any two
+    // wish-list bones will do; the nearest (armoured zombies round the
+    // mountain, angry giant rats in Tolna's rift) sit behind the required
+    // Defender of Varrock and A Soul's Bane. The death loop and the asylum
+    // under his house are reached through him.
+    locations: [
+      { id: 'odd-old-man-house', label: "Odd Old Man's house in Silvarea", standardAreas: ['Silvarea'], chunkOptions: [{ cx: 52, cy: 54 }] },
+    ],
+    skills: { 'Slayer': 58 }, prereqs: ['Rag and Bone Man II', 'Dragon Slayer I', 'The Great Brain Robbery', 'Defender of Varrock', 'Tower of Life', "A Soul's Bane"], points: 3, series: 'Rag and Bone Man',
+    // Slots checked on the Wiki (22 Nov): the earmuffs are on a desk in the asylum.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear earmuffs or a Slayer helmet to fight the ancient banshee' },
+      { slot: 'Weapon', tier: 1, reason: "Wield Sedridor's staff to kill Tolna's heads" },
+    ],
+    difficulty: DropSource.QUEST_EXPERIENCED
   },
 
   // --- Miniquests ---
@@ -2728,6 +2778,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  // A quest, not a miniquest, since 3 Nov 2026; left here so the order of QUEST_DATA does not move.
   'Daddy\'s Home': {
     // A quest worth 1 quest point since 3 Nov 2026 (it was a miniquest).
     kind: 'quest', accessPolicy: 'locations',

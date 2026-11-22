@@ -12,18 +12,14 @@ import {
   evaluateQuestEligibility, questReadyFrom, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
 import { actualCombatLevel } from '../utils/slayerReach';
-import { WIKI_OVERRIDES } from '../constants';
+import { questWikiUrl } from '../utils/questWikiUrl';
 import { UnlockState } from '../types';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import type { AreaRoutes } from '../utils/areaRoutes';
 
 interface Props { searchTerm?: string }
 
-const wikiUrl = (name: string) => {
-  if (name.startsWith('RFD:')) return 'https://oldschool.runescape.wiki/w/Recipe_for_Disaster';
-  if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-  return `https://oldschool.runescape.wiki/w/${name.replace(/ /g, '_')}`;
-};
+const wikiUrl = questWikiUrl;
 
 const BUCKET_META: Record<DoabilityBucket, { label: string; cls: string; dot: string }> = {
   DOABLE:  { label: 'Doable now',          cls: 'text-emerald-300', dot: 'bg-emerald-400' },

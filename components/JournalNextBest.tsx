@@ -8,6 +8,7 @@ import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { DropSource, UnlockState } from '../types';
 import { questUnmet, diaryUnmet } from '../utils/journalProgress';
 import { questLocations } from '../utils/questLocations';
+import { questWikiUrl } from '../utils/questWikiUrl';
 import { chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
 import { computeUnlockImpact } from '../utils/unlockImpact';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -42,7 +43,7 @@ const diffRank = (d: DropSource): number => {
 };
 
 export const wikiUrl = (a: JournalNextBestAction): string => {
-  if (a.kind === 'quest') return `https://oldschool.runescape.wiki/w/${encodeURIComponent(a.name.replace(/ /g, '_'))}`;
+  if (a.kind === 'quest') return questWikiUrl(a.name);
   const area = a.id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
   return `https://oldschool.runescape.wiki/w/${encodeURIComponent((area + ' Diary').replace(/ /g, '_'))}`;
 };

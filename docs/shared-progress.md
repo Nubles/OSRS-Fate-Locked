@@ -2,7 +2,9 @@
 
 A player can choose to show a summary of their run in the Fate Locked Discord.
 The bot's `/progress` command then shows their mode, area or chunk count,
-quests, diary tasks, Combat Achievements and last few unlocks.
+quests, diary tasks, Combat Achievements and last few unlocks. The quest
+count leaves miniquests out, as the Quest Cape does, so the Quest Cape role
+comes with the last quest.
 
 It is off until the player turns it on, in **Discord notifications → Fate
 Locked Discord**. The save, history, sync code and backup never leave the
