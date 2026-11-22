@@ -140,6 +140,11 @@ describe('Boss Task card', () => {
     expect(bossTaskChoices(likeABoss(10, { bosses: ['Vorkath', 'Wintertodt'] }), 'vanilla', {}).block).toBe(BOSS_TASK_NEEDS_BOSS);
     expect(bossTaskChoices(likeABoss(10, { bosses: ['Vorkath', 'Callisto', 'Artio', 'Wintertodt'] }), 'vanilla', {}))
       .toEqual({ bosses: ['Artio', 'Callisto'], block: null });
+    // Krystilia's tasks count only in the Wilderness, so the Fossil Island archaeologist never stands in.
+    expect(BOSS_TASK_BOSSES.Krystilia).not.toContain('Deranged Archaeologist');
+    expect(bossTaskChoices(likeABoss(10, { bosses: ['Deranged Archaeologist'] }), 'vanilla', {}).block).toBe(BOSS_TASK_NEEDS_BOSS);
+    expect(bossTaskChoices(likeABoss(10, { bosses: ['Deranged Archaeologist', 'Crazy Archaeologist'] }), 'vanilla', {}))
+      .toEqual({ bosses: ['Crazy Archaeologist'], block: null });
     // With Konar's Mount Karuulm, any task boss she assigns, the Hydra too; never Wintertodt.
     expect(bossTaskChoices(likeABoss(10, { regions: ['Mount Karuulm'], bosses: ['Wintertodt', 'Vorkath', 'Alchemical Hydra'] }), 'vanilla', {}))
       .toEqual({ bosses: ['Alchemical Hydra', 'Vorkath'], block: null });

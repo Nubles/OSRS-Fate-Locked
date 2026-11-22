@@ -80,13 +80,13 @@
   ],
   "bossTasks": {
     "unlock": "Like a Boss",
-    "reason": "Konar, Nieve, Duradel and Krystilia assign a boss task once Like a Boss is bought: one of these bosses whose Slayer level the player has. Konar alone assigns the Alchemical Hydra and takes no substitute for the crazy archaeologist; Krystilia assigns only the Wilderness bosses.",
+    "reason": "Konar, Nieve, Duradel and Krystilia assign a boss task once Like a Boss is bought: one of these bosses whose Slayer level the player has. Konar alone assigns the Alchemical Hydra. Konar and Krystilia take no substitute for the crazy archaeologist, as their tasks name the Wilderness; Krystilia assigns only the Wilderness bosses.",
     "wiki": ["https://oldschool.runescape.wiki/w/Boss_Slayer?oldid=15359739", "https://oldschool.runescape.wiki/w/Krystilia?oldid=15341834"],
     "masters": {
       "Konar quo Maten": { "weight": 8, "noSubstitutes": ["Crazy archaeologist"] },
       "Nieve": { "weight": 8, "except": ["Alchemical Hydra"] },
       "Duradel": { "weight": 12, "except": ["Alchemical Hydra"] },
-      "Krystilia": { "weight": 8, "only": ["Callisto", "Chaos Elemental", "Chaos Fanatic", "Crazy archaeologist", "Scorpia", "Venenatis", "Vet'ion"] }
+      "Krystilia": { "weight": 8, "noSubstitutes": ["Crazy archaeologist"], "only": ["Callisto", "Chaos Elemental", "Chaos Fanatic", "Crazy archaeologist", "Scorpia", "Venenatis", "Vet'ion"] }
     },
     "bosses": [
       { "boss": "Abyssal Sire", "slayer": 85 },
