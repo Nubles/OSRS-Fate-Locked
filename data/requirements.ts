@@ -1382,7 +1382,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Boots of Brimstone',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Drakes/Wyrms (Component)
-    skills: { 'Slayer': 44 }, // To wear (with 70 Defence, Magic or Ranged); no skill to make
+    skills: { 'Slayer': 84 }, // Drake's claw drops only from drakes; 44 Slayer and 70 Defence, Magic, Ranged to wear
     description: 'Best hybrid boots.'
   },
   'Devout Boots': {
@@ -1444,7 +1444,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Barrelchest Anchor',
     category: TableType.MERCHANTS,
     regions: ['Morytania', 'Islands & Others'], // Mos Le'Harmless
-    skills: { 'Prayer': 50, 'Smithing': 50 },
+    skills: { 'Prayer': 50, 'Attack': 60, 'Strength': 40 }, // Quest Prayer; 60 Attack, 40 Strength to wield
     quests: ['The Great Brain Robbery'],
     description: 'Heavy crush weapon. Repairs cost coins.'
   },
@@ -1452,7 +1452,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ancient Mace',
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Dorgesh-Kaan
-    skills: { 'Prayer': 31 },
+    skills: { 'Prayer': 25, 'Attack': 15 },
     quests: ['Another Slice of H.A.M.'],
     description: 'Special attack restores Prayer points.'
   },
@@ -2176,7 +2176,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Salt Mine',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Weiss
-    skills: { 'Mining': 1 },
+    skills: { 'Mining': 72 }, // Every salt and basalt rock
     quests: ['Making Friends with My Arm'],
     description: 'Mine salt for stony basalt teleports/fires.'
   },
@@ -2227,7 +2227,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Mos Le\'Harmless Cave',
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
-    skills: {},
+    skills: { 'Slayer': 58 }, // Cave horrors
     quests: ['Cabin Fever'],
     description: 'Cave Horrors (Black Mask).'
   },
@@ -2283,9 +2283,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Abyssal Area',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // ALR code
-    skills: {},
+    skills: { 'Slayer': 85 }, // Abyssal demons
     quests: ['Fairytale II - Cure a Queen'],
-    description: 'Safe spot Abyssal Demons (No Slayer requirement on some servers? OSRS requires 85).'
+    description: 'Abyssal demons (85 Slayer) and other Abyss creatures.'
   },
 
   // ============================================================================
@@ -2742,8 +2742,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Spirit Shield (Making)',
     category: TableType.MINIGAMES,
     regions: ['Wilderness'], // Corp Cave logic usually? Or anvil
-    skills: { 'Prayer': 85, 'Smithing': 85 },
-    description: 'Attach Sigil to Blessed Spirit Shield.'
+    skills: { 'Prayer': 85 }, // To bless the shield; Abbot Langley attaches the sigil with no level
+    description: 'Bless a spirit shield (85 Prayer), then attach the sigil yourself (90 Prayer and 85 Smithing) or pay Abbot Langley 1.5M coins.'
   },
   'Ferocious Gloves': {
     id: 'Ferocious Gloves',
@@ -2757,7 +2757,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Neitiznot Faceguard',
     category: TableType.MERCHANTS,
     regions: ['Fremennik'],
-    skills: { 'Crafting': 20 }, // Minimal
+    skills: { 'Defence': 70 }, // To wear; made by Olaf the Bard, no skill
     quests: ['The Fremennik Exiles'],
     description: 'Combine Basilisk Jaw with Helm of Neitiznot.'
   },

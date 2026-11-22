@@ -1,0 +1,52 @@
+import { describe, it, expect } from 'vitest';
+import { STRATEGY_DATABASE } from './requirements';
+import { QUEST_DATA } from './questData';
+import { SKILLS_LIST, REGIONS_LIST } from './items';
+import { createFreshState } from '../context/GameContext';
+import { analyzeRequirement } from '../components/StrategyGuide';
+import { calculateGoalProgress } from '../utils/goalLogic';
+import { buildGoalRoute } from '../utils/goalRoute';
+
+/**
+ * Wiki facts for the second half of the Strategy Guide / Goal Tracker table
+ * (requirements audit, part B). Each pin names the OSRS Wiki page it was
+ * checked against on 22 Nov 2026.
+ */
+
+const entry = (key: string) => {
+  const req = STRATEGY_DATABASE[key];
+  expect(req, key).toBeDefined();
+  return req;
+};
+
+describe('requirements part B: skill levels', () => {
+  it('Barrelchest Anchor needs no Smithing; 60 Attack and 40 Strength to wield (Wiki: Barrelchest anchor)', () => {
+    expect(entry('Barrelchest Anchor').skills).toEqual({ Prayer: 50, Attack: 60, Strength: 40 });
+  });
+  it('Ancient Mace needs 25 Prayer and 15 Attack (Wiki: Ancient mace, Another Slice of H.A.M.)', () => {
+    expect(entry('Ancient Mace').skills).toEqual({ Prayer: 25, Attack: 15 });
+  });
+  it('every Weiss salt rock needs 72 Mining (Wiki: Salt Mine)', () => {
+    expect(entry('Salt Mine (Weiss)').skills).toEqual({ Mining: 72 });
+  });
+  it('cave horrors need 58 Slayer (Wiki: Cave horror)', () => {
+    expect(entry("Mos Le'Harmless Cave (Horrors)").skills).toEqual({ Slayer: 58 });
+  });
+  it('abyssal demons need 85 Slayer and the text does not guess (Wiki: Abyssal demon)', () => {
+    const req = entry('Abyssal Area (Fairy Ring)');
+    expect(req.skills).toEqual({ Slayer: 85 });
+    expect(req.description).not.toMatch(/\?/);
+  });
+  it("Boots of Brimstone need a drake's claw, so 84 Slayer for drakes (Wiki: Drake's claw, Drake)", () => {
+    expect(entry('Boots of Brimstone').skills).toEqual({ Slayer: 84 });
+  });
+  it('Neitiznot Faceguard needs no Crafting; 70 Defence to wear (Wiki: Neitiznot faceguard)', () => {
+    expect(entry('Neitiznot Faceguard').skills).toEqual({ Defence: 70 });
+  });
+  it('Spirit Shield asks only for the 85 Prayer bless; both sigil routes are named (Wiki: Arcane spirit shield)', () => {
+    const req = entry('Spirit Shield (Making)');
+    expect(req.skills).toEqual({ Prayer: 85 });
+    expect(req.description).toMatch(/90 Prayer and 85 Smithing/);
+    expect(req.description).toMatch(/Abbot Langley/);
+  });
+});

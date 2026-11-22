@@ -82,7 +82,7 @@ describe('Strategy Guide corrections from the roll data audit (7 October 2026)',
     expect(skills('Games Necklace (Wintertodt)')).toEqual({ Crafting: 22 });
     expect(skills('Necklace of Passage')).toEqual({ Crafting: 25 });
     expect(skills('Bonecrusher')).toEqual({});
-    expect(skills('Boots of Brimstone')).toEqual({ Slayer: 44 });
+    expect(skills('Boots of Brimstone')).toEqual({ Slayer: 84 });
   });
   it('takes 60 Strength or 60 Agility in the Wilderness God Wars Dungeon, not both', () => {
     for (const key of ['Wilderness God Wars Dungeon', 'Spiritual Rangers', 'Spiritual Warriors']) {
