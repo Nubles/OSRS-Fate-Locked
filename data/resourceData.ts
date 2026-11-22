@@ -298,7 +298,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Chocolate Dust': [
     { type: 'SHOP', name: 'Food Shop', regions: ['Kandarin'], notes: 'Buy Chocolate Bar (Grand Tree/Catherby) and grind' },
-    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: {'Chocolate Bar': 1, 'Knife': 0} }
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: {'Chocolate Bar': 1, 'Knife': 0} },
+    { type: 'SHOP', name: 'Grand Tree Groceries', regions: ['Kandarin'], notes: 'Tree Gnome Stronghold' }
   ],
   'Chocolate Bar': [
     { type: 'SHOP', name: 'Food Shop', regions: ['Kandarin'], notes: 'Grand Tree Groceries / Catherby' }
@@ -1501,8 +1502,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' }
   ],
   'Yew Seed': [
-    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' },
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Very rare' }
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
   ],
   'Magic Seed': [
     { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' },
@@ -1525,7 +1525,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Archery Shop', regions: ['Misthalin', 'Kandarin'] }
   ],
   'Steel Arrow': [
-    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 30 }, inputs: { 'Headless Arrow': 1, 'Steel Arrowtips': 1 } }
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 30 }, inputs: { 'Headless Arrow': 1, 'Steel Arrowtips': 1 } },
+    { type: 'DROP', name: 'Giant Frog', regions: ['Misthalin', 'The Open Seas'], rarity: '1/128', notes: 'Lumbridge Swamp' }
   ],
   'Rune Arrow': [
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 75 }, inputs: { 'Headless Arrow': 1, 'Rune Arrowtips': 1 } },
@@ -1570,7 +1571,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 75 }, inputs: { 'Adamantite Bar': 1 }, outputYield: 15 }
   ],
   'Adamant Axe': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 71 }, inputs: { 'Adamantite Bar': 1 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 71 }, inputs: { 'Adamantite Bar': 1 } },
+    { type: 'DROP', name: 'Dust Devil', regions: ['Kharidian Desert', 'Kourend & Kebos'], skills: { 'Slayer': 65 }, rarity: '3/128' }
   ],
   'Adamant Battleaxe': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 80 }, inputs: { 'Adamantite Bar': 3 } }
@@ -2489,17 +2491,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- LOW-LEVEL HERBS ---
   'Guam Leaf': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 9 }, notes: 'Clean a Grimy guam leaf', outputYield: 8 },
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Common' },
     { type: 'DROP', name: 'Common Monster', regions: ['Any'], notes: 'Low-level humanoids' }
   ],
   'Marrentill': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 14 }, notes: 'Clean a Grimy marrentill', outputYield: 8 },
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Common' },
     { type: 'DROP', name: 'Common Monster', regions: ['Any'] }
   ],
   'Tarromin': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 19 }, notes: 'Clean a Grimy tarromin', outputYield: 8 },
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Uncommon' },
     { type: 'DROP', name: 'Common Monster', regions: ['Any'] }
   ],
 
@@ -2508,8 +2507,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Blue Dragon Scale': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Garlic': [
-    { type: 'SHOP', name: "Wydin's Food Store", regions: ['Asgarnia'], notes: 'Port Sarim' },
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: 'Draynor Manor kitchen' }
+    { type: 'SHOP', name: 'Ardougne Spice Stall', regions: ['Kandarin'], notes: 'East Ardougne market' },
+    { type: 'SHOP', name: 'Greengrocer of Miscellania', regions: ['Fremennik'], notes: 'Miscellania' },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: "East Ardougne and Seers' Village" },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: "Morgan's cupboard, Draynor Village" }
   ],
   'Desert Goat Horn': [
     { type: 'DROP', name: 'Desert Goat', regions: ['Kharidian Desert'], rarity: 'Common' }
@@ -2530,12 +2531,12 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Crush Coconut', regions: ['Any'], inputs: { 'Coconut': 1, 'Vial': 1 }, notes: 'Hammer a coconut, then fill vials' }
   ],
   'Coconut': [
-    { type: 'SHOP', name: 'Grand Tree Groceries', regions: ['Kandarin'], notes: 'Tree Gnome Stronghold' },
+    { type: 'SHOP', name: "Cobado's Groceries", regions: ['Varlamore'], notes: 'Civitas illa Fortis' },
     { type: 'SKILL', name: 'Palm Tree Patch', regions: ['Any'], skills: { 'Farming': 68 }, outputYield: 6 }
   ],
   'Potato Cactus': [
     { type: 'SKILL', name: 'Cactus Patch', regions: ['Kharidian Desert'], skills: { 'Farming': 64 }, outputYield: 3 },
-    { type: 'DROP', name: 'Dust Devil', regions: ['Kharidian Desert', 'Kourend & Kebos'], skills: { 'Slayer': 65 } }
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' }
   ],
   'Magic Roots': [
     { type: 'SKILL', name: 'Farming', regions: ['Any'], skills: { 'Farming': 75 }, notes: 'Dig up a Magic tree stump after harvest' }
@@ -2545,14 +2546,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Jangerberries': [
     { type: 'SKILL', name: 'Bush Patch', regions: ['Any'], skills: { 'Farming': 48 }, outputYield: 4 },
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Ape Atoll' }
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: "Island north of Gu'Tanoth" }
   ],
   "Toad's Legs": [
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Zanaris' },
-    { type: 'DROP', name: 'Giant Frog', regions: ['Misthalin', 'The Open Seas'], notes: 'Lumbridge Swamp Caves' }
+    { type: 'SPAWN', name: 'Swamp Toad', regions: ['Kandarin', 'Asgarnia'], notes: 'Catch a swamp toad and pull off its legs' },
+    { type: 'PICKPOCKET', name: 'Gnome', regions: ['Kandarin'], skills: { 'Thieving': 75 }, notes: 'Tree Gnome Stronghold' }
   ],
   'Star Flower': [
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], notes: 'Zanaris' }
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Islands & Others'], skills: { 'Farming': 49 }, quests: ['Fairytale II - Cure a Queen'], notes: "Cosmic entity's plane (fairy ring CKP)" }
   ],
   "Zulrah's Scales": [
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', rarity: 'Always', notes: 'Large quantities', outputYield: 600 }
@@ -2568,7 +2569,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Crush Crystal Shard', regions: ['Any'], inputs: { 'Crystal Shard': 1 }, outputYield: 10, notes: 'Grind with a Pestle and mortar; one shard makes 10 dust' }
   ],
   'Lava Scale': [
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: 'Common' }
+    { type: 'DROP', name: 'Lava Dragon', regions: ['Wilderness'], rarity: 'Always', notes: 'Lava Dragon Isle' }
   ],
   'Lava Scale Shard': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Lava Scale': 1 }, notes: 'Grind with a Pestle and mortar', outputYield: 4 }
@@ -2596,22 +2597,19 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
     { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
     { type: 'DROP', name: "Kree'arra", regions: ['Asgarnia'], unlockId: "Kree'arra" },
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" }
   ],
   'Godsword Shard 2': [
     { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
     { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
     { type: 'DROP', name: "Kree'arra", regions: ['Asgarnia'], unlockId: "Kree'arra" },
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" }
   ],
   'Godsword Shard 3': [
     { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
     { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
     { type: 'DROP', name: "Kree'arra", regions: ['Asgarnia'], unlockId: "Kree'arra" },
-    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" },
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
+    { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth" }
   ],
   "Executioner's Axe Head": [
     { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis', rarity: '1/1088' }
@@ -2629,16 +2627,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor' }
   ],
   'Ancient Essence': [
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', notes: 'DT2 awakened bosses (any)' },
-    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan' },
-    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer' },
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis' }
+    { type: 'DROP', name: 'Phantom Muspah', regions: ['Fremennik'], unlockId: 'Phantom Muspah' },
+    { type: 'SKILL', name: 'Mining', regions: ['Fremennik'], skills: { 'Mining': 75 }, quests: ['Secrets of the North'], notes: 'Ancient essence crystals, Ghorrock Dungeon' }
   ],
   'Ancient Shard': [
     { type: 'DROP', name: 'Catacombs of Kourend Monsters', regions: ['Kourend & Kebos'], rarity: 'Common' }
   ],
   'Vial of Blood': [
-    { type: 'DROP', name: 'Vyrewatch Sentinel', regions: ['Morytania'], quests: ['Sins of the Father'], rarity: 'Common' }
+    { type: 'DROP', name: 'Theatre of Blood', regions: ['Morytania'], unlockId: 'Theatre of Blood' }
   ],
   'Nail Beast Nails': [
     { type: 'MINIGAME', name: 'Temple Trekking', regions: ['Morytania'], unlockId: 'Temple Trekking', rarity: 'Common' }
@@ -2647,8 +2643,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Nihil Shard': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Nihil Shard': [
-    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' },
-    { type: 'DROP', name: 'Tombs of Amascut', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut' }
+    { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex', notes: 'Nex and the Ancient Prison monsters' }
   ],
   'Helm of Neitiznot': [
     { type: 'QUEST', name: 'The Fremennik Isles', regions: ['Fremennik'], notes: 'Quest Reward' }
@@ -2660,8 +2655,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Requires Broader Fletching unlock (300 Slayer points)' }
   ],
   'Dragon Axe': [
-    { type: 'DROP', name: 'Dagannoth Kings', regions: ['Fremennik'], unlockId: 'Dagannoth Kings', rarity: '1/128' },
-    { type: 'MINIGAME', name: 'Volcanic Mine', regions: ['Islands & Others'], unlockId: 'Volcanic Mine', notes: 'Broken from Ore Pack' }
+    { type: 'DROP', name: 'Dagannoth Kings', regions: ['Fremennik'], unlockId: 'Dagannoth Kings', rarity: '1/128' }
   ],
   'Dragon Harpoon': [
     { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: { 'Slayer': 62 }, rarity: '1/10000 (1/2000 on task)' },

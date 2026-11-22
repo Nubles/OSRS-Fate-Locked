@@ -71,3 +71,75 @@ describe('items that do not exist in the game', () => {
     expect(Object.values(RESOURCE_CATEGORIES).flat()).not.toContain('Bar Mould');
   });
 });
+
+// Sources the Wiki item and monster pages do not list for the item.
+const has = (item: string, name: string, type?: ResourceSource['type']) =>
+  curated(item).some(s => s.name === name && (!type || s.type === type));
+
+describe('curated sources the game does not have', () => {
+  it.each([
+    ['Godsword Shard 1', 'Nex'], ['Godsword Shard 2', 'Nex'], ['Godsword Shard 3', 'Nex'],
+    ['Nihil Shard', 'Tombs of Amascut'],
+    ['Lava Scale', 'Vorkath'],
+    ['Ancient Essence', 'Duke Sucellus'], ['Ancient Essence', 'The Leviathan'],
+    ['Ancient Essence', 'The Whisperer'], ['Ancient Essence', 'Vardorvis'],
+    ['Vial of Blood', 'Vyrewatch Sentinel'],
+    ['Dragon Axe', 'Volcanic Mine'],
+    ['Potato Cactus', 'Dust Devil'],
+    ["Toad's Legs", 'Giant Frog'],
+    ['Garlic', "Wydin's Food Store"],
+    ['Coconut', 'Grand Tree Groceries'],
+    ['Yew Seed', 'Master Farmer'],
+    ['Guam Leaf', 'Master Farmer'], ['Marrentill', 'Master Farmer'], ['Tarromin', 'Master Farmer'],
+  ] as const)('%s is not offered from %s', (item, name) => {
+    expect(has(item, name)).toBe(false);
+  });
+
+  it("toad's legs have no Zanaris ground spawn", () => {
+    expect(curated("Toad's Legs").some(s => s.type === 'SPAWN' && /Zanaris/.test(s.notes ?? ''))).toBe(false);
+  });
+});
+
+describe('curated sources the game does have', () => {
+  it.each([
+    ['Nihil Shard', 'Nex', 'DROP'],
+    ['Lava Scale', 'Lava Dragon', 'DROP'],
+    ['Ancient Essence', 'Phantom Muspah', 'DROP'],
+    ['Vial of Blood', 'Theatre of Blood', 'DROP'],
+    ['Potato Cactus', 'Kalphite Queen', 'DROP'],
+    ["Toad's Legs", 'Gnome', 'PICKPOCKET'],
+    ['Garlic', 'Ardougne Spice Stall', 'SHOP'],
+    ['Coconut', "Cobado's Groceries", 'SHOP'],
+  ] as const)('%s comes from %s', (item, name, type) => {
+    expect(has(item, name, type)).toBe(true);
+  });
+
+  it('gates ancient essence mining on 75 Mining and Secrets of the North', () => {
+    const row = curated('Ancient Essence').find(s => s.type === 'SKILL');
+    expect(row).toMatchObject({ skills: { Mining: 75 }, quests: ['Secrets of the North'] });
+  });
+
+  it('gates gnome pickpocketing for toad legs on 75 Thieving', () => {
+    expect(curated("Toad's Legs").find(s => s.name === 'Gnome')?.skills).toEqual({ Thieving: 75 });
+  });
+
+  it('places the jangerberry spawn in Kandarin', () => {
+    const spawn = curated('Jangerberries').find(s => s.type === 'SPAWN');
+    expect(spawn?.regions).toEqual(['Kandarin']);
+  });
+
+  it('gates star flowers on 49 Farming and Fairytale II', () => {
+    const [row] = curated('Star Flower');
+    expect(row).toMatchObject({ skills: { Farming: 49 }, quests: ['Fairytale II - Cure a Queen'] });
+  });
+
+  // Wiki rows borrow region and skill data from the curated row of the same
+  // name, so each of these needs one curated row on an item it really gives.
+  it.each([
+    ['Adamant Axe', 'Dust Devil', 'DROP'],
+    ['Steel Arrow', 'Giant Frog', 'DROP'],
+    ['Chocolate Dust', 'Grand Tree Groceries', 'SHOP'],
+  ] as const)('keeps a %s template row for %s', (item, name, type) => {
+    expect(has(item, name, type)).toBe(true);
+  });
+});
