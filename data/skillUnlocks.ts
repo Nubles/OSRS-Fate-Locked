@@ -1132,7 +1132,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Elidinis\' Ward, Tecu Salamander, Soulflame Horn, Avernic Treads'
     ],
     9: [
-      'Lvl 81: Wind Surge',
+      'Lvl 81: Wind Surge, Stat Restore Pot Share',
       'Lvl 82: Ice Blitz, Magic Imbue, Sanguinesti Staff, Teleother Falador',
       'Lvl 82: Dark Demonbane (A Kingdom Divided)',
       'Lvl 82: Eldritch, Harmonised and Volatile Nightmare Staves',

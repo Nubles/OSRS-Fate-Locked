@@ -83,6 +83,7 @@ describe('Magic unlocks filled from the Wiki level-up table', () => {
     ['Magic', 'Undead Grasp', 79],
     ['Magic', 'Death Charge', 80],
     ['Magic', 'Avernic Treads', 80],
+    ['Magic', 'Stat Restore Pot Share', 81],
     ['Magic', 'Teleother Falador', 82],
     ['Magic', 'Dark Demonbane', 82],
     ['Magic', 'Volatile Nightmare Staves', 82],
