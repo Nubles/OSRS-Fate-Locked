@@ -2,6 +2,18 @@
   "reviewedAt": "2026-09-21",
   "records": [
     {
+      "name": "Slayer Equipment (shop)",
+      "status": "stocked",
+      "npcNames": [
+        "Spria"
+      ],
+      "note": "Spria runs the Draynor Village branch; the export places only the numbered branches.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Slayer_Equipment_(shop)?oldid=15364486",
+        "revision": 15364486
+      }
+    },
+    {
       "name": "Grum's Gold Exchange",
       "status": "zero-stock",
       "items": [],
@@ -248,7 +260,8 @@
       "name": "Lost Property shop",
       "status": "stocked",
       "npcNames": [
-        "Perdu"
+        "Perdu",
+        "Chris"
       ],
       "requirements": [
         "Previously earned the replacement quest reward"

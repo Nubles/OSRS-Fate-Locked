@@ -61,3 +61,16 @@ describe('full-source content conservation', () => {
     expect(result.full.tags.mining).toEqual(['256']);
   });
 });
+
+describe('reviewed shop placements (chunk audit, November 2026)', () => {
+  const shopsIn = (id: string): string[] => (full.chunks as Record<string, { s?: string[] }>)[id]?.s ?? [];
+
+  it("lists Spria's Slayer Equipment shop in Draynor and Chris's Lost Property shop at Emir's Arena", () => {
+    // OSRS Wiki 'Slayer Equipment (shop)' rev 15364486: Spria, Draynor Village, 3092,3268 (48,51).
+    expect(shopsIn('12339')).toContain('Slayer Equipment (shop)');
+    // OSRS Wiki 'Lost Property shop' rev 15349467: Chris, Emir's Arena, 3385,3269 (52,51).
+    expect(shopsIn('13363')).toContain('Lost Property shop');
+    expect((full.taskUnlocks.Shops as Record<string, Record<string, string[]>>)['Lost Property shop']['13363'])
+      .toEqual(['Previously earned the replacement quest reward']);
+  });
+});
