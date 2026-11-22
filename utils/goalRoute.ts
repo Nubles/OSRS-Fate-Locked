@@ -4,7 +4,7 @@ import { GameState, TableType, UnlockState } from '../types';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { RESOURCE_MAP } from '../data/resourceData';
+import { RESOURCE_MAP, currentResourceName } from '../data/resourceData';
 import { REGION_GROUPS } from '../constants';
 import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
 import { isAreaReachable } from './reachability';
@@ -340,8 +340,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   // ── Resource Engine item goals: route = its sources + tables ─────────────
   if (!req) {
-    if (!RESOURCE_MAP[goalId]) return null;
-    const chain = calculateSupplyChain(goalId, gameState);
+    // A goal pinned before an item was renamed keeps its stored id.
+    const itemName = currentResourceName(goalId);
+    if (!RESOURCE_MAP[itemName]) return null;
+    const chain = calculateSupplyChain(itemName, gameState);
     const sources: RouteSource[] = (chain?.sources ?? []).map(s => ({
       type: s.source.type,
       name: s.source.name,

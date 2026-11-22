@@ -17,6 +17,16 @@ const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const RECENT_KEY = 'FATE_RESOURCE_RECENT';
 const MAX_FAVORITES = 20;
 const MAX_RECENT = 10;
+// Stored quantities under the item's current name; plan targets keep only
+// items the engine knows, as the mount loader does.
+const currentQuantities = (stored: Record<string, number>, knownOnly: boolean): Record<string, number> => {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(stored)) {
+    const name = currentResourceName(k);
+    if (!knownOnly || RESOURCE_MAP[name]) out[name] = v;
+  }
+  return out;
+};
 
 interface SupplyChainCalculatorProps {
   onClose: () => void;
@@ -287,6 +297,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       if (exact) return calculateSupplyChain(exact, gameState, inventory, targetQty);
       return null;
   }, [query, availableItems, gameState, inventory, targetQty]);
+  // The stored pin for this item, which may still use a pre-rename name.
+  const pinnedId = selectedResult ? pinnedGoals.find(g => currentResourceName(g) === selectedResult.itemName) : undefined;
 
   // Calculate Reverse Dependencies ("Used In")
   const usedIn = useMemo(() => {
@@ -373,8 +385,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                 <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">The Resource Engine <SectionGuide id="SUPPLY" /></h2>
                 {legacyAvailable && <button type="button" className="text-xs text-amber-300 underline" onClick={() => {
                   if (copyLegacyResourcePlanning(localStorage, runId)) {
-                    setInventory(readResourceQuantities(localStorage, INVENTORY_KEY));
-                    setPlanTargets(readResourceQuantities(localStorage, PLAN_KEY));
+                    setInventory(currentQuantities(readResourceQuantities(localStorage, INVENTORY_KEY), false));
+                    setPlanTargets(currentQuantities(readResourceQuantities(localStorage, PLAN_KEY), true));
                     setLegacyAvailable(false);
                   }
                 }}>Copy previous shared inventory and plan into this run</button>}
@@ -469,13 +481,13 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                                     </button>
                                     <span className="text-xs text-gray-500">•</span>
                                     <button
-                                        onClick={() => togglePin(selectedResult.itemName)}
-                                        aria-pressed={pinnedGoals.includes(selectedResult.itemName)}
-                                        title={pinnedGoals.includes(selectedResult.itemName) ? 'Remove from Active Goals' : 'Track in Active Goals (Dashboard)'}
-                                        className={`text-xs transition-colors flex items-center gap-1 ${pinnedGoals.includes(selectedResult.itemName) ? 'text-purple-300 hover:text-purple-200' : 'text-gray-500 hover:text-purple-400'}`}
+                                        onClick={() => togglePin(pinnedId ?? selectedResult.itemName)}
+                                        aria-pressed={pinnedId !== undefined}
+                                        title={pinnedId !== undefined ? 'Remove from Active Goals' : 'Track in Active Goals (Dashboard)'}
+                                        className={`text-xs transition-colors flex items-center gap-1 ${pinnedId !== undefined ? 'text-purple-300 hover:text-purple-200' : 'text-gray-500 hover:text-purple-400'}`}
                                     >
-                                        <Pin size={12} className={pinnedGoals.includes(selectedResult.itemName) ? 'fill-purple-400' : ''} />
-                                        {pinnedGoals.includes(selectedResult.itemName) ? 'Pinned Goal' : 'Pin as Goal'}
+                                        <Pin size={12} className={pinnedId !== undefined ? 'fill-purple-400' : ''} />
+                                        {pinnedId !== undefined ? 'Pinned Goal' : 'Pin as Goal'}
                                     </button>
                                     <span className="text-xs text-gray-500">•</span>
                                     <button
