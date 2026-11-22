@@ -216,9 +216,15 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
     const tableFirst = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
     expect(unlocks).toContain(`${tableFirst} Places you can&#x27;t reach yet can come up too. Guaranteed at skill levels`);
-    expect(unlocks).not.toContain('In Chunked, only banks and guilds');
-    expect(renderCodex('unlocks', 'chunked')).toContain(`${tableFirst} In Chunked, only banks and guilds inside your chunks can come up. Guaranteed`);
+    expect(unlocks).not.toContain('In Chunked, only bosses');
+    expect(renderCodex('unlocks', 'chunked')).toContain(`${tableFirst} In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up. Guaranteed`);
     expect(unlocks).not.toContain('keeps its old odds');
+  });
+
+  it('says every chunk gained in Chunked draws an omen', () => {
+    const modes = renderCodex('modes', 'chunked');
+    expect(modes).toContain('every chunk you gain draws one of fate&#x27;s eight omens (see Key Economy).');
+    expect(modes).not.toContain('one chunk in eight');
   });
 
   it('tells a seeded run from before the table-first rule that it keeps its old Chaos odds', () => {

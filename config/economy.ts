@@ -384,7 +384,7 @@ export interface KeyTypeInfo {
 /** How a Chaos Key picks (utils/gameEngine.ts pickChaosEntry). */
 export const CHAOS_PICK_TEXT = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
 export const CHAOS_REACH_TEXT = "Places you can't reach yet can come up too.";
-export const CHUNKED_CHAOS_TEXT = 'In Chunked, only banks and guilds inside your chunks can come up.';
+export const CHUNKED_CHAOS_TEXT = 'In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up.';
 /** A seeded run from before the table-first rule keeps its old draw (utils/seededRng.ts chaosPicksTableFirst). */
 export const OLD_SEEDED_CHAOS_TEXT = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
 

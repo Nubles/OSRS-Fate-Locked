@@ -151,7 +151,7 @@ describe('economy ↔ engine consistency', () => {
       expect(counts.get(TableType.EQUIPMENT)).toBe(1);
       expect(counts.get(TableType.BANKS)).toBe(1);
     }
-    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only banks and guilds inside your chunks can come up.");
+    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up.");
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
