@@ -69,6 +69,8 @@ export const MAX_IDENTIFIER_ARRAY = 25_000;
 export const MAX_COLLECTION_LOG_ENTRIES = 25_000;
 export const MAX_USER_NOTES = 5_000;
 export const MAX_NOTE_CHARS = 20_000;
+/** The most free Rituals of Clarity the preview achievement build could grant (eight achievements, one each). */
+export const LEGACY_FREE_CLARITY_MAX = 8;
 
 /**
  * Keeps a run note within MAX_NOTE_CHARS. The note editor, the reducer and the
@@ -1497,10 +1499,13 @@ const normalizeState = (
     if (checked.value.length > 0) state.hopes = checked.value.slice(-MAX_HOPES);
   }
   // A preview build of achievement rewards gave free Rituals of Clarity as a count.
+  // Only its eight biggest achievements gave one each, so no honest save holds
+  // more than LEGACY_FREE_CLARITY_MAX; a larger count is cut to that.
   if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
     const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
     if (checked.ok === false) return checked;
-    if (checked.value > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(checked.value).fill('LUCK')];
+    const count = Math.min(checked.value, LEGACY_FREE_CLARITY_MAX);
+    if (count > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(count).fill('LUCK')];
   }
   if (own(input, 'rituals')) {
     const checked = normalizeRituals(readOwn(input, 'rituals'));

@@ -14,6 +14,7 @@ import {
   MAX_IDENTIFIER_CHARS,
   MAX_NOTE_CHARS,
   clampNoteText,
+  LEGACY_FREE_CLARITY_MAX,
   MAX_SAVE_BYTES,
   MAX_SEED_CHARS,
   MAX_USER_NOTES,
@@ -1224,6 +1225,18 @@ describe('save schema resource limits', () => {
     const repaired = expectAccepted(validateAndMigrateSave(candidate({ userNotes: { note: 'x'.repeat(MAX_NOTE_CHARS + 1), short: 'kept' } }), defaultsFixture()));
     expect(repaired.state.userNotes).toEqual({ note: 'x'.repeat(MAX_NOTE_CHARS), short: 'kept' });
     expectRejected(candidate({ userNotes: { note: 5 } }), 'invalid_field', 'userNotes.note');
+  });
+
+  it('loads a legacy freeClarity count as free Rituals, cut to what the preview build could grant', () => {
+    const honest = expectAccepted(validateAndMigrateSave(candidate({ freeClarity: 3 }), defaultsFixture()));
+    expect(honest.state.freeRituals).toEqual(['LUCK', 'LUCK', 'LUCK']);
+    const most = expectAccepted(validateAndMigrateSave(candidate({ freeClarity: LEGACY_FREE_CLARITY_MAX, freeRituals: ['LUCK'] }), defaultsFixture()));
+    expect(most.state.freeRituals).toHaveLength(LEGACY_FREE_CLARITY_MAX + 1);
+    const crafted = expectAccepted(validateAndMigrateSave(candidate({ freeClarity: 4_000_000 }), defaultsFixture()));
+    expect(crafted.state.freeRituals).toHaveLength(LEGACY_FREE_CLARITY_MAX);
+    const none = expectAccepted(validateAndMigrateSave(candidate({ freeClarity: 0 }), defaultsFixture()));
+    expect(none.state.freeRituals ?? []).toEqual([]);
+    expectRejected(candidate({ freeClarity: -1 }), 'invalid_number', 'freeClarity');
   });
 
   it('cuts a long note without splitting a surrogate pair', () => {
