@@ -40,6 +40,7 @@ import { JournalSummaryCard } from './components/JournalSummaryCard';
 import { isChunkLoadError, reloadIfNewBuild } from './utils/chunkLoadError';
 import { reportError } from './utils/errorBeacon';
 import { useEscapeKey } from './hooks/useEscapeKey';
+import { useOncePerEvent } from './hooks/useOncePerEvent';
 import { resolveModeRules } from './config/gameModes';
 import { CHUNKED_OMNI_LAND_TEXT, RITUALS, type Ritual } from './config/economy';
 import { showToast } from './utils/toast';
@@ -1008,11 +1009,12 @@ const GameLayout = () => {
   }, []);
 
   // Watch for ritual events to trigger animations
-  React.useEffect(() => {
-    if (lastEvent?.type !== 'RITUAL' || !animationsEnabled) return;
-    const meta = (lastEvent.meta ?? {}) as Record<string, unknown>;
-    if (RITUALS.some(r => r.id === meta.type)) setActiveRitual({ id: lastEvent.id, ritual: meta.type as Ritual['id'], meta });
-  }, [lastEvent, animationsEnabled]);
+  // (once per event, so toggling Animations doesn't replay the last scene).
+  useOncePerEvent(lastEvent, animationsEnabled, event => {
+    if (event.type !== 'RITUAL') return;
+    const meta = (event.meta ?? {}) as Record<string, unknown>;
+    if (RITUALS.some(r => r.id === meta.type)) setActiveRitual({ id: event.id, ritual: meta.type as Ritual['id'], meta });
+  });
 
   // Ctrl/⌘+K now opens the command palette (which can jump to the Oracle and
   // everything else); the CommandPalette component owns that key handler.

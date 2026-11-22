@@ -1,6 +1,7 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { useOncePerEvent } from '../hooks/useOncePerEvent';
 import { Key, Sparkles } from './OsrsIcon';
 import { LootBeam } from './LootBeam';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
@@ -48,9 +49,9 @@ export const EffectsLayer: React.FC = () => {
   const [rollFeedback, setRollFeedback] = useState<RollFeedback[]>([]);
   const [beams, setBeams] = useState<Beam[]>([]);
 
-  useEffect(() => {
-    if (!lastEvent || !animationsEnabled) return;
-    const { type, x, y, meta } = lastEvent;
+  // Once per event: toggling Animations must not replay the last one.
+  useOncePerEvent(lastEvent, animationsEnabled, event => {
+    const { type, x, y, meta } = event;
 
     // Loot beam — fired for significant events. UNLOCK is handled inside the
     // reveal itself (the beam rises behind the revealed item), so we skip it
@@ -86,7 +87,7 @@ export const EffectsLayer: React.FC = () => {
       spawnParticle(x, y, 'key');
       spawnFeedback(x, y, roll?.roll ?? 0, roll?.threshold ?? 0, 'PITY');
     }
-  }, [lastEvent, animationsEnabled]);
+  });
 
   const spawnBeam = (x: number, y: number, color: string, intense: boolean) => {
     const id = Math.random().toString();
