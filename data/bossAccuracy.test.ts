@@ -125,7 +125,7 @@ describe('boss access, from the roll data audit (7 October 2026)', () => {
     expect(ACTIVITY_REQUIREMENTS['Volcanic Mine'].manualRequirements).toBeUndefined();
     expect(ACTIVITY_REQUIREMENTS['Archery Competition'].skills).toEqual({ Ranged: 40 });
     expect(ACTIVITY_REQUIREMENTS['Gnome Restaurant'].skills).toEqual({ Cooking: 29 });
-    expect(ACTIVITY_REQUIREMENTS['Colossal Pouch'].skills).toEqual({ Runecraft: 25 });
+    expect(ACTIVITY_REQUIREMENTS['Colossal Pouch'].skills).toEqual({ Runecraft: 25, Crafting: 56 });
     expect(ACTIVITY_REQUIREMENTS["Mounted Xeric's Talisman"].skills).toEqual({ Construction: 72 });
     expect(ACTIVITY_REQUIREMENTS['Mounted Digsite Pendant'].skills).toEqual({ Construction: 82 });
     expect(ACTIVITY_REGIONS["Servants' Guild"]).toBe('Kandarin');

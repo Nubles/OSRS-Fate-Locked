@@ -154,4 +154,8 @@ describe('activity rows follow the Wiki', () => {
     expect(ACTIVITY_REQUIREMENTS['Cape Rack'].skills).toEqual({ Construction: 54 });
   });
 
+  it('the Colossal Pouch needs 56 Crafting as well as 25 Runecraft (Wiki: Colossal pouch)', () => {
+    expect(ACTIVITY_REQUIREMENTS['Colossal Pouch'].skills).toEqual({ Runecraft: 25, Crafting: 56 });
+  });
+
 });

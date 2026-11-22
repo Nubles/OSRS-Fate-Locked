@@ -236,7 +236,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: "Bought from Veos; each teleport page comes from a Great Kourend quest (Depths of Despair, Queen of Thieves, Tale of the Righteous, The Forsaken Tower, The Ascent of Arceuus)." },
   'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
-  'Colossal Pouch': { skills: { Runecraft: 25 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
+  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
   'Dizana\'s Quiver': { note: 'Fortis Colosseum reward (ammo storage).' },
   'Forestry Kit': { note: 'Forestry Shop (anima-infused bark).' },
