@@ -43,6 +43,8 @@ describe('Rune altars reached through the Abyss', () => {
     ['lum_med_12', 'Al Kharid', ['Rune Mysteries']],
     ['fal_easy_7', 'Ice Mountain', []],
     ['fal_hard_1', 'Goblin Village', ['Rune Mysteries']],
+    // Falador Diary rev 15404232: the Air Altar through its talisman or tiara, or the Abyss.
+    ['fal_elite_1', 'Falador', ['Rune Mysteries']],
     ['kar_hard_4', 'Shilo Village', ['Rune Mysteries']],
     ['kar_elite_1', 'Shilo Village', ['Rune Mysteries']],
     ["ard_hard_12", 'West Ardougne', ["Mourning's End Part II", 'Rune Mysteries']],

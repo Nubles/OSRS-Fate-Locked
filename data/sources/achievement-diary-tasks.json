@@ -4332,13 +4332,36 @@
       "sourceRequirements": "88 Runecraft 77 Runecraft with 2 Raiments of the Eye pieces 66 Runecraft with 3 Raiments of the Eye pieces 55 Runecraft with 4 Raiments of the Eye pieces 28 pure, daeyalt, or rune essence (less may suffice at higher Runecraft levels) Access to the Air Altar ( air talisman / tiara, elemental talisman / tiara, or the Abyss )",
       "oneOf": [
         {
-          "label": "No Raiments",
+          "label": "No Raiments, Falador ruins",
           "skills": {
             "Runecraft": 88
-          }
+          },
+          "regions": [
+            "Falador"
+          ]
         },
         {
-          "label": "2 Raiments of the Eye pieces (Head, Body)",
+          "label": "No Raiments, through the Abyss",
+          "skills": {
+            "Runecraft": 88
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Body), Falador ruins",
           "skills": {
             "Runecraft": 77
           },
@@ -4358,10 +4381,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "2 Raiments of the Eye pieces (Head, Legs)",
+          "label": "2 Raiments of the Eye pieces (Head, Body), through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Legs), Falador ruins",
           "skills": {
             "Runecraft": 77
           },
@@ -4381,10 +4444,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "2 Raiments of the Eye pieces (Head, Boots)",
+          "label": "2 Raiments of the Eye pieces (Head, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Boots), Falador ruins",
           "skills": {
             "Runecraft": 77
           },
@@ -4404,10 +4507,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "2 Raiments of the Eye pieces (Body, Legs)",
+          "label": "2 Raiments of the Eye pieces (Head, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Legs), Falador ruins",
           "skills": {
             "Runecraft": 77
           },
@@ -4427,10 +4570,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "2 Raiments of the Eye pieces (Body, Boots)",
+          "label": "2 Raiments of the Eye pieces (Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Boots), Falador ruins",
           "skills": {
             "Runecraft": 77
           },
@@ -4450,10 +4633,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "2 Raiments of the Eye pieces (Legs, Boots)",
+          "label": "2 Raiments of the Eye pieces (Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Legs, Boots), Falador ruins",
           "skills": {
             "Runecraft": 77
           },
@@ -4473,10 +4696,50 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Body, Legs)",
+          "label": "2 Raiments of the Eye pieces (Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "2 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs), Falador ruins",
           "skills": {
             "Runecraft": 66
           },
@@ -4502,10 +4765,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Body, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Legs), through the Abyss",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots), Falador ruins",
           "skills": {
             "Runecraft": 66
           },
@@ -4531,10 +4840,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Body, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots), Falador ruins",
           "skills": {
             "Runecraft": 66
           },
@@ -4560,10 +4915,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Head, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots), Falador ruins",
           "skills": {
             "Runecraft": 66
           },
@@ -4589,10 +4990,56 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
           ]
         },
         {
-          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots)",
+          "label": "3 Raiments of the Eye pieces (Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 66
+          },
+          "items": [
+            "3 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots), Falador ruins",
           "skills": {
             "Runecraft": 55
           },
@@ -4624,11 +5071,60 @@
               "reason": "Raiments of the Eye",
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "regions": [
+            "Falador"
+          ]
+        },
+        {
+          "label": "4 Raiments of the Eye pieces (Head, Body, Legs, Boots), through the Abyss",
+          "skills": {
+            "Runecraft": 55
+          },
+          "items": [
+            "4 Raiments of the Eye pieces"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
           ]
         }
-      ],
-      "regions": [
-        "Falador"
       ]
     },
     {
