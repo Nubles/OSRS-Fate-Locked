@@ -284,12 +284,14 @@ export function useAutoRoll() {
       if (!linkedNow) return !askedFor;
       return normalizeAccountName(askedFor ?? answerName ?? '') === normalizeAccountName(linkedNow);
     };
+    // The latest request, dropped only because the linked name changed elsewhere: stop loading.
+    const settleDropped = () => { if (asked === requestId.current) setStatus('idle'); };
     setStatus('loading'); setError(''); setErrorNameNotFound(false); setFetched(null); setRolledTo(0); setApplied(false);
     setSkillRollingState(false); setSkillKeysGained(null); setBaselineTaken(false);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
       const data = await fetchPlayer(query);
-      if (!current(data.displayName)) return;
+      if (!current(data.displayName)) { settleDropped(); return; }
       // Bind the run to this account on the first successful fetch. This
       // reading becomes its baseline: levels it already has never roll.
       // A failed fetch binds nothing and takes no baseline.
@@ -305,7 +307,7 @@ export function useAutoRoll() {
       setFetched(data);
       setStatus('loaded');
     } catch (e: any) {
-      if (!current()) return;
+      if (!current()) { settleDropped(); return; }
       // Inside Wise Old Man's minute: keep the reading the player already had, with the note.
       const keptReading = e instanceof HiscoresLookupError && e.rateLimited ? syncReadings.get(readingKey(runId, linkedAccount) ?? '') : undefined;
       if (keptReading) setFetched(keptReading.data);

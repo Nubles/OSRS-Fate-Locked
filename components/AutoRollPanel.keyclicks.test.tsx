@@ -138,6 +138,26 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
     expect(screen.getByRole('button', { name: /Auto-roll 1 skill \(\+4\)/ })).toBeTruthy();
   });
 
+  it('is not left loading when the run is unlinked while its lookup is in flight', async () => {
+    game.linkedAccount = 'Alex';
+    game.syncBaseline = { account: 'Alex', levels: { Attack: 1 } };
+    let answer: (value: unknown) => void = () => {};
+    vi.stubGlobal('fetch', vi.fn(() => new Promise(resolve => { answer = resolve; })));
+    const view = await mount();
+    await flush();
+    expect(screen.getByRole('button', { name: /Refresh|Loading/ }).hasAttribute('disabled')).toBe(true);
+
+    // A run reset (or a save replaced elsewhere) unlinks the name under the lookup.
+    game.linkedAccount = null;
+    game.syncBaseline = undefined;
+    view.rerender(<AutoRollPanel />);
+    await act(async () => { answer(reading('Alex', 90)); });
+    await flush();
+
+    expect(screen.getByRole('button', { name: /Fetch/ }).hasAttribute('disabled')).toBe(false);
+    expect(game.setLinkedAccount).not.toHaveBeenCalled();
+  });
+
   it('keeps the reading across a tab switch and asks Wise Old Man only once within a minute', async () => {
     game.linkedAccount = 'Alex';
     game.syncBaseline = { account: 'Alex', levels: { Attack: 5 } };
