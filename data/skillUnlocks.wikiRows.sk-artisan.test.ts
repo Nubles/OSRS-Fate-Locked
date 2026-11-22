@@ -78,6 +78,10 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Crafting', 'Confliction Gauntlets (Smithing 70)', 83], ['Crafting', 'Onyx Bracelets', 84],
     ['Crafting', 'Accursed Sceptres', 85], ['Crafting', 'Amulet of Rancour', 86],
     ['Crafting', 'Fortified Masori Armour, Armadylean Plates', 90],
+    ['Herblore', 'Compost Potion', 22], ['Herblore', 'Moonlight Potion (Perilous Moons)', 38],
+    ['Herblore', 'Goading Potion', 54], ['Herblore', 'Mastering Mixology', 60],
+    ['Herblore', 'Sanfew Serum (Zogre Flesh Eaters)', 65], ['Herblore', 'Surge Potion', 81],
+    ['Herblore', 'Menaphite Remedy', 88],
     // @next-skill
   ] as const)('%s: %s appears once, at its Wiki level and tier', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));

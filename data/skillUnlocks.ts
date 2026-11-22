@@ -915,7 +915,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 20: Clean Harralander'
     ],
     3: [
-      'Lvl 22: Restore Potion, Guthix Balance',
+      'Lvl 22: Restore Potion, Guthix Balance, Compost Potion',
       'Lvl 25: Clean Ranarr Weed',
       'Lvl 26: Energy Potion',
       'Lvl 30: Clean Toadflax, Defence Potion'
@@ -923,7 +923,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     4: [
       'Lvl 34: Agility Potion',
       'Lvl 36: Combat Potion',
-      'Lvl 38: Prayer Potion',
+      'Lvl 38: Prayer Potion, Moonlight Potion (Perilous Moons)',
       'Lvl 40: Clean Irit Leaf'
     ],
     5: [
@@ -934,17 +934,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 52: Super Energy Potion',
       'Lvl 53: Hunter Potion',
-      'Lvl 54: Clean Kwuarm',
+      'Lvl 54: Clean Kwuarm, Goading Potion',
       'Lvl 55: Super Strength Potion',
       'Lvl 56: Haemostatic Dressing',
       'Lvl 58: Clean Huasca',
       'Lvl 59: Clean Snapdragon',
-      'Lvl 60: Weapon Poison'
+      'Lvl 60: Weapon Poison, Mastering Mixology'
     ],
     7: [
       'Lvl 62: Super Fishing Potion',
       'Lvl 63: Super Restore Potion',
-      'Lvl 65: Clean Cadantine',
+      'Lvl 65: Clean Cadantine, Sanfew Serum (Zogre Flesh Eaters)',
       'Lvl 66: Super Defence Potion',
       'Lvl 66: Extreme Energy',
       'Lvl 67: Clean Lantadyme',
@@ -963,10 +963,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Bastion & Battlemage Potions'
     ],
     9: [
-      'Lvl 81: Saradomin Brew',
+      'Lvl 81: Saradomin Brew, Surge Potion',
       'Lvl 84: Extended Antifire',
       'Lvl 85: Ancient Brew, Extended Stamina',
       'Lvl 87: Anti-venom',
+      'Lvl 88: Menaphite Remedy',
       'Lvl 89: Armadyl Brew',
       'Lvl 90: Super Combat Potion'
     ],
