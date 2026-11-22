@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { QUEST_DATA } from '../data/questData';
-import { questWikiUrl } from '../utils/questWikiUrl';
+import { caMonsterWikiUrl, questIdWikiUrl, questWikiUrl } from '../utils/questWikiUrl';
+import { ALL_DIARY_TASKS } from '../data/diaryTasks';
+import { ALL_CA_TASKS } from '../data/caTasks';
 import { wikiUrl as nextBestWikiUrl } from './JournalNextBest';
 
 describe('Quest Journal Wiki links', () => {
@@ -23,5 +25,24 @@ describe('Quest Journal Wiki links', () => {
     expect(nextBestWikiUrl(action('Cook\'s Assistant'))).toBe("https://oldschool.runescape.wiki/w/Cook's_Assistant");
     expect(nextBestWikiUrl({ kind: 'diary', sub: 'DIARIES', id: 'Varrock Easy', name: 'Varrock Easy', unmet: 0, diffRank: 1 }))
       .toBe('https://oldschool.runescape.wiki/w/Varrock_Diary');
+  });
+});
+
+describe('Diary and Combat Achievement Wiki links', () => {
+  const page = (url: string) => decodeURIComponent(url.replace('https://oldschool.runescape.wiki/w/', ''));
+
+  it('sends the Recipe for Disaster steps a diary asks for to the Recipe for Disaster page', () => {
+    expect(questIdWikiUrl('RFD: Finale')).toBe('https://oldschool.runescape.wiki/w/Recipe_for_Disaster');
+    expect(questIdWikiUrl('RFD: King Awowogei')).toBe('https://oldschool.runescape.wiki/w/Recipe_for_Disaster');
+    // No page of the Wiki is called "RFD: ..." (checked 22 Nov 2026).
+    const quests = [...new Set(ALL_DIARY_TASKS.flatMap(task => task.quests ?? []))];
+    expect(quests.map(questIdWikiUrl).map(page).filter(title => title.startsWith('RFD:'))).toEqual([]);
+  });
+
+  it('opens the Combat Achievements page for a task with no monster', () => {
+    expect(ALL_CA_TASKS.find(task => task.id === 'ca_399')?.monster).toBe('N/A');
+    expect(caMonsterWikiUrl('N/A')).toBe('https://oldschool.runescape.wiki/w/Combat_Achievements');
+    expect(caMonsterWikiUrl('Zulrah')).toBe('https://oldschool.runescape.wiki/w/Zulrah');
+    expect(ALL_CA_TASKS.map(task => page(caMonsterWikiUrl(task.monster))).filter(title => title === 'N/A')).toEqual([]);
   });
 });

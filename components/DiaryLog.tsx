@@ -25,6 +25,7 @@ import {
   type EligibilityBlocker,
 } from '../utils/journalStatus';
 import { requestDiaryTaskAttestation } from '../utils/manualAttestation';
+import { questIdWikiUrl } from '../utils/questWikiUrl';
 import { farmingPatchLabel } from '../utils/farmingPatches';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -421,7 +422,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           {missingDiaryQuests.map(q => (
                             <a
                               key={q}
-                              href={`https://oldschool.runescape.wiki/w/${encodeURIComponent(q.replace(/ /g, '_'))}`}
+                              href={questIdWikiUrl(q)}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}

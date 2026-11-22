@@ -17,6 +17,7 @@ import {
   earnedCATiers,
 } from '../utils/caProgress';
 import { caTaskBlocker, caTaskBlockerHint } from '../utils/caTaskAccess';
+import { caMonsterWikiUrl } from '../utils/questWikiUrl';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -56,10 +57,7 @@ export const useCAJournal = (externalSearch = '') => {
     }, 50);
   };
 
-  const getWikiUrl = (monster: string) => {
-    if (monster === 'General') return 'https://oldschool.runescape.wiki/w/Combat_Achievements';
-    return `https://oldschool.runescape.wiki/w/${encodeURIComponent(monster.replace(/ /g, '_'))}`;
-  };
+  const getWikiUrl = caMonsterWikiUrl;
 
   const totalPoints = useMemo(
     () => completedCAPoints(unlocks.completedTasks),
