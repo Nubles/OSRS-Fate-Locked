@@ -78,7 +78,7 @@ const edgesAround = (el: HTMLElement): { left: number; right: number } => {
   return { left, right };
 };
 
-const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => void; onClose: () => void }> = ({ a, onPick, onClose }) => {
+const ActionMenu: React.FC<{ a: JournalNextBestAction; areaRoutes: AreaRoutes | null; onPick: (s: SubTab) => void; onClose: () => void }> = ({ a, areaRoutes, onPick, onClose }) => {
   const { unlocks, gameModeId } = useGame();
   const [showUnlocks, setShowUnlocks] = useState(false);
   const place = placeFor(a, unlocks);
@@ -119,9 +119,10 @@ const ActionMenu: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => vo
       unlocks,
       { ...unlocks, quests: [...unlocks.quests, a.id] },
       gameModeId,
+      { areaRoutes },
     );
     return { quests: imp.directQuestNames, diaries: imp.directDiaryIds };
-  }, [a, unlocks, gameModeId]);
+  }, [a, unlocks, gameModeId, areaRoutes]);
 
   const Row: React.FC<{ icon: React.ReactNode; label: string; onClick?: () => void; disabled?: boolean }> = ({ icon, label, onClick, disabled }) => (
     <button
@@ -341,7 +342,7 @@ const ClassicJournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = ({ o
                   <span className="truncate font-semibold">{a.name}</span>
                   <span className={`shrink-0 text-[9px] px-1 rounded ${isReady ? 'bg-emerald-500/20' : 'bg-amber-500/20'}`}>{isReady ? 'ready' : a.firstBlocker}</span>
                 </button>
-                {openItem === key && <ActionMenu a={a} onPick={onPick} onClose={() => setOpenItem(null)} />}
+                {openItem === key && <ActionMenu a={a} areaRoutes={areaRoutes} onPick={onPick} onClose={() => setOpenItem(null)} />}
               </div>
             );
           })}

@@ -28,6 +28,7 @@ import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
 import { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER, useFarmModel } from '../ActionSection';
 import { slayerCardBlock } from '../../utils/farmGates';
 import { useBossTask } from '../../hooks/useBossTask';
+import { useAreaRoutes } from '../../hooks/useAreaRoutes';
 import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
 
@@ -622,7 +623,7 @@ const RecentRolls: React.FC<{ history: readonly LogEntry[] }> = ({ history }) =>
 
 // ── The panel ─────────────────────────────────────────────────────────────
 export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
-  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId } = useGame();
+  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId, hasSeenOnboarding } = useGame();
   const p = useFarmModel();
   const { farmTab: subTab, bossQuery } = useKeysView();
   const [pending, setPending] = useState<PendingRoll | null>(null);
@@ -631,6 +632,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const { isVanilla, reserves, bonusFor, effectiveRate, handleRoll } = p;
   // Vanilla and Chunked: the Boss Task card asks which boss, and rolls from its stash.
   const bossTask = useBossTask(handleRoll);
+  // An owned area no route reaches is Not ready, as in the Journal.
+  // Not behind the first-visit onboarding (PERF-4): owning an area is enough until then.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
   useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
@@ -744,7 +748,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       const head = npcHead(name);
       const classLabel = bossClass === 'brutus' ? 'Low' : TIER_LABEL[bossClass];
       const rates = stage.rates.map((r) => `${r}%`).join(', then ');
-      const readiness = evaluateActivityReadiness(true, getUtilityActivityReq(name, TableType.BOSSES, gameModeId), unlocks, gameModeId);
+      const readiness = evaluateActivityReadiness(true, getUtilityActivityReq(name, TableType.BOSSES, gameModeId), unlocks, gameModeId, areaRoutes);
       const notReady = !stage.capped && readiness.status === 'NOT_READY'
         ? `Not ready: needs ${readiness.blockers.map((b) => b.label).join(', ')}`
         : undefined;

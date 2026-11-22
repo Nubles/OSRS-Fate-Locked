@@ -1,6 +1,7 @@
 import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
-import { meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
+import { evaluateDiaryTaskEligibility, meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
+import type { AreaRoutes } from './areaRoutes';
 import { isAreaReachable } from './reachability';
 import { chunkPlaceLabel, ownsAnyChunk } from './activityAccess';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
@@ -26,6 +27,7 @@ export function evaluateActivityReadiness(
   requirement: ActivityReq | undefined,
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): ActivityReadiness {
   if (!isOwned) return { status: 'LOCKED', blockers: [] };
 
@@ -47,11 +49,18 @@ export function evaluateActivityReadiness(
     if (!ownsAnyChunk(requiredChunks, unlocks)) {
       blockers.push({ kind: 'area', label: requiredChunks.map(chunkPlaceLabel).join(' or ') });
     }
-  } else if (
-    requiredAreas.length > 0
-    && !requiredAreas.some(area => isAreaReachable(area, unlocks, gameModeId))
-  ) {
-    blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
+  } else if (requiredAreas.length > 0) {
+    const owned = requiredAreas.filter(area => isAreaReachable(area, unlocks, gameModeId));
+    if (owned.length === 0) {
+      blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
+    } else if (
+      areaRoutes && gameModeId !== 'chunked'
+      // The Journal's own check (caTaskAccess bossAreaBlocker): an owned area
+      // no route reaches, or an island with no way onto it, doesn't count.
+      && !evaluateDiaryTaskEligibility({ id: 'activity-area', anyOfRegions: [...requiredAreas] }, unlocks, gameModeId, areaRoutes).confirmable
+    ) {
+      blockers.push({ kind: 'area', label: `a route to ${owned.join(' or ')}` });
+    }
   }
   // Includes the unlocking quest of a gated skill, such as Druidic Ritual.
   for (const quest of withSkillGateQuests(requirement?.quests, requirement?.skills)) {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MISTHALIN_AREAS, REGION_GROUPS, wikiUrlFor } from '../../constants';
 import { useGame } from '../../context/GameContext';
+import { useAreaRoutesState } from '../../hooks/useAreaRoutes';
 import { isAreaReachable } from '../../utils/reachability';
 import { rankLockedRegions } from '../../utils/regionAdvisor';
 import { rankFrontierChunks } from '../../utils/frontierAdvisor';
@@ -36,15 +37,17 @@ interface AdvisorRow { id: string; title: string; meta?: string; region?: string
 
 /** Region Advisor (named-area modes) or Frontier Advisor (Chunked), ranked the classic way. */
 const useAdvisor = (): { heading: string; caption: string; sub: string; empty: string; rows: AdvisorRow[] } => {
-  const { unlocks, gameModeId } = useGame();
+  const { unlocks, gameModeId, advisorsEnabled, hasSeenOnboarding } = useGame();
   const chunked = gameModeId === 'chunked';
   const [tick, setTick] = useState(0);
+  // Not behind the first-visit onboarding (PERF-4); owning an area is enough until then.
+  const { routesFor } = useAreaRoutesState(unlocks, gameModeId, !chunked && advisorsEnabled && hasSeenOnboarding);
   useEffect(() => {
     if (chunked && !chunkContentService.ready) chunkContentService.init().then((ok) => { if (ok) setTick((t) => t + 1); });
   }, [chunked]);
   const rows = useMemo<AdvisorRow[]>(() => {
     if (!chunked) {
-      return rankLockedRegions(unlocks, gameModeId).map((r) => ({
+      return rankLockedRegions(unlocks, gameModeId, routesFor).map((r) => ({
         id: r.id, title: displayAreaName(r.id), meta: r.region, region: r.region,
         quests: r.newQuestNames, diaries: r.newDiaryIds, cascadeQuests: r.cascadeQuestNames, score: r.score, cascadeScore: r.cascadeScore,
       }));
@@ -65,7 +68,7 @@ const useAdvisor = (): { heading: string; caption: string; sub: string; empty: s
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unlocks, gameModeId, chunked, tick]);
+  }, [unlocks, gameModeId, chunked, tick, routesFor]);
   return chunked
     ? { heading: 'Frontier Advisor', caption: 'by what opens', sub: 'What your rollable chunks are worth. Hope for the top ones.', empty: 'Nothing left to roll next to your land.', rows }
     : { heading: 'Region Advisor', caption: 'by unlock chain', sub: 'Unlock these areas for the most forward progress.', empty: 'All areas unlocked. Impressive!', rows };

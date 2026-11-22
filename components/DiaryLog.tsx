@@ -24,8 +24,8 @@ import {
   evaluateDiaryTierEligibility, getDiaryStatus, meetsSkillRequirement, withSkillGateQuests,
   type EligibilityBlocker,
 } from '../utils/journalStatus';
-import { requestManualAttestation } from '../utils/manualAttestation';
-import { diaryTaskLoggingEligibility } from '../utils/journalCompletion';
+import { requestDiaryTaskAttestation } from '../utils/manualAttestation';
+import { questIdWikiUrl } from '../utils/questWikiUrl';
 import { farmingPatchLabel } from '../utils/farmingPatches';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -232,12 +232,7 @@ export const useDiaryJournal = (externalSearch = '') => {
   const handleTaskToggle = (task: DiaryTask, e: React.MouseEvent) => {
       // Logging by hand: guild, farming patch, house and Slayer reward unlocks
       // only set the task's status, so they never hold this up.
-      const eligibility = diaryTaskLoggingEligibility(task, unlocks, gameModeId, areaRoutes);
-      const attestation = requestManualAttestation(
-        task.description,
-        eligibility,
-        message => window.confirm(message),
-      );
+      const attestation = requestDiaryTaskAttestation(task, unlocks, gameModeId, message => window.confirm(message));
       if (attestation === null) return;
       const { clientX, clientY } = e;
       confirmThen('Complete this diary task and roll for a Key?', () => completeDiaryTask(task.id, clientX, clientY, attestation));
@@ -427,7 +422,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                           {missingDiaryQuests.map(q => (
                             <a
                               key={q}
-                              href={`https://oldschool.runescape.wiki/w/${encodeURIComponent(q.replace(/ /g, '_'))}`}
+                              href={questIdWikiUrl(q)}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
