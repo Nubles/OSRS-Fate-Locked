@@ -1000,9 +1000,11 @@ describe('audited diary route eligibility', () => {
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],
     }));
-    expect(missingQuest.blockers).toContainEqual({
+    // Only a started In Aid of the Myreque is needed (Morytania Diary rev 15409170), a check the player confirms.
+    expect(missingQuest.blockers).not.toContainEqual({
       kind: 'quest', label: 'In Aid of the Myreque',
     });
+    expect(missingQuest.manualChecks).toContain('Started In Aid of the Myreque');
 
     const lowFishing = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, levels: { Fishing: 95, Strength: 76 },
@@ -1065,7 +1067,7 @@ describe('audited diary route eligibility', () => {
       ['lum_elite_5', 38], ['var_elite_5', 52],
     ] as const;
     // The altar's ruins: each Raiments route also comes with the Abyss as a way in.
-    const ruins: Record<string, string[]> = { fal_hard_1: ['Goblin Village'], lum_elite_5: ['Lumbridge'], var_elite_5: ['Varrock'] };
+    const ruins: Record<string, string[]> = { fal_hard_1: ['Goblin Village'], fal_elite_1: ['Falador'], lum_elite_5: ['Lumbridge'], var_elite_5: ['Varrock'] };
     for (const [id, level] of cases) {
       const diaryTask = task(id);
       expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({

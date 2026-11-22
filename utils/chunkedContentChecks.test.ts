@@ -166,10 +166,11 @@ describe("Chunked diary tasks with no chunk code use the export's own chunks (co
     ...(task.regions ?? []), ...(task.anyOfRegions ?? []), ...(task.oneOf ?? []).flatMap(o => o.regions ?? []),
   ].length > 0).length;
 
-  it('leaves 30 of 492 tasks on their areas, down from 106', () => {
+  it('leaves 29 of 492 tasks on their areas, down from 106', () => {
     expect(ALL_DIARY_TASKS).toHaveLength(492);
     expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never))).toBe(106);
-    expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks))).toBe(30);
+    // 22 November 2026: des_med_9 moved to the Bandit Camp, which holds the export's chunk for it (49,45).
+    expect(fallbackCount(buildDiaryIndex(doc().chunks, doc().interiors as never, doc().diaryChunks))).toBe(29);
   });
 
   it('"Kill a Sandcrab" needs a sand crab chunk, not any chunk of Hosidius', () => {
