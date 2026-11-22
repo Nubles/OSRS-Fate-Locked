@@ -124,11 +124,23 @@ const recordFor = (method: (typeof TRAVEL_METHODS)[number]) => CHUNK_PICKER_SPEL
 const REVIEWED_AGAINST_CHUNK_PICKER: Readonly<Record<string, string>> = {
   'spell:ancient:senntisten-teleport': 'The Chunk Picker names the Exam Centre (52,52); the wiki lands at 3320,3337, in 51,52.',
 };
+/** Spells the Chunk Picker has no record for, checked against their wiki pages instead. */
+const NO_CHUNK_PICKER_RECORD: Readonly<Record<string, readonly string[]>> = {
+  // Each page marks one landing square: 3221,3218; 3087-3090,3501-3504; 2094,3913; 1700,3882.
+  'spell:standard:lumbridge-home-teleport': ['50,50'],
+  'spell:ancient:edgeville-home-teleport': ['48,54'],
+  'spell:lunar:lunar-home-teleport': ['32,61'],
+  'spell:arceuus:arceuus-home-teleport': ['26,60'],
+};
 
 describe('teleport spells', () => {
   it('each have a Chunk Picker record, and go where it says, or differ as reviewed', () => {
     for (const method of spells()) {
       const record = recordFor(method);
+      if (method.id in NO_CHUNK_PICKER_RECORD) {
+        expect(record, method.id).toBeUndefined();
+        continue;
+      }
       expect(record, method.id).toBeDefined();
       const to = new Set(castTo(method));
       const agrees = record!.every((chunk) => {
@@ -148,6 +160,23 @@ describe('teleport spells', () => {
     const somewhere = [...CHUNK_PICKER_SPELLS.entries()].filter(([, chunks]) => chunks.some((chunk) =>
       !NOT_A_PLACE.has(chunk) && keyOf(chunk) !== ARCEUUS_TEACHER)).map(([name]) => name);
     expect(somewhere.filter((name) => !covered.has(name))).toEqual([]);
+  });
+
+  it('cover the four Home Teleports, which the Chunk Picker leaves out, each to its one landing square', () => {
+    const byId = new Map(spells().map((method) => [method.id, method]));
+    for (const [id, to] of Object.entries(NO_CHUNK_PICKER_RECORD)) {
+      expect(byId.get(id)?.options, id).toEqual({ Cast: { to } });
+    }
+    expect(spells().filter((method) => /home teleport/i.test(spellOf(method).name)).map((method) => method.id).sort())
+      .toEqual(Object.keys(NO_CHUNK_PICKER_RECORD).sort());
+  });
+
+  it("read a landing polygon's points as tile corners, so an edge on a chunk border adds no chunk (travel-a F3)", () => {
+    const byId = new Map(spells().map((method) => [method.id, method]));
+    expect(byId.get('spell:standard:civitas-illa-fortis-teleport')?.options.Cast.to).toEqual(['26,48']);
+    expect(byId.get('spell:lunar:tele-group-moonclan')?.options.Cast.to).toEqual(['32,61']);
+    // The one-player spell's square (2113,3915, r=2) really does cross into 33,61.
+    expect(byId.get('spell:lunar:moonclan-teleport')?.options.Cast.to).toEqual(['32,61', '33,61']);
   });
 
   it('put the spells the old table got wrong in the right places (G7)', () => {
@@ -189,7 +218,6 @@ const byKind = (kind: string) => TRAVEL_METHODS.filter((method) => method.id.sta
 
 /** Where a tablet's page marks a different landing square from its spell's page, reviewed. */
 const TABLET_SQUARES: Readonly<Record<string, string>> = {
-  'tablet:civitas-illa-fortis-teleport': "The tablet's square lies in 26,48; the spell's crosses into 26,49.",
   'tablet:arceuus-library-teleport': "The tablet's square crosses into 25,60; the spell's lies in 25,59.",
 };
 
@@ -265,14 +293,18 @@ const ALSO_NAMED: Readonly<Record<string, string>> = {
 /** Catalogue versions that can't teleport. */
 const SPENT = new Set(['Uncharged', 'Inert', 'Empty']);
 /** Lower diary tiers that don't teleport yet, as their pages have it. */
+/** The house portal towns' chunks, from the Construct. cape's page (oldid 15365081). */
+const HOUSE_PORTAL_CHUNKS = ['46,50', '45,54', '52,46', '27,54', '22,46', '41,56', '43,49', '39,48', '50,94'];
 const NO_TELEPORT = new Set([
   'Desert amulet 1', "Explorer's ring 1", 'Kandarin headgear 1', 'Kandarin headgear 2', 'Karamja gloves 1',
   'Karamja gloves 2', 'Western banner 1', 'Western banner 2', 'Wilderness sword 1', 'Wilderness sword 2',
 ]);
-/** Ids the catalogue lacks, from the item's page: the max cape in the inventory, and a newer charged amulet. */
+/** Ids the catalogue lacks, from the item's page: the max cape in the inventory, a newer charged amulet, and the second charged sceptre. */
 const NOT_IN_CATALOGUE: Readonly<Record<string, readonly number[]>> = {
   'item:max-cape': [13280],
   "item:sailors-amulet": [32399],
+  // "Pharaoh's sceptre" (oldid 15374164) gives the charged version two ids, 26948 and 26950.
+  'item:pharaohs-sceptre': [26950],
 };
 /** Options that open a choice of every place the item goes. */
 const CHOOSING = ['Rub', 'Teleport', 'Last Destination', 'Last-Teleport', 'Reminisce'];
@@ -374,6 +406,21 @@ describe('worn teleport equipment', () => {
     expect(itemRow('item:fremennik-sea-boots').options.Teleport.to).toEqual(['41,57']);
   });
 
+  it("offer the Construct. cape's and Sailors' amulet's Teleport sub-options as options of their own (travel-a F1)", () => {
+    const cape = itemRow('item:construct-cape').options;
+    expect(cape.Teleport.to).toEqual(HOUSE_PORTAL_CHUNKS);
+    expect(cape.Home).toEqual({ to: [] });
+    expect(cape.Prifddinas).toEqual({ to: ['50,94'] });
+    expect(['Rimmington', 'Taverley', 'Pollnivneach', 'Hosidius', 'Aldarin', 'Rellekka', 'Brimhaven', 'Yanille', 'Prifddinas']
+      .map((town) => cape[town].to[0])).toEqual(HOUSE_PORTAL_CHUNKS);
+    expect(cape['Tele to POH']).toEqual({ to: [] });
+    expect(itemRow('item:sailors-amulet').options).toEqual({
+      Teleport: { to: ['47,46', '29,51', '43,39', '30,43'] },
+      'The Pandemonium': { to: ['47,46'] }, 'Port Roberts': { to: ['29,51'] },
+      'Red Rock': { to: ['43,39'] }, 'Deepfin Point': { to: ['30,43'] },
+    });
+  });
+
   it("match only the max cape's options whose places its page gives", () => {
     expect(Object.keys(itemRow('item:max-cape').options).sort())
       .toEqual(['Crafting Guild', 'Home', 'POH Portals', 'Teleports']);
@@ -396,6 +443,12 @@ describe('the other teleport items', () => {
 /** Every page the wiki's list of teleportation items links, pinned in data/sources. */
 const WIKI_TELEPORT_ITEMS = (JSON.parse(readFileSync(new URL('./sources/wiki-teleportation-items.json', import.meta.url), 'utf8')) as
   { pages: string[] }).pages;
+/**
+ * Teleport items the navbox does not link, found by the accuracy audit (Nov 2026), checked like its pages:
+ * Seed of growth (oldid 15410900), Archivist's folio (oldid 15395514) and Master scroll book (oldid 15408812).
+ */
+const BEYOND_THE_NAVBOX = ['Seed of growth', "Archivist's folio", 'Master scroll book'];
+const TELEPORT_ITEM_PAGES = [...WIKI_TELEPORT_ITEMS, ...BEYOND_THE_NAVBOX];
 const NO_LANDING_SQUARE = 'Its page marks no landing square.';
 /** Teleport items the table leaves out, and why. */
 const LEFT_OUT: Readonly<Record<string, string>> = {
@@ -430,6 +483,10 @@ const LEFT_OUT: Readonly<Record<string, string>> = {
   'Magic whistle': 'It works at one spot only, into the Fisher Realm.',
   'Rum (blue)': NO_LANDING_SQUARE,
   'Rum (red)': NO_LANDING_SQUARE,
+  // "Returns you to the Farming Guild", which spans more than one chunk; the page gives no landing square.
+  'Seed of growth': NO_LANDING_SQUARE,
+  "Archivist's folio": 'The app has no chunk for the Fractured Archive.',
+  'Master scroll book': 'Its Teleport uses whichever scroll the player set as the default; each scroll has a row.',
 };
 const pageOf = (source: string) => decodeURIComponent(/\/w\/([^?]+)/.exec(source)?.[1] ?? '').replace(/_/g, ' ');
 
@@ -438,9 +495,11 @@ describe('the whole table', () => {
     const cited = new Set(TRAVEL_METHODS.map((method) => pageOf(method.source)));
     const covered = (page: string) => cited.has(page) || byKind('item').some((method) => ofFamily(method, page));
     expect(WIKI_TELEPORT_ITEMS.length).toBeGreaterThan(150);
-    expect(WIKI_TELEPORT_ITEMS.filter((page) => !covered(page) && !(page in LEFT_OUT))).toEqual([]);
+    expect(TELEPORT_ITEM_PAGES.filter((page) => !covered(page) && !(page in LEFT_OUT))).toEqual([]);
     // A page left out must still be on the list, and not covered after all.
-    expect(Object.keys(LEFT_OUT).filter((page) => covered(page) || !WIKI_TELEPORT_ITEMS.includes(page))).toEqual([]);
+    expect(Object.keys(LEFT_OUT).filter((page) => covered(page) || !TELEPORT_ITEM_PAGES.includes(page))).toEqual([]);
+    // A page added beyond the navbox is dropped from that list once the navbox links it.
+    expect(BEYOND_THE_NAVBOX.filter((page) => WIKI_TELEPORT_ITEMS.includes(page))).toEqual([]);
   });
 });
 
@@ -464,7 +523,15 @@ const NETWORK_NODES: Readonly<Record<string, RegExp>> = {
   'boat:port-sarim-ship': /^(customs officer|seaman morris)$/i,
   'boat:musa-point-ship': /^(captain tobias|seaman (lorris|thresnor|morris))$/i,
   'boat:pandemonium-ship': /^(captain tobias|seaman (lorris|thresnor)|customs officer)$/i,
+  // Veos stands at Port Sarim and Port Piscarilius, Captain Magoro at Land's End.
   "boat:lands-end-ship": /^veos$/i,
+  'boat:veos-ship': /^(veos|captain magoro)$/i,
+  'boat:entrana-boat': /^monk of entrana$/i,
+  'boat:corsair-cove-ship': /^(captain tock|cabin boy colin)$/i,
+  'boat:void-outpost-ship': /^squire \(void knights\)$/i,
+  'boat:void-outpost-return-ship': /^squire \(void knights\)$/i,
+  'boat:miscellania-boat': /^sailor$/i,
+  'boat:mos-le-harmless-ship': /^bill teach$/i,
   'boat:piscatoris-boat': /^kathy corkat$/i,
   'boat:harmony-boat': /^brother tranquility$/i,
   'boat:dragontooth-boat': /^ghost captain$/i,
@@ -520,6 +587,31 @@ describe('travel networks', () => {
     })).toEqual([]);
     expect([...byKind('network'), ...byKind('boat')].filter((method) => !(method.id in NETWORK_NODES)).map((method) => method.id))
       .toEqual([]);
+  });
+
+  it('know the crews with a one-click trip, each option going where its page says (travel-b F1)', () => {
+    const npcs = (id: string) => [...(itemRow(id).match as { npcs: readonly number[] }).npcs];
+    expect(itemRow('boat:veos-ship').options).toEqual({
+      'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] }, "Land's End": { to: ['23,53'] },
+    });
+    expect(npcs('boat:veos-ship')).toEqual([2850, 8484, 8630, 10723, 10724, 10726, 10727, 10949]);
+    expect(itemRow('boat:entrana-boat').options).toEqual({ 'Take-boat': { to: ['44,52', '47,50'] } });
+    expect(npcs('boat:corsair-cove-ship')).toEqual([7958, 7967]);
+    expect(itemRow('boat:void-outpost-ship').options).toEqual({ Travel: { to: ['41,41'] } });
+    expect(npcs('boat:void-outpost-ship')).toEqual([1770]);
+    expect(itemRow('boat:void-outpost-return-ship').options).toEqual({ Travel: { to: ['47,50'] } });
+    expect(npcs('boat:void-outpost-return-ship')).toEqual([1769]);
+    expect(itemRow('boat:miscellania-boat').options).toEqual({ Miscellania: { to: ['40,60'] }, Rellekka: { to: ['41,57'] } });
+    expect(itemRow('boat:mos-le-harmless-ship').options).toEqual({ Travel: { to: ['57,46', '57,54'] } });
+    // No NPC id is matched by two rows.
+    const all = TRAVEL_METHODS.flatMap((method) => 'npcs' in method.match ? [...method.match.npcs] : []);
+    expect(all.filter((id, i) => all.indexOf(id) !== i)).toEqual([]);
+  });
+
+  it("know every glider pilot's ids, Captain Shoracks' last-destination ones too (travel-b F2)", () => {
+    const npcs = (itemRow('network:gnome-glider').match as { npcs: readonly number[] }).npcs;
+    // Captain Klemfoodle's (10479-10485) and Captain Shoracks' (7178, then 10486-10491 by last destination).
+    for (const id of [10479, 10485, 7178, 10486, 10487, 10488, 10489, 10490, 10491]) expect(npcs, String(id)).toContain(id);
   });
 
   it('dial every fairy ring code to where the wiki marks it', () => {
