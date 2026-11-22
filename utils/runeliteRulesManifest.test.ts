@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { loadWalkSections } from './walkSections';
-import { MOBILITY_LIST } from '../data/items';
+import { MOBILITY_LIST, SKILLS_LIST } from '../data/items';
+import { FREE_HITPOINTS_TIER } from './hitpointsMigration';
+import { GAME_MODES } from '../config/gameModes';
 import { getGameMode } from '../config/gameModes';
 import { TRAVEL_METHODS } from '../data/travelMethods';
 import type { ChunkContent } from '../services/ChunkContentService';
@@ -107,6 +109,32 @@ describe('buildRuneliteRulesManifest', () => {
     ]);
   });
 
+  // The plugin's Skills-tab padlock is drawn for tier 0 and skipped for an
+  // absent skill, so a skill with no Key yet goes out as an explicit 0.
+  it.each([...GAME_MODES.map(mode => mode.id), 'casual', 'hardcore', 'region-rush', 'xtreme', 'custom'])('writes 0 for every skill with no Key yet in %s', async (gameModeId) => {
+    const fresh = await buildRuneliteRulesManifest({
+      unlocks: initialState.unlocks,
+      run: { runId: 'run-skills', runRevision: 1, gameModeId },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    const lockable = SKILLS_LIST.filter(skill => skill !== 'Hitpoints');
+    expect(fresh.unlocks.skills).toEqual({
+      ...Object.fromEntries(lockable.map(skill => [skill, 0])),
+      Hitpoints: FREE_HITPOINTS_TIER,
+    });
+    const keyed = await buildRuneliteRulesManifest({
+      unlocks: { ...initialState.unlocks, skills: { ...initialState.unlocks.skills, Attack: 3, Sailing: 1 } },
+      run: { runId: 'run-skills', runRevision: 2, gameModeId },
+      contentService: contentSource,
+      itemRuleSource: { init: async () => {}, ready: false, itemRuleExport: () => ({}) },
+    });
+    expect(keyed.unlocks.skills).toMatchObject({ Attack: 3, Sailing: 1, Mining: 0, Hitpoints: FREE_HITPOINTS_TIER });
+    expect(Object.keys(keyed.unlocks.skills)).toHaveLength(SKILLS_LIST.length);
+    // Stored state keeps leaving no-Key skills out.
+    expect(initialState.unlocks.skills).toEqual({ Hitpoints: FREE_HITPOINTS_TIER });
+  });
+
   it('sorts exported collections deterministically', async () => {
     const manifest = await buildRuneliteRulesManifest({
       unlocks: {
@@ -129,7 +157,9 @@ describe('buildRuneliteRulesManifest', () => {
     });
 
     expect(manifest.unlocks.regions).toEqual(['A', 'Z']);
-    expect(Object.keys(manifest.unlocks.skills)).toEqual(['Attack', 'Zeta']);
+    const skillNames = Object.keys(manifest.unlocks.skills);
+    expect(skillNames).toEqual([...skillNames].sort((left, right) => left.localeCompare(right)));
+    expect(skillNames).toEqual(expect.arrayContaining(['Attack', 'Zeta']));
     expect(Object.keys(manifest.unlocks.equipment)).toEqual(['Head', 'Weapon']);
   });
 

@@ -16,7 +16,7 @@ does not exist, so the following remain confirmation-only:
 |---|---:|---:|---|
 | `slayer-task-varp-v1` | 1 | 0 | Awaiting playtest evidence |
 | `diary-task-v1` | 2 | 0 | Awaiting playtest evidence |
-| `pet-drop-v1` | 1 | 0 | Awaiting playtest evidence; RuneLite doesn't copy pets while the pet reward poll runs |
+| `pet-drop-v1` | 1 | 0 | Awaiting playtest evidence; RuneLite offers and copies pets, and the tracker asks which pet it was |
 
 Stage 4 (September 2026) rebuilt RuneLite's detectors on the game's own signals
 and retired three confirmation-only ones:
