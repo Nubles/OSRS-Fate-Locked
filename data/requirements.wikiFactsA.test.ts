@@ -49,3 +49,25 @@ describe('Ver Sinhaza Bank (Wiki: Ver Sinhaza, List of banks)', () => {
   });
 });
 
+describe('Agility shortcuts (Wiki: Shortcuts list, Rocks (Eagles\' Peak), The Hollows)', () => {
+  it('Lumbridge Swamp Caves stepping stones open at 1 Agility', () => {
+    expect(S['Lumbridge Swamp Caves Jump'].skills).toEqual({ Agility: 1 });
+    expect(S['Lumbridge Swamp Caves Jump'].description).toMatch(/Chasm of Tears/);
+  });
+  it('the Eagles\' Peak rocks need 25 Agility and no quest', () => {
+    expect(S["Eagles' Peak Shortcut"].skills).toEqual({ Agility: 25 });
+    expect(S["Eagles' Peak Shortcut"].quests ?? []).toEqual([]);
+  });
+  it('the Canifis cellar trapdoor needs no Agility and opens during In Search of the Myreque', () => {
+    expect(S['Myreque Hideout Shortcut'].skills).toEqual({});
+    expect(S['Myreque Hideout Shortcut'].quests).toEqual(['In Search of the Myreque']);
+  });
+  it('lists no shortcut the game does not have', () => {
+    expect(S["Xeric's Lookout"]).toBeUndefined();
+    expect(S['Prifddinas Waterfall']).toBeUndefined();
+  });
+  it('keeps the real 62 Agility Mount Karuulm climb', () => {
+    expect(S['Karuulm Dungeon (Middle)'].skills).toEqual({ Agility: 62 });
+  });
+});
+

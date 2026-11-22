@@ -694,13 +694,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: { 'Agility': 34 },
     description: 'Crack between the warped jellies and the greater nechryael.'
   },
-  'Xeric\'s Lookout': {
-    id: 'Xeric\'s Lookout',
-    category: TableType.AGILITY_COURSES,
-    regions: ['Kourend & Kebos'],
-    skills: {}, // Grapple
-    description: 'Grapple shortcut in Shayzien.'
-  },
   'Karuulm Dungeon (Upper)': {
     id: 'Karuulm Dungeon (Upper)',
     category: TableType.AGILITY_COURSES,
@@ -714,13 +707,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 62 },
     description: 'Shortcut to Wyrms/Tasakaal.'
-  },
-  'Prifddinas Waterfall': {
-    id: 'Prifddinas Waterfall',
-    category: TableType.AGILITY_COURSES,
-    regions: ['Tirannwn'],
-    skills: { 'Agility': 66, 'Strength': 66, 'Ranged': 66 }, // Mith Grapple
-    description: 'Shortcut to the waterfall fishing spot.'
   },
   'Draynor Underwall Tunnel': {
     id: 'Draynor Underwall Tunnel',
@@ -748,7 +734,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.AGILITY_COURSES,
     regions: ['Kandarin'],
     skills: { 'Agility': 25 },
-    quests: ['Eagles\' Peak'],
     description: 'Climb the rocks to the peak.'
   },
   'Observatory Grapple': {
@@ -778,16 +763,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Myreque Hideout Shortcut',
     category: TableType.AGILITY_COURSES,
     regions: ['Morytania'],
-    skills: { 'Agility': 30 }, // Swamp boaty
-    quests: ['Nature Spirit'],
-    description: 'Behind the pub in Canifis.'
+    skills: {},
+    quests: ['In Search of the Myreque'], // Partial: the cellar opens during the quest
+    description: 'Trapdoor behind the pub in Canifis.'
   },
   'Lumbridge Swamp Caves Jump': {
     id: 'Lumbridge Swamp Caves Jump',
     category: TableType.AGILITY_COURSES,
     regions: ['Misthalin'],
-    skills: { 'Agility': 12 },
-    description: 'Jump across to Tears of Guthix.'
+    skills: { 'Agility': 1 },
+    description: 'Stepping stones to the Chasm of Tears.'
   },
 
   // ============================================================================
