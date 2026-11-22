@@ -99,6 +99,59 @@ describe('reviewed equipment placements', () => {
     expect(tierOf('Hard leather shield', 'Shield')).toBe(2);
   });
 
+  it('gives gear with a real wield level its level tier, not the cosmetics T1', () => {
+    // Each needs a combat level to equip on the OSRS Wiki (checked 22 November 2026).
+    for (const name of ['Amulet of air', 'Amulet of earth', 'Amulet of fire', 'Amulet of water', 'Elemental amulet']) {
+      expect(tierOf(name, 'Neck'), name).toBe(5); // 59 Magic
+    }
+    expect(tierOf('Aquanite hopper', 'Shield')).toBe(6); // 60 Ranged
+    expect(tierOf('Bone staff', 'Weapon')).toBe(5); // 50 Magic
+    expect(tierOf('Oak blackjack(o)', 'Weapon')).toBe(2); // 10 Attack
+    expect(tierOf('Oak blackjack(d)', 'Weapon')).toBe(2); // 10 Defence
+    expect(tierOf('Willow blackjack(d)', 'Weapon')).toBe(3); // 20 Defence
+    // The plain blackjacks really have no wield level.
+    expect(tierOf('Oak blackjack', 'Weapon')).toBe(1);
+    expect(tierOf('Willow blackjack', 'Weapon')).toBe(1);
+  });
+
+  it('places the wood blowpipes by their Ranged level, not with the toxic blowpipe', () => {
+    expect(tierOf('Camphor blowpipe', 'Weapon', 'Blowpipe')).toBe(5); // 45 Ranged
+    expect(tierOf('Ironwood blowpipe', 'Weapon', 'Blowpipe')).toBe(5); // 55 Ranged
+    expect(tierOf('Rosewood blowpipe', 'Weapon', 'Blowpipe')).toBe(6); // 65 Ranged
+    expect(tierOf('Toxic blowpipe', 'Weapon', 'Blowpipe')).toBe(8);
+    expect(tierOf('Blazing blowpipe', 'Weapon', 'Blowpipe')).toBe(8);
+  });
+
+  it('keeps cosmetic novelty weapons out of the material families', () => {
+    expect(tierOf('Mystic cards', 'Weapon')).toBe(1); // purely cosmetic code reward
+    expect(tierOf('Mystic robe top', 'Body')).toBe(4);
+    expect(tierOf('Mystic fire staff', 'Weapon')).toBe(4);
+  });
+
+  it('places the shadow sword with the black 2h sword it copies', () => {
+    expect(tierOf('Shadow sword', 'Weapon')).toBe(2);
+    expect(tierOf('Black 2h sword', 'Weapon')).toBe(2);
+  });
+
+  it('uses the current Deadman Mode wield levels', () => {
+    // Lowered to 20 Defence for Deadman: Annihilation (January 2026).
+    for (const name of ['Statius\'s full helm (deadman mode)', 'Statius\'s platebody (deadman mode)',
+      'Statius\'s platelegs (deadman mode)', 'Vesta\'s chainbody (deadman mode)', 'Vesta\'s plateskirt (deadman mode)']) {
+      expect(tierOf(name, 'Body'), name).toBe(3);
+    }
+    expect(EQUIPMENT_REVIEW.wieldLevels['morrigan\'s coif (deadman mode)']).toEqual({ defence: 20, ranged: 75 });
+    expect(EQUIPMENT_REVIEW.wieldLevels['zuriel\'s hood (deadman mode)']).toEqual({ defence: 20, magic: 75 });
+    expect(EQUIPMENT_REVIEW.wieldLevels['statius\'s warhammer (deadman mode)']).toEqual({ strength: 78, attack: 20 });
+    expect(EQUIPMENT_REVIEW.wieldLevels['zuriel\'s staff (deadman mode)']).toEqual({ magic: 78, attack: 60 });
+    expect(EQUIPMENT_REVIEW.wieldLevels['lunar staff']).toEqual({ magic: 65, defence: 40 });
+    // The 75-level pieces keep their tier.
+    expect(tierOf('Morrigan\'s coif (deadman mode)', 'Head')).toBe(8);
+    expect(tierOf('Zuriel\'s robe top (deadman mode)', 'Body')).toBe(8);
+    expect(tierOf('Statius\'s warhammer (deadman mode)', 'Weapon')).toBe(8);
+    expect(tierOf('Zuriel\'s staff (deadman mode)', 'Weapon')).toBe(8);
+    expect(tierOf('Lunar staff', 'Weapon')).toBe(6);
+  });
+
   it('only lists names in one place, in lower case', () => {
     for (const key of [...Object.keys(EQUIPMENT_REVIEW.wieldLevels), ...Object.keys(EQUIPMENT_REVIEW.placed)]) {
       expect(key, key).toBe(key.toLowerCase());
