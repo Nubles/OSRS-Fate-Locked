@@ -32,6 +32,16 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Smithing', 'Rune Scimitar/Arrows/C-balls/Spear/Hasta', 90], ['Smithing', 'Rune Longsword/Limbs/Javelin Tips', 91],
     ['Smithing', 'Shayzien T5 Greaves', 91], ['Smithing', 'Dragon Nails', 92], ['Smithing', 'Shayzien T5 Body', 93],
     ['Smithing', 'Dragon Keel', 94],
+    ['Fletching', 'Javelin Shafts, Bronze Javelins', 3], ['Fletching', 'Bronze Brutal Arrows', 7],
+    ['Fletching', 'Steel Brutal Arrows', 33], ['Fletching', 'Willow Shortbows/Totems', 35],
+    ['Fletching', 'Black Brutal Arrows', 38], ['Fletching', 'Silver Bolts', 43],
+    ['Fletching', 'Mithril Javelins', 47], ['Fletching', 'Mithril Brutal Arrows', 49],
+    ['Fletching', 'Maple Shortbows/Totems', 50], ['Fletching', 'Barbed Bolts', 51],
+    ['Fletching', 'Emerald Bolts', 58], ['Fletching', "Hunters' Spears", 60],
+    ['Fletching', 'Adamant Javelins/Brutal Arrows', 62], ['Fletching', 'Yew Shortbows/Totems', 65],
+    ['Fletching', 'Scorching Bows (While Guthix Sleeps)', 74], ['Fletching', 'Rune Javelins/Brutal Arrows', 77],
+    ['Fletching', 'Magic Shortbows/Totems', 80], ['Fletching', 'Webweaver Bows', 85],
+    ['Fletching', 'Ascension Bolts (Diamond, Onyx)', 86], ['Fletching', 'Redwood Totems/Hiking Staff', 90],
     // @next-skill
   ] as const)('%s: %s appears once, at its Wiki level and tier', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));

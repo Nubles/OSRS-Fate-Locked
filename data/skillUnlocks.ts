@@ -747,7 +747,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Arrow Shafts, Bronze Arrows',
       'Lvl 1: Wasp Darts (The Birds and the Wasps)',
+      'Lvl 3: Javelin Shafts, Bronze Javelins',
       'Lvl 5: Shortbows, Ogre Arrows',
+      'Lvl 7: Bronze Brutal Arrows',
       'Lvl 9: Bronze Crossbows/Bolts',
       'Lvl 10: Longbows, Bronze Darts'
     ],
@@ -770,35 +772,41 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 32: Steel Javelins, Kebbit Bolts',
-      'Lvl 35: Willow Shortbows',
+      'Lvl 33: Steel Brutal Arrows',
+      'Lvl 35: Willow Shortbows/Totems',
       'Lvl 37: Steel Darts',
+      'Lvl 38: Black Brutal Arrows',
       'Lvl 39: Iron Crossbows/Bolts',
       'Lvl 40: Willow Longbows, Battlestaves'
     ],
     5: [
       'Lvl 41: Pearl Bolts',
       'Lvl 42: Willow Shields',
+      'Lvl 43: Silver Bolts',
       'Lvl 45: Mithril Arrows, Maple Arrow Shafts',
       'Lvl 46: Steel Crossbows/Bolts',
-      'Lvl 47: Light Ballista',
+      'Lvl 47: Light Ballista, Mithril Javelins',
       'Lvl 48: Topaz Bolts',
-      'Lvl 50: Maple Shortbows'
+      'Lvl 49: Mithril Brutal Arrows',
+      'Lvl 50: Maple Shortbows/Totems'
     ],
     6: [
+      'Lvl 51: Barbed Bolts',
       'Lvl 52: Broad Arrows, Mithril Darts',
       'Lvl 54: Mithril Crossbows/Bolts',
       'Lvl 55: Maple Longbows, Broad Bolts',
       'Lvl 56: Sapphire Bolts',
       'Lvl 57: Maple Shields',
-      'Lvl 58: Camphor Blowpipe',
+      'Lvl 58: Camphor Blowpipe, Emerald Bolts',
       'Lvl 59: Mithril Grapples',
-      'Lvl 60: Adamant Arrows, Yew Arrow Shafts'
+      'Lvl 60: Adamant Arrows, Yew Arrow Shafts',
+      'Lvl 60: Hunters\' Spears'
     ],
     7: [
       'Lvl 61: Adamant Crossbows/Bolts',
-      'Lvl 62: Sunlight Antler Bolts',
+      'Lvl 62: Sunlight Antler Bolts, Adamant Javelins/Brutal Arrows',
       'Lvl 63: Ruby Bolts',
-      'Lvl 65: Yew Shortbows, Diamond Bolts',
+      'Lvl 65: Yew Shortbows/Totems, Diamond Bolts',
       'Lvl 67: Adamant Darts',
       'Lvl 69: Rune Crossbows/Bolts',
       'Lvl 70: Yew Longbows',
@@ -810,20 +818,23 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 72: Ironwood Blowpipe, Moonlight Antler Bolts',
       'Lvl 73: Onyx Bolts',
       'Lvl 74: Sunlight Crossbows, Atlatl Darts',
+      'Lvl 74: Scorching Bows (While Guthix Sleeps)',
       'Lvl 75: Rune Arrows, Magic Arrow Shafts',
       'Lvl 76: Amethyst Broad Bolts',
+      'Lvl 77: Rune Javelins/Brutal Arrows',
       'Lvl 78: Dragon Crossbow, Toxic Blowpipe',
-      'Lvl 80: Magic Shortbows'
+      'Lvl 80: Magic Shortbows/Totems'
     ],
     9: [
       'Lvl 81: Rune Darts',
       'Lvl 82: Amethyst Arrows',
       'Lvl 84: Dragon Bolts, Amethyst Javelins',
       'Lvl 84: Rosewood Blowpipe',
-      'Lvl 85: Magic Longbows',
+      'Lvl 85: Magic Longbows, Webweaver Bows',
       'Lvl 86: Ascension Bolts (Diamond, Onyx)',
       'Lvl 87: Magic Shields',
-      'Lvl 90: Dragon Arrows, Amethyst Darts'
+      'Lvl 90: Dragon Arrows, Amethyst Darts',
+      'Lvl 90: Redwood Totems/Hiking Staff'
     ],
     10: [
       'Lvl 92: Dragon Javelins',
