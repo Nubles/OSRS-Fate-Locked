@@ -7,7 +7,7 @@ import { DROP_RATES } from '../constants';
 import { keyChance } from '../utils/keyChance';
 import { DropSource } from '../types';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
-import { mercyShutReason } from '../utils/chunkedMercyText';
+import { mercyOpenText, mercyShutReason } from '../utils/chunkedMercyText';
 import { chunksToExplore, exploreBlocker, exploreRollsLeft, exploreThings, exploredIn } from '../utils/chunkExplore';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { tierBand } from '../utils/skillTiers';
@@ -106,7 +106,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const mercyText = needsQuestCheck && !ready
     ? 'Checking your chunks for quests you can still do…'
     : shutReason
-      ?? 'You have no Keys, not enough Fate for a ritual, and every skill you can train is at its tier cap. Fate draws one neighbouring chunk or skill tier for you, free.';
+      ?? (showMercy ? mercyOpenText(game) : '');
   const shown = explore.slice(0, compact ? 1 : EXPLORE_SHOWN);
   const more = explore.length - shown.length;
   const exploreIntro = `The first time you do something new in a chunk you unlocked, roll once at ${exploreChance}%. Tick what you did.`;

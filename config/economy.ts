@@ -308,7 +308,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   },
   {
     category: 'Pets',
-    icon: `${WIKI}Pet_kraken.png`,
+    icon: `${WIKI}Pet_Kraken.png`,
     where: 'Farm Keys → Activities: claim each new pet.',
     blurb: 'Each new pet gives an Omni-Key, once per pet.',
     tiers: [
@@ -384,7 +384,7 @@ export interface KeyTypeInfo {
 /** How a Chaos Key picks (utils/gameEngine.ts pickChaosEntry). */
 export const CHAOS_PICK_TEXT = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
 export const CHAOS_REACH_TEXT = "Places you can't reach yet can come up too.";
-export const CHUNKED_CHAOS_TEXT = 'In Chunked, only banks and guilds inside your chunks can come up.';
+export const CHUNKED_CHAOS_TEXT = 'In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up.';
 /** A seeded run from before the table-first rule keeps its old draw (utils/seededRng.ts chaosPicksTableFirst). */
 export const OLD_SEEDED_CHAOS_TEXT = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
 
@@ -503,7 +503,7 @@ export const GREED_REFUND_FRACTION = 0.5;
 
 export const RITUALS: Ritual[] = [
   { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll twice, keep the better.', fateCost: 8,  effect: 'Your next Key roll is made twice and the better result is kept.' },
-  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a Vanilla boss with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
+  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a boss or minigame with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
   { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Buy a Chaos Key.',       fateCost: 25, effect: 'Get 1 Chaos Key now: one random unlock from any table.' },
   { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
@@ -515,7 +515,7 @@ export const RITUALS: Ritual[] = [
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
-    effect: 'Your next 3 rolls get +15% odds. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
+    effect: 'Your next 3 rolls get +15% odds, up to 95%. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
   { id: 'INVOCATIONS',  name: "Amascut's Invocations",   tagline: 'Take handicaps for Omni-Keys.', fateCost: 10,
     effect: 'Pick handicaps for your next 3 rolls. Each one raises the Omni-Key chance on those rolls.' },
   { id: 'BARROWS',      name: 'Barrows Chest',           tagline: 'A brother powers your next rolls.', fateCost: 20,
@@ -569,11 +569,11 @@ export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
 /** The Barrows brothers and the set effect each puts on your next rolls. */
 export interface BarrowsBrother { id: 'AHRIM' | 'DHAROK' | 'GUTHAN' | 'KARIL' | 'TORAG' | 'VERAC'; name: string; effect: string }
 export const BARROWS_BROTHERS: BarrowsBrother[] = [
-  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds' },
-  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (up to +25%)' },
+  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds, up to 95%' },
+  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (at most +25%), up to 95%' },
   { id: 'GUTHAN', name: 'Guthan the Infested', effect: 'Every fail heals 8 Fate back' },
   { id: 'KARIL',  name: 'Karil the Tainted',   effect: 'Every success has a 50% chance of a second Key' },
-  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, and the 20 Fate comes back if all 3 fail' },
+  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, up to 95%, and the 20 Fate comes back if all 3 fail' },
   { id: 'VERAC',  name: 'Verac the Defiled',   effect: 'Every fail has a 15% chance to become a success' },
 ];
 

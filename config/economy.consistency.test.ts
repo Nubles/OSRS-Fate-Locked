@@ -84,6 +84,10 @@ describe('economy ↔ engine consistency', () => {
     expect(new Set(sources).size).toBe(sources.length);
   });
 
+  it('points the Pets icon at a Wiki file that exists (File:Pet Kraken.png, capital K)', () => {
+    expect(EARN_METHODS.find(m => m.category === 'Pets')?.icon).toBe('https://oldschool.runescape.wiki/images/Pet_Kraken.png');
+  });
+
   it('represents Level Ups as the dynamic Level ÷ 5 curve', () => {
     const lvl = EARN_METHODS.find(m => m.category === 'Level Ups');
     expect(lvl?.dynamic).toBe(true);
@@ -151,7 +155,7 @@ describe('economy ↔ engine consistency', () => {
       expect(counts.get(TableType.EQUIPMENT)).toBe(1);
       expect(counts.get(TableType.BANKS)).toBe(1);
     }
-    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only banks and guilds inside your chunks can come up.");
+    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up.");
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {

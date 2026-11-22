@@ -50,6 +50,23 @@ const ALTAR_UI: Record<string, { icon: any; color: string; border: string }> = {
   SACRIFICE:   { icon: Key,      color: 'text-rose-400',    border: 'border-rose-500/30' },
 };
 
+/**
+ * The gear badges' tier hues (utils/equipTiers.ts EQUIP_TIER_COLORS) as text,
+ * for the tier names in the Codex's Equipment Tiers table. Kept here, not in
+ * utils/equipTiers.ts, because only this lazy window uses it.
+ */
+export const EQUIP_TIER_TEXT_COLORS = [
+  'text-stone-400',   // T1
+  'text-orange-700',  // T2
+  'text-slate-400',   // T3
+  'text-slate-300',   // T4
+  'text-emerald-500', // T5
+  'text-cyan-500',    // T6
+  'text-red-500',     // T7
+  'text-purple-500',  // T8
+  'text-yellow-400',  // T9
+];
+
 export const formatVanillaBossSchedule = (bossClass: string, rates: readonly number[]): string => {
   const label = `${bossClass.slice(0, 1).toUpperCase()}${bossClass.slice(1)}`;
   return `${label}: ${rates.map(rate => `${rate}%`).join(' → ')} (${rates.length} ${rates.length === 1 ? 'Key' : 'Keys'})`;
@@ -99,7 +116,7 @@ export const ChunkedFateRules: React.FC<{ chaosCost: number; cartographerCost: n
     <p><b className="text-gray-100">Breakthrough.</b> A skill at or past its tier cap, when your chunks give you a way to train it at its next tier, gets one free {BREAKTHROUGH_CHANCE * 100}% roll to open that tier. Each tier rolls once, win or lose; a Key can still open it after a loss.</p>
     <p><b className="text-gray-100">Fate's Mercy.</b> It opens only when all of these hold: you have no Keys, Omni-Keys or Chaos Keys; you have less than {chaosCost} Fate (the Ritual of Chaos; the Cartographer costs {cartographerCost}) and no free Chaos ritual waiting, nor a free Cartographer while a frontier chunk is left to chart; no skill your chunks can train is below its tier cap; no Breakthrough or exploring roll is waiting; and no quest in your chunks is doable now. Those last three are the tracker's best guess at what you can still do, so if 3 days pass with no new Key, unlock or level, Mercy opens anyway. Then fate draws one frontier chunk or trainable skill tier, from what a Key could roll, or, once none is left, the Farming patch type, guild, merchant or gear slot that keeps a skill from training, and nothing is spent. The Keys screen says what keeps it shut.</p>
     <p><b className="text-gray-100">Fate's Thread.</b> Fate ties a thread to an unheld chunk {FATE_THREAD_MIN_STEPS} to {FATE_THREAD_MAX_STEPS} chunks past your border: a boss, minigame, guild or bank where there is one. One Chunks draw in {Math.round(1 / FATE_THREAD_LEAN_CHANCE)} goes to the frontier chunks nearest the thread; the rest draw from your whole frontier. When you gain the thread's chunk, by any means, fate is fulfilled: you get a free ritual fate picks, and fate ties a new thread.</p>
-    <p><b className="text-gray-100">Fate's omens.</b> Every chunk you gain draws one of eight omens, each as likely as the others. Four are boons. <b className="text-gray-100">Blessed</b>: +{FATE_MARK_BLESSED_FATE} Fate, up to the pity line. <b className="text-gray-100">Gilded</b>: a free {DROP_RATES[DropSource.FATE_MARK]}% Key roll, waiting on the Keys screen. <b className="text-gray-100">Fortunate</b>: your next {FATE_MARK_FORTUNATE_ROLLS} Key rolls are {FATE_MARK_FORTUNATE_ODDS}% better. <b className="text-gray-100">Chaotic</b>: a {FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key. Four are banes. <b className="text-gray-100">Cursed</b>: your next {FATE_MARK_CURSED_ROLLS} Key rolls are {FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate. <b className="text-gray-100">Withered</b>: you lose {FATE_MARK_WITHERED_FATE} Fate. <b className="text-gray-100">Clouded</b>: your next {FATE_MARK_CLOUDED_ROLLS} Key rolls give no Fate if they fail. <b className="text-gray-100">Tangled</b>: Fate's Thread doesn't pull your next chunk. A bane never takes Keys, chunks or unlocks. The map shows each chunk's omen; the Omens button hides them.</p>
+    <p><b className="text-gray-100">Fate's omens.</b> Every chunk you gain draws one of eight omens, each as likely as the others. Four are boons. <b className="text-gray-100">Blessed</b>: +{FATE_MARK_BLESSED_FATE} Fate, up to the pity line. <b className="text-gray-100">Gilded</b>: a free {DROP_RATES[DropSource.FATE_MARK]}% Key roll, waiting on the Keys screen. <b className="text-gray-100">Fortunate</b>: your next {FATE_MARK_FORTUNATE_ROLLS} Key rolls are {FATE_MARK_FORTUNATE_ODDS}% better, up to 95%. <b className="text-gray-100">Chaotic</b>: a {FATE_MARK_CHAOS_CHANCE * 100}% chance of a Chaos Key. Four are banes. <b className="text-gray-100">Cursed</b>: your next {FATE_MARK_CURSED_ROLLS} Key rolls are {FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate. <b className="text-gray-100">Withered</b>: you lose {FATE_MARK_WITHERED_FATE} Fate. <b className="text-gray-100">Clouded</b>: your next {FATE_MARK_CLOUDED_ROLLS} Key rolls give no Fate if they fail. <b className="text-gray-100">Tangled</b>: Fate's Thread doesn't pull your next chunk. A bane never takes Keys, chunks or unlocks. The map shows each chunk's omen; the Omens button hides them.</p>
     <p><b className="text-gray-100">Fated sites.</b> When your run starts, fate hides {FATE_SITE_COUNT} sites in the fog. One shows as a <b className="text-gray-100">?</b> once it's {FATE_SITE_SIGHT} chunks from your land, but only a draw can land on it. A site's chunk sets off the site instead of an omen. <b className="text-gray-100">Shrine</b>: a free ritual. <b className="text-gray-100">Hoard</b>: a Chaos Key. <b className="text-gray-100">Rift</b>: fate draws a second chunk for you, free. <b className="text-gray-100">Waystone</b>: your next {FATE_WAYSTONE_DRAWS} Chunks draws all lean toward Fate's Thread.</p>
     <p><b className="text-gray-100">Region seals.</b> Every region but Misthalin starts sealed. The first chunk you gain in a region breaks its seal, and that chunk's omen is always a boon, {FATE_SEAL_BOON_FACTOR === 2 ? 'twice' : `${FATE_SEAL_BOON_FACTOR} times`} as strong. The map dots the border of each region still sealed; the Sites button hides sites and seals.</p>
   </div>
@@ -268,7 +285,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Roll</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                The tracker draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
+                                                The tracker draws to 0.1% precision, from 0.1 to 100.0 (boss and minigame rolls in Vanilla and Chunked, and Vanilla clue rolls, use 0.01%).
                                                 <br/>
                                                 <span className="text-green-400">Success:</span> Roll at or under the threshold to get a Key.
                                                 <br/>
@@ -450,7 +467,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                 <h3 className="text-gray-200 font-bold uppercase tracking-widest mb-4">What Differs Between the Modes</h3>
                                 <ul className="space-y-3 text-sm text-gray-400">
                                     <li><b className="text-amber-300">Vanilla:</b> you unlock named areas, and all of Misthalin is free from the start. Each boss and each unlocked minigame pays a few Keys and then stops, your first three clue Keys roll at no less than {andList(CLUE_ONBOARDING_MINIMUMS.map(rate => `${rate}%`))}, and Keys can land on bosses and minigames you can't reach yet.</li>
-                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left. Fate's Thread leans your Chunks draws toward a place fate picks, and fate marks about one chunk in eight (see Key Economy).</li>
+                                    <li><b className="text-emerald-300">Chunked:</b> you start in one chunk of Lumbridge and unlock one chunk at a time, one you can walk into from land you hold; islands need Sailing. Content counts only in the chunk it sits in: Keys only unlock bosses, minigames, banks and guilds inside your chunks, and quests, diaries and Slayer masters count only there. Bosses and minigames pay a few Keys each and then stop, as in Vanilla. The first time you do something new in a chunk you unlocked, it rolls once at {DROP_RATES[DropSource.CHUNK_EXPLORE]}%, up to {CHUNK_EXPLORE_ROLLS} times per chunk. A Skills Key only rolls skills your chunks can train, and a skill a quest opens only after that quest. Levels past a skill's tier cap roll no Keys, a capped skill gets one {BREAKTHROUGH_CHANCE * 100}% Breakthrough roll for its next tier, and Fate's Mercy draws a chunk or skill tier when you have nothing left. Fate's Thread leans your Chunks draws toward a place fate picks, and every chunk you gain draws one of fate's eight omens (see Key Economy).</li>
                                     <li><b className="text-gray-200">Both:</b> a Pity Key at {SHARED_MODE_RULES.pityThreshold} Fate Points, a {SHARED_MODE_RULES.omniChanceBase}% base Omni-Key chance, the same ritual prices, and every bank locked until you unlock it.</li>
                                 </ul>
                             </div>
@@ -596,7 +613,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                         <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h1 className="text-3xl font-black text-white mb-2">The Void Altar</h1>
-                                <p className="text-gray-400">Spend Fate Points on rituals.</p>
+                                <p className="text-gray-400">Spend Fate Points on rituals. Odds boosts stop at 95%.</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -770,19 +787,19 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-800 text-gray-300">
-                                        <tr><td className="p-4 font-bold text-gray-500">Tier 1</td><td className="p-4">Bronze / Iron / Leather / Basic staves</td><td className="p-4 text-xs text-gray-500">Elemental staves, Wooden shield</td></tr>
-                                        <tr><td className="p-4 font-bold text-orange-800">Tier 2</td><td className="p-4">Steel / Black / White / Studded</td><td className="p-4 text-xs text-gray-500">Oak shortbow, Steel scimitar</td></tr>
-                                        <tr><td className="p-4 font-bold text-gray-400">Tier 3</td><td className="p-4">Mithril / Initiate</td><td className="p-4 text-xs text-gray-500">Willow bow, Xerician robes</td></tr>
-                                        <tr><td className="p-4 font-bold text-green-700">Tier 4</td><td className="p-4">Adamant / Green D'hide</td><td className="p-4 text-xs text-gray-500">Maple bow, Mystic robes</td></tr>
-                                        <tr><td className="p-4 font-bold text-cyan-500">Tier 5</td><td className="p-4">Rune / Blue D'hide</td><td className="p-4 text-xs text-gray-500">Yew bow, Iban's staff</td></tr>
-                                        <tr><td className="p-4 font-bold text-red-500">Tier 6</td><td className="p-4">Dragon / Red D'hide</td><td className="p-4 text-xs text-gray-500">Magic bow, Ancient staff</td></tr>
-                                        <tr><td className="p-4 font-bold text-purple-500">Tier 7</td><td className="p-4">Barrows / Black &amp; Blessed D'hide</td><td className="p-4 text-xs text-gray-500">Ahrim's, Karil's, Obsidian</td></tr>
-                                        <tr><td className="p-4 font-bold text-yellow-500">Tier 8</td><td className="p-4">God Wars / Zenyte</td><td className="p-4 text-xs text-gray-500">Bandos, Armadyl, Trident</td></tr>
-                                        <tr><td className="p-4 font-bold text-blue-400">Tier 9</td><td className="p-4">Raids / Endgame</td><td className="p-4 text-xs text-gray-500">Ancestral, Torva, Masori, T-Bow</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[0]}`}>Tier 1</td><td className="p-4">Bronze / Iron / Leather / Basic staves</td><td className="p-4 text-xs text-gray-500">Elemental staves, Wooden shield</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[1]}`}>Tier 2</td><td className="p-4">Steel / Black / White / Studded</td><td className="p-4 text-xs text-gray-500">Oak shortbow, Steel scimitar</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[2]}`}>Tier 3</td><td className="p-4">Mithril / Initiate</td><td className="p-4 text-xs text-gray-500">Willow bow, Xerician robes</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[3]}`}>Tier 4</td><td className="p-4">Adamant / Green D'hide</td><td className="p-4 text-xs text-gray-500">Maple bow, Mystic robes</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[4]}`}>Tier 5</td><td className="p-4">Rune / Blue D'hide</td><td className="p-4 text-xs text-gray-500">Yew bow, Iban's staff</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[5]}`}>Tier 6</td><td className="p-4">Dragon / Red D'hide</td><td className="p-4 text-xs text-gray-500">Magic bow, Ancient staff</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[6]}`}>Tier 7</td><td className="p-4">Barrows / Black &amp; Blessed D'hide</td><td className="p-4 text-xs text-gray-500">Ahrim's, Karil's, Obsidian</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[7]}`}>Tier 8</td><td className="p-4">God Wars / Zenyte</td><td className="p-4 text-xs text-gray-500">Bandos, Armadyl, Trident</td></tr>
+                                        <tr><td className={`p-4 font-bold ${EQUIP_TIER_TEXT_COLORS[8]}`}>Tier 9</td><td className="p-4">Raids / Endgame</td><td className="p-4 text-xs text-gray-500">Ancestral, Torva, Masori, T-Bow</td></tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <p className="text-sm text-gray-400">Gear with no metal sits with the metal that needs the same level to wear, so level 50 Granite is Tier 5 like rune. Gear an activity hands you and takes back, like the Gauntlet's, is never locked.</p>
+                            <p className="text-sm text-gray-400">Gear with no metal sits with the metal whose level band it falls in, so level 50 granite armour is Tier 5 with rune (level 40). A few weapons sit higher for what they do, like the granite maul at Tier 6. Gear an activity hands you and takes back, like the Gauntlet's, is never locked.</p>
                         </div>
                     )}
 

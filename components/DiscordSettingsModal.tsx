@@ -236,8 +236,8 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
       ) : (
         <>
           <p className="text-[12px] text-gray-400 mb-2">
-            Share a summary of this run (mode, areas, quests, diaries, Combat Achievements and your
-            last few unlocks) so <span className="text-gray-200">/progress</span> in the Fate Locked
+            Share a summary of this run (your linked account name, mode, start date, areas, quests,
+            diaries, Combat Achievements and your last few unlocks) so <span className="text-gray-200">/progress</span> in the Fate Locked
             Discord can show it. Your save never leaves this device.
           </p>
           {link.kind === 'code' && secondsLeft > 0 ? (
@@ -280,8 +280,8 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
           <BookOpen size={13} className="text-amber-400" /> Adventurer&apos;s Log
         </h3>
         <p className="text-[12px] text-gray-400 mb-2">
-          A read-only page anyone with the link can open: this run&apos;s mode, counts, last few unlocks and
-          a map of the chunks you own. Off unless you turn it on; your save never leaves this device.
+          A read-only page anyone with the link can open: your linked account name and this run&apos;s mode,
+          start date, counts, last few unlocks and a map of the chunks you own. Off unless you turn it on; your save never leaves this device.
         </p>
         {publicLog && record && (
           <div className="flex items-center gap-2 mb-2">
