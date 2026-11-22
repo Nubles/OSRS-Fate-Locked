@@ -39,6 +39,8 @@ export interface ActivityReq {
 }
 
 const GOD_WARS_ENTRY = ['Unlocked God Wars Dungeon access through Troll Stronghold progress (defeated Dad), or the Easy Combat Achievement hilt teleport; entry also requires 60 Strength or Agility and a rope for first entry'];
+// One fee covers Callisto's Den, Hunter's End, the Skeletal Tomb, Vet'ion's Rest, the Silk Chasm and the Web Chasm.
+const WILDERNESS_LAIR_FEE = "Entry costs 50,000 coins, taken from the bank if not carried; one fee covers all six Wilderness boss lairs.";
 const GOD_WARS_CHAMBER = 'Meet this faction’s kill-count requirement for your Combat Achievement tier, or use an ecumenical key';
 
 export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
@@ -59,17 +61,17 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "K'ril Tsutsaroth": { skills: { Hitpoints: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   'Abyssal Sire': {
     skills: { Slayer: 85 },
-    manualRequirements: ['Abyssal demon Slayer task.'],
+    manualRequirements: ['Abyssal demon Slayer task or Abyssal Sire boss task.'],
     oneOf: [
       { manualRequirements: ['Reached the Abyssal Nexus through fairy ring DIP'] },
       { manualRequirements: ['Reached the Abyss through the Mage of Zamorak in the Wilderness'] },
     ],
   },
-  'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task; Karuulm Slayer Dungeon.'] },
-  'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task.'] },
+  'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task or Alchemical Hydra boss task; Karuulm Slayer Dungeon.'] },
+  'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task or Cerberus boss task.'] },
   'Grotesque Guardians': { skills: { Slayer: 75 }, quests: ['Priest in Peril'], manualRequirements: ['Permanently unlocked the Slayer Tower roof using a brittle key', 'An active gargoyle or Grotesque Guardians boss Slayer task'] },
-  'Kraken': { skills: { Slayer: 87 }, manualRequirements: ['Cave kraken Slayer task.'] },
-  'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, manualRequirements: ['Smoke devil Slayer task.'] },
+  'Kraken': { skills: { Slayer: 87 }, manualRequirements: ['Cave kraken Slayer task or Kraken boss task.'] },
+  'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, manualRequirements: ['Smoke devil Slayer task or Thermonuclear smoke devil boss task.'] },
   'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], manualRequirements: ['Araxyte/spider Slayer task or boss task.'] },
   'Skotizo': { manualRequirements: ['Summoned with a Dark totem in the Catacombs of Kourend.'] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
@@ -99,17 +101,17 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Yama': { quests: ['A Kingdom Divided'] },
   'Doom of Mokhaiotl': { quests: ['The Final Dawn'] },
   'Gemstone Crab': { quests: ['Children of the Sun'] },
-  'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], manualRequirements: ['Gryphon Slayer task.'] },
+  'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], manualRequirements: ['Gryphon Slayer task or Shellbane gryphon boss task.'] },
   'The Mad Angel': { quests: ['Fallen From Grace'], requiredAreas: ['Wyrmscraig'] },
   'Mimic': { manualRequirements: ['Opted in at the strange casket in Watson’s house', 'Obtained a Mimic from an elite or master reward casket'] },
 
-  "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
-  'Artio': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }] },
-  'Spindel': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }] },
+  "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }], note: WILDERNESS_LAIR_FEE },
+  'Artio': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
+  'Spindel': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
   // The big three's lairs ask for the Medium diary instead of the Hard one.
-  'Callisto': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }], note: "Entry to Callisto's Den costs 50,000 coins, taken from the bank if not carried." },
-  'Venenatis': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }] },
-  "Vet'ion": { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
+  'Callisto': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
+  'Venenatis': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
+  "Vet'ion": { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }], note: WILDERNESS_LAIR_FEE },
   // B-4: the Maggot King can only be killed after The Blood Moon Rises.
   'Maggot King': { quests: ['The Blood Moon Rises'] },
   'Obor': { manualRequirements: ['Permanently unlocked Obor’s lair using a giant key (first access only)'] },

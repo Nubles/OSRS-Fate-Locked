@@ -153,6 +153,21 @@ describe('boss access items (fix phase, 22 November 2026)', () => {
   });
 });
 
+describe('Slayer bosses and the Wilderness lair fee (fix phase, 22 November 2026)', () => {
+  it('lets a boss task stand in for the regular task wherever the boss is a boss task', () => {
+    for (const boss of ['Abyssal Sire', 'Alchemical Hydra', 'Cerberus', 'Kraken', 'Thermonuclear Smoke Devil', 'Shellbane Gryphon']) {
+      expect(ACTIVITY_REQUIREMENTS[boss].manualRequirements, boss).toContainEqual(expect.stringMatching(/Slayer task or .+ boss task/));
+    }
+  });
+
+  it('notes the shared 50,000-coin fee on all six Wilderness lair bosses', () => {
+    // Wiki: Callisto's Den, Hunter's End, the Skeletal Tomb, Vet'ion's Rest, the Silk Chasm and the Web Chasm share one fee.
+    for (const boss of ['Callisto', 'Artio', "Calvar'ion", "Vet'ion", 'Venenatis', 'Spindel']) {
+      expect(ACTIVITY_REQUIREMENTS[boss].note, boss).toContain('50,000 coins');
+    }
+  });
+});
+
 describe('Galvek leaves the boss table', () => {
   // He is fought once, inside Dragon Slayer II (owner decision B3).
   const migrate = (state: ReturnType<typeof createFreshState>) => {
