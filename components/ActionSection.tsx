@@ -504,7 +504,7 @@ export const useFarmModel = () => {
         name: isMM2Complete ? "Steve" : "Nieve",
         subText: "Gnome Stronghold (Hard)",
         source: DropSource.SLAYER_NIEVE,
-        image: isMM2Complete ? "https://oldschool.runescape.wiki/images/Steve.png" : "https://oldschool.runescape.wiki/images/Nieve.png",
+        image: isMM2Complete ? "https://oldschool.runescape.wiki/images/Steve_(Slayer_master).png" : "https://oldschool.runescape.wiki/images/Nieve.png",
         style: TIER_STYLES.RED
       },
       {
