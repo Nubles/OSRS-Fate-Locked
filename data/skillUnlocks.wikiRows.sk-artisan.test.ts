@@ -103,6 +103,23 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Hunter', 'Horn of Plenty', 50], ['Hunter', 'Common Tench (Fishing 56)', 51], ['Hunter', 'Kryket Bats', 60],
     ['Hunter', 'Wild Broavs (While Guthix Sleeps)', 62], ['Hunter', 'Murng Bats', 75], ['Hunter', 'Giral Bats', 30],
     ['Hunter', 'Psykk Bats', 90],
+    ['Construction', 'Wooden Larder', 9], ['Construction', 'Wood Dining Table', 10],
+    ['Construction', 'Wooden Workbench', 17], ['Construction', 'Cooking Pot (Sailing)', 19],
+    ['Construction', 'Pottery & Spinning Wheels (Sailing)', 24], ['Construction', 'Crafting Table 2', 25],
+    ['Construction', 'Fremennik Wood Decor', 30], ['Construction', 'Loom (Sailing)', 31],
+    ['Construction', 'Crafting Table 3, Steel Range', 34], ['Construction', 'Pottery Oven (Sailing)', 37],
+    ['Construction', 'Tropical Wood Decor', 40], ['Construction', 'Crafting Table 4', 42],
+    ['Construction', 'Teak Larder, Anvil (Sailing)', 43], ['Construction', 'Steel Framed Workbench', 46],
+    ['Construction', 'Fancy Stone Decor, Teak Altar, Teak Portal, Rowboat (Sailing)', 50],
+    ['Construction', 'Formal Garden', 55], ['Construction', 'Cloth Altar, Furnace (Sailing)', 56],
+    ['Construction', 'Mahogany Altar, Oak Throne', 60], ['Construction', 'Oak Incense Burners', 61],
+    ['Construction', 'Bench with Vice', 62], ['Construction', 'Limestone Altar', 64],
+    ['Construction', 'Mahogany Portal, Mahogany Incense Burners', 65],
+    ['Construction', 'Revitalisation Pool, Bank Chest (Sailing)', 70], ['Construction', 'Mahogany Throne', 74],
+    ['Construction', 'Treasure Room', 75], ['Construction', 'Bench with Lathe', 77],
+    ['Construction', 'Lunar & Dark Altars, Marble Portal', 80], ['Construction', 'Gilded Throne', 81],
+    ['Construction', 'Skeleton Throne', 88], ['Construction', 'Crystal Throne', 95],
+    ['Construction', 'Demonic Throne', 99], ['Construction', 'Water Pump (Sailing)', 17],
     // @next-skill
   ] as const)('%s: %s appears once, at its Wiki level and tier', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));

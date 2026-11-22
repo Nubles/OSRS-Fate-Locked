@@ -221,14 +221,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Mahogany Homes (Beginner)',
       'Lvl 1: Move to Rimmington',
       'Lvl 5: Kitchen',
-      'Lvl 10: Basic Stone Decor, Dining Room',
+      'Lvl 9: Wooden Larder',
+      'Lvl 10: Basic Stone Decor, Dining Room, Wood Dining Table',
       'Lvl 10: Move to Taverley'
     ],
     2: [
       'Lvl 12: STASH Units (Beginner)',
       'Lvl 15: Workshop, Repair Bench',
       'Lvl 16: Crafting Table 1',
+      'Lvl 17: Wooden Workbench',
       'Lvl 17: Water Pump (Sailing)',
+      'Lvl 19: Cooking Pot (Sailing)',
       'Lvl 20: Bedroom, Whitewashed Stone Decor',
       'Lvl 20: Mahogany Homes (Novice)',
       'Lvl 20: Move to Pollnivneach'
@@ -236,63 +239,87 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     3: [
       'Sailing: Teak Hull, Cannons',
       'Lvl 22: Oak Dining Table',
+      'Lvl 24: Pottery & Spinning Wheels (Sailing)',
+      'Lvl 25: Crafting Table 2',
       'Lvl 25: Skill Hall, Move to Hosidius',
       'Lvl 27: STASH Units (Easy)',
-      'Lvl 30: Games Room',
+      'Lvl 30: Games Room, Fremennik Wood Decor',
       'Lvl 30: Move to Rellekka'
     ],
     4: [
+      'Lvl 31: Loom (Sailing)',
       'Lvl 32: Combat Room',
       'Lvl 32: Oak Workbench',
       'Lvl 33: Oak Larder',
+      'Lvl 34: Crafting Table 3, Steel Range',
       'Lvl 35: Quest Hall, Move to Aldarin',
       'Lvl 37: Menagerie',
+      'Lvl 37: Pottery Oven (Sailing)',
       'Lvl 38: Pet List, Teak Table',
       'Lvl 40: Servant (Butler), Move to Brimhaven',
-      'Lvl 40: Study'
+      'Lvl 40: Study',
+      'Lvl 40: Tropical Wood Decor'
     ],
     5: [
       'Lvl 42: Costume Room',
-      'Lvl 42: Fancy Range',
+      'Lvl 42: Fancy Range, Crafting Table 4',
       'Lvl 42: STASH Units (Medium)',
+      'Lvl 43: Teak Larder, Anvil (Sailing)',
       'Lvl 45: Chapel, Oak Altar',
+      'Lvl 46: Steel Framed Workbench',
       'Lvl 47: Mounted Glory, Mythical Cape',
       'Lvl 50: Mahogany Homes (Adept)',
       'Lvl 50: Portal Chamber, Teleport Focus',
+      'Lvl 50: Fancy Stone Decor, Teak Altar, Teak Portal, Rowboat (Sailing)',
       'Lvl 50: Servant (Demon Butler), Move to Yanille'
     ],
     6: [
       'Lvl 52: Mahogany Table',
+      'Lvl 55: Formal Garden',
       'Lvl 55: STASH Units (Hard)',
+      'Lvl 56: Cloth Altar, Furnace (Sailing)',
       'Lvl 58: Servant\'s Moneybag',
-      'Lvl 60: Throne Room, Gilded 4-Poster'
+      'Lvl 60: Throne Room, Gilded 4-Poster',
+      'Lvl 60: Mahogany Altar, Oak Throne'
     ],
     7: [
+      'Lvl 61: Oak Incense Burners',
+      'Lvl 62: Bench with Vice',
+      'Lvl 64: Limestone Altar',
       'Lvl 65: Oubliette (Dungeon)',
       'Lvl 65: Restoration Pool, Superior Garden',
+      'Lvl 65: Mahogany Portal, Mahogany Incense Burners',
       'Lvl 67: Teak Throne',
       'Lvl 69: Marble Incense Burners',
       'Lvl 70: Dungeon Entrance, Marble Altar',
       'Lvl 70: Mahogany Homes (Expert)',
+      'Lvl 70: Revitalisation Pool, Bank Chest (Sailing)',
       'Lvl 70: Move to Prifddinas'
     ],
     8: [
       'Lvl 72: Portal Nexus (Marble)',
+      'Lvl 74: Mahogany Throne',
+      'Lvl 75: Treasure Room',
       'Lvl 75: Spirit Tree (Farming 83), Gilded Altar',
       'Lvl 77: STASH Units (Elite)',
+      'Lvl 77: Bench with Lathe',
       'Lvl 80: Achievement Gallery, Ancient Altar',
+      'Lvl 80: Lunar & Dark Altars, Marble Portal',
       'Lvl 80: Rejuvenation Pool'
     ],
     9: [
-      'Lvl 81: Jewellery Box',
+      'Lvl 81: Jewellery Box, Gilded Throne',
       'Lvl 82: Gilded Portal Nexus',
       'Lvl 85: Fairy Ring, Fancy Rejuvenation Pool',
       'Lvl 88: STASH Units (Master)',
+      'Lvl 88: Skeleton Throne',
       'Lvl 90: Occult Altar, Ornate Rejuvenation Pool'
     ],
     10: [
       'Lvl 91: Ornate Jewellery Box',
       'Lvl 95: Spirit Tree & Fairy Ring',
+      'Lvl 95: Crystal Throne',
+      'Lvl 99: Demonic Throne',
       'Lvl 99: Construction Cape (Teleports)'
     ],
   },
