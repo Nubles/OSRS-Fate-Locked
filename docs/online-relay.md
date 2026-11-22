@@ -125,7 +125,7 @@ only a SHA-256 hash of the token and the time it was last refreshed. It lasts
 90 days from the last refresh, and publishes refresh it at most once a week
 to spare KV writes. A code therefore stays claimed after its 30-day profile
 record expires; after 90 days without a publish it can be claimed again,
-which is safe for random 128-bit codes. Codes published before owner records
+which is safe for random 122-bit codes (a type-4 UUID without dashes). Codes published before owner records
 existed are adopted on their owner's next publish.
 
 The pairing dialog asks the player to continue only if they just pressed
