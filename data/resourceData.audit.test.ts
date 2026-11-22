@@ -205,3 +205,29 @@ describe('curated drops the monster does not have', () => {
     expect(curated("Red Spiders' Eggs").find(s => s.name === 'Sarachnis')?.notes).toMatch(/giant egg sac/i);
   });
 });
+
+describe('curated shops that do not sell the item', () => {
+  it.each([
+    ['Limestone', 'Stonemason'],
+    ['Black Pickaxe', 'Pickaxe Shop'],
+    ['Rune Pickaxe', "Lliann's Wares"],
+    ['Blood Rune', 'Mage Arena Shop'],
+    ['Soul Rune', 'Mage Arena Shop'],
+    ['Rune Scimitar', "Daga's Scimitar Smithy"],
+    ['Amulet of Power', 'Quartermaster'],
+  ] as const)('%s is not sold by %s', (item, shop) => {
+    expect(has(item, shop, 'SHOP')).toBe(false);
+  });
+
+  it.each([
+    ['Limestone', 'Razmire Builders Merchants', ['Morytania']],
+    ['Rune Pickaxe', "Gwyn's Mining Emporium", ['Tirannwn']],
+    ['Amulet of Power', "Davon's Amulet Store", ['Karamja']],
+  ] as const)('%s is sold by %s', (item, shop, regions) => {
+    expect(curated(item).find(s => s.type === 'SHOP' && s.name === shop)?.regions).toEqual(regions);
+  });
+
+  it('keeps Mage Arena Shop nature runes', () => {
+    expect(has('Nature Rune', 'Mage Arena Shop', 'SHOP')).toBe(true);
+  });
+});

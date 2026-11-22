@@ -423,7 +423,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Limestone': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Morytania', 'Kandarin', 'Tirannwn'], skills: {'Mining': 10} },
-    { type: 'SHOP', name: 'Stonemason', regions: ['Fremennik'] }
+    { type: 'SHOP', name: 'Razmire Builders Merchants', regions: ['Morytania'], notes: "Mort'ton" }
   ],
   'Barronite Shards': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia'], skills: {'Mining': 14}, quests: ['Below Ice Mountain'], notes: 'Camdozaal' }
@@ -511,8 +511,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' }
   ],
   'Black Pickaxe': [
-    { type: 'MINIGAME', name: 'Clue Scroll (Easy)', regions: ['Any'], notes: 'Easy Clue Reward' },
-    { type: 'SHOP', name: 'Pickaxe Shop', regions: ['Wilderness'], notes: 'Deep Wilderness (Level 50)' }
+    { type: 'MINIGAME', name: 'Clue Scroll (Easy)', regions: ['Any'], notes: 'Easy Clue Reward' }
   ],
   'Mithril Pickaxe': [
     { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' }
@@ -521,7 +520,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' }
   ],
   'Rune Pickaxe': [
-    { type: 'SHOP', name: 'Lliann\'s Wares', regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Prifddinas' },
+    { type: 'SHOP', name: "Gwyn's Mining Emporium", regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Prifddinas' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano' },
     { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' },
     { type: 'DROP', name: 'Venenatis', regions: ['Wilderness'], unlockId: 'Venenatis' },
@@ -793,13 +792,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Blood Rune': [
     { type: 'SKILL', name: 'True Blood Altar', regions: ['Morytania'], skills: { 'Runecraft': 77 }, quests: ['Sins of the Father'] },
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Kourend & Kebos'], skills: { 'Runecraft': 77, 'Mining': 38, 'Crafting': 38 }, notes: 'Arceuus (Zeah)' },
-    { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'DROP', name: 'Bloodveld', regions: ['Morytania', 'Kandarin', 'Kourend & Kebos'], skills: {'Slayer': 50} },
     { type: 'MINIGAME', name: 'Barrows Chest', regions: ['Morytania'], unlockId: 'Barrows Brothers' }
   ],
   'Soul Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Kourend & Kebos'], skills: { 'Runecraft': 90 }, notes: 'Arceuus (Zeah)' },
-    { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83} },
     { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], skills: {'Slayer': 91}, unlockId: 'Cerberus' }
   ],
@@ -866,8 +863,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Rune Scimitar': [
     { type: 'DROP', name: 'Fire Giant', regions: ['Kandarin', 'Wilderness', 'Kourend & Kebos'], notes: 'Waterfall / Deep Wildy / Catacombs' },
     { type: 'DROP', name: 'Zamorak Warrior', regions: ['Morytania', 'Kandarin'], notes: 'ZMI / GWD' },
-    { type: 'SKILL', name: 'Smithing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kourend & Kebos', 'Wilderness', 'Fremennik'], skills: {'Smithing': 90}, inputs: {'Rune Bar': 2}, notes: 'Requires 2 Bars + Anvil' },
-    { type: 'SHOP', name: 'Daga\'s Scimitar Smithy', regions: ['Islands & Others'], notes: 'Ape Atoll' }
+    { type: 'SKILL', name: 'Smithing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kourend & Kebos', 'Wilderness', 'Fremennik'], skills: {'Smithing': 90}, inputs: {'Rune Bar': 2}, notes: 'Requires 2 Bars + Anvil' }
   ],
   'Dragon Scimitar': [
     { type: 'SHOP', name: 'Daga\'s Scimitar Smithy', regions: ['Islands & Others'], quests: ['Monkey Madness I'], notes: 'Ape Atoll' }
@@ -914,7 +910,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Amulet of Power': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 70, 'Magic': 57}, inputs: {'Diamond Amulet': 1, 'Cosmic Rune': 1}, notes: 'Enchant Lvl-4' },
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} },
-    { type: 'SHOP', name: 'Quartermaster', regions: ['Kourend & Kebos'], notes: 'Shayzien (requires favor)' }
+    { type: 'SHOP', name: "Davon's Amulet Store", regions: ['Karamja'], notes: 'Brimhaven' }
   ],
   'Diamond Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 70}, inputs: {'Gold Bar': 1, 'Diamond': 1, 'Amulet Mould': 0, 'Ball of Wool': 1} }
