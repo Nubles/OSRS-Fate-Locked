@@ -308,7 +308,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   },
   {
     category: 'Pets',
-    icon: `${WIKI}Pet_kraken.png`,
+    icon: `${WIKI}Pet_Kraken.png`,
     where: 'Farm Keys → Activities: claim each new pet.',
     blurb: 'Each new pet gives an Omni-Key, once per pet.',
     tiers: [

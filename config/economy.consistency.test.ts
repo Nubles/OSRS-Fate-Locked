@@ -84,6 +84,10 @@ describe('economy ↔ engine consistency', () => {
     expect(new Set(sources).size).toBe(sources.length);
   });
 
+  it('points the Pets icon at a Wiki file that exists (File:Pet Kraken.png, capital K)', () => {
+    expect(EARN_METHODS.find(m => m.category === 'Pets')?.icon).toBe('https://oldschool.runescape.wiki/images/Pet_Kraken.png');
+  });
+
   it('represents Level Ups as the dynamic Level ÷ 5 curve', () => {
     const lvl = EARN_METHODS.find(m => m.category === 'Level Ups');
     expect(lvl?.dynamic).toBe(true);
