@@ -3,6 +3,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } fr
 import { Loader2, Search, CheckCircle2, AlertTriangle, RefreshCw, Lock } from 'lucide-react';
 import { Sparkles, Dice5 } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { normalizeAccountName } from '../utils/accountName';
 import { RollInbox } from './RollInbox';
 import { RuneLiteOnboarding } from './RuneLiteOnboarding';
 import { WikiIcon } from './WikiIcon';
@@ -87,11 +88,13 @@ interface Fetched {
  */
 export class HiscoresLookupError extends Error {
   readonly nameNotFound: boolean;
+  readonly rateLimited: boolean;
 
-  constructor(message: string, nameNotFound = false) {
+  constructor(message: string, nameNotFound = false, rateLimited = false) {
     super(message);
     this.name = 'HiscoresLookupError';
     this.nameNotFound = nameNotFound;
+    this.rateLimited = rateLimited;
   }
 }
 
@@ -108,7 +111,7 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   }
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 429) throw new HiscoresLookupError('Rate-limited by the API — wait a moment and retry.');
+    if (res.status === 429) throw new HiscoresLookupError('Rate-limited by the API — wait a moment and retry.', false, true);
     if (res.status === 404 || data?.code === 'HISCORES_USERNAME_NOT_FOUND') throw new HiscoresLookupError(`"${name}" isn't on the OSRS hiscores — check the spelling.`, true);
     throw new HiscoresLookupError(`Could not refresh Wise Old Man hiscores (${res.status}).`);
   }
@@ -137,6 +140,23 @@ export async function fetchPlayer(name: string): Promise<Fetched> {
   };
 }
 
+/** Wise Old Man refuses a second update of the same player within this long (HTTP 429). */
+const WOM_UPDATE_COOLDOWN_MS = 60_000;
+
+/**
+ * The last reading per run and linked name, kept for the session outside the
+ * panel: the panel unmounts on every tab switch, and fetching again on return
+ * would hit Wise Old Man's cooldown and lose the reading to a rate-limit note.
+ */
+const syncReadings = new Map<string, { data: Fetched; at: number }>();
+const readingKey = (runId: unknown, account: string | null | undefined) =>
+  typeof runId === 'string' && account ? `${runId}|${normalizeAccountName(account)}` : null;
+/** Clears the session's kept readings (tests). */
+export function forgetSyncReadings(): void { syncReadings.clear(); }
+
+/** The question Ask before Key clicks puts before Sync & Roll, in both layouts. */
+export const SYNC_ROLL_QUESTION = 'Roll for Keys on everything this sync found?';
+
 /**
  * Everything Sync & Roll shows and does, shared by the classic panel and the
  * OSRS layout so both bind, fetch and roll through the same handlers.
@@ -145,8 +165,14 @@ export function useAutoRoll() {
   const {
     unlocks, createBackup, levelUpSkill, keys, specialKeys, chaosKeys, linkedAccount, setLinkedAccount, renameLinkedAccount,
     syncBaseline, recordSyncBaseline, catchUpSyncLevel,
-    syncScores, recordSyncScores, rollForKey, history, gameModeId,
+    syncScores, recordSyncScores, rollForKey, history, gameModeId, runId,
   } = useGame() as any;
+  // The linked name now, for an answer that lands after it changed.
+  const linkedRef = useRef<string | null | undefined>(linkedAccount);
+  linkedRef.current = linkedAccount;
+  // Only the latest lookup's answer is shown; an older one that lands late is dropped.
+  const requestId = useRef(0);
+  const [kept] = useState(() => { const key = readingKey(runId, linkedAccount); return key ? syncReadings.get(key) ?? null : null; });
   // Each run is linked to one OSRS character: the first fetch sets it, and the
   // player can change it (a name change, a typo) with Change name.
   const [name, setName] = useState(linkedAccount ?? '');
@@ -155,11 +181,11 @@ export function useAutoRoll() {
   const [renameError, setRenameError] = useState('');
   const [renamedTo, setRenamedTo] = useState<string | null>(null);
   const refetchAfterRename = useRef(false);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'loaded'>(kept ? 'loaded' : 'idle');
   const [error, setError] = useState('');
   // Only a name the hiscores don't know is worth pointing at Change name.
   const [errorNameNotFound, setErrorNameNotFound] = useState(false);
-  const [fetched, setFetched] = useState<Fetched | null>(null);
+  const [fetched, setFetched] = useState<Fetched | null>(kept?.data ?? null);
   // Wise Old Man calls a group iron a regular account, so a group iron picks their title.
   const [groupTitle, setGroupTitle] = useState<GroupIronTitle | null>(null);
   useEffect(() => { setGroupTitle(fetched ? readGroupIronTitle(fetched.displayName) : null); }, [fetched]);
@@ -249,11 +275,21 @@ export function useAutoRoll() {
     // Once bound, only that account can be fetched for this run.
     const query = (linkedAccount ?? name).trim();
     if (!query) return;
+    const asked = ++requestId.current;
+    const askedFor = linkedAccount;
+    // An answer counts only while it is the latest request and for the name the run is linked to.
+    const current = (answerName?: string) => {
+      if (asked !== requestId.current) return false;
+      const linkedNow = linkedRef.current;
+      if (!linkedNow) return !askedFor;
+      return normalizeAccountName(askedFor ?? answerName ?? '') === normalizeAccountName(linkedNow);
+    };
     setStatus('loading'); setError(''); setErrorNameNotFound(false); setFetched(null); setRolledTo(0); setApplied(false);
     setSkillRollingState(false); setSkillKeysGained(null); setBaselineTaken(false);
     if (skillTimer.current) window.clearInterval(skillTimer.current);
     try {
       const data = await fetchPlayer(query);
+      if (!current(data.displayName)) return;
       // Bind the run to this account on the first successful fetch. This
       // reading becomes its baseline: levels it already has never roll.
       // A failed fetch binds nothing and takes no baseline.
@@ -264,17 +300,26 @@ export function useAutoRoll() {
       // Kills and caskets this account already has never roll either.
       recordSyncScores?.(account, baselineScores(data.scores));
       setBaselineTaken(pending);
+      const key = readingKey(runId, account);
+      if (key) syncReadings.set(key, { data, at: Date.now() });
       setFetched(data);
       setStatus('loaded');
     } catch (e: any) {
+      if (!current()) return;
+      // Inside Wise Old Man's minute: keep the reading the player already had, with the note.
+      const keptReading = e instanceof HiscoresLookupError && e.rateLimited ? syncReadings.get(readingKey(runId, linkedAccount) ?? '') : undefined;
+      if (keptReading) setFetched(keptReading.data);
       setError(e?.message ?? 'Failed to reach the hiscores API.');
       setErrorNameNotFound(e instanceof HiscoresLookupError && e.nameNotFound);
       setStatus('error');
     }
-  }, [name, linkedAccount, setLinkedAccount, recordSyncBaseline, recordSyncScores, syncBaseline, setSkillRollingState]);
+  }, [name, linkedAccount, setLinkedAccount, recordSyncBaseline, recordSyncScores, syncBaseline, setSkillRollingState, runId]);
 
-  // If the run is already bound, pull that account's hiscores on open.
-  useEffect(() => { if (linkedAccount) onFetch(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, []);
+  // If the run is already bound, pull that account's hiscores on open, unless
+  // this session read them under a minute ago (Wise Old Man would refuse).
+  useEffect(() => {
+    if (linkedAccount && !(kept && Date.now() - kept.at < WOM_UPDATE_COOLDOWN_MS)) onFetch();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onRename = useCallback(() => {
     if (!linkedAccount) return;
@@ -312,7 +357,7 @@ export function useAutoRoll() {
   // the 2% chaos-key chance and the omni chance — so the run earns exactly the
   // keys those levels would have. Runs in batches for a responsive slot-machine
   // feel; tallies the keys/omni/chaos earned at the end.
-  const autoRoll = useCallback(async () => {
+  const rollEverything = useCallback(async () => {
     if (!fetched || (gains.length === 0 && activityRolls === 0) || skillRollingRef.current) return;
     // Lock before awaiting the protective backup. Otherwise the button stays
     // live during the async gap and a double click can start overlapping rolls.
@@ -379,6 +424,8 @@ export function useAutoRoll() {
       }
     }, 70);
   }, [fetched, gains, activity, activityRolls, createBackup, setSkillRollingState]);
+  // Both layouts' button: Ask before Key clicks puts its Yes / No box first.
+  const autoRoll = useCallback(() => confirmThen(SYNC_ROLL_QUESTION, () => void rollEverything()), [rollEverything]);
 
   const totalGain = gains.reduce((a, s) => a + s.count, 0);
 
@@ -473,7 +520,7 @@ function ClassicAutoRollPanel() {
           <input
             value={linkedAccount ?? name}
             onChange={(e) => !linkedAccount && setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onFetch()}
+            onKeyDown={(e) => e.key === 'Enter' && status !== 'loading' && onFetch()}
             placeholder="OSRS username…"
             readOnly={!!linkedAccount}
             title={linkedAccount ? 'This run is linked to this account' : undefined}
@@ -621,7 +668,7 @@ function ClassicAutoRollPanel() {
             <div className="flex-1" />
             {!applied && !skillRolling && (gains.length > 0 || activityRolls > 0) && (
               <button
-                onClick={() => confirmThen('Roll for Keys on everything this sync found?', () => void autoRoll())}
+                onClick={() => autoRoll()}
                 className="px-4 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-emerald-600 hover:from-fuchsia-500 hover:to-emerald-500 text-white text-sm font-bold flex items-center gap-2 shadow-lg"
               >
                 <Sparkles size={16} /> {syncButtonText(gains.length, totalGain, activity)}
