@@ -178374,9 +178374,9 @@
         "Farming Supplies",
         "Flynn's Mace Market",
         "Herquin's Gems",
+        "Initiate Temple Knight Armoury",
         "Lost Property shop",
-        "Mahogany Homes Reward Shop",
-        "Rising Sun Inn"
+        "Mahogany Homes Reward Shop"
       ],
       "detail": "11 source values capped at 8"
     },
@@ -179820,6 +179820,17 @@
         "12086"
       ],
       "detail": "https://oldschool.runescape.wiki/w/Chase?oldid=15350971"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "quest-step/A Ruff Situation",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12342"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Outlaw_Camp?oldid=15394973"
     },
     {
       "category": "overrides",

@@ -2,6 +2,40 @@
   "reviewedAt": "2026-09-21",
   "records": [
     {
+      "name": "Initiate Temple Knight Armoury",
+      "status": "stocked",
+      "sourceNames": [
+        "Sir Tiffy Cashien (Recruitment Drive)"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Initiate_Temple_Knight_Armoury?oldid=15318625",
+        "revision": 15318625
+      }
+    },
+    {
+      "name": "Proselyte Temple Knight Armoury",
+      "status": "stocked",
+      "sourceNames": [
+        "Sir Tiffy Cashien (The Slug Menace)"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Proselyte_Temple_Knight_Armoury?oldid=15318742",
+        "revision": 15318742
+      }
+    },
+    {
+      "name": "Slayer Equipment (shop)",
+      "status": "stocked",
+      "npcNames": [
+        "Spria"
+      ],
+      "note": "Spria runs the Draynor Village branch; the export places only the numbered branches.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Slayer_Equipment_(shop)?oldid=15364486",
+        "revision": 15364486
+      }
+    },
+    {
       "name": "Grum's Gold Exchange",
       "status": "zero-stock",
       "items": [],
@@ -247,8 +281,10 @@
     {
       "name": "Lost Property shop",
       "status": "stocked",
+      "note": "\"Chris\" is meant only for the Emir's Arena shopkeeper in 52,51 (region 13363). On a re-pin, check no other export NPC is named Chris.",
       "npcNames": [
-        "Perdu"
+        "Perdu",
+        "Chris"
       ],
       "requirements": [
         "Previously earned the replacement quest reward"

@@ -104,11 +104,11 @@
     "Chaos altar": {
       "entrances": [
         { "chunkId": "12088", "requirements": [] },
-        { "chunkId": "13110", "requirements": [] },
+        { "chunkId": "13110", "requirements": ["What Lies Below: reached the Tunnel of Chaos"] },
         { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest"] }
       ],
       "source": "https://oldschool.runescape.wiki/w/Abyss?oldid=15228428",
-      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. 12088 is the Chaos Temple ruins in the Wilderness (47,56), as the Wilderness Easy Diary task has it; 13110 is the generated route kept as it was."
+      "note": "Its rift in the Abyss is a second way in, through the Mage of Zamorak north of the Edgeville ditch. 12088 is the Chaos Temple ruins in the Wilderness (47,56), as the Wilderness Easy Diary task has it. 13110 (51,54) is the Tunnel of Chaos under the Saradomin statue east of Varrock, which opens part way through What Lies Below (OSRS Wiki 'Chaos Altar' rev 15350445, 'Tunnel of Chaos' rev 15365753); without the quest done it shows as unknown."
     },
     "Nature altar": {
       "entrances": [

@@ -410,6 +410,20 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
     for (const id of targets) ((chunks[id] ??= {}).q ??= {})[override.name] = 'first';
     audit.add('overrides', `quest/${override.name}`, 'normalized', 'reviewed-content-override', targets, false, override.source);
   }
+  // A quest step the export files under the wrong chunk moves to its reviewed chunk.
+  for (const override of contentOverrides.questSteps ?? []) {
+    if (!entries.some(entry => override.name in (entry.q ?? {}))) continue;
+    const targets = override.toChunks.filter(id => validChunks.has(id));
+    if (!targets.length) continue;
+    for (const id of override.fromChunks) {
+      const q = chunks[id]?.q;
+      if (q?.[override.name] !== 'step') continue;
+      delete q[override.name];
+      if (!Object.keys(q).length) delete chunks[id].q;
+    }
+    for (const id of targets) ((chunks[id] ??= {}).q ??= {})[override.name] ??= 'step';
+    audit.add('overrides', `quest-step/${override.name}`, 'normalized', 'reviewed-content-override', targets, false, override.source);
+  }
   for (const override of contentOverrides.npcs) {
     if (!validChunks.has(override.chunkId)) continue;
     const expected = String(Math.floor(override.x / 64) * 256 + Math.floor(override.y / 64));
@@ -665,6 +679,19 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
   const entrances = buildEntranceIndex(namedLocationRegistry ?? { locations: [] });
+  // A shop the export names by its owner takes its Wiki title (a record's sourceNames).
+  const renameShop = (from, to) => {
+    if (from in shopItems) { shopItems[to] = [...new Set([...(shopItems[to] ?? []), ...shopItems[from]])]; delete shopItems[from]; }
+    const swap = list => (list?.includes(from) ? [...new Set(list.map(name => (name === from ? to : name)))].sort() : list);
+    for (const entry of Object.values(chunks)) if (entry.s) entry.s = swap(entry.s);
+    for (const entry of Object.values(interiors)) {
+      if (entry.content.s) entry.content.s = swap(entry.content.s);
+      const shop = entry.requirements?.shop;
+      if (shop?.[from]) { shop[to] = [...new Set([...(shop[to] ?? []), ...shop[from]])]; delete shop[from]; }
+    }
+    if (taskUnlocks.Shops?.[from]) { taskUnlocks.Shops[to] = { ...taskUnlocks.Shops[to], ...taskUnlocks.Shops[from] }; delete taskUnlocks.Shops[from]; }
+  };
+  for (const override of shopOverrides.records) for (const from of override.sourceNames ?? []) renameShop(from, override.name);
   const shopInfo = {};
   for (const override of shopOverrides.records) {
     const located = Object.values(chunks).some(e => e.s?.includes(override.name) || override.npcNames?.some(n => e.p?.includes(n)))

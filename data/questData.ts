@@ -2562,7 +2562,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'dog-shelter', label: 'Dog Shelter', standardAreas: ['Edgeville'], chunkOptions: [{ cx: 47, cy: 54 }] },
       { id: 'gertrudes-house', label: "Gertrude's house and Cooks' Guild", standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 53 }] },
-      { id: 'outlaw-camp', label: 'Outlaw Camp', standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 54 }] },
+      { id: 'outlaw-camp', label: 'Outlaw Camp', standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 54 }] },
       { id: 'shelter-road', label: 'Barbarian Village crossing', standardAreas: ['Barbarian Village'], chunkOptions: [{ cx: 48, cy: 53 }] },
     ],
     skills: { Crafting: 15 }, prereqs: [], points: 1,

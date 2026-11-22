@@ -2,8 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { DropSource } from '../types';
 import { QUEST_DATA } from './questData';
 import * as questDataModule from './questData';
+import chunkDoc from '../public/chunk-content.json';
 
 describe('audited current quest requirements', () => {
+  it("puts A Ruff Situation's Outlaw Camp fight in 48,54, not the Grand Exchange chunk", () => {
+    // OSRS Wiki 'Outlaw Camp' (rev 15394973): map x=3123 y=3472 r=6, all inside chunk 48,54.
+    expect(QUEST_DATA['A Ruff Situation'].locations?.find(location => location.id === 'outlaw-camp'))
+      .toMatchObject({ standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 54 }] });
+    const chunks = chunkDoc.chunks as Record<string, { q?: Record<string, string> }>;
+    expect(chunks['12342'].q?.['A Ruff Situation']).toBe('step');
+    expect(chunks['12598'].q?.['A Ruff Situation']).toBeUndefined();
+  });
+
   it("pins Witch's Potion to Rimmington without enforcing all Asgarnia", () => {
     expect(QUEST_DATA["Witch's Potion"]).toMatchObject({
       kind: 'quest',

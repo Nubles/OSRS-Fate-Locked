@@ -64,6 +64,7 @@ const reviewedQuestProgress = new Map<string, [string, 'satisfies' | 'blocks']>(
   ['While Guthix Sleeps: reached the Ancient Guthixian Temple', ['While Guthix Sleeps', 'satisfies']],
   ["Mourning's End Part II: obtained the new key", ["Mourning's End Part II", 'satisfies']],
   ["Mourning's End Part II: reached the Death Altar", ["Mourning's End Part II", 'satisfies']],
+  ['What Lies Below: reached the Tunnel of Chaos', ['What Lies Below', 'satisfies']],
 ]);
 
 const parseQuestProgress = (raw: string): RouteGate | null => {
