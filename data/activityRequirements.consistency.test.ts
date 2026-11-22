@@ -144,4 +144,14 @@ describe('activity rows follow the Wiki', () => {
     expect(ready('Mess', () => {}).status).toBe('NOT_READY');
   });
 
+  it('house furniture rows carry their lowest build level (Wiki: Achievement gallery, Costume room)', () => {
+    expect(ACTIVITY_REQUIREMENTS['Spellbook Altars'].skills).toEqual({ Construction: 80 });
+    expect(ACTIVITY_REQUIREMENTS['Spellbook Altars'].note).toMatch(/Achievement gallery/);
+    expect(ACTIVITY_REQUIREMENTS['Magic Wardrobe'].skills).toEqual({ Construction: 42 });
+    expect(ACTIVITY_REQUIREMENTS['Armour Case'].skills).toEqual({ Construction: 46 });
+    expect(ACTIVITY_REQUIREMENTS['Treasure Chest (Clues)'].skills).toEqual({ Construction: 48 });
+    expect(ACTIVITY_REQUIREMENTS['Toy Box'].skills).toEqual({ Construction: 50 });
+    expect(ACTIVITY_REQUIREMENTS['Cape Rack'].skills).toEqual({ Construction: 54 });
+  });
+
 });
