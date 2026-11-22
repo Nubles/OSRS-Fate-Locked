@@ -186,6 +186,8 @@ describe('Diary tasks that named the wrong place', () => {
     ['des_med_9', { regions: ['Bandit Camp'], quests: ["Enakhra's Lament"], mobility: ['Camulet'] }, "the Camulet lands in Enakhra's Temple, under the Desert Quarry (49,45)"],
     ['ard_hard_9', { regions: ['East Ardougne'], skills: { Smithing: 10 }, levels: { Smithing: 99 } }, "West Ardougne's anvil is in 39,52"],
     ['west_hard_1', { regions: ['Iorwerth Camp'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } }, 'elves at Iorwerth Camp'],
+    // Every Skavid cave entrance is in 39,47 or 40,47 (Wiki rev 15201513), as Watchtower already has it.
+    ['ard_med_9', { regions: ['Feldip Hills'] }, 'the Skavid caves are in the Feldip Hills'],
   ] as const)('%s counts with %j: %s', (id, run, _why) => {
     expect(doable(id, account(run as unknown as Partial<UnlockState>))).toBe(true);
   });
@@ -198,6 +200,7 @@ describe('Diary tasks that named the wrong place', () => {
     expect(doable('west_hard_1', account({ regions: ['Isafdar'], quests: ['Roving Elves'], equipment: { Weapon: 8 }, skills: { Ranged: 10 }, levels: { Ranged: 99 } })))
       .toBe(false);
     expect(doable('des_med_2', account({ regions: ['Shantay Pass'], skills: { Slayer: 10 }, levels: { Slayer: 99 } }))).toBe(false);
+    expect(doable('ard_med_9', account({ regions: ['Yanille'] }))).toBe(false);
   });
 
   it.each([
