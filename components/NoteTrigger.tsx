@@ -2,6 +2,7 @@
 import React, { useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGame } from '../context/GameContext';
+import { MAX_NOTE_CHARS, clampNoteText } from '../utils/saveSchema';
 import { StickyNote, Save, X } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -18,7 +19,7 @@ interface NoteTriggerProps {
 export const NoteTrigger: React.FC<NoteTriggerProps> = ({ id, title, className, suspendModals = false }) => {
   const { userNotes, saveNote } = useGame();
   const [isOpen, setIsOpen] = useState(false);
-  const [text, setText] = useState(userNotes[id] || '');
+  const [text, setText] = useState('');
 
   const hasNote = !!userNotes[id] && userNotes[id].trim().length > 0;
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -29,15 +30,23 @@ export const NoteTrigger: React.FC<NoteTriggerProps> = ({ id, title, className, 
   useEscapeKey(() => setIsOpen(false), dialogOpen);
 
   const handleSave = () => {
-    saveNote(id, text);
+    saveNote(id, clampNoteText(text));
     setIsOpen(false);
   };
+
+  // The draft always starts from the saved note of this entry when the editor
+  // opens, so a new id, a replaced run or a cancelled draft never carries over.
+  const openEditor = () => {
+    setText(userNotes[id] || '');
+    setIsOpen(true);
+  };
+  const nearLimit = text.length >= MAX_NOTE_CHARS * 0.9;
 
   return (
     <>
       <button 
         ref={triggerRef}
-        onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+        onClick={(e) => { e.stopPropagation(); openEditor(); }}
         className={`p-1.5 rounded transition-all z-20 ${hasNote ? 'text-yellow-400 bg-yellow-900/40 hover:bg-yellow-900/60 shadow-[0_0_5px_rgba(250,204,21,0.3)]' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'} ${className}`}
         title={hasNote ? "View Note" : "Add Note"}
         aria-label={`${hasNote ? 'View note' : 'Add note'}: ${title || id}`}
@@ -60,9 +69,15 @@ export const NoteTrigger: React.FC<NoteTriggerProps> = ({ id, title, className, 
                 className="ocw-input w-full h-32 bg-[#121212] border border-[#333] rounded p-3 text-sm text-gray-200 focus:border-yellow-500/50 focus:outline-none resize-none font-mono"
                 placeholder="Write your plans here... (e.g. 'Farm Blue Dragons after 70 Agility')"
                 value={text}
+                maxLength={MAX_NOTE_CHARS}
                 onChange={(e) => setText(e.target.value)}
                 autoFocus
               />
+              {nearLimit && (
+                <p className="mt-1 text-[11px] text-yellow-500/80" aria-live="polite">
+                  {text.length.toLocaleString('en-GB')} / {MAX_NOTE_CHARS.toLocaleString('en-GB')} characters. Notes are capped at this length.
+                </p>
+              )}
             </div>
 
             <div className="ocw-foot p-3 border-t border-[#333] bg-[#151515] flex justify-end gap-2">
