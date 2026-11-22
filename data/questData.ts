@@ -426,7 +426,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
     ],
-    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1,
+    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
 

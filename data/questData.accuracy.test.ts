@@ -71,6 +71,16 @@ describe('audited current quest requirements', () => {
   });
 });
 
+describe('quest series', () => {
+  it('tags all three Twisted Tales quests, as the Wiki infoboxes do', () => {
+    expect(Object.values(QUEST_DATA)
+      .filter(quest => quest.series === 'Twisted Tales')
+      .map(quest => quest.id)
+      .sort())
+      .toEqual(['Getting Ahead', 'The Garden of Death', "The Writing's on the Wall"]);
+  });
+});
+
 describe('quest cape eligibility', () => {
   it('exports only quest-point-cape quests and excludes optional miniquests', () => {
     const questCapeIds = (questDataModule as any).QUEST_CAPE_QUEST_IDS as string[] | undefined;
