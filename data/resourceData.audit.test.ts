@@ -163,3 +163,45 @@ describe('metal shortswords (renamed in game on 3 November 2026)', () => {
     expect(currentResourceName('__proto__')).toBe('__proto__');
   });
 });
+
+// Hand-written DROP rows for monsters whose Wiki drop table has no such item
+// (checked against the item and monster pages, November 2026).
+describe('curated drops the monster does not have', () => {
+  it.each([
+    ["Snapdragon", "Nechryael"],
+    ["Torstol", "Commander Zilyana"],
+    ["Torstol", "Thermonuclear Smoke Devil"],
+    ["Cadantine", "Gargoyle"],
+    ["Dwarf Weed", "Gargoyle"],
+    ["Lantadyme", "Zulrah"],
+    ["Lantadyme", "Steel Dragon"],
+    ["Prayer Potion", "Wyrm"],
+    ["Saradomin Brew", "Giant Mole"],
+    ["Wine of Zamorak", "Zamorak Warrior"],
+    ["Eye of Newt", "Chaos Druid"],
+    ["Magic Logs", "Zulrah"],
+    ["Teak Plank", "Callisto"],
+    ["Mahogany Plank", "Callisto"],
+    ["Mahogany Plank", "Zulrah"],
+    ["Black D'hide Body", "Magpie Impling"],
+    ["Coal", "Gargoyle"],
+    ["Adamantite Ore", "Aviansie"],
+    ["Adamantite Ore", "Skeletal Wyvern"],
+    ["Mithril Pickaxe", "Blue Dragon"],
+    ["Adamant Pickaxe", "Wyrm"],
+    ["Rune Pickaxe", "Chaos Elemental"],
+    ["Gold Bar", "Spiritual Mage"],
+    ["Adamantite Bar", "Rune Dragon"],
+    ["Raw Sea Turtle", "Mithril Dragon"],
+    ["Harpoon", "Wyrm"],
+    ["Soul Rune", "Vorkath"],
+    ["Rune Crossbow", "Deranged Archaeologist"],
+    ["Rune Crossbow", "Iron Dragon"],
+  ] as const)('%s is not a drop from %s', (item, monster) => {
+    expect(has(item, monster, 'DROP')).toBe(false);
+  });
+
+  it("keeps Sarachnis for red spiders' eggs, from the giant egg sac it drops", () => {
+    expect(curated("Red Spiders' Eggs").find(s => s.name === 'Sarachnis')?.notes).toMatch(/giant egg sac/i);
+  });
+});

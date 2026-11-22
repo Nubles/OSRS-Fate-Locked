@@ -138,15 +138,12 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Snapdragon': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 62 }, notes: 'Requires Seeds', outputYield: 8 },
-    { type: 'DROP', name: 'Nechryael', regions: ['Morytania', 'Kourend & Kebos'], skills: { 'Slayer': 80 } },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Boss Drop' },
     { type: 'DROP', name: 'Hydra', regions: ['Kourend & Kebos'], skills: {'Slayer': 95}, notes: 'Karuulm Dungeon' }
   ],
   'Torstol': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
-    { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Guaranteed Drop' },
-    { type: 'DROP', name: 'Commander Zilyana', regions: ['Asgarnia'], unlockId: 'Commander Zilyana' },
-    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], skills: {'Slayer': 93}, unlockId: 'Thermonuclear Smoke Devil' }
+    { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Guaranteed Drop' }
   ],
   'Irit Leaf': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 44}, notes: 'Seed required', outputYield: 8 },
@@ -160,13 +157,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Cadantine': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 67}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Nechryael', regions: ['Morytania', 'Kourend & Kebos'], skills: {'Slayer': 80} },
-    { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
+    { type: 'DROP', name: 'Nechryael', regions: ['Morytania', 'Kourend & Kebos'], skills: {'Slayer': 80} }
   ],
   'Dwarf Weed': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 79}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
-    { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
   ],
   'Toadflax': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 },
@@ -179,9 +174,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Turoth', regions: ['Fremennik'], skills: {'Slayer': 55} }
   ],
   'Lantadyme': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 73}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah' },
-    { type: 'DROP', name: 'Steel Dragon', regions: ['Karamja', 'Kourend & Kebos'] }
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 73}, notes: 'Seed required', outputYield: 8 }
   ],
   'Harralander': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 26}, notes: 'Seed required', outputYield: 8 },
@@ -191,8 +184,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- POTIONS ---
   'Prayer Potion': [
     { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 38 }, inputs: {'Ranarr Weed': 1, 'Snape Grass': 1, 'Vial of Water': 1}, notes: 'Standard Recipe (3-dose)', outputYield: 1 },
-    { type: 'DROP', name: 'Maniacal Monkey', regions: ['Islands & Others'], quests: ['Monkey Madness I'], manualRequirements: ['Reach chapter II of Monkey Madness II and unlock Kruk\'s Dungeon'], notes: 'Combat monkeys in Kruk\'s Dungeon on Ape Atoll; 1-dose drop', outputDoses: 1 },
-    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: {'Slayer': 62}, notes: 'Uncommon drop (3-dose)' }
+    { type: 'DROP', name: 'Maniacal Monkey', regions: ['Islands & Others'], quests: ['Monkey Madness I'], manualRequirements: ['Reach chapter II of Monkey Madness II and unlock Kruk\'s Dungeon'], notes: 'Combat monkeys in Kruk\'s Dungeon on Ape Atoll; 1-dose drop', outputDoses: 1 }
   ],
   'Super Attack': [
     { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 45 }, inputs: {'Irit Leaf': 1, 'Eye of Newt': 1, 'Vial of Water': 1} }
@@ -227,7 +219,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Saradomin Brew': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 81 }, inputs: {'Toadflax': 1, 'Crushed Nest': 1, 'Vial of Water': 1} },
-    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', notes: 'Common drop (2-dose)' },
     { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], quests: ['Monkey Madness II'], notes: 'No Slayer level required' }
   ],
   'Super Combat Potion': [
@@ -253,7 +244,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Red Spiders\' Eggs': [
     { type: 'DROP', name: 'Spidine', regions: ['Kandarin'], quests: ['Tower of Life'], notes: 'Tower of Life (Fastest)', outputYield: 3 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin', 'Wilderness'], notes: 'Edgeville Dungeon / Forthos / Wildy' },
-    { type: 'DROP', name: 'Sarachnis', regions: ['Kourend & Kebos'], unlockId: 'Sarachnis', notes: 'Common Drop' },
+    { type: 'DROP', name: 'Sarachnis', regions: ['Kourend & Kebos'], unlockId: 'Sarachnis', notes: 'Open the giant egg sac it drops (100 eggs)' },
     { type: 'DROP', name: 'Spidines/Red Spiders', regions: ['Misthalin', 'Karamja'], notes: 'Varrock Sewers/Brimhaven' }
   ],
   'Mort Myre Fungus': [
@@ -267,8 +258,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Wine of Zamorak': [
     { type: 'SPAWN', name: 'Telegrab Spawn', regions: ['Asgarnia'], skills: {'Magic': 33}, notes: 'Chaos Temple (Monks will attack)' },
     { type: 'MINIGAME', name: 'Tithe Farm', regions: ['Kourend & Kebos'], unlockId: 'Tithe Farm', notes: 'Purchase with Points' },
-    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' },
-    { type: 'DROP', name: 'Zamorak Warrior', regions: ['Morytania'], notes: 'ZMI Altar' }
+    { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' }
   ],
   'Limpwurt Root': [
     { type: 'SKILL', name: 'Flower Patch', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Fremennik'], skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
@@ -286,8 +276,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' }
   ],
   'Eye of Newt': [
-    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Taverley / Catherby / Port Sarim' },
-    { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] }
+    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Taverley / Catherby / Port Sarim' }
   ],
   'Vial of Water': [
     { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Most general stores stock packs' },
@@ -336,7 +325,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Magic Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Islands & Others', 'Wilderness', 'Tirannwn'], skills: {'Woodcutting': 75}, notes: 'Seers / Mage Arena / Prifddinas' },
     { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Asgarnia'], skills: {'Slayer': 72} },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah' },
     { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
     { type: 'MINIGAME', name: 'Wintertodt', regions: ['Kourend & Kebos'], unlockId: 'Wintertodt' }
@@ -352,14 +340,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Teak Plank': [
     { type: 'MERCHANT', name: 'Sawmill Operator', regions: ['Misthalin', 'Kourend & Kebos'], inputs: {'Teak Logs': 1, 'Coins': 500} },
-    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Teak Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} },
-    { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' }
+    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Teak Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} }
   ],
   'Mahogany Plank': [
     { type: 'MERCHANT', name: 'Sawmill Operator', regions: ['Misthalin', 'Kourend & Kebos'], inputs: {'Mahogany Logs': 1, 'Coins': 1500} },
-    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Mahogany Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} },
-    { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah' }
+    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Mahogany Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} }
   ],
 
   // --- CRAFTING & PROCESSING ---
@@ -386,8 +371,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Crafting': 1}, inputs: {'Bucket of Sand': 1, 'Soda Ash': 1} }
   ],
   'Black D\'hide Body': [
-    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 84}, inputs: {'Black Dragon Leather': 3, 'Thread': 1, 'Needle': 0}, notes: 'Requires 3 leather' },
-    { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} }
+    { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 84}, inputs: {'Black Dragon Leather': 3, 'Thread': 1, 'Needle': 0}, notes: 'Requires 3 leather' }
   ],
   'Black Dragon Leather': [
     { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: {'Black Dragonhide': 1, 'Coins': 20}, notes: 'Use a Tanner' }
@@ -459,7 +443,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'], notes: 'Passive Gathering', outputYield: 400 },
     { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace' },
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Karamja', 'Wilderness', 'Morytania'], skills: {'Mining': 30}, notes: 'Motherlode Mine / Guild' },
-    { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 200 }
   ],
   'Sandstone': [
@@ -499,9 +482,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Adamantite Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Wilderness', 'Tirannwn', 'Fremennik'], skills: {'Mining': 70}, notes: 'Mining Guild / Motherlode' },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 },
-    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70}, notes: 'Noted (Fremennik Hard)' },
-    { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Asgarnia'], skills: {'Slayer': 72} }
+    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
   ],
   'Runite Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Wilderness', 'Asgarnia', 'Misthalin', 'Tirannwn', 'Fremennik'], skills: { 'Mining': 85 }, notes: 'Heroes Guild / Wildy / Myths Guild' },
@@ -534,12 +515,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Pickaxe Shop', regions: ['Wilderness'], notes: 'Deep Wilderness (Level 50)' }
   ],
   'Mithril Pickaxe': [
-    { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' },
-    { type: 'DROP', name: 'Blue Dragon', regions: ['Asgarnia', 'Kandarin'] }
+    { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' }
   ],
   'Adamant Pickaxe': [
-    { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' },
-    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: {'Slayer': 62} }
+    { type: 'SHOP', name: 'Nurmof\'s Pickaxe Shop', regions: ['Asgarnia'], notes: 'Dwarven Mine' }
   ],
   'Rune Pickaxe': [
     { type: 'SHOP', name: 'Lliann\'s Wares', regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Prifddinas' },
@@ -547,7 +526,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' },
     { type: 'DROP', name: 'Venenatis', regions: ['Wilderness'], unlockId: 'Venenatis' },
     { type: 'DROP', name: 'Vet\'ion', regions: ['Wilderness'], unlockId: 'Vet\'ion' },
-    { type: 'DROP', name: 'Chaos Elemental', regions: ['Wilderness'], unlockId: 'Chaos Elemental' },
     { type: 'DROP', name: 'Scorpia', regions: ['Wilderness'], unlockId: 'Scorpia' }
   ],
   'Dragon Pickaxe': [
@@ -581,7 +559,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1}, notes: 'Instant with Goldsmith Gauntlets' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1} },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
-    { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83} },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
   ],
   'Mithril Bar': [
@@ -593,8 +570,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Adamantite Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} },
-    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'] }
+    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} }
   ],
   'Rune Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 4}, notes: 'Requires 4 Coal at BF' },
@@ -696,8 +672,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 100 }
   ],
   'Raw Sea Turtle': [
-    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 79} },
-    { type: 'DROP', name: 'Mithril Dragon', regions: ['Kandarin'], notes: 'Ancient Cavern' }
+    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 79} }
   ],
   'Infernal Eel': [
     { type: 'SKILL', name: 'Oily Rod Fishing', regions: ['Karamja'], skills: {'Fishing': 80}, inputs: {'Fishing Bait': 1}, notes: 'Mor Ul Rek (Requires Fire Cape)' }
@@ -736,8 +711,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fishing Shop', regions: ['Misthalin', 'Kandarin', 'Karamja', 'Fremennik'] }
   ],
   'Harpoon': [
-    { type: 'SHOP', name: 'Fishing Shop', regions: ['Kandarin', 'Karamja', 'Fremennik'], notes: 'Catherby / Port Sarim' },
-    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: {'Slayer': 62} }
+    { type: 'SHOP', name: 'Fishing Shop', regions: ['Kandarin', 'Karamja', 'Fremennik'], notes: 'Catherby / Port Sarim' }
   ],
   'Lobster Pot': [
     { type: 'SHOP', name: 'Fishing Shop', regions: ['Kandarin', 'Karamja', 'Fremennik'], notes: 'Catherby / Port Sarim' }
@@ -827,8 +801,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Kourend & Kebos'], skills: { 'Runecraft': 90 }, notes: 'Arceuus (Zeah)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83} },
-    { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], skills: {'Slayer': 91}, unlockId: 'Cerberus' },
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' }
+    { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], skills: {'Slayer': 91}, unlockId: 'Cerberus' }
   ],
   'Death Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Misthalin', 'Tirannwn'], skills: {'Runecraft': 65}, quests: ['Mourning\'s End Part II'] },
@@ -901,9 +874,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Rune Crossbow': [
     { type: 'DROP', name: 'Crazy Archaeologist', regions: ['Wilderness'], unlockId: 'Crazy Archaeologist' },
-    { type: 'DROP', name: 'Deranged Archaeologist', regions: ['Islands & Others'], unlockId: 'Deranged Archaeologist' },
-    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: {'Fletching': 69}, inputs: {'Runite Limbs': 1, 'Yew Stock': 1, 'Crossbow String': 1}, notes: 'Assembly' },
-    { type: 'DROP', name: 'Iron Dragon', regions: ['Karamja', 'Kourend & Kebos'] }
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: {'Fletching': 69}, inputs: {'Runite Limbs': 1, 'Yew Stock': 1, 'Crossbow String': 1}, notes: 'Assembly' }
   ],
   'Runite Limbs': [
     { type: 'DROP', name: 'Iron Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
