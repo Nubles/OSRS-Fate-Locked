@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { gameReducer, initialState, prepareKeyRollAction } from '../context/GameContext';
-import { DropSource, type GameState, type LogEntry } from '../types';
+import { DropSource, type LogEntry } from '../types';
 import { DROP_RATES } from '../config/rules';
 import { resolveModeRules } from '../config/gameModes';
 import { auditHistory, replayInvariants } from './runAudit';
 
+type RunState = Parameters<typeof gameReducer>[0];
 const alwaysMiss = (_purpose: string, _index: number, sides = 100) => sides;
-const miss = (s: GameState) => gameReducer(s, prepareKeyRollAction(s, DropSource.QUEST_NOVICE, DROP_RATES[DropSource.QUEST_NOVICE], 1, alwaysMiss)!);
-const start = (over: Partial<GameState> = {}): GameState => ({
+const miss = (s: RunState) => gameReducer(s, prepareKeyRollAction(s, DropSource.QUEST_NOVICE, DROP_RATES[DropSource.QUEST_NOVICE], 1, alwaysMiss)!);
+const start = (over: Partial<RunState> = {}): RunState => ({
   ...initialState, runId: 'greed-run', runRevision: 0, gameModeId: 'vanilla', achievementsClaimed: [], lastEvent: null, ...over,
 });
 const tenFate = { type: 'SETTLE_ACHIEVEMENTS', payload: [{ id: 'bosses-10', title: 'Boss Slayer', description: 'Unlock 10 bosses', fate: 10, freeRituals: 0, chaosKeys: 0 }] } as const;

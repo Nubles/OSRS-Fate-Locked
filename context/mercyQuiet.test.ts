@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { createFreshState, gameReducer, type Action } from './GameContext';
 import { QUEST_DATA } from '../data/questData';
 import { mercyQuietLeft } from '../utils/chunkedFate';
-import type { GameState } from '../types';
 
 const DAY = 24 * 60 * 60 * 1000;
 // A Chunked run that has gone 3 quiet days: Fate's Mercy's quiet spell is over.
-const quiet = (): GameState => ({ ...createFreshState(), gameModeId: 'chunked', chunkedProgressAt: Date.now() - 3 * DAY - 1000, lastEvent: null });
+type RunState = Parameters<typeof gameReducer>[0];
+const quiet = (): RunState => ({ ...createFreshState(), gameModeId: 'chunked', chunkedProgressAt: Date.now() - 3 * DAY - 1000, lastEvent: null });
 const after = (...actions: Action[]) => actions.reduce(gameReducer, quiet());
 
 // The Codex: "if 3 days pass with no new Key, unlock or level, Mercy opens anyway".
