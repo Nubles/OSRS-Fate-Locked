@@ -6484,7 +6484,14 @@
             "Easy"
           ]
         }
-      ]
+      ],
+      "anyOfSkillsLevel": {
+        "skills": [
+          "Strength",
+          "Agility"
+        ],
+        "level": 60
+      }
     },
     {
       "id": "kan_easy_1",

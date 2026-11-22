@@ -489,6 +489,17 @@ describe('Diary tasks that need only part of a quest', () => {
     },
   );
 
+  it('needs 60 Strength or 60 Agility to enter the God Wars Dungeon for the Spiritual mage', () => {
+    // God Wars Dungeon rev 15384639: entry needs "either 60 Strength or 60 Agility", as the Wilderness
+    // God Wars Dungeon tasks already ask; the generals' task asks 70 of both.
+    expect(task('frem_elite_6').anyOfSkillsLevel).toEqual({ skills: ['Strength', 'Agility'], level: 60 });
+    const slayer = account({ skills: { Slayer: 10 }, levels: { Slayer: 99 }, regions: ['Burthorpe'], cas: ['Easy'] });
+    expect(evaluateDiaryTaskEligibility(task('frem_elite_6'), slayer).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('frem_elite_6'), {
+      ...slayer, skills: { Slayer: 10, Agility: 10 }, levels: { Slayer: 99, Agility: 60 },
+    }).machineEligible).toBe(true);
+  });
+
   it('smelts in The Forsaken Tower partway through the quest, after Client of Kourend', () => {
     // The pinned wiki text said completion; the current page says "Partial completion" (rev 15357910).
     expect(task('kou_hard_2')).toMatchObject({
