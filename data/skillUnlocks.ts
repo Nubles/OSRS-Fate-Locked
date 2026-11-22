@@ -1501,6 +1501,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Basic Boat (Wooden Hull, Bronze Helm, Linen Sails)',
       'Lvl 1: Basic Cargo Hold, Charting',
+      'Lvl 1: Chart Bay of Sarim, Kharidian Sea',
       'Lvl 1: Dock Port Sarim, Pandemonium',
       'Lvl 5: Dock Land\'s End, Hosidius',
       'Lvl 7: 2 Port Tasks',
@@ -1508,8 +1509,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     2: [
       'Lvl 12: Drink Crate Charting',
+      'Lvl 13: Chart Mudskipper Sound',
       'Lvl 15: Sail Skiff, 2 Boats, Port Piscarillius',
       'Lvl 15: Salvage Small Shipwrecks, Bronze Salvage Hook',
+      'Lvl 16: Range (Construction 6)',
       'Lvl 17: Chart Rimmington Strait, Iron Helm',
       'Lvl 18: Dock Rimmington, Oak Cargo Hold',
       'Lvl 20: Dock Catherby, Oak Hull'
@@ -1523,10 +1526,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 27: Steel Salvaging Hook',
       'Lvl 28: Dock Ardougne, 3 Port Tasks, Bronze Cannon',
       'Lvl 29: Teak Cargo Hold',
-      'Lvl 30: Dock Port Khazard, Barracuda Trials'
+      'Lvl 30: Dock Port Khazard, Barracuda Trials',
+      'Lvl 30: Bounty Port Tasks'
     ],
     4: [
       'Lvl 31: Teak Hull',
+      'Lvl 33: Keg (Construction 25)',
       'Lvl 34: Dock Witchaven',
       'Lvl 35: Salvage Barracuda Shipwrecks, Iron Cannon',
       'Lvl 36: Dock Entrana, Teak Mast, Canvas Sails',
@@ -1534,9 +1539,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 38: Dock Civitas illa Fortis, Sea Depth Charting, Steel Helm',
       'Lvl 39: Steel Keel',
       'Lvl 40: 1 Crewmate (Jobless Jim)',
-      'Lvl 40: Dock Corsair Cove, Dognose Island'
+      'Lvl 40: Dock Corsair Cove, Dognose Island',
+      'Lvl 40: Inoculation Station (Construction 37)'
     ],
     5: [
+      'Lvl 41: Recolour Sails (Construction 27)',
       'Lvl 42: Dock Cairn Isle, Chinchompa Island, Salvaging Station',
       'Lvl 44: Dock Sunset Coast, Mithril Salvaging Hook',
       'Lvl 45: Dock Summer Shore, Little Pearl',
@@ -1546,7 +1553,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 49: Dock Shimmering Atoll',
       'Lvl 50: Dock Void Outpost, Port Roberts',
       'Lvl 50: Recruit Captain Siad',
-      'Lvl 50: Sail Sloop, 3 Boats'
+      'Lvl 50: Sail Sloop, 3 Boats',
+      'Lvl 50: Ballistic Attractor (Construction 44; Animal Magnetism)'
     ],
     6: [
       'Lvl 51: Dock Anglers\' Retreat',
@@ -1556,6 +1564,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: 2 Crewmates (Adventurer Ada)',
       'Lvl 55: Dock Isle of Souls, Mithril Helm, Teleport Focus',
       'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net',
+      'Lvl 56: Chum Station (Construction 45)',
       'Lvl 57: Weather Pattern Charting, Mithril Cannon',
       'Lvl 58: Dock Laguna Aurorae',
       'Lvl 59: Adamant Salvaging Hook',
@@ -1566,6 +1575,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 61: Dock Tear of the Soul, Rename Boat',
       'Lvl 62: Dock Rellekka, Wyrmscraig',
       'Lvl 63: Dock Wintumber Island',
+      'Lvl 63: Bosun\'s Workbench (Construction 54; The Red Reef)',
       'Lvl 64: Dock Crown Jewel, Salvage Pirate Shipwrecks',
       'Lvl 65: Dock Etceteria, Recruit Oarswoman Olga',
       'Lvl 65: Linen Trawling Net (Construction 61)',

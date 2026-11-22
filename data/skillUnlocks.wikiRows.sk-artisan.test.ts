@@ -120,6 +120,13 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Construction', 'Lunar & Dark Altars, Marble Portal', 80], ['Construction', 'Gilded Throne', 81],
     ['Construction', 'Skeleton Throne', 88], ['Construction', 'Crystal Throne', 95],
     ['Construction', 'Demonic Throne', 99], ['Construction', 'Water Pump (Sailing)', 17],
+    ['Sailing', 'Chart Bay of Sarim, Kharidian Sea', 1], ['Sailing', 'Chart Mudskipper Sound', 13],
+    ['Sailing', 'Range (Construction 6)', 16], ['Sailing', 'Bounty Port Tasks', 30],
+    ['Sailing', 'Keg (Construction 25)', 33], ['Sailing', 'Inoculation Station (Construction 37)', 40],
+    ['Sailing', 'Recolour Sails (Construction 27)', 41],
+    ['Sailing', 'Ballistic Attractor (Construction 44; Animal Magnetism)', 50],
+    ['Sailing', 'Chum Station (Construction 45)', 56],
+    ['Sailing', "Bosun's Workbench (Construction 54; The Red Reef)", 63],
     // @next-skill
   ] as const)('%s: %s appears once, at its Wiki level and tier', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));
