@@ -3,7 +3,8 @@ import { confirmThen } from '../utils/spendConfirm';
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
-import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
+import { SLOT_CONFIG } from '../constants';
+import { questWikiUrl } from '../utils/questWikiUrl';
 import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { BookOpen, MapPin, Sparkles, Scroll } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -72,23 +73,6 @@ export function splitJournalEntriesByKind<T extends Pick<QuestData, 'kind'>>(
 }
 
 // Helpers
-/**
- * Miniquests that share their name with a minigame or raid page. Kept apart
- * from WIKI_OVERRIDES, which other screens use for the activity itself.
- */
-const MINIQUEST_WIKI_PAGES: Readonly<Record<string, string>> = {
-    'Vale Totems': 'Vale_Totems_(miniquest)',
-    'The Fractured Archive': 'The_Fractured_Archive_(miniquest)',
-};
-export const questWikiUrl = (name: string) => {
-    // Special handling for Recipe for Disaster subquests to avoid broken links
-    if (name.startsWith('RFD:')) {
-        return 'https://oldschool.runescape.wiki/w/Recipe_for_Disaster';
-    }
-    if (MINIQUEST_WIKI_PAGES[name]) return `https://oldschool.runescape.wiki/w/${MINIQUEST_WIKI_PAGES[name]}`;
-    if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-    return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-};
 const getWikiUrl = questWikiUrl;
 
 const getDifficultyColor = (difficulty: DropSource) => {
