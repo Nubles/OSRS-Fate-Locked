@@ -859,9 +859,14 @@ describe('Achievement Diary id-classification audit', () => {
       skills: {},
       oneOf: [
         { label: 'Bare-handed', skills: { Hunter: 45 } },
-        expect.objectContaining({ label: 'Butterfly net', skills: { Hunter: 35 } }),
+        // The butterfly net was renamed the insect net on 11 November 2026 (Insect net rev 15402554).
+        expect.objectContaining({ label: 'Insect net', skills: { Hunter: 35 }, items: ['Insect net', 'Butterfly jar'] }),
       ],
     });
+    for (const id of ['frem_med_6', 'lum_med_11']) {
+      // sourceRequirements keeps the pinned Wiki revision's text; the routes players read use the new name.
+      expect(JSON.stringify({ ...byId.get(id), sourceRequirements: undefined }), id).not.toMatch(/butterfly net/i);
+    }
     // Ironmen catch the dashing kebbits themselves, at 69 Hunter.
     expect(byId.get('var_hard_1')).toMatchObject({ skills: { Hunter: 69 }, items: ['800 coins'] });
     expect(byId.get('var_hard_1').oneOf).toBeUndefined();

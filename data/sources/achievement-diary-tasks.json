@@ -5943,20 +5943,20 @@
           }
         },
         {
-          "label": "Butterfly net",
+          "label": "Insect net",
           "skills": {
             "Hunter": 35
           },
           "items": [
-            "Butterfly net",
+            "Insect net",
             "Butterfly jar"
           ],
           "equipmentRequirements": [
             {
               "slot": "Weapon",
               "tier": 1,
-              "reason": "Butterfly net",
-              "manualCheck": "Have Butterfly net and confirm that the specific item is permitted by your equipment tier"
+              "reason": "Insect net",
+              "manualCheck": "Have Insect net and confirm that the specific item is permitted by your equipment tier"
             }
           ]
         }
@@ -10885,8 +10885,8 @@
             {
               "slot": "Weapon",
               "tier": 1,
-              "reason": "Butterfly net or magic butterfly net",
-              "manualCheck": "Have Butterfly net or magic butterfly net and confirm that the specific item is permitted by your equipment tier"
+              "reason": "Insect net or magic insect net",
+              "manualCheck": "Have Insect net or magic insect net and confirm that the specific item is permitted by your equipment tier"
             }
           ],
           "items": [
@@ -10905,8 +10905,8 @@
             {
               "slot": "Weapon",
               "tier": 1,
-              "reason": "Butterfly net or magic butterfly net",
-              "manualCheck": "Have Butterfly net or magic butterfly net and confirm that the specific item is permitted by your equipment tier"
+              "reason": "Insect net or magic insect net",
+              "manualCheck": "Have Insect net or magic insect net and confirm that the specific item is permitted by your equipment tier"
             }
           ],
           "items": [
