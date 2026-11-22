@@ -408,6 +408,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     }
   };
   addSkills(req.skills);
+  if (req.questPoints !== undefined) qpNeed = Math.max(qpNeed, req.questPoints);
   for (const id of chainIds) {
     const q = QUEST_DATA[id];
     if (!q) continue;

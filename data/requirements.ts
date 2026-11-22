@@ -1382,7 +1382,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Boots of Brimstone',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Drakes/Wyrms (Component)
-    skills: { 'Slayer': 44 }, // To wear (with 70 Defence, Magic or Ranged); no skill to make
+    skills: { 'Slayer': 84 }, // Drake's claw drops only from drakes; 44 Slayer and 70 Defence, Magic, Ranged to wear
     description: 'Best hybrid boots.'
   },
   'Devout Boots': {
@@ -1444,7 +1444,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Barrelchest Anchor',
     category: TableType.MERCHANTS,
     regions: ['Morytania', 'Islands & Others'], // Mos Le'Harmless
-    skills: { 'Prayer': 50, 'Smithing': 50 },
+    skills: { 'Prayer': 50, 'Attack': 60, 'Strength': 40 }, // Quest Prayer; 60 Attack, 40 Strength to wield
     quests: ['The Great Brain Robbery'],
     description: 'Heavy crush weapon. Repairs cost coins.'
   },
@@ -1452,7 +1452,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ancient Mace',
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Dorgesh-Kaan
-    skills: { 'Prayer': 31 },
+    skills: { 'Prayer': 25, 'Attack': 15 },
     quests: ['Another Slice of H.A.M.'],
     description: 'Special attack restores Prayer points.'
   },
@@ -1583,7 +1583,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
-    quests: [], // 32 QP + Champion Scroll
+    questPoints: 32, // Champions' Guild entry
+    quests: [], // Plus a champion scroll
     description: 'Defeat champions for the cape.'
   },
   'Chompy Bird Hunting': {
@@ -1685,7 +1686,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Harpie Bug Swarms': {
     id: 'Harpie Bug Swarms',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin'], // Bug Swarm Island
+    regions: ['Karamja'], // North-east of Tai Bwo Wannai (Varlamore also has some)
     skills: { 'Slayer': 33, 'Firemaking': 33 },
     items: ['Lit Bug Lantern'],
     description: 'Requires Lit Bug Lantern.'
@@ -1735,7 +1736,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Master Farmers': {
     id: 'Master Farmers',
     category: TableType.MINIGAMES, // Activity
-    regions: ['Misthalin', 'Kandarin', 'Asgarnia'], // Draynor, Ardougne, Varrock
+    regions: ['Misthalin'], // Draynor, south of Varrock (also Ardougne, Hosidius, Farming Guild, Varlamore)
     skills: { 'Thieving': 38 },
     description: 'Essential source of Ranarr/Snapdragon seeds.'
   },
@@ -1787,14 +1788,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Silk Stalls': {
     id: 'Silk Stalls',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Kharidian Desert'], // Ardougne, Al Kharid
+    regions: ['Kandarin'], // Ardougne market (the Al Kharid stall cannot be stolen from)
     skills: { 'Thieving': 20 },
     description: 'Early game GP method (Steal and sell back).'
   },
   'Gem Stall': {
     id: 'Gem Stall',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Kharidian Desert'], // Ardougne, Al Kharid
+    regions: ['Kandarin'], // East Ardougne (the Al Kharid stall cannot be stolen from)
     skills: { 'Thieving': 75 },
     description: 'Source of gems (Sapphire/Emerald/Ruby).'
   },
@@ -1934,9 +1935,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Mud Battlestaff': {
     id: 'Mud Battlestaff',
     category: TableType.MINIGAMES,
-    regions: ['Misthalin'], // Lumber Yard / Chaos Dwarves
+    regions: ['Fremennik'], // Waterbirth Island (Dagannoth Kings)
     skills: { 'Magic': 30, 'Attack': 30 },
-    description: 'Drop from Chaos Golems or Dagannoth Prime.'
+    description: 'Drop from Dagannoth Prime.'
   },
   'Seercull': {
     id: 'Seercull',
@@ -2068,6 +2069,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Fremennik'], // Etceteria
     skills: { 'Farming': 83 },
+    quests: ['The Fremennik Trials'], // Every way to the island
     description: 'Spirit Tree patch.'
   },
   'Brimhaven Spirit Tree': {
@@ -2176,7 +2178,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Salt Mine',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Weiss
-    skills: { 'Mining': 1 },
+    skills: { 'Mining': 72 }, // Every salt and basalt rock
     quests: ['Making Friends with My Arm'],
     description: 'Mine salt for stony basalt teleports/fires.'
   },
@@ -2201,6 +2203,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
     skills: { 'Mining': 22 },
+    quests: ['Bone Voyage'], // Fossil Island
     description: 'Mining Volcanic Ash for Ultracompost.'
   },
 
@@ -2227,7 +2230,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Mos Le\'Harmless Cave',
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
-    skills: {},
+    skills: { 'Slayer': 58 }, // Cave horrors
     quests: ['Cabin Fever'],
     description: 'Cave Horrors (Black Mask).'
   },
@@ -2283,9 +2286,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Abyssal Area',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // ALR code
-    skills: {},
+    skills: { 'Slayer': 85 }, // Abyssal demons
     quests: ['Fairytale II - Cure a Queen'],
-    description: 'Safe spot Abyssal Demons (No Slayer requirement on some servers? OSRS requires 85).'
+    description: 'Abyssal demons (85 Slayer) and other Abyss creatures.'
   },
 
   // ============================================================================
@@ -2303,6 +2306,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
+    questPoints: 32,
     description: 'Champions\' Guild access requires 32 Quest Points. Sells rune chainbody, platelegs, plateskirt, weapons, and green d\'hide armour.'
   },
   'Fancy Clothes Store': {
@@ -2408,8 +2412,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Sandstorm',
     category: TableType.MINIGAMES,
     regions: ['Kharidian Desert'], // Quarry
-    skills: { 'Mining': 35 },
-    quests: ['Beneath Cursed Sands'], // Access to Circlet helps
+    skills: { 'Mining': 35 }, // No quest needed
     description: 'Fastest sand gathering via Sandstone Grinder.'
   },
   'Zogre Bones': {
@@ -2742,8 +2745,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Spirit Shield (Making)',
     category: TableType.MINIGAMES,
     regions: ['Wilderness'], // Corp Cave logic usually? Or anvil
-    skills: { 'Prayer': 85, 'Smithing': 85 },
-    description: 'Attach Sigil to Blessed Spirit Shield.'
+    skills: { 'Prayer': 85 }, // To bless the shield; Abbot Langley attaches the sigil with no level
+    description: 'Bless a spirit shield (85 Prayer), then attach the sigil yourself (90 Prayer and 85 Smithing) or pay Abbot Langley 1.5M coins.'
   },
   'Ferocious Gloves': {
     id: 'Ferocious Gloves',
@@ -2757,7 +2760,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Neitiznot Faceguard',
     category: TableType.MERCHANTS,
     regions: ['Fremennik'],
-    skills: { 'Crafting': 20 }, // Minimal
+    skills: { 'Defence': 70 }, // To wear; made by Olaf the Bard, no skill
     quests: ['The Fremennik Exiles'],
     description: 'Combine Basilisk Jaw with Helm of Neitiznot.'
   },
