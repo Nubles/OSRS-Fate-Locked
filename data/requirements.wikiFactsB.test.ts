@@ -50,3 +50,21 @@ describe('requirements part B: skill levels', () => {
     expect(req.description).toMatch(/Abbot Langley/);
   });
 });
+
+describe('requirements part B: regions and sources', () => {
+  it('harpie bug swarms are in Karamja, not Kandarin (Wiki: Harpie Bug Swarm)', () => {
+    expect(entry('Harpie Bug Swarms').regions).toEqual(['Karamja']);
+  });
+  it('no master farmer is in Asgarnia (Wiki: Master Farmer)', () => {
+    expect(entry('Master Farmers').regions).toEqual(['Misthalin']);
+  });
+  it('the Al Kharid silk and gem stalls cannot be stolen from (Wiki: Silk stall, Gem stall)', () => {
+    expect(entry('Silk Stalls').regions).toEqual(['Kandarin']);
+    expect(entry('Gem Stall').regions).toEqual(['Kandarin']);
+  });
+  it('only Dagannoth Prime drops the mud battlestaff (Wiki: Mud battlestaff)', () => {
+    const req = entry('Mud Battlestaff');
+    expect(req.regions).toEqual(['Fremennik']);
+    expect(req.description).toBe('Drop from Dagannoth Prime.');
+  });
+});

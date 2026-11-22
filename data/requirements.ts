@@ -1685,7 +1685,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Harpie Bug Swarms': {
     id: 'Harpie Bug Swarms',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin'], // Bug Swarm Island
+    regions: ['Karamja'], // North-east of Tai Bwo Wannai (Varlamore also has some)
     skills: { 'Slayer': 33, 'Firemaking': 33 },
     items: ['Lit Bug Lantern'],
     description: 'Requires Lit Bug Lantern.'
@@ -1735,7 +1735,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Master Farmers': {
     id: 'Master Farmers',
     category: TableType.MINIGAMES, // Activity
-    regions: ['Misthalin', 'Kandarin', 'Asgarnia'], // Draynor, Ardougne, Varrock
+    regions: ['Misthalin'], // Draynor, south of Varrock (also Ardougne, Hosidius, Farming Guild, Varlamore)
     skills: { 'Thieving': 38 },
     description: 'Essential source of Ranarr/Snapdragon seeds.'
   },
@@ -1787,14 +1787,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Silk Stalls': {
     id: 'Silk Stalls',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Kharidian Desert'], // Ardougne, Al Kharid
+    regions: ['Kandarin'], // Ardougne market (the Al Kharid stall cannot be stolen from)
     skills: { 'Thieving': 20 },
     description: 'Early game GP method (Steal and sell back).'
   },
   'Gem Stall': {
     id: 'Gem Stall',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Kharidian Desert'], // Ardougne, Al Kharid
+    regions: ['Kandarin'], // East Ardougne (the Al Kharid stall cannot be stolen from)
     skills: { 'Thieving': 75 },
     description: 'Source of gems (Sapphire/Emerald/Ruby).'
   },
@@ -1934,9 +1934,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Mud Battlestaff': {
     id: 'Mud Battlestaff',
     category: TableType.MINIGAMES,
-    regions: ['Misthalin'], // Lumber Yard / Chaos Dwarves
+    regions: ['Fremennik'], // Waterbirth Island (Dagannoth Kings)
     skills: { 'Magic': 30, 'Attack': 30 },
-    description: 'Drop from Chaos Golems or Dagannoth Prime.'
+    description: 'Drop from Dagannoth Prime.'
   },
   'Seercull': {
     id: 'Seercull',
