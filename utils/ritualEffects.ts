@@ -147,7 +147,8 @@ export interface FailFate {
 
 /**
  * What a failed roll does to Fate under the run's rituals. `base` is the
- * source's Fate (plus Greed's refund). Order: Walk the Path, Tears, Guthan
+ * source's Fate (Greed's refund is added after, and only when no Pity Key
+ * comes; utils/runAudit.ts allows the overflow). Order: Walk the Path, Tears, Guthan
  * and Torag add up what the fail would give, Zamorak takes his share of it,
  * then Blood Price takes Fate from the bar.
  */
