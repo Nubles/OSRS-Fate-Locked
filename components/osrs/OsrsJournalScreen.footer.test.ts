@@ -3,11 +3,9 @@
 // (commit 82f1ccc). Without routes every owned area counts as reachable, so
 // the footer must be held too, or it shows a "Ready" and "Keys waiting"
 // that then drop.
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import source from './OsrsJournalScreen.tsx?raw';
 
-const source = readFileSync(fileURLToPath(new URL('./OsrsJournalScreen.tsx', import.meta.url)), 'utf8');
 const footer = source.slice(source.indexOf('<div className="ojs-foot">'), source.indexOf('ojs-foot-note'));
 
 describe('Journal screen footer while routes load', () => {

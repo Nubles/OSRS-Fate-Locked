@@ -58,10 +58,7 @@ describe('completing by hand with no route yet', () => {
 
   it('asks the confirm box for kan_hard_7 owning only its own areas, then logs it', () => {
     const task = ALL_DIARY_TASKS.find(t => t.id === 'kan_hard_7')!;
-    const areas = [...new Set([
-      ...(task.regions ?? []),
-      ...(task.locations ?? []).flatMap(l => l.standardAreas ?? []),
-    ])].filter(a => REGIONS_LIST.includes(a));
+    const areas = [...new Set(task.regions ?? [])].filter(a => REGIONS_LIST.includes(a));
     const unlocks = run(areas, [], [...MOBILITY_LIST]);
     const shown = diaryTaskLoggingEligibility(task, unlocks, 'vanilla', routesOf(unlocks));
     expect(shown.machineEligible).toBe(false);

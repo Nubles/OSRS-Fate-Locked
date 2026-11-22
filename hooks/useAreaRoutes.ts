@@ -44,7 +44,7 @@ export interface AreaRoutesState {
    * The routes of another snapshot of this run (an advisor's "what if this
    * area were owned"), or null until the routing has loaded.
    */
-  routesFor: ((snapshot: UnlockState) => AreaRoutes | null) | null;
+  routesFor?: ((snapshot: UnlockState) => AreaRoutes | null) | null;
 }
 
 /**
