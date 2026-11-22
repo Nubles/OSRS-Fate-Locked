@@ -73,9 +73,9 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
   beforeEach(() => { ui.osrs = osrs; });
 
   it('asks before rolling with Ask before Key clicks on, and rolls nothing on No', async () => {
-    game.linkedAccount = 'Alex';
-    game.syncBaseline = { account: 'Alex', levels: { Attack: 1 } };
-    vi.stubGlobal('fetch', vi.fn(async () => reading('Alex', 5)));
+    game.linkedAccount = 'Fated Iron';
+    game.syncBaseline = { account: 'Fated Iron', levels: { Attack: 1 } };
+    vi.stubGlobal('fetch', vi.fn(async () => reading('Fated Iron', 5)));
     ask.pref = true;
     await mount();
     await flush();
@@ -109,8 +109,8 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
   });
 
   it('drops a late answer for the name the run was linked to before a name change', async () => {
-    game.linkedAccount = 'Alex';
-    game.syncBaseline = { account: 'Alex', levels: { Attack: 1 } };
+    game.linkedAccount = 'Fated Iron';
+    game.syncBaseline = { account: 'Fated Iron', levels: { Attack: 1 } };
     game.renameLinkedAccount.mockImplementation((_from: string, to: string) => {
       game.linkedAccount = to;
       game.syncBaseline = { account: to, levels: { Attack: 1 } };
@@ -119,7 +119,7 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
     vi.stubGlobal('fetch', vi.fn((url: string) => new Promise(resolve => { answers.set(decodeURIComponent(url.split('/').pop()!), resolve); })));
     await mount();
     await flush();
-    expect([...answers.keys()]).toEqual(['Alex']);
+    expect([...answers.keys()]).toEqual(['Fated Iron']);
 
     fireEvent.click(screen.getByRole('button', { name: /Change name/ }));
     const field = screen.getAllByRole('textbox').find(el => (el as HTMLInputElement).value === '')!;
@@ -131,16 +131,16 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
     // The new name answers first, the old one a moment later.
     await act(async () => { answers.get('Bob')!(reading('Bob', 5)); });
     await flush();
-    await act(async () => { answers.get('Alex')!(reading('Alex', 90)); });
+    await act(async () => { answers.get('Fated Iron')!(reading('Fated Iron', 90)); });
     await flush();
 
-    expect(screen.queryByText('Alex')).toBeNull();
+    expect(screen.queryByText('Fated Iron')).toBeNull();
     expect(screen.getByRole('button', { name: /Auto-roll 1 skill \(\+4\)/ })).toBeTruthy();
   });
 
   it('is not left loading when the run is unlinked while its lookup is in flight', async () => {
-    game.linkedAccount = 'Alex';
-    game.syncBaseline = { account: 'Alex', levels: { Attack: 1 } };
+    game.linkedAccount = 'Fated Iron';
+    game.syncBaseline = { account: 'Fated Iron', levels: { Attack: 1 } };
     let answer: (value: unknown) => void = () => {};
     vi.stubGlobal('fetch', vi.fn(() => new Promise(resolve => { answer = resolve; })));
     const view = await mount();
@@ -151,7 +151,7 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
     game.linkedAccount = null;
     game.syncBaseline = undefined;
     view.rerender(<AutoRollPanel />);
-    await act(async () => { answer(reading('Alex', 90)); });
+    await act(async () => { answer(reading('Fated Iron', 90)); });
     await flush();
 
     expect(screen.getByRole('button', { name: /Fetch/ }).hasAttribute('disabled')).toBe(false);
@@ -159,11 +159,11 @@ describe.each([['classic', false], ['OSRS', true]])('Sync & Roll in the %s layou
   });
 
   it('keeps the reading across a tab switch and asks Wise Old Man only once within a minute', async () => {
-    game.linkedAccount = 'Alex';
-    game.syncBaseline = { account: 'Alex', levels: { Attack: 5 } };
+    game.linkedAccount = 'Fated Iron';
+    game.syncBaseline = { account: 'Fated Iron', levels: { Attack: 5 } };
     game.unlocks = { levels: { Attack: 5 }, skills: { Attack: 10 } };
     let updates = 0;
-    const request = vi.fn(async () => (++updates > 1 ? rateLimited : reading('Alex', 12)));
+    const request = vi.fn(async () => (++updates > 1 ? rateLimited : reading('Fated Iron', 12)));
     vi.stubGlobal('fetch', request);
 
     const first = await mount();
