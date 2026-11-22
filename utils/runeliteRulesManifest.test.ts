@@ -180,7 +180,9 @@ describe('buildRuneliteRulesManifest - frontier', () => {
     // and coast across it joins, Catherby's and Rellekka's ports too.
     const manifest = await build('chunked', { regions: [], chunks: ['49,50', '49,49'], ...sailor });
     expect(manifest.frontier).toEqual(expect.arrayContaining(['49,47', '50,48', '43,53', '41,57', '28,57']));
-    expect(manifest.frontier).toHaveLength(180);
+    // The wiki-only ports with no open sea beside them: Hosidius, Ardougne and Entrana (Piscatoris is coast already).
+    expect(manifest.frontier).toEqual(expect.arrayContaining(['26,54', '41,51', '44,52']));
+    expect(manifest.frontier).toHaveLength(183);
     expect(manifest.frontier).not.toContain('48,49');
   });
 
