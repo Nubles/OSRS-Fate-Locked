@@ -2,7 +2,9 @@
 
 A player can choose to show a summary of their run in the Fate Locked Discord.
 The bot's `/progress` command then shows their mode, area or chunk count,
-quests, diary tasks, Combat Achievements and last few unlocks. The quest
+quests, diary tasks, Combat Achievements and last few unlocks. The summary also
+carries the run's start date and, when the run has one, its linked OSRS account
+name (`account`, at most 32 characters). The quest
 count leaves miniquests out, as the Quest Cape does, so the Quest Cape role
 comes with the last quest.
 
@@ -57,8 +59,10 @@ public page at `#/log/<run id>` (`components/AdventurersLog.tsx`). Turning it
 on turns sharing on too, and publishes straight away. A public summary adds
 `public: true` and `map`: the land chunks the run owns, one bit per cell of
 the tracker's 48 x 34 chunk grid (`utils/chunkMapBits.ts`), row by row from
-the north-west corner, low bit first, in base64. Anyone with the link can read
-it through `GET /p/<id>`; a private summary and a missing one both answer
+the north-west corner, low bit first, in base64. The page shows the linked
+account name as its title and heading, with the mode, start date, counts, last
+few unlocks and map. Anyone with the link can read the whole summary, account
+name included, through `GET /p/<id>`; a private summary and a missing one both answer
 `404`, so a private run can't be found by guessing. Turning it off republishes
 without the flag, and **Stop sharing** deletes the summary, page and all.
 
