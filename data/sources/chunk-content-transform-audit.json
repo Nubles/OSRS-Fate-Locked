@@ -123991,6 +123991,16 @@
       "sourceKey": "10543",
       "terminal": false,
       "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "North Rantz Peninsula"
+      ]
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "10543",
+      "terminal": false,
+      "disposition": "normalized",
       "reason": "section-merged",
       "targetKeys": [
         "10543"
