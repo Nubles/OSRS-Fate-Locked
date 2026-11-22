@@ -71,6 +71,33 @@ describe('audited current quest requirements', () => {
   });
 });
 
+describe('18 November 2026 quests (OSRS Wiki, 22 Nov revisions)', () => {
+  it('lists A New Leaf with its quest points, difficulty and requirements', () => {
+    expect(QUEST_DATA['A New Leaf']).toMatchObject({
+      kind: 'quest', points: 2, difficulty: DropSource.QUEST_INTERMEDIATE,
+      skills: { Farming: 45, Cooking: 35, Herblore: 32 }, prereqs: ['Priest in Peril'],
+      manualRequirements: ['Completed at least one farming contract'],
+      oneOf: [{ guilds: ['Farming Guild'], regions: ['Farming Guild'] }],
+    });
+    expect(QUEST_DATA['A New Leaf'].series).toBeUndefined();
+    expect(QUEST_DATA['A New Leaf'].locations?.[0]).toMatchObject({ id: 'hosidius-cabbage-field', chunkOptions: [{ cx: 27, cy: 55 }] });
+  });
+
+  it('lists Rag and Bone Man III as the third of its series, started in Silvarea', () => {
+    expect(QUEST_DATA['Rag and Bone Man III']).toMatchObject({
+      kind: 'quest', points: 3, difficulty: DropSource.QUEST_EXPERIENCED, series: 'Rag and Bone Man',
+      skills: { Slayer: 58 },
+      prereqs: ['Rag and Bone Man II', 'Dragon Slayer I', 'The Great Brain Robbery', 'Defender of Varrock', 'Tower of Life', "A Soul's Bane"],
+      locations: [expect.objectContaining({ standardAreas: ['Silvarea'], chunkOptions: [{ cx: 52, cy: 54 }] })],
+    });
+    expect(QUEST_DATA['Rag and Bone Man III'].equipmentRequirements?.map(requirement => requirement.slot)).toEqual(['Head', 'Weapon']);
+  });
+
+  it('adds up to the Wiki total of 354 quest points', () => {
+    expect(Object.values(QUEST_DATA).reduce((total, quest) => total + quest.points, 0)).toBe(354);
+  });
+});
+
 describe('quest series', () => {
   it('tags all three Twisted Tales quests, as the Wiki infoboxes do', () => {
     expect(Object.values(QUEST_DATA)
