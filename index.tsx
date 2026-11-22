@@ -1,9 +1,10 @@
 // First, so it reports errors thrown while the modules below load.
 import './utils/errorBeacon';
 import { lazyWithRetry } from './utils/lazyRetry';
-import React, { Suspense } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import { StandaloneRoute } from './components/StandaloneRoute';
 import './styles.css';
 import './components/osrs/osrs-skin.css';
 import { applyUiStyle } from './utils/uiStyle';
@@ -38,9 +39,9 @@ const start = () => {
   root.render(
     <React.StrictMode>
       {view.kind === 'overlay'
-        ? <Suspense fallback={null}><StreamOverlay /></Suspense>
+        ? <StandaloneRoute name="Stream overlay"><StreamOverlay /></StandaloneRoute>
         : view.kind === 'log'
-          ? <Suspense fallback={null}><AdventurersLog id={view.id} /></Suspense>
+          ? <StandaloneRoute name="Adventurer's Log"><AdventurersLog id={view.id} /></StandaloneRoute>
           : <App />}
     </React.StrictMode>
   );

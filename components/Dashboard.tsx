@@ -869,7 +869,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   );
 
   const renderWorldTab = () => (
-      <div className="flex flex-col lg:h-full lg:overflow-hidden">
+      // MAP: the column scrolls when the window is too short for the map's
+      // 280 px floor, so its bottom controls are never clipped out of reach.
+      <div data-testid="world-column" className={`flex flex-col lg:h-full ${worldView === 'MAP' ? 'lg:overflow-y-auto custom-scrollbar' : 'lg:overflow-hidden'}`}>
           <div className="flex justify-between items-center mb-4 px-2 pt-2 shrink-0">
                <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">{gameModeId === 'chunked' ? 'Chunks' : 'Areas'}</h3>
                <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/10">
@@ -892,7 +894,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
           <p className="px-2 pb-2 text-[10px] text-gray-400 shrink-0">{tutorialIslandNote(gameModeId)}</p>
           {worldView === 'MAP' ? (
-              <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
+              <div className="flex-1 lg:min-h-[280px] bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
                     <Suspense fallback={<PaneFallback />}>
                       <RegionMap />

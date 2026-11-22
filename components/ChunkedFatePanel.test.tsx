@@ -10,12 +10,12 @@ vi.mock('../context/GameContext', async importOriginal => ({
   useGame: () => game.current,
 }));
 // No quest is doable in this test's chunks; the real check needs chunk content.
-const content = vi.hoisted(() => ({ ready: true }));
-vi.mock('../services/ChunkContentService', () => ({ chunkContentService: { get ready() { return content.ready; }, init: () => new Promise(() => {}) } }));
+const content = vi.hoisted(() => ({ ready: true, error: null as string | null, init: vi.fn(() => new Promise<boolean>(() => {})) }));
+vi.mock('../services/ChunkContentService', () => ({ chunkContentService: { get ready() { return content.ready; }, get error() { return content.error; }, init: content.init, subscribe: () => () => {} } }));
 const quests = vi.hoisted(() => ({ rows: [] as { id: string; bucket: string }[] }));
 vi.mock('./QuestDoabilityPanel', () => ({ chunkedQuestRows: () => quests.rows }));
 
-afterEach(() => { cleanup(); quests.rows = []; content.ready = true; });
+afterEach(() => { cleanup(); quests.rows = []; content.ready = true; content.error = null; content.init.mockClear(); });
 
 const dry = (over: Record<string, unknown> = {}) => {
   const fresh = createFreshState();
@@ -59,6 +59,21 @@ describe('Chunked fate panel', () => {
     fireEvent.click(call);
     // The panel sends nothing: the provider lists the doable quests and draws the roll itself.
     expect(game.current.callOnFate).toHaveBeenCalledWith();
+  });
+
+  it('keeps Mercy shut and offers Retry when the chunk content failed to load', async () => {
+    content.ready = false;
+    content.error = 'HTTP 503';
+    // Doable in the run's chunks, but the check cannot see it without the data.
+    quests.rows = [{ id: "Cook's Assistant", bucket: 'DOABLE' }];
+    dry({ chunkedBreakthroughs: { Attack: 2, Hitpoints: 2, Woodcutting: 3 } });
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    render(<ChunkedFatePanel />);
+    expect(screen.getByRole('alert').textContent).toContain('Could not load the chunk data to check your quests.');
+    expect((screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement).disabled).toBe(true);
+    const calls = content.init.mock.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Retry chunk data' }));
+    expect(content.init.mock.calls.length).toBe(calls + 1);
   });
 
   it('says why Mercy is shut without waiting for the chunk content', async () => {
