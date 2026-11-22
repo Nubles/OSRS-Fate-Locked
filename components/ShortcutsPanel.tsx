@@ -11,6 +11,7 @@ const STATUS_META: Record<ShortcutStatus, { label: string; cls: string }> = {
   'ready':       { label: 'ready',       cls: 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200' },
   'area-locked': { label: 'area locked', cls: 'bg-amber-900/25 border-amber-500/40 text-amber-200' },
   'level':       { label: 'level',       cls: 'bg-fuchsia-900/25 border-fuchsia-500/40 text-fuchsia-200' },
+  'quest':       { label: 'quest',       cls: 'bg-sky-900/25 border-sky-500/40 text-sky-200' },
   'no-location': { label: '—',           cls: 'bg-white/5 border-white/10 text-gray-500' },
 };
 
@@ -18,6 +19,7 @@ const FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'ready', label: 'Ready' },
   { key: 'level', label: 'Need level' },
+  { key: 'quest', label: 'Need quest' },
   { key: 'area-locked', label: 'Area locked' },
 ];
 
@@ -87,7 +89,9 @@ export const ShortcutsPanel: React.FC = () => {
                       <MapPin size={11} />
                     </button>
                   )}
-                  <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{r.status === 'level' ? `${r.skill} ${r.level}` : meta.label}</span>
+                  {r.status === 'level'
+                    ? r.missing.map(need => <span key={need.skill} className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{need.skill} {need.level}</span>)
+                    : <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{r.status === 'quest' ? r.quest : meta.label}</span>}
                 </div>
               );
             })}
