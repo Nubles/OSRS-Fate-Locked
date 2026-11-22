@@ -70,6 +70,7 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"11047","accessOptions":[{"quests":["The Red Reef"]},{"manual":["Confirm you have partly completed The Red Reef"]}]},
   {"id":"8757","accessOptions":[{"quests":["Song of the Elves"]}]},
   {"id":"8499","accessOptions":[{"quests":["Song of the Elves"]}]},
+  {"id":"7216","accessOptions":[{"manual":["Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt"]}]},
   {"id":"5678","accessOptions":[{"quests":["Children of the Sun"]}]},
   {"id":"13618","accessOptions":[{"quests":["Haunted Mine"]}]},
   {"id":"11051","accessOptions":[{"quests":["Monkey Madness II"]}]},

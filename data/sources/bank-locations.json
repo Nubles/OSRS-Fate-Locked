@@ -38,7 +38,8 @@
     { "title": "Red Rock", "revision": 15248903, "url": "https://oldschool.runescape.wiki/w/Red_Rock" },
     { "title": "Mos Le'Harmless bank", "revision": 15211938, "url": "https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank" },
     { "title": "Mor Ul Rek", "revision": 15394862, "url": "https://oldschool.runescape.wiki/w/Mor_Ul_Rek" },
-    { "title": "Hallowed Sepulchre", "revision": 15387544, "url": "https://oldschool.runescape.wiki/w/Hallowed_Sepulchre" }
+    { "title": "Hallowed Sepulchre", "revision": 15387544, "url": "https://oldschool.runescape.wiki/w/Hallowed_Sepulchre" },
+    { "title": "Fortis Colosseum", "revision": 15404131, "url": "https://oldschool.runescape.wiki/w/Fortis_Colosseum" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -127,6 +128,7 @@
     { "id": "11047", "accessOptions": [{ "quests": ["The Red Reef"] }, { "manual": ["Confirm you have partly completed The Red Reef"] }], "note": "Red Rock bank chest: Red Rock needs The Red Reef partly done.", "wiki": ["https://oldschool.runescape.wiki/w/Red_Rock", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "8757", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "Gwenith deposit box: the village needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Gwenith", "https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "8499", "accessOptions": [{ "quests": ["Song of the Elves"] }], "note": "The deposit box west of Prifddinas needs Song of the Elves.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
+    { "id": "7216", "accessOptions": [{ "manual": ["Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt"] }], "note": "The bank chest below the Fortis Colosseum opens at 2,000 Glory (the Brawler title), and only the most Glory earned in one attempt counts.", "wiki": ["https://oldschool.runescape.wiki/w/Fortis_Colosseum"] },
     { "id": "5678", "accessOptions": [{ "quests": ["Children of the Sun"] }], "note": "Aldarin dock deposit box: Varlamore needs Children of the Sun.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_Deposit_Box"] },
     { "id": "13618", "accessOptions": [{ "quests": ["Haunted Mine"] }], "note": "Tarn's Lair bank (Odovacar) needs Haunted Mine and takes 100 coins each use.", "wiki": ["https://oldschool.runescape.wiki/w/Tarn%27s_Lair", "https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "11051", "accessOptions": [{ "quests": ["Monkey Madness II"] }], "note": "Ape Atoll bank chest in Marim needs Monkey Madness II.", "wiki": ["https://oldschool.runescape.wiki/w/Ape_Atoll_bank", "https://oldschool.runescape.wiki/w/List_of_banks"] },

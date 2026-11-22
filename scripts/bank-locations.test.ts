@@ -277,6 +277,7 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       12838: [{ quests: ['Troubled Tortugans'] }, { manual: ['Confirm you have started Troubled Tortugans'] }],
       11047: [{ quests: ['The Red Reef'] }, { manual: ['Confirm you have partly completed The Red Reef'] }],
       8757: [{ quests: ['Song of the Elves'] }], 8499: [{ quests: ['Song of the Elves'] }],
+      7216: [{ manual: ['Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt'] }],
       5678: [{ quests: ['Children of the Sun'] }], 13618: [{ quests: ['Haunted Mine'] }],
       11051: [{ quests: ['Monkey Madness II'] }], 11056: [{ quests: ['Jungle Potion'] }],
       14908: [{ quests: ['Bone Voyage'] }],

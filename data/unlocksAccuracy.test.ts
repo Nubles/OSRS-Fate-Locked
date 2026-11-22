@@ -222,6 +222,15 @@ describe('B3: a bank the Wiki names a requirement for states it, not "needs revi
     expect(bankAccess('8751', everything(99, { quests: questsWithout('Regicide') })).reasons).toContain('Complete Regicide');
   });
 
+  // Fortis Colosseum oldid 15404131: the bank chest is for "players who have obtained at least 2,000 glory",
+  // and "Only a player's highest Glory earned in a single Colosseum attempt" counts (the Brawler title).
+  it('asks a run at the Fortis Colosseum to confirm 2,000 Glory in one attempt', () => {
+    const access = bankAccess('7216', everything());
+    expect(access.status).toBe('UNKNOWN');
+    expect(access.reasons).toEqual(['Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt']);
+    expect(bankAccess('7216', createFreshState().unlocks).status).not.toBe('ALLOWED');
+  });
+
   // Fossil Island bank oldid 15315035 (21 Construction); Bank chest (amenity) oldid 15402269 (70 Construction).
   it.each([
     ['14907', 21], ['11811', 70], ['10533', 70], ['8740', 70], ['8249', 70],
