@@ -72,14 +72,24 @@ export function splitJournalEntriesByKind<T extends Pick<QuestData, 'kind'>>(
 }
 
 // Helpers
-const getWikiUrl = (name: string) => {
+/**
+ * Miniquests that share their name with a minigame or raid page. Kept apart
+ * from WIKI_OVERRIDES, which other screens use for the activity itself.
+ */
+const MINIQUEST_WIKI_PAGES: Readonly<Record<string, string>> = {
+    'Vale Totems': 'Vale_Totems_(miniquest)',
+    'The Fractured Archive': 'The_Fractured_Archive_(miniquest)',
+};
+export const questWikiUrl = (name: string) => {
     // Special handling for Recipe for Disaster subquests to avoid broken links
     if (name.startsWith('RFD:')) {
         return 'https://oldschool.runescape.wiki/w/Recipe_for_Disaster';
     }
+    if (MINIQUEST_WIKI_PAGES[name]) return `https://oldschool.runescape.wiki/w/${MINIQUEST_WIKI_PAGES[name]}`;
     if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
     return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
 };
+const getWikiUrl = questWikiUrl;
 
 const getDifficultyColor = (difficulty: DropSource) => {
     if (difficulty === DropSource.QUEST_GRANDMASTER) return 'text-yellow-400 border-yellow-500/30 bg-yellow-900/10';
