@@ -27,6 +27,11 @@ describe('3D Model Gallery caption', () => {
     expect(classes).toEqual(expect.arrayContaining(['hidden', 'sm:inline', 'truncate', 'min-w-0']));
     const row = caption.parentElement!;
     expect(row.className.split(/\s+/)).toContain('min-w-0');
-    expect(row.querySelector('h3')!.textContent).toBe('Abyssal Sire');
+    const title = row.querySelector('h3')!;
+    expect(title.textContent).toBe('Abyssal Sire');
+    // The full name wraps on a narrow phone column instead of being cut off.
+    const titleClasses = title.className.split(/\s+/);
+    expect(titleClasses).toEqual(expect.arrayContaining(['min-w-0', 'break-words']));
+    expect(titleClasses).not.toContain('truncate');
   });
 });

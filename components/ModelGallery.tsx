@@ -95,7 +95,7 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
               )}
             </div>
             <div className="mt-3 flex items-baseline justify-between gap-2 min-w-0">
-              <h3 className="text-lg font-bold text-white min-w-0 truncate">{prettify(sel)}</h3>
+              <h3 className="text-lg font-bold text-white min-w-0 break-words">{prettify(sel)}</h3>
               {/* The file name is for review on wide screens; a phone has no room for it. */}
               <span data-testid="model-file" className="hidden sm:inline min-w-0 truncate text-[11px] font-mono text-gray-600">{loadedModelFiles()[sel]}</span>
             </div>
