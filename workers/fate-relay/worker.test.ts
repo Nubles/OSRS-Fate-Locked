@@ -182,7 +182,7 @@ describe('Fate relay profile requests', () => {
 
     expect(response.status).toBe(503);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example.test');
-    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag, X-Backup-Updated-At');
+    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag, X-Backup-Updated-At, Retry-After');
   });
 
   it('lets browsers cache preflights', async () => {
