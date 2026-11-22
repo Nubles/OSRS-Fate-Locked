@@ -459,7 +459,7 @@ const PLACED: Record<string, number> = {
     'Silverlight', // Steel longsword
     'Western banner 1', // Steel spear
     'Western banner 2', // Black spear
-    'Wilderness sword 2', // Steel sword
+    'Wilderness sword 2', // Steel shortsword
   ]),
   ...at(3, [
     'Blessed axe', // Mithril axe
@@ -468,14 +468,14 @@ const PLACED: Record<string, number> = {
     'Kandarin headgear 4', // Mithril med helm
     'Morytania legs 3', // Mithril platelegs
     'Western banner 3', // Mithril spear
-    'Wilderness sword 3', // Mithril sword
+    'Wilderness sword 3', // Mithril shortsword
   ]),
   ...at(4, [
     'Fremennik sea boots 4', // Adamant boots
     'Gadderhammer', // Adamant warhammer
     'Morytania legs 4', // Adamant platelegs
     'Western banner 4', // Adamant spear
-    'Wilderness sword 4', // Adamant sword
+    'Wilderness sword 4', // Adamant shortsword
   ]),
   ...at(6, [
     'Infernal axe', // Dragon axe

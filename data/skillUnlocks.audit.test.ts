@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SKILL_UNLOCK_DATA } from './skillUnlocks';
+import { STRATEGY_DATABASE } from './requirements';
 
 // S01–S04: independently reviewed OSRS Wiki revisions and Jagex 12-Aug-2026
 // patch notes, retained in the 22-Sep-2026 skill-reference audit.
@@ -142,6 +143,18 @@ describe('unlocks added in the 9 November 2026 review', () => {
     const matches = rowsFor(skill).filter(row => row.level === level && row.text.includes(name));
     expect(matches, `${skill}: ${name}`).toHaveLength(1);
     expect(matches[0].tier).toBe(Math.ceil(level / 10));
+  });
+
+  // The game renamed the metal swords to shortswords on 3 November 2026 (Wiki: Shortsword, Changes).
+  it('uses the shortsword names for the smithed swords and the wyrm drop', () => {
+    const oldName = /\b(Bronze|Iron|Steel|Black|White|Mithril|Adamant|Rune|Dragon) Sword\b/i;
+    for (const skill of Object.keys(SKILL_UNLOCK_DATA)) {
+      for (const row of rowsFor(skill)) expect(row.text, `${skill}: ${row.text}`).not.toMatch(oldName);
+    }
+    for (const [metal, level] of [['Bronze', 4], ['Iron', 19], ['Steel', 34], ['Mithril', 54], ['Adamant', 74], ['Rune', 89]] as const) {
+      expect(rowsFor('Smithing').some(row => row.level === level && row.text.includes(`${metal} Shortsword`)), metal).toBe(true);
+    }
+    expect(STRATEGY_DATABASE.Wyrms.description).toBe('Source of Dragon Shortsword/Harpoon.');
   });
 
   it('lists all nine house locations at their Construction levels', () => {

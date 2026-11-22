@@ -1028,7 +1028,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'In Search of the Myreque', name: 'In Search of the Myreque',
     regions: ['Canifis', 'Mort Myre Swamp', 'Barrows'],
     skills: { 'Agility': 25 }, prereqs: ['Nature Spirit'], points: 2, series: 'Myreque',
-    // Items checked on the Wiki: Steel longsword, 2 steel swords, steel mace, steel warhammer, steel dagger; 225 steel nails.
+    // Items checked on the Wiki: Steel longsword, 2 steel shortswords, steel mace, steel warhammer, steel dagger; 225 steel nails.
     oneOf: [
       { skills: { 'Smithing': 39 } },
       { skills: { 'Smithing': 34 }, merchants: ['Weapon Shops'] },
