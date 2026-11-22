@@ -438,10 +438,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Defence': {
     1: [
-      'Lvl 1: Bronze & Iron Armour, Defenders',
+      'Lvl 1: Bronze & Iron Armour, Bronze & Iron Defenders',
       'Lvl 1: Wizard Robes, Leather',
       'Lvl 5: Steel Armour, Steel Defender, Red Decorative Armour',
-      'Lvl 10: Black Armour, White Armour',
+      'Lvl 10: Black Armour, Black Defender, White Armour',
       'Lvl 10: Black Mask (Strength 20, Combat 40)',
       'Lvl 10: Hard Leather Shield',
       'Lvl 10: Oak Shield',
@@ -450,7 +450,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     2: [
       'Lvl 20: Initiate Armour (Prayer 10)',
-      'Lvl 20: Mithril Armour, White Decorative Armour',
+      'Lvl 20: Mithril Armour, Mithril Defender, White Decorative Armour',
       'Lvl 20: Mystic Robes, Enchanted Robes, Robes of Darkness (Magic 40)',
       'Lvl 20: Shayzien Armour, Yak-hide Armour',
       'Lvl 20: Studded Body (Ranged 20)'
@@ -459,7 +459,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 25: Infinity Robes, Frog Leather',
       'Lvl 25: Neitiznot Shield',
       'Lvl 30: 3rd Age Mage Robes (Magic 65)',
-      'Lvl 30: Adamant Armour, Gold Decorative Armour',
+      'Lvl 30: Adamant Armour, Adamant Defender, Gold Decorative Armour',
       'Lvl 30: Fremennik Helm & Shield (The Fremennik Trials)',
       'Lvl 30: Inquisitor\'s Armour',
       'Lvl 30: Masori Armour (Range 80)',
@@ -522,9 +522,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 70: Piety (Prayer 70), Rigour (Prayer 74), Augury (Prayer 77)'
     ],
     8: [
+      'Lvl 75: Ancient Wyvern Shield (Magic 70)',
       'Lvl 75: Arcane & Spectral Spirit Shields (Prayer 70, Magic 65)',
       'Lvl 75: Dinh\'s Bulwark (Attack 75)',
-      'Lvl 75: Dragonfire Shield / Ward, Ancient Wyvern Shield',
+      'Lvl 75: Dragonfire Shield / Ward',
       'Lvl 75: Elysian Spirit Shield (Prayer 75)',
       'Lvl 75: Justiciar Armour',
       'Lvl 75: Primordial/Pegasian/Eternal Boots, Guardian & Echo Boots',
@@ -541,7 +542,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     9: [],
     10: [
-      'Lvl 99: Rockslide to Mac\'s Island',
+      'Lvl 99: Rockslide to Mac\'s Island (Mining 99)',
       'Lvl 99: Skill Mastery (Defence Cape)'
     ],
   },

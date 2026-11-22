@@ -9,11 +9,11 @@ const rowsFor = (skill: string) => Object.entries(SKILL_UNLOCK_DATA[skill])
 // one line the fill added or extended, at the level the table gives.
 describe('Defence and Runecraft rows from the Wiki level-up tables', () => {
   it.each([
-    ['Defence', 'Bronze & Iron Armour, Defenders', 1], ['Defence', 'Steel Defender', 5], ['Defence', 'Red Decorative Armour', 5],
-    ['Defence', 'Black Mask (Strength 20, Combat 40)', 10], ['Defence', 'Oak Shield', 10],
-    ['Defence', 'White Decorative Armour', 20], ['Defence', 'Robes of Darkness', 20], ['Defence', 'Yak-hide Armour', 20],
+    ['Defence', 'Bronze & Iron Defenders', 1], ['Defence', 'Steel Defender', 5], ['Defence', 'Red Decorative Armour', 5],
+    ['Defence', 'Black Defender', 10], ['Defence', 'Black Mask (Strength 20, Combat 40)', 10], ['Defence', 'Oak Shield', 10],
+    ['Defence', 'Mithril Defender', 20], ['Defence', 'White Decorative Armour', 20], ['Defence', 'Robes of Darkness', 20], ['Defence', 'Yak-hide Armour', 20],
     ['Defence', 'Studded Body (Ranged 20)', 20], ['Defence', 'Neitiznot Shield', 25],
-    ['Defence', '3rd Age Mage Robes (Magic 65)', 30], ['Defence', 'Gold Decorative Armour', 30],
+    ['Defence', '3rd Age Mage Robes (Magic 65)', 30], ['Defence', 'Adamant Defender', 30], ['Defence', 'Gold Decorative Armour', 30],
     ['Defence', 'Fremennik Helm & Shield', 30], ['Defence', 'Ram Skull Helm (Rag and Bone Man II)', 30], ['Defence', 'Willow Shield', 30],
     ['Defence', 'Samurai Armour', 35], ['Defence', "Blessed D'hide Body, Coif, Boots & Shield", 40],
     ['Defence', "Blue/Red/Black D'hide Bodies", 40], ['Defence', "Dagon'hai Robes", 40], ['Defence', 'Penance Skirt & Gloves, Runner Boots', 40],
@@ -28,10 +28,10 @@ describe('Defence and Runecraft rows from the Wiki level-up tables', () => {
     ['Defence', '3rd Age Melee Equipment', 65], ['Defence', 'Chivalry (Prayer 60)', 65],
     ['Defence', 'Avernic Defender', 70], ['Defence', 'Blessed Spirit Shield', 70], ['Defence', 'Boots of Brimstone', 70],
     ['Defence', 'Neitiznot Faceguard', 70], ['Defence', 'Rigour (Prayer 74), Augury (Prayer 77)', 70],
-    ['Defence', 'Arcane & Spectral Spirit Shields', 75], ['Defence', "Dinh's Bulwark", 75], ['Defence', 'Ancient Wyvern Shield', 75],
+    ['Defence', 'Arcane & Spectral Spirit Shields', 75], ['Defence', "Dinh's Bulwark", 75], ['Defence', 'Ancient Wyvern Shield (Magic 70)', 75],
     ['Defence', 'Elysian Spirit Shield', 75], ['Defence', 'Guardian & Echo Boots', 75], ['Defence', 'Serpentine Helm', 75],
     ['Defence', 'Twisted Buckler', 75], ['Defence', 'Virtus Robes', 75], ['Defence', 'Oathplate Armour', 78],
-    ['Defence', 'Avernic Treads', 80], ['Defence', "Rockslide to Mac's Island", 99],
+    ['Defence', 'Avernic Treads', 80], ['Defence', "Rockslide to Mac's Island (Mining 99)", 99],
     ['Runecraft', 'Air/Mind/Water/Earth/Fire/Body Tiaras', 1], ['Runecraft', 'Cosmic/Chaos/Nature/Law/Death/Blood/Wrath Tiaras', 1],
     ['Runecraft', 'Dark Essence Blocks', 1], ['Runecraft', 'Elemental & Catalytic Tiaras', 1],
     ['Runecraft', 'Rune Case 1 (Construction 41)', 14], ['Runecraft', 'Amulet of Air', 18], ['Runecraft', 'Amulet of Water', 19],
