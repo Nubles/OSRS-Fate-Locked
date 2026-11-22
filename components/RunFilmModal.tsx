@@ -242,7 +242,8 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
         canvas, frames, draw, signal: abort.signal,
         onProgress: (done, total) => { if (done % 6 === 0 || done === total) setPhase({ kind: 'making', done, total }); },
       });
-      if (abort.signal.aborted) return;
+      // Stop can land after the last frame, while the file is being finished.
+      if (abort.signal.aborted) { setPhase({ kind: 'idle' }); return; }
       setPhase({ kind: 'ready', file, url: URL.createObjectURL(file.blob) });
     } catch (err) {
       if (err instanceof FilmCancelled || abort.signal.aborted) { setPhase({ kind: 'idle' }); return; }

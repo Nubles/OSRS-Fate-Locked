@@ -374,3 +374,36 @@ describe('ChangelogModal DOM focus restoration', () => {
     expect(document.activeElement).not.toBe(utilityGear);
   });
 });
+
+describe('ChangelogModal new entries', () => {
+  const four: readonly ChangelogRelease[] = ['2026-11-12', '2026-11-11', '2026-11-10', '2026-11-09'].map(date => ({
+    id: `${date}-note`, title: `Release ${date}`, date, sections: { added: [`Note ${date}`] },
+  }));
+  const marked = (host: HTMLElement) => four.map(release =>
+    !!host.querySelector(`#changelog-release-toggle-${release.id} [data-testid="changelog-new-badge"]`));
+  const expanded = (host: HTMLElement) => four.map(release =>
+    host.querySelector(`#changelog-release-toggle-${release.id}`)?.getAttribute('aria-expanded') === 'true');
+
+  it('marks every entry newer than the one the player last saw, and still opens only the newest', async () => {
+    const { host } = await mount(<ChangelogModal releases={four} seenReleaseId={four[2].id} onClose={() => undefined} />);
+    expect(marked(host)).toEqual([true, true, false, false]);
+    expect(expanded(host)).toEqual([true, false, false, false]);
+  });
+
+  it('marks nothing when the player saw the newest, never saw one, or saw one no longer listed', async () => {
+    for (const seen of [four[0].id, null, '2025-01-01-gone']) {
+      const { host } = await mount(<ChangelogModal releases={four} seenReleaseId={seen} onClose={() => undefined} />);
+      expect(marked(host)).toEqual([false, false, false, false]);
+    }
+  });
+
+  it('reads the last entry seen from storage when it is not given', async () => {
+    window.localStorage.setItem('fate-locked:last-seen-changelog', four[1].id);
+    try {
+      const { host } = await mount(<ChangelogModal releases={four} onClose={() => undefined} />);
+      expect(marked(host)).toEqual([true, false, false, false]);
+    } finally {
+      window.localStorage.removeItem('fate-locked:last-seen-changelog');
+    }
+  });
+});

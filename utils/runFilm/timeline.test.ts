@@ -4,6 +4,7 @@ import { SUB_AREA_CHUNKS } from '../../data/subAreaChunks';
 import { SKILLS_LIST } from '../../data/items';
 import { buildFilmTimeline, filmDays, filmFramePlan, ownedChunksForAreas, TICKER_LINES } from './timeline';
 import { chunkRect, filmLayout } from './painter';
+import { buildFateAnalytics, defaultFateAnalyticsQuery } from '../fateAnalytics';
 
 const DAY = 86_400_000;
 const T0 = Date.UTC(2026, 9, 1, 12);
@@ -162,6 +163,49 @@ describe('buildFilmTimeline', () => {
     });
     expect(t.summary.mapShare).toBeGreaterThan(0);
     expect(t.summary.mapShare).toBeLessThan(0.2);
+  });
+
+  it('counts a Pity Key as a miss and takes a win at its real odds, as the Stats page does', () => {
+    const roll = (type: LogEntry['type'], threshold: number, rollValue: number, source: string, meta: Record<string, unknown> = {}): LogEntry =>
+      ({ ...entry(0, type, type, { source, ...meta }), threshold, rollValue, source });
+    const misses = () => Array.from({ length: 5 }, () => roll('ROLL_FAIL', 3, 50, 'Quest'));
+    const log = [
+      roll('ROLL_SUCCESS', 20, 10, 'Quest'),
+      ...misses(),
+      // Missed at 1.5%, and Fate paid the Key: not a lucky roll, and the dry run goes on.
+      roll('PITY', 1.5, 80, 'Cooking Level 12'),
+      ...misses(),
+      // Luck's second draw: a 2% roll that was really a 3.96% chance.
+      roll('ROLL_SUCCESS', 2, 1, 'Mining Level 30', { successProbability: 0.0396, luckApplied: true }),
+      // Verac's hit-through won a 1% roll that missed its odds.
+      roll('ROLL_SUCCESS', 1, 40, 'Slayer (Cows)', { roll: 40, threshold: 1 }),
+    ];
+    const t = buildFilmTimeline(log, vanilla);
+    expect(t.summary.luckiest).toEqual({ chance: 3.96, source: 'Mining Level 30' });
+    expect(t.summary.longestDry).toBe(11);
+    const stats = buildFateAnalytics(log, defaultFateAnalyticsQuery(T0 + 5 * DAY));
+    expect(stats.notables.luckiestSuccess?.source).toBe(t.summary.luckiest!.source);
+    expect(stats.notables.luckiestSuccess!.probability * 100).toBeCloseTo(t.summary.luckiest!.chance, 9);
+    expect(stats.summary.longestDrought).toBe(t.summary.longestDry);
+  });
+
+  it('counts the Keys a roll paid, not its line', () => {
+    const paid = (type: LogEntry['type'], standardKeysAwarded: number, rewardKind: string) =>
+      entry(0, type, type, { standardKeysAwarded, rewardKind, successProbability: 0.3, luckApplied: false, drawResolution: 1000 });
+    const log = [
+      paid('ROLL_SUCCESS', 2, 'greed'), // Greed doubled it
+      paid('ROLL_SUCCESS', 2, 'normal'), // Karil's second Key
+      paid('ROLL_OMNI', 1, 'omni'),
+      paid('PITY', 1, 'pity'),
+      paid('ROLL_SUCCESS', 0, 'normal'), // a reserve already emptied
+      paid('ROLL_FAIL', 0, 'none'),
+      entry(0, 'ROLL_SUCCESS', 'Key Found!'), // an older line, with no count: one Key
+    ];
+    const t = buildFilmTimeline(log, vanilla);
+    expect(t.summary.keysWon).toBe(7);
+    expect(t.steps.at(-1)!.keysWon).toBe(7);
+    const stats = buildFateAnalytics(log.slice(0, -1), defaultFateAnalyticsQuery(T0 + 5 * DAY));
+    expect(stats.summary.confirmedStandardKeys).toBe(6);
   });
 
   it('tracks the share of the map that is open', () => {

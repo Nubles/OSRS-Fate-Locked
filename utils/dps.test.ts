@@ -87,8 +87,35 @@ describe('dps formulas', () => {
     expect(r.defenceRoll).toBe(12426);
     expect(r.hitChance).toBeCloseTo(0.6023, 3);
     expect(r.attackInterval).toBeCloseTo(2.4, 5);
-    expect(r.dps).toBeCloseTo((0.6023 * 12.5) / 2.4, 2);
+    // Wiki, Damage per second/Melee step eight: Hit Chance * (Max/2 + 1/(Max+1)).
+    expect(r.dps).toBeCloseTo((r.hitChance * (12.5 + 1 / 26)) / 2.4, 9);
     expect(r.ttk).toBeCloseTo(150 / r.dps, 4);
+  });
+
+  // The Wiki's step eight (Melee, Ranged and Magic pages alike): a successful
+  // hit that rolls 0 is changed to a 1, so an average hit is Max/2 + 1/(Max+1).
+  it('counts a successful 0 as a 1, as the Wiki does', () => {
+    const fresh: DpsInput = {
+      ...baseInput(), stanceId: 'accurate',
+      levels: { attack: 1, strength: 1, ranged: 1, magic: 1 },
+      gear: { accuracy: 0, meleeStr: 0, rangedStr: 0, magicDmgPct: 0, speedTicks: 4 },
+      monster: { defLevel: 1, defBonus: 0, hp: 2 },
+    };
+    // Max hit 1: every hit lands 1 damage, so an attack averages its hit chance.
+    const one = computeDps(fresh);
+    expect(one.maxHit).toBe(1);
+    expect(one.dps).toBeCloseTo((one.hitChance * 1) / 2.4, 9);
+    expect(one.ttk).toBeCloseTo(2 / ((one.hitChance * 1) / 2.4), 6);
+    // Max hit 2: hits of 1, 1 and 2 average 4/3.
+    const two = computeDps({ ...fresh, levels: { ...fresh.levels, strength: 10 } });
+    expect(two.maxHit).toBe(2);
+    expect(two.dps).toBeCloseTo((two.hitChance * (4 / 3)) / 2.4, 9);
+    // Ranged and Magic use the same step: a 30 max hit averages 15 + 1/31.
+    const magic = computeDps({ ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'accurate', baseSpellMax: 30 });
+    expect(magic.maxHit).toBe(30);
+    expect(magic.dps).toBeCloseTo((magic.hitChance * (15 + 1 / 31)) / magic.attackInterval, 9);
+    // No max hit, no damage.
+    expect(computeDps({ ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'accurate', baseSpellMax: 0 }).dps).toBe(0);
   });
 
   it('piety raises max hit and DPS', () => {
