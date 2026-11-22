@@ -18,6 +18,7 @@ import {
 } from '../utils/caProgress';
 import { caTaskBlocker, caTaskBlockerHint } from '../utils/caTaskAccess';
 import { caMonsterWikiUrl } from '../utils/questWikiUrl';
+import { caTaskMatches, compileJournalQuery } from './osrs/OsrsJournalSearch';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -91,11 +92,10 @@ export const useCAJournal = (externalSearch = '') => {
       if (filterStatus === 'AVAILABLE' && !isAvailable) return false;
       if (filterStatus === 'LOCKED' && (isCompleted || isAvailable)) return false;
 
-      if (!searchTerm) return true;
-      const lowerSearch = searchTerm.toLowerCase();
-      if (ca.id.toLowerCase().includes(lowerSearch)) return true;
-      const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
-      return tasks.some(t => t.monster.toLowerCase().includes(lowerSearch) || t.description.toLowerCase().includes(lowerSearch));
+      const query = compileJournalQuery(searchTerm);
+      if (!query) return true;
+      // A task's tier is one of its search fields, so a tier name keeps the tier.
+      return ALL_CA_TASKS.some(t => t.tierId === ca.id && caTaskMatches(query, t));
   });
 
   const statusCounts = useMemo(() => {
@@ -296,7 +296,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                             {tasks.map(task => {
                                 const isTaskDone = unlocks.completedTasks.includes(task.id);
                                 const blocker = caTaskBlocker(task, unlocks, gameModeId, areaRoutes);
-                                if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !task.monster.toLowerCase().includes(searchTerm.toLowerCase()) && !ca.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
+                                if (!caTaskMatches(compileJournalQuery(searchTerm), task)) return null;
 
                                 return (
                                     <button

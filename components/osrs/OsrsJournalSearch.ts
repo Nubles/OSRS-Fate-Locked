@@ -205,3 +205,22 @@ export const diaryTaskSearchFields = (t: { description: string; tierId: string }
 /** A Combat Achievement task: its name (or text), its text, the boss and the tier. */
 export const caTaskSearchFields = (t: { name?: string; description: string; monster: string; tierId: string }): string[] =>
   [t.name ?? t.description, t.name ? t.description : '', t.monster, t.tierId];
+
+/**
+ * The journal panel's Combat Achievement search, in both layouts: a task
+ * matches by its name (the row's text), its text, its boss or its tier.
+ */
+export const caTaskMatches = (
+  query: JournalQuery | null,
+  t: { name?: string; description: string; monster: string; tierId: string },
+): boolean => journalMatches(query, caTaskSearchFields(t));
+
+/**
+ * A plain "contains" for the other journal panels' searches (Quests,
+ * Collection Log), folded as this search folds: case, accents and joiners
+ * are ignored, so "cooks assistant" finds "Cook's Assistant".
+ */
+export const foldedIncludes = (text: string, term: string): boolean => {
+  const needle = foldText(term).text;
+  return needle.length === 0 ? text.toLowerCase().includes(term.trim().toLowerCase()) : folded(text).text.includes(needle);
+};

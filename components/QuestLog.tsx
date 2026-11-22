@@ -24,6 +24,7 @@ import {
   withSkillGateQuests,
 } from '../utils/journalStatus';
 import { requestQuestAttestation } from '../utils/manualAttestation';
+import { foldedIncludes } from './osrs/OsrsJournalSearch';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -526,7 +527,7 @@ export const useQuestJournal = (externalSearch = '') => {
       d === DropSource.QUEST_GRANDMASTER ? 5 : d === DropSource.QUEST_MASTER ? 4
         : d === DropSource.QUEST_EXPERIENCED ? 3 : d === DropSource.QUEST_INTERMEDIATE ? 2 : 1;
     const list = allQuests.filter(q => {
-      const matchesSearch = q.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = foldedIncludes(q.name, searchTerm);
       if (!matchesSearch) return false;
       if (activeRegion !== 'ALL' && !enforcedQuestAreas(q).includes(activeRegion)) return false;
       if (diffFilter !== 'ALL' && getDifficultyLabel(q.difficulty) !== diffFilter) return false;

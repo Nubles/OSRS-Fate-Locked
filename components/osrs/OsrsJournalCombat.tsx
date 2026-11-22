@@ -6,6 +6,7 @@ import type { AreaRoutes } from '../../utils/areaRoutes';
 import { useSourceKeyChance } from '../../hooks/useSourceKeyChance';
 import { CA_TASK_POINTS, isCATierId } from '../../utils/caProgress';
 import { caTaskBlocker, caTaskBlockerHint, caTaskBlockerText, type CATaskBlocker } from '../../utils/caTaskAccess';
+import { caTaskMatches, compileJournalQuery } from './OsrsJournalSearch';
 import { EntityLocations } from '../EntityLocations';
 import { Legend, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
 
@@ -66,8 +67,8 @@ export const OsrsJournalCombat: React.FC<Props> = ({
   }, []);
 
   const tier = tiers.find(t => t.id === selectedTierId) ?? tiers.find(t => !unlocks.cas.includes(t.id)) ?? tiers[0] ?? null;
-  const visibleTasks = (ca: CATier) => (tasksOf.get(ca.id) ?? []).filter(task => !isSearching
-    || task.description.toLowerCase().includes(term) || task.monster.toLowerCase().includes(term) || ca.id.toLowerCase().includes(term));
+  const query = compileJournalQuery(searchTerm);
+  const visibleTasks = (ca: CATier) => (tasksOf.get(ca.id) ?? []).filter(task => caTaskMatches(query, task));
 
   // A jump to a tier selects it and shows the tier itself, not a stale task.
   useEffect(() => { if (highlightedId) setSelectedTask(null); }, [highlightedId]);
