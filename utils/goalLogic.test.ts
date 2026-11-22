@@ -90,13 +90,29 @@ describe('calculateGoalProgress for pinned Strategy Guide entries', () => {
     expect(progress.percentage).toBeLessThan(100);
   });
 
+  it('needs the Mobility Key for Soda Ash (Charter Ships), whose id is a Mobility root', () => {
+    const req = STRATEGY_DATABASE['Soda Ash (Charter Ships)'];
+    const without = baseUnlocks({ ...maxed(), mobility: [] });
+    const progress = calculateGoalProgress(req, without, 'vanilla');
+    expect(progress.missing).toContain('Unlock: Charter Ships');
+    expect(progress.percentage).toBeLessThan(100);
+    expect(analyzeRequirement(req, without, 'vanilla').isCategoryUnlocked).toBe(false);
+
+    const withKey = baseUnlocks({ ...maxed(), mobility: ['Charter Ships'] });
+    expect(calculateGoalProgress(req, withKey, 'vanilla').missing).not.toContain('Unlock: Charter Ships');
+    expect(calculateGoalProgress(req, withKey, 'vanilla').percentage).toBe(100);
+    expect(analyzeRequirement(req, withKey, 'vanilla').isCategoryUnlocked).toBe(true);
+  });
+
   it('never asks to unlock an id no Key can roll, and agrees with the Strategy Guide on Ready', () => {
     for (const [key, req] of Object.entries(STRATEGY_DATABASE)) {
       if (QUEST_DATA[req.id]) continue; // quests use the quest journal
       for (const state of [unlocks([]), maxed()]) {
         const progress = calculateGoalProgress(req, state, 'vanilla');
         for (const item of progress.missing.filter(entry => entry.startsWith('Unlock: '))) {
-          expect(ROLLABLE[req.category]?.includes(item.slice('Unlock: '.length)), `${key}: ${item}`).toBe(true);
+          const id = item.slice('Unlock: '.length);
+          // Usually its own table's Key; Soda Ash (Charter Ships) needs the Mobility Key.
+          expect(Object.values(ROLLABLE).some(list => list?.includes(id)), `${key}: ${item}`).toBe(true);
         }
         expect(progress.percentage === 100, key).toBe(analyzeRequirement(req, state, 'vanilla').isFullyPlayable);
         expect(progress.percentage === 100, key).toBe(progress.missing.length === 0);

@@ -38,6 +38,27 @@ const ROOT_UNLOCKS: Partial<Record<TableType, Set<string>>> = {
     [TableType.FARMING_LAYERS]: new Set(FARMING_PATCH_LIST),
 };
 
+/** The tables whose roots are held as a list of unlocked ids. */
+const KEYED_TABLES: readonly TableType[] = [
+    TableType.BOSSES, TableType.MINIGAMES, TableType.GUILDS, TableType.FARMING_LAYERS, TableType.MOBILITY,
+    TableType.ARCANA, TableType.POH, TableType.STORAGE, TableType.MERCHANTS,
+];
+
+const hasRootUnlock = (table: TableType, id: string, unlocks: any): boolean => {
+    switch (table) {
+        case TableType.BOSSES: return unlocks.bosses.includes(id);
+        case TableType.MINIGAMES: return unlocks.minigames.includes(id);
+        case TableType.GUILDS: return unlocks.guilds.includes(id);
+        case TableType.FARMING_LAYERS: return unlocks.farming.includes(id);
+        case TableType.MOBILITY: return unlocks.mobility.includes(id);
+        case TableType.ARCANA: return unlocks.arcana.includes(id);
+        case TableType.POH: return unlocks.housing.includes(id);
+        case TableType.STORAGE: return unlocks.storage.includes(id);
+        case TableType.MERCHANTS: return unlocks.merchants.includes(id);
+        default: return true;
+    }
+};
+
 export const alternativeRequirementText = (
     alternative: NonNullable<ContentRequirement['alternatives']>[number],
 ): string => 'One of: ' + alternative.routes.map(route => route.label).join(' or ');
@@ -95,21 +116,12 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
 
     const isCategoryUnlocked = (() => {
         if (req.category === TableType.QUESTS || req.category === TableType.AGILITY_COURSES || req.category === TableType.DIARIES) return true;
-        const rootSet = ROOT_UNLOCKS[req.category];
-        const isRootItem = rootSet ? rootSet.has(req.id) : false;
-        if (!isRootItem) return true;
-        switch(req.category) {
-            case TableType.BOSSES: return unlocks.bosses.includes(req.id);
-            case TableType.MINIGAMES: return unlocks.minigames.includes(req.id);
-            case TableType.GUILDS: return unlocks.guilds.includes(req.id);
-            case TableType.FARMING_LAYERS: return unlocks.farming.includes(req.id);
-            case TableType.MOBILITY: return unlocks.mobility.includes(req.id);
-            case TableType.ARCANA: return unlocks.arcana.includes(req.id);
-            case TableType.POH: return unlocks.housing.includes(req.id);
-            case TableType.STORAGE: return unlocks.storage.includes(req.id);
-            case TableType.MERCHANTS: return unlocks.merchants.includes(req.id);
-            default: return true;
-        }
+        if (ROOT_UNLOCKS[req.category]?.has(req.id)) return hasRootUnlock(req.category, req.id, unlocks);
+        // An id that is another table's root needs that Key: the shop
+        // 'Soda Ash (Charter Ships)' sits under Merchants but is reached with
+        // the Mobility unlock Charter Ships.
+        const otherTable = KEYED_TABLES.find(table => table !== req.category && ROOT_UNLOCKS[table]?.has(req.id));
+        return otherTable ? hasRootUnlock(otherTable, req.id, unlocks) : true;
     })();
 
     const totalReqs = req.regions.length + Object.keys(req.skills).length
