@@ -80,7 +80,7 @@
     "Last Man Standing": [{ "object": "Competitive" }],
     "Mage Arena": [{ "chunkName": "Mage Arena" }],
     "Nightmare Zone": [{ "npc": "Dominic Onion" }],
-    "Pest Control": [{ "chunkName": "Pest Control" }],
+    "Pest Control": [{ "chunkName": "Pest Control" }, { "npc": "Squire (Novice)" }],
     "Pete Kayer's Challenges": [{ "npc": "Pete Kayer" }],
     "Soul Wars": [{ "chunkName": "Soul Wars Lobby" }],
     "Temple Trekking": [{ "interior": "Temple Trekking Routes" }],

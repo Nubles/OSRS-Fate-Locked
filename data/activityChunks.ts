@@ -75,7 +75,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Nex": ["45,58"],
   "Nightmare Zone": ["40,48"],
   "Obor": ["48,54"],
-  "Pest Control": ["41,40"],
+  "Pest Control": ["41,40", "41,41"],
   "Pete Kayer's Challenges": ["49,56"],
   "Phantom Muspah": ["44,61"],
   "Phosani's Nightmare": ["58,51", "58,52"],
