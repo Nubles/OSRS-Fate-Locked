@@ -153,22 +153,23 @@ const getTierStyle = (tier: string): TierStyle => {
 };
 
 // --- New Suspense Animation Logic ---
-export const useRollSuspense = (onClick: (e: any) => void) => {
+/** Where a roll was clicked, and the card's 0.6 s rolling animation to play once the roll is going ahead. */
+export type RollPoint = { clientX: number; clientY: number; suspense?: () => Promise<void> };
+
+export const useRollSuspense = (onClick: (e: RollPoint) => void) => {
     const [isRolling, setIsRolling] = useState(false);
 
-    const triggerRoll = async (e: React.MouseEvent) => {
+    // handleRoll asks first (Ask before Key clicks) and plays the animation
+    // only for a roll that happens, then rolls.
+    const triggerRoll = (e: React.MouseEvent) => {
         if (isRolling) return;
-        
-        // Capture event data since synthetic event is reused
-        const eventData = { clientX: e.clientX, clientY: e.clientY };
-        
-        setIsRolling(true);
-        
-        // Suspense duration (0.6s to match loading bar animation)
-        await new Promise(resolve => setTimeout(resolve, 600));
-        
-        setIsRolling(false);
-        onClick(eventData);
+        const suspense = async () => {
+            setIsRolling(true);
+            // Suspense duration (0.6s to match loading bar animation)
+            await new Promise(resolve => setTimeout(resolve, 600));
+            setIsRolling(false);
+        };
+        onClick({ clientX: e.clientX, clientY: e.clientY, suspense });
     };
 
     return { isRolling, triggerRoll };
@@ -434,10 +435,11 @@ export const useFarmModel = () => {
     : `Chance = Level / 5 ${levelBonus > 0 ? '+' : '−'} ${Math.abs(levelBonus)}% (up to ${formatKeyPercent(LEVEL_ROLL_MAX + levelBonus)})`;
   const collectionRate = effectiveRate(DropSource.COLLECTION_LOG);
 
-  const handleRoll = (source: string, chance: number, e: { clientX: number; clientY: number }, context?: KeyRollContext) => {
-    const { clientX, clientY } = e;
-    confirmThen(`Roll for a Key from ${source}?`, () =>
-      rollForKey(source, chance, failureFateForSource(source as DropSource), clientX, clientY, undefined, context));
+  const handleRoll = (source: string, chance: number, e: RollPoint, context?: KeyRollContext) => {
+    const { clientX, clientY, suspense } = e;
+    const roll = () => rollForKey(source, chance, failureFateForSource(source as DropSource), clientX, clientY, undefined, context);
+    // The question first; a card's rolling animation only after a Yes.
+    confirmThen(`Roll for a Key from ${source}?`, () => { if (suspense) void suspense().then(roll); else roll(); });
   };
 
   const isVanilla = gameModeId === 'vanilla';
