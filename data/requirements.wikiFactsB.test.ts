@@ -158,4 +158,16 @@ describe("requirements part B: Champions' Guild 32 Quest Points (Wiki: Champions
       expect(buildGoalRoute(key, stateWith(withQuestPoints(32)))?.questPoints?.met, key).toBe(true);
     }
   });
+  it("the goal route counts them for the Champions' Guild shop, whose rule is kept on the guild", () => {
+    // Champions' Guild (Shop) carries no questPoints of its own: the guild's entry rule in
+    // data/activityRequirements.ts gates it, and the Strategy Guide and the Goal Tracker's list read it there.
+    // The goal route read only the row, so its Quest Points line was missing for this one goal.
+    const key = "Champions' Guild (Shop)";
+    expect(entry(key).questPoints).toBeUndefined();
+    expect(buildGoalRoute(key, stateWith(everythingButQuests()))?.questPoints).toMatchObject({ need: 32, have: 0, met: false });
+    expect(buildGoalRoute(key, stateWith(withQuestPoints(32)))?.questPoints?.met).toBe(true);
+    // The Goal Tracker's list names the rule once, not once per source.
+    expect(calculateGoalProgress(entry(key), everythingButQuests(), 'vanilla').missing.filter(line => /Quest Points/.test(line)))
+      .toEqual(['32 Quest Points']);
+  });
 });

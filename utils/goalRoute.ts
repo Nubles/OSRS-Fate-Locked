@@ -411,6 +411,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   };
   addSkills(req.skills);
   if (req.questPoints !== undefined) qpNeed = Math.max(qpNeed, req.questPoints);
+  // A guild's own entry rule (the Champions' Guild's 32 Quest Points) is kept on the guild in
+  // data/activityRequirements.ts, where the Strategy Guide and the Goal Tracker's list read it.
+  const entryQuestPoints = kind === 'strategy' ? getActivityReq(req.activity ?? req.id)?.questPoints : undefined;
+  if (entryQuestPoints !== undefined) qpNeed = Math.max(qpNeed, entryQuestPoints);
   for (const id of chainIds) {
     const q = QUEST_DATA[id];
     if (!q) continue;
