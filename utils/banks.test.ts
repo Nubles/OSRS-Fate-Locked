@@ -49,6 +49,21 @@ describe('bank data', () => {
     expect(BANKS.map(b => b.name)).not.toContain('Ardougne Market');
   });
 
+  it('names four banks for their place, not a landmark in their chunk, under the same ids', () => {
+    // List of banks; Mos Le'Harmless bank oldid 15211938; Tarn's Lair oldid 15327755 (banker Odovacar);
+    // Mor Ul Rek oldid 15394862 (north and east banks); Hallowed Sepulchre oldid 15387544.
+    expect(BANK_BY_ID['14638'].name).toBe("Mos Le'Harmless bank");
+    expect(BANK_BY_ID['13618'].name).toBe("Tarn's Lair bank");
+    expect(BANK_BY_ID['11313'].name).toBe('Mor Ul Rek (TzHaar City) banks');
+    expect(BANK_BY_ID['14644'].name).toBe('Hallowed Sepulchre bank chests');
+    for (const old of ['Pirate Base', 'Abandoned Mine', 'Karamja Volcano', 'East Darkmeyer']) {
+      expect(BANKS.map(b => b.name)).not.toContain(old);
+    }
+    // Saves and seeded draws hold ids and pool positions, which the rename leaves where they were.
+    expect([BANK_IDS.indexOf('13618'), BANK_IDS.indexOf('14644'), BANK_IDS.indexOf('11313'), BANK_IDS.indexOf('14638')])
+      .toEqual([0, 27, 52, 79]);
+  });
+
   it('bankId encodes cx*256+cy and round-trips against a known entry', () => {
     expect(bankId(19, 48)).toBe(String(19 * 256 + 48));
     // Every id resolves to a def.

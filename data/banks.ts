@@ -6,7 +6,7 @@
 export interface BankDef { id: string; name: string }
 
 export const BANKS: BankDef[] = [
-  { id: '13618', name: "Abandoned Mine" },
+  { id: '13618', name: "Tarn's Lair bank" },
   { id: '13105', name: "Al Kharid Palace" },
   { id: '5678', name: "Aldarin dock deposit box" },
   { id: '11578', name: "Ancient Prison bank" },
@@ -33,7 +33,7 @@ export const BANKS: BankDef[] = [
   { id: '5939', name: "Darkfrost Peak" },
   { id: '14388', name: "Darkmeyer" },
   { id: '7723', name: "Deepfin Point" },
-  { id: '14644', name: "East Darkmeyer" },
+  { id: '14644', name: "Hallowed Sepulchre bank chests" },
   { id: '12084', name: "East Falador" },
   { id: '6454', name: "East Woodcutting Guild deposit box" },
   { id: '10288', name: "East Yanille" },
@@ -58,7 +58,7 @@ export const BANKS: BankDef[] = [
   { id: '14908', name: "House on the Hill" },
   { id: '6191', name: "Hunter Guild" },
   { id: '9531', name: "Jatizso" },
-  { id: '11313', name: "Karamja Volcano" },
+  { id: '11313', name: "Mor Ul Rek (TzHaar City) banks" },
   { id: '11066', name: "Keldagrim bank and Blast Furnace chest" },
   { id: '6457', name: "Kourend Castle" },
   { id: '5941', name: "Land's End" },
@@ -85,7 +85,7 @@ export const BANKS: BankDef[] = [
   { id: '8253', name: "North Moonclan" },
   { id: '9778', name: "Ourania Altar" },
   { id: '10553', name: "Peer the Seer deposit service" },
-  { id: '14638', name: "Pirate Base" },
+  { id: '14638', name: "Mos Le'Harmless bank" },
   { id: '7227', name: "Piscarilius Bank" },
   { id: '10545', name: "Port Khazard" },
   { id: '14646', name: "Port Phasmatys" },

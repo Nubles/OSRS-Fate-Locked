@@ -35,7 +35,10 @@
     { "title": "Lunar Isle bank", "revision": 15345927, "url": "https://oldschool.runescape.wiki/w/Lunar_Isle_bank" },
     { "title": "Lunar Isle", "revision": 15375264, "url": "https://oldschool.runescape.wiki/w/Lunar_Isle" },
     { "title": "The Great Conch", "revision": 15376235, "url": "https://oldschool.runescape.wiki/w/The_Great_Conch" },
-    { "title": "Red Rock", "revision": 15248903, "url": "https://oldschool.runescape.wiki/w/Red_Rock" }
+    { "title": "Red Rock", "revision": 15248903, "url": "https://oldschool.runescape.wiki/w/Red_Rock" },
+    { "title": "Mos Le'Harmless bank", "revision": 15211938, "url": "https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank" },
+    { "title": "Mor Ul Rek", "revision": 15394862, "url": "https://oldschool.runescape.wiki/w/Mor_Ul_Rek" },
+    { "title": "Hallowed Sepulchre", "revision": 15387544, "url": "https://oldschool.runescape.wiki/w/Hallowed_Sepulchre" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -82,7 +85,11 @@
     { "id": "11830", "name": "Ruins of Camdozaal (via Ice Mountain)", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "10292", "name": "Ardougne north bank", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
     { "id": "10547", "name": "Ardougne south bank", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
-    { "id": "13361", "name": "Giants' Foundry bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
+    { "id": "13361", "name": "Giants' Foundry bank chest", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "14638", "name": "Mos Le'Harmless bank", "wiki": ["https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "13618", "name": "Tarn's Lair bank", "wiki": ["https://oldschool.runescape.wiki/w/Tarn%27s_Lair", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11313", "name": "Mor Ul Rek (TzHaar City) banks", "wiki": ["https://oldschool.runescape.wiki/w/Mor_Ul_Rek", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "14644", "name": "Hallowed Sepulchre bank chests", "wiki": ["https://oldschool.runescape.wiki/w/Hallowed_Sepulchre", "https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
   "exclusions": [
     { "name": "Tutorial Island bank", "reason": "Onboarding-only and absent from the walkable chunk registry." },

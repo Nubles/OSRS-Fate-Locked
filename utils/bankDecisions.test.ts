@@ -36,7 +36,7 @@ describe('bankDecisions', () => {
     // Lumbridge Castle's id also covers the bank in Dorgesh-Kaan, entered
     // from the castle's cellar, as its BANKS row already does.
     expect(decisions['12850'].physical).toEqual(['42,83', '50,50']);
-    // The Abandoned Mine's (Tarn's Lair) bank is one the facility data doesn't show.
+    // Tarn's Lair's bank (chunk Abandoned Mine) is one the facility data doesn't show.
     expect(decisions['13618'].physical).toEqual(['53,50']);
     // Merged into the banks they lead to, so they are no longer decided at all.
     expect(decisions['10810']).toBeUndefined();
