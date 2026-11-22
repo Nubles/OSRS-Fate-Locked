@@ -559,7 +559,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Singing Bowl', regions: ['Tirannwn'], inputs: {'Crystal Tool Seed': 1, 'Dragon Pickaxe': 1, 'Crystal Shard': 120}, skills: {'Smithing': 76, 'Crafting': 76} }
   ],
   'Infernal Pickaxe': [
-    { type: 'SKILL', name: 'Fusion', regions: ['Any'], inputs: {'Smouldering Stone': 1, 'Dragon Pickaxe': 1}, skills: {'Smithing': 85} }
+    { type: 'SKILL', name: 'Fusion', regions: ['Any'], inputs: {'Smouldering Stone': 1, 'Dragon Pickaxe': 1}, skills: {'Mining': 61, 'Smithing': 85} }
   ],
 
   // --- BARS & SMITHING ---
@@ -625,9 +625,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Ammo Mould': [
     { type: 'SHOP', name: 'Nulodion', regions: ['Asgarnia'], quests: ['Dwarf Cannon'], notes: 'Ice Mountain' }
-  ],
-  'Bar Mould': [
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Asgarnia'], notes: 'Crafting Guild / Shops' }
   ],
   'Goldsmith Gauntlets': [
     { type: 'QUEST', name: 'Family Crest', regions: ['Asgarnia', 'Kandarin', 'Misthalin', 'Kharidian Desert'], notes: 'Quest Reward' }
@@ -1221,7 +1218,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' }
   ],
   'Toxic Blowpipe': [
-    { type: 'SKILL', name: 'Crafting', regions: ['Any'], inputs: {'Tanzanite Fang': 1}, skills: {'Fletching': 53} }
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], inputs: {'Tanzanite Fang': 1}, skills: {'Fletching': 78} }
   ],
   'Trident of the Swamp': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], inputs: {'Magic Fang': 1, 'Trident of the Seas': 1}, skills: {'Crafting': 59} }
@@ -1295,10 +1292,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Singing Bowl', regions: ['Tirannwn'], inputs: {'Crystal Tool Seed': 1, 'Dragon Harpoon': 1, 'Crystal Shard': 120}, skills: {'Smithing': 76, 'Crafting': 76} }
   ],
   'Infernal Axe': [
-    { type: 'SKILL', name: 'Fusion', regions: ['Any'], inputs: {'Smouldering Stone': 1, 'Dragon Axe': 1}, skills: {'Smithing': 85} }
+    { type: 'SKILL', name: 'Fusion', regions: ['Any'], inputs: {'Smouldering Stone': 1, 'Dragon Axe': 1}, skills: {'Woodcutting': 61, 'Firemaking': 85} }
   ],
   'Infernal Harpoon': [
-    { type: 'SKILL', name: 'Fusion', regions: ['Any'], inputs: {'Smouldering Stone': 1, 'Dragon Harpoon': 1}, skills: {'Smithing': 85} }
+    { type: 'SKILL', name: 'Fusion', regions: ['Any'], inputs: {'Smouldering Stone': 1, 'Dragon Harpoon': 1}, skills: {'Fishing': 75, 'Cooking': 85} }
   ],
   'Smouldering Stone': [
     { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], unlockId: 'Cerberus' },
@@ -1420,9 +1417,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lava Dragon', regions: ['Wilderness'], rarity: 'Always', notes: 'Lava Dragon Isle' }
   ],
   'Superior Dragon Bones': [
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: 'Always' },
-    { type: 'DROP', name: 'Adamant Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], rarity: 'Always' },
-    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'], rarity: 'Always' }
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', rarity: 'Always' }
   ],
   'Hydra Bones': [
     { type: 'DROP', name: 'Alchemical Hydra', regions: ['Kourend & Kebos'], unlockId: 'Alchemical Hydra', rarity: 'Always' }
@@ -1537,7 +1532,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Dragon arrows variant also drops' }
   ],
   'Bronze Arrowtips': [
-    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 1 }, inputs: { 'Bronze Bar': 1 }, outputYield: 15 }
+    { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 5 }, inputs: { 'Bronze Bar': 1 }, outputYield: 15 }
   ],
   'Steel Arrowtips': [
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 35 }, inputs: { 'Steel Bar': 1 }, outputYield: 15 }
@@ -1558,15 +1553,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- TREASURE TRAIL REWARDS ---
   'Ranger Boots': [
-    { type: 'CLUE', name: 'Clue Scroll (Elite)', regions: ['Any'], rarity: '1/1133', notes: 'Reward casket' },
-    { type: 'CLUE', name: 'Clue Scroll (Hard)', regions: ['Any'], rarity: '1/1625', notes: 'Reward casket' }
+    { type: 'CLUE', name: 'Clue Scroll (Medium)', regions: ['Any'], rarity: '1/1133', notes: 'Reward casket' }
   ],
   'Robin Hood Hat': [
-    { type: 'CLUE', name: 'Clue Scroll (Hard)', regions: ['Any'], rarity: '1/1133', notes: 'Reward casket' },
-    { type: 'CLUE', name: 'Clue Scroll (Elite)', regions: ['Any'], rarity: '1/1133' }
+    { type: 'CLUE', name: 'Clue Scroll (Hard)', regions: ['Any'], rarity: '1/1625', notes: 'Reward casket' }
   ],
   'Holy Sandals': [
-    { type: 'CLUE', name: 'Clue Scroll (Elite)', regions: ['Any'], rarity: '1/1625', notes: 'Reward casket' }
+    { type: 'CLUE', name: 'Clue Scroll (Medium)', regions: ['Any'], rarity: '1/1133', notes: 'Reward casket' }
   ],
 
   // --- CRAFTED ITEMS (generated by scripts/buildCraftables.mjs) ---
@@ -2621,16 +2614,16 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Nex', regions: ['Asgarnia'], unlockId: 'Nex' }
   ],
   "Executioner's Axe Head": [
-    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis', rarity: '1/96' }
+    { type: 'DROP', name: 'Vardorvis', regions: ['Varlamore', 'Kourend & Kebos'], unlockId: 'Vardorvis', rarity: '1/1088' }
   ],
   'Eye of the Duke': [
-    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/96' }
+    { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/720' }
   ],
   'Leviathan Lure': [
-    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan', rarity: '1/96' }
+    { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan', rarity: '1/768' }
   ],
   "Siren's Staff": [
-    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer', rarity: '1/96' }
+    { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer', rarity: '1/512' }
   ],
   'Araxyte Venom Sack': [
     { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor' }
@@ -2671,7 +2664,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Volcanic Mine', regions: ['Islands & Others'], unlockId: 'Volcanic Mine', notes: 'Broken from Ore Pack' }
   ],
   'Dragon Harpoon': [
-    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: { 'Slayer': 62 }, rarity: '1/5000' },
+    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: { 'Slayer': 62 }, rarity: '1/10000 (1/2000 on task)' },
     { type: 'MINIGAME', name: 'Tempoross', regions: ['Kharidian Desert'], unlockId: 'Tempoross' }
   ],
   'Zamorakian Hasta': [
@@ -2699,10 +2692,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 27 }, inputs: { 'Oak Logs': 2 } }
   ],
   'Maple Shield': [
-    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 62 }, inputs: { 'Maple Logs': 2 } }
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 57 }, inputs: { 'Maple Logs': 2 } }
   ],
   'Yew Shield': [
-    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 77 }, inputs: { 'Yew Logs': 2 } }
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 72 }, inputs: { 'Yew Logs': 2 } }
   ],
   'Magic Shield': [
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 87 }, inputs: { 'Magic Logs': 2 } }
@@ -3023,7 +3016,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Bronze Bar', 'Iron Bar', 'Steel Bar', 'Gold Bar', 'Mithril Bar',
     'Adamantite Bar', 'Rune Bar', 'Blurite Bar', 'Elemental Bar',
     'Elemental Ore', 'Lovakite Bar', 'Silver Bar', 'Cannonball', 'Hammer',
-    'Ammo Mould', 'Bar Mould', 'Goldsmith Gauntlets', 'Ice Gloves',
+    'Ammo Mould', 'Goldsmith Gauntlets', 'Ice Gloves',
     'Smithing Catalyst', 'Imcando Hammer', 'Adamantite Nails', 'Sinew', 'Raw Beef',
   ],
   'Fishing & Food': [
