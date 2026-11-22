@@ -7345,6 +7345,9 @@
           },
           "regions": [
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         }
       ]
@@ -7681,6 +7684,9 @@
           },
           "regions": [
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         },
         {
@@ -7693,6 +7699,7 @@
             "Wintertodt Camp"
           ],
           "bosses": [
+            "Wintertodt",
             "Zalcano"
           ]
         },
@@ -7707,6 +7714,9 @@
           ],
           "minigames": [
             "Volcanic Mine"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         }
       ]
@@ -13134,6 +13144,9 @@
           ],
           "regions": [
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         },
         {
@@ -13151,6 +13164,9 @@
           },
           "regions": [
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         }
       ]
@@ -16265,6 +16281,9 @@
           },
           "regions": [
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         },
         {
@@ -16291,6 +16310,9 @@
           "regions": [
             "Feldip Hills",
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         },
         {
@@ -16313,6 +16335,9 @@
           ],
           "minigames": [
             "Temple Trekking"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         },
         {
@@ -16331,6 +16356,9 @@
           },
           "regions": [
             "Wintertodt Camp"
+          ],
+          "bosses": [
+            "Wintertodt"
           ]
         }
       ]
@@ -18893,6 +18921,7 @@
       "frem_elite_1",
       "frem_elite_5",
       "kan_elite_5",
+      "kan_hard_6",
       "kar_easy_9",
       "kar_elite_4",
       "kar_hard_2",
@@ -18901,8 +18930,10 @@
       "kou_elite_3",
       "kou_elite_7",
       "kou_med_11",
+      "mor_elite_2",
       "mor_elite_6",
       "var_elite_4",
+      "west_elite_1",
       "west_elite_2",
       "west_hard_11",
       "wild_elite_1",
@@ -18916,6 +18947,6 @@
       "lum_hard_7": "Barrows gloves come from Recipe for Disaster, not from the Barrows.",
       "wilderness_easy_8": "Only enters the King Black Dragon's lair; the boss is not fought."
     },
-    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno. Item audit, 10 October 2026: karamja_elite_4's antivenom needs Zulrah's scales, which come from Zulrah or from dissecting sacred eels at Zul-Andra. Item audit recheck, 13 October 2026: Zalcano drops runite ore, so it is one route to the runite bars of kan_elite_5 and var_elite_4."
+    "followUp": "Owner decision, 2 October 2026: a task that needs a boss's loot needs that boss. The KQ head (des_elite_4) drops only from the Kalphite Queen, and the fire cape (kar_elite_4) comes only from the TzHaar Fight Cave; the infernal cape needs a fire cape to enter the Inferno. Item audit, 10 October 2026: karamja_elite_4's antivenom needs Zulrah's scales, which come from Zulrah or from dissecting sacred eels at Zul-Andra. Item audit recheck, 13 October 2026: Zalcano drops runite ore, so it is one route to the runite bars of kan_elite_5 and var_elite_4. Diary recheck, 22 November 2026: the reward cart's logs, ores and seeds come from fighting the Wintertodt, so every Wintertodt route of kan_hard_6, kan_elite_5, mor_elite_2 and west_elite_1 needs the Wintertodt, as kou_med_11 does."
   }
 }
