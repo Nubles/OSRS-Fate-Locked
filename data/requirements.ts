@@ -1286,8 +1286,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dark Beasts': {
     id: 'Dark Beasts',
     category: TableType.MINIGAMES,
-    regions: ['Tirannwn', 'Misthalin'], // Mourner Tunnels / Isle of Souls
+    regions: ['Kandarin', 'Tirannwn'], // Mourner Tunnels (West Ardougne) / Iorwerth Dungeon
     skills: { 'Slayer': 90 },
+    quests: ['Mourning\'s End Part II'], // Partial: the new key opens the Mourner Tunnels
     description: 'Source of Dark Bow.'
   },
   'Smoke Devils': {

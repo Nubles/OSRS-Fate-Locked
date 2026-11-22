@@ -33,3 +33,12 @@ describe('Calcified Rocks (Wiki: Cam Torum mine, Calcified rocks)', () => {
   });
 });
 
+describe('Dark Beasts (Wiki: Dark beast, Mourner Tunnels)', () => {
+  it('live in the Mourner Tunnels and the Iorwerth Dungeon, behind Mourning\'s End Part II', () => {
+    expect(S['Dark Beasts'].regions).toEqual(['Kandarin', 'Tirannwn']);
+    expect(S['Dark Beasts'].quests).toEqual(["Mourning's End Part II"]);
+    expect(S['Dark Beasts'].skills).toEqual({ Slayer: 90 });
+    expect(analyzeRequirement(S['Dark Beasts'], maxed(), 'vanilla').isFullyPlayable).toBe(false);
+  });
+});
+
