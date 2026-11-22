@@ -608,6 +608,12 @@ describe('travel networks', () => {
     expect(all.filter((id, i) => all.indexOf(id) !== i)).toEqual([]);
   });
 
+  it("know every glider pilot's ids, Captain Shoracks' last-destination ones too (travel-b F2)", () => {
+    const npcs = (itemRow('network:gnome-glider').match as { npcs: readonly number[] }).npcs;
+    // Captain Klemfoodle's (10479-10485) and Captain Shoracks' (7178, then 10486-10491 by last destination).
+    for (const id of [10479, 10485, 7178, 10486, 10487, 10488, 10489, 10490, 10491]) expect(npcs, String(id)).toContain(id);
+  });
+
   it('dial every fairy ring code to where the wiki marks it', () => {
     const ring = itemRow('network:fairy-ring');
     const codes = Object.keys(ring.codes ?? {});

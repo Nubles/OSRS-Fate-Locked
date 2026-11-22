@@ -599,10 +599,11 @@ const NETWORKS: readonly TravelMethod[] = [
       '40,60', '47,50', '43,50', '26,55', '19,58',
     ], 'Travel', 'Last-destination'),
     'Spirit tree', 15356739),
-  // The pilots: Gnormadium Avlafrim, Captains Bleemadge, Errdo, Dalbur, Klemfoodle and Shoracks.
+  // The pilots: Gnormadium Avlafrim, Captains Bleemadge, Errdo, Dalbur, Klemfoodle and Shoracks. A pilot's id
+  // changes with the player's last destination: Captain Shoracks' are 10486-10491 (RuneLite's PILOT_APEATOLL_*).
   network('gnome-glider', 'Gnome glider', 'Gnome Gliders', {
     npcs: [7516, 7517, 10459, ...range(10461, 10466), ...range(10467, 10473), 6091, ...range(10452, 10458),
-      ...range(10479, 10485), 7178],
+      ...range(10479, 10485), 7178, ...range(10486, 10491)],
   }, {
     ...anyStop(['38,54', '44,54', '51,53', '51,50', '39,46', '42,43', '46,46'], 'Glider'),
     'Glider-to Gandius': { to: ['46,46'] },
