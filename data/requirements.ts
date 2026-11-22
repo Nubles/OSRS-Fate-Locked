@@ -446,7 +446,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: {},
-    description: 'Fire Giants, Chaos Dwarves (D2H), Air Obelisk.'
+    description: 'Fire Giants, Chaos Dwarves and Wine of Zamorak. Single-way combat.'
   },
   'Ferox Enclave': {
     id: 'Ferox Enclave',
@@ -467,7 +467,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: { 'Thieving': 39 },
-    description: 'Deep Wildy thieving and food shop.'
+    description: 'Deep Wildy thieving chests. Pick the door lock with a lockpick.'
   },
 
   // ============================================================================
@@ -534,7 +534,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
       { label: '60 Strength', skills: { Strength: 60 } },
       { label: '60 Agility', skills: { Agility: 60 } },
     ],
-    description: 'Source of Dragon Arrowtips.'
+    description: 'Slayer task monster in the God Wars Dungeon.'
   },
   'Spiritual Warriors': {
     id: 'Spiritual Warriors',
@@ -667,7 +667,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Tirannwn'], // Prifddinas
     skills: { 'Hunter': 80 },
     quests: ['Song of the Elves'],
-    description: 'Source of Elven Signet and Amulet of Power (t).'
+    description: 'Source of Elven Signet and noted Amulets of Power.'
   },
   'Lucky Implings': {
     id: 'Lucky Implings',

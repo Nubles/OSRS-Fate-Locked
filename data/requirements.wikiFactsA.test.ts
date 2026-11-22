@@ -87,3 +87,21 @@ describe('Teomat (Wiki: The Teomat)', () => {
   });
 });
 
+describe('Entry descriptions (Wiki: Obelisk of Air, Pirates\' Hideout, Spiritual ranger, Crystal impling)', () => {
+  it('the Deep Wilderness Dungeon has no air obelisk and chaos dwarves drop no dragon 2h', () => {
+    expect(S['Deep Wilderness Dungeon'].description).not.toMatch(/Obelisk|D2H/i);
+    expect(S['Deep Wilderness Dungeon'].description).toMatch(/wine of Zamorak/i);
+  });
+  it('the Pirates\' Hideout has thieving chests and no shop', () => {
+    expect(S["Pirate's Hideout"].description).not.toMatch(/shop/i);
+    expect(S["Pirate's Hideout"].description).toMatch(/chests/);
+  });
+  it('spiritual rangers do not drop dragon arrowtips', () => {
+    expect(S['Spiritual Rangers'].description).not.toMatch(/Dragon Arrowtips/i);
+  });
+  it('crystal implings give noted amulets of power, not (t)', () => {
+    expect(S['Crystal Implings'].description).not.toMatch(/\(t\)/);
+    expect(S['Crystal Implings'].description).toMatch(/noted Amulets of Power/);
+  });
+});
+
