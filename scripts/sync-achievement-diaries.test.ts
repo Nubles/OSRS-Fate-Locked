@@ -842,8 +842,8 @@ describe('Achievement Diary id-classification audit', () => {
     expect(kandarinBareHanded.quests).toBeUndefined();
     // Morytania Diary rev 15409170: only partial completion of In Aid of the Myreque (Burgh de Rott access).
     expect(byId.get('mor_elite_1')).toMatchObject({
-      skills: { Fishing: 96, Strength: 76 },
-      quests: [],
+      skills: { Fishing: 96, Strength: 76, Agility: 25, Crafting: 25, Mining: 15, Magic: 7 },
+      quests: ['In Search of the Myreque'],
       questProgress: [
         { quest: 'In Aid of the Myreque', label: 'Started In Aid of the Myreque' },
         { quest: 'Barbarian Training', label: 'Learned barehanded fishing in Barbarian Training' },

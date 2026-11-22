@@ -515,6 +515,12 @@ describe('Diary tasks that need only part of a quest', () => {
     expect(task('mor_elite_1').questProgress).toEqual(expect.arrayContaining([
       { quest: 'In Aid of the Myreque', label: 'Started In Aid of the Myreque' },
     ]));
+    // Starting the quest still needs what the quest page marks for the start: In Search of the Myreque done, and
+    // 25 Agility, 25 Crafting, 15 Mining and 7 Magic (In Aid of the Myreque, Questreqstart).
+    expect(task('mor_elite_1')).toMatchObject({
+      quests: ['In Search of the Myreque'],
+      skills: { Fishing: 96, Strength: 76, Agility: 25, Crafting: 25, Mining: 15, Magic: 7 },
+    });
   });
 
   it('boards the Swampy boat once Nature Spirit is started', () => {

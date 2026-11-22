@@ -13109,9 +13109,15 @@
       "description": "Catch a shark in Burgh de Rott with your bare hands.",
       "skills": {
         "Fishing": 96,
-        "Strength": 76
+        "Strength": 76,
+        "Agility": 25,
+        "Crafting": 25,
+        "Mining": 15,
+        "Magic": 7
       },
-      "quests": [],
+      "quests": [
+        "In Search of the Myreque"
+      ],
       "regions": [
         "Burgh de Rott"
       ],
