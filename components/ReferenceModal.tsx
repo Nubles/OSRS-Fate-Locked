@@ -268,7 +268,7 @@ export const ReferenceModal: React.FC<ReferenceModalProps> = ({ onClose, initial
                                         <div>
                                             <h4 className="font-bold text-gray-200">The Roll</h4>
                                             <p className="text-sm text-gray-400 mt-1">
-                                                The tracker draws to 0.1% precision, from 0.1 to 100.0 (Vanilla boss and clue rolls use 0.01%).
+                                                The tracker draws to 0.1% precision, from 0.1 to 100.0 (boss and minigame rolls in Vanilla and Chunked, and Vanilla clue rolls, use 0.01%).
                                                 <br/>
                                                 <span className="text-green-400">Success:</span> Roll at or under the threshold to get a Key.
                                                 <br/>

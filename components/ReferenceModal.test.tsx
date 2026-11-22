@@ -221,6 +221,13 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(unlocks).not.toContain('keeps its old odds');
   });
 
+  it('says the activity Key stash rules hold in Chunked too, not only Vanilla', () => {
+    expect(renderCodex('core', 'chunked')).toContain('(boss and minigame rolls in Vanilla and Chunked, and Vanilla clue rolls, use 0.01%)');
+    const altar = renderCodex('altar', 'chunked');
+    expect(altar).toContain('(a boss or minigame with 1 Key left gives 1)');
+    expect(altar).toContain('Odds boosts stop at 95%.');
+  });
+
   it('says every chunk gained in Chunked draws an omen', () => {
     const modes = renderCodex('modes', 'chunked');
     expect(modes).toContain('every chunk you gain draws one of fate&#x27;s eight omens (see Key Economy).');
