@@ -172,7 +172,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Tithe Farm': { skills: { Farming: 34 } },
   'Hallowed Sepulchre': { skills: { Agility: 52 }, quests: ['Sins of the Father'] },
   "Giants' Foundry": { skills: { Smithing: 15 }, quests: ['Sleeping Giants'] },
-  'Mastering Mixology': { skills: { Herblore: 60 } },
+  'Mastering Mixology': { skills: { Herblore: 60 }, quests: ['Children of the Sun'] },
   'Volcanic Mine': { skills: { Mining: 50 }, quests: ['Bone Voyage'], note: 'Petrified Pete takes 30 numulite each entry, or 3,000 once for good.' },
   'Pyramid Plunder': { skills: { Thieving: 21 }, questProgress: [{ quest: "Icthlarin's Little Helper", label: "Gained access to Sophanem by starting Icthlarin's Little Helper" }] },
   'Trouble Brewing': { skills: { Cooking: 40 }, quests: ['Cabin Fever'] },
@@ -181,7 +181,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
   // Either way in is enough: a crop circle at 17 Hunter, or Zanaris's wheat-field portal.
   'Impetuous Impulses': { oneOf: [{ skills: { Hunter: 17 } }, { manualRequirements: ['Completed Lost City, for the portal in Zanaris'] }] },
-  'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
+  'Vale Totems': { skills: { Fletching: 20 }, quests: ['Children of the Sun', 'Vale Totems'], note: 'Vale Totems miniquest (Auburn Valley) first.' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
   // Anyone can take the challenges; claiming the rewards needs 750 total level.
   // The Easy Wilderness Diary requirement was removed on 14 October 2026

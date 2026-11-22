@@ -10,6 +10,7 @@ import { QUEST_DATA } from './questData';
 import { REGIONS_LIST, REGION_GROUPS } from './items';
 import { createFreshState } from '../context/GameContext';
 import { isAreaReachable } from '../utils/reachability';
+import { evaluateActivityReadiness } from '../utils/activityReadiness';
 
 const ALL_ACTIVITY_ITEMS = new Set<string>([
   ...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST, ...MOBILITY_LIST, ...ARCANA_LIST,
@@ -96,4 +97,43 @@ describe('activity requirements + regions consistency', () => {
       expect(CONTINENTS.has(reg), `${item}: bad region "${reg}"`).toBe(true);
     }
   });
+});
+
+// Wiki facts for minigame, guild and storage rows, checked in November 2026.
+describe('activity rows follow the Wiki', () => {
+  const needsCotS = (quests: string[] = []): boolean => {
+    const seen = new Set<string>();
+    const walk = (id: string): boolean => {
+      if (id === 'Children of the Sun') return true;
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return (QUEST_DATA[id]?.prereqs ?? []).some(walk);
+    };
+    return quests.some(walk);
+  };
+  const ready = (item: string, setup: (u: ReturnType<typeof createFreshState>['unlocks']) => void) => {
+    const u = createFreshState().unlocks;
+    u.regions = [...REGIONS_LIST];
+    setup(u);
+    return evaluateActivityReadiness(true, getActivityReq(item), u, 'vanilla');
+  };
+
+  it('every gated Varlamore minigame or guild asks for Children of the Sun (Wiki: Varlamore)', () => {
+    const ACTIVITIES = new Set<string>([...MINIGAMES_LIST, ...GUILDS_LIST]);
+    const missing = Object.entries(ACTIVITY_REGIONS)
+      .filter(([item, region]) => region === 'Varlamore' && ACTIVITIES.has(item) && ACTIVITY_REQUIREMENTS[item])
+      .filter(([item]) => !needsCotS([
+        ...(ACTIVITY_REQUIREMENTS[item].quests ?? []),
+        ...(ACTIVITY_REQUIREMENTS[item].questProgress ?? []).map(p => p.quest),
+      ]))
+      .map(([item]) => item);
+    expect(missing).toEqual([]);
+  });
+
+  it('Mastering Mixology and Vale Totems name their quest gates', () => {
+    expect(ACTIVITY_REQUIREMENTS['Mastering Mixology']).toMatchObject({ skills: { Herblore: 60 }, quests: ['Children of the Sun'] });
+    expect(ACTIVITY_REQUIREMENTS['Vale Totems']).toMatchObject({ skills: { Fletching: 20 }, quests: ['Children of the Sun', 'Vale Totems'] });
+    expect(ready('Mastering Mixology', u => { u.skills.Herblore = 10; u.levels.Herblore = 60; u.quests = ['Druidic Ritual']; }).status).toBe('NOT_READY');
+  });
+
 });
