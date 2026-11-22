@@ -97,7 +97,8 @@ function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: Un
     : { status: 'UNKNOWN', reasons: [`${name ?? 'Bank facility'} access requirements need review`] };
   return { status: entry.status === 'NOT_READY' || access.status === 'NOT_READY' ? 'NOT_READY'
     : entry.status === 'UNKNOWN' || access.status === 'UNKNOWN' ? 'UNKNOWN' : 'ALLOWED',
-    reasons: [...new Set([...entry.reasons, ...access.reasons])] };
+    // A gate's "Complete X" repeats a quest X the place's own entry already names.
+    reasons: [...new Set([...entry.reasons, ...access.reasons.filter(reason => !entry.reasons.some(r => reason === `Complete ${r}`))])] };
 }
 
 interface BankFacility { name: string; kind: EntityKind; requirements?: string[] }

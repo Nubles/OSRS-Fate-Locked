@@ -195,7 +195,8 @@ describe('B3: a bank the Wiki names a requirement for states it, not "needs revi
     expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
     const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
     expect(without.status).toBe('NOT_READY');
-    expect(without.reasons).toContain(`Complete ${quest}`);
+    // The quest once: as the gate's "Complete X", or bare where the place's own entry already names it.
+    expect(without.reasons.filter(reason => reason === quest || reason === `Complete ${quest}`)).toHaveLength(1);
   });
 
   // Zul-Andra oldid 15402994: Regicide, then "volunteer themselves as sacrifice to Zulrah".
@@ -223,6 +224,13 @@ describe('B3: a bank the Wiki names a requirement for states it, not "needs revi
     expect(bankAccess('10275', everything()).status).toBe('UNKNOWN');
     expect(bankAccess('10275', everything(47)).reasons).toContain('Construction level 48');
     expect(bankAccess('10275', everything(99, { quests: questsWithout('Fallen From Grace') })).reasons).toContain('Complete Fallen From Grace');
+  });
+
+  it('names a quest the place already asks for only once', () => {
+    const fresh = createFreshState().unlocks;
+    expect(bankAccess('5678', fresh).reasons).toEqual(['Children of the Sun']);
+    expect(bankAccess('14908', fresh).reasons).toEqual(['Bone Voyage']);
+    expect(bankAccess('14907', fresh).reasons).toEqual(['Bone Voyage', 'Construction level 21']);
   });
 
   it('leaves none of these at "needs review" for a run that has everything', () => {
