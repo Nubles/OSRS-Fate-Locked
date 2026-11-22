@@ -71,3 +71,13 @@ describe('Agility shortcuts (Wiki: Shortcuts list, Rocks (Eagles\' Peak), The Ho
   });
 });
 
+describe('Ectoplasmator (Wiki: Ectoplasmator)', () => {
+  it('needs 40 Prayer', () => {
+    expect(S.Ectoplasmator.skills).toEqual({ Prayer: 40 });
+  });
+  it("leaves the Champions' Guild's 32 quest points to its activity gate", () => {
+    const u = maxed();
+    expect(analyzeRequirement(S["Champions' Guild (Shop)"], u, 'vanilla').missingChecks).toContain('32 Quest Points');
+  });
+});
+

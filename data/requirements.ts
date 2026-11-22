@@ -640,7 +640,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Champions\' Guild',
     category: TableType.GUILDS,
     regions: ['Misthalin'],
-    skills: {}, // 32 QP
+    skills: {}, // 32 QP: enforced by its activity requirement
     description: 'Shop sells an adamant platebody and black platelegs.'
   },
   'Ranging Guild (Minigame)': {
@@ -821,7 +821,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ectoplasmator',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Soul Wars
-    skills: {},
+    skills: { 'Prayer': 40 },
     description: 'Prayer XP from spectral creatures. Soul Wars.'
   },
   'Fish Sack': {
