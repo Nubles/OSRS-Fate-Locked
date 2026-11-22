@@ -508,6 +508,15 @@ describe('Diary tasks that need only part of a quest', () => {
     });
   });
 
+  it('catches the Burgh de Rott shark once In Aid of the Myreque is started', () => {
+    // The pinned wiki text said completion; the current page says "Partial completion" (rev 15409170), and
+    // Burgh de Rott needs only the quest started.
+    expect(task('mor_elite_1').quests ?? []).not.toContain('In Aid of the Myreque');
+    expect(task('mor_elite_1').questProgress).toEqual(expect.arrayContaining([
+      { quest: 'In Aid of the Myreque', label: 'Started In Aid of the Myreque' },
+    ]));
+  });
+
   it('boards the Swampy boat once Nature Spirit is started', () => {
     expect(task('mor_med_7')).toMatchObject({
       quests: ['Priest in Peril', 'The Restless Ghost'],
