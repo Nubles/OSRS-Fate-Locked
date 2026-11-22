@@ -161,7 +161,7 @@ describe('unlocks added in the 9 November 2026 review', () => {
     expect(SKILL_UNLOCK_DATA.Runecraft[8]).toContain('Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Gauntlets/Boots');
     expect(SKILL_UNLOCK_DATA.Defence[1]).toContain('Lvl 10: Hard Leather Shield');
     expect(SKILL_UNLOCK_DATA.Attack[8]).toContain("Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor's Mace");
-    expect(SKILL_UNLOCK_DATA.Defence[5]).toContain('Lvl 45: Berserker/Archer/Farseer Helms');
+    expect(SKILL_UNLOCK_DATA.Defence[5]).toContain('Lvl 45: Berserker/Warrior/Archer/Farseer Helms');
     expect(SKILL_UNLOCK_DATA.Slayer[4]).toContain('Lvl 33: Harpie Bug Swarms (Lit Bug Lantern)');
   });
 
