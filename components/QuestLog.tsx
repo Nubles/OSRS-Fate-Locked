@@ -23,7 +23,7 @@ import {
   questRequirementOptionLabel,
   withSkillGateQuests,
 } from '../utils/journalStatus';
-import { requestManualAttestation } from '../utils/manualAttestation';
+import { requestQuestAttestation } from '../utils/manualAttestation';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -576,12 +576,7 @@ export const useQuestJournal = (externalSearch = '') => {
 
   const handleQuestToggle = (e: React.MouseEvent, quest: QuestData) => {
       e.stopPropagation();
-      const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
-      const attestation = requestManualAttestation(
-        quest.name,
-        eligibility,
-        message => window.confirm(message),
-      );
+      const attestation = requestQuestAttestation(quest, unlocks, gameModeId, message => window.confirm(message));
       if (attestation === null) return;
       const { clientX, clientY } = e;
       confirmThen(`Complete ${quest.name} and roll for a Key?`, () => {
