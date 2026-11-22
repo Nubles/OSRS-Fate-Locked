@@ -4739,6 +4739,266 @@
           ]
         },
         {
+          "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Falador ruins",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Falador"
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Falador ruins",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Falador"
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Falador ruins",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Falador"
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Falador ruins",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Falador"
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Runecraft": 77
+          },
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with willow, magic or redwood logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
           "label": "3 Raiments of the Eye pieces (Head, Body, Legs), Falador ruins",
           "skills": {
             "Runecraft": 66

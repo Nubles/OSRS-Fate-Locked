@@ -525,6 +525,25 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
   });
 });
 
+describe('Diary tasks with Raiments of the Eye routes', () => {
+  it('crafts 252 air runes at 77 Runecraft with one Raiments piece and a lit abyssal lantern', () => {
+    // Falador Diary rev 15404232: "77 Runecraft with 2 Raiments of the Eye pieces or 1 Raiments of the Eye
+    // piece and abyssal lantern (with willow, magic, or redwood logs)". The lantern is worn in the shield slot.
+    const lantern = (task('fal_elite_1').oneOf ?? []).filter(route => route.label?.includes('abyssal lantern'));
+    expect(lantern).toHaveLength(8);
+    for (const route of lantern) {
+      expect(route.skills).toEqual({ Runecraft: 77 });
+      expect(route.equipmentRequirements?.map(requirement => requirement.slot)).toContain('Shield');
+    }
+    const crafter = account({
+      skills: { Runecraft: 10 }, levels: { Runecraft: 77 }, regions: ['Falador'], quests: ['Rune Mysteries'], equipment: { Head: 1 },
+    });
+    expect(evaluateDiaryTaskEligibility(task('fal_elite_1'), crafter).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('fal_elite_1'), { ...crafter, equipment: { Head: 1, Shield: 1 } }).machineEligible)
+      .toBe(true);
+  });
+});
+
 describe('Diary tasks an ironman does the ironman way', () => {
   it('needs 69 Hunter for the spottier cape, as an ironman catches the dashing kebbits', () => {
     // "Catching dashing kebbits at the Piscatoris falconry area requires 69 Hunter" (Spottier cape rev 15183240).
