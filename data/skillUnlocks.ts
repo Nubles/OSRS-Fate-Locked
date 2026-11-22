@@ -204,7 +204,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Scythe of Vitur & Soulreaper Axe'
     ],
     9: [
-      'Lvl 82: Osmumten\'s Fang'
+      'Lvl 82: Osmumten\'s Fang',
+      'Lvl 85: Obligator'
     ],
     10: [
       'Lvl 99: Skill Mastery (Attack Cape)'
@@ -490,6 +491,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Elidinis\' Ward',
       'Lvl 80: Ferocious Gloves',
       'Lvl 80: Fortified Masori',
+      'Lvl 80: Rondache',
       'Lvl 80: Torva Armour'
     ],
     9: [],
@@ -817,6 +819,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 84: Dragon Bolts, Amethyst Javelins',
       'Lvl 84: Rosewood Blowpipe',
       'Lvl 85: Magic Longbows',
+      'Lvl 86: Ascension Bolts (Diamond, Onyx)',
       'Lvl 87: Magic Shields',
       'Lvl 90: Dragon Arrows, Amethyst Darts'
     ],
@@ -1085,7 +1088,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 81: Wind Surge',
       'Lvl 82: Ice Blitz, Magic Imbue, Sanguinesti Staff',
       'Lvl 83: Barrows Teleport, Fertile Soil',
-      'Lvl 85: Tele Block, Water Surge, Tumeken\'s Shadow',
+      'Lvl 85: Tele Block, Water Surge, Tumeken\'s Shadow, Zorya\'s Tome',
       'Lvl 86: Plank Make, Smoke Barrage',
       'Lvl 87: Lvl-6 Enchant, Enchant Bolt (Onyx)',
       'Lvl 88: Shadow Barrage',
@@ -1151,7 +1154,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 71: Crystal Pickaxe',
       'Lvl 72: Basalt & Salts',
       'Lvl 74: Nickel Ore',
-      'Lvl 75: Ancient Essence'
+      'Lvl 75: Ancient Essence',
+      'Lvl 80: Ascension Shards (While Guthix Sleeps)'
     ],
     9: [
       'Lvl 85: Runite Ore'
@@ -1225,6 +1229,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Elidinis\' Ward'
     ],
     9: [
+      'Lvl 84: Zeal (Attack 75, Strength 75, Defence 70; Horn of Bran)',
       'Lvl 85: Bless Spirit Shields',
       'Lvl 90: Sigil Smithing'
     ],
@@ -1295,6 +1300,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Pegasian Boots',
       'Lvl 75: Toxic Blowpipe, Twisted Buckler',
       'Lvl 80: Bow of Faerdhinen',
+      'Lvl 80: Ascension Crossbows',
       'Lvl 80: Masori Armour',
       'Lvl 80: Venator Bow',
       'Lvl 80: Zaryte Crossbow'

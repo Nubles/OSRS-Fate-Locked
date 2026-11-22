@@ -133,6 +133,17 @@ describe('unlocks added in the 9 November 2026 review', () => {
     expect(SKILL_UNLOCK_DATA.Slayer[6]).toContain('Lvl 58: Cave Horrors (Witchwood Icon), Black Mask');
   });
 
+  // The Fractured Archive (20 Oct 2026): read from each skill's level-up table on 22 Nov 2026.
+  it.each([
+    ['Attack', 'Obligator', 85], ['Defence', 'Rondache', 80], ['Ranged', 'Ascension Crossbows', 80],
+    ['Magic', "Zorya's Tome", 85], ['Prayer', 'Zeal (Attack 75, Strength 75, Defence 70; Horn of Bran)', 84],
+    ['Mining', 'Ascension Shards (While Guthix Sleeps)', 80], ['Fletching', 'Ascension Bolts (Diamond, Onyx)', 86],
+  ] as const)('%s: %s from The Fractured Archive is listed at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.level === level && row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0].tier).toBe(Math.ceil(level / 10));
+  });
+
   it('lists all nine house locations at their Construction levels', () => {
     const moves = rowsFor('Construction').filter(row => row.text.includes('Move to')).map(row => [row.text.match(/Move to (\w+)/)?.[1], row.level]);
     expect(moves).toEqual([
