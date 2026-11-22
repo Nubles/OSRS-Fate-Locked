@@ -73,4 +73,20 @@ describe('reviewed shop placements (chunk audit, November 2026)', () => {
     expect((full.taskUnlocks.Shops as Record<string, Record<string, string[]>>)['Lost Property shop']['13363'])
       .toEqual(['Previously earned the replacement quest reward']);
   });
+
+  it("names Sir Tiffy Cashien's shops by their Wiki titles", () => {
+    // OSRS Wiki 'Initiate Temple Knight Armoury' rev 15318625 and 'Proselyte Temple Knight Armoury' rev 15318742.
+    const shops = full.taskUnlocks.Shops as Record<string, Record<string, string[]>>;
+    const items = full.shopItems as Record<string, string[]>;
+    for (const [title, quest, item] of [
+      ['Initiate Temple Knight Armoury', 'Recruitment Drive', 'Initiate sallet'],
+      ['Proselyte Temple Knight Armoury', 'The Slug Menace', 'Proselyte sallet'],
+    ]) {
+      expect(shopsIn('11828')).toContain(title);
+      expect(shops[title]['11828']).toEqual([`${quest} Complete the quest`]);
+      expect(items[title]).toContain(item);
+    }
+    expect(shopsIn('11828').filter(name => name.startsWith('Sir Tiffy Cashien'))).toEqual([]);
+    expect(Object.keys(items).filter(name => name.startsWith('Sir Tiffy Cashien'))).toEqual([]);
+  });
 });

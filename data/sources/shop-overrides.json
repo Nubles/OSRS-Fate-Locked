@@ -2,6 +2,28 @@
   "reviewedAt": "2026-09-21",
   "records": [
     {
+      "name": "Initiate Temple Knight Armoury",
+      "status": "stocked",
+      "sourceNames": [
+        "Sir Tiffy Cashien (Recruitment Drive)"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Initiate_Temple_Knight_Armoury?oldid=15318625",
+        "revision": 15318625
+      }
+    },
+    {
+      "name": "Proselyte Temple Knight Armoury",
+      "status": "stocked",
+      "sourceNames": [
+        "Sir Tiffy Cashien (The Slug Menace)"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Proselyte_Temple_Knight_Armoury?oldid=15318742",
+        "revision": 15318742
+      }
+    },
+    {
       "name": "Slayer Equipment (shop)",
       "status": "stocked",
       "npcNames": [
