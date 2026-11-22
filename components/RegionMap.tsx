@@ -2198,7 +2198,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     <div data-testid="world-map-box" className="h-[min(600px,70vh)] lg:absolute lg:inset-0 lg:h-auto w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
       {/* ── Chunk lens control ─────────────────────────────────────────────── */}
       {!authoring && (
-        <div className="absolute top-2 left-2 z-30 w-64 max-w-[70%]">
+        <div data-testid="map-lens" className="absolute top-2 left-2 z-40 w-64 max-w-[70%]">
           <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="flex items-center gap-1.5 px-2 py-1.5">
               <Search size={13} className="text-gray-500 shrink-0" />
@@ -2308,8 +2308,10 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
       )}
 
       {/* ── Map overlay layers ─────────────────────────────────────────────── */}
+      {/* Capped to stop below the idle lens (about 98 px tall); the lens sits
+          above it (z-40) so its open suggestion list is never covered. */}
       {!authoring && overlayCategories.length > 0 && (
-        <div className="absolute bottom-2 left-2 z-30 w-56 max-w-[70%] max-h-[calc(100%-3.5rem)] flex flex-col">
+        <div className="absolute bottom-2 left-2 z-30 w-56 max-w-[70%] max-h-[calc(100%-7rem)] flex flex-col">
           <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden flex flex-col min-h-0">
             <div className={`flex items-center gap-1.5 px-2 py-1.5 shrink-0 ${overlayCollapsed ? '' : 'border-b border-white/5'}`}>
               <button onClick={() => setOverlayCollapsed(c => !c)} className="flex items-center gap-1.5 flex-1 min-w-0 text-left" title={overlayCollapsed ? 'Expand overlays' : 'Collapse overlays'}>

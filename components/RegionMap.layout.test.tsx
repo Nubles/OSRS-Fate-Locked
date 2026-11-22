@@ -1,6 +1,10 @@
 /* @vitest-environment jsdom */
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { resolve } from 'node:path';
 
 const flags = vi.hoisted(() => ({ authoring: false }));
 vi.mock('../utils/mapAuthoring', () => ({
@@ -76,8 +80,27 @@ describe('World map box in the classic layout', () => {
     const panel = list.parentElement!;
     expect(panel.className.split(/\s+/)).toEqual(expect.arrayContaining(['flex', 'flex-col', 'min-h-0']));
     const anchor = panel.parentElement!;
-    expect(anchor.className).toContain('max-h-[calc(100%-3.5rem)]');
-    expect(anchor.className.split(/\s+/)).toEqual(expect.arrayContaining(['absolute', 'flex', 'flex-col']));
+    // Stops 7rem (112 px) short of the box top, below the idle lens panel.
+    expect(anchor.className).toContain('max-h-[calc(100%-7rem)]');
+    expect(anchor.className.split(/\s+/)).toEqual(expect.arrayContaining(['absolute', 'flex', 'flex-col', 'z-30']));
+  });
+
+  it('draws the lens, and its suggestion list, above the overlay panel', async () => {
+    let view!: ReturnType<typeof render>;
+    await act(async () => { view = render(<RegionMap />); });
+    const lens = view.getByTestId('map-lens');
+    expect(lens.className.split(/\s+/)).toEqual(expect.arrayContaining(['absolute', 'top-2', 'z-40']));
+    expect(lens.className).not.toContain('z-30');
+  });
+
+  it('lets the World column scroll in MAP view when the window is too short for the map floor', () => {
+    const src = readFileSync(resolve('components/Dashboard.tsx'), 'utf8');
+    const column = src.match(/data-testid="world-column" className=\{`([^`]*)`\}/);
+    expect(column, 'world column').not.toBeNull();
+    // MAP view scrolls; LIST view keeps its own inner scroller.
+    expect(column![1]).toContain("worldView === 'MAP' ? 'lg:overflow-y-auto");
+    expect(column![1]).toContain(": 'lg:overflow-hidden'");
+    expect(src).toContain('flex-1 lg:min-h-[280px]');
   });
 
   it('leaves the OSRS layout map without the classic box', async () => {
