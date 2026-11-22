@@ -211,8 +211,8 @@ const articles: readonly QuestGuideArticle[] = [
     itemsObtained: ['Air talisman from Duke Horacio.', 'Research package from Sedridor.', 'Research notes from Aubury.'],
     recommended: [],
     enemies: ['No combat required.'],
-    rewards: ['1 quest point', 'An air talisman', 'Access to mine rune essence.', 'Use random-event lamps and books of knowledge on Runecraft.', '5 Kudos, claimed separately from Historian Minas in Varrock Museum.'],
-    sourceUrl: 'https://oldschool.runescape.wiki/w/Rune_Mysteries?oldid=15275863',
+    rewards: ['1 quest point', '500 Runecraft XP', 'An air talisman', 'Access to mine rune essence.', 'Use random-event lamps and books of knowledge on Runecraft.', '5 Kudos, claimed separately from Historian Minas in Varrock Museum.'],
+    sourceUrl: 'https://oldschool.runescape.wiki/w/Rune_Mysteries?oldid=15403897',
     steps: {
       'rune-mysteries:start-with-duke': {
         section: 'A mysterious talisman',
