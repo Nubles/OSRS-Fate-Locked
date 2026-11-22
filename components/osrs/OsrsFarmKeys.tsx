@@ -4,6 +4,7 @@ import { DropSource, TableType, type LogEntry } from '../../types';
 import { DROP_RATES, BOSSES_LIST } from '../../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, type BossTier } from '../../data/bossKeyTiers';
 import { useGame } from '../../context/GameContext';
+import { KEY_CHANCE_BONUS_TITLE } from '../../utils/keyChance';
 import { evaluateActivityReadiness } from '../../utils/activityReadiness';
 import { getUtilityActivityReq } from '../../utils/utilityReadiness';
 import { wikiService } from '../../services/WikiService';
@@ -215,7 +216,7 @@ const BLOCKED_COLOR = '#ff981f';
 
 // Rounded so summed boosts never print as 0.30000000000000004.
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
-  bonus ? <span className="okf-bonus" title="Bonus odds from region passives and achievements" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030' }}>{bonus > 0 ? '+' : '−'}{Number(Math.abs(bonus).toFixed(2))}</span> : null;
+  bonus ? <span className="okf-bonus" title={KEY_CHANCE_BONUS_TITLE} style={{ color: bonus > 0 ? '#00ff00' : '#ff3030' }}>{bonus > 0 ? '+' : '−'}{Number(Math.abs(bonus).toFixed(2))}</span> : null;
 
 /** Wide: the NPC card (FarmKeys-NPCs board). */
 const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, reserveExtra = false }) => {

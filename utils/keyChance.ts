@@ -117,6 +117,9 @@ export const keyChance = (
   context?: KeyRollContext,
 ): number | null => keyRollOdds(state, source, rate, context)?.threshold ?? null;
 
+/** The tooltip on the +N / -N badge that shows keyChanceBonus, in both layouts. */
+export const KEY_CHANCE_BONUS_TITLE = 'Odds changed by achievements, rituals and omens (and region passives in Region Rush)';
+
 /** How far the run's boosts and rituals move a roll from its base rate, in points. */
 export const keyChanceBonus = (
   state: KeyChanceState,

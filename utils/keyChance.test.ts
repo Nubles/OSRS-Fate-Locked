@@ -156,3 +156,16 @@ describe('no screen works out a Key chance on its own', () => {
     expect(offenders.sort()).toEqual(['SkillInfoBox.tsx', 'SkillRollOdds.tsx']);
   });
 });
+
+describe('the bonus badge tooltip', () => {
+  it('is one string in both layouts and credits what the live modes really add', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { KEY_CHANCE_BONUS_TITLE } = await import('./keyChance');
+    expect(KEY_CHANCE_BONUS_TITLE).toMatch(/^Odds changed by achievements, rituals and omens/);
+    for (const file of ['components/ActionSection.tsx', 'components/osrs/OsrsFarmKeys.tsx']) {
+      const src = readFileSync(file, 'utf8');
+      expect(src).toContain('title={KEY_CHANCE_BONUS_TITLE}');
+      expect(src).not.toMatch(/Region passive modifier active|Bonus odds from region passives/);
+    }
+  });
+});

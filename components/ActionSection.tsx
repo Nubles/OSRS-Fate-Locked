@@ -9,7 +9,7 @@ import { BookOpen, ScrollText, Dices } from './OsrsIcon';
 import { Crosshair } from 'lucide-react';
 import { wikiService } from '../services/WikiService';
 import { usesActivityKeyReserves } from '../config/gameModes';
-import { keyChance, keyChanceBonus } from '../utils/keyChance';
+import { keyChance, keyChanceBonus, KEY_CHANCE_BONUS_TITLE } from '../utils/keyChance';
 import { formatKeyPercent } from '../utils/keyRoll';
 import { EARN_METHODS, failureFateForSource, LEVEL_ROLL_MAX } from '../config/economy';
 import { BRUTUS_BOSS_NAME, vanillaBossKeyStage, type KeyRollContext } from '../config/vanillaKeyEconomy';
@@ -193,13 +193,13 @@ export const RollingOverlay = () => (
 );
 
 // --- Slayer Card Component ---
-// Small "+N" / "-N" badge shown when region passives shift a roll's odds.
+// Small "+N" / "-N" badge shown when the run's boosts, rituals or omens shift a roll's odds.
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) => {
   if (!bonus) return null;
   const up = bonus > 0;
   return (
     <span
-      title="Region passive modifier active"
+      title={KEY_CHANCE_BONUS_TITLE}
       className={`text-[9px] font-bold ${up ? 'text-emerald-400' : 'text-red-400'}`}
     >
       {up ? '+' : '−'}{Math.abs(bonus)}
