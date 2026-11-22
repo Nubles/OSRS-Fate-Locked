@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BANK_IDS } from '../data/banks';
 import { readBankLocationRegistry } from './bank-locations.mjs';
-import { buildBankDefinitions, generateBankAccessSource, generateBankSource, orderBanksForRolls, readBankRollOrder } from './gen-banks.mjs';
+import {
+  buildBankDefinitions, facilityPictureKind, generateBankAccessSource, generateBankPictureSource, generateBankSource,
+  orderBanksForRolls, readBankRollOrder,
+} from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 describe('bank source generator', () => {
@@ -107,6 +110,28 @@ describe('bank source generator', () => {
       readFileSync('data/bankAccess.ts', 'utf8'),
       generateBankAccessSource(registry),
     )).toBe(true);
+    expect(generatedTextMatches(
+      readFileSync('data/bankPictureKinds.ts', 'utf8'),
+      generateBankPictureSource(doc, registry),
+    )).toBe(true);
+  });
+
+  it('reads a bank picture from the facility, not from the place name', () => {
+    expect(facilityPictureKind('Bank booth')).toBe('booth');
+    expect(facilityPictureKind('Bank counter')).toBe('booth');
+    expect(facilityPictureKind('Banker', 'npc')).toBe('booth');
+    expect(facilityPictureKind('Gnome banker', 'npc')).toBe('booth');
+    expect(facilityPictureKind('Bank chest')).toBe('chest');
+    expect(facilityPictureKind('Bank Chest-wreck')).toBe('chest');
+    expect(facilityPictureKind('Bank chest space')).toBe('chest');
+    expect(facilityPictureKind('Zul-Andra deposit chest', 'registry')).toBe('chest');
+    expect(facilityPictureKind('Bank Deposit Box')).toBe('box');
+    expect(facilityPictureKind('Guardians of the Rift deposit pool', 'registry')).toBe('box');
+    expect(facilityPictureKind('Keldagrim bank', 'registry')).toBe('booth');
+    expect(facilityPictureKind('Keldagrim bank')).toBeUndefined();
+    for (const none of ['Cloud bank', 'Salt Deposit', 'Bank buffalo', 'Banker tutor', 'Peer the Seer']) {
+      expect(facilityPictureKind(none, /buffalo|tutor|Peer/.test(none) ? 'npc' : 'object'), none).toBeUndefined();
+    }
   });
 
   it('keeps the access rules out of the bank list, which loads with the first screen', () => {
