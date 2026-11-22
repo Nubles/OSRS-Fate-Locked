@@ -385,7 +385,7 @@ const PLACED: Record<string, number> = {
     'Corrupted axe', 'Corrupted harpoon', 'Corrupted pickaxe', 'Crystal axe (The Gauntlet)',
     'Crystal dagger (perfected)', 'Crystal harpoon (The Gauntlet)', 'Crystal pickaxe (The Gauntlet)',
   ]),
-  // Ammunition sits with the metal ammunition of the same ranged strength, not its launcher's wield level (barbed, blurite, bone, silver and kebbit bolts are at or below iron bolts).
+  // Ammunition sits with the metal ammunition of the same ranged strength, not its launcher's wield level (barbed, blurite, silver and kebbit bolts are at or below iron bolts; bone bolts, +49 against iron's +46, are roughly equal to them).
   ...at(1, [
     'Barbed bolts', 'Blurite bolts', 'Bone bolts', 'Silver bolts', 'Kebbit bolts', 'Long kebbit bolts',
     'Ancient blessing', 'Holy blessing', 'Honourable blessing', 'Peaceful blessing', 'Unholy blessing',
