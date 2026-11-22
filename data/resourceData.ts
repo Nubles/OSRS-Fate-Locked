@@ -566,7 +566,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Adamantite Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} }
+    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} },
+    { type: 'DROP', name: 'Adamant Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'], rarity: 'Always' }
   ],
   'Rune Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 4}, notes: 'Requires 4 Coal at BF' },
@@ -2857,7 +2858,8 @@ export const enrichResourceSource = (source: ResourceSource): ResourceSource => 
   const known = findCuratedSource(source);
   // A drop-table name is not sufficient evidence of where/how it is obtained.
   // Keep the route visible, but never turn missing metadata into permission.
-  return known ? { ...source, ...known, rarity: source.rarity, requirementsUnverified: true }
+  // Rarity and notes describe one item, so they stay the Wiki row's own.
+  return known ? { ...source, ...known, rarity: source.rarity, notes: source.notes, requirementsUnverified: true }
     : { ...source, requirementsUnverified: true };
 };
 // Item names the game has changed. Stored names (calculator favourites and

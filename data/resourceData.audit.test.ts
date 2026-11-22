@@ -38,6 +38,15 @@ describe('reviewed drop sources', () => {
     expect(curatedNames('Superior Dragon Bones')).toEqual(['Vorkath']);
   });
 
+  it('Wiki adamant dragon rows still borrow Dragon Slayer II from a curated row', () => {
+    // The superior bones row was the only curated Adamant Dragon row; the
+    // adamantite bar drop (2, always) now carries it.
+    const wiki = (RESOURCE_MAP['Adamant Javelin Tips'] ?? []).find(s => s.name === 'Adamant Dragon');
+    expect(wiki?.requirementsUnverified).toBe(true);
+    expect(wiki?.quests).toEqual(['Dragon Slayer II']);
+    expect(wiki?.regions).not.toEqual(['Any']);
+  });
+
   it.each([
     ["Executioner's Axe Head", 'Vardorvis', '1/1088'],
     ['Eye of the Duke', 'Duke Sucellus', '1/720'],
@@ -139,6 +148,7 @@ describe('curated sources the game does have', () => {
     ['Adamant Axe', 'Dust Devil', 'DROP'],
     ['Steel Arrow', 'Giant Frog', 'DROP'],
     ['Chocolate Dust', 'Grand Tree Groceries', 'SHOP'],
+    ['Adamantite Bar', 'Adamant Dragon', 'DROP'],
   ] as const)('keeps a %s template row for %s', (item, name, type) => {
     expect(has(item, name, type)).toBe(true);
   });
@@ -203,6 +213,20 @@ describe('curated drops the monster does not have', () => {
 
   it("keeps Sarachnis for red spiders' eggs, from the giant egg sac it drops", () => {
     expect(curated("Red Spiders' Eggs").find(s => s.name === 'Sarachnis')?.notes).toMatch(/giant egg sac/i);
+  });
+
+  // A Wiki row borrows region and unlock data from the curated row of the
+  // same name, but a curated note describes one item and must not follow it.
+  it.each([
+    ['Red Dragonhide', 'Sarachnis', "Red Spiders' Eggs"],
+    ['Big Bones', 'Giant Mole', 'Crushed Nest'],
+  ] as const)('the Wiki %s row from %s does not show the %s note', (item, monster, from) => {
+    const note = curated(from).find(s => s.name === monster)?.notes;
+    expect(note).toBeTruthy();
+    const wiki = (RESOURCE_MAP[item] ?? []).find(s => s.name === monster && s.requirementsUnverified);
+    expect(wiki).toBeDefined();
+    expect(wiki?.unlockId).toBe(monster);
+    expect(wiki?.notes).not.toBe(note);
   });
 });
 
