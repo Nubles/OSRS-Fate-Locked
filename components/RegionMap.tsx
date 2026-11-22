@@ -2187,7 +2187,10 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
 
   return (
-    <div className="h-[min(600px,70vh)] lg:h-[600px] w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
+    // Phone: a fixed-height box in the scrolling page. Wide screens: the box
+    // fills the World pane, so a short window never cuts off the overlay
+    // list or the zoom buttons along its bottom edge.
+    <div data-testid="world-map-box" className="h-[min(600px,70vh)] lg:absolute lg:inset-0 lg:h-auto w-full bg-[#0b0d10] rounded-lg border border-white/10 relative overflow-hidden group select-none shadow-inner">
       {/* ── Chunk lens control ─────────────────────────────────────────────── */}
       {!authoring && (
         <div className="absolute top-2 left-2 z-30 w-64 max-w-[70%]">
@@ -2295,9 +2298,9 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
 
       {/* ── Map overlay layers ─────────────────────────────────────────────── */}
       {!authoring && overlayCategories.length > 0 && (
-        <div className="absolute bottom-2 left-2 z-30 w-56 max-w-[70%]">
-          <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden">
-            <div className={`flex items-center gap-1.5 px-2 py-1.5 ${overlayCollapsed ? '' : 'border-b border-white/5'}`}>
+        <div className="absolute bottom-2 left-2 z-30 w-56 max-w-[70%] max-h-[calc(100%-3.5rem)] flex flex-col">
+          <div className="bg-[#101010]/95 border border-white/15 rounded-lg shadow-xl backdrop-blur-sm overflow-hidden flex flex-col min-h-0">
+            <div className={`flex items-center gap-1.5 px-2 py-1.5 shrink-0 ${overlayCollapsed ? '' : 'border-b border-white/5'}`}>
               <button onClick={() => setOverlayCollapsed(c => !c)} className="flex items-center gap-1.5 flex-1 min-w-0 text-left" title={overlayCollapsed ? 'Expand overlays' : 'Collapse overlays'}>
                 <Layers size={12} className="text-sky-400 shrink-0" />
                 <span className="text-[10px] font-semibold text-gray-300 flex-1">Overlays</span>
@@ -2312,7 +2315,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
               )}
             </div>
             {!overlayCollapsed && (
-            <div className="p-1.5 flex flex-wrap gap-1">
+            <div data-testid="map-overlay-list" className="p-1.5 flex flex-wrap gap-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar">
               {overlayCategories.map(cat => {
                 const on = overlayCats.has(cat);
                 const color = overlayColor(cat);

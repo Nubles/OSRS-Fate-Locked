@@ -887,7 +887,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
           <p className="px-2 pb-2 text-[10px] text-gray-400 shrink-0">{tutorialIslandNote(gameModeId)}</p>
           {worldView === 'MAP' ? (
-              <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
+              <div className="flex-1 lg:min-h-[280px] bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
                     <Suspense fallback={<PaneFallback />}>
                       <RegionMap />
