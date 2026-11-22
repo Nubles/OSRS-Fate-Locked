@@ -114,8 +114,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ===== Guilds =============================================================
   "Champions' Guild": { questPoints: 32, requiredAreas: ['Varrock'], note: 'South of Varrock.' },
-  "Cooks' Guild": { skills: { Cooking: 32 } },
-  'Crafting Guild': { skills: { Crafting: 40 } },
+  "Cooks' Guild": { skills: { Cooking: 32 }, note: "Wear a chef's hat, Cooking cape or hood, Max cape or hood, or Varrock armour 3 or 4 to enter." },
+  'Crafting Guild': { skills: { Crafting: 40 }, note: 'Wear a brown or golden apron, Crafting cape or Max cape to enter by the door.' },
   'Mining Guild': { skills: { Mining: 60 } },
   'Prayer Guild': { skills: { Prayer: 31 }, note: 'Edgeville Monastery chapel.' },
   'Farming Guild': { skills: { Farming: 45 }, requiredAreas: ['Farming Guild'], note: 'Tiered access: 45 / 65 / 85 Farming.' },

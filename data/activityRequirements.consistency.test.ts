@@ -158,4 +158,8 @@ describe('activity rows follow the Wiki', () => {
     expect(ACTIVITY_REQUIREMENTS['Colossal Pouch'].skills).toEqual({ Runecraft: 25, Crafting: 56 });
   });
 
+  it("the Cooks' and Crafting Guild doors ask for a worn item (Wiki: Cooks' Guild, Crafting Guild)", () => {
+    expect(ACTIVITY_REQUIREMENTS["Cooks' Guild"]).toMatchObject({ skills: { Cooking: 32 }, note: expect.stringMatching(/chef's hat/) });
+    expect(ACTIVITY_REQUIREMENTS['Crafting Guild']).toMatchObject({ skills: { Crafting: 40 }, note: expect.stringMatching(/apron/) });
+  });
 });
