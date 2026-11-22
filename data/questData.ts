@@ -1419,7 +1419,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Bandit Camp"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
-    skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
+    skills: { 'Crafting': 50, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },

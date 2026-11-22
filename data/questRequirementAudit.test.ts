@@ -288,6 +288,18 @@ describe('official quest and miniquest audit coverage', () => {
     expect(entry?.source.url).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/index\.php\?title=Fallen_From_Grace&oldid=\d+$/);
   });
 
+  it("drops Enakhra's Lament's bypassable Firemaking 45, as Temple of Ikov drops its Ranged 40", () => {
+    // Wiki Enakhra's Lament (rev 15411975): Firemaking 45 is "bypassable"; the braziers
+    // can be solved by guess and check, so the level is not needed to finish the quest.
+    const quest = QUEST_DATA["Enakhra's Lament"];
+    expect(quest.skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43 });
+    const entry = audit.entries.find(candidate => candidate.id === "Enakhra's Lament");
+    expect(entry?.requirementFingerprint).toBe(questRequirementFingerprint(quest));
+    expect(entry?.notes.partialCompletion).toContain(
+      'Level 45 Firemaking is bypassable by guessing which item goes in each brazier, so it is not gated.',
+    );
+  });
+
   it('matches every runtime requirement fingerprint', () => {
     const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
     expect(Object.values(QUEST_DATA).flatMap(quest => {
