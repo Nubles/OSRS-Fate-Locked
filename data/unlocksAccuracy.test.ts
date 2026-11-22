@@ -188,6 +188,7 @@ describe('B2: a town bank built in a quest needs the quest', () => {
     ['12581', 'Great Conch bank', 'Troubled Tortugans'], ['12838', 'Great Conch Sacred Grove deposit box', 'Troubled Tortugans'],
     ['11047', 'Red Rock bank chest', 'The Red Reef'],
     ['9275', 'Neitiznot bank', 'The Fremennik Isles'], ['9531', 'Jatizso bank', 'The Fremennik Isles'],
+    ['9274', 'Neitiznot dock deposit box', 'The Fremennik Isles'],
     ['9265', 'Lletya bank', "Mourning's End Part I"], ['13874', 'Burgh de Rott bank', 'In Aid of the Myreque'],
   ])('bank %s (%s) opens after %s, and asks a run partway through to confirm', (id, _bank, quest) => {
     expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
@@ -198,9 +199,11 @@ describe('B2: a town bank built in a quest needs the quest', () => {
   });
 
   // Neitiznot oldid 15389735 and Jatizso oldid 15389736: the islands need The Fremennik Trials;
-  // Burgh de Rott bank oldid 15211939: the bank needs Priest in Peril.
+  // Burgh de Rott bank oldid 15211939: the bank needs Priest in Peril. The Neitiznot dock deposit box
+  // (Bank Deposit Box oldid 15378951, added with the Sailing docks) stands on the island, so it needs the same.
   it.each([
     ['9275', 'The Fremennik Isles', 'The Fremennik Trials'], ['9531', 'The Fremennik Isles', 'The Fremennik Trials'],
+    ['9274', 'The Fremennik Isles', 'The Fremennik Trials'],
     ['13874', 'In Aid of the Myreque', 'Priest in Peril'],
   ])('keeps bank %s shut to a run partway through %s without %s', (id, started, quest) => {
     const without = bankAccess(id, everything(99, { quests: questsWithout(started, quest) }));
@@ -272,10 +275,26 @@ describe('B3: a bank the Wiki names a requirement for states it, not "needs revi
     expect(bankAccess('14907', fresh).reasons).toEqual(['Bone Voyage', 'Construction level 21']);
   });
 
+  // Eniola oldid 15353166 and Ourania Cave: the roving banker just inside the cave asks for 20 runes a visit
+  // and for no quest or level, so the place needs nothing beyond its Banks unlock and its land.
+  it('counts Eniola as the Ourania Altar bank, with no requirement of her own', () => {
+    expect(bankAccess('9778', everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(bankAccess('9778', everything(1, { quests: [] }))).toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
   it('leaves none of these at "needs review" for a run that has everything', () => {
-    for (const id of ['10275', '5678', '13618', '11051', '11056', '14908', '8751', '14907', '11811', '10533', '8740', '8249']) {
+    for (const id of ['10275', '5678', '13618', '11051', '11056', '14908', '8751', '14907', '11811', '10533', '8740', '8249', '9778']) {
       expect(bankAccess(id, everything()).reasons.join(' '), id).not.toMatch(/need review/);
     }
+  });
+
+  // The Camelot PvP chest is the owner's call (it exists only on PvP worlds). List of banks oldid 15402836 puts
+  // both Castle Drakan facilities behind The Blood Moon Rises, but not whether the castle's deposit chests outlast
+  // the quest, so that place waits for a reviewed gate.
+  it('knows which bank places still wait for a reviewed requirement', () => {
+    const waiting = BANKS.filter(({ id }) => /^\d+$/.test(id))
+      .filter(({ id }) => /need review/.test(bankAccess(id, everything()).reasons.join(' '))).map(({ id }) => id).sort();
+    expect(waiting).toEqual(['11062', '14132']);
   });
 });
 

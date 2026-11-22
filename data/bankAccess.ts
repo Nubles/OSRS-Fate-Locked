@@ -12,6 +12,7 @@ export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind
   {"id":"13354","name":"Bank Camel","kind":"npc","requirements":["Beneath Cursed Sands Complete the quest"]},
   {"id":"15151","name":"Deposit Box","kind":"object","requirements":["Cabin Fever Complete the quest"]},
   {"id":"15151","name":"Bank chest","kind":"object","requirements":["Cabin Fever Complete the quest"]},
+  {"id":"9778","name":"Eniola","kind":"npc"},
 ];
 
 /** The registry's reviewed locations (their names are their BANKS labels), with a service's own ways in. */
@@ -60,6 +61,7 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"10300","accessOptions":[{"quests":["The Fremennik Trials"]}]},
   {"id":"9275","accessOptions":[{"quests":["The Fremennik Isles"]},{"quests":["The Fremennik Trials"],"manual":["Confirm you have started The Fremennik Isles"]}]},
   {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]},{"quests":["The Fremennik Trials"],"manual":["Confirm you have started The Fremennik Isles"]}]},
+  {"id":"9274","accessOptions":[{"quests":["The Fremennik Isles"]},{"quests":["The Fremennik Trials"],"manual":["Confirm you have started The Fremennik Isles"]}]},
   {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]},{"quests":["Priest in Peril"],"manual":["Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque"]}]},
   {"id":"14388","accessOptions":[{"quests":["Sins of the Father"]}]},
   {"id":"12337","accessOptions":[{"quests":["Temple of the Eye"]}]},

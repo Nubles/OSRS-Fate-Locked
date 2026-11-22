@@ -270,6 +270,7 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       10284: [{ quests: ['The Corsair Curse'] }], 10300: [{ quests: ['The Fremennik Trials'] }],
       9275: [{ quests: ['The Fremennik Isles'] }, { quests: ['The Fremennik Trials'], manual: ['Confirm you have started The Fremennik Isles'] }],
       9531: [{ quests: ['The Fremennik Isles'] }, { quests: ['The Fremennik Trials'], manual: ['Confirm you have started The Fremennik Isles'] }],
+      9274: [{ quests: ['The Fremennik Isles'] }, { quests: ['The Fremennik Trials'], manual: ['Confirm you have started The Fremennik Isles'] }],
       13874: [{ quests: ['In Aid of the Myreque'] }, { quests: ['Priest in Peril'], manual: ['Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque'] }],
       14388: [{ quests: ['Sins of the Father'] }], 9273: [{ quests: ['Swan Song'] }],
       12337: [{ quests: ['Temple of the Eye'] }],
