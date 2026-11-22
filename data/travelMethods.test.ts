@@ -286,6 +286,8 @@ const ALSO_NAMED: Readonly<Record<string, string>> = {
 /** Catalogue versions that can't teleport. */
 const SPENT = new Set(['Uncharged', 'Inert', 'Empty']);
 /** Lower diary tiers that don't teleport yet, as their pages have it. */
+/** The house portal towns' chunks, from the Construct. cape's page (oldid 15365081). */
+const HOUSE_PORTAL_CHUNKS = ['46,50', '45,54', '52,46', '27,54', '22,46', '41,56', '43,49', '39,48', '50,94'];
 const NO_TELEPORT = new Set([
   'Desert amulet 1', "Explorer's ring 1", 'Kandarin headgear 1', 'Kandarin headgear 2', 'Karamja gloves 1',
   'Karamja gloves 2', 'Western banner 1', 'Western banner 2', 'Wilderness sword 1', 'Wilderness sword 2',
@@ -395,6 +397,21 @@ describe('worn teleport equipment', () => {
 
   it("send the sea boots to Rellekka, not where the old table's text match put them (G7)", () => {
     expect(itemRow('item:fremennik-sea-boots').options.Teleport.to).toEqual(['41,57']);
+  });
+
+  it("offer the Construct. cape's and Sailors' amulet's Teleport sub-options as options of their own (travel-a F1)", () => {
+    const cape = itemRow('item:construct-cape').options;
+    expect(cape.Teleport.to).toEqual(HOUSE_PORTAL_CHUNKS);
+    expect(cape.Home).toEqual({ to: [] });
+    expect(cape.Prifddinas).toEqual({ to: ['50,94'] });
+    expect(['Rimmington', 'Taverley', 'Pollnivneach', 'Hosidius', 'Aldarin', 'Rellekka', 'Brimhaven', 'Yanille', 'Prifddinas']
+      .map((town) => cape[town].to[0])).toEqual(HOUSE_PORTAL_CHUNKS);
+    expect(cape['Tele to POH']).toEqual({ to: [] });
+    expect(itemRow('item:sailors-amulet').options).toEqual({
+      Teleport: { to: ['47,46', '29,51', '43,39', '30,43'] },
+      'The Pandemonium': { to: ['47,46'] }, 'Port Roberts': { to: ['29,51'] },
+      'Red Rock': { to: ['43,39'] }, 'Deepfin Point': { to: ['30,43'] },
+    });
   });
 
   it("match only the max cape's options whose places its page gives", () => {

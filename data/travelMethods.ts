@@ -429,9 +429,14 @@ const EQUIPMENT: readonly TravelMethod[] = [
     'Wilderness sword 4', 15242364),
 
   // Teleport opens a choice of the house and the portals; Tele to POH goes to the house, wherever it is.
+  // Teleport opens a sub-menu of the house (no fixed place) and the portal towns, in HOUSE_PORTALS' order.
   item('item:construct-cape', 'Construct. cape', [9789, 9790], [], {
-    Teleport: { to: HOUSE_PORTALS }, 'Tele to POH': { to: [] },
-  }, 'Construct. cape', 15327003),
+    ...choice({
+      Home: [], Rimmington: ['46,50'], Taverley: ['45,54'], Pollnivneach: ['52,46'], Hosidius: ['27,54'],
+      Aldarin: ['22,46'], Rellekka: ['41,56'], Brimhaven: ['43,49'], Yanille: ['39,48'], Prifddinas: ['50,94'],
+    }, 'Teleport'),
+    'Tele to POH': { to: [] },
+  }, 'Construct. cape', 15365081),
   item('item:crafting-cape', 'Crafting cape', [9780, 9781], [], { Teleport: { to: ['45,51'] } }, 'Crafting cape', 15232507),
   item('item:farming-cape', 'Farming cape', [9810, 9811], [], { Teleport: { to: ['19,58'] } }, 'Farming cape', 15327005),
   item('item:fishing-cape', 'Fishing cape', [9798, 9799], [], {
@@ -490,8 +495,10 @@ const EQUIPMENT: readonly TravelMethod[] = [
   item('item:amulet-of-the-eye', 'Amulet of the Eye', [26914, 26990, 26992, 26994], [], { Teleport: { to: [] } },
     'Amulet of the Eye', 15309207),
   // A choice of the Pandemonium, Port Roberts, Red Rock and Deepfin Point.
-  item("item:sailors-amulet", "Sailors' amulet", [32399], [], { Teleport: { to: ['47,46', '29,51', '43,39', '30,43'] } },
-    "Sailors' amulet", 15319506),
+  item("item:sailors-amulet", "Sailors' amulet", [32399], [],
+    choice({ 'The Pandemonium': ['47,46'], 'Port Roberts': ['29,51'], 'Red Rock': ['43,39'], 'Deepfin Point': ['30,43'] },
+      'Teleport'),
+    "Sailors' amulet", 15372200),
   // To the Lumbridge cow field.
   item('item:cowbell-amulet', 'Cowbell amulet', [33104], [], { Teleport: { to: ['50,51'] } }, 'Cowbell amulet', 15338665),
 ];
