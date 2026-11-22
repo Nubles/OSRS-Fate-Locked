@@ -281,6 +281,7 @@
     {
       "name": "Lost Property shop",
       "status": "stocked",
+      "note": "\"Chris\" is meant only for the Emir's Arena shopkeeper in 52,51 (region 13363). On a re-pin, check no other export NPC is named Chris.",
       "npcNames": [
         "Perdu",
         "Chris"
