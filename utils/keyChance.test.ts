@@ -162,6 +162,9 @@ describe('no screen works out a Key chance on its own', () => {
 describe('the bonus badge tooltip', () => {
   it('is one string in both layouts and credits what the live modes really add', () => {
     expect(KEY_CHANCE_BONUS_TITLE).toMatch(/^Odds changed by achievements, rituals and omens/);
+    // Custom runs can turn region bonuses on too, so the text must not tie them to Region Rush.
+    expect(KEY_CHANCE_BONUS_TITLE).toContain('region passives, on runs that have them on');
+    expect(KEY_CHANCE_BONUS_TITLE).not.toMatch(/Region Rush/);
     for (const file of ['components/ActionSection.tsx', 'components/osrs/OsrsFarmKeys.tsx']) {
       const src = readFileSync(file, 'utf8');
       expect(src).toContain('title={KEY_CHANCE_BONUS_TITLE}');

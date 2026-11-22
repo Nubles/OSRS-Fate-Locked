@@ -41,7 +41,7 @@ export interface KeyRollOdds {
   clueAwarded: number;
   /** The source's own rate, as the history records it. */
   baseThreshold: number;
-  /** Region passives plus the activity's achievement boosts, in points. */
+  /** The activity's achievement boosts, plus region passives on runs that have them on, in points. */
   successBonus: number;
   omniBonus: number;
   /** The run's rituals for this roll (Pact, a curse, Invocations, Barrows). */
@@ -118,7 +118,7 @@ export const keyChance = (
 ): number | null => keyRollOdds(state, source, rate, context)?.threshold ?? null;
 
 /** The tooltip on the +N / -N badge that shows keyChanceBonus, in both layouts. */
-export const KEY_CHANCE_BONUS_TITLE = 'Odds changed by achievements, rituals and omens (and region passives in Region Rush)';
+export const KEY_CHANCE_BONUS_TITLE = 'Odds changed by achievements, rituals and omens (and region passives, on runs that have them on)';
 
 /** How far the run's boosts and rituals move a roll from its base rate, in points. */
 export const keyChanceBonus = (
