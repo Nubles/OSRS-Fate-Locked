@@ -498,7 +498,7 @@ export const OsrsJournalScreen: React.FC = () => {
   };
 
   const unlocksNote = (id: string): string => {
-    const imp = computeUnlockImpact(unlocks, { ...unlocks, quests: [...unlocks.quests, id] }, gameModeId);
+    const imp = computeUnlockImpact(unlocks, { ...unlocks, quests: [...unlocks.quests, id] }, gameModeId, { areaRoutes });
     const parts: string[] = [];
     if (imp.directQuestNames.length) parts.push(`Quests: ${imp.directQuestNames.slice(0, 5).join(', ')}${imp.directQuestNames.length > 5 ? '…' : ''}`);
     if (imp.directDiaryIds.length) parts.push(`Diary tiers: ${imp.directDiaryIds.slice(0, 4).join(', ')}${imp.directDiaryIds.length > 4 ? '…' : ''}`);

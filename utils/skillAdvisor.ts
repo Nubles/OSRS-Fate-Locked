@@ -18,6 +18,7 @@ import { hasCompletedQuestCapeRequirements, QUEST_DATA } from '../data/questData
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
+import type { AreaRoutes } from './areaRoutes';
 import { EligibilityBlocker, evaluateDiaryTierEligibility, skillGateQuests } from './journalStatus';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 
@@ -39,12 +40,12 @@ export interface RankedSkill {
  * Herblore and Sailing before their unlocking quests), are omitted. Sorted by
  * cascade score, then direct score, then lower target level, then name.
  */
-export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedSkill[] {
+export function rankSkillBottlenecks(unlocks: any, gameModeId?: string, areaRoutes?: AreaRoutes | null): RankedSkill[] {
   const allDiaries = Object.values(DIARY_DATA);
-  const impactContext = prepareUnlockImpactContext(unlocks, gameModeId);
+  const impactContext = prepareUnlockImpactContext(unlocks, gameModeId, areaRoutes);
   const baseDiaryEligibility = new Map(allDiaries.map(diary => [
     diary.id,
-    evaluateDiaryTierEligibility(diary, unlocks, gameModeId),
+    evaluateDiaryTierEligibility(diary, unlocks, gameModeId, areaRoutes),
   ]));
   const isOpen = (status: string | undefined) => (
     status === 'AVAILABLE' || status === 'COMPLETED'
@@ -178,7 +179,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
 
       const directDiaryIds = candidateDiaryIds(skill, new Set(), false).filter(id => {
         const diary = DIARY_DATA[id];
-        return diary && evaluateDiaryTierEligibility(diary, simulated, gameModeId).eligible;
+        return diary && evaluateDiaryTierEligibility(diary, simulated, gameModeId, areaRoutes).eligible;
       });
 
       let cascadeDiaryIds = directDiaryIds;
@@ -193,7 +194,7 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
           hasCompletedQuestCapeRequirements(impact.finalQuestIds),
         ).filter(id => {
           const diary = DIARY_DATA[id];
-          return diary && evaluateDiaryTierEligibility(diary, cascadeSnap, gameModeId).eligible;
+          return diary && evaluateDiaryTierEligibility(diary, cascadeSnap, gameModeId, areaRoutes).eligible;
         });
       }
 
@@ -234,10 +235,11 @@ export function rankSkillBottlenecks(unlocks: any, gameModeId?: string): RankedS
 // The Skills panel's Advisor button and the open Advisor panel ask for the
 // same ranking, which walks every quest and diary for each skill threshold,
 // so the last answer is kept for the same unlocks object.
-let lastRanking: { unlocks: unknown; gameModeId?: string; ranked: RankedSkill[] } | null = null;
-export function rankSkillBottlenecksCached(unlocks: any, gameModeId?: string): RankedSkill[] {
-  if (lastRanking && lastRanking.unlocks === unlocks && lastRanking.gameModeId === gameModeId) return lastRanking.ranked;
-  const ranked = rankSkillBottlenecks(unlocks, gameModeId);
-  lastRanking = { unlocks, gameModeId, ranked };
+let lastRanking: { unlocks: unknown; gameModeId?: string; areaRoutes?: AreaRoutes | null; ranked: RankedSkill[] } | null = null;
+export function rankSkillBottlenecksCached(unlocks: any, gameModeId?: string, areaRoutes?: AreaRoutes | null): RankedSkill[] {
+  if (lastRanking && lastRanking.unlocks === unlocks && lastRanking.gameModeId === gameModeId
+    && lastRanking.areaRoutes === areaRoutes) return lastRanking.ranked;
+  const ranked = rankSkillBottlenecks(unlocks, gameModeId, areaRoutes);
+  lastRanking = { unlocks, gameModeId, areaRoutes, ranked };
   return ranked;
 }

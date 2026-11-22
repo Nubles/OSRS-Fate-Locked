@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { rankSkillBottlenecksCached } from '../../utils/skillAdvisor';
+import { useAreaRoutes } from '../../hooks/useAreaRoutes';
 import { SKILLS_LIST } from '../../constants';
 import { TableType, type UnlockState } from '../../types';
 import { NoteTrigger } from '../NoteTrigger';
@@ -69,9 +70,11 @@ export const OsrsSkills: React.FC<Props> = ({
   // once the pointer or focus reaches the button, never on each unlock.
   const [checkedFor, setCheckedFor] = useState<unknown>(null);
   const checking = checkedFor === unlocks;
+  // The same routes as the Advisor panel, so the button and the panel agree.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const advisorEmpty = useMemo(
-    () => advisorsEnabled && checking && rankSkillBottlenecksCached(unlocks, gameModeId).length === 0,
-    [advisorsEnabled, checking, unlocks, gameModeId],
+    () => advisorsEnabled && checking && rankSkillBottlenecksCached(unlocks, gameModeId, areaRoutes).length === 0,
+    [advisorsEnabled, checking, unlocks, gameModeId, areaRoutes],
   );
   const checkAdvisor = () => { if (!checking) setCheckedFor(unlocks); };
   const query = searchQuery.trim().toLowerCase();
@@ -97,7 +100,7 @@ export const OsrsSkills: React.FC<Props> = ({
               onClick={() => {
                 if (!checking) {
                   setCheckedFor(unlocks);
-                  if (rankSkillBottlenecksCached(unlocks, gameModeId).length === 0) return;
+                  if (rankSkillBottlenecksCached(unlocks, gameModeId, areaRoutes).length === 0) return;
                 }
                 if (!advisorEmpty) setShowAdvisor((v) => !v);
               }}

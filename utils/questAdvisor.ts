@@ -46,7 +46,7 @@ export function rankAvailableQuests(unlocks: any, gameModeId?: string, areaRoute
   const available = allQuests.filter(quest => isQuestReady(quest, unlocks, gameModeId, areaRoutes));
   // Every candidate is simulated from the same snapshot, so its base
   // statuses are evaluated once and shared, as the Skill Advisor does.
-  const context = prepareUnlockImpactContext(unlocks, gameModeId);
+  const context = prepareUnlockImpactContext(unlocks, gameModeId, areaRoutes);
 
   return available
     .map((candidate): RankedQuest => {

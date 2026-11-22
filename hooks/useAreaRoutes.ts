@@ -40,6 +40,11 @@ export interface AreaRoutesState {
    * no route reaches. The first screen holds those counts while this is true.
    */
   pending: boolean;
+  /**
+   * The routes of another snapshot of this run (an advisor's "what if this
+   * area were owned"), or null until the routing has loaded.
+   */
+  routesFor: ((snapshot: UnlockState) => AreaRoutes | null) | null;
 }
 
 /**
@@ -83,7 +88,12 @@ export function useAreaRoutesState(unlocks: UnlockState, gameModeId?: string, en
       : null
   ), [ready, loaded, unlocks, gameModeId]);
   const pending = enabled && !routes && !gaveUp;
-  return useMemo(() => ({ routes, pending }), [routes, pending]);
+  const routesFor = useMemo(() => (
+    ready && loaded
+      ? (snapshot: UnlockState) => loaded.compute(loaded.service.connectGraph(), snapshot, gameModeId)
+      : null
+  ), [ready, loaded, gameModeId]);
+  return useMemo(() => ({ routes, pending, routesFor }), [routes, pending, routesFor]);
 }
 
 /**
