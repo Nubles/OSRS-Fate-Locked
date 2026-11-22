@@ -362,13 +362,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     quests: ['Perilous Moons'],
     description: 'Zero-supply combat training (Free potions).'
   },
-  'Teomat': {
-    id: 'Teomat',
-    category: TableType.MERCHANTS, // Shop
-    regions: ['Varlamore'], // Civitas
-    skills: {},
-    description: 'General store and regional supplies in Civitas.'
-  },
   'Hunter Rumours': {
     id: 'Hunter Rumours',
     category: TableType.MINIGAMES, // Activity

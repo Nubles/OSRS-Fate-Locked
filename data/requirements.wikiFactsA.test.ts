@@ -81,3 +81,9 @@ describe('Ectoplasmator (Wiki: Ectoplasmator)', () => {
   });
 });
 
+describe('Teomat (Wiki: The Teomat)', () => {
+  it('is a monastery with no shop, so the Merchants list does not offer it', () => {
+    expect(S.Teomat).toBeUndefined();
+  });
+});
+
