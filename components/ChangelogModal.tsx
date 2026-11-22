@@ -11,6 +11,7 @@ import type {
 import { PetCompensationPanel } from './PetCompensationPanel';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { readSeenChangelog } from '../utils/changelogState';
 
 export interface ChangelogModalProps {
   releases: readonly ChangelogRelease[];
@@ -31,6 +32,8 @@ export interface ChangelogModalProps {
   onClose: () => void;
   /** Persistent control to receive focus after a manual close. */
   returnFocusTarget?: HTMLElement | null;
+  /** The last release the player saw, or null for none. Left out, it is read from storage. */
+  seenReleaseId?: string | null;
 }
 
 const SECTION_META: Array<{
@@ -59,6 +62,18 @@ const formatReleaseDate = (date: string): string => {
 const panelIdFor = (releaseId: string): string => `changelog-release-${releaseId}`;
 const toggleIdFor = (releaseId: string): string => `changelog-release-toggle-${releaseId}`;
 
+/**
+ * The releases newer than the one the player last saw. Nothing is new when
+ * they never saw one (a new player) or it is no longer listed.
+ */
+export const releasesNewerThan = (
+  releases: readonly ChangelogRelease[],
+  seenReleaseId: string | null,
+): ReadonlySet<string> => {
+  const seenAt = seenReleaseId === null ? -1 : releases.findIndex(release => release.id === seenReleaseId);
+  return new Set(seenAt > 0 ? releases.slice(0, seenAt).map(release => release.id) : []);
+};
+
 export const toggleExpandedRelease = (
   expandedReleaseIds: ReadonlySet<string>,
   releaseId: string,
@@ -80,8 +95,12 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
   petRollTimes,
   onResolvePetCompensation,
   returnFocusTarget,
+  seenReleaseId,
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
+  // Read once, as the window opens: closing it marks the newest as seen.
+  const [newReleaseIds] = useState(() =>
+    releasesNewerThan(releases, seenReleaseId === undefined ? readSeenChangelog() : seenReleaseId));
   const [expandedReleaseIds, setExpandedReleaseIds] = useState<Set<string>>(
     () => new Set(releases[0] ? [releases[0].id] : []),
   );
@@ -206,7 +225,14 @@ export const ChangelogModal: React.FC<ChangelogModalProps> = ({
                       className="flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/80"
                     >
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-gray-100">{release.title}</span>
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-sm font-semibold text-gray-100">{release.title}</span>
+                          {newReleaseIds.has(release.id) && (
+                            <span data-testid="changelog-new-badge" className="shrink-0 rounded bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-300">
+                              New
+                            </span>
+                          )}
+                        </span>
                         <time dateTime={release.date} className="mt-0.5 block text-[11px] font-mono text-gray-500">
                           {formatReleaseDate(release.date)}
                         </time>
