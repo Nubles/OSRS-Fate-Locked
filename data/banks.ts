@@ -212,4 +212,5 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]}]},
   {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]}]},
   {"id":"14388","accessOptions":[{"quests":["Sins of the Father"]}]},
+  {"id":"12337","accessOptions":[{"quests":["Temple of the Eye"]}]},
 ];

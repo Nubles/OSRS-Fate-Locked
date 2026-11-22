@@ -72,6 +72,17 @@ function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mo
   }));
 }
 
+/**
+ * A bank's own ways in, with no facility content needed: a reviewed location's
+ * own options (such as the Ancient Prison's quest), else its guild's entry or
+ * its town's quest, as registryBankRequirements reads them. ALLOWED when the
+ * bank has neither. Saradomin's Ward reads it.
+ */
+export function bankGateAccess(bankId: string, unlocks: UnlockState, mode?: string): EntityAccessResult {
+  const options = BANK_REVIEWED_LOCATIONS.find(entry => entry.id === bankId)?.accessOptions ?? bankGateOptions(bankId);
+  return options?.length ? bankOptionsAccess(options, unlocks, mode) : { status: 'ALLOWED', reasons: [] };
+}
+
 function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: UnlockState, source: EntityAccessSource, mode?: string): EntityAccessResult {
   const bankId = String(coord.cx * 256 + coord.cy);
   const bank = BANK_REVIEWED_LOCATIONS.find(entry => entry.id === bankId);
