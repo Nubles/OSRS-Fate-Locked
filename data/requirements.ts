@@ -191,16 +191,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     quests: ['Pirate\'s Treasure', 'Rum Deal'],
     description: 'Unlocks Mos Le\'Harmless and Cave Horrors (Black Mask).'
   },
-  'Fremennik Exiles': {
-    id: 'Fremennik Exiles',
+  'The Fremennik Exiles': {
+    id: 'The Fremennik Exiles',
     category: TableType.QUESTS,
     regions: ['Fremennik'],
     skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 },
     quests: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'],
     description: 'Unlocks Basilisk Knights (Jaw) and Neitiznot Faceguard.'
   },
-  'Slug Menace': {
-    id: 'Slug Menace',
+  'The Slug Menace': {
+    id: 'The Slug Menace',
     category: TableType.QUESTS,
     regions: ['Asgarnia', 'Kandarin'], // Witchaven/Falador
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 },

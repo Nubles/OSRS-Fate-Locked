@@ -105,3 +105,30 @@ describe('Entry descriptions (Wiki: Obelisk of Air, Pirates\' Hideout, Spiritual
   });
 });
 
+describe('Quest strategy keys match the quest list', () => {
+  it('The Fremennik Exiles and The Slug Menace use their QUEST_DATA ids, so their descriptions show', () => {
+    for (const key of ['The Fremennik Exiles', 'The Slug Menace']) {
+      expect(QUEST_DATA[key], key).toBeDefined();
+      expect(S[key]?.category, key).toBe(TableType.QUESTS);
+    }
+    expect(S['The Fremennik Exiles'].description).toMatch(/Neitiznot Faceguard/);
+    expect(S['The Slug Menace'].description).toMatch(/Proselyte/);
+    expect(S['Fremennik Exiles']).toBeUndefined();
+    expect(S['Slug Menace']).toBeUndefined();
+  });
+});
+
+
+describe('Saves that pinned a removed or renamed entry', () => {
+  // The save schema keeps any pinned id as a plain string (utils/saveSchema.test.ts
+  // keeps 'first_goal'). An id the goal panel cannot find falls through to the
+  // Resource Engine lookup, which shows no card for it, as before.
+  it('falls through to the engine lookup instead of throwing', async () => {
+    const { goalNeedsResourceEngine } = await import('../components/GoalTracker');
+    for (const id of ["Xeric's Lookout", 'Prifddinas Waterfall', 'Teomat', 'Fremennik Exiles', 'Slug Menace']) {
+      expect(goalNeedsResourceEngine(id), id).toBe(true);
+    }
+    expect(goalNeedsResourceEngine('The Fremennik Exiles')).toBe(false);
+    expect(goalNeedsResourceEngine('Dark Beasts')).toBe(false);
+  });
+});
