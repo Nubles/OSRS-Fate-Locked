@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { planBoss, PlayerCombat, MonsterLite, BOSS_ALIASES, defaultBossVersion, bestBoostPrayers } from './bossPlanner';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { planBoss, PlayerCombat, MonsterLite, BOSS_ALIASES, BOSS_COMBAT_LIMITS, BOSS_OPENING_VERSIONS, defaultBossVersion, bestBoostPrayers, type BossPlan, type Readiness } from './bossPlanner';
+import { BOSSES_LIST, RETIRED_BOSSES } from '../data/items';
+import { MONSTER_CATALOGUE } from '../data/monsterCatalogue';
+import type { MonsterStats } from '../services/MonsterService';
 import { ZERO_BONUSES } from './gearStats';
 import type { UnlockState } from '../types';
 
@@ -184,3 +189,151 @@ describe('boost prayers', () => {
     expect(planBoss({ ...whip7070({ melee: 'piety' }), boostsOn: false }, graardor)).toMatchObject({ maxHit: 18, prayer: null, potion: null });
   });
 });
+
+
+// The planner fed exactly as the Boss Kill Planner feeds it: the real monster
+// catalogue through MonsterService, each boss on its default version.
+describe('planner against the real catalogue', () => {
+  let planned: { boss: string; monster: MonsterStats }[] = [];
+  beforeAll(async () => {
+    const values = new Map<string, string>();
+    vi.stubGlobal('localStorage', { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } });
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    vi.stubGlobal('fetch', async () => ({ ok: true, json: async () => rows }));
+    vi.resetModules();
+    const { monsterService } = await import('../services/MonsterService');
+    await monsterService.init();
+    planned = BOSSES_LIST.flatMap(boss => {
+      const monster = defaultBossVersion(monsterService.versionsOf(BOSS_ALIASES[boss] ?? boss));
+      return monster ? [{ boss, monster }] : [];
+    });
+  });
+  afterAll(() => { vi.unstubAllGlobals(); vi.resetModules(); });
+
+  const setup = (level: number, category: string, bonus: number, boostsOn = true): PlayerCombat => ({
+    levels: { attack: level, strength: level, ranged: level, magic: level, hitpoints: level },
+    gear: { bonuses: { ...ZERO_BONUSES, stab: bonus, slash: bonus, crush: bonus, ranged: bonus, meleeStr: bonus, rangedStr: Math.round(bonus * 0.8) }, speedTicks: 4, category },
+    boostsOn, prayers: boostsOn ? { melee: 'piety', ranged: 'rigour' } : undefined,
+  });
+  // The planner's own strong reference (99s, +150 melee, +140 ranged, +120 ranged strength), plus weaker setups.
+  const STRONG_MELEE: PlayerCombat = { ...setup(99, 'Multi-melee', 150), gear: { bonuses: { ...ZERO_BONUSES, stab: 150, slash: 150, crush: 150, ranged: 140, meleeStr: 150, rangedStr: 120 }, speedTicks: 4, category: 'Multi-melee' } };
+  const STRONG_RANGED: PlayerCombat = { ...STRONG_MELEE, gear: { ...STRONG_MELEE.gear, category: 'Bow' } };
+  const SETUPS: Record<string, PlayerCombat> = {
+    'strong melee': STRONG_MELEE, 'strong ranged': STRONG_RANGED,
+    'mid melee': setup(80, 'Whip', 82), 'mid ranged': setup(80, 'Crossbow', 90),
+    'low melee': setup(60, 'Slash Sword', 40, false), 'low ranged': setup(60, 'Bow', 40, false),
+  };
+  const ORDER: Readiness[] = ['excellent', 'good', 'workable', 'slow', 'undergeared', 'unverified'];
+  // The readiness bands as they were before reference-relative readiness (time to kill alone).
+  const before = (plan: BossPlan): Readiness => {
+    if (plan.dps <= 0.01 || !isFinite(plan.ttk)) return 'undergeared';
+    if (plan.ttk <= 20) return 'excellent';
+    if (plan.ttk <= 45) return 'good';
+    if (plan.ttk <= 90) return 'workable';
+    if (plan.ttk <= 180) return 'slow';
+    return 'undergeared';
+  };
+
+  it('keeps every verdict where the reference is under three minutes, and only improves the rest', () => {
+    expect(planned.length).toBeGreaterThan(50);
+    const changes: string[] = [];
+    for (const { boss, monster } of planned) {
+      if (BOSS_COMBAT_LIMITS[boss]) continue;
+      for (const [name, player] of Object.entries(SETUPS)) {
+        const plan = planBoss(player, monster, boss);
+        const old = before(planBoss(player, monster));
+        if (!(plan.referenceTtk > 180)) expect({ boss, name, readiness: plan.readiness }).toEqual({ boss, name, readiness: old });
+        else {
+          expect(ORDER.indexOf(plan.readiness)).toBeLessThanOrEqual(ORDER.indexOf(old));
+          if (plan.readiness !== old) changes.push(`${boss} (${name}): ${old} -> ${plan.readiness}`);
+        }
+      }
+    }
+    expect(changes).toEqual(EXPECTED_CHANGES);
+  });
+
+  it('never calls the strong reference Undergeared on a boss the planner can plan', () => {
+    for (const { boss, monster } of planned) for (const player of [STRONG_MELEE, STRONG_RANGED]) {
+      const plan = planBoss(player, monster, boss);
+      if (plan.assessmentNote) continue;
+      expect({ boss, readiness: plan.readiness }).not.toEqual({ boss, readiness: 'undergeared' });
+    }
+  });
+
+  it('gives no combat readiness for Zalcano, a skilling fight', () => {
+    const { monster } = planned.find(entry => entry.boss === 'Zalcano')!;
+    for (const player of Object.values(SETUPS)) {
+      expect(planBoss(player, monster, 'Zalcano')).toMatchObject({ readiness: 'unverified', dps: 0, assessmentNote: expect.stringContaining('immune to combat damage') });
+    }
+  });
+
+  it('gives no melee or ranged readiness for the Kraken', () => {
+    const { monster } = planned.find(entry => entry.boss === 'Kraken')!;
+    expect(planBoss(STRONG_MELEE, monster, 'Kraken')).toMatchObject({ readiness: 'unverified', assessmentNote: expect.stringContaining('immune to melee') });
+    expect(planBoss(STRONG_RANGED, monster, 'Kraken')).toMatchObject({ readiness: 'unverified', assessmentNote: expect.stringContaining('a seventh') });
+    expect(planBoss({ ...STRONG_MELEE, gear: { ...STRONG_MELEE.gear, category: 'Polearm' } }, monster, 'Kraken').readiness).toBe('unverified');
+    // Without the boss name the plan is the plain combat estimate, as before.
+    expect(planBoss(STRONG_MELEE, monster).readiness).toBe('good');
+  });
+
+  it('plans melee on Zulrah only with a halberd', () => {
+    const { monster } = planned.find(entry => entry.boss === 'Zulrah')!;
+    expect(monster.version).toBe('Serpentine');
+    expect(planBoss(STRONG_MELEE, monster, 'Zulrah')).toMatchObject({ readiness: 'unverified', assessmentNote: expect.stringContaining('except with a halberd') });
+    const halberd = planBoss({ ...STRONG_MELEE, gear: { ...STRONG_MELEE.gear, category: 'Polearm' } }, monster, 'Zulrah');
+    expect(halberd.assessmentNote).toBeUndefined();
+    expect(halberd.style).toBe('melee');
+    const salamander = planBoss({ ...STRONG_MELEE, gear: { ...STRONG_MELEE.gear, category: 'Salamander' } }, monster, 'Zulrah');
+    expect(salamander).toMatchObject({ style: 'ranged' });
+    expect(planBoss(STRONG_RANGED, monster, 'Zulrah').assessmentNote).toBeUndefined();
+  });
+
+  it('never calls the Gemstone Crab Undergeared', () => {
+    const { monster } = planned.find(entry => entry.boss === 'Gemstone Crab')!;
+    for (const player of Object.values(SETUPS)) {
+      const plan = planBoss(player, monster, 'Gemstone Crab');
+      expect(plan.readiness).toBe('unverified');
+      expect(plan.dps).toBeGreaterThan(0);
+      expect(plan.assessmentNote).toMatch(/^The Gemstone Crab is a training boss with effectively endless hitpoints, so there is no kill time to plan\. You deal about \d+\.\d damage per second to it\.$/);
+    }
+  });
+
+  it('lists combat limits and opening versions only for bosses the planner plans', () => {
+    for (const boss of Object.keys(BOSS_COMBAT_LIMITS)) expect(planned.map(entry => entry.boss)).toContain(boss);
+    for (const name of Object.keys(BOSS_OPENING_VERSIONS)) {
+      expect(RETIRED_BOSSES).not.toContain(name);
+      expect(planned.some(entry => (BOSS_ALIASES[entry.boss] ?? entry.boss) === name && entry.monster.version === BOSS_OPENING_VERSIONS[name])).toBe(true);
+    }
+    expect(BOSS_OPENING_VERSIONS).not.toHaveProperty('Galvek');
+  });
+});
+
+// Every verdict that reference-relative readiness changes for the setups above:
+// only the strong reference itself, on bosses it needs over three minutes for.
+const EXPECTED_CHANGES: string[] = [
+  'The Nightmare (strong melee): undergeared -> slow',
+  'The Nightmare (strong ranged): undergeared -> slow',
+  "Phosani's Nightmare (strong melee): undergeared -> slow",
+  "Phosani's Nightmare (strong ranged): undergeared -> slow",
+  'Nex (strong melee): undergeared -> slow',
+  'Nex (strong ranged): undergeared -> slow',
+  'Corporeal Beast (strong melee): undergeared -> slow',
+  'Corporeal Beast (strong ranged): undergeared -> slow',
+  'Thermonuclear Smoke Devil (strong ranged): undergeared -> slow',
+  'Araxxor (strong ranged): undergeared -> slow',
+  'Callisto (strong melee): undergeared -> slow',
+  'Venenatis (strong ranged): undergeared -> slow',
+  "Vet'ion (strong ranged): undergeared -> slow",
+  'The Hueycoatl (strong melee): undergeared -> slow',
+  'The Hueycoatl (strong ranged): undergeared -> slow',
+  'Duke Sucellus (strong ranged): undergeared -> slow',
+  'The Leviathan (strong melee): undergeared -> slow',
+  'The Whisperer (strong melee): undergeared -> slow',
+  'The Whisperer (strong ranged): undergeared -> slow',
+  'Phantom Muspah (strong melee): undergeared -> slow',
+  'Yama (strong melee): undergeared -> slow',
+  'Yama (strong ranged): undergeared -> slow',
+  'Maggot King (strong melee): undergeared -> slow',
+  'Maggot King (strong ranged): undergeared -> slow',
+  'The Mad Angel (strong ranged): undergeared -> slow',
+];

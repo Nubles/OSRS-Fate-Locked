@@ -62,6 +62,8 @@ export interface BossPlan {
   killsBeforeBank: number | null;
   /** Your DPS as a % of a strong reference setup (0..100). */
   gearGapPct: number;
+  /** Seconds the strong reference setup needs with the same attack; Infinity when not planned. */
+  referenceTtk: number;
 }
 
 /** Boss names that map to a different monster entry than their app name. */
@@ -75,15 +77,48 @@ export const BOSS_ALIASES: Record<string, string> = {
 };
 
 /** Multi-phase bosses whose opening phase is not first in the catalogue's alphabetical order. */
-const BOSS_OPENING_VERSIONS: Record<string, string> = {
+export const BOSS_OPENING_VERSIONS: Record<string, string> = {
   'Alchemical Hydra': 'Serpentine',
   'Zulrah': 'Serpentine',
   'Kalphite Queen': 'Crawling',
-  'Galvek': 'Fire',
   'Phantom Muspah': 'Ranged',
   'Doom of Mokhaiotl': 'Delve 1',
 };
 const STANDARD_VERSIONS = ['Post-quest', 'Normal', 'Solo'];
+
+/**
+ * Bosses (by app name) that ordinary melee or ranged damage cannot plan for,
+ * each checked on the boss's Wiki page. A style listed here gets no readiness.
+ */
+interface BossCombatLimit {
+  /** The boss cannot be fought with combat at all. */
+  noCombat?: string;
+  /** Melee cannot hurt it, except with weapons of `unlessCategory`. */
+  melee?: { note: string; unlessCategory?: string };
+  ranged?: { note: string };
+  /** A training boss with effectively endless hitpoints: no kill to time. */
+  endless?: string;
+}
+export const BOSS_COMBAT_LIMITS: Readonly<Record<string, BossCombatLimit>> = {
+  // Wiki "Zalcano" (rev 15358247): immune to traditional combat damage; Mining, Smithing and Runecraft instead.
+  'Zalcano': { noCombat: 'Zalcano is immune to combat damage. She is fought with Mining, Smithing and Runecraft, so there is no combat plan.' },
+  // Wiki "Kraken" (rev 15383981): entirely immune to melee; Ranged deals 1/7th of its normal damage; Magic is the reliable way.
+  'Kraken': {
+    melee: { note: 'The Kraken is immune to melee. Magic is the reliable way to fight it; choose a spell in the DPS tab.' },
+    ranged: { note: 'Ranged deals only a seventh of its damage to the Kraken. Magic is the reliable way to fight it; choose a spell in the DPS tab.' },
+  },
+  // Wiki "Zulrah" (rev 15385964): cannot be reached with melee, with the exception of halberds (the Polearm category).
+  'Zulrah': { melee: { note: 'Zulrah cannot be reached with melee, except with a halberd.', unlessCategory: 'polearm' } },
+  // Wiki "Gemstone Crab" (rev 15404558): no defence and effectively infinite hitpoints, made for combat training.
+  'Gemstone Crab': { endless: 'The Gemstone Crab is a training boss with effectively endless hitpoints, so there is no kill time to plan.' },
+};
+
+const styleBlock = (limit: BossCombatLimit | undefined, style: Style, category?: string): string | undefined => {
+  if (!limit) return undefined;
+  if (style === 'melee' && limit.melee && limit.melee.unlessCategory !== (category ?? '').trim().toLowerCase()) return limit.melee.note;
+  if (style === 'ranged' && limit.ranged) return limit.ranged.note;
+  return undefined;
+};
 
 /**
  * The version the Boss Planner assumes until the player picks one: the
@@ -165,13 +200,20 @@ const STRONG: PlayerCombat = {
 
 const KILL_OVERHEAD_S = 6; // amortised between-kills / banking
 
-const readinessOf = (ttk: number, dps: number): Readiness => {
+const SLOW_LIMIT_S = 180;
+const READINESS_BANDS: ReadonlyArray<[number, Readiness]> = [[20, 'excellent'], [45, 'good'], [90, 'workable'], [SLOW_LIMIT_S, 'slow']];
+
+/**
+ * Time-to-kill bands. A boss the strong reference itself needs over three
+ * minutes for (a group boss fought alone) is judged by the ratio to that
+ * reference's time instead, so the reference reads Slow there, never
+ * Undergeared. Every other boss keeps the plain time bands.
+ */
+const readinessOf = (ttk: number, dps: number, referenceTtk: number): Readiness => {
   if (dps <= 0.01 || !isFinite(ttk)) return 'undergeared';
-  if (ttk <= 20) return 'excellent';
-  if (ttk <= 45) return 'good';
-  if (ttk <= 90) return 'workable';
-  if (ttk <= 180) return 'slow';
-  return 'undergeared';
+  const againstReference = isFinite(referenceTtk) && referenceTtk > SLOW_LIMIT_S;
+  const band = READINESS_BANDS.find(([limit]) => againstReference ? ttk / referenceTtk <= limit / SLOW_LIMIT_S : ttk <= limit);
+  return band ? band[1] : 'undergeared';
 };
 
 const dangerOf = (maxHit: number | null, hp: number): Danger => {
@@ -183,18 +225,22 @@ const dangerOf = (maxHit: number | null, hp: number): Danger => {
   return 'extreme';
 };
 
-/** Compute the best plan for a boss. */
-export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan => {
+/** Compute the best plan for a boss; `bossName` (the app's boss name) applies its combat limits. */
+export const planBoss = (player: PlayerCombat, monster: MonsterLite, bossName?: string): BossPlan => {
+  const limit = bossName !== undefined && Object.prototype.hasOwnProperty.call(BOSS_COMBAT_LIMITS, bossName) ? BOSS_COMBAT_LIMITS[bossName] : undefined;
   const options = weaponCombatOptions(player.gear.category);
-  const candidates = options.filter(option => option.style !== 'magic');
-  if (!candidates.length) return {
+  const usable = options.filter(option => option.style !== 'magic');
+  const candidates = usable.filter(option => !styleBlock(limit, option.style, player.gear.category));
+  const unplanned = (assessmentNote: string): BossPlan => ({
     dps: 0, ttk: Infinity, maxHit: 0, hitChance: 0, style: 'melee', attackType: 'crush', stanceId: '',
     prayer: null, potion: null, killsPerHour: 0, readiness: 'unverified', danger: dangerOf(monster.maxHit, player.levels.hitpoints),
-    killsBeforeBank: 0, gearGapPct: 0,
-    assessmentNote: options.length
-      ? 'Choose a spell in the DPS tab to assess this magic weapon.'
-      : 'Attack options for this weapon need review before a combat estimate is available.',
-  };
+    killsBeforeBank: 0, gearGapPct: 0, referenceTtk: Infinity, assessmentNote,
+  });
+  if (limit?.noCombat) return unplanned(limit.noCombat);
+  if (usable.length && !candidates.length) return unplanned(styleBlock(limit, usable[0].style, player.gear.category)!);
+  if (!candidates.length) return unplanned(options.length
+    ? 'Choose a spell in the DPS tab to assess this magic weapon.'
+    : 'Attack options for this weapon need review before a combat estimate is available.');
   let bestCombo = candidates[0];
   let best = runCombo(player, monster, bestCombo);
   for (const candidate of candidates.slice(1)) {
@@ -222,9 +268,11 @@ export const planBoss = (player: PlayerCombat, monster: MonsterLite): BossPlan =
     prayer: boostLabel(PRAYERS[bestCombo.style], boosts.prayerId),
     potion: boostLabel(POTIONS[bestCombo.style], boosts.potionId),
     killsPerHour,
-    readiness: readinessOf(best.ttk, best.dps),
+    readiness: limit?.endless ? 'unverified' : readinessOf(best.ttk, best.dps, ref.ttk),
     danger: dangerOf(monster.maxHit, player.levels.hitpoints),
     killsBeforeBank,
     gearGapPct,
+    referenceTtk: ref.ttk,
+    ...(limit?.endless ? { assessmentNote: `${limit.endless} You deal about ${best.dps.toFixed(1)} damage per second to it.` } : {}),
   };
 };
