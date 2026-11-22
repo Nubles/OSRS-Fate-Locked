@@ -1,3 +1,4 @@
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildProgressSnapshot } from '../utils/progressSnapshot';

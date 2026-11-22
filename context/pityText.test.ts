@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createFreshState, gameReducerForTest as reduce, prepareKeyRollAction } from './GameContext';
-import type { GameState } from '../types';
+type S = Parameters<typeof reduce>[0];
 
 /** One missed Key roll (the highest die) in the given mode. */
 const missIn = (modeId: string) => {
-  let s = { ...createFreshState(), lastEvent: null } as GameState;
-  s = reduce(s, { type: 'SET_GAME_MODE', payload: { modeId } } as never) as GameState;
-  s = reduce(s, prepareKeyRollAction(s, 'Novice', 1, 3, (_p: string, _i = 0, max = 100) => max)) as GameState;
+  let s = { ...createFreshState(), lastEvent: null } as S;
+  s = reduce(s, { type: 'SET_GAME_MODE', payload: { modeId } } as never) as S;
+  s = reduce(s, prepareKeyRollAction(s, 'Novice', 1, 3, (_p: string, _i = 0, max = 100) => max)) as S;
   return s.history.at(-1)!;
 };
 

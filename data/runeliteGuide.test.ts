@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
 import {
   RUNELITE_GUIDE_CHAPTERS,
   RUNELITE_GUIDE_CHAPTER_IDS,
@@ -131,8 +133,7 @@ describe('RuneLite guide, as the plugin does it', () => {
     RUNELITE_GUIDE_FIGURES.find(figure => figure.id === figureId)?.callouts.find(item => item.id === id)?.body ?? '';
   const glossary = (term: string): string => RUNELITE_GUIDE_GLOSSARY.find(item => item.term === term)?.definition ?? '';
 
-  it('gives the relay’s real profile lifetime for Tracker copy expired', async () => {
-    const { readFileSync } = await import('node:fs');
+  it('gives the relay’s real profile lifetime for Tracker copy expired', () => {
     const worker = readFileSync('workers/fate-relay/worker.js', 'utf8');
     const days = Number(/const PROFILE_TTL_SECONDS = (\d+) \* 86400;/.exec(worker)?.[1]);
     expect(days).toBe(30);

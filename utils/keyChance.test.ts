@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
+import { readFileSync } from 'node:fs';
 import { initialState, prepareKeyRollAction, prepareLevelUpActions } from '../context/GameContext';
 import { DROP_RATES } from '../config/rules';
 import { FATE_MARK_CURSED_ODDS } from '../config/economy';
@@ -7,7 +9,7 @@ import { bossTier } from '../data/bossKeyTiers';
 import { MINIGAME_KEY_RESERVES } from '../data/minigameKeyReserves';
 import type { KeyRollContext } from '../config/vanillaKeyEconomy';
 import { DropSource, type GameState } from '../types';
-import { keyChance, keyChanceBonus, levelUpKeyChance } from './keyChance';
+import { keyChance, keyChanceBonus, KEY_CHANCE_BONUS_TITLE, levelUpKeyChance } from './keyChance';
 
 /**
  * The Key chance every screen shows is the chance the roll is made against.
@@ -158,9 +160,7 @@ describe('no screen works out a Key chance on its own', () => {
 });
 
 describe('the bonus badge tooltip', () => {
-  it('is one string in both layouts and credits what the live modes really add', async () => {
-    const { readFileSync } = await import('node:fs');
-    const { KEY_CHANCE_BONUS_TITLE } = await import('./keyChance');
+  it('is one string in both layouts and credits what the live modes really add', () => {
     expect(KEY_CHANCE_BONUS_TITLE).toMatch(/^Odds changed by achievements, rituals and omens/);
     for (const file of ['components/ActionSection.tsx', 'components/osrs/OsrsFarmKeys.tsx']) {
       const src = readFileSync(file, 'utf8');
