@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import regionMapSource from '../components/RegionMap.tsx?raw';
 import { hostHash, pointsAtRetiredFeed, RETIRED_FEED_HOST_HASH } from './starFeedOverride';
 
 // A made-up retired subdomain: the real one is only ever stored as a hash.
@@ -28,7 +27,7 @@ describe('pointsAtRetiredFeed', () => {
   });
 
   it('is the check the World map uses for a saved override', () => {
-    const src = readFileSync(fileURLToPath(new URL('../components/RegionMap.tsx', import.meta.url)), 'utf8');
+    const src: string = regionMapSource;
     expect(src).toContain('pointsAtRetiredFeed(ls)');
     // The default the map falls back to is the address the test above clears.
     expect(src).toContain("const DEFAULT_STAR_FEED = 'https://star-proxy.fatelocked.workers.dev/';");
