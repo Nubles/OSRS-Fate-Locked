@@ -45,7 +45,7 @@ React 18 · TypeScript · Vite · Tailwind CSS · Recharts · Vitest
 
 ## Run locally
 
-**Prerequisites:** Node.js 20+
+**Prerequisites:** Node.js 22+
 
 ```bash
 npm install
