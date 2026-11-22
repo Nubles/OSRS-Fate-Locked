@@ -1,10 +1,46 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { BANK_IDS } from '../data/banks';
 import { readBankLocationRegistry } from './bank-locations.mjs';
-import { buildBankDefinitions, generateBankAccessSource, generateBankSource } from './gen-banks.mjs';
+import { buildBankDefinitions, generateBankAccessSource, generateBankSource, orderBanksForRolls, readBankRollOrder } from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
 describe('bank source generator', () => {
+  // Seeded runs replay their Banks draws by position in BANK_IDS (context/chaosReplay.test.ts),
+  // so the pool order is pinned whole: it was the label order of 22 November 2026.
+  it('keeps the Banks roll pool in its fixed order', () => {
+    expect(BANK_IDS).toHaveLength(125);
+    expect(BANK_IDS.slice(0, 3)).toEqual(['13618', '13105', '5678']);
+    expect(BANK_IDS.at(-1)).toBe('woodcutting-leprechaun');
+    expect(createHash('sha256').update(BANK_IDS.join(',')).digest('hex'))
+      .toBe('027ebcd096260e36a10e719919ae53f2772139f4b74f92733842b145bc102315');
+    expect(BANK_IDS).toEqual(readBankRollOrder());
+  });
+
+  it('does not move a bank in the roll pool when its label changes', () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const before = buildBankDefinitions(doc, registry).map(def => def.id);
+    registry.labelOverrides = [
+      ...registry.labelOverrides.map((override: { name: string }) => ({ ...override, name: `Zz ${override.name}` })),
+      { id: '13618', name: 'Aaa first by name', wiki: [] },
+    ];
+    const renamed = buildBankDefinitions(doc, registry);
+
+    expect(renamed.find(def => def.id === '13618')?.name).toBe('Aaa first by name');
+    expect(renamed.map(def => def.id)).toEqual(before);
+  });
+
+  it('asks for a place in the roll order for every bank, and only for banks', () => {
+    const defs = [{ id: '1', name: 'B' }, { id: '2', name: 'A' }];
+
+    expect(orderBanksForRolls(defs, ['1', '2']).map(def => def.id)).toEqual(['1', '2']);
+    expect(() => orderBanksForRolls(defs, ['1'])).toThrow(/no place .* 2/);
+    expect(() => orderBanksForRolls(defs, ['1', '2', '3'])).toThrow(/not banks: 3/);
+    expect(() => orderBanksForRolls(defs, ['1', '2', '1'])).toThrow(/twice/);
+  });
+
   it('uses reviewed labels before chunk nicknames and appends the virtual bank after all 124 physical banks', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
     const registry = readBankLocationRegistry();

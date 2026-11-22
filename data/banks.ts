@@ -133,7 +133,7 @@ export const BANKS: BankDef[] = [
   { id: 'woodcutting-leprechaun', name: "Woodcutting Leprechaun (Forestry)" },
 ];
 
-/** All bank ids, for the roll pool. */
+/** All bank ids, for the roll pool, in the fixed order of data/sources/bank-roll-order.json. */
 export const BANK_IDS: string[] = BANKS.map((b) => b.id);
 
 /** id → definition, for label lookups. */

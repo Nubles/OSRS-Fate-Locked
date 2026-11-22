@@ -14,18 +14,41 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DOC_PATH = resolve(ROOT, 'public', 'chunk-content.json');
 const OUTPUT_PATH = resolve(ROOT, 'data', 'banks.ts');
 const ACCESS_OUTPUT_PATH = resolve(ROOT, 'data', 'bankAccess.ts');
+const ROLL_ORDER_PATH = resolve(ROOT, 'data', 'sources', 'bank-roll-order.json');
 
-export function buildBankDefinitions(doc, registry) {
+/** The Banks roll pool order: data/sources/bank-roll-order.json's ids. */
+export function readBankRollOrder(path = ROLL_ORDER_PATH) {
+  return JSON.parse(readFileSync(path, 'utf8')).ids;
+}
+
+/**
+ * Puts the banks in the roll pool's fixed order. Seeded runs replay their draws by
+ * position in BANK_IDS, so the order never follows the labels: a renamed bank keeps
+ * its place. Every bank needs a place, and a new bank goes at the end of the list.
+ */
+export function orderBanksForRolls(defs, rollOrder = readBankRollOrder()) {
+  const position = new Map(rollOrder.map((id, index) => [String(id), index]));
+  if (position.size !== rollOrder.length) throw new Error('data/sources/bank-roll-order.json lists a bank twice');
+  const ids = new Set(defs.map(({ id }) => id));
+  const unknown = rollOrder.filter(id => !ids.has(String(id)));
+  if (unknown.length) throw new Error(`data/sources/bank-roll-order.json lists ids that are not banks: ${unknown.join(', ')}`);
+  const missing = defs.filter(({ id }) => !position.has(id)).map(({ id }) => id);
+  if (missing.length) {
+    throw new Error(`Banks with no place in data/sources/bank-roll-order.json (add them at the end): ${missing.join(', ')}`);
+  }
+  return [...defs].sort((a, b) => position.get(a.id) - position.get(b.id));
+}
+
+export function buildBankDefinitions(doc, registry, rollOrder = readBankRollOrder()) {
   const chunks = doc.chunks ?? {};
   const labels = bankLocationLabels(registry);
   const merged = new Set(bankMerges(registry).map(({ id }) => id));
   const bankIds = [...new Set((doc.banks ?? []).map(String))].filter(id => !merged.has(id));
   const physicalDefs = bankIds
-    .map(id => ({ id, name: (labels.get(id) ?? chunks[id]?.n ?? chunks[id]?.name ?? `Bank ${id}`).trim() }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .map(id => ({ id, name: (labels.get(id) ?? chunks[id]?.n ?? chunks[id]?.name ?? `Bank ${id}`).trim() }));
   const virtualDefs = bankVirtualLocations(registry)
     .map(({ id, name }) => ({ id, name: name.trim() }));
-  const defs = [...physicalDefs, ...virtualDefs];
+  const defs = orderBanksForRolls([...physicalDefs, ...virtualDefs], rollOrder);
 
   const seen = new Set();
   for (const def of defs) {
@@ -54,7 +77,7 @@ export const BANKS: BankDef[] = [
 ${body}
 ];
 
-/** All bank ids, for the roll pool. */
+/** All bank ids, for the roll pool, in the fixed order of data/sources/bank-roll-order.json. */
 export const BANK_IDS: string[] = BANKS.map((b) => b.id);
 
 /** id → definition, for label lookups. */
