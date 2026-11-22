@@ -1800,13 +1800,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   // ============================================================================
   // SKILLING SUPPLY SHOPS (Ironman Meta)
   // ============================================================================
-  'Sandwich Lady': {
-    id: 'Food Shops',
-    category: TableType.MERCHANTS,
-    regions: ['Kandarin'], // Ardougne Market
-    skills: {},
-    description: 'Sells Chocolate Bars (Compost/Energy Potions).'
-  },
   'Fremennik Fish Shop': {
     id: 'Fishing Shops',
     category: TableType.MERCHANTS,
@@ -2298,11 +2291,11 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Fancy boots/gloves/capes for Clue Scrolls.'
   },
   'Gnome Glider Clothing': {
-    id: 'Clothes Shops',
-    category: TableType.MERCHANTS,
-    regions: ['Kandarin'], // Grand Tree
-    skills: {},
-    description: 'Gnome goggles/scarves for Clue Scrolls.'
+    id: 'Gnome Restaurant',
+    category: TableType.MINIGAMES, // Not a shop: rewards from hard deliveries
+    regions: ['Tree Gnome Stronghold'], // Grand Tree
+    skills: { 'Cooking': 29 },
+    description: 'Gnome goggles and scarf for Clue Scrolls: a 1/17 reward each from Gnome Restaurant hard deliveries.'
   },
   'Shayzien Armourer': {
     id: 'Platebody Shops',
