@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { resolve } from 'node:path';
 import { SHORTCUT_QUESTS, shortcutReachability } from './shortcutReach';
 import { QUEST_DATA } from '../data/questData';

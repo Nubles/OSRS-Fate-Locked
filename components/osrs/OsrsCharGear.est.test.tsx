@@ -2,7 +2,9 @@
 // ui-osrs-b[0]: the OSRS gear picker marks "Est." only for items with no
 // reviewed tier, asking GearService.isEstimated as the classic GearView does.
 import React from 'react';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
+// @ts-expect-error Node types are intentionally excluded from the browser app.
 import { resolve } from 'node:path';
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
