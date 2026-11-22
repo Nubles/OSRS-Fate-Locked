@@ -220,7 +220,7 @@
       "id": "A Ruff Situation",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-21",
+      "reviewedAt": "2026-11-22",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Ruff_Situation&oldid=15350582",
         "revision": 15350582,
@@ -228,7 +228,7 @@
       },
       "chunkSourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Edgeville\",\"Varrock\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"dog-shelter\",\"label\":\"Dog Shelter\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"gertrudes-house\",\"label\":\"Gertrude's house and Cooks' Guild\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":54}],\"id\":\"outlaw-camp\",\"label\":\"Outlaw Camp\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":53}],\"id\":\"shelter-road\",\"label\":\"Barbarian Village crossing\",\"standardAreas\":[\"Barbarian Village\"]}],\"skills\":{\"Crafting\":15},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Edgeville\",\"Varrock\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"dog-shelter\",\"label\":\"Dog Shelter\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"gertrudes-house\",\"label\":\"Gertrude's house and Cooks' Guild\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"outlaw-camp\",\"label\":\"Outlaw Camp\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":53}],\"id\":\"shelter-road\",\"label\":\"Barbarian Village crossing\",\"standardAreas\":[\"Barbarian Village\"]}],\"skills\":{\"Crafting\":15},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "47,54",
@@ -246,7 +246,7 @@
           "Needle (or costume needle), thread when using a regular needle, one suitable fur and grain; grain can be picked near the Cooks' Guild."
         ],
         "travel": [
-          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode."
+          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode. The Outlaw Camp lies wholly in chunk 48,54 (Wiki Outlaw Camp, oldid 15394973)."
         ],
         "instances": [
           "Defeat the two quest outlaws, combat levels 22 and 23."
