@@ -81,7 +81,7 @@ ${mergeBody}
 };
 
 /** One way into a bank: quests, diaries, guilds (the unlock and its entry) or checks to confirm. */
-export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; manual?: string[] }
+export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; skills?: string[]; manual?: string[] }
 
 /** Bank facilities the registry reviewed, such as the bank buffalo, with what each needs. */
 export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind: string; requirements?: string[] }[] = [

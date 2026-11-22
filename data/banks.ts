@@ -154,7 +154,7 @@ export const MERGED_BANKS: Readonly<Record<string, string>> = {
 };
 
 /** One way into a bank: quests, diaries, guilds (the unlock and its entry) or checks to confirm. */
-export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; manual?: string[] }
+export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; skills?: string[]; manual?: string[] }
 
 /** Bank facilities the registry reviewed, such as the bank buffalo, with what each needs. */
 export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind: string; requirements?: string[] }[] = [
@@ -197,7 +197,7 @@ export const BANK_REVIEWED_LOCATIONS: readonly { id: string; accessOptions?: Ban
 export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccessOption[] }[] = [
   {"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]},
   {"id":"4922","accessOptions":[{"guilds":["Farming Guild"]}]},
-  {"id":"11571","accessOptions":[{"guilds":["Crafting Guild"]}]},
+  {"id":"11571","accessOptions":[{"guilds":["Crafting Guild"],"diaries":["Falador Hard"]},{"guilds":["Crafting Guild"],"skills":["Crafting 99"]}]},
   {"id":"11319","accessOptions":[{"guilds":["Warriors' Guild"]}]},
   {"id":"10804","accessOptions":[{"guilds":["Legends' Guild"]}]},
   {"id":"9772","accessOptions":[{"guilds":["Myths' Guild"]}]},
@@ -207,9 +207,12 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"13099","accessOptions":[{"quests":["Contact!"]}]},
   {"id":"9265","accessOptions":[{"quests":["Mourning's End Part I"]}]},
   {"id":"10284","accessOptions":[{"quests":["The Corsair Curse"]}]},
-  {"id":"10300","accessOptions":[{"quests":["Throne of Miscellania"]}]},
+  {"id":"10300","accessOptions":[{"quests":["The Fremennik Trials"]}]},
   {"id":"9275","accessOptions":[{"quests":["The Fremennik Isles"]}]},
   {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]}]},
   {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]}]},
   {"id":"14388","accessOptions":[{"quests":["Sins of the Father"]}]},
+  {"id":"9273","accessOptions":[{"quests":["Swan Song"]}]},
+  {"id":"8757","accessOptions":[{"quests":["Song of the Elves"]}]},
+  {"id":"8499","accessOptions":[{"quests":["Song of the Elves"]}]},
 ];

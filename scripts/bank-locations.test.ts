@@ -259,21 +259,29 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
     expect(() => validateBankLocationRegistry(registry, options())).not.toThrow();
     expect(gatesOf(registry)).toEqual({
       10293: [{ guilds: ['Fishing Guild'] }], 4922: [{ guilds: ['Farming Guild'] }],
-      11571: [{ guilds: ['Crafting Guild'] }], 11319: [{ guilds: ["Warriors' Guild"] }],
+      11571: [{ guilds: ['Crafting Guild'], diaries: ['Falador Hard'] }, { guilds: ['Crafting Guild'], skills: ['Crafting 99'] }],
+      11319: [{ guilds: ["Warriors' Guild"] }],
       10804: [{ guilds: ["Legends' Guild"] }], 9772: [{ guilds: ["Myths' Guild"] }],
       6198: [{ guilds: ['Woodcutting Guild'] }], 6454: [{ guilds: ['Woodcutting Guild'] }],
       11310: [{ quests: ['Shilo Village'] }], 13099: [{ quests: ['Contact!'] }],
       9265: [{ quests: ["Mourning's End Part I"] }], 10284: [{ quests: ['The Corsair Curse'] }],
-      10300: [{ quests: ['Throne of Miscellania'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
+      10300: [{ quests: ['The Fremennik Trials'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
       9531: [{ quests: ['The Fremennik Isles'] }], 13874: [{ quests: ['In Aid of the Myreque'] }],
-      14388: [{ quests: ['Sins of the Father'] }],
+      14388: [{ quests: ['Sins of the Father'] }], 9273: [{ quests: ['Swan Song'] }],
+      8757: [{ quests: ['Song of the Elves'] }], 8499: [{ quests: ['Song of the Elves'] }],
     });
   });
 
   it('reject a gate with an unknown kind of requirement', () => {
     const registry = structuredClone(readBankLocationRegistry());
-    registry.accessGates[0].accessOptions = [{ skills: ['Fishing 68'] }];
-    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/invalid skills requirements/i);
+    registry.accessGates[0].accessOptions = [{ bosses: ['Fortis Colosseum'] }];
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/invalid bosses requirements/i);
+  });
+
+  it('reject a skill requirement that is not a skill and a level', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.accessGates[0].accessOptions = [{ skills: ['99 Crafting'] }];
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/must read like/i);
   });
 
   it('reject two gates on one bank', () => {

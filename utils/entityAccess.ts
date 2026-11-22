@@ -11,6 +11,7 @@ import { getActivityReq } from '../data/activityRequirements';
 import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
+import { meetsSkillRequirement } from './journalStatus';
 
 export type EntityAccessStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export interface EntityAccessResult { status: EntityAccessStatus; reasons: string[]; }
@@ -64,6 +65,9 @@ function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mo
     const missing = [
       ...(option.quests ?? []).filter(quest => !unlocks.quests.includes(quest)).map(quest => `Complete ${quest}`),
       ...(option.diaries ?? []).filter(diary => !unlocks.diaries.includes(diary)).map(diary => `Complete ${diary} Diary`),
+      // "Crafting 99" (scripts/bank-locations.mjs checks the wording).
+      ...(option.skills ?? []).map(entry => entry.split(' ')).filter(([skill, level]) => !meetsSkillRequirement(unlocks, skill, Number(level)))
+        .map(([skill, level]) => `${skill} level ${level}`),
     ];
     const own: EntityAccessResult = missing.length ? { status: 'NOT_READY', reasons: missing }
       : option.manual?.length ? { status: 'UNKNOWN', reasons: option.manual }

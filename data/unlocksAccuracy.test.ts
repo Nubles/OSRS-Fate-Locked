@@ -157,7 +157,7 @@ describe('B2: a town bank built in a quest needs the quest', () => {
   it.each([
     ['11310', 'Shilo Village', 'Shilo Village'], ['13099', 'Sophanem', 'Contact!'],
     ['9265', 'Lletya', "Mourning's End Part I"], ['10284', 'Corsair Cove', 'The Corsair Curse'],
-    ['10300', 'Etceteria', 'Throne of Miscellania'], ['9275', 'Neitiznot', 'The Fremennik Isles'],
+    ['10300', 'Etceteria', 'The Fremennik Trials'], ['9275', 'Neitiznot', 'The Fremennik Isles'],
     ['9531', 'Jatizso', 'The Fremennik Isles'], ['13874', 'Burgh de Rott', 'In Aid of the Myreque'],
     ['14388', 'Darkmeyer', 'Sins of the Father'],
   ])('bank %s (%s) needs %s', (id, _bank, quest) => {
@@ -165,6 +165,44 @@ describe('B2: a town bank built in a quest needs the quest', () => {
     const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
     expect(without.status).toBe('NOT_READY');
     expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+
+  // Piscatoris bank oldid 15211946, Gwenith oldid 15359762, Bank Deposit Box oldid 15378951.
+  it.each([
+    ['9273', 'Piscatoris', 'Swan Song'], ['8757', 'Gwenith deposit box', 'Song of the Elves'],
+    ['8499', 'West Prifddinas dock deposit box', 'Song of the Elves'],
+  ])('bank %s (%s) needs %s, which the Wiki names for using it', (id, _bank, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+
+  // Throne of Miscellania oldid 15403898: "the bank in Etceteria is available for use" before the quest starts.
+  it('opens the Etceteria bank after The Fremennik Trials, before Throne of Miscellania', () => {
+    expect(bankAccess('10300', everything(99, { quests: questsWithout('Throne of Miscellania') })))
+      .toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+});
+
+describe('B1b: the Crafting Guild bank needs 99 Crafting or the hard Falador Diary', () => {
+  // Crafting Guild oldid 15362001: "Only players who have completed the hard Falador Diary or have
+  // level 99 Crafting will be able to use either" (the bank chest and the deposit box).
+  it('stays shut to a run with the guild and 40 Crafting only', () => {
+    const access = bankAccess('11571', everything(98));
+    expect(access.status).toBe('NOT_READY');
+    expect(access.reasons).toContain('Crafting level 99');
+  });
+
+  it('opens with 99 Crafting, or with the hard Falador Diary', () => {
+    expect(bankAccess('11571', everything(99))).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(bankAccess('11571', everything(98, { diaries: ['Falador Hard'] }))).toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
+  it('still needs the guild itself', () => {
+    const access = bankAccess('11571', everything(99, { guilds: GUILDS_LIST.filter(name => name !== 'Crafting Guild') }));
+    expect(access.status).toBe('NOT_READY');
+    expect(access.reasons).toContain('Crafting Guild');
   });
 });
 
