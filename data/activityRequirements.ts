@@ -120,8 +120,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ===== Guilds =============================================================
   "Champions' Guild": { questPoints: 32, requiredAreas: ['Varrock'], note: 'South of Varrock.' },
-  "Cooks' Guild": { skills: { Cooking: 32 } },
-  'Crafting Guild': { skills: { Crafting: 40 } },
+  "Cooks' Guild": { skills: { Cooking: 32 }, note: "Wear a chef's hat or golden chef's hat, Cooking cape or hood, Max cape or hood, or Varrock armour 3 or 4 to enter." },
+  'Crafting Guild': { skills: { Crafting: 40 }, note: 'Wear a brown or golden apron, Crafting cape or Max cape to enter by the door.' },
   'Mining Guild': { skills: { Mining: 60 } },
   'Prayer Guild': { skills: { Prayer: 31 }, note: 'Edgeville Monastery chapel.' },
   'Farming Guild': { skills: { Farming: 45 }, requiredAreas: ['Farming Guild'], note: 'Tiered access: 45 / 65 / 85 Farming.' },
@@ -178,16 +178,16 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Tithe Farm': { skills: { Farming: 34 } },
   'Hallowed Sepulchre': { skills: { Agility: 52 }, quests: ['Sins of the Father'] },
   "Giants' Foundry": { skills: { Smithing: 15 }, quests: ['Sleeping Giants'] },
-  'Mastering Mixology': { skills: { Herblore: 60 } },
+  'Mastering Mixology': { skills: { Herblore: 60 }, quests: ['Children of the Sun'] },
   'Volcanic Mine': { skills: { Mining: 50 }, quests: ['Bone Voyage'], note: 'Petrified Pete takes 30 numulite each entry, or 3,000 once for good.' },
   'Pyramid Plunder': { skills: { Thieving: 21 }, questProgress: [{ quest: "Icthlarin's Little Helper", label: "Gained access to Sophanem by starting Icthlarin's Little Helper" }] },
   'Trouble Brewing': { skills: { Cooking: 40 }, quests: ['Cabin Fever'] },
   'Tai Bwo Wannai Cleanup': { quests: ['Jungle Potion'] },
   "Shades of Mort'ton": { quests: ["Shades of Mort'ton"] },
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
-  // Either way in is enough: a crop circle at 17 Hunter, or Zanaris's wheat-field portal.
-  'Impetuous Impulses': { oneOf: [{ skills: { Hunter: 17 } }, { manualRequirements: ['Completed Lost City, for the portal in Zanaris'] }] },
-  'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
+  // 17 Hunter is needed by either way in; Lost City only opens the Zanaris portal.
+  'Impetuous Impulses': { skills: { Hunter: 17 }, note: 'Enter by a crop circle, or the Zanaris portal after Lost City.' },
+  'Vale Totems': { skills: { Fletching: 20 }, quests: ['Children of the Sun', 'Vale Totems'], note: 'Vale Totems miniquest (Auburn Valley) first.' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
   // Anyone can take the challenges; claiming the rewards needs 750 total level.
   // The Easy Wilderness Diary requirement was removed on 14 October 2026
@@ -204,7 +204,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   },
   "Sorceress's Garden": { quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
   'Stealing Artefacts': { skills: { Thieving: 49 }, manualRequirements: ['Have a lockpick or hair clip'], note: 'Piscarilius access (Kourend & Kebos).' },
-  'Mess': { note: "Hosidius kitchen — a cook's duties in Great Kourend." },
+  'Mess': { skills: { Cooking: 20 }, note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
   // ===== Player-Owned House (Construction room-build levels) ================
   // Only the standard room-build levels and Superior Garden features, which are
@@ -242,7 +242,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: "Bought from Veos; each teleport page comes from a Great Kourend quest (Depths of Despair, Queen of Thieves, Tale of the Righteous, The Forsaken Tower, The Ascent of Arceuus)." },
   'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
-  'Colossal Pouch': { skills: { Runecraft: 25 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
+  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
   'Dizana\'s Quiver': { note: 'Fortis Colosseum reward (ammo storage).' },
   'Forestry Kit': { note: 'Forestry Shop (anima-infused bark).' },
@@ -307,12 +307,12 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Mounted Mythical Cape': { skills: { Construction: 47 } },
   "Mounted Xeric's Talisman": { skills: { Construction: 72 }, note: 'Amulet space in the portal nexus room.' },
   'Mounted Digsite Pendant': { skills: { Construction: 82 }, note: 'Amulet space in the portal nexus room.' },
-  'Spellbook Altars': { note: 'Chapel / altar (Construction).' },
-  'Armour Case': { note: 'Costume room (Construction).' },
-  'Magic Wardrobe': { note: 'Costume room (Construction).' },
-  'Cape Rack': { note: 'Costume room (Construction).' },
-  'Treasure Chest (Clues)': { note: 'Costume room (Construction).' },
-  'Toy Box': { note: 'Costume room (Construction).' },
+  'Spellbook Altars': { skills: { Construction: 80 }, note: 'Achievement gallery altar space (occult altar at 90).' },
+  'Armour Case': { skills: { Construction: 46 }, note: 'Costume room (Construction).' },
+  'Magic Wardrobe': { skills: { Construction: 42 }, note: 'Costume room (Construction).' },
+  'Cape Rack': { skills: { Construction: 54 }, note: 'Costume room (Construction).' },
+  'Treasure Chest (Clues)': { skills: { Construction: 48 }, note: 'Costume room (Construction).' },
+  'Toy Box': { skills: { Construction: 50 }, note: 'Costume room (Construction).' },
   'Armour Repair Stand': { skills: { Construction: 55 }, note: 'Repairs Barrows armour.' },
   'Telescope': { skills: { Construction: 44 }, note: 'Study.' },
   'Aquarium': { unverified: true, note: 'Legacy entry: an OSRS housing facility has not been verified.' },

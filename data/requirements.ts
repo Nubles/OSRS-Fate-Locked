@@ -191,16 +191,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     quests: ['Pirate\'s Treasure', 'Rum Deal'],
     description: 'Unlocks Mos Le\'Harmless and Cave Horrors (Black Mask).'
   },
-  'Fremennik Exiles': {
-    id: 'Fremennik Exiles',
+  'The Fremennik Exiles': {
+    id: 'The Fremennik Exiles',
     category: TableType.QUESTS,
     regions: ['Fremennik'],
     skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 },
     quests: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'],
     description: 'Unlocks Basilisk Knights (Jaw) and Neitiznot Faceguard.'
   },
-  'Slug Menace': {
-    id: 'Slug Menace',
+  'The Slug Menace': {
+    id: 'The Slug Menace',
     category: TableType.QUESTS,
     regions: ['Asgarnia', 'Kandarin'], // Witchaven/Falador
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 },
@@ -351,8 +351,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Mining Activity
     regions: ['Varlamore'], // Cam Torum
     skills: { 'Mining': 41 },
-    quests: ['Children of the Sun'], // Access to Cam Torum
-    description: 'AFK Mining for Calcified shards/Bone shards.'
+    quests: ['Perilous Moons'], // Partial: Cam Torum opens mid-quest
+    description: 'AFK Mining for blessed bone shards and calcified deposits.'
   },
   'Sulphur Naguas': {
     id: 'Sulphur Naguas',
@@ -361,13 +361,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: { 'Slayer': 48 }, // Technically no slayer req to kill, but effectively slayer creature? Actually 0 req.
     quests: ['Perilous Moons'],
     description: 'Zero-supply combat training (Free potions).'
-  },
-  'Teomat': {
-    id: 'Teomat',
-    category: TableType.MERCHANTS, // Shop
-    regions: ['Varlamore'], // Civitas
-    skills: {},
-    description: 'General store and regional supplies in Civitas.'
   },
   'Hunter Rumours': {
     id: 'Hunter Rumours',
@@ -453,7 +446,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: {},
-    description: 'Fire Giants, Chaos Dwarves (D2H), Air Obelisk.'
+    description: 'Fire Giants, Chaos Dwarves and Wine of Zamorak. Single-way combat.'
   },
   'Ferox Enclave': {
     id: 'Ferox Enclave',
@@ -474,7 +467,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: { 'Thieving': 39 },
-    description: 'Deep Wildy thieving and food shop.'
+    description: 'Deep Wildy thieving chests. Pick the door lock with a lockpick.'
   },
 
   // ============================================================================
@@ -541,7 +534,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
       { label: '60 Strength', skills: { Strength: 60 } },
       { label: '60 Agility', skills: { Agility: 60 } },
     ],
-    description: 'Source of Dragon Arrowtips.'
+    description: 'Slayer task monster in the God Wars Dungeon.'
   },
   'Spiritual Warriors': {
     id: 'Spiritual Warriors',
@@ -640,7 +633,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Champions\' Guild',
     category: TableType.GUILDS,
     regions: ['Misthalin'],
-    skills: {}, // 32 QP
+    skills: {}, // 32 QP: enforced by its activity requirement
     description: 'Shop sells an adamant platebody and black platelegs.'
   },
   'Ranging Guild (Minigame)': {
@@ -674,7 +667,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Tirannwn'], // Prifddinas
     skills: { 'Hunter': 80 },
     quests: ['Song of the Elves'],
-    description: 'Source of Elven Signet and Amulet of Power (t).'
+    description: 'Source of Elven Signet and noted Amulets of Power.'
   },
   'Lucky Implings': {
     id: 'Lucky Implings',
@@ -694,13 +687,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: { 'Agility': 34 },
     description: 'Crack between the warped jellies and the greater nechryael.'
   },
-  'Xeric\'s Lookout': {
-    id: 'Xeric\'s Lookout',
-    category: TableType.AGILITY_COURSES,
-    regions: ['Kourend & Kebos'],
-    skills: {}, // Grapple
-    description: 'Grapple shortcut in Shayzien.'
-  },
   'Karuulm Dungeon (Upper)': {
     id: 'Karuulm Dungeon (Upper)',
     category: TableType.AGILITY_COURSES,
@@ -714,13 +700,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 62 },
     description: 'Shortcut to Wyrms/Tasakaal.'
-  },
-  'Prifddinas Waterfall': {
-    id: 'Prifddinas Waterfall',
-    category: TableType.AGILITY_COURSES,
-    regions: ['Tirannwn'],
-    skills: { 'Agility': 66, 'Strength': 66, 'Ranged': 66 }, // Mith Grapple
-    description: 'Shortcut to the waterfall fishing spot.'
   },
   'Draynor Underwall Tunnel': {
     id: 'Draynor Underwall Tunnel',
@@ -748,7 +727,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.AGILITY_COURSES,
     regions: ['Kandarin'],
     skills: { 'Agility': 25 },
-    quests: ['Eagles\' Peak'],
     description: 'Climb the rocks to the peak.'
   },
   'Observatory Grapple': {
@@ -778,16 +756,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Myreque Hideout Shortcut',
     category: TableType.AGILITY_COURSES,
     regions: ['Morytania'],
-    skills: { 'Agility': 30 }, // Swamp boaty
-    quests: ['Nature Spirit'],
-    description: 'Behind the pub in Canifis.'
+    skills: {},
+    quests: ['In Search of the Myreque'], // Partial: the cellar opens during the quest
+    description: 'Trapdoor behind the pub in Canifis.'
   },
   'Lumbridge Swamp Caves Jump': {
     id: 'Lumbridge Swamp Caves Jump',
     category: TableType.AGILITY_COURSES,
     regions: ['Misthalin'],
-    skills: { 'Agility': 12 },
-    description: 'Jump across to Tears of Guthix.'
+    skills: { 'Agility': 1 },
+    description: 'Stepping stones to the Chasm of Tears.'
   },
 
   // ============================================================================
@@ -836,7 +814,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ectoplasmator',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Soul Wars
-    skills: {},
+    skills: { 'Prayer': 40 },
     description: 'Prayer XP from spectral creatures. Soul Wars.'
   },
   'Fish Sack': {
@@ -1027,14 +1005,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Members bank: Falador Hard diary or 99 Crafting. Wear an apron or suitable cape/hood to enter the guild.'
   },
   'Farming Guild Bank': {
-    id: 'Farming Guild Bank',
+    id: 'Farming Guild',
     category: TableType.GUILDS,
     regions: ['Kourend & Kebos'],
     skills: { 'Farming': 45 },
     description: 'Requires 45 Farming to enter guild.'
   },
   'Myths\' Guild Bank': {
-    id: 'Myths\' Guild Bank',
+    id: 'Myths\' Guild',
     category: TableType.GUILDS,
     regions: ['Kandarin'],
     skills: {},
@@ -1093,7 +1071,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Morytania'],
     skills: {},
-    quests: ['A Taste of Hope'],
+    quests: ['Priest in Peril'],
     description: 'Bank near ToB.'
   },
   'Darkmeyer Bank': {
@@ -1115,7 +1093,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Corsair Cove Bank': {
     id: 'Corsair Cove Bank',
     category: TableType.MERCHANTS,
-    regions: ['Kandarin', 'Fremennik'], // Accessed via Rellekka or Feldip
+    regions: ['Kandarin'], // Feldip Hills
     skills: {},
     quests: ['The Corsair Curse'],
     description: 'Bank in the Corsair Cove.'
@@ -1286,8 +1264,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dark Beasts': {
     id: 'Dark Beasts',
     category: TableType.MINIGAMES,
-    regions: ['Tirannwn', 'Misthalin'], // Mourner Tunnels / Isle of Souls
+    regions: ['Kandarin', 'Tirannwn'], // Mourner Tunnels (West Ardougne) / Iorwerth Dungeon
     skills: { 'Slayer': 90 },
+    quests: ['Mourning\'s End Part II'], // Partial: the new key opens the Mourner Tunnels
     description: 'Source of Dark Bow.'
   },
   'Smoke Devils': {
