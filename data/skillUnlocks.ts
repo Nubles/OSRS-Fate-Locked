@@ -153,18 +153,20 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Bronze & Iron Weapons',
       'Lvl 1: Quest Weapons (Silverlight, Wolfbane)',
-      'Lvl 5: Steel Weapons & Decorative Swords',
+      'Lvl 5: Steel Weapons & Decorative Sword (Red)',
       'Lvl 10: Black Weapons',
       'Lvl 10: White Weapons (Wanted! Quest)'
     ],
     2: [
       'Lvl 15: Ancient Mace (Another Slice of H.A.M)',
+      'Lvl 20: Decorative Sword (White)',
       'Lvl 20: Excalibur (Merlin\'s Crystal)',
       'Lvl 20: Mithril Weapons'
     ],
     3: [
       'Lvl 30: Adamant Weapons',
       'Lvl 30: Battlestaves',
+      'Lvl 30: Decorative Sword (Gold)',
       'Lvl 30: Pharaoh\'s Sceptre',
       'Lvl 30: Swamp Lizards (Magic/Range 30)'
     ],
@@ -1281,11 +1283,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 55: Red Chinchompas',
       'Lvl 55: Ironwood Blowpipe',
-      'Lvl 60: Dragon Thrown',
+      'Lvl 60: Dragon Darts, Dragon Knives',
       'Lvl 60: Red D\'hide, Dark Bow',
       'Lvl 60: Dragon Cannon (Sailing 92)'
     ],
     7: [
+      'Lvl 61: Dragon Thrownaxes',
       'Lvl 61: Rune Crossbow, Broad Bolts',
       'Lvl 64: Dragon Crossbow',
       'Lvl 65: 3rd Age Range',
