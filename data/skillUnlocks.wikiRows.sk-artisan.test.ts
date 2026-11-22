@@ -82,7 +82,7 @@ describe('artisan skill lists hold the Wiki level-up table rows', () => {
     ['Herblore', 'Goading Potion', 54], ['Herblore', 'Mastering Mixology', 60],
     ['Herblore', 'Sanfew Serum (Zogre Flesh Eaters)', 65], ['Herblore', 'Surge Potion', 81],
     ['Herblore', 'Menaphite Remedy', 88],
-    ['Thieving', "Winter Sq'irk", 1], ['Thieving', 'Bakery, Tea & Crafting Stalls', 5],
+    ['Thieving', "Winter Sq'irk", 1], ['Thieving', 'Crafting Stalls', 5],
     ['Thieving', 'Monkey Food & General Stalls (Monkey Madness I)', 5], ['Thieving', 'Chest (10 Coins)', 13],
     ['Thieving', 'Ogre Coffins', 20], ['Thieving', 'Wine Stalls', 22], ['Thieving', 'Digsite Workmen', 25],
     ['Thieving', "Spring Sq'irk", 25], ['Thieving', 'Seed Stalls', 27], ['Thieving', 'Isle of Souls Chest', 28],

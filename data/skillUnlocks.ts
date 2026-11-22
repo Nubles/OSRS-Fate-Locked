@@ -1907,7 +1907,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Pickpocket Man/Woman',
       'Lvl 1: Winter Sq\'irk',
       'Lvl 2: Vegetable Stalls',
-      'Lvl 5: Bakery, Tea & Crafting Stalls',
+      'Lvl 5: Bakery & Tea Stalls',
+      'Lvl 5: Crafting Stalls',
       'Lvl 5: Monkey Food & General Stalls (Monkey Madness I)',
       'Lvl 10: Pickpocket Farmers'
     ],
