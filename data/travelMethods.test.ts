@@ -171,6 +171,14 @@ describe('teleport spells', () => {
       .toEqual(Object.keys(NO_CHUNK_PICKER_RECORD).sort());
   });
 
+  it("read a landing polygon's points as tile corners, so an edge on a chunk border adds no chunk (travel-a F3)", () => {
+    const byId = new Map(spells().map((method) => [method.id, method]));
+    expect(byId.get('spell:standard:civitas-illa-fortis-teleport')?.options.Cast.to).toEqual(['26,48']);
+    expect(byId.get('spell:lunar:tele-group-moonclan')?.options.Cast.to).toEqual(['32,61']);
+    // The one-player spell's square (2113,3915, r=2) really does cross into 33,61.
+    expect(byId.get('spell:lunar:moonclan-teleport')?.options.Cast.to).toEqual(['32,61', '33,61']);
+  });
+
   it('put the spells the old table got wrong in the right places (G7)', () => {
     const byId = new Map(TRAVEL_METHODS.map((method) => [method.id, method]));
     expect(byId.get('spell:ancient:senntisten-teleport')?.options.Cast.to).toEqual(['51,52']);
@@ -210,7 +218,6 @@ const byKind = (kind: string) => TRAVEL_METHODS.filter((method) => method.id.sta
 
 /** Where a tablet's page marks a different landing square from its spell's page, reviewed. */
 const TABLET_SQUARES: Readonly<Record<string, string>> = {
-  'tablet:civitas-illa-fortis-teleport': "The tablet's square lies in 26,48; the spell's crosses into 26,49.",
   'tablet:arceuus-library-teleport': "The tablet's square crosses into 25,60; the spell's lies in 25,59.",
 };
 

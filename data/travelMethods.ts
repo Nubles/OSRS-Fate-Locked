@@ -88,7 +88,8 @@ const SPELLS: readonly TravelMethod[] = [
   spell('standard', 'Trollheim Teleport', ['45,57'], 15134848),
   spell('standard', 'Ape Atoll Teleport', ['43,43'], 14906055, { page: 'Ape Atoll Teleport (standard)' }),
   spell('standard', 'Kourend Castle Teleport', ['25,57'], 15311656),
-  spell('standard', 'Civitas illa Fortis Teleport', ['26,48', '26,49'], 15019227),
+  // The wiki's polygon runs from corner 1679,3131 to corner 1684,3136: tiles 1679-1683 x 3131-3135, all in 26,48.
+  spell('standard', 'Civitas illa Fortis Teleport', ['26,48'], 15356637),
   // The Home Teleports need no runes and land in one place each; the Chunk Picker has no record for them.
   spell('standard', 'Lumbridge Home Teleport', ['50,50'], 15362019),
 
@@ -111,7 +112,8 @@ const SPELLS: readonly TravelMethod[] = [
   spell('lunar', 'Fishing Guild Teleport', ['40,52', '40,53'], 14863806),
   spell('lunar', 'Catherby Teleport', ['43,53'], 14863808),
   spell('lunar', 'Ice Plateau Teleport', ['46,61'], 15134857),
-  spell('lunar', 'Tele Group Moonclan', ['32,61', '33,61'], 14863799),
+  // The wiki's polygon is one tile tall, corners 2107,3915 to 2112,3916: tiles 2107-2111 x 3915, all in 32,61.
+  spell('lunar', 'Tele Group Moonclan', ['32,61'], 15362973),
   spell('lunar', 'Tele Group Waterbirth', ['39,58'], 14863801),
   spell('lunar', 'Tele Group Barbarian', ['39,55'], 14863803),
   spell('lunar', 'Tele Group Khazard', ['41,49'], 14863805),
