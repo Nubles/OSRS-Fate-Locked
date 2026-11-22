@@ -277,6 +277,7 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
       8751: [{ quests: ['Regicide'], manual: ['Confirm you have volunteered as a sacrifice to Zulrah with High Priestess Zul-Harcinqa'] }],
       14907: [{ quests: ['Bone Voyage'], skills: ['Construction 21'], manual: ['Confirm you have built the bank chest from the chest pieces'] }],
       11811: BUILT, 10533: BUILT, 8740: BUILT, 8249: BUILT,
+      10275: [{ quests: ['Fallen From Grace'], skills: ['Construction 48'], manual: ['Confirm you have built the bank chest from the chest pieces'] }],
     });
   });
 

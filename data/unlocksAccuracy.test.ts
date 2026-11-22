@@ -218,8 +218,15 @@ describe('B3: a bank the Wiki names a requirement for states it, not "needs revi
     expect(short.reasons).toContain(`Construction level ${level}`);
   });
 
+  // Chest pieces (Wyrmscraig) oldid 15402131: 48 Construction, and its sunstone crystal needs Fallen From Grace.
+  it('asks for Fallen From Grace and 48 Construction before the Wyrmscraig chest is built', () => {
+    expect(bankAccess('10275', everything()).status).toBe('UNKNOWN');
+    expect(bankAccess('10275', everything(47)).reasons).toContain('Construction level 48');
+    expect(bankAccess('10275', everything(99, { quests: questsWithout('Fallen From Grace') })).reasons).toContain('Complete Fallen From Grace');
+  });
+
   it('leaves none of these at "needs review" for a run that has everything', () => {
-    for (const id of ['5678', '13618', '11051', '11056', '14908', '8751', '14907', '11811', '10533', '8740', '8249']) {
+    for (const id of ['10275', '5678', '13618', '11051', '11056', '14908', '8751', '14907', '11811', '10533', '8740', '8249']) {
       expect(bankAccess(id, everything()).reasons.join(' '), id).not.toMatch(/need review/);
     }
   });

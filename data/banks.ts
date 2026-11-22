@@ -226,4 +226,5 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"10533","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
   {"id":"8740","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
   {"id":"8249","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
+  {"id":"10275","accessOptions":[{"quests":["Fallen From Grace"],"skills":["Construction 48"],"manual":["Confirm you have built the bank chest from the chest pieces"]}]},
 ];

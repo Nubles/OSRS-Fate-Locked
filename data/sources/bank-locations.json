@@ -31,7 +31,8 @@
     { "title": "Fossil Island bank", "revision": 15315035, "url": "https://oldschool.runescape.wiki/w/Fossil_Island_bank" },
     { "title": "Bank chest (amenity)", "revision": 15402269, "url": "https://oldschool.runescape.wiki/w/Bank_chest_(amenity)" },
     { "title": "Mos Le'Harmless bank", "revision": 15211938, "url": "https://oldschool.runescape.wiki/w/Mos_Le%27Harmless_bank" },
-    { "title": "Mor Ul Rek", "revision": 15394862, "url": "https://oldschool.runescape.wiki/w/Mor_Ul_Rek" }
+    { "title": "Mor Ul Rek", "revision": 15394862, "url": "https://oldschool.runescape.wiki/w/Mor_Ul_Rek" },
+    { "title": "Chest pieces (Wyrmscraig)", "revision": 15402131, "url": "https://oldschool.runescape.wiki/w/Chest_pieces_(Wyrmscraig)" }
   ],
   "locations": [
     { "id": "11066", "cx": 43, "cy": 58, "name": "Keldagrim bank and Blast Furnace chest", "referenceKind": "entrance", "accessVia": "Keldagrim entrance north-east of Rellekka; start The Giant Dwarf", "facilities": ["Keldagrim bank", "Blast Furnace bank chest"], "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/Blast_Furnace"] },
@@ -124,7 +125,8 @@
     { "id": "11811", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "The Onyx Crest bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
     { "id": "10533", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Charred Island bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
     { "id": "8740", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Sunbleak Island bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
-    { "id": "8249", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Buccaneers' Haven bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] }
+    { "id": "8249", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Buccaneers' Haven bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
+    { "id": "10275", "accessOptions": [{ "quests": ["Fallen From Grace"], "skills": ["Construction 48"], "manual": ["Confirm you have built the bank chest from the chest pieces"] }], "note": "Wyrmscraig bank chest is built once from chest pieces with 48 Construction; its sunstone crystal needs Fallen From Grace.", "wiki": ["https://oldschool.runescape.wiki/w/Chest_pieces_(Wyrmscraig)", "https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
   "merges": [
     { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },
