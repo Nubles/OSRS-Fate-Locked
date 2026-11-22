@@ -11,6 +11,7 @@ export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind
   {"id":"5427","name":"Bank buffalo","kind":"npc"},
   {"id":"13354","name":"Bank Camel","kind":"npc","requirements":["Beneath Cursed Sands Complete the quest"]},
   {"id":"15151","name":"Deposit Box","kind":"object","requirements":["Cabin Fever Complete the quest"]},
+  {"id":"15151","name":"Bank chest","kind":"object","requirements":["Cabin Fever Complete the quest"]},
 ];
 
 /** The registry's reviewed locations (their names are their BANKS labels), with a service's own ways in. */

@@ -113,6 +113,6 @@ export const BANK_PICTURE_KINDS: Readonly<Record<string, BankPictureKind>> = {
   '14644': 'chest',
   '14646': 'booth',
   '14908': 'chest',
-  '15151': 'box',
+  '15151': 'chest',
   '15163': 'chest',
 };

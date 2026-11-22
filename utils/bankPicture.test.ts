@@ -26,8 +26,10 @@ describe('bankPicture', () => {
     expect(bankModelName(bankFor('7216')!)).toBe('Bank chest');
     expect(bankModelName(bankFor('9275')!)).toBe('Bank chest');
     expect(bankModelName(bankFor('11313')!)).toBe('Bank chest');
-    // A reviewed deposit box only (data/sources/bank-locations.json reviewedFacilities).
-    expect(bankModelName(bankFor('15151')!)).toBe('Bank deposit box');
+    // Trouble Brewing Lobby: the chunk data shows only a deposit box, but the Wiki has a full bank
+    // chest there (List of banks, 'Trouble Brewing chest' at 3810,3020; Trouble Brewing: 'Items can be
+    // deposited at the bank chest near Honest Jimmy'), recorded in the registry's reviewedFacilities.
+    expect(bankModelName(bankFor('15151')!)).toBe('Bank chest');
   });
 
   it('keeps the label rule where the facility data cannot tell', () => {
