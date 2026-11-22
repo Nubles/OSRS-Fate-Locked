@@ -328,8 +328,9 @@ describe('deterministic current content baseline', () => {
       // Up from 27,654: the transform records each "F2P Only" tag it drops and each requirement it
       // rewrites or overrides (accuracy audit S11, G4, G5, U6).
       // Up from 28,083 with the 7 Oct 2026 Chunk Picker export (net +3 ledger events).
-      // Up from 28,087: the reviewed A Ruff Situation step override (the Outlaw Camp is in 48,54).
-      auditEvents: 28088,
+      // Up from 28,087: the reviewed A Ruff Situation step override (the Outlaw Camp is in 48,54)
+      // and the North Rantz Peninsula spelling correction.
+      auditEvents: 28089,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1958);

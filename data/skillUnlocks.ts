@@ -153,18 +153,20 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Bronze & Iron Weapons',
       'Lvl 1: Quest Weapons (Silverlight, Wolfbane)',
-      'Lvl 5: Steel Weapons & Decorative Swords',
+      'Lvl 5: Steel Weapons & Decorative Sword (Red)',
       'Lvl 10: Black Weapons',
       'Lvl 10: White Weapons (Wanted! Quest)'
     ],
     2: [
       'Lvl 15: Ancient Mace (Another Slice of H.A.M)',
+      'Lvl 20: Decorative Sword (White)',
       'Lvl 20: Excalibur (Merlin\'s Crystal)',
       'Lvl 20: Mithril Weapons'
     ],
     3: [
       'Lvl 30: Adamant Weapons',
       'Lvl 30: Battlestaves',
+      'Lvl 30: Decorative Sword (Gold)',
       'Lvl 30: Pharaoh\'s Sceptre',
       'Lvl 30: Swamp Lizards (Magic/Range 30)'
     ],
@@ -200,11 +202,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Arclight, Abyssal Tentacle, Voidwaker',
       'Lvl 75: Godswords (AGS, BGS, SGS, ZGS)',
       'Lvl 80: Ferocious Gloves',
-      'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor Mace',
+      'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor\'s Mace',
       'Lvl 80: Scythe of Vitur & Soulreaper Axe'
     ],
     9: [
-      'Lvl 82: Osmumten\'s Fang'
+      'Lvl 82: Osmumten\'s Fang',
+      'Lvl 85: Obligator'
     ],
     10: [
       'Lvl 99: Skill Mastery (Attack Cape)'
@@ -439,7 +442,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Wizard Robes, Leather',
       'Lvl 5: Steel Armour, Defenders',
       'Lvl 10: Black Armour, White Armour',
-      'Lvl 10: Hardleather Shield',
+      'Lvl 10: Hard Leather Shield',
       'Lvl 10: Slayer Helmet (Craft 55)',
       'Lvl 10: Xerician Robes'
     ],
@@ -463,7 +466,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
-      'Lvl 45: Berserker/Archer/Seer Helms',
+      'Lvl 45: Berserker/Archer/Farseer Helms',
       'Lvl 45: Spirit Shields (Prayer 55)',
       'Lvl 50: Granite Armour',
       'Lvl 50: Moons of Peril Armour (Blood/Blue/Eclipse)',
@@ -490,6 +493,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Elidinis\' Ward',
       'Lvl 80: Ferocious Gloves',
       'Lvl 80: Fortified Masori',
+      'Lvl 80: Rondache',
       'Lvl 80: Torva Armour'
     ],
     9: [],
@@ -817,6 +821,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 84: Dragon Bolts, Amethyst Javelins',
       'Lvl 84: Rosewood Blowpipe',
       'Lvl 85: Magic Longbows',
+      'Lvl 86: Ascension Bolts (Diamond, Onyx)',
       'Lvl 87: Magic Shields',
       'Lvl 90: Dragon Arrows, Amethyst Darts'
     ],
@@ -1085,7 +1090,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 81: Wind Surge',
       'Lvl 82: Ice Blitz, Magic Imbue, Sanguinesti Staff',
       'Lvl 83: Barrows Teleport, Fertile Soil',
-      'Lvl 85: Tele Block, Water Surge, Tumeken\'s Shadow',
+      'Lvl 85: Tele Block, Water Surge, Tumeken\'s Shadow, Zorya\'s Tome',
       'Lvl 86: Plank Make, Smoke Barrage',
       'Lvl 87: Lvl-6 Enchant, Enchant Bolt (Onyx)',
       'Lvl 88: Shadow Barrage',
@@ -1151,7 +1156,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 71: Crystal Pickaxe',
       'Lvl 72: Basalt & Salts',
       'Lvl 74: Nickel Ore',
-      'Lvl 75: Ancient Essence'
+      'Lvl 75: Ancient Essence',
+      'Lvl 80: Ascension Shards (While Guthix Sleeps)'
     ],
     9: [
       'Lvl 85: Runite Ore'
@@ -1225,6 +1231,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Elidinis\' Ward'
     ],
     9: [
+      'Lvl 84: Zeal (Attack 75, Strength 75, Defence 70; Horn of Bran)',
       'Lvl 85: Bless Spirit Shields',
       'Lvl 90: Sigil Smithing'
     ],
@@ -1276,11 +1283,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 55: Red Chinchompas',
       'Lvl 55: Ironwood Blowpipe',
-      'Lvl 60: Dragon Thrown',
+      'Lvl 60: Dragon Darts, Dragon Knives',
       'Lvl 60: Red D\'hide, Dark Bow',
       'Lvl 60: Dragon Cannon (Sailing 92)'
     ],
     7: [
+      'Lvl 61: Dragon Thrownaxes',
       'Lvl 61: Rune Crossbow, Broad Bolts',
       'Lvl 64: Dragon Crossbow',
       'Lvl 65: 3rd Age Range',
@@ -1295,6 +1303,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Pegasian Boots',
       'Lvl 75: Toxic Blowpipe, Twisted Buckler',
       'Lvl 80: Bow of Faerdhinen',
+      'Lvl 80: Ascension Crossbows',
       'Lvl 80: Masori Armour',
       'Lvl 80: Venator Bow',
       'Lvl 80: Zaryte Crossbow'
@@ -1365,7 +1374,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 74: 2 Chaos Runes',
       'Lvl 75: Giant Pouch, Colossal Pouch (27)',
       'Lvl 76: 5 Water Runes',
-      'Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Hands/Feet',
+      'Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Gauntlets/Boots',
       'Lvl 78: 4 Earth Runes',
       'Lvl 79: Bloodbark Helm'
     ],
@@ -1520,7 +1529,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 32: Mogres (Fishing Explosive)',
-      'Lvl 33: Harpie Bug Swarms (Lit Lantern)',
+      'Lvl 33: Harpie Bug Swarms (Lit Bug Lantern)',
       'Lvl 35: Wall Beasts, Slayer Helmet',
       'Lvl 35: Witchwood Icon',
       'Lvl 37: Killerwatts, Insulated Boots',
@@ -1586,7 +1595,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Smith Bronze Axe/Dagger',
       'Lvl 2: Bronze Mace',
       'Lvl 3: Bronze Med Helm/Bolts',
-      'Lvl 4: Bronze Sword/Nails/Wire',
+      'Lvl 4: Bronze Shortsword/Nails/Wire',
       'Lvl 5: Bronze Scimitar/Arrows/C-balls/Spear',
       'Lvl 6: Bronze Longsword/Limbs',
       'Lvl 7: Bronze Full Helm/Knives',
@@ -1603,7 +1612,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 16: Iron Axe, Bronze Legs/Skirt',
       'Lvl 17: Iron Mace/Spit',
       'Lvl 18: Bronze Platebody, Iron Med Helm',
-      'Lvl 19: Iron Sword/Nails/Darts',
+      'Lvl 19: Iron Shortsword/Nails/Darts',
       'Lvl 20: Elemental Bars, Iron Arrows/C-balls',
       'Lvl 20: Silver Bars, Iron Scimitar'
     ],
@@ -1623,7 +1632,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 31: Steel Axe, Iron Legs/Skirt',
       'Lvl 32: Steel Mace',
       'Lvl 33: Iron Platebody, Steel Med Helm',
-      'Lvl 34: Steel Sword/Nails/Darts',
+      'Lvl 34: Steel Shortsword/Nails/Darts',
       'Lvl 35: Steel Scimitar/Arrows/C-balls',
       'Lvl 36: Steel Longsword/Limbs',
       'Lvl 37: Steel Full Helm/Knives',
@@ -1648,7 +1657,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 51: Mithril Axe, Shayzien T1 Greaves',
       'Lvl 52: Mithril Mace',
       'Lvl 53: Mithril Med Helm, Shayzien T1 Body',
-      'Lvl 54: Mithril Sword/Darts/Nails',
+      'Lvl 54: Mithril Shortsword/Darts/Nails',
       'Lvl 55: Mithril Scimitar/Arrows/C-balls',
       'Lvl 56: Mithril Longsword/Limbs/Keel',
       'Lvl 57: Mithril Full Helm/Knives',
@@ -1673,7 +1682,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 71: Adamant Axe, Shayzien T3 Greaves',
       'Lvl 72: Adamant Mace, Crystal Legs',
       'Lvl 73: Adamant Med Helm, Shayzien T3 Body',
-      'Lvl 74: Adamant Sword/Keel, Crystal Body',
+      'Lvl 74: Adamant Shortsword/Keel, Crystal Body',
       'Lvl 74: Cupronickel Bars',
       'Lvl 75: Adamant Scimitar/Arrows/C-balls',
       'Lvl 75: Dragon Kiteshield',
@@ -1694,7 +1703,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 86: Adamant Legs/Skirt, Rune Axe/Keel',
       'Lvl 87: Rune Mace',
       'Lvl 88: Adamant Platebody, Rune Med Helm',
-      'Lvl 89: Rune Sword/Nails',
+      'Lvl 89: Rune Shortsword/Nails',
       'Lvl 90: Dragon Platebody, dfs/Ward',
       'Lvl 90: Rune Scimitar/Arrows/C-balls',
       'Lvl 90: Torva Repair'

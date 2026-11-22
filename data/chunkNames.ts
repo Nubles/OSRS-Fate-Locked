@@ -318,7 +318,7 @@ export const CHUNK_NAMES: Readonly<Record<string, string>> = {
   "41,40": "Pest Control",
   "41,41": "Void Knights' Outpost",
   "41,46": "Rantz' Cave",
-  "41,47": "North Rantz Penninsula",
+  "41,47": "North Rantz Peninsula",
   "41,48": "Hazelmere's Island",
   "41,49": "Port Khazard",
   "41,50": "Tower of Life",

@@ -374,7 +374,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Karuulm
     skills: { 'Slayer': 62 },
-    description: 'Source of Dragon Sword/Harpoon.'
+    description: 'Source of Dragon Shortsword/Harpoon.'
   },
   'Drakes': {
     id: 'Drakes',

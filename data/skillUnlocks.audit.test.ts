@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SKILL_UNLOCK_DATA } from './skillUnlocks';
+import { STRATEGY_DATABASE } from './requirements';
 
 // S01–S04: independently reviewed OSRS Wiki revisions and Jagex 12-Aug-2026
 // patch notes, retained in the 22-Sep-2026 skill-reference audit.
@@ -50,7 +51,7 @@ describe('reviewed skill-reference facts', () => {
       ['Crafting', 'Coifs', 38], ['Defence', 'Fighter Torso', 40],
       ['Fletching', 'Shortbows, Ogre Arrows', 5], ['Herblore', 'Divine Super Attack', 70],
       ['Magic', 'Entangle', 79], ['Magic', 'Dream', 79], ['Magic', 'Blood Barrage', 92],
-      ['Ranged', "Ava's Accumulator", 50], ['Ranged', 'Dragon Thrown', 60],
+      ['Ranged', "Ava's Accumulator", 50], ['Ranged', 'Dragon Darts, Dragon Knives', 60],
       ['Sailing', 'Advanced Chum Station', 68], ['Sailing', 'Dock Drumstick Isle', 79],
       ['Sailing', 'Gale Catcher', 79],
     ] as const) {
@@ -131,6 +132,50 @@ describe('unlocks added in the 9 November 2026 review', () => {
 
   it('keeps the black mask on the cave horror row beside the witchwood icon they need', () => {
     expect(SKILL_UNLOCK_DATA.Slayer[6]).toContain('Lvl 58: Cave Horrors (Witchwood Icon), Black Mask');
+  });
+
+  // The Fractured Archive (20 Oct 2026): read from each skill's level-up table on 22 Nov 2026.
+  it.each([
+    ['Attack', 'Obligator', 85], ['Defence', 'Rondache', 80], ['Ranged', 'Ascension Crossbows', 80],
+    ['Magic', "Zorya's Tome", 85], ['Prayer', 'Zeal (Attack 75, Strength 75, Defence 70; Horn of Bran)', 84],
+    ['Mining', 'Ascension Shards (While Guthix Sleeps)', 80], ['Fletching', 'Ascension Bolts (Diamond, Onyx)', 86],
+  ] as const)('%s: %s from The Fractured Archive is listed at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.level === level && row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0].tier).toBe(Math.ceil(level / 10));
+  });
+
+  // The game renamed the metal swords to shortswords on 3 November 2026 (Wiki: Shortsword, Changes).
+  it('uses the shortsword names for the smithed swords and the wyrm drop', () => {
+    const oldName = /\b(Bronze|Iron|Steel|Black|White|Mithril|Adamant|Rune|Dragon) Sword\b/i;
+    for (const skill of Object.keys(SKILL_UNLOCK_DATA)) {
+      for (const row of rowsFor(skill)) expect(row.text, `${skill}: ${row.text}`).not.toMatch(oldName);
+    }
+    for (const [metal, level] of [['Bronze', 4], ['Iron', 19], ['Steel', 34], ['Mithril', 54], ['Adamant', 74], ['Rune', 89]] as const) {
+      expect(rowsFor('Smithing').some(row => row.level === level && row.text.includes(`${metal} Shortsword`)), metal).toBe(true);
+    }
+    expect(STRATEGY_DATABASE.Wyrms.description).toBe('Source of Dragon Shortsword/Harpoon.');
+  });
+
+  it('names items as the Wiki titles them', () => {
+    expect(SKILL_UNLOCK_DATA.Runecraft[8]).toContain('Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Gauntlets/Boots');
+    expect(SKILL_UNLOCK_DATA.Defence[1]).toContain('Lvl 10: Hard Leather Shield');
+    expect(SKILL_UNLOCK_DATA.Attack[8]).toContain("Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor's Mace");
+    expect(SKILL_UNLOCK_DATA.Defence[5]).toContain('Lvl 45: Berserker/Archer/Farseer Helms');
+    expect(SKILL_UNLOCK_DATA.Slayer[4]).toContain('Lvl 33: Harpie Bug Swarms (Lit Bug Lantern)');
+  });
+
+  it('gives each dragon thrown weapon and decorative sword its own level', () => {
+    for (const [skill, name, level] of [
+      ['Ranged', 'Dragon Darts, Dragon Knives', 60], ['Ranged', 'Dragon Thrownaxes', 61],
+      ['Attack', 'Decorative Sword (Red)', 5], ['Attack', 'Decorative Sword (White)', 20], ['Attack', 'Decorative Sword (Gold)', 30],
+    ] as const) {
+      const matches = rowsFor(skill).filter(row => row.text.includes(name));
+      expect(matches, `${skill}: ${name}`).toHaveLength(1);
+      expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+    }
+    expect(rowsFor('Ranged').some(row => row.text.includes('Dragon Thrown,') || row.text.endsWith('Dragon Thrown'))).toBe(false);
+    expect(rowsFor('Attack').some(row => row.text.includes('Decorative Swords'))).toBe(false);
   });
 
   it('lists all nine house locations at their Construction levels', () => {
