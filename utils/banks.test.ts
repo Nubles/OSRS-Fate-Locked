@@ -13,8 +13,9 @@ const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
 
 describe('bank data', () => {
   it('has 125 uniquely-named, uniquely-keyed banks', () => {
-    // Two of the Chunk Picker's 127 bank chunks open no bank and are merged into
-    // the bank each leads to (data/sources/bank-locations.json merges).
+    // Three of the 127 bank chunks in public/chunk-content.json open no bank and are
+    // merged into the bank each leads to (data/sources/bank-locations.json merges),
+    // leaving 124 physical places plus the one virtual registry entry.
     expect(BANKS.length).toBe(125);
     expect(new Set(BANK_IDS).size).toBe(125);
     expect(new Set(BANKS.map(b => b.name)).size).toBe(125);
@@ -35,6 +36,11 @@ describe('bank data', () => {
     expect(BANK_BY_ID['11830'].name).toBe('Ruins of Camdozaal (via Ice Mountain)');
     expect(BANK_BY_ID['14132'].name).toBe('Sangvesti and Castle Drakan banking');
     expect(BANK_BY_ID['woodcutting-leprechaun'].name).toBe('Woodcutting Leprechaun (Forestry)');
+    // Named for the bank, not a landmark in its chunk (List of banks oldid 15402836).
+    expect(BANK_BY_ID['14638'].name).toBe("Mos Le'Harmless bank");
+    expect(BANK_BY_ID['13618'].name).toBe("Tarn's Lair bank");
+    expect(BANK_BY_ID['11313'].name).toBe('Mor Ul Rek (TzHaar City) banks');
+    expect(BANK_BY_ID['14644'].name).toBe('Hallowed Sepulchre bank chests');
     expect(BANK_IDS.filter(id => /^\d+$/.test(id))).toHaveLength(124);
   });
 

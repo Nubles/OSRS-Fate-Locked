@@ -6,7 +6,6 @@
 export interface BankDef { id: string; name: string }
 
 export const BANKS: BankDef[] = [
-  { id: '13618', name: "Abandoned Mine" },
   { id: '13105', name: "Al Kharid Palace" },
   { id: '5678', name: "Aldarin dock deposit box" },
   { id: '11578', name: "Ancient Prison bank" },
@@ -33,7 +32,6 @@ export const BANKS: BankDef[] = [
   { id: '5939', name: "Darkfrost Peak" },
   { id: '14388', name: "Darkmeyer" },
   { id: '7723', name: "Deepfin Point" },
-  { id: '14644', name: "East Darkmeyer" },
   { id: '12084', name: "East Falador" },
   { id: '6454', name: "East Woodcutting Guild deposit box" },
   { id: '10288', name: "East Yanille" },
@@ -53,12 +51,12 @@ export const BANKS: BankDef[] = [
   { id: '12838', name: "Great Conch Sacred Grove deposit box" },
   { id: '12337', name: "Guardians of the Rift bank and deposit pool" },
   { id: '8757', name: "Gwenith deposit box" },
+  { id: '14644', name: "Hallowed Sepulchre bank chests" },
   { id: '6712', name: "Hosidius Kitchen bank chest" },
   { id: '6968', name: "Hosidius Square" },
   { id: '14908', name: "House on the Hill" },
   { id: '6191', name: "Hunter Guild" },
   { id: '9531', name: "Jatizso" },
-  { id: '11313', name: "Karamja Volcano" },
   { id: '11066', name: "Keldagrim bank and Blast Furnace chest" },
   { id: '6457', name: "Kourend Castle" },
   { id: '5941', name: "Land's End" },
@@ -73,6 +71,8 @@ export const BANKS: BankDef[] = [
   { id: '11051', name: "Marim" },
   { id: '5420', name: "Mistrock Center" },
   { id: '5421', name: "Moonrise Alchemical Headquarters" },
+  { id: '11313', name: "Mor Ul Rek (TzHaar City) banks" },
+  { id: '14638', name: "Mos Le'Harmless bank" },
   { id: '5179', name: "Mount Karuulm" },
   { id: '4919', name: "Mount Quidamortem" },
   { id: '14907', name: "Museum Camp" },
@@ -85,7 +85,6 @@ export const BANKS: BankDef[] = [
   { id: '8253', name: "North Moonclan" },
   { id: '9778', name: "Ourania Altar" },
   { id: '10553', name: "Peer the Seer deposit service" },
-  { id: '14638', name: "Pirate Base" },
   { id: '7227', name: "Piscarilius Bank" },
   { id: '10545', name: "Port Khazard" },
   { id: '14646', name: "Port Phasmatys" },
@@ -110,6 +109,7 @@ export const BANKS: BankDef[] = [
   { id: '5692', name: "Sulphur Mine" },
   { id: '8740', name: "Sunbleak Island" },
   { id: '4912', name: "Tal Teklan" },
+  { id: '13618', name: "Tarn's Lair bank" },
   { id: '11811', name: "The Onyx Crest" },
   { id: '12078', name: "The Pandemonium" },
   { id: '12581', name: "The Summer Shore" },
@@ -154,7 +154,7 @@ export const MERGED_BANKS: Readonly<Record<string, string>> = {
 };
 
 /** One way into a bank: quests, diaries, guilds (the unlock and its entry) or checks to confirm. */
-export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; manual?: string[] }
+export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; skills?: string[]; manual?: string[] }
 
 /** Bank facilities the registry reviewed, such as the bank buffalo, with what each needs. */
 export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind: string; requirements?: string[] }[] = [
@@ -197,7 +197,7 @@ export const BANK_REVIEWED_LOCATIONS: readonly { id: string; accessOptions?: Ban
 export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccessOption[] }[] = [
   {"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]},
   {"id":"4922","accessOptions":[{"guilds":["Farming Guild"]}]},
-  {"id":"11571","accessOptions":[{"guilds":["Crafting Guild"]}]},
+  {"id":"11571","accessOptions":[{"guilds":["Crafting Guild"],"diaries":["Falador Hard"]},{"guilds":["Crafting Guild"],"skills":["Crafting 99"]}]},
   {"id":"11319","accessOptions":[{"guilds":["Warriors' Guild"]}]},
   {"id":"10804","accessOptions":[{"guilds":["Legends' Guild"]}]},
   {"id":"9772","accessOptions":[{"guilds":["Myths' Guild"]}]},
@@ -207,10 +207,30 @@ export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccess
   {"id":"13099","accessOptions":[{"quests":["Contact!"]}]},
   {"id":"9265","accessOptions":[{"quests":["Mourning's End Part I"]}]},
   {"id":"10284","accessOptions":[{"quests":["The Corsair Curse"]}]},
-  {"id":"10300","accessOptions":[{"quests":["Throne of Miscellania"]}]},
+  {"id":"10300","accessOptions":[{"quests":["The Fremennik Trials"]}]},
   {"id":"9275","accessOptions":[{"quests":["The Fremennik Isles"]}]},
   {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]}]},
   {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]}]},
   {"id":"14388","accessOptions":[{"quests":["Sins of the Father"]}]},
   {"id":"12337","accessOptions":[{"quests":["Temple of the Eye"]}]},
+  {"id":"9273","accessOptions":[{"quests":["Swan Song"]}]},
+  {"id":"8253","accessOptions":[{"quests":["Dream Mentor"]},{"manual":["Confirm you have started Lunar Diplomacy and carry a Seal of Passage"]}]},
+  {"id":"8508","accessOptions":[{"quests":["Lunar Diplomacy"]},{"manual":["Confirm you have progressed Lunar Diplomacy far enough to reach Lunar Isle"]}]},
+  {"id":"12581","accessOptions":[{"quests":["Troubled Tortugans"]},{"manual":["Confirm you have started Troubled Tortugans"]}]},
+  {"id":"12838","accessOptions":[{"quests":["Troubled Tortugans"]},{"manual":["Confirm you have started Troubled Tortugans"]}]},
+  {"id":"11047","accessOptions":[{"quests":["The Red Reef"]},{"manual":["Confirm you have partly completed The Red Reef"]}]},
+  {"id":"8757","accessOptions":[{"quests":["Song of the Elves"]}]},
+  {"id":"8499","accessOptions":[{"quests":["Song of the Elves"]}]},
+  {"id":"5678","accessOptions":[{"quests":["Children of the Sun"]}]},
+  {"id":"13618","accessOptions":[{"quests":["Haunted Mine"]}]},
+  {"id":"11051","accessOptions":[{"quests":["Monkey Madness II"]}]},
+  {"id":"11056","accessOptions":[{"quests":["Jungle Potion"]}]},
+  {"id":"14908","accessOptions":[{"quests":["Bone Voyage"]}]},
+  {"id":"8751","accessOptions":[{"quests":["Regicide"],"manual":["Confirm you have volunteered as a sacrifice to Zulrah with High Priestess Zul-Harcinqa"]}]},
+  {"id":"14907","accessOptions":[{"quests":["Bone Voyage"],"skills":["Construction 21"],"manual":["Confirm you have built the bank chest from the chest pieces"]}]},
+  {"id":"11811","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
+  {"id":"10533","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
+  {"id":"8740","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
+  {"id":"8249","accessOptions":[{"skills":["Construction 70"],"manual":["Confirm you have built the bank chest here"]}]},
+  {"id":"10275","accessOptions":[{"quests":["Fallen From Grace"],"skills":["Construction 48"],"manual":["Confirm you have built the bank chest from the chest pieces"]}]},
 ];

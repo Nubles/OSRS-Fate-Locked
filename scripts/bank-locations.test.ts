@@ -29,7 +29,7 @@ const EXCLUSIONS = [
 // below fails on the check it names rather than on an unknown override id.
 const TEST_VALIDATION_OPTIONS = {
   validChunkIds: new Set(ADDITION_IDS),
-  validBankIds: new Set(['10275', '11830', '10292', '10547', '13361']),
+  validBankIds: new Set(['10275', '11830', '10292', '10547', '13361', '14638', '13618', '11313', '14644']),
 };
 
 describe('reviewed bank-location registry', () => {
@@ -254,26 +254,48 @@ describe('bank access gates (accuracy audit B1, B2)', () => {
   const gatesOf = (registry: { accessGates: Array<{ id: string; accessOptions: unknown[] }> }) =>
     Object.fromEntries(registry.accessGates.map(({ id, accessOptions }) => [id, accessOptions]));
 
+  // The Sailing islands' bank chests (Bank chest (amenity), oldid 15402269).
+  const BUILT = [{ skills: ['Construction 70'], manual: ['Confirm you have built the bank chest here'] }];
   it('gate the guild banks by their guild and the town banks by their quest', () => {
     const registry = readBankLocationRegistry();
     expect(() => validateBankLocationRegistry(registry, options())).not.toThrow();
     expect(gatesOf(registry)).toEqual({
       10293: [{ guilds: ['Fishing Guild'] }], 4922: [{ guilds: ['Farming Guild'] }],
-      11571: [{ guilds: ['Crafting Guild'] }], 11319: [{ guilds: ["Warriors' Guild"] }],
+      11571: [{ guilds: ['Crafting Guild'], diaries: ['Falador Hard'] }, { guilds: ['Crafting Guild'], skills: ['Crafting 99'] }],
+      11319: [{ guilds: ["Warriors' Guild"] }],
       10804: [{ guilds: ["Legends' Guild"] }], 9772: [{ guilds: ["Myths' Guild"] }],
       6198: [{ guilds: ['Woodcutting Guild'] }], 6454: [{ guilds: ['Woodcutting Guild'] }],
       11310: [{ quests: ['Shilo Village'] }], 13099: [{ quests: ['Contact!'] }],
       9265: [{ quests: ["Mourning's End Part I"] }], 10284: [{ quests: ['The Corsair Curse'] }],
-      10300: [{ quests: ['Throne of Miscellania'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
+      10300: [{ quests: ['The Fremennik Trials'] }], 9275: [{ quests: ['The Fremennik Isles'] }],
       9531: [{ quests: ['The Fremennik Isles'] }], 13874: [{ quests: ['In Aid of the Myreque'] }],
-      14388: [{ quests: ['Sins of the Father'] }],
+      14388: [{ quests: ['Sins of the Father'] }], 9273: [{ quests: ['Swan Song'] }],
+      8253: [{ quests: ['Dream Mentor'] }, { manual: ['Confirm you have started Lunar Diplomacy and carry a Seal of Passage'] }],
+      8508: [{ quests: ['Lunar Diplomacy'] }, { manual: ['Confirm you have progressed Lunar Diplomacy far enough to reach Lunar Isle'] }],
+      12581: [{ quests: ['Troubled Tortugans'] }, { manual: ['Confirm you have started Troubled Tortugans'] }],
+      12838: [{ quests: ['Troubled Tortugans'] }, { manual: ['Confirm you have started Troubled Tortugans'] }],
+      11047: [{ quests: ['The Red Reef'] }, { manual: ['Confirm you have partly completed The Red Reef'] }],
+      8757: [{ quests: ['Song of the Elves'] }], 8499: [{ quests: ['Song of the Elves'] }],
+      5678: [{ quests: ['Children of the Sun'] }], 13618: [{ quests: ['Haunted Mine'] }],
+      11051: [{ quests: ['Monkey Madness II'] }], 11056: [{ quests: ['Jungle Potion'] }],
+      14908: [{ quests: ['Bone Voyage'] }],
+      8751: [{ quests: ['Regicide'], manual: ['Confirm you have volunteered as a sacrifice to Zulrah with High Priestess Zul-Harcinqa'] }],
+      14907: [{ quests: ['Bone Voyage'], skills: ['Construction 21'], manual: ['Confirm you have built the bank chest from the chest pieces'] }],
+      11811: BUILT, 10533: BUILT, 8740: BUILT, 8249: BUILT,
+      10275: [{ quests: ['Fallen From Grace'], skills: ['Construction 48'], manual: ['Confirm you have built the bank chest from the chest pieces'] }],
     });
   });
 
   it('reject a gate with an unknown kind of requirement', () => {
     const registry = structuredClone(readBankLocationRegistry());
-    registry.accessGates[0].accessOptions = [{ skills: ['Fishing 68'] }];
-    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/invalid skills requirements/i);
+    registry.accessGates[0].accessOptions = [{ bosses: ['Fortis Colosseum'] }];
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/invalid bosses requirements/i);
+  });
+
+  it('reject a skill requirement that is not a skill and a level', () => {
+    const registry = structuredClone(readBankLocationRegistry());
+    registry.accessGates[0].accessOptions = [{ skills: ['99 Crafting'] }];
+    expect(() => validateBankLocationRegistry(registry, options())).toThrow(/must read like/i);
   });
 
   it('reject two gates on one bank', () => {

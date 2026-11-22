@@ -11,6 +11,7 @@ import { getActivityReq } from '../data/activityRequirements';
 import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
+import { meetsSkillRequirement } from './journalStatus';
 
 export type EntityAccessStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export interface EntityAccessResult { status: EntityAccessStatus; reasons: string[]; }
@@ -34,6 +35,15 @@ function bestAccess(results: EntityAccessResult[]): EntityAccessResult {
   if (results.some(result => result.status === 'ALLOWED')) return { status: 'ALLOWED', reasons: [] };
   const status = (['UNKNOWN', 'NOT_READY', 'LOCKED'] as const)
     .find(candidate => results.some(result => result.status === candidate)) ?? 'UNKNOWN';
+  // Every way is blocked: name what the nearest ways still need, not all of them together.
+  if (status !== 'UNKNOWN') {
+    const blocked = results.filter(result => result.status === status).map(result => [...new Set(result.reasons)]);
+    const fewest = Math.min(...blocked.map(reasons => reasons.length));
+    const nearest = blocked.filter(reasons => reasons.length === fewest);
+    const shared = nearest[0].filter(reason => nearest.every(reasons => reasons.includes(reason)));
+    const rest = [...new Set(nearest.map(reasons => reasons.filter(reason => !shared.includes(reason)).join(' and ')))].filter(Boolean);
+    return { status, reasons: rest.length > 1 ? [...shared, `One of: ${rest.join(' or ')}`] : [...shared, ...rest] };
+  }
   return { status, reasons: [...new Set(results.flatMap(result => result.reasons))] };
 }
 
@@ -64,6 +74,9 @@ function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mo
     const missing = [
       ...(option.quests ?? []).filter(quest => !unlocks.quests.includes(quest)).map(quest => `Complete ${quest}`),
       ...(option.diaries ?? []).filter(diary => !unlocks.diaries.includes(diary)).map(diary => `Complete ${diary} Diary`),
+      // "Crafting 99" (scripts/bank-locations.mjs checks the wording).
+      ...(option.skills ?? []).map(entry => entry.split(' ')).filter(([skill, level]) => !meetsSkillRequirement(unlocks, skill, Number(level)))
+        .map(([skill, level]) => `${skill} level ${level}`),
     ];
     const own: EntityAccessResult = missing.length ? { status: 'NOT_READY', reasons: missing }
       : option.manual?.length ? { status: 'UNKNOWN', reasons: option.manual }
@@ -95,7 +108,8 @@ function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: Un
     : { status: 'UNKNOWN', reasons: [`${name ?? 'Bank facility'} access requirements need review`] };
   return { status: entry.status === 'NOT_READY' || access.status === 'NOT_READY' ? 'NOT_READY'
     : entry.status === 'UNKNOWN' || access.status === 'UNKNOWN' ? 'UNKNOWN' : 'ALLOWED',
-    reasons: [...new Set([...entry.reasons, ...access.reasons])] };
+    // A gate's "Complete X" repeats a quest X the place's own entry already names.
+    reasons: [...new Set([...entry.reasons, ...access.reasons.filter(reason => !entry.reasons.some(r => reason === `Complete ${r}`))])] };
 }
 
 interface BankFacility { name: string; kind: EntityKind; requirements?: string[] }
