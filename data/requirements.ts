@@ -2297,10 +2297,10 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   },
   'Gnome Glider Clothing': {
     id: 'Gnome Restaurant',
-    category: TableType.MINIGAMES, // Not a shop: rewards from hard deliveries
+    category: TableType.MINIGAMES, // Not a shop: tips from two hard-delivery customers
     regions: ['Tree Gnome Stronghold'], // Grand Tree
     skills: { 'Cooking': 29 },
-    description: 'Gnome goggles and scarf for Clue Scrolls: a 1/17 reward each from Gnome Restaurant hard deliveries.'
+    description: 'Gnome goggles and scarf for Clue Scrolls: a 1/17 tip each from Captain Daerkin or Captain Ninto on Gnome Restaurant hard deliveries.'
   },
   'Shayzien Armourer': {
     id: 'Platebody Shops',

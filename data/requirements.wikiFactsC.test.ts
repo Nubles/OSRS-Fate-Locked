@@ -20,6 +20,7 @@ describe('Strategy Guide entries for things that are not shops', () => {
     });
     expect(S['Gnome Glider Clothing'].description).toMatch(/Gnome Restaurant/);
     expect(S['Gnome Glider Clothing'].description).toMatch(/1\/17/);
+    expect(S['Gnome Glider Clothing'].description).toMatch(/Daerkin|Ninto/);
   });
 
   it('were guide entries only, in no list a Key rolls on', () => {
