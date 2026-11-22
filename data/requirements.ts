@@ -23,6 +23,8 @@ export interface ContentRequirement {
   manualRequirements?: string[];
   alternatives?: ContentAlternativeRequirement[]; // One complete route is sufficient.
   accessRoutes?: Array<{ label: string; skills?: Record<string, number>; diaries?: string[] }>;
+  /** Borrow this activity's readiness (data/activityRequirements.ts) when the id is another unlock. */
+  activity?: string;
 }
 
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
@@ -591,7 +593,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Warriors\' Guild',
     category: TableType.GUILDS,
     regions: ['Asgarnia'],
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {}, // Entry rule (130 combined, or 99 in either) comes from the guild's activity readiness
     description: 'Grind for Bronze through Dragon Defenders.'
   },
   'Wizards\' Guild (Runes)': {
@@ -1203,7 +1205,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Rune Defender',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // Warriors Guild
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {},
+    activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Accurate off-hand. Warriors Guild.'
   },
   'Ava\'s Accumulator': {
@@ -1604,7 +1607,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Herblore Shops',
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Warriors Guild
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {},
+    activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Cheap Attack/Strength potions.'
   },
   'Yanille Magic Shop': {
@@ -1811,7 +1815,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Food Shops',
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Burthorpe
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {},
+    activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Buy Potatoes with Cheese and Plain Pizzas.'
   },
   'Grand Tree Groceries': {

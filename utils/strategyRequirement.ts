@@ -82,7 +82,7 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const missingQuests = canonical ? canonical.blockers.filter(b => b.kind === 'quest').map(b => b.label)
         : (req.quests || []).filter(q => !unlocks.quests.includes(q));
     const missingAlternatives = req.alternatives ?? [];
-    const activityRequirement = getActivityReq(req.id);
+    const activityRequirement = getActivityReq(req.activity ?? req.id);
     const readiness = canonical || req.category === TableType.DIARIES || !activityRequirement ? null : evaluateActivityReadiness(true, activityRequirement, unlocks, gameModeId);
     const manualChecks = req.manualRequirements ?? [];
     const chunkChecks = partlyHeld.map(area => `Check it is in your chunks: ${area}`);
