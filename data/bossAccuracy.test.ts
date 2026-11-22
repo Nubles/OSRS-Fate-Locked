@@ -133,7 +133,7 @@ describe('boss access, from the roll data audit (7 October 2026)', () => {
 });
 
 describe('boss access items (fix phase, 22 November 2026)', () => {
-  // Wiki: Kree'arra, General Graardor, Commander Zilyana, Mole Hole, Kalphite Queen and Sarachnis pages.
+  // Wiki: Kree'arra, General Graardor, Commander Zilyana, Mole Hole, Kalphite Queen, Sarachnis and Waterbirth Island Dungeon pages.
   const manual = (boss: string) => ACTIVITY_REQUIREMENTS[boss]?.manualRequirements ?? [];
   it('names the item each lair needs to get in', () => {
     expect(manual("Kree'arra")).toContainEqual(expect.stringContaining('mith grapple'));
@@ -143,6 +143,7 @@ describe('boss access items (fix phase, 22 November 2026)', () => {
     expect(manual('Giant Mole')).toContainEqual(expect.stringContaining('light source'));
     expect(manual('Kalphite Queen')).toContainEqual(expect.stringContaining('two ropes'));
     expect(manual('Sarachnis')).toContainEqual(expect.stringContaining('slash weapon or a knife'));
+    expect(manual('Dagannoth Kings')).toContainEqual(expect.stringContaining('rune thrownaxe'));
   });
 
   it('keeps the God Wars entry and chamber lines on the generals', () => {

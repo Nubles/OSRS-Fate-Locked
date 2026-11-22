@@ -89,6 +89,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Giant Mole': { manualRequirements: ['Dig into a mole hill with a spade, carrying a light source unless the Fire of Eternal Light is lit'] },
   'Kalphite Queen': { manualRequirements: ['Bring two ropes for the Kalphite Lair (the Hard Desert Diary keeps them tied once placed)'] },
   'Sarachnis': { manualRequirements: ['Bring a slash weapon or a knife to cut the webs, or wear Aranea boots'] },
+  'Dagannoth Kings': { manualRequirements: ['Bring another player, or a pet rock and a rune thrownaxe, or use the 85 Agility shortcut on Waterbirth Island'] },
   'Hespori': { skills: { Farming: 65 } },
   'Coral Nursery': { manualRequirements: ['Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.'] },
   'Phantom Muspah': { quests: ['Secrets of the North'] },
