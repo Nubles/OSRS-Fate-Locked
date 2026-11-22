@@ -10244,7 +10244,18 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "95 Slayer Weaponry Antipoison recommended"
+      "sourceRequirements": "95 Slayer Weaponry Antipoison recommended",
+      "equipmentRequirements": [
+        {
+          "slot": "Boots",
+          "tier": 1,
+          "reason": "Boots of stone, brimstone or granite",
+          "manualCheck": "Have Boots of stone, brimstone or granite and confirm that the specific item is permitted by your equipment tier"
+        }
+      ],
+      "merchants": [
+        "Slayer Equipment"
+      ]
     },
     {
       "id": "kou_elite_6",

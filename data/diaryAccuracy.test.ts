@@ -560,6 +560,20 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
     expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), { ...wyrmHunter, diaries: ['Kourend Elite'] }))
       .toMatchObject({ eligible: true, blockers: [] });
   });
+
+  it('needs the same boots to reach the hydras, which are past the entrance chamber', () => {
+    // Karuulm Slayer Dungeon (Wiki, 20 September 2026 revision): the boots are needed beyond the entrance
+    // chamber. The Kourend Elite reward cannot help here, as this task is part of it.
+    const { unlessDiary: _reward, ...boots } = BOOTS;
+    expect(task('kou_elite_5')).toMatchObject({ regions: ['Mount Karuulm'], equipmentRequirements: [boots], merchants: ['Slayer Equipment'] });
+    const hydraHunter = account({
+      regions: ['Mount Karuulm'], merchants: ['Slayer Equipment'], skills: { Slayer: 10 }, levels: { Slayer: 95 },
+    });
+    expect(evaluateDiaryTaskEligibility(task('kou_elite_5'), hydraHunter).blockers)
+      .toEqual([expect.objectContaining({ kind: 'equipment', slot: 'Boots', tier: 1 })]);
+    expect(evaluateDiaryTaskEligibility(task('kou_elite_5'), { ...hydraHunter, equipment: { Boots: 1 } }))
+      .toMatchObject({ machineEligible: true, manualChecks: [BOOTS.manualCheck] });
+  });
 });
 
 describe('Diary tasks with Raiments of the Eye routes', () => {
