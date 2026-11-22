@@ -74,6 +74,11 @@ const chunkOfBlocker = (b: EligibilityBlocker): { cx: number; cy: number } | nul
 };
 
 /** The journal's requirement lines: quests and levels, then the Fate Locked unlocks. */
+/** The ten Recipe for Disaster parts carry the mode's own tiers; the game rates them all
+ *  "Special", so their row does not say "Official". */
+export const difficultyRowLabel = (quest: Pick<QuestData, 'id'>): string =>
+  quest.id.startsWith('RFD: ') ? 'Difficulty' : 'Official difficulty';
+
 export const questLines = (
   quest: QuestCardQuest,
   unlocks: UnlockState,
@@ -273,7 +278,7 @@ const QuestDetail: React.FC<{
   const start = loc.startPlaces[0] ?? loc.places[0] ?? null;
 
   const rows: WikiRow[] = [
-    { label: 'Official difficulty', value: difficultyLabel(quest) },
+    { label: difficultyRowLabel(quest), value: difficultyLabel(quest) },
     quest.kind === 'quest'
       ? { label: 'Quest points', value: String(quest.points) }
       : { label: 'Type', value: 'Miniquest' },

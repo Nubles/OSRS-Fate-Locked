@@ -20,7 +20,7 @@ import { chunkContentService } from '../../services/ChunkContentService';
 import { findEntityLocations } from '../../utils/entityLocationLookup';
 import { placeFor } from '../JournalNextBest';
 import { EntityLocations } from '../EntityLocations';
-import { questLines, LineView, type Line } from './OsrsJournalQuests';
+import { questLines, LineView, difficultyRowLabel, type Line } from './OsrsJournalQuests';
 import { placesOf, blockerChunk } from './OsrsJournalDiaries';
 import { SkillIcon, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
 import { compileJournalQuery, journalMatches, diaryTaskSearchFields } from './OsrsJournalSearch';
@@ -164,7 +164,7 @@ export const QuestDetail: React.FC<{
   const need = [...game, ...fateLines];
 
   const facts: WikiRow[] = [
-    { label: 'Official difficulty', value: difficultyLabel(quest) },
+    { label: difficultyRowLabel(quest), value: difficultyLabel(quest) },
     quest.kind === 'quest' ? { label: 'Quest points', value: String(quest.points) } : { label: 'Type', value: 'Miniquest' },
   ];
   if (start) facts.push({ label: 'Start point', value: start.label });
