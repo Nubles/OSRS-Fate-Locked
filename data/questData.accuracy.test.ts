@@ -116,6 +116,23 @@ describe('quest series', () => {
       .sort())
       .toEqual(['Getting Ahead', 'The Garden of Death', "The Writing's on the Wall"]);
   });
+
+  it('spells the Fairytale series as the Wiki does', () => {
+    expect(Object.values(QUEST_DATA)
+      .filter(quest => quest.series === 'Fairytale')
+      .map(quest => quest.id)
+      .sort())
+      .toEqual(['Fairytale I - Growing Pains', 'Fairytale II - Cure a Queen']);
+    expect(Object.values(QUEST_DATA).some(quest => quest.series === 'Fairy Tale')).toBe(false);
+  });
+
+  it('gives no series to the related story quests the Wiki lists as series = None', () => {
+    // Wiki infoboxes (Nov 2026): Cook's Assistant, Waterfall Quest, Priest in Peril and
+    // Nature Spirit are standalone quests, only named as lead-ins on Quests/Series.
+    for (const id of ["Cook's Assistant", 'Waterfall Quest', 'Priest in Peril', 'Nature Spirit']) {
+      expect(QUEST_DATA[id].series, id).toBeUndefined();
+    }
+  });
 });
 
 describe('quest cape eligibility', () => {

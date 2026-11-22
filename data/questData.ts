@@ -144,7 +144,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "lumbridge-castle", label: "Lumbridge Castle", standardAreas: ["Lumbridge"], chunkOptions: [{ cx: 50, cy: 50 }] },
     ],
-    skills: {}, prereqs: [], points: 1, series: 'Recipe for Disaster',
+    skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Demon Slayer': {
@@ -645,7 +645,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Waterfall Quest', name: 'Waterfall Quest',
     regions: ['Gnome Village', 'Baxtorian Falls'],
-    skills: {}, prereqs: [], points: 1, series: 'Elf',
+    skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Biohazard': {
@@ -838,7 +838,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'varrock-palace', label: 'Varrock Palace', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 54 }] },
       { id: 'paterdomus', label: 'Paterdomus Temple and mausoleum', standardAreas: ['Paterdomus'], chunkOptions: [{ cx: 53, cy: 54 }] },
     ],
-    skills: {}, prereqs: [], points: 1, series: 'Myreque',
+    skills: {}, prereqs: [], points: 1,
     // Items checked on the Wiki: 50 rune or pure essence.
     difficulty: DropSource.QUEST_NOVICE,
     // Alternatives rechecked on the Wiki (13 Oct): essence is no longer gated: minotaurs in the Stronghold of Security (Misthalin) drop it.
@@ -851,7 +851,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'paterdomus', label: 'Paterdomus and Drezel', standardAreas: ['Paterdomus'], chunkOptions: [{ cx: 53, cy: 54 }] },
       { id: 'nature-grotto', label: 'Nature Grotto in Mort Myre Swamp', standardAreas: ['Mort Myre Swamp'], chunkOptions: [{ cx: 53, cy: 52 }] },
     ],
-    skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2, series: 'Myreque',
+    skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
     // Items checked on the Wiki: Silver sickle; Ghostspeak amulet (worn).
     equipmentRequirements: [
       { slot: 'Neck', tier: 1, reason: 'Equip amulet of ghostspeak to talk to Filliman' },
@@ -1434,7 +1434,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Fairytale I - Growing Pains', name: 'Fairytale I - Growing Pains',
     regions: ['Draynor Village', 'Falador', 'Mort Myre Swamp', 'Zanaris'],
-    skills: {}, prereqs: ['Lost City', 'Nature Spirit'], points: 2, series: 'Fairy Tale',
+    skills: {}, prereqs: ['Lost City', 'Nature Spirit'], points: 2, series: 'Fairytale',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: The Cook': {
@@ -1682,7 +1682,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "poison-waste", label: "Poison Waste", standardAreas: ["Poison Waste"], chunkOptions: [{ cx: 34, cy: 48 }] },
       { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Brimhaven"], chunkOptions: [{ cx: 42, cy: 50 }] },
     ],
-    skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairy Tale',
+    skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairytale',
     // The Fairy Queen's hideout (AIR, DLR, DJQ, AJS), the cosmic plane (CKP) and the gorak plane (DIR) are reached only by fairy ring.
     mobility: ['Fairy Rings'],
     difficulty: DropSource.QUEST_EXPERIENCED

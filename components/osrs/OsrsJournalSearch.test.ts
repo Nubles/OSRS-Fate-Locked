@@ -37,9 +37,13 @@ describe('Journal search: matching', () => {
   });
 
   it('finds a quest by its series, also as an acronym, and by its start point', () => {
-    expect(cooks.series).toBe('Recipe for Disaster');
-    expect(journalMatches(q('recipe'), questSearchFields(cooks))).toBe(true);
-    expect(journalMatches(q('rfd'), questSearchFields(cooks))).toBe(true);
+    // Cook's Assistant has no series on the Wiki; the first RFD part carries it.
+    const rfdCook = QUEST_DATA['RFD: The Cook'];
+    expect(rfdCook.series).toBe('Recipe for Disaster');
+    expect(cooks.series).toBeUndefined();
+    expect(journalMatches(q('recipe'), questSearchFields({ ...cooks, series: rfdCook.series }))).toBe(true);
+    expect(journalMatches(q('rfd'), questSearchFields({ ...cooks, series: rfdCook.series }))).toBe(true);
+    expect(journalMatches(q('recipe'), questSearchFields(cooks))).toBe(false);
     expect(journalMatches(q('lumbridge'), questSearchFields(cooks, 'Lumbridge Castle, Misthalin'))).toBe(true);
     expect(journalMatches(q('lumbridge'), questSearchFields(cooks))).toBe(false);
   });
