@@ -6,11 +6,13 @@ import { chunkUnlocked } from './chunkLocations';
 import { classifyShop } from './shopClassification';
 import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accountRequirements';
 import type { RawRouteRequirement } from './questRoutes/model';
-import { BANK_ACCESS_GATES, BANK_BY_ID, BANK_REVIEWED_FACILITIES, BANK_REVIEWED_LOCATIONS, type BankAccessOption } from '../data/banks';
+import { BANK_BY_ID } from '../data/banks';
+import { BANK_ACCESS_GATES, BANK_REVIEWED_FACILITIES, BANK_REVIEWED_LOCATIONS, type BankAccessOption } from '../data/bankAccess';
 import { getActivityReq } from '../data/activityRequirements';
 import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
+import { meetsSkillRequirement } from './journalStatus';
 
 export type EntityAccessStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export interface EntityAccessResult { status: EntityAccessStatus; reasons: string[]; }
@@ -34,6 +36,15 @@ function bestAccess(results: EntityAccessResult[]): EntityAccessResult {
   if (results.some(result => result.status === 'ALLOWED')) return { status: 'ALLOWED', reasons: [] };
   const status = (['UNKNOWN', 'NOT_READY', 'LOCKED'] as const)
     .find(candidate => results.some(result => result.status === candidate)) ?? 'UNKNOWN';
+  // Every way is blocked: name what the nearest ways still need, not all of them together.
+  if (status !== 'UNKNOWN') {
+    const blocked = results.filter(result => result.status === status).map(result => [...new Set(result.reasons)]);
+    const fewest = Math.min(...blocked.map(reasons => reasons.length));
+    const nearest = blocked.filter(reasons => reasons.length === fewest);
+    const shared = nearest[0].filter(reason => nearest.every(reasons => reasons.includes(reason)));
+    const rest = [...new Set(nearest.map(reasons => reasons.filter(reason => !shared.includes(reason)).join(' and ')))].filter(Boolean);
+    return { status, reasons: rest.length > 1 ? [...shared, `One of: ${rest.join(' or ')}`] : [...shared, ...rest] };
+  }
   return { status, reasons: [...new Set(results.flatMap(result => result.reasons))] };
 }
 
@@ -64,6 +75,9 @@ function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mo
     const missing = [
       ...(option.quests ?? []).filter(quest => !unlocks.quests.includes(quest)).map(quest => `Complete ${quest}`),
       ...(option.diaries ?? []).filter(diary => !unlocks.diaries.includes(diary)).map(diary => `Complete ${diary} Diary`),
+      // "Crafting 99" (scripts/bank-locations.mjs checks the wording).
+      ...(option.skills ?? []).map(entry => entry.split(' ')).filter(([skill, level]) => !meetsSkillRequirement(unlocks, skill, Number(level)))
+        .map(([skill, level]) => `${skill} level ${level}`),
     ];
     const own: EntityAccessResult = missing.length ? { status: 'NOT_READY', reasons: missing }
       : option.manual?.length ? { status: 'UNKNOWN', reasons: option.manual }
@@ -71,6 +85,21 @@ function bankOptionsAccess(options: BankAccessOption[], unlocks: UnlockState, mo
     return combineAccess(own, ...(option.guilds ?? []).map(guild => guildEntry(guild, unlocks, mode)));
   }));
 }
+
+/**
+ * A bank's own ways in, with no facility content needed: a reviewed location's
+ * own options (such as the Ancient Prison's quest), else its guild's entry or
+ * its town's quest, as registryBankRequirements reads them. ALLOWED when the
+ * bank has neither. Saradomin's Ward reads it.
+ */
+export function bankGateAccess(bankId: string, unlocks: UnlockState, mode?: string): EntityAccessResult {
+  const options = BANK_REVIEWED_LOCATIONS.find(entry => entry.id === bankId)?.accessOptions ?? bankGateOptions(bankId);
+  return options?.length ? bankOptionsAccess(options, unlocks, mode) : { status: 'ALLOWED', reasons: [] };
+}
+
+/** A gate's "Complete X" repeats a quest X the place's own entry already names, so it is dropped. */
+const gateReasonsBeyond = (own: string[], gate: string[]): string[] =>
+  gate.filter(reason => !own.some(r => reason === `Complete ${r}`));
 
 function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: UnlockState, source: EntityAccessSource, mode?: string): EntityAccessResult {
   const bankId = String(coord.cx * 256 + coord.cy);
@@ -84,7 +113,7 @@ function registryBankRequirements(coord: { cx: number; cy: number }, unlocks: Un
     : { status: 'UNKNOWN', reasons: [`${name ?? 'Bank facility'} access requirements need review`] };
   return { status: entry.status === 'NOT_READY' || access.status === 'NOT_READY' ? 'NOT_READY'
     : entry.status === 'UNKNOWN' || access.status === 'UNKNOWN' ? 'UNKNOWN' : 'ALLOWED',
-    reasons: [...new Set([...entry.reasons, ...access.reasons])] };
+    reasons: [...new Set([...entry.reasons, ...gateReasonsBeyond(entry.reasons, access.reasons)])] };
 }
 
 interface BankFacility { name: string; kind: EntityKind; requirements?: string[] }
@@ -126,7 +155,7 @@ export function evaluateBankRequirements(
     const extra = evaluateRouteGates(compileRawRequirements((requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
     const facility = combineAccess(access, { status: !extra.blockers.length ? 'ALLOWED' : extra.hasDataGap ? 'UNKNOWN' : 'NOT_READY',
       reasons: extra.blockers.map(blocker => blocker.label) });
-    return gate ? combineAccess(facility, gate) : facility;
+    return gate ? combineAccess(facility, { ...gate, reasons: gateReasonsBeyond(facility.reasons, gate.reasons) }) : facility;
   });
   // Reviewed NPC services may not have a generic bank object in the source.
   if (!results.length) return registryBankRequirements(coord, unlocks, source, mode);

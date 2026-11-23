@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { canonicalTierFromName } from '../../utils/gearTiers';
 import { useGame } from '../../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../../constants';
 import { gearService } from '../../services/GearService';
@@ -132,7 +131,8 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
         {status === 'ready' && shown.length === 0 && <p className="osrs-dash-muted-s osrs-dash-pickmsg">No items match.</p>}
         {status === 'ready' && shown.map((item) => {
           const tier = gearService.tierOf(item.id);
-          const estimated = canonicalTierFromName(item.name) == null;
+          // The same reviewed-tier source as the classic GearView.
+          const estimated = gearService.isEstimated(item.id);
           const tierLabel = `${estimated ? 'Est. ' : ''}${gems ? `T${tier}` : (tier > 0 ? roman(tier) : '0')}`;
           const locked = tier > unlockedTier;
           const isCurrent = item.id === currentItemId;

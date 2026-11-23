@@ -37,11 +37,16 @@ export default {
 
 ## Point the app at it
 
-Either is fine:
+The app has a built-in default proxy (`DEFAULT_STAR_FEED` in
+`components/RegionMap.tsx`), so **Live stars** works without setup and never
+asks for a URL. To use your own Worker instead (a per-browser setting wins over
+the build setting, which wins over the default):
 
-- **Per browser (no rebuild):** open the app, World tab → Overlays → **Live
-  stars**. On first enable it prompts for the URL; paste your Worker URL. It's
-  saved in `localStorage` (`fate_star_feed`).
+- **Per browser (no rebuild):** there is no setting in the app for it. Open the
+  browser console on the app and run
+  `localStorage.setItem('fate_star_feed', 'https://star-proxy.<you>.workers.dev/')`,
+  then reload. `localStorage.removeItem('fate_star_feed')` goes back to the
+  default.
 - **Baked into the build:** set `VITE_STAR_FEED=https://star-proxy.<you>.workers.dev`
   in the deploy environment before `vite build`.
 

@@ -37,6 +37,23 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-22-accuracy-pass',
+    title: 'Big accuracy pass and two new quests',
+    date: '2026-11-22',
+    sections: {
+      added: [
+        'A New Leaf and Rag and Bone Man III, from the 18 November update, are in the Quest Journal.',
+        'The skill guides list about 400 more unlocks from the Wiki’s level-up tables, across 19 skills.',
+      ],
+      fixed: [
+        'A very long note can’t stop your run from saving any more, and coming back to a tab with Back no longer overwrites newer progress.',
+        'Saradomin’s Ward no longer lands a Key on a bank or guild you can’t use yet, and Ask before Key clicks now covers Farm Keys and Sync & Roll too.',
+        'Over 100 facts were checked against the Wiki and corrected: bank, boss, quest and goal requirements, Slayer tasks, gear tiers, diary routes and drop sources.',
+        'On shorter laptop screens the classic World map now fits its pane, so every overlay and zoom button can be reached.',
+      ],
+    },
+  },
+  {
     id: '2026-11-12-quest-month-week-two',
     title: 'Two more Quest Month quests',
     date: '2026-11-12',

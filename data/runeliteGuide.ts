@@ -589,7 +589,7 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
   {
     id: 'out-of-date-or-expired',
     symptom: 'The status card says Rules may be out of date, Tracker copy expired, or Tracker has older rules.',
-    likelyCause: 'RuneLite couldn’t reach the relay for more than 15 minutes, the tracker hasn’t sent your rules in 24 hours, or the relay has an older copy than yours. Your current rules stay in use.',
+    likelyCause: 'RuneLite couldn’t reach the relay for more than 15 minutes, the tracker hasn’t sent your rules in 30 days, or the relay has an older copy than yours. Your current rules stay in use.',
     fix: [
       'For Rules may be out of date, check your internet connection, then select Check now.',
       'For the others, select Open web tracker: opening your profile there sends the rules again.',
@@ -836,7 +836,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         items: [
           { figureId: 'status-up-to-date', title: 'Rules up to date', body: 'Synced recently, for this character. Nothing to do.' },
           { figureId: 'status-out-of-date', title: 'Rules may be out of date', body: 'RuneLite couldn’t check for more than 15 minutes. Your rules stay in use; Strict Mode waits.' },
-          { figureId: 'status-expired', title: 'Tracker copy expired', body: 'The tracker hasn’t sent your rules in 24 hours. Open it to send them again.' },
+          { figureId: 'status-expired', title: 'Tracker copy expired', body: 'The tracker hasn’t sent your rules in 30 days. Open it to send them again.' },
           { figureId: 'status-backup', title: 'Using a backup', body: 'Rules from the clipboard or a file. Connect tracker goes back to the relay.' },
           { figureId: 'status-different-character', title: 'Different character', body: 'The run is linked to another character, so warnings and Strict Mode are off.' },
           { figureId: 'status-not-connected', title: 'Not connected', body: 'Connect your tracker, or use a backup instead.' },
@@ -914,7 +914,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         items: [
           'Walking, clicks on NPCs, objects and banks, and putting on or taking off gear.',
           'An option that picks its place after the click, such as a jewellery Rub.',
-          'Fairy rings, spirit trees, charters and boats. These get the (Locked) tag instead.',
+          'Spirit trees, and fairy rings, charters and boats unless Block networks and boats is on. These get the (Locked) tag instead.',
           'Anything when the rules are stale, for another character, or don’t decide the trip. Strict Mode fails open rather than guessing.',
         ],
       },

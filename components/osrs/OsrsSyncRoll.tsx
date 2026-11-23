@@ -73,7 +73,7 @@ const OsrsSyncRoll: React.FC = () => {
           <input
             value={linkedAccount ?? name}
             onChange={(e) => !linkedAccount && setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && onFetch()}
+            onKeyDown={(e) => e.key === 'Enter' && status !== 'loading' && onFetch()}
             placeholder="OSRS username..."
             readOnly={!!linkedAccount}
             aria-label="OSRS username"
@@ -176,7 +176,7 @@ const OsrsSyncRoll: React.FC = () => {
             </div>
             <div style={{ marginLeft: 'auto', textAlign: 'right', maxWidth: 300, lineHeight: '18px' }}>
               {!applied && !skillRolling && (gains.length > 0 || activityRolls > 0) && (
-                <button type="button" className="osrs-btn" onClick={autoRoll} style={{ minHeight: 30, padding: '0 12px', color: '#00ff00' }}>
+                <button type="button" className="osrs-btn" onClick={() => autoRoll()} style={{ minHeight: 30, padding: '0 12px', color: '#00ff00' }}>
                   {syncButtonText(gains.length, totalGain, activity)}
                 </button>
               )}

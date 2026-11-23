@@ -6,7 +6,7 @@
 export interface BankDef { id: string; name: string }
 
 export const BANKS: BankDef[] = [
-  { id: '13618', name: "Abandoned Mine" },
+  { id: '13618', name: "Tarn's Lair bank" },
   { id: '13105', name: "Al Kharid Palace" },
   { id: '5678', name: "Aldarin dock deposit box" },
   { id: '11578', name: "Ancient Prison bank" },
@@ -33,7 +33,7 @@ export const BANKS: BankDef[] = [
   { id: '5939', name: "Darkfrost Peak" },
   { id: '14388', name: "Darkmeyer" },
   { id: '7723', name: "Deepfin Point" },
-  { id: '14644', name: "East Darkmeyer" },
+  { id: '14644', name: "Hallowed Sepulchre bank chests" },
   { id: '12084', name: "East Falador" },
   { id: '6454', name: "East Woodcutting Guild deposit box" },
   { id: '10288', name: "East Yanille" },
@@ -58,7 +58,7 @@ export const BANKS: BankDef[] = [
   { id: '14908', name: "House on the Hill" },
   { id: '6191', name: "Hunter Guild" },
   { id: '9531', name: "Jatizso" },
-  { id: '11313', name: "Karamja Volcano" },
+  { id: '11313', name: "Mor Ul Rek (TzHaar City) banks" },
   { id: '11066', name: "Keldagrim bank and Blast Furnace chest" },
   { id: '6457', name: "Kourend Castle" },
   { id: '5941', name: "Land's End" },
@@ -85,7 +85,7 @@ export const BANKS: BankDef[] = [
   { id: '8253', name: "North Moonclan" },
   { id: '9778', name: "Ourania Altar" },
   { id: '10553', name: "Peer the Seer deposit service" },
-  { id: '14638', name: "Pirate Base" },
+  { id: '14638', name: "Mos Le'Harmless bank" },
   { id: '7227', name: "Piscarilius Bank" },
   { id: '10545', name: "Port Khazard" },
   { id: '14646', name: "Port Phasmatys" },
@@ -133,7 +133,7 @@ export const BANKS: BankDef[] = [
   { id: 'woodcutting-leprechaun', name: "Woodcutting Leprechaun (Forestry)" },
 ];
 
-/** All bank ids, for the roll pool. */
+/** All bank ids, for the roll pool, in the fixed order of data/sources/bank-roll-order.json. */
 export const BANK_IDS: string[] = BANKS.map((b) => b.id);
 
 /** id → definition, for label lookups. */
@@ -152,64 +152,3 @@ export const MERGED_BANKS: Readonly<Record<string, string>> = {
   '12085': '12084',
   '11572': '11828',
 };
-
-/** One way into a bank: quests, diaries, guilds (the unlock and its entry) or checks to confirm. */
-export interface BankAccessOption { quests?: string[]; diaries?: string[]; guilds?: string[]; manual?: string[] }
-
-/** Bank facilities the registry reviewed, such as the bank buffalo, with what each needs. */
-export const BANK_REVIEWED_FACILITIES: readonly { id: string; name: string; kind: string; requirements?: string[] }[] = [
-  {"id":"5939","name":"Bank buffalo","kind":"npc"},
-  {"id":"5427","name":"Bank buffalo","kind":"npc"},
-  {"id":"13354","name":"Bank Camel","kind":"npc","requirements":["Beneath Cursed Sands Complete the quest"]},
-  {"id":"15151","name":"Deposit Box","kind":"object","requirements":["Cabin Fever Complete the quest"]},
-];
-
-/** The registry's reviewed locations (their names are their BANKS labels), with a service's own ways in. */
-export const BANK_REVIEWED_LOCATIONS: readonly { id: string; accessOptions?: BankAccessOption[] }[] = [
-  {"id":"11066"},
-  {"id":"5678"},
-  {"id":"6454"},
-  {"id":"6458"},
-  {"id":"6711"},
-  {"id":"6712"},
-  {"id":"6961"},
-  {"id":"7225"},
-  {"id":"8499"},
-  {"id":"8508"},
-  {"id":"8751"},
-  {"id":"8756"},
-  {"id":"8757"},
-  {"id":"8999"},
-  {"id":"9274"},
-  {"id":"10553","accessOptions":[{"diaries":["Fremennik Easy"]},{"manual":["Confirm Peer is offering the deposit service during his trial in The Fremennik Trials"]}]},
-  {"id":"11047"},
-  {"id":"11056"},
-  {"id":"11062"},
-  {"id":"11578","accessOptions":[{"quests":["The Frozen Door"],"manual":["Confirm access to the Ancient Prison safe room using ancient kill count or an eligible bypass"]}]},
-  {"id":"12082"},
-  {"id":"12337"},
-  {"id":"12838"},
-  {"id":"12849"},
-  {"id":"14132"},
-];
-
-/** The ways into a whole bank that every facility in it needs: its guild, or its town's quest. */
-export const BANK_ACCESS_GATES: readonly { id: string; accessOptions: BankAccessOption[] }[] = [
-  {"id":"10293","accessOptions":[{"guilds":["Fishing Guild"]}]},
-  {"id":"4922","accessOptions":[{"guilds":["Farming Guild"]}]},
-  {"id":"11571","accessOptions":[{"guilds":["Crafting Guild"]}]},
-  {"id":"11319","accessOptions":[{"guilds":["Warriors' Guild"]}]},
-  {"id":"10804","accessOptions":[{"guilds":["Legends' Guild"]}]},
-  {"id":"9772","accessOptions":[{"guilds":["Myths' Guild"]}]},
-  {"id":"6198","accessOptions":[{"guilds":["Woodcutting Guild"]}]},
-  {"id":"6454","accessOptions":[{"guilds":["Woodcutting Guild"]}]},
-  {"id":"11310","accessOptions":[{"quests":["Shilo Village"]}]},
-  {"id":"13099","accessOptions":[{"quests":["Contact!"]}]},
-  {"id":"9265","accessOptions":[{"quests":["Mourning's End Part I"]}]},
-  {"id":"10284","accessOptions":[{"quests":["The Corsair Curse"]}]},
-  {"id":"10300","accessOptions":[{"quests":["Throne of Miscellania"]}]},
-  {"id":"9275","accessOptions":[{"quests":["The Fremennik Isles"]}]},
-  {"id":"9531","accessOptions":[{"quests":["The Fremennik Isles"]}]},
-  {"id":"13874","accessOptions":[{"quests":["In Aid of the Myreque"]}]},
-  {"id":"14388","accessOptions":[{"quests":["Sins of the Father"]}]},
-];

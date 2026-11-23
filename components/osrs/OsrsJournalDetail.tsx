@@ -15,12 +15,12 @@ import { effectiveSkillLevel } from '../../utils/slayerReach';
 import { evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility } from '../../utils/journalStatus';
 import { formatDiaryChecks } from '../../utils/diaryCheckFormat';
 import { CA_TASK_POINTS, isCATierId } from '../../utils/caProgress';
-import { caTaskBlocker, caTaskBlockerText } from '../../utils/caTaskAccess';
+import { caTaskBlocker, caTaskBlockerHint } from '../../utils/caTaskAccess';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { findEntityLocations } from '../../utils/entityLocationLookup';
 import { placeFor } from '../JournalNextBest';
 import { EntityLocations } from '../EntityLocations';
-import { questLines, LineView, type Line } from './OsrsJournalQuests';
+import { questLines, LineView, difficultyRowLabel, type Line } from './OsrsJournalQuests';
 import { placesOf, blockerChunk } from './OsrsJournalDiaries';
 import { SkillIcon, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
 import { compileJournalQuery, journalMatches, diaryTaskSearchFields } from './OsrsJournalSearch';
@@ -164,7 +164,7 @@ export const QuestDetail: React.FC<{
   const need = [...game, ...fateLines];
 
   const facts: WikiRow[] = [
-    { label: 'Official difficulty', value: difficultyLabel(quest) },
+    { label: difficultyRowLabel(quest), value: difficultyLabel(quest) },
     quest.kind === 'quest' ? { label: 'Quest points', value: String(quest.points) } : { label: 'Type', value: 'Miniquest' },
   ];
   if (start) facts.push({ label: 'Start point', value: start.label });
@@ -446,7 +446,7 @@ export const CATaskDetail: React.FC<{
         <button type="button" className="ojr-link" onClick={() => onSelect({ kind: 'caTier', id: task.tierId })}>{task.tierId} tier</button>
         , {plural(caPoints(task.tierId), 'point')}.
       </div>
-      {blocker && <div className="ojr-gap ojs-red">{caTaskBlockerText(blocker)} You can still log the task by hand.</div>}
+      {blocker && <div className="ojr-gap ojs-red">{caTaskBlockerHint(blocker, task, unlocks, gameModeId)}</div>}
       {!isDone && rate !== undefined && <div className="ojr-gap ojs-red">Completing it rolls once for a Key at {rate}%.</div>}
     </Pane>
   );

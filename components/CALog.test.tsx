@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, renderHook, screen, fireEvent, cleanup } from '@testing-library/react';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import { CALog } from './CALog';
+import { CALog, useCAJournal } from './CALog';
 import { ALL_CA_TASKS } from '../data/caTasks';
 const game = vi.hoisted(() => ({ unlocks: { cas: [] as string[], completedTasks: [] as string[], bosses: [] }, advisorsEnabled: false, completeCATask: vi.fn(), completeCATier: vi.fn() }));
 vi.mock('../context/GameContext', () => ({ useGame: () => game }));
@@ -34,5 +34,23 @@ describe('CA reward filters', () => {
     expect(screen.queryByText('Easy Tier')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Done\s*1/i }));
     expect(screen.getByText('Easy Tier')).toBeTruthy();
+  });
+});
+
+describe('CA search', () => {
+  it("finds a task by its own name, the row's text, ignoring case and apostrophes", () => {
+    for (const term of ['Noxious Foe', 'noxious foe', 'barrows novice']) {
+      const { result } = renderHook(() => useCAJournal(term));
+      expect(result.current.filteredCAs.map(ca => ca.id)).toEqual(['Easy']);
+    }
+    const defence = ALL_CA_TASKS.find(task => task.name?.includes("'"))!;
+    const { result } = renderHook(() => useCAJournal(defence.name!.replace(/'/g, '')));
+    expect(result.current.filteredCAs.map(ca => ca.id)).toContain(defence.tierId);
+  });
+
+  it('still finds a tier by its name, a boss and a task text', () => {
+    expect(renderHook(() => useCAJournal('Elite')).result.current.filteredCAs.map(ca => ca.id)).toContain('Elite');
+    expect(renderHook(() => useCAJournal('Aberrant Spectre')).result.current.filteredCAs.map(ca => ca.id)).toContain('Easy');
+    expect(renderHook(() => useCAJournal('Open the Barrows chest 10 times')).result.current.filteredCAs.map(ca => ca.id)).toEqual(['Easy']);
   });
 });

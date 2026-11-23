@@ -4,6 +4,7 @@ import { Search, CornerDownLeft, ArrowUp, ArrowDown, Route, BarChart3, Share2, R
 import { User, Globe, Swords, BookOpen, Library, Coins, ShoppingBag, ScrollText, Trophy, Sparkles, Skull, Map, Wand2, Zap, Compass } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { RIVAL_ENABLED } from '../config/rules';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 /**
  * Global ⌘K / Ctrl-K command palette. A single launcher to jump to any tab,
@@ -42,6 +43,7 @@ export const CommandPalette: React.FC = () => {
   const [sel, setSel] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const returnFocusTargetRef = useRef<HTMLElement | null>(null);
 
   const commands: Cmd[] = useMemo(() => {
@@ -148,8 +150,6 @@ export const CommandPalette: React.FC = () => {
           }
           return !wasOpen;
         });
-      } else if (e.key === 'Escape') {
-        setOpen(false);
       }
     };
     const onOpen = (event: Event) => {
@@ -168,6 +168,23 @@ export const CommandPalette: React.FC = () => {
       window.removeEventListener('fate:open-palette', onOpen);
     };
   }, []);
+
+  // Escape closes only the palette, the top layer. Capture phase, so the
+  // window or onboarding step under it never sees the key (as in SpendConfirm).
+  useEffect(() => {
+    if (!open) return;
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setOpen(false);
+    };
+    window.addEventListener('keydown', onEscape, true);
+    return () => window.removeEventListener('keydown', onEscape, true);
+  }, [open]);
+
+  // aria-modal: Tab stays inside, and focus goes back to the trigger on close.
+  useFocusTrap(panelRef, open, returnFocusTargetRef.current);
 
   useEffect(() => {
     if (open) {
@@ -214,6 +231,8 @@ export const CommandPalette: React.FC = () => {
       aria-label="Command palette"
     >
       <div
+        ref={panelRef}
+        tabIndex={-1}
         className="w-full max-w-xl bg-[#1b1b1b] border border-white/15 rounded-xl shadow-[0_24px_70px_rgba(0,0,0,0.7)] overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-150"
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={onListKey}

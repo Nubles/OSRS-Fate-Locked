@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Lock, Route, ChevronDown, ChevronRight, ExternalLink, AlertTriangle, HelpCircle } from 'lucide-react';
 import { MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { QuestData, QUEST_DATA, EquipmentSlot } from '../data/questData';
 import { chunkContentService } from '../services/ChunkContentService';
+import { useChunkContent } from '../hooks/useChunkContent';
 import { cachedChunkedQuestReach } from '../utils/chunkedQuestReach';
 import { chunkUnlocked, placeOf, showChunkOnMap } from '../utils/chunkLocations';
 import { chunkAreaLabelAt } from '../utils/chunkPlaceLabel';
@@ -12,18 +13,14 @@ import {
   evaluateQuestEligibility, questReadyFrom, questRequirementOptionLabel, withSkillGateQuests,
 } from '../utils/journalStatus';
 import { actualCombatLevel } from '../utils/slayerReach';
-import { WIKI_OVERRIDES } from '../constants';
+import { questWikiUrl } from '../utils/questWikiUrl';
 import { UnlockState } from '../types';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import type { AreaRoutes } from '../utils/areaRoutes';
 
 interface Props { searchTerm?: string }
 
-const wikiUrl = (name: string) => {
-  if (name.startsWith('RFD:')) return 'https://oldschool.runescape.wiki/w/Recipe_for_Disaster';
-  if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-  return `https://oldschool.runescape.wiki/w/${name.replace(/ /g, '_')}`;
-};
+const wikiUrl = questWikiUrl;
 
 const BUCKET_META: Record<DoabilityBucket, { label: string; cls: string; dot: string }> = {
   DOABLE:  { label: 'Doable now',          cls: 'text-emerald-300', dot: 'bg-emerald-400' },
@@ -247,10 +244,10 @@ export const useQuestDoabilityRows = () => {
   const { unlocks, gameModeId } = useGame();
   const areaRoutes = useAreaRoutes(unlocks, gameModeId);
   const isChunked = gameModeId === 'chunked';
-  const [ready, setReady] = useState(() => isChunked && chunkContentService.ready);
-  useEffect(() => {
-    if (isChunked && !ready) chunkContentService.init().then(() => setReady(true));
-  }, [isChunked, ready]);
+  // A failed load stays not-ready (with error and Retry), never rows worked out without the data.
+  const content = useChunkContent(isChunked);
+  const ready = isChunked && content.ready;
+  const loadError = isChunked && !ready ? content.error : null;
 
   const rows = useMemo<Row[]>(() => {
     if (!isChunked) {
@@ -263,7 +260,7 @@ export const useQuestDoabilityRows = () => {
     return chunkedQuestRows(unlocks, gameModeId, areaRoutes);
   }, [ready, unlocks, gameModeId, isChunked, areaRoutes]);
 
-  return { rows, isChunked, ready };
+  return { rows, isChunked, ready, loadError, retry: content.retry };
 };
 
 export type QuestDoabilityRow = Row;
@@ -271,7 +268,7 @@ export const QUEST_DOABILITY_BUCKET_LABEL = (bucket: DoabilityBucket, isChunked:
   !isChunked && bucket === 'REQS' ? 'Requirements remaining' : BUCKET_META[bucket].label;
 
 export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
-  const { rows, isChunked, ready } = useQuestDoabilityRows();
+  const { rows, isChunked, ready, loadError, retry } = useQuestDoabilityRows();
   const [open, setOpen] = useState<Record<string, boolean>>({ DOABLE: true, REQS: true, STRANDED: true, LOCKED: true });
 
   const filtered = useMemo(() => {
@@ -286,6 +283,7 @@ export const QuestDoabilityPanel: React.FC<Props> = ({ searchTerm = '' }) => {
     return m;
   }, [filtered]);
 
+  if (isChunked && !ready && loadError) return <div role="alert" className="p-4 text-xs text-amber-300">Could not load the chunk data. <button type="button" onClick={retry} className="underline">Retry chunk data</button></div>;
   if (isChunked && !ready) return <div className="p-4 text-sm text-gray-500">Loading chunk data…</div>;
 
   const doableCount = byBucket.DOABLE.length;

@@ -79,7 +79,7 @@ describe('where a master’s task is fought', () => {
   const chunks = (master: string, task: string) => new Set(located(master, task).map(hit => `${hit.location.cx},${hit.location.cy}`));
 
   it('finds every task a Slayer reward adds where its master sends players (B5)', () => {
-    for (const addition of corrections.additions) {
+    for (const addition of [...corrections.additions, ...(corrections as unknown as { places: typeof corrections.additions }).places]) {
       expect(located(addition.master, addition.task).length, `${addition.master}/${addition.task}`).toBeGreaterThan(0);
     }
   });
@@ -221,7 +221,52 @@ describe('reviewed Slayer corrections', () => {
     expect(MASTERS.Nieve.Suqah.combat).toBe(85);
     expect(MASTERS.Nieve['Metal dragons'].combat).toBe(85);
     expect(MASTERS.Nieve['Greater demons'].combat).toBe(75);
-    expect(MASTERS.Duradel['Fossil Island Wyverns'].req).toEqual(['Bone Voyage Complete the quest']);
     expect(MASTERS.Duradel.Waterfiends.req).toBeUndefined();
+  });
+});
+
+describe('Slayer rows from the November 2026 audit', () => {
+  const konar = (family: string) => Object.entries(MASTERS['Konar quo Maten'])
+    .filter(([task]) => task.startsWith(`${family} - `))
+    .map(([task, info]) => ({ place: task.split(' - ')[1], ...info }));
+
+  it('gives Konar\'s and Duradel\'s metal dragons from combat 85, in Konar\'s four places only (slayer[0], slayer[1])', () => {
+    const dragons = konar('Metal dragons');
+    expect(dragons.map(({ place }) => place).sort()).toEqual(['Brimhaven Dungeon', 'Catacombs of Kourend', 'Isle of Souls Dungeon', 'Lithkren Vault']);
+    for (const dragon of dragons) expect(dragon.combat, dragon.place).toBe(85);
+    expect(dragons.reduce((sum, { weight }) => sum + weight, 0)).toBe(15);
+    expect(MASTERS.Duradel['Metal dragons'].combat).toBe(85);
+    const low = account({ regions: ['Mount Karuulm'], levels: { ...account().levels, Attack: 65, Strength: 65, Defence: 65, Hitpoints: 65, Prayer: 50, Ranged: 60, Magic: 60 }, quests: [...account().quests, 'Dragon Slayer I'] });
+    expect(row('Konar quo Maten', 'Metal dragons - Brimhaven Dungeon', low).status).toBe('combat-locked');
+  });
+
+  it('uses Duradel\'s own combat levels for greater demons and suqah (slayer[1])', () => {
+    expect(MASTERS.Duradel['Greater demons'].combat).toBe(75);
+    expect(MASTERS.Duradel.Suqah.combat).toBe(85);
+  });
+
+  it('gives Mortimer\'s venators from 74 Slayer and his bloodvelds weight 8 (slayer[2], slayer[5])', () => {
+    expect(MASTERS.Mortimer.Venators.slayer).toBe(74);
+    expect(MASTERS.Mortimer.Bloodvelds.weight).toBe(8);
+  });
+
+  it('asks for Bone Voyage and Elemental Workshop I before Fossil Island wyverns (slayer[3])', () => {
+    for (const [master, task] of [['Chaeldar', 'Fossil Island Wyverns'], ['Nieve', 'Fossil Island Wyverns'], ['Duradel', 'Fossil Island Wyverns'], ['Konar quo Maten', 'Fossil Island Wyverns - Wyvern Cave']]) {
+      expect(MASTERS[master][task].req, `${master}/${task}`).toEqual(['Bone Voyage Complete the quest', 'Elemental Workshop I Complete the quest']);
+    }
+  });
+
+  it('sends Konar\'s trolls and wyrms to every place the wiki lists (slayer[4])', () => {
+    expect(konar('Trolls').map(({ place }) => place).sort()).toEqual(['Death Plateau', 'Fremennik Isles', 'Keldagrim', 'Mount Quidamortem', 'Troll Stronghold', 'Wyrmscraig Cavern']);
+    expect(konar('Trolls').every(({ weight }) => weight === 1)).toBe(true);
+    expect(konar('Wyrms').map(({ place }) => place).sort()).toEqual(['Charred Dungeon', 'Karuulm Slayer Dungeon', 'Neypotzli', 'Wyrmscraig Cavern']);
+    expect(konar('Wyrms').every(({ weight }) => weight === 2.5)).toBe(true);
+  });
+
+  it('cites a listed wiki revision for every removed or added place', () => {
+    const extra = corrections as unknown as { removals: { wiki: string[] }[]; places: { wiki: string[] }[] };
+    for (const entry of [...extra.removals, ...extra.places]) {
+      expect(entry.wiki.every(url => corrections.sourceRevisions.some(source => source.url === url))).toBe(true);
+    }
   });
 });

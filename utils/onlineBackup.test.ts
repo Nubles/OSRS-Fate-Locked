@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BACKUP_CODE_LENGTH,
   BACKUP_RETRY_MS,
+  BACKUP_THROTTLE_FALLBACK_MS,
+  BACKUP_THROTTLE_MIN_MS,
   backupRun,
   decryptBackup,
   deleteBackup,
@@ -146,6 +148,21 @@ describe('the relay', () => {
       .toEqual({ ok: false, reason: 'network' });
   });
 
+  it('waits a minute on a 429 whose Retry-After the browser cannot read, never 0', async () => {
+    // The deployed relay does not expose Retry-After to the page (CORS), so headers.get() gives null.
+    // Number(null) is 0, which used to send the whole save again at once, in a loop.
+    const keys = await deriveBackupKeys(CODE);
+    for (const header of [undefined, '', '0', '-5', 'soon', 'Infinity']) {
+      const extra = header === undefined ? {} : { 'Retry-After': header };
+      expect(await uploadBackup(base, keys, 'e', WRITER, reply(429, null, extra)))
+        .toEqual({ ok: false, reason: 'throttled', retryAfterMs: BACKUP_THROTTLE_FALLBACK_MS });
+    }
+    expect(BACKUP_THROTTLE_FALLBACK_MS).toBe(60_000);
+    // A very short ask still waits a few seconds.
+    expect(await uploadBackup(base, keys, 'e', WRITER, reply(429, null, { 'Retry-After': '1' })))
+      .toEqual({ ok: false, reason: 'throttled', retryAfterMs: BACKUP_THROTTLE_MIN_MS });
+  });
+
   it('fetches the envelope and its upload time, or says there is none', async () => {
     const keys = await deriveBackupKeys(CODE);
     expect(await fetchBackup(base, keys, 'latest', reply(200, 'FLBK1.x.y', { 'X-Backup-Updated-At': '99' })))
@@ -271,6 +288,8 @@ describe('backing up a run', () => {
     headers = { 'Retry-After': '42' };
     expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'retry', afterMs: 42_000 });
     expect(readOnlineBackupRecord('P').lastError).toBeUndefined();
+    headers = {};
+    expect(await backupRun('P', exportJson, base, { fetchImpl })).toEqual({ kind: 'retry', afterMs: 60_000 });
   });
 
   it('stops on a refusal, and keeps the reason', async () => {

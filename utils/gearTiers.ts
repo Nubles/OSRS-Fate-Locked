@@ -31,15 +31,18 @@ const NAMED_TIERS: [RegExp, number][] = [
   [/^ghostspeak amulet$/, 1],
   // Quest props, unenchanted jewellery and cosmetic rewards have no combat
   // family, even when their name contains a god, metal or high-end weapon.
-  [/^(?:armadyl pendant|dark bow tie|dragon necklace|robe of elidinis \((?:top|bottom)\)|rune satchel|steel coffin|ring of 3rd age|zenyte (?:amulet|bracelet|necklace|ring))$/, 1],
+  [/^(?:armadyl pendant|dark bow tie|dragon necklace|mystic cards|robe of elidinis \((?:top|bottom)\)|rune satchel|steel coffin|ring of 3rd age|zenyte (?:amulet|bracelet|necklace|ring))$/, 1],
   [/^(?:bronze|iron|steel|mithril|adamant|rune|dragon) (?:dragon mask|staff of collection)$/, 1],
   // Gauntlet equipment is made inside the Gauntlet and lost on leaving it, so it
   // never restricts. Its names would otherwise match the T8 crystal armour rule.
   [/^(?:crystal|corrupted) (?:helm|body|legs|bow|halberd|staff) \((?:basic|attuned|perfected)\)$/, 1],
+  // Nightmare Zone pickaxes and the Emir's Arena wrapped gloves stay inside their
+  // activity too. Their names would otherwise match the pickaxe and gloves rules.
+  [/^(?:(?:barrows|rune|mithril) gloves \(wrapped\)|(?:rune|mithril) pickaxe \(nz\))$/, 1],
   // Leather in the name, but not leather armour: wield levels set these.
   [/^frog-leather (?:body|chaps|boots)$|^hard leather shield$/, 2], // 25 Defence and Ranged; 20 Ranged
   [/^corrupted morrigan's leather (?:body|chaps) \(bh\)$/, 3], // 20 Defence
-  [/^morrigan's leather (?:body|chaps) \((?:bh|deadman mode)\)$/, 8], // 78 Defence
+  [/^morrigan's leather (?:body|chaps) \((?:bh|deadman mode)\)$/, 8], // (bh) 78 Defence; (deadman mode) 20 Defence and 75 Ranged
   [/^collection log \(|^crate of (?:adamantite ore|mithril ore|steel bars|xerician fabrics)$| max hood$|^(?:demonic pacts|raging echoes|shattered relics|trailblazer(?: reloaded)?|twisted) (?:bronze|iron|steel|mithril|adamant|rune|dragon) trophy$/, 1],
 
   // Basic elemental staves have the same magic accuracy and no equip-level
@@ -138,7 +141,8 @@ const NAMED_TIERS: [RegExp, number][] = [
   // weapons whose power comes from mechanics (speed/specs), not raw bonuses
   [/abyssal tentacle|abyssal bludgeon/, 8],
   [/abyssal whip|abyssal dagger/, 7],
-  [/(toxic )?blowpipe/, 8],
+  // The wood blowpipes have Ranged wield levels (data/equipmentReview.ts).
+  [/^(?:toxic|blazing|drygore) blowpipe/, 8],
   [/dark bow/, 6],
   [/zamorakian (hasta|spear)/, 7],
   [/ghrazi rapier|inquisitor's mace/, 9],

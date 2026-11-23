@@ -13,8 +13,9 @@ const unlocks = (over: Partial<UnlockState> = {}): UnlockState => ({
 
 describe('bank data', () => {
   it('has 125 uniquely-named, uniquely-keyed banks', () => {
-    // Two of the Chunk Picker's 127 bank chunks open no bank and are merged into
-    // the bank each leads to (data/sources/bank-locations.json merges).
+    // Three of the 127 bank chunks in public/chunk-content.json open no bank and are
+    // merged into the bank each leads to (data/sources/bank-locations.json merges),
+    // leaving 124 physical places plus the one virtual registry entry.
     expect(BANKS.length).toBe(125);
     expect(new Set(BANK_IDS).size).toBe(125);
     expect(new Set(BANKS.map(b => b.name)).size).toBe(125);
@@ -46,6 +47,21 @@ describe('bank data', () => {
     expect(BANK_BY_ID['10547'].name).toBe('Ardougne south bank');
     expect(BANKS.map(b => b.name)).not.toContain('Chaos Druid Tower');
     expect(BANKS.map(b => b.name)).not.toContain('Ardougne Market');
+  });
+
+  it('names four banks for their place, not a landmark in their chunk, under the same ids', () => {
+    // List of banks; Mos Le'Harmless bank oldid 15211938; Tarn's Lair oldid 15327755 (banker Odovacar);
+    // Mor Ul Rek oldid 15394862 (north and east banks); Hallowed Sepulchre oldid 15387544.
+    expect(BANK_BY_ID['14638'].name).toBe("Mos Le'Harmless bank");
+    expect(BANK_BY_ID['13618'].name).toBe("Tarn's Lair bank");
+    expect(BANK_BY_ID['11313'].name).toBe('Mor Ul Rek (TzHaar City) banks');
+    expect(BANK_BY_ID['14644'].name).toBe('Hallowed Sepulchre bank chests');
+    for (const old of ['Pirate Base', 'Abandoned Mine', 'Karamja Volcano', 'East Darkmeyer']) {
+      expect(BANKS.map(b => b.name)).not.toContain(old);
+    }
+    // Saves and seeded draws hold ids and pool positions, which the rename leaves where they were.
+    expect([BANK_IDS.indexOf('13618'), BANK_IDS.indexOf('14644'), BANK_IDS.indexOf('11313'), BANK_IDS.indexOf('14638')])
+      .toEqual([0, 27, 52, 79]);
   });
 
   it('bankId encodes cx*256+cy and round-trips against a known entry', () => {

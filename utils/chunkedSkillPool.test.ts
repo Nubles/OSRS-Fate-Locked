@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs';
 import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
 import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import chunkDoc from '../public/chunk-content.json';
-import { chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingTiers, chunkFactLevel } from './chunkedSkillPool';
+import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingTiers, chunkFactLevel } from './chunkedSkillPool';
 import { chunkedSkillHasRoom, mercyBlocker, skillsWithRoom } from './chunkedFate';
 import { randomUnlockPool } from './gameEngine';
 import { chunkKey, getChunkFrontier } from './chunkAdjacency';
@@ -172,6 +172,17 @@ describe('Chunked Skills rolls', () => {
     expect(levelsIn('50,53').Mining).toBeUndefined();
     // A rune altar's own altar is not a Prayer altar.
     expect(levelsIn('46,51').Prayer).toBeUndefined();
+  });
+
+  it('gates the Crafting Guild mine (45,51) behind the Crafting Guild, not 40 Mining', () => {
+    // OSRS Wiki 'Crafting Guild mine': the gold, silver and clay rocks are reachable only through the guild.
+    expect(chunkContentBlocker('45,51', 'Mining', { quests: [], guilds: [] })).toBe('Needs the Crafting Guild unlocked.');
+    expect(chunkContentBlocker('45,51', 'Mining', { quests: [], guilds: ['Crafting Guild'] })).toBeNull();
+    // The rocks keep their own level; Crafting 40 is the guild unlock's requirement.
+    expect(levelsIn('45,51').Mining).toBe(1);
+    const mine = { chunks: ['45,51'] };
+    expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: [] })).toBe(false);
+    expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: ['Crafting Guild'] })).toBe(true);
   });
 
   it('round-trips a tier-10 fact: the Wrath altar (95) is stored as "0" and read back as tier 10 (content review 13)', () => {

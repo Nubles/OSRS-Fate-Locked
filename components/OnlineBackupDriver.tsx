@@ -30,6 +30,14 @@ export const nextUploadDelay = (lastUploadAt: number | undefined, now: number): 
   Math.max(ONLINE_BACKUP_SETTLE_MS, (lastUploadAt ?? 0) + ONLINE_BACKUP_INTERVAL_MS - now);
 
 /**
+ * How long to wait before retrying after `streak` retries in a row: what was
+ * asked, doubled for each earlier refusal, at least 5 seconds and at most the
+ * normal gap between uploads, so a relay that keeps refusing is never hammered.
+ */
+export const nextRetryDelay = (afterMs: number, streak: number): number =>
+  Math.min(ONLINE_BACKUP_INTERVAL_MS, Math.max(5_000, afterMs) * 2 ** Math.min(streak, 10));
+
+/**
  * Keeps the active run's online backup current (utils/onlineBackup.ts): when the
  * run changes, it uploads once things settle, at most every 30 minutes, and
  * earlier when the page is hidden with a change waiting, at most every 15
@@ -46,6 +54,7 @@ export const OnlineBackupDriver: React.FC = () => {
   const { storageKeyForActiveProfile: storageKey } = useProfiles();
   const timer = useRef<number | null>(null);
   const running = useRef(false);
+  const retryStreak = useRef(0);
   const exportRef = useRef(getExportData);
   exportRef.current = getExportData;
   const ownerRef = useRef(saveOwnershipStatus);
@@ -77,7 +86,8 @@ export const OnlineBackupDriver: React.FC = () => {
         relaySync.base(),
         replace ? { force: true, replace: true } : { force },
       );
-      if (outcome.kind === 'retry') schedule(outcome.afterMs);
+      if (outcome.kind === 'retry') schedule(nextRetryDelay(outcome.afterMs, retryStreak.current++));
+      else retryStreak.current = 0;
     } finally {
       running.current = false;
     }

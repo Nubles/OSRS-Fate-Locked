@@ -85,9 +85,9 @@ describe('questUnmet', () => {
 
 describe('diaryUnmet', () => {
   const diary = (over: Partial<DiaryTier>): DiaryTier =>
-    ({ id: 'D', region: 'Misthalin', tier: 'Easy', skills: {}, quests: [], requiredRegions: [], difficulty: '' as any, ...over });
-  it('ignores legacy aggregate requirements when no canonical tasks exist', () => {
-    const d = diary({ region: 'Kandarin', requiredRegions: ['Kandarin', 'Asgarnia'] });
+    ({ id: 'D', region: 'Misthalin', tier: 'Easy', difficulty: '' as any, ...over });
+  it('ignores the tier region when no canonical tasks exist', () => {
+    const d = diary({ region: 'Kandarin' });
     expect(diaryUnmet(d, u({ regions: ['Asgarnia'] }))).toEqual([]);
   });
   it('derives blockers from canonical remaining tasks instead of the stale aggregate', () => {
@@ -110,8 +110,7 @@ describe('diaryUnmet', () => {
     ]);
     expect(diaryUnmet({
       ...DIARY_DATA['Ardougne Easy'],
-      quests: ['Impossible aggregate quest'],
-      requiredRegions: ['Impossible aggregate region'],
+      region: 'Impossible aggregate region',
     }, unlocks)).toEqual([{ kind: 'quest', label: 'Biohazard' }]);
   });
 

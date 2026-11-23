@@ -34,6 +34,29 @@ describe('registry-only bank requirements', () => {
     expect(evaluateBankRequirements(bank, coord, state, service)).toMatchObject({ status: 'UNKNOWN', reasons: expect.arrayContaining([expect.stringContaining('safe room')]) });
   });
 
+  // Banks audit finding 7: a place with several facilities names what its easiest one needs,
+  // not every facility's requirements together.
+  it.each([
+    ['6191 Hunter Guild', 24, 47], ['5421', 21, 45],
+  ])('names only the easiest facility\'s requirements at %s', (_place, cx, cy) => {
+    const coord = { cx, cy };
+    const state = structuredClone(initialState.unlocks);
+    const bank = service.contentFor(cx, cy)!;
+    expect(evaluateBankRequirements(bank, coord, state, service)).toEqual({ status: 'NOT_READY', reasons: ['Children of the Sun'] });
+    state.quests.push('Children of the Sun');
+    expect(evaluateBankRequirements(bank, coord, state, service)).toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
+  it('names both ways in when two are equally near', () => {
+    const coord = { cx: 45, cy: 51 };
+    const state = structuredClone(initialState.unlocks);
+    state.guilds.push('Crafting Guild');
+    state.skills.Crafting = 10;
+    state.levels.Crafting = 40;
+    expect(evaluateBankRequirements(service.contentFor(coord.cx, coord.cy)!, coord, state, service))
+      .toEqual({ status: 'NOT_READY', reasons: ['One of: Complete Falador Hard Diary or Crafting level 99'] });
+  });
+
   it('does not infer permission from a missing facility', () => {
     const coord = { cx: 1, cy: 1 };
     const empty = { ...service.contentFor(41, 57)!, objects: [], npcs: [] };

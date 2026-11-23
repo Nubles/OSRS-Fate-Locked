@@ -314,8 +314,8 @@ describe('planForTarget — diaries', () => {
     }));
   });
   it('delegates diary skill gates and omits requirements already met', () => {
-    const diary = Object.values(DIARY_DATA).find(candidate =>
-      Object.keys(candidate.skills).length > 0)!;
+    const diary = Object.values(DIARY_DATA).find(candidate => ALL_DIARY_TASKS.some(task =>
+      task.tierId === candidate.id && Object.keys(task.skills ?? {}).length > 0))!;
     const plan = planForTarget('diary', diary.id, maxedUnlocks())!;
 
     expect(plan.skillSteps).toEqual([]);

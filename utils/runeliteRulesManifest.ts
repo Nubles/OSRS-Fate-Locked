@@ -1,5 +1,5 @@
 import { usesActivityKeyReserves, type GameModeRules } from '../config/gameModes';
-import { MOBILITY_LIST } from '../data/items';
+import { MOBILITY_LIST, SKILLS_LIST } from '../data/items';
 import { DETECTOR_POLICIES, type DetectorPolicy } from '../config/detectorPolicies';
 import { gearService } from '../services/GearService';
 import {
@@ -163,6 +163,17 @@ const sortedNumberRecord = (
   Object.entries(values).sort(([left], [right]) => left.localeCompare(right)),
 );
 
+/**
+ * Each skill's tier, with an explicit 0 for a skill with no Key yet: the
+ * plugin's Skills-tab padlock is drawn for 0 and skipped for an absent skill.
+ * The Skills table locks every skill in every mode; Hitpoints is free and keeps
+ * whatever the run holds. Stored state still leaves no-Key skills out.
+ */
+const skillTiers = (skills: Record<string, number>): Record<string, number> => sortedNumberRecord({
+  ...Object.fromEntries(SKILLS_LIST.filter((skill) => skill !== 'Hitpoints').map((skill) => [skill, 0])),
+  ...skills,
+});
+
 export async function buildRuneliteRulesManifest(
   input: RulesManifestInput,
 ): Promise<RuneliteRulesManifest> {
@@ -269,7 +280,7 @@ export async function buildRuneliteRulesManifest(
       // Keep explicit legacy parents in the wire format, matching the bundle root.
       regions: sorted(canonicalizeAreaUnlocks(unlocks.regions).regions),
       chunks: sorted(unlocks.chunks),
-      skills: sortedNumberRecord(unlocks.skills),
+      skills: skillTiers(unlocks.skills),
       levels: sortedNumberRecord(unlocks.levels),
       equipment: sortedNumberRecord(unlocks.equipment),
       banks: sorted(unlocks.banks),

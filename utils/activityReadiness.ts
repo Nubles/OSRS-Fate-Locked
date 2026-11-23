@@ -1,6 +1,7 @@
 import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
-import { meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
+import { evaluateDiaryTaskEligibility, meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
+import type { AreaRoutes } from './areaRoutes';
 import { isAreaReachable } from './reachability';
 import { chunkPlaceLabel, ownsAnyChunk } from './activityAccess';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
@@ -21,11 +22,20 @@ export type ActivityReadiness =
   | { status: 'NEEDS_CONFIRMATION'; checks: string[] }
   | { status: 'READY' };
 
+export const WARRIORS_GUILD_ENTRY_LABEL = '99 Attack or Strength, or 130 combined';
+
+/** The Warriors' Guild door: 99 Attack or Strength, or 130 combined. Tier-capped,
+ *  like the diary's "Enter the Warriors' Guild" task. */
+export const meetsWarriorsGuildEntry = (unlocks: UnlockState): boolean =>
+  meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99)
+  || effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength') >= 130;
+
 export function evaluateActivityReadiness(
   isOwned: boolean,
   requirement: ActivityReq | undefined,
   unlocks: UnlockState,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): ActivityReadiness {
   if (!isOwned) return { status: 'LOCKED', blockers: [] };
 
@@ -34,11 +44,8 @@ export function evaluateActivityReadiness(
     const points = [...new Set(unlocks.quests)].reduce((sum, id) => sum + (QUEST_DATA[id]?.kind === 'quest' ? QUEST_DATA[id].points : 0), 0);
     if (points < requirement.questPoints) blockers.push({ kind: 'questPoints', label: `${requirement.questPoints} Quest Points` });
   }
-  if (requirement?.warriorsGuildEntry) {
-    // Tier-capped, like the diary's "Enter the Warriors' Guild" task.
-    const oneAt99 = meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99);
-    const combined = effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength');
-    if (!oneAt99 && combined < 130) blockers.push({ kind: 'skill', label: '99 Attack or Strength, or 130 combined' });
+  if (requirement?.warriorsGuildEntry && !meetsWarriorsGuildEntry(unlocks)) {
+    blockers.push({ kind: 'skill', label: WARRIORS_GUILD_ENTRY_LABEL });
   }
   const requiredAreas = requirement?.requiredAreas ?? [];
   // Chunked: the exact entrance chunk must be owned, not any chunk of the area.
@@ -47,11 +54,18 @@ export function evaluateActivityReadiness(
     if (!ownsAnyChunk(requiredChunks, unlocks)) {
       blockers.push({ kind: 'area', label: requiredChunks.map(chunkPlaceLabel).join(' or ') });
     }
-  } else if (
-    requiredAreas.length > 0
-    && !requiredAreas.some(area => isAreaReachable(area, unlocks, gameModeId))
-  ) {
-    blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
+  } else if (requiredAreas.length > 0) {
+    const owned = requiredAreas.filter(area => isAreaReachable(area, unlocks, gameModeId));
+    if (owned.length === 0) {
+      blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
+    } else if (
+      areaRoutes && gameModeId !== 'chunked'
+      // The Journal's own check (caTaskAccess bossAreaBlocker): an owned area
+      // no route reaches, or an island with no way onto it, doesn't count.
+      && !evaluateDiaryTaskEligibility({ id: 'activity-area', anyOfRegions: [...requiredAreas] }, unlocks, gameModeId, areaRoutes).confirmable
+    ) {
+      blockers.push({ kind: 'area', label: `a route to ${owned.join(' or ')}` });
+    }
   }
   // Includes the unlocking quest of a gated skill, such as Druidic Ritual.
   for (const quest of withSkillGateQuests(requirement?.quests, requirement?.skills)) {

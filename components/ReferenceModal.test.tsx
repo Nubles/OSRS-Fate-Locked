@@ -2,13 +2,15 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState, GameProvider, prepareKeyRollAction } from '../context/GameContext';
-import { ReferenceModal } from './ReferenceModal';
+import { EQUIP_TIER_TEXT_COLORS, ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
 import { STARTING_KEYS } from '../config/economy';
 import { GAME_MODES } from '../config/gameModes';
 import { DropSource } from '../types';
-import { DROP_RATES } from '../config/rules';
+import { DROP_RATES, EQUIPMENT_TIER_MAX } from '../config/rules';
+import { EQUIP_TIER_COLORS } from '../utils/equipTiers';
+import { reviewedTier } from '../utils/equipmentReviewTiers';
 
 const CHUNKED_LAND = 'In Chunked an Omni-Key can&#x27;t pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate&#x27;s Mercy.';
 
@@ -216,9 +218,37 @@ describe('ReferenceModal Vanilla policy', () => {
     expect(unlocks).toContain('Guaranteed at skill levels 30, 40, 50, 60, 70, 80, 90 and 99, a 2% chance on every level-up, or the Ritual of Chaos.');
     const tableFirst = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
     expect(unlocks).toContain(`${tableFirst} Places you can&#x27;t reach yet can come up too. Guaranteed at skill levels`);
-    expect(unlocks).not.toContain('In Chunked, only banks and guilds');
-    expect(renderCodex('unlocks', 'chunked')).toContain(`${tableFirst} In Chunked, only banks and guilds inside your chunks can come up. Guaranteed`);
+    expect(unlocks).not.toContain('In Chunked, only bosses');
+    expect(renderCodex('unlocks', 'chunked')).toContain(`${tableFirst} In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up. Guaranteed`);
     expect(unlocks).not.toContain('keeps its old odds');
+  });
+
+  it('says the activity Key stash rules hold in Chunked too, not only Vanilla', () => {
+    expect(renderCodex('core', 'chunked')).toContain('(boss and minigame rolls in Vanilla and Chunked, and Vanilla clue rolls, use 0.01%)');
+    const altar = renderCodex('altar', 'chunked');
+    expect(altar).toContain('(a boss or minigame with 1 Key left gives 1)');
+    expect(altar).toContain('Odds boosts stop at 95%.');
+  });
+
+  it('gives the Codex tier names the same hue as the gear badges, tier by tier', () => {
+    const hue = (cls: string): string => cls.split(' ')[0].replace(/^(bg|text)-/, '').replace(/-\d+$/, '');
+    expect(EQUIP_TIER_TEXT_COLORS).toHaveLength(EQUIPMENT_TIER_MAX);
+    expect(EQUIP_TIER_TEXT_COLORS.map(hue)).toEqual(EQUIP_TIER_COLORS.map(hue));
+  });
+
+  it('colours each Equipment Tier like its gear badge and places granite by its level band', () => {
+    const gear = renderCodex('equipment' as CodexTab);
+    EQUIP_TIER_TEXT_COLORS.forEach((cls, i) => expect(gear).toContain(`p-4 font-bold ${cls}">Tier ${i + 1}<`));
+    expect(gear).toContain('level 50 granite armour is Tier 5 with rune (level 40). A few weapons sit higher for what they do, like the granite maul at Tier 6.');
+    expect(reviewedTier({ name: 'Granite body', slot: 'Body' })).toBe(5);
+    expect(reviewedTier({ name: 'Granite maul', slot: 'Weapon' })).toBe(6);
+    expect(reviewedTier({ name: 'Rune platebody', slot: 'Body' })).toBe(5);
+  });
+
+  it('says every chunk gained in Chunked draws an omen', () => {
+    const modes = renderCodex('modes', 'chunked');
+    expect(modes).toContain('every chunk you gain draws one of fate&#x27;s eight omens (see Key Economy).');
+    expect(modes).not.toContain('one chunk in eight');
   });
 
   it('tells a seeded run from before the table-first rule that it keeps its old Chaos odds', () => {

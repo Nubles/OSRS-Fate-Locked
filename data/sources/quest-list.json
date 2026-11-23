@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-11-12",
+  "reviewedAt": "2026-11-22",
   "listSource": {
     "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15366661",
     "revision": 15366661,
     "revisionTimestamp": "2026-10-06T09:31:48Z"
   },
   "parsedCounts": {
-    "quests": 199,
+    "quests": 201,
     "miniquests": 19
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 198/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 200/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -24,6 +24,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Kingdom_Divided&oldid=15259353",
         "revision": 15259353,
         "revisionTimestamp": "2026-07-09T19:18:15Z"
+      }
+    },
+    {
+      "id": "A New Leaf",
+      "kind": "quest",
+      "pageTitle": "A New Leaf",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_New_Leaf&oldid=15412103",
+        "revision": 15412103,
+        "revisionTimestamp": "2026-11-22T16:53:30Z"
       }
     },
     {
@@ -1224,6 +1234,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
         "revision": 15273866,
         "revisionTimestamp": "2026-07-24T09:05:30Z"
+      }
+    },
+    {
+      "id": "Rag and Bone Man III",
+      "kind": "quest",
+      "pageTitle": "Rag and Bone Man III",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_III&oldid=15412074",
+        "revision": 15412074,
+        "revisionTimestamp": "2026-11-22T16:18:01Z"
       }
     },
     {

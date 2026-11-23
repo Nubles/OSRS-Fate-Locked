@@ -4,6 +4,8 @@ const INTERVAL_LIMIT = 6;
 const PRIOR_DAY_LIMIT = 7;
 const PRE_REPLACEMENT_LIMIT = 4;
 const LEGACY_IMPORT_LIMIT = 8;
+/** The run as it was when the latest session began, kept even on the day it was taken. */
+const SESSION_START_LIMIT = 1;
 
 type RetentionCheckpoint = RecoveryCheckpoint & { isHead?: boolean };
 
@@ -68,6 +70,10 @@ export const selectRetainedCheckpointKeys = (
     keep(newest(selected, 1));
   }
 
+  keep(newest(
+    checkpoints.filter(record => record.reason === 'session-start'),
+    SESSION_START_LIMIT,
+  ));
   keep(newest(
     checkpoints.filter(record => record.reason === 'pre-replacement'),
     PRE_REPLACEMENT_LIMIT,

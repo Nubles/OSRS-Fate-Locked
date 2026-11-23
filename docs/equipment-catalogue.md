@@ -10,10 +10,15 @@ Source: [WeirdGloop equipment data](https://github.com/weirdgloop/osrs-dps-calc/
 Item facts and images originate from the [Old School RuneScape Wiki](https://oldschool.runescape.wiki/).
 
 All item IDs remain available to local loadouts and damage tools. Only items
-with reviewed named/material rules in `utils/gearTiers.ts` appear in either
-RuneLite permission map. Unreviewed items retain their clearly labelled local
-estimates. Their omitted IDs mean unknown/no equipment warning in both legacy
-and v4 plugin consumers; an estimate is never exported as a definitive lock.
+with a reviewed tier appear in either RuneLite permission map.
+`utils/equipmentReviewTiers.ts` (`reviewedTier`) decides it: the named and
+material rules in `utils/gearTiers.ts` first, then the Fate placements
+(`PLACED`) and Wiki wield levels (`WIELD_LEVELS`) in `data/equipmentReview.ts`.
+Every catalogue item with bonuses has a reviewed tier
+(`data/equipmentReview.test.ts` fails when a catalogue update brings one that
+does not); only zero-bonus items keep a clearly labelled local estimate. Their
+omitted IDs mean unknown/no equipment warning in both legacy and v4 plugin
+consumers; an estimate is never exported as a definitive lock.
 
 The additive `rules.equipmentCatalogue` metadata reports source identity and
 local/reviewed/estimated ID counts. Older plugins can ignore this metadata

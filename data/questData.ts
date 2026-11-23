@@ -144,7 +144,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "lumbridge-castle", label: "Lumbridge Castle", standardAreas: ["Lumbridge"], chunkOptions: [{ cx: 50, cy: 50 }] },
     ],
-    skills: {}, prereqs: [], points: 1, series: 'Recipe for Disaster',
+    skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   'Demon Slayer': {
@@ -418,6 +418,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
+  // A members' quest (3 Nov 2026), left here so the order of QUEST_DATA does not move.
   'The Writing\'s on the Wall': {
     kind: 'quest', accessPolicy: 'locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
@@ -426,7 +427,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
     ],
-    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1,
+    skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
 
@@ -644,7 +645,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Waterfall Quest', name: 'Waterfall Quest',
     regions: ['Gnome Village', 'Baxtorian Falls'],
-    skills: {}, prereqs: [], points: 1, series: 'Elf',
+    skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Biohazard': {
@@ -837,7 +838,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'varrock-palace', label: 'Varrock Palace', standardAreas: ['Varrock'], chunkOptions: [{ cx: 50, cy: 54 }] },
       { id: 'paterdomus', label: 'Paterdomus Temple and mausoleum', standardAreas: ['Paterdomus'], chunkOptions: [{ cx: 53, cy: 54 }] },
     ],
-    skills: {}, prereqs: [], points: 1, series: 'Myreque',
+    skills: {}, prereqs: [], points: 1,
     // Items checked on the Wiki: 50 rune or pure essence.
     difficulty: DropSource.QUEST_NOVICE,
     // Alternatives rechecked on the Wiki (13 Oct): essence is no longer gated: minotaurs in the Stronghold of Security (Misthalin) drop it.
@@ -850,7 +851,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'paterdomus', label: 'Paterdomus and Drezel', standardAreas: ['Paterdomus'], chunkOptions: [{ cx: 53, cy: 54 }] },
       { id: 'nature-grotto', label: 'Nature Grotto in Mort Myre Swamp', standardAreas: ['Mort Myre Swamp'], chunkOptions: [{ cx: 53, cy: 52 }] },
     ],
-    skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2, series: 'Myreque',
+    skills: {}, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
     // Items checked on the Wiki: Silver sickle; Ghostspeak amulet (worn).
     equipmentRequirements: [
       { slot: 'Neck', tier: 1, reason: 'Equip amulet of ghostspeak to talk to Filliman' },
@@ -1027,7 +1028,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'In Search of the Myreque', name: 'In Search of the Myreque',
     regions: ['Canifis', 'Mort Myre Swamp', 'Barrows'],
     skills: { 'Agility': 25 }, prereqs: ['Nature Spirit'], points: 2, series: 'Myreque',
-    // Items checked on the Wiki: Steel longsword, 2 steel swords, steel mace, steel warhammer, steel dagger; 225 steel nails.
+    // Items checked on the Wiki: Steel longsword, 2 steel shortswords, steel mace, steel warhammer, steel dagger; 225 steel nails.
     oneOf: [
       { skills: { 'Smithing': 39 } },
       { skills: { 'Smithing': 34 }, merchants: ['Weapon Shops'] },
@@ -1418,7 +1419,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Bandit Camp"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
-    skills: { 'Crafting': 50, 'Firemaking': 45, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
+    skills: { 'Crafting': 50, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -1433,7 +1434,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Fairytale I - Growing Pains', name: 'Fairytale I - Growing Pains',
     regions: ['Draynor Village', 'Falador', 'Mort Myre Swamp', 'Zanaris'],
-    skills: {}, prereqs: ['Lost City', 'Nature Spirit'], points: 2, series: 'Fairy Tale',
+    skills: {}, prereqs: ['Lost City', 'Nature Spirit'], points: 2, series: 'Fairytale',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'RFD: The Cook': {
@@ -1681,7 +1682,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: "poison-waste", label: "Poison Waste", standardAreas: ["Poison Waste"], chunkOptions: [{ cx: 34, cy: 48 }] },
       { id: "horseshoe-mine", label: "Horseshoe Mine", standardAreas: ["Brimhaven"], chunkOptions: [{ cx: 42, cy: 50 }] },
     ],
-    skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairy Tale',
+    skills: { 'Thieving': 40, 'Farming': 49, 'Herblore': 57 }, prereqs: ['Fairytale I - Growing Pains'], points: 2, series: 'Fairytale',
     // The Fairy Queen's hideout (AIR, DLR, DJQ, AJS), the cosmic plane (CKP) and the gorak plane (DIR) are reached only by fairy ring.
     mobility: ['Fairy Rings'],
     difficulty: DropSource.QUEST_EXPERIENCED
@@ -2561,7 +2562,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'dog-shelter', label: 'Dog Shelter', standardAreas: ['Edgeville'], chunkOptions: [{ cx: 47, cy: 54 }] },
       { id: 'gertrudes-house', label: "Gertrude's house and Cooks' Guild", standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 53 }] },
-      { id: 'outlaw-camp', label: 'Outlaw Camp', standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 54 }] },
+      { id: 'outlaw-camp', label: 'Outlaw Camp', standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 54 }] },
       { id: 'shelter-road', label: 'Barbarian Village crossing', standardAreas: ['Barbarian Village'], chunkOptions: [{ cx: 48, cy: 53 }] },
     ],
     skills: { Crafting: 15 }, prereqs: [], points: 1,
@@ -2625,6 +2626,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     skills: { Sailing: 52, Smithing: 48 }, prereqs: ['Troubled Tortugans'], points: 2, series: 'Tortugan',
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  // Free-to-play (25 Feb 2026), left here so the order of QUEST_DATA does not move.
   'The Ides of Milk': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'The Ides of Milk', name: 'The Ides of Milk',
@@ -2674,6 +2676,54 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Herblore': 16, 'Construction': 15 }, prereqs: ['Priest in Peril'], points: 2,
     difficulty: DropSource.QUEST_INTERMEDIATE
+  },
+  'A New Leaf': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'A New Leaf', name: 'A New Leaf',
+    regions: ['Kourend & Kebos', 'Asgarnia', 'Kandarin', 'Morytania', 'Kharidian Desert'],
+    // Released 18 Nov 2026. Starts by eating a cabbage from the field in south
+    // Hosidius (the Wiki gives no start map; the chunk is the Cabbage page's
+    // Hosidius patch), then works for Dishop Dennis by the Farming Guild: stew
+    // for Jane, Mary, a sergeant and Konar, a potion from Allanna's book, and a
+    // sprout spy on five ranges around the world.
+    locations: [
+      { id: 'hosidius-cabbage-field', label: 'Cabbage field in south Hosidius', standardAreas: ['Hosidius'], chunkOptions: [{ cx: 27, cy: 55 }] },
+      { id: 'dishop-dennis-farm', label: "Dishop Dennis's farm, south-east of the Farming Guild", standardAreas: ['Mount Karuulm'], chunkOptions: [{ cx: 20, cy: 58 }] },
+      { id: 'farming-guild', label: 'Farming Guild', standardAreas: ['Farming Guild'], chunkOptions: [{ cx: 19, cy: 58 }] },
+      { id: 'kebos-farm-mary', label: "Mary's farm, south of the Farming Guild", standardAreas: ['Molch'], chunkOptions: [{ cx: 19, cy: 57 }] },
+      { id: 'mount-karuulm-konar', label: 'Konar on top of Mount Karuulm', standardAreas: ['Mount Karuulm'], chunkOptions: [{ cx: 20, cy: 59 }] },
+      { id: 'white-knights-castle-range', label: "Range in the White Knights' Castle", standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 52 }] },
+      { id: 'hosidius-mess-hall', label: 'Hosidius Mess Hall', standardAreas: ['Hosidius'], chunkOptions: [{ cx: 25, cy: 56 }] },
+      { id: 'gnome-restaurant-range', label: 'Gnome Restaurant range in the Tree Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 38, cy: 54 }] },
+      { id: 'port-phasmatys-range', label: 'Range in Port Phasmatys', standardAreas: ['Port Phasmatys'], chunkOptions: [{ cx: 57, cy: 54 }] },
+      { id: 'al-kharid-kebab-shop', label: 'Kebab shop in Al Kharid', standardAreas: ['Al Kharid'], chunkOptions: [{ cx: 51, cy: 49 }] },
+    ],
+    // Allanna only hands over her book once a farming contract from Guildmaster
+    // Jane is done, and both are inside the guild.
+    oneOf: [{ guilds: ['Farming Guild'], regions: ['Farming Guild'] }],
+    manualRequirements: ['Completed at least one farming contract'],
+    skills: { 'Farming': 45, 'Cooking': 35, 'Herblore': 32 }, prereqs: ['Priest in Peril'], points: 2,
+    difficulty: DropSource.QUEST_INTERMEDIATE
+  },
+  'Rag and Bone Man III': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'Rag and Bone Man III', name: 'Rag and Bone Man III',
+    regions: ['Misthalin'],
+    // Released 18 Nov 2026. Starts with the Odd Old Man in Silvarea. Any two
+    // wish-list bones will do; the nearest (armoured zombies round the
+    // mountain, angry giant rats in Tolna's rift) sit behind the required
+    // Defender of Varrock and A Soul's Bane. The death loop and the asylum
+    // under his house are reached through him.
+    locations: [
+      { id: 'odd-old-man-house', label: "Odd Old Man's house in Silvarea", standardAreas: ['Silvarea'], chunkOptions: [{ cx: 52, cy: 54 }] },
+    ],
+    skills: { 'Slayer': 58 }, prereqs: ['Rag and Bone Man II', 'Dragon Slayer I', 'The Great Brain Robbery', 'Defender of Varrock', 'Tower of Life', "A Soul's Bane"], points: 3, series: 'Rag and Bone Man',
+    // Slots checked on the Wiki (22 Nov): the earmuffs are on a desk in the asylum.
+    equipmentRequirements: [
+      { slot: 'Head', tier: 1, reason: 'Wear earmuffs or a Slayer helmet to fight the ancient banshee' },
+      { slot: 'Weapon', tier: 1, reason: "Wield Sedridor's staff to kill Tolna's heads" },
+    ],
+    difficulty: DropSource.QUEST_EXPERIENCED
   },
 
   // --- Miniquests ---
@@ -2728,6 +2778,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
+  // A quest, not a miniquest, since 3 Nov 2026; left here so the order of QUEST_DATA does not move.
   'Daddy\'s Home': {
     // A quest worth 1 quest point since 3 Nov 2026 (it was a miniquest).
     kind: 'quest', accessPolicy: 'locations',

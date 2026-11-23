@@ -4,6 +4,7 @@ import type { UnlockState } from '../types';
 import { getActivityAccess } from './activityAccess';
 import type { AreaRoutes } from './areaRoutes';
 import { canonicalBossId } from './contentIdentity';
+import { chunkedCATaskBlocker } from './chunkedFate';
 import { evaluateDiaryTaskEligibility } from './journalStatus';
 import { isAreaReachable } from './reachability';
 
@@ -49,7 +50,8 @@ export const bossAreaBlocker = (
 /**
  * What keeps a task from being fought now, or undefined when it can be (or is
  * done, or isn't at a boss, which carries no unlock to check). Only a hint:
- * a task stays free to complete by hand.
+ * a task stays free to complete by hand, except in Chunked when its boss is
+ * not in the run's chunks (caTaskBlockerHint).
  */
 export const caTaskBlocker = (
   task: Pick<CATask, 'id' | 'monster'>,
@@ -71,3 +73,17 @@ export const caTaskBlockerText = (blocker: CATaskBlocker): string => (
     ? `Unlock ${blocker.boss} to fight here.`
     : `${blocker.boss} is unlocked, but you can't get there yet: ${blocker.label.charAt(0).toLowerCase()}${blocker.label.slice(1)}.`
 );
+
+/**
+ * The blocker sentence with what logging by hand allows: Vanilla logs any
+ * task, while Chunked refuses one whose boss is not in the run's chunks
+ * (chunkedCATaskBlocker, the engine's own check).
+ */
+export const caTaskBlockerHint = (
+  blocker: CATaskBlocker,
+  task: Pick<CATask, 'monster'>,
+  unlocks: UnlockState,
+  gameModeId?: string,
+): string => `${caTaskBlockerText(blocker)} ${chunkedCATaskBlocker(task, unlocks, gameModeId)
+  ? 'In Chunked, you can log it once its boss is in your chunks.'
+  : 'You can still log the task by hand.'}`;

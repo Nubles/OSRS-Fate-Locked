@@ -3,7 +3,8 @@ import { ALL_CA_TASKS } from '../data/caTasks';
 import { ACTIVITY_ACCESS_AREAS, NO_HARD_LOCATION_GATE } from '../data/activityAccess';
 import type { UnlockState } from '../types';
 import type { AreaRoutes } from './areaRoutes';
-import { bossAreaBlocker, caTaskBlocker, caTaskBlockerText } from './caTaskAccess';
+import { bossAreaBlocker, caTaskBlocker, caTaskBlockerHint, caTaskBlockerText } from './caTaskAccess';
+import { chunkedCATaskBlocker } from './chunkedFate';
 import { canonicalBossId } from './contentIdentity';
 
 const run = (over: Partial<UnlockState> = {}): UnlockState => ({
@@ -60,5 +61,28 @@ describe('bossAreaBlocker', () => {
     const bosses = new Set(ALL_CA_TASKS.map(task => canonicalBossId(task.monster)).filter((boss): boss is string => !!boss));
     const unplaced = [...bosses].filter(boss => !ACTIVITY_ACCESS_AREAS[boss] && !NO_HARD_LOCATION_GATE.has(boss));
     expect(unplaced).toEqual([]);
+  });
+});
+
+describe('caTaskBlockerHint', () => {
+  const zulrah = ALL_CA_TASKS.find(task => task.id === 'ca_224')!;
+
+  it('offers logging by hand where the engine allows it', () => {
+    const unlocks = run();
+    const blocker = caTaskBlocker(zulrah, unlocks, 'vanilla')!;
+    expect(chunkedCATaskBlocker(zulrah, unlocks, 'vanilla')).toBeNull();
+    expect(caTaskBlockerHint(blocker, zulrah, unlocks, 'vanilla'))
+      .toBe('Unlock Zulrah to fight here. You can still log the task by hand.');
+  });
+
+  it("gives Chunked's rule instead where the engine refuses the task", () => {
+    for (const unlocks of [run({ chunks: [] } as Partial<UnlockState>), run({ chunks: [], bosses: ['Zulrah'] } as Partial<UnlockState>)]) {
+      const blocker = caTaskBlocker(zulrah, unlocks, 'chunked')!;
+      expect(blocker).toBeDefined();
+      expect(chunkedCATaskBlocker(zulrah, unlocks, 'chunked')).not.toBeNull();
+      const hint = caTaskBlockerHint(blocker, zulrah, unlocks, 'chunked');
+      expect(hint).not.toContain('by hand');
+      expect(hint).toMatch(/In Chunked, you can log it once its boss is in your chunks\.$/);
+    }
   });
 });

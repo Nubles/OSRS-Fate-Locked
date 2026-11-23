@@ -156,15 +156,165 @@ describe('B2: a town bank built in a quest needs the quest', () => {
   // List of banks, oldid 15315317.
   it.each([
     ['11310', 'Shilo Village', 'Shilo Village'], ['13099', 'Sophanem', 'Contact!'],
-    ['9265', 'Lletya', "Mourning's End Part I"], ['10284', 'Corsair Cove', 'The Corsair Curse'],
-    ['10300', 'Etceteria', 'Throne of Miscellania'], ['9275', 'Neitiznot', 'The Fremennik Isles'],
-    ['9531', 'Jatizso', 'The Fremennik Isles'], ['13874', 'Burgh de Rott', 'In Aid of the Myreque'],
+    ['10284', 'Corsair Cove', 'The Corsair Curse'], ['10300', 'Etceteria', 'The Fremennik Trials'],
     ['14388', 'Darkmeyer', 'Sins of the Father'],
   ])('bank %s (%s) needs %s', (id, _bank, quest) => {
     expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
     const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
     expect(without.status).toBe('NOT_READY');
     expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+
+  // Piscatoris bank oldid 15211946, Gwenith oldid 15359762, Bank Deposit Box oldid 15378951.
+  it.each([
+    ['9273', 'Piscatoris', 'Swan Song'], ['8757', 'Gwenith deposit box', 'Song of the Elves'],
+    ['8499', 'West Prifddinas dock deposit box', 'Song of the Elves'],
+  ])('bank %s (%s) needs %s, which the Wiki names for using it', (id, _bank, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons).toContain(`Complete ${quest}`);
+  });
+
+  // Partway through a quest: Lunar Isle bank oldid 15345927 (started Lunar Diplomacy and a Seal of Passage, or Dream Mentor),
+  // Bank Deposit Box oldid 15378951 (Lunar Isle; the Great Conch needs Troubled Tortugans partly done),
+  // The Great Conch oldid 15376235 (starting Troubled Tortugans), Red Rock oldid 15248903 (The Red Reef partly done),
+  // The Fremennik Isles oldid 15402837 ("Both villages have a bank that can be used", travel "At any time during
+  // the quest"), Neitiznot oldid 15389735, Lletya bank oldid 15361478 ("partially completed Mourning's End Part I"),
+  // Lletya oldid 15379525 ("accessed after starting"), Burgh de Rott bank oldid 15211939 ("a partial completion of In Aid of
+  // the Myreque"; the quest repairs the bank partway through).
+  it.each([
+    ['8253', 'Lunar Isle bank', 'Dream Mentor'], ['8508', 'Lunar Isle dock deposit box', 'Lunar Diplomacy'],
+    ['12581', 'Great Conch bank', 'Troubled Tortugans'], ['12838', 'Great Conch Sacred Grove deposit box', 'Troubled Tortugans'],
+    ['11047', 'Red Rock bank chest', 'The Red Reef'],
+    ['9275', 'Neitiznot bank', 'The Fremennik Isles'], ['9531', 'Jatizso bank', 'The Fremennik Isles'],
+    ['9274', 'Neitiznot dock deposit box', 'The Fremennik Isles'],
+    ['9265', 'Lletya bank', "Mourning's End Part I"], ['13874', 'Burgh de Rott bank', 'In Aid of the Myreque'],
+  ])('bank %s (%s) opens after %s, and asks a run partway through to confirm', (id, _bank, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const partway = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(partway.status).toBe('UNKNOWN');
+    expect(partway.reasons.join(' ')).toMatch(/Confirm you have/);
+    expect(bankAccess(id, createFreshState().unlocks).status).not.toBe('ALLOWED');
+  });
+
+  // Neitiznot oldid 15389735 and Jatizso oldid 15389736: the islands need The Fremennik Trials;
+  // Burgh de Rott bank oldid 15211939: the bank needs Priest in Peril. The Neitiznot dock deposit box
+  // (Bank Deposit Box oldid 15378951, added with the Sailing docks) stands on the island, so it needs the same.
+  it.each([
+    ['9275', 'The Fremennik Isles', 'The Fremennik Trials'], ['9531', 'The Fremennik Isles', 'The Fremennik Trials'],
+    ['9274', 'The Fremennik Isles', 'The Fremennik Trials'],
+    ['13874', 'In Aid of the Myreque', 'Priest in Peril'],
+  ])('keeps bank %s shut to a run partway through %s without %s', (id, started, quest) => {
+    const without = bankAccess(id, everything(99, { quests: questsWithout(started, quest) }));
+    expect(without.status).toBe('NOT_READY');
+    expect(without.reasons.join(' ')).toContain(quest);
+  });
+
+  // Throne of Miscellania oldid 15403898: "the bank in Etceteria is available for use" before the quest starts.
+  it('opens the Etceteria bank after The Fremennik Trials, before Throne of Miscellania', () => {
+    expect(bankAccess('10300', everything(99, { quests: questsWithout('Throne of Miscellania') })))
+      .toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+});
+
+describe('B3: a bank the Wiki names a requirement for states it, not "needs review"', () => {
+  // Bank Deposit Box oldid 15378951, Tarn's Lair 15327755, Ape Atoll bank 15360641, Rionasta 15310502,
+  // List of banks 15402836 (Bank Chest-wreck: Bone Voyage).
+  it.each([
+    ['5678', 'Children of the Sun'], ['13618', 'Haunted Mine'], ['11051', 'Monkey Madness II'],
+    ['11056', 'Jungle Potion'], ['14908', 'Bone Voyage'],
+  ])('bank %s needs %s and nothing more', (id, quest) => {
+    expect(bankAccess(id, everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    const without = bankAccess(id, everything(99, { quests: questsWithout(quest) }));
+    expect(without.status).toBe('NOT_READY');
+    // The quest once: as the gate's "Complete X", or bare where the place's own entry already names it.
+    expect(without.reasons.filter(reason => reason === quest || reason === `Complete ${quest}`)).toHaveLength(1);
+  });
+
+  // Zul-Andra oldid 15402994: Regicide, then "volunteer themselves as sacrifice to Zulrah".
+  it('asks a run at Zul-Andra to confirm it volunteered as the sacrifice, after Regicide', () => {
+    const access = bankAccess('8751', everything());
+    expect(access.status).toBe('UNKNOWN');
+    expect(access.reasons.join(' ')).toMatch(/sacrifice/);
+    expect(bankAccess('8751', everything(99, { quests: questsWithout('Regicide') })).reasons).toContain('Complete Regicide');
+  });
+
+  // Fortis Colosseum oldid 15404131: the bank chest is for "players who have obtained at least 2,000 glory",
+  // and "Only a player's highest Glory earned in a single Colosseum attempt" counts (the Brawler title).
+  it('asks a run at the Fortis Colosseum to confirm 2,000 Glory in one attempt', () => {
+    const access = bankAccess('7216', everything());
+    expect(access.status).toBe('UNKNOWN');
+    expect(access.reasons).toEqual(['Confirm you have earned 2,000 Glory in one Fortis Colosseum attempt']);
+    expect(bankAccess('7216', createFreshState().unlocks).status).not.toBe('ALLOWED');
+  });
+
+  // Fossil Island bank oldid 15315035 (21 Construction); Bank chest (amenity) oldid 15402269 (70 Construction).
+  it.each([
+    ['14907', 21], ['11811', 70], ['10533', 70], ['8740', 70], ['8249', 70],
+  ])('bank %s must be built, with %i Construction', (id, level) => {
+    const built = bankAccess(id, everything());
+    expect(built.status).toBe('UNKNOWN');
+    expect(built.reasons.join(' ')).toMatch(/built the bank/);
+    const short = bankAccess(id, everything(level - 1));
+    expect(short.status).toBe('NOT_READY');
+    expect(short.reasons).toContain(`Construction level ${level}`);
+  });
+
+  // Chest pieces (Wyrmscraig) oldid 15402131: 48 Construction, and its sunstone crystal needs Fallen From Grace.
+  it('asks for Fallen From Grace and 48 Construction before the Wyrmscraig chest is built', () => {
+    expect(bankAccess('10275', everything()).status).toBe('UNKNOWN');
+    expect(bankAccess('10275', everything(47)).reasons).toContain('Construction level 48');
+    expect(bankAccess('10275', everything(99, { quests: questsWithout('Fallen From Grace') })).reasons).toContain('Complete Fallen From Grace');
+  });
+
+  it('names a quest the place already asks for only once', () => {
+    const fresh = createFreshState().unlocks;
+    expect(bankAccess('5678', fresh).reasons).toEqual(['Children of the Sun']);
+    expect(bankAccess('14908', fresh).reasons).toEqual(['Bone Voyage']);
+    expect(bankAccess('14907', fresh).reasons).toEqual(['Bone Voyage', 'Construction level 21']);
+  });
+
+  // Eniola oldid 15353166 and Ourania Cave: the roving banker just inside the cave asks for 20 runes a visit
+  // and for no quest or level, so the place needs nothing beyond its Banks unlock and its land.
+  it('counts Eniola as the Ourania Altar bank, with no requirement of her own', () => {
+    expect(bankAccess('9778', everything())).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(bankAccess('9778', everything(1, { quests: [] }))).toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
+  it('leaves none of these at "needs review" for a run that has everything', () => {
+    for (const id of ['10275', '5678', '13618', '11051', '11056', '14908', '8751', '14907', '11811', '10533', '8740', '8249', '9778']) {
+      expect(bankAccess(id, everything()).reasons.join(' '), id).not.toMatch(/need review/);
+    }
+  });
+
+  // The Camelot PvP chest is the owner's call (it exists only on PvP worlds). List of banks oldid 15402836 puts
+  // both Castle Drakan facilities behind The Blood Moon Rises, but not whether the castle's deposit chests outlast
+  // the quest, so that place waits for a reviewed gate.
+  it('knows which bank places still wait for a reviewed requirement', () => {
+    const waiting = BANKS.filter(({ id }) => /^\d+$/.test(id))
+      .filter(({ id }) => /need review/.test(bankAccess(id, everything()).reasons.join(' '))).map(({ id }) => id).sort();
+    expect(waiting).toEqual(['11062', '14132']);
+  });
+});
+
+describe('B1b: the Crafting Guild bank needs 99 Crafting or the hard Falador Diary', () => {
+  // Crafting Guild oldid 15362001: "Only players who have completed the hard Falador Diary or have
+  // level 99 Crafting will be able to use either" (the bank chest and the deposit box).
+  it('stays shut to a run with the guild and 40 Crafting only', () => {
+    const access = bankAccess('11571', everything(98));
+    expect(access).toEqual({ status: 'NOT_READY', reasons: ['One of: Complete Falador Hard Diary or Crafting level 99'] });
+  });
+
+  it('opens with 99 Crafting, or with the hard Falador Diary', () => {
+    expect(bankAccess('11571', everything(99))).toEqual({ status: 'ALLOWED', reasons: [] });
+    expect(bankAccess('11571', everything(98, { diaries: ['Falador Hard'] }))).toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
+  it('still needs the guild itself', () => {
+    const access = bankAccess('11571', everything(99, { guilds: GUILDS_LIST.filter(name => name !== 'Crafting Guild') }));
+    expect(access.status).toBe('NOT_READY');
+    expect(access.reasons).toContain('Crafting Guild');
   });
 });
 

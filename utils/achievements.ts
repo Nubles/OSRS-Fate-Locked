@@ -33,6 +33,7 @@ import { getPoolAndStateKey } from './gameEngine';
 import { isRollEntry } from './logEntry';
 import { mergedBankId } from './bankUnlockMerges';
 import { AchievementPayout, fateDue, rewardLabel, ritualName } from './achievementRewards';
+import { QUEST_CAPE_ACHIEVEMENT_ID } from './questCapeAchievement';
 
 export type AchievementCategory =
   | 'Quests' | 'Skills' | 'Areas' | 'Equipment'
@@ -382,7 +383,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Veteran', description: 'Complete 50 quests', target: 50, fate: 15 },
     { title: 'Centurion', description: 'Complete 100 quests', target: 100, fate: 15 },
     { title: 'Loremaster', description: 'Complete 150 quests', target: 150, fate: 25 },
-    { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown', fate: 25, freeRituals: 1 },
+    // A fixed id, so adding a quest neither drops nor repays it (utils/questCapeAchievement).
+    { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown', fate: 25, freeRituals: 1, id: QUEST_CAPE_ACHIEVEMENT_ID },
   ]),
   ...tiers('qp', 'Quests', 'star', questPoints, [
     { title: "Champions' Guild", description: "Earn 32 Quest Points, enough to enter the Champions' Guild", target: 32 },

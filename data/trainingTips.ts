@@ -158,6 +158,14 @@ export const TRAINING_TIPS: Record<string, TrainingTip[]> = {
     { from: 82, to: 91, method: 'Double astral runes', note: 'Requires Lunar Diplomacy' },
     { from: 91, to: 99, method: 'Double nature runes or lava runes' },
   ],
+  // Sailing training on the Wiki (rev 15379238, 22 Oct 2026): its recommended routes.
+  Sailing: [
+    { from: 1,  to: 4,  method: 'Pandemonium quest' },
+    { from: 4,  to: 30, method: 'Courier tasks while sea charting', note: 'Prying Times at 12 and Current Affairs at 22 Sailing' },
+    { from: 30, to: 55, method: 'Barracuda Trials: The Tempor Tantrum' },
+    { from: 55, to: 72, method: 'Barracuda Trials: The Jubbly Jive' },
+    { from: 72, to: 99, method: 'Barracuda Trials: The Gwenith Glide' },
+  ],
   Slayer: [
     { from: 1,  to: 20, method: 'Turael/Spria tasks', note: 'Award no points; for point boosting, use a higher master for milestone tasks' },
     { from: 20, to: 50, method: 'Mazchna tasks', note: 'Requires Priest in Peril and 20 combat (or 99 Slayer)' },
@@ -218,6 +226,7 @@ const WIKI_TRAINING_SLUGS: Record<string, string> = {
   Ranged:       'Pay-to-play_Ranged_training',
   Runecraft:    'Pay-to-play_Runecraft_training',
   Runecrafting: 'Pay-to-play_Runecraft_training',
+  Sailing:      'Sailing_training',
   Slayer:       'Slayer_training',
   Smithing:     'Pay-to-play_Smithing_training',
   Strength:     'Pay-to-play_Melee_training',

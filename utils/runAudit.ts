@@ -124,12 +124,18 @@ export const replayInvariants = (
   };
   const violations: InvariantViolation[] = [];
   let fateEstimate = false;
+  // Greed's refund comes after the pity decision (the Ritual of Greed's text:
+  // "half the Fate comes back, unless the fail brings a Pity Key"), so an
+  // honest miss can carry Fate over the line by up to that refund. The next
+  // miss pays the Pity Key; until Fate is back under the line that much is allowed.
+  let greedOverflow = 0;
   const check = (idx: number) => {
+    if (s.fatePoints <= fateCap) greedOverflow = 0;
     if (s.keys < 0) violations.push({ index: idx, kind: 'KEYS_NEGATIVE', message: `keys went negative (${s.keys})` });
     if (s.specialKeys < 0) violations.push({ index: idx, kind: 'SPECIAL_NEGATIVE', message: `specialKeys went negative` });
     if (s.chaosKeys < 0) violations.push({ index: idx, kind: 'CHAOS_NEGATIVE', message: `chaosKeys went negative` });
     if (!fateEstimate && s.fatePoints < 0) violations.push({ index: idx, kind: 'FATE_NEGATIVE', message: `fatePoints went negative` });
-    if (!fateEstimate && s.fatePoints > fateCap) violations.push({ index: idx, kind: 'FATE_OVERFLOW', message: `fatePoints above cap (${s.fatePoints})` });
+    if (!fateEstimate && s.fatePoints > fateCap + greedOverflow) violations.push({ index: idx, kind: 'FATE_OVERFLOW', message: `fatePoints above cap (${s.fatePoints})` });
   };
 
   let exactKeys = true;
@@ -169,11 +175,15 @@ export const replayInvariants = (
         s.fatePoints = Math.max(0, s.fatePoints + recordedFateAward(e) - recordedPityThreshold(e) - recordedFateLost(e));
         s.rolls += 1; s.pities += 1;
         break;
-      case 'ROLL_FAIL':
+      case 'ROLL_FAIL': {
         s.chaosKeys += detectedSkillChaosAward(e);
-        s.fatePoints += recordedFateAward(e) - recordedFateLost(e);
+        const award = recordedFateAward(e);
+        s.fatePoints += award - recordedFateLost(e);
+        const refund = Math.min(award, Number(e.message.match(/\(Greed refunded (\d+) Fate\)/)?.[1] ?? 0));
+        if (refund > 0) greedOverflow = Math.max(0, Math.min(refund, s.fatePoints - fateCap));
         s.rolls += 1;
         break;
+      }
       case 'UNLOCK': {
         const cost = typeof e.meta?.cost === 'number' ? e.meta.cost : 0;
         const costType = e.meta?.costType;

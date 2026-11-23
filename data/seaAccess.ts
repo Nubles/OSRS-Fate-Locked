@@ -1,11 +1,23 @@
 /**
  * Chunked mode's sea: which land you sail from and to, and which land needs a
- * boat. utils/chunkWalkReach.ts reads it; data/seaAccess.test.ts pins it.
+ * boat. utils/chunkWalkReach.ts reads it; utils/chunkWalkReach.test.ts pins it.
  */
 
 /**
+ * Ports the wiki's Port master page pins (oldid 15369854, versions Hosidius,
+ * Piscatoris Fishing Colony, Ardougne and Entrana) where the chunk content has
+ * no Port master yet. Its Mos Le'Harmless port has no pin, so it stays out.
+ */
+export const PORTS_BEYOND_CHUNK_CONTENT: readonly string[] = [
+  '26,54', // Hosidius (pin 1725,3460)
+  '36,57', // Piscatoris Fishing Colony (pin 2313,3693)
+  '41,51', // Ardougne (pin 2674,3269)
+  '44,52', // Entrana (pin 2874,3339)
+];
+
+/**
  * Sailing ports: every land chunk where the chunk content (public/chunk-content.json,
- * from the pinned Chunk Picker export) has a Port master. Most of them touch
+ * from the pinned Chunk Picker export) has a Port master, and the ports above. Most of them touch
  * no chunk of data/oceanChunks.json, which holds only chunks that are all
  * water (Catherby, Brimhaven, Port Khazard, Rellekka and Port Sarim's
  * church chunk among them), so they are named here. With Sailing, you set
@@ -38,6 +50,7 @@ export const SAILING_PORT_CHUNKS: readonly string[] = [
   '47,49', // Port Sarim
   '49,37', // The Summer Shore
   '49,44', // Ruins of Unkah
+  ...PORTS_BEYOND_CHUNK_CONTENT,
 ];
 
 /**

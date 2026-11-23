@@ -23,9 +23,11 @@ const assertVirtualBankId = (value, label) => {
 
 /**
  * A bank's ways in, any one of them enough: quests, diaries, guilds (the
- * guild's unlock and its entry requirement) and checks a player confirms.
+ * guild's unlock and its entry requirement), skill levels written as
+ * "Crafting 99", and checks a player confirms.
  */
-const ACCESS_KINDS = ['quests', 'diaries', 'guilds', 'manual'];
+const ACCESS_KINDS = ['quests', 'diaries', 'guilds', 'skills', 'manual'];
+const SKILL_LEVEL = /^[A-Z][a-z]+ (?:[1-9]\d?)$/;
 
 const validateAccessOptions = (options, id) => {
   if (!Array.isArray(options) || !options.length) throw new Error(`Bank ${id} needs access alternatives`);
@@ -34,6 +36,9 @@ const validateAccessOptions = (options, id) => {
     for (const [kind, requirements] of Object.entries(option)) {
       if (!ACCESS_KINDS.includes(kind) || !Array.isArray(requirements) || !requirements.length) throw new Error(`Bank ${id} has invalid ${kind} requirements`);
       for (const requirement of requirements) assertNonEmptyString(requirement, `Bank ${id} ${kind} requirement`);
+      if (kind === 'skills' && !requirements.every(requirement => SKILL_LEVEL.test(requirement))) {
+        throw new Error(`Bank ${id} skills requirements must read like "Crafting 99"`);
+      }
     }
   }
 };
