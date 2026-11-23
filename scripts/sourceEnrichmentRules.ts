@@ -43,10 +43,18 @@ export const UNLOCK_ALIAS: Record<string, string> = {
   // Wintertodt: reward cart pulls, and the crates Ignisia exchanges
   'reward cart': 'Wintertodt',
   'extra supply crate': 'Wintertodt',
-  // Hallowed Sepulchre — the "Coffin (...)" naming is caught by the paren
-  // rule below, but the standalone "Grand Hallowed Coffin" / "Casket" need
-  // an explicit alias.
+  // Hallowed Sepulchre: the "Coffin (...)" naming is caught by the paren
+  // rule, but the standalone "Grand Hallowed Coffin" needs an alias, and so
+  // do hallowed sacks (bought with Hallowed marks, they hold coffin loot).
   'grand hallowed coffin': 'Hallowed Sepulchre',
+  'hallowed sack': 'Hallowed Sepulchre',
+  // Tempoross: the reward pool is fished with the permits it gives, and its
+  // caskets come from that pool.
+  'reward pool': 'Tempoross',
+  'casket (reward pool)': 'Tempoross',
+  // Reward tokens come from guiding a follower on Temple Trekking (or the
+  // Burgh de Rott Ramble route of the same minigame).
+  'reward token': 'Temple Trekking',
   // Theatre of Blood — final-boss / chamber-chest names that aren't in
   // BOSSES_LIST/MINIGAMES_LIST as such.
   'verzik vitur': 'Theatre of Blood',
@@ -60,4 +68,171 @@ export const UNLOCK_ALIAS: Record<string, string> = {
   'ba-ba': 'Tombs of Amascut',
   'kephri': 'Tombs of Amascut',
   'zebak': 'Tombs of Amascut',
+};
+
+// --- drop rarity ------------------------------------------------------------
+// Chance per kill for the Wiki's rarity words. The Wiki colours a drop common
+// down to 1/25, uncommon to 1/99, rare to 1/999 and very rare below that; each
+// word sits inside its band. 'Varies' sits between uncommon and rare.
+const RARITY_WORDS: Record<string, number> = {
+  always: 1, common: 1 / 16, uncommon: 1 / 64, varies: 1 / 128, rare: 1 / 512, 'very rare': 1 / 5000,
+};
+
+/**
+ * Sort key for a Wiki drop rarity: lower is more common. A fraction is read
+ * whole ('21/128' is 21 in 128, '1/1,000' is 1 in 1000); anything unreadable
+ * ('Unknown', 'Once') sorts after every real chance.
+ */
+export const rarityRank = (raw: string): number => {
+  const l = raw.trim().toLowerCase();
+  const word = RARITY_WORDS[l];
+  if (word !== undefined) return 1 - word;
+  const m = l.match(/^~?\s*([\d.,]+)\s*\/\s*([\d.,]+)$/);
+  if (m) {
+    const num = Number(m[1].replace(/,/g, ''));
+    const den = Number(m[2].replace(/,/g, ''));
+    if (num > 0 && den > 0) return 1 - Math.min(1, num / den);
+  }
+  return 2;
+};
+
+// --- which Wiki drop rows to use --------------------------------------------
+// Skilling "drop tables" (mining rocks, trees and so on): the engine already
+// covers these as SKILL sources. Only a row the Wiki does not call a combat
+// drop is skilling, so monsters such as Tree spirit or Rock Crab still count.
+const SKILLING_SOURCE = /\b(rocks?|trees?|bushes?|patch|vein|deposit|spawn|ore)\b/i;
+export const isSkillingSource = (source: string, dropType: unknown): boolean =>
+  dropType !== 'combat' && SKILLING_SOURCE.test(source);
+
+/** Treasure Trail reward caskets and clue scrolls; other caskets are not clues. */
+export const isClueSource = (source: string): boolean => /^(reward casket|clue scroll)\b/i.test(source);
+
+/**
+ * Wiki "drop" sources that are one-time quest rewards, not a place to get
+ * more: the generator leaves them out.
+ */
+export const isQuestRewardSource = (source: string): boolean => /^casket \(pirate's treasure\)$/i.test(source);
+
+/**
+ * The hand-written rows of a RESOURCE_MAP entry. resourceData.ts merges the
+ * Wiki rows in at load and marks each requirementsUnverified, so that flag
+ * (not the length of today's ENRICHED_SOURCES entry, which misses rows
+ * merged in under an item's old name) tells the two apart.
+ */
+export const curatedRows = <T extends { requirementsUnverified?: boolean }>(merged: readonly T[]): T[] =>
+  merged.filter((s) => !s.requirementsUnverified);
+
+// --- unlocks ----------------------------------------------------------------
+// The Shade Catacombs chests of Shades of Mort'ton: "Steel Chest (red)" etc.
+const SHADES_CHEST = /^(bronze|steel|black|silver|gold) chest \((black|brown|crimson|purple|red)\)$/i;
+
+/**
+ * Resolver from a Wiki drop-source name to a boss or minigame unlock id, for
+ * the given unlock names (BOSSES_LIST and MINIGAMES_LIST).
+ */
+export const makeUnlockResolver = (unlockNames: readonly string[]) => {
+  const byName = new Map<string, string>();
+  for (const u of unlockNames) byName.set(u.toLowerCase(), u);
+  return (name: string): string | undefined => {
+    const l = name.toLowerCase();
+    if (byName.has(l)) return byName.get(l);
+    if (UNLOCK_ALIAS[l]) return UNLOCK_ALIAS[l];
+    if (SHADES_CHEST.test(name) && byName.has("shades of mort'ton")) return byName.get("shades of mort'ton");
+    // Reward-chest style names, e.g. "Rewards Chest (Fortis Colosseum)".
+    const paren = name.match(/\(([^)]+)\)/);
+    if (paren && byName.has(paren[1].toLowerCase())) return byName.get(paren[1].toLowerCase());
+    return undefined;
+  };
+};
+
+// --- shop regions -----------------------------------------------------------
+// Region overrides for shops whose infobox location names no known place.
+// Keys are the Wiki's seller names (storeline sold_by), matched in any case.
+export const SHOP_REGION: Record<string, string> = {
+  'Lletya Seamstress': 'Tirannwn',
+  "Lliann's Wares": 'Tirannwn',
+  "TzHaar-Hur-Lek's Ore and Gem Store": 'Karamja',
+  "TzHaar-Hur-Tel's Equipment Store": 'Karamja',
+  "TzHaar-Mej-Roh's Rune Store": 'Karamja',
+  'Mistrock Mining Supplies': 'Varlamore',
+  "Daga's Scimitar Smithy": 'Islands & Others',
+};
+const SHOP_REGION_LOWER = new Map(Object.entries(SHOP_REGION).map(([k, v]) => [k.toLowerCase(), v]));
+export const shopRegionOverride = (shop: string): string | undefined => SHOP_REGION_LOWER.get(shop.toLowerCase());
+
+/**
+ * Place index (lower-case place -> app region) from [place, region] pairs;
+ * the first pair for a place wins. A place written with a note in brackets
+ * ('Mor Ul Rek (TzHaar City)') is also found without it.
+ */
+export const buildPlaceIndex = (pairs: Iterable<readonly [string, string]>): Map<string, string> => {
+  const index = new Map<string, string>();
+  const add = (p: string, region: string) => { if (p && !index.has(p)) index.set(p, region); };
+  for (const [place, region] of pairs) {
+    const l = place.trim().toLowerCase();
+    add(l, region);
+    add(l.replace(/\s*\([^)]*\)$/, ''), region);
+  }
+  return index;
+};
+
+/**
+ * App region of a Wiki infobox_shop location such as "[[Blast Furnace]] in
+ * [[Keldagrim]]" or "[[Shilo Village (location)|Shilo Village]]". Every link
+ * is tried, by its target (without a bracketed note) and its shown text;
+ * failing that, a link that starts with a known place ("[[Lumbridge Castle]]").
+ */
+export const shopLocationRegion = (location: string, places: ReadonlyMap<string, string>): string | undefined => {
+  const names: string[] = [];
+  for (const m of location.matchAll(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g)) {
+    const target = m[1].trim().toLowerCase();
+    names.push(target, target.replace(/\s*\([^)]*\)$/, ''));
+    if (m[2]) names.push(m[2].trim().toLowerCase());
+  }
+  for (const n of names) if (places.has(n)) return places.get(n);
+  for (const n of names) {
+    let best: string | undefined;
+    for (const place of places.keys()) {
+      if (n.startsWith(`${place} `) && (!best || place.length > best.length)) best = place;
+    }
+    if (best) return places.get(best);
+  }
+  return undefined;
+};
+
+// --- picking drop rows ------------------------------------------------------
+export type WikiDrop = { monster: string; regions: string[]; rarity: string; isClue: boolean };
+
+/**
+ * The Wiki drop rows the generator adds for one item: the commonest row of
+ * each source, leaving out sources a hand-written row already names
+ * (`have`, lower case), at most one source per activity (the Shade
+ * Catacombs' ten chests are one Shades of Mort'ton source), commonest first,
+ * at most `cap` of them.
+ */
+export const pickDrops = (
+  drops: readonly WikiDrop[], have: ReadonlySet<string>,
+  unlockOf: (name: string) => string | undefined, cap = 6,
+): WikiDrop[] => {
+  const byMonster = new Map<string, WikiDrop>();
+  for (const d of drops) {
+    const ml = d.monster.toLowerCase();
+    const cur = byMonster.get(ml);
+    if (!cur || rarityRank(d.rarity) < rarityRank(cur.rarity)) byMonster.set(ml, d);
+  }
+  const sorted = [...byMonster.values()]
+    .filter((d) => !have.has(d.monster.toLowerCase()))
+    .sort((a, b) => rarityRank(a.rarity) - rarityRank(b.rarity));
+  const seenActivity = new Set<string>();
+  const out: WikiDrop[] = [];
+  for (const d of sorted) {
+    const activity = d.isClue ? undefined : unlockOf(d.monster);
+    if (activity) {
+      if (seenActivity.has(activity)) continue;
+      seenActivity.add(activity);
+    }
+    out.push(d);
+    if (out.length >= cap) break;
+  }
+  return out;
 };
