@@ -7,8 +7,8 @@ import { slayerReachability, type SlayerStatus, type SlayerTaskRow } from '../..
 import { slayerLocate } from '../../utils/slayerDecisions';
 import { chunkUnlocked, chunkForPlace, showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
 import { shortcutReachability, type ShortcutStatus } from '../../utils/shortcutReach';
-import { shopsByCategory, type CategoryShop } from '../../utils/merchantShops';
-import { evaluateEntityAccess } from '../../utils/entityAccess';
+import { shopsByCategory } from '../../utils/merchantShops';
+import { useShopAccess } from '../../hooks/useShopAccess';
 import { itemSrc, skillIconSrc } from './OsrsDashGems';
 import './osrs-world.css';
 
@@ -153,6 +153,7 @@ const ShopsTool: React.FC = () => {
   const { ready, error, retry } = useChunkContent();
   const [openCats, setOpenCats] = useState<Set<string>>(new Set());
   const grouped = useMemo(() => (ready ? shopsByCategory() : null), [ready]);
+  const accessFor = useShopAccess(ready, unlocks, gameModeId);
   const icon = itemSrc(1004);
   const head = { icon, title: 'Shop directory' };
   if (!grouped) {
@@ -162,7 +163,6 @@ const ShopsTool: React.FC = () => {
       </Shell>
     );
   }
-  const accessFor = (shop: CategoryShop) => shop.locations.map((location) => evaluateEntityAccess(shop.name, shop.kind ?? 'shop', location, unlocks, gameModeId));
   const toggle = (c: string) => setOpenCats((prev) => { const next = new Set(prev); next.has(c) ? next.delete(c) : next.add(c); return next; });
   // Unlocked categories first, as on the board.
   const cats = [...MERCHANTS_LIST.filter((c) => unlocks.merchants.includes(c)), ...MERCHANTS_LIST.filter((c) => !unlocks.merchants.includes(c))];
