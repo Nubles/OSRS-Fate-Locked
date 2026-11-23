@@ -60,12 +60,34 @@ describe('reviewed drop sources', () => {
     expect(wiki?.regions).toEqual(['Lithkren']);
   });
 
+  // outputYield is the Wiki drop quantity; a range uses its low end.
+  it.each([
+    ['Flax', 'Zulrah', 1000],
+    ['Raw Shark', 'Zulrah', 35],
+    ['Pure Essence', 'Twisted Banshee', 65],
+    ['Mithril Ore', 'Zalcano', 56],
+    ['Adamantite Ore', 'Zalcano', 51],
+    ['Runite Ore', 'Zalcano', 3],
+    ['Steel Bar', 'Zalcano', 16],
+    ['Manta Ray', 'Zulrah', 35],
+    ['Manta Ray', 'Vorkath', 35],
+    ['Dragonstone', 'Vorkath', 2],
+  ] as const)('%s from %s yields %d per drop', (item, monster, qty) => {
+    expect(curated(item).find(s => s.name === monster)?.outputYield).toBe(qty);
+  });
+
   it.each([
     ["Executioner's Axe Head", 'Vardorvis', '1/1088'],
     ['Eye of the Duke', 'Duke Sucellus', '1/720'],
     ['Leviathan Lure', 'The Leviathan', '1/768'],
     ["Siren's Staff", 'The Whisperer', '1/512'],
     ['Dragon Harpoon', 'Wyrm', '1/10000 (1/2000 on task)'],
+    // Imps always drop fiendish ashes; regular ashes are 6/128.
+    ['Ashes', 'Imp', '6/128'],
+    // Unsired 1/100 x 62/128 per piece: 1/206 per kill (1/198 with the pet).
+    ['Bludgeon Axon', 'Abyssal Sire', '1/206'],
+    ['Bludgeon Claw', 'Abyssal Sire', '1/206'],
+    ['Bludgeon Spine', 'Abyssal Sire', '1/206'],
   ] as const)('%s from %s is %s', (item, monster, rarity) => {
     const row = curated(item).find(s => s.name === monster);
     expect(row?.rarity).toBe(rarity);

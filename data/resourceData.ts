@@ -355,7 +355,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Seaweed Patch', regions: ['Islands & Others'], skills: {'Farming': 23}, quests: ['Bone Voyage'], notes: 'Fossil Island Underwater', outputYield: 30 }
   ],
   'Flax': [
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Massive quantities', outputYield: 100 },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Massive quantities', outputYield: 1000 },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: 'Seers\' Village Fields' }
   ],
@@ -462,7 +462,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Mithril Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik', 'Wilderness'], skills: {'Mining': 55}, notes: 'Mining Guild / Motherlode' },
     { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'] },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 20 }
+    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 56 }
   ],
   'Daeyalt Essence': [
     { type: 'SKILL', name: 'Mining', regions: ['Morytania'], skills: {'Mining': 60}, quests: ['Sins of the Father'], notes: 'Darkmeyer' }
@@ -472,12 +472,12 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Adamantite Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Wilderness', 'Tirannwn', 'Fremennik'], skills: {'Mining': 70}, notes: 'Mining Guild / Motherlode' },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
+    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 51 }
   ],
   'Runite Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Wilderness', 'Asgarnia', 'Misthalin', 'Tirannwn', 'Fremennik'], skills: { 'Mining': 85 }, notes: 'Heroes Guild / Wildy / Myths Guild' },
     { type: 'DROP', name: 'Crystal Geode', regions: ['Tirannwn'], skills: {'Woodcutting': 1}, notes: 'Rare from chopping crystal trees' },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 2 },
+    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 3 },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'] }
   ],
   'Amethyst': [
@@ -485,7 +485,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Pure Essence': [
     { type: 'SKILL', name: 'Mining', regions: ['Misthalin'], quests: ['Rune Mysteries'], notes: 'Rune Essence Mine' },
-    { type: 'DROP', name: 'Twisted Banshee', regions: ['Kourend & Kebos'], skills: {'Slayer': 15}, notes: 'Catacombs (Noted)', outputYield: 13 },
+    { type: 'DROP', name: 'Twisted Banshee', regions: ['Kourend & Kebos'], skills: {'Slayer': 15}, notes: 'Catacombs (Noted)', outputYield: 65 },
     { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Asgarnia'], skills: {'Slayer': 72}, notes: 'Asgarnian Ice Dungeon (Noted)', outputYield: 250 },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Boss Drop (Noted)', outputYield: 1500 },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75}, notes: 'Slayer Tower', outputYield: 150 },
@@ -540,7 +540,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 1}, notes: 'Requires 1 Coal at BF, 2 elsewhere' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 2} },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 15 }
+    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 16 }
   ],
   'Gold Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1}, notes: 'Instant with Goldsmith Gauntlets' },
@@ -655,7 +655,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Raw Shark': [
     { type: 'SKILL', name: 'Harpoon Fishing', regions: ['Kandarin', 'Fremennik', 'Kourend & Kebos'], skills: {'Fishing': 76}, notes: 'Fishing Guild / Catherby' },
     { type: 'DROP', name: 'Kraken', regions: ['Kandarin'], unlockId: 'Kraken', skills: {'Slayer': 87} },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 100 }
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 35 }
   ],
   'Raw Sea Turtle': [
     { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 79} }
@@ -2529,7 +2529,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Lava Scale': 1 }, notes: 'Grind with a Pestle and mortar', outputYield: 4 }
   ],
   'Ashes': [
-    { type: 'DROP', name: 'Imp', regions: ['Any'], rarity: 'Always' },
+    { type: 'DROP', name: 'Imp', regions: ['Any'], rarity: '6/128' },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'], notes: 'Various fires / locations' }
   ],
   'Vial': [
@@ -2539,13 +2539,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- BOSS & RAID UNIQUE INTERMEDIATES ---
   'Bludgeon Axon': [
-    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/206', notes: 'Via unsired; 1/198 with the pet' }
   ],
   'Bludgeon Claw': [
-    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/206', notes: 'Via unsired; 1/198 with the pet' }
   ],
   'Bludgeon Spine': [
-    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/258' }
+    { type: 'DROP', name: 'Abyssal Sire', regions: ['Wilderness'], unlockId: 'Abyssal Sire', rarity: '1/206', notes: 'Via unsired; 1/198 with the pet' }
   ],
   'Godsword Shard 1': [
     { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor' },
