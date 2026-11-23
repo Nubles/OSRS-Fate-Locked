@@ -330,7 +330,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Varrock', 'Edgeville', 'Draynor Village', 'Lumbridge', 'Rimmington', 'Port Sarim', 'Crandor', 'Dwarven Mine'],
     skills: { 'Quest Points': 32, 'Crafting': 8 }, prereqs: [], points: 2, series: 'Dragonkin',
     // Items checked on the Wiki: Unfired bowl; Wizard's mind bomb; 90 steel nails; Silk; Anti-dragon shield. The only
-    // General Store with silk is Durrik's Goods in the Deepfin Mine (Sailing 67, 23 Nov).
+    // General Store with silk is Durrik's Goods in the Deepfin Mine (Sailing 67, 23 Nov), and the only General Store
+    // with the mind bomb is the Lighthouse store (Horror from the Deep); every other mind bomb seller is an inn.
     equipmentRequirements: [
       { slot: 'Shield', tier: 1, reason: "Equip the anti-dragon shield against Elvarg's dragonfire" },
     ],
@@ -339,12 +340,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns', 'Silk Shops'] },
       { skills: { 'Smithing': 34, 'Thieving': 20 }, merchants: ['Bars & Inns'] },
       { skills: { 'Smithing': 34 }, merchants: ['Bars & Inns'], regions: ['Civitas illa Fortis'] },
-      { skills: { 'Smithing': 34, 'Sailing': 67 }, merchants: ['General Stores'], regions: ['Deepfin Point'], quests: ['Pandemonium'] },
+      { skills: { 'Smithing': 34, 'Sailing': 67 }, merchants: ['Bars & Inns', 'General Stores'], regions: ['Deepfin Point'], quests: ['Pandemonium'] },
+      { skills: { 'Smithing': 34, 'Sailing': 67 }, merchants: ['General Stores'], regions: ['Deepfin Point', 'Lighthouse'], quests: ['Pandemonium', 'Horror from the Deep'] },
       { merchants: ['Sawmill Operators', 'Bars & Inns', 'Clothes Shops'] },
       { merchants: ['Sawmill Operators', 'Bars & Inns', 'Silk Shops'] },
       { skills: { 'Thieving': 20 }, merchants: ['Sawmill Operators', 'Bars & Inns'] },
       { merchants: ['Sawmill Operators', 'Bars & Inns'], regions: ['Civitas illa Fortis'] },
-      { skills: { 'Sailing': 67 }, merchants: ['Sawmill Operators', 'General Stores'], regions: ['Deepfin Point'], quests: ['Pandemonium'] },
+      { skills: { 'Sailing': 67 }, merchants: ['Sawmill Operators', 'Bars & Inns', 'General Stores'], regions: ['Deepfin Point'], quests: ['Pandemonium'] },
+      { skills: { 'Sailing': 67 }, merchants: ['Sawmill Operators', 'General Stores'], regions: ['Deepfin Point', 'Lighthouse'], quests: ['Pandemonium', 'Horror from the Deep'] },
     ],
     difficulty: DropSource.QUEST_EXPERIENCED,
     // Alternatives rechecked on the Wiki (13 Oct): silk also spawns in Civitas illa Fortis.

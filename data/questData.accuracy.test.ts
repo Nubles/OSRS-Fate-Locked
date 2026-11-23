@@ -287,10 +287,29 @@ describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
     expect(routes('Nature Spirit', unlocks({ merchants: ['Weapon Shops'] }))).toEqual([]);
   });
 
-  it.each([
+  it('asks Dragon Slayer I for an inn or the Lighthouse store as well as Durrik\'s Goods', () => {
+    // Wiki storeline bucket for Wizard's mind bomb (23 Nov; page rev 15404365): sold by four inns and
+    // The Lighthouse Store (rev 15318804, after Horror from the Deep). Durrik's Goods sells silk but no mind bomb.
+    const deepfin = unlocks({
+      ...at({ Smithing: 34, Sailing: 67 }),
+      regions: ['Varrock', 'Edgeville', 'Draynor Village', 'Lumbridge', 'Rimmington', 'Port Sarim', 'Crandor', 'Dwarven Mine', 'Deepfin Point'],
+      quests: ['Pandemonium'],
+      merchants: ['General Stores'],
+    });
+    expect(routes('Dragon Slayer I', deepfin)).toEqual([]);
+    expect(routes('Dragon Slayer I', { ...deepfin, merchants: ['General Stores', 'Bars & Inns'] })).toHaveLength(1);
+    expect(routes('Dragon Slayer I', {
+      ...deepfin,
+      regions: [...deepfin.regions, 'Lighthouse'],
+      quests: ['Pandemonium', 'Horror from the Deep'],
+    })).toHaveLength(1);
+  });
+
+  it.each<[string, string, Partial<UnlockState>?]>([
     // Durrik's Goods (rev 15372124) in the Deepfin Mine (Sailing 67) is the only General Store with silk or spice.
     ['Dragon Slayer I', 'General Stores'], ['Ghosts Ahoy', 'General Stores'], ['Enlightened Journey', 'General Stores'],
-    ['Cold War', 'General Stores'], ['Desert Treasure I', 'General Stores'],
+    // Every Desert Treasure I route also needs its magic logs, so the case brings Woodcutting 75.
+    ['Cold War', 'General Stores'], ['Desert Treasure I', 'General Stores', at({ Woodcutting: 75 })],
     // Frankie's Fishing Emporium (Port Piscarilius) is the only fishmonger with raw shark.
     ['The Fremennik Trials', 'Fishing Shops'],
     // Razmire Builders Merchants (Mort'ton, after Shades of Mort'ton) is the only limestone seller.
@@ -303,11 +322,12 @@ describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
     ['Family Crest', 'Food Shops'],
     // ~ Uglug's stuffsies ~ (Jiggig, after Zogre Flesh Eaters) is the only bow string seller.
     ['Devious Minds', 'Archery Shops'],
-  ])('%s does not count %s alone as a route for its item', (id, merchant) => {
+  ])('%s does not count %s alone as a route for its item', (id, merchant, extra = {}) => {
     const quest = QUEST_DATA[id];
     const extraMerchants = [...new Set((quest.oneOf ?? []).flatMap(option => option.merchants ?? []))];
-    // Every merchant the quest's routes name, and nothing else: no region, quest, guild or level.
-    const state = unlocks({ merchants: extraMerchants });
+    // Every merchant the quest's routes name, and nothing else: no region, quest or guild, and no level
+    // beyond what the case adds.
+    const state = unlocks({ ...extra, merchants: extraMerchants });
     const met = routes(id, state).filter(option => option.merchants?.includes(merchant));
     expect(met).toEqual([]);
   });
