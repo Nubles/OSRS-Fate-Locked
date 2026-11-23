@@ -4,7 +4,7 @@ import { QUEST_DATA } from './questData';
 import * as questDataModule from './questData';
 import chunkDoc from '../public/chunk-content.json';
 import type { UnlockState } from '../types';
-import { evaluateQuestEligibility } from '../utils/journalStatus';
+import { evaluateQuestEligibility, questRequirementOptionMet } from '../utils/journalStatus';
 
 describe('audited current quest requirements', () => {
   it("puts A Ruff Situation's Outlaw Camp fight in 48,54, not the Grand Exchange chunk", () => {
@@ -198,5 +198,117 @@ describe('quest item gates checked on the Wiki (23 Nov 2026)', () => {
     expect(locked.manualChecks).toContainEqual(expect.stringContaining('Crafting (level 1) to make molten glass'));
     const open = evaluateQuestEligibility(quest, unlocks({ regions, skills: { Crafting: 1 }, levels: { Crafting: 1 } }), 'vanilla');
     expect(open).toMatchObject({ eligible: true, manualChecks: [] });
+  });
+});
+
+describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+  const at = (levels: Record<string, number>) => ({
+    skills: Object.fromEntries(Object.entries(levels).map(([skill, level]) => [skill, Math.ceil(level / 10)])),
+    levels,
+  });
+  const routes = (id: string, state: UnlockState) =>
+    (QUEST_DATA[id].oneOf ?? []).filter(option => questRequirementOptionMet(option, state, 'vanilla'));
+
+  it('gates the blessed holy symbol for Animal Magnetism on Prayer 31', () => {
+    // Wiki Animal Magnetism (rev 15395095) ironman field: "Holy symbol (Prayer 31, not boostable)";
+    // Wiki Holy symbol (rev 15295070): Brother Jered is upstairs in the monastery (Prayer 31 to enter),
+    // a god book needs Prayer 50, and Davon's Amulet Store stocks none.
+    expect(QUEST_DATA['Animal Magnetism'].skills).toEqual({ Slayer: 18, Crafting: 19, Ranged: 30, Woodcutting: 35, Prayer: 31 });
+  });
+
+  it('lets Animal Magnetism buy its mithril axe only from Lunami in Auburnvale', () => {
+    // Wiki Lunami's Axe Shop (rev 15211381): "the only way to buy a mithril or adamant axe without the
+    // 60 Woodcutting requirement to enter the Woodcutting Guild".
+    const axeShopRoutes = (QUEST_DATA['Animal Magnetism'].oneOf ?? []).filter(option => option.merchants?.includes('Axe Shops'));
+    expect(axeShopRoutes).toHaveLength(4);
+    expect(axeShopRoutes.every(option => option.regions?.includes('Auburnvale'))).toBe(true);
+  });
+
+  it('gives Tears of Guthix a route to the bullseye lantern for its sapphire lantern', () => {
+    // Wiki Tears of Guthix (rev 15292296) ironman field lists Miltog, Smithing 49, Tarn's Lair
+    // skeletons, cave goblins (Thieving 36), wall beasts (Slayer 35) and the Darkmeyer spawn.
+    const quest = QUEST_DATA['Tears of Guthix'];
+    expect(quest.oneOf).toHaveLength(6);
+    expect(routes('Tears of Guthix', unlocks())).toEqual([]);
+    expect(routes('Tears of Guthix', unlocks(at({ Smithing: 49 })))).toHaveLength(1);
+    expect(routes('Tears of Guthix', unlocks(at({ Slayer: 35 })))).toHaveLength(1);
+    expect(routes('Tears of Guthix', unlocks({ merchants: ['Candle Shops'], quests: ['Death to the Dorgeshuun'] }))).toHaveLength(1);
+  });
+
+  it("gives Icthlarin's Little Helper and Sleeping Giants a route to their logs", () => {
+    // Wiki Icthlarin's Little Helper (rev 15401465): willow log from Woodcutting 30, Vampyre Juvinates
+    // (In Aid of the Myreque) or swamp crabs (Priest in Peril). Wiki Sleeping Giants (rev 15241064):
+    // 3 oak logs from Woodcutting 15, small salvage at Sailing 15, or Brutus after The Ides of Milk.
+    expect(QUEST_DATA["Icthlarin's Little Helper"].oneOf).toEqual([
+      { skills: { Woodcutting: 30 } }, { quests: ['In Aid of the Myreque'] }, { quests: ['Priest in Peril'] },
+    ]);
+    expect(QUEST_DATA['Sleeping Giants'].oneOf).toEqual([
+      { skills: { Woodcutting: 15 } }, { skills: { Sailing: 15 }, quests: ['Pandemonium'] }, { quests: ['The Ides of Milk'] },
+    ]);
+    expect(routes("Icthlarin's Little Helper", unlocks(at({ Woodcutting: 29 })))).toEqual([]);
+    expect(routes('Sleeping Giants', unlocks(at({ Woodcutting: 14 })))).toEqual([]);
+  });
+
+  it('asks The Giant Dwarf for a redberry pie route, and Prying Times for Cam Torum with Food Shops', () => {
+    // Wiki The Giant Dwarf (rev 15412711) items: Redberry pie (earlier quests' pies do not count).
+    // Wiki Redberry pie: Cooking 10, or the Pie Shop (Cooks' Guild, Cooking 32) or Yarnio (Cam Torum).
+    const gems = { merchants: ['Gem Shops', 'Ore Merchants'] };
+    expect(routes('The Giant Dwarf', unlocks(gems))).toEqual([]);
+    expect(routes('The Giant Dwarf', unlocks({ merchants: [...gems.merchants, 'Food Shops'] }))).toEqual([]);
+    expect(routes('The Giant Dwarf', unlocks({ merchants: [...gems.merchants, 'Food Shops'], regions: ['Cam Torum'] }))).toHaveLength(1);
+    expect(routes('The Giant Dwarf', unlocks({ ...gems, ...at({ Cooking: 10 }) }))).toHaveLength(1);
+    expect(QUEST_DATA['Prying Times'].oneOf).toEqual([
+      { skills: { Cooking: 10 } }, { merchants: ['Food Shops'], regions: ['Cam Torum'] },
+    ]);
+  });
+
+  it("does not take a guild route the player cannot enter (Cooks' Guild Cooking 32, Warriors' Guild door)", () => {
+    // Wiki Cooks' Guild (rev 15394637): Cooking 32. Wiki Warriors' Guild (rev 15366588): combined Attack
+    // and Strength of 130, or 99 in either.
+    const plague = unlocks({ guilds: ["Cooks' Guild"], regions: ['Rimmington'], ...at({ Farming: 99, Cooking: 31 }) });
+    expect(routes('Plague City', plague)).toEqual([]);
+    expect(routes('Plague City', { ...plague, ...at({ Farming: 99, Cooking: 32 }) })).toHaveLength(2);
+    const dave = unlocks({ guilds: ["Warriors' Guild"], merchants: ['Food Shops'], ...at({ Attack: 60, Strength: 60 }) });
+    expect(routes('RFD: Evil Dave', dave)).toEqual([]);
+    expect(routes('RFD: Evil Dave', { ...dave, ...at({ Attack: 70, Strength: 60 }) })).toHaveLength(1);
+    expect(routes('RFD: Evil Dave', { ...dave, ...at({ Strength: 99 }) })).toHaveLength(1);
+  });
+
+  it('keeps Nature Spirit locked behind Crafting 18 when Weapon Shops is all the run has', () => {
+    // Wiki Silver sickle (rev 15322375): sold only by Ivan's, Efaritay's and Old Man Ral's Supplies,
+    // which open after Sins of the Father or The Blood Moon Rises; both need Nature Spirit.
+    expect(QUEST_DATA['Nature Spirit'].oneOf).toEqual([{ skills: { Crafting: 18 } }]);
+    expect(routes('Nature Spirit', unlocks({ merchants: ['Weapon Shops'] }))).toEqual([]);
+  });
+
+  it.each([
+    // Durrik's Goods (rev 15372124) in the Deepfin Mine (Sailing 67) is the only General Store with silk or spice.
+    ['Dragon Slayer I', 'General Stores'], ['Ghosts Ahoy', 'General Stores'], ['Enlightened Journey', 'General Stores'],
+    ['Cold War', 'General Stores'], ['Desert Treasure I', 'General Stores'],
+    // Frankie's Fishing Emporium (Port Piscarilius) is the only fishmonger with raw shark.
+    ['The Fremennik Trials', 'Fishing Shops'],
+    // Razmire Builders Merchants (Mort'ton, after Shades of Mort'ton) is the only limestone seller.
+    ['Regicide', 'Real Estate Agents'],
+    // The Lighthouse Store (after Horror from the Deep) is the only General Store with vodka.
+    ["Eadgar's Ruse", 'General Stores'], ['Bone Voyage', 'General Stores'],
+    // Stew in a Food Shop: only Prifddinas Foodstuffs and the Warriors' Guild food shop.
+    ['The Queen of Thieves', 'Food Shops'],
+    // No shop sells cooked shrimps.
+    ['Family Crest', 'Food Shops'],
+    // ~ Uglug's stuffsies ~ (Jiggig, after Zogre Flesh Eaters) is the only bow string seller.
+    ['Devious Minds', 'Archery Shops'],
+  ])('%s does not count %s alone as a route for its item', (id, merchant) => {
+    const quest = QUEST_DATA[id];
+    const extraMerchants = [...new Set((quest.oneOf ?? []).flatMap(option => option.merchants ?? []))];
+    // Every merchant the quest's routes name, and nothing else: no region, quest, guild or level.
+    const state = unlocks({ merchants: extraMerchants });
+    const met = routes(id, state).filter(option => option.merchants?.includes(merchant));
+    expect(met).toEqual([]);
   });
 });

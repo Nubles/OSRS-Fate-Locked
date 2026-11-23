@@ -487,15 +487,15 @@
       "id": "Animal Magnetism",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15327014",
-        "revision": 15327014,
-        "revisionTimestamp": "2026-09-01T06:32:15Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Animal_Magnetism&oldid=15395095",
+        "revision": 15395095,
+        "revisionTimestamp": "2026-11-06T00:39:54Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\",\"Port Phasmatys\",\"Rimmington\"],\"skills\":{\"Crafting\":19,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"oneOf\":[{\"skills\":{\"Mining\":20,\"Smithing\":51}},{\"merchants\":[\"Axe Shops\"],\"skills\":{\"Mining\":20,\"Smithing\":20}},{\"merchants\":[\"Silver Shops\"],\"skills\":{\"Smithing\":51}},{\"merchants\":[\"Silver Shops\",\"Axe Shops\"]},{\"regions\":[\"East Ardougne\"],\"skills\":{\"Smithing\":51,\"Thieving\":50}},{\"merchants\":[\"Axe Shops\"],\"regions\":[\"East Ardougne\"],\"skills\":{\"Thieving\":50}},{\"regions\":[\"Barbarian Village\"],\"skills\":{\"Smithing\":51}},{\"merchants\":[\"Axe Shops\"],\"regions\":[\"Barbarian Village\"]}],\"merchants\":[\"Tanners\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Draynor Village\",\"Burthorpe\",\"Fenkenstrain's Castle\",\"Port Phasmatys\",\"Rimmington\"],\"skills\":{\"Crafting\":19,\"Prayer\":31,\"Ranged\":30,\"Slayer\":18,\"Woodcutting\":35},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet when speaking to the old crone\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"The Restless Ghost\",\"Ernest the Chicken\",\"Priest in Peril\"],\"oneOf\":[{\"skills\":{\"Mining\":20,\"Smithing\":51}},{\"merchants\":[\"Axe Shops\"],\"regions\":[\"Auburnvale\"],\"skills\":{\"Mining\":20,\"Smithing\":20}},{\"merchants\":[\"Silver Shops\"],\"skills\":{\"Smithing\":51}},{\"merchants\":[\"Silver Shops\",\"Axe Shops\"],\"regions\":[\"Auburnvale\"]},{\"regions\":[\"East Ardougne\"],\"skills\":{\"Smithing\":51,\"Thieving\":50}},{\"merchants\":[\"Axe Shops\"],\"regions\":[\"East Ardougne\",\"Auburnvale\"],\"skills\":{\"Thieving\":50}},{\"regions\":[\"Barbarian Village\"],\"skills\":{\"Smithing\":51}},{\"merchants\":[\"Axe Shops\"],\"regions\":[\"Barbarian Village\",\"Auburnvale\"]}],\"merchants\":[\"Tanners\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "45,55",
@@ -519,7 +519,8 @@
           "Fate equipment review 2026-09-22: Neck T1: Wear the ghostspeak amulet when speaking to the old crone. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
           "Item gate review 2026-10-09: gated for Mithril axe; Hard leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for Holy symbol (silver bar), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): silver bar also from the East Ardougne silver stall (50 Thieving) or Stronghold of Security flesh crawlers."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): silver bar also from the East Ardougne silver stall (50 Thieving) or Stronghold of Security flesh crawlers.",
+          "Item gate review 2026-11-23: gated for Prayer 31, because Turael takes a blessed holy symbol and the only blessings are Brother Jered upstairs in the Edgeville Monastery (Prayer 31 to enter) or a god book (Prayer 50); Davon's Amulet Store stocks none. The Axe Shops routes now need Auburnvale, because Lunami's Axe Shop is the only mithril axe seller outside the Woodcutting Guild (Woodcutting 60)."
         ],
         "travel": [
           "The route visits Draynor Manor, Taverley, and Port Phasmatys, represented by Misthalin, Asgarnia, and Morytania.",
@@ -977,15 +978,15 @@
       "id": "Bone Voyage",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Bone_Voyage&oldid=15262285",
-        "revision": 15262285,
-        "revisionTimestamp": "2026-07-13T04:00:01Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Bone_Voyage&oldid=15411977",
+        "revision": 15411977,
+        "revisionTimestamp": "2026-11-22T11:39:40Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Fossil Island\",\"Port Sarim\",\"Woodcutting Guild\",\"Digsite\",\"Silvarea\"],\"skills\":{},\"prereqs\":[\"The Dig Site\"],\"oneOf\":[{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"General Stores\"]}],\"manualRequirements\":[\"100 Kudos\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Fossil Island\",\"Port Sarim\",\"Woodcutting Guild\",\"Digsite\",\"Silvarea\"],\"skills\":{},\"prereqs\":[\"The Dig Site\"],\"oneOf\":[{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"General Stores\"],\"quests\":[\"Horror from the Deep\"],\"regions\":[\"Lighthouse\"]}],\"manualRequirements\":[\"100 Kudos\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "25,54",
@@ -1021,7 +1022,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Bone Voyage were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for 2 Vodka, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for 2 Vodka, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the General Stores vodka route now needs the Lighthouse and Horror from the Deep, because the Lighthouse store is the only General Store with vodka."
         ],
         "travel": [
           "The route crosses Varrock/Misthalin, Asgarnia, Kourend, and Fossil Island.",
@@ -1204,15 +1206,15 @@
       "id": "Cold War",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Cold_War&oldid=15271161",
-        "revision": 15271161,
-        "revisionTimestamp": "2026-07-21T05:30:10Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Cold_War&oldid=15315223",
+        "revision": 15315223,
+        "revisionTimestamp": "2026-08-21T05:18:11Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"East Ardougne\",\"Lumbridge\"],\"locations\":[{\"chunkOptions\":[{\"cx\":41,\"cy\":62}],\"id\":\"south-iceberg\",\"label\":\"South iceberg\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":63}],\"id\":\"north-iceberg\",\"label\":\"North iceberg\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":30,\"Construction\":34,\"Crafting\":30,\"Hunter\":10,\"Thieving\":15,\"Woodcutting\":50},\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Silk Shops\"]},{\"merchants\":[\"Clothes Shops\"]},{\"merchants\":[\"General Stores\"]},{\"skills\":{\"Thieving\":20}},{\"regions\":[\"Civitas illa Fortis\"]}],\"manualRequirements\":[\"Access to a crafting table 3\"],\"merchants\":[\"Sawmill Operators\",\"Tanners\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"East Ardougne\",\"Lumbridge\"],\"locations\":[{\"chunkOptions\":[{\"cx\":41,\"cy\":62}],\"id\":\"south-iceberg\",\"label\":\"South iceberg\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":63}],\"id\":\"north-iceberg\",\"label\":\"North iceberg\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":30,\"Construction\":34,\"Crafting\":30,\"Hunter\":10,\"Thieving\":15,\"Woodcutting\":50},\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Silk Shops\"]},{\"merchants\":[\"Clothes Shops\"]},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67}},{\"skills\":{\"Thieving\":20}},{\"regions\":[\"Civitas illa Fortis\"]}],\"manualRequirements\":[\"Access to a crafting table 3\"],\"merchants\":[\"Sawmill Operators\",\"Tanners\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "41,62",
@@ -1240,7 +1242,8 @@
           "The pinned Wiki item requirements for Cold War were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Item gate review 2026-10-09: gated for 10 steel nails; Silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for Oak and mahogany planks; Leather, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): planks need a sawmill and leather a tanner; silk from shops, the Ardougne stall or the Civitas illa Fortis spawn."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): planks need a sawmill and leather a tanner; silk from shops, the Ardougne stall or the Civitas illa Fortis spawn.",
+          "Item gate review 2026-11-23: the General Stores silk route now needs Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with silk."
         ],
         "travel": [
           "The route crosses Rellekka/Fremennik, Ardougne/Kandarin, and Lumbridge/Misthalin.",
@@ -1824,7 +1827,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Smithing\":30,\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the ring of visibility for the Damis fight\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ice gloves to fight Fareed\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear spiked boots to climb the ice ledge\",\"slot\":\"Boots\",\"tier\":1}],\"preparationRequirements\":[{\"action\":\"make molten glass\",\"alternative\":\"molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest\",\"level\":1,\"skill\":\"Crafting\"}],\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Spice Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Woodcutting\":75}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"skills\":{\"Thieving\":65,\"Woodcutting\":75}},{\"merchants\":[\"Spice Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"merchants\":[\"General Stores\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Thieving\":65,\"Woodcutting\":50}}],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Smithing\":30,\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the ring of visibility for the Damis fight\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ice gloves to fight Fareed\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear spiked boots to climb the ice ledge\",\"slot\":\"Boots\",\"tier\":1}],\"preparationRequirements\":[{\"action\":\"make molten glass\",\"alternative\":\"molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest\",\"level\":1,\"skill\":\"Crafting\"}],\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Spice Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67,\"Woodcutting\":75}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"skills\":{\"Thieving\":65,\"Woodcutting\":75}},{\"merchants\":[\"Spice Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Wintertodt Camp\",\"Deepfin Point\"],\"skills\":{\"Firemaking\":50,\"Sailing\":67,\"Woodcutting\":50}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Thieving\":65,\"Woodcutting\":50}}],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1888,7 +1891,8 @@
           "Item gate review 2026-10-09: gated for Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for 12 magic logs; 6 steel bars, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): lockpicks are pickpocketed from bandits (53 Thieving); spice also from a spice stall (65 Thieving); Wintertodt gives magic logs at 50 Woodcutting.",
-          "Item gate review 2026-11-23: molten glass is made at Crafting 1 and no shop sells it, so Crafting 1 is a preparation requirement; the only drops (Thermonuclear smoke devil, Phantom Muspah, Monumental chest) can be confirmed instead."
+          "Item gate review 2026-11-23: molten glass is made at Crafting 1 and no shop sells it, so Crafting 1 is a preparation requirement; the only drops (Thermonuclear smoke devil, Phantom Muspah, Monumental chest) can be confirmed instead.",
+          "Item gate review 2026-11-23 (shops): the General Stores spice routes now need Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with spice."
         ],
         "travel": [
           "The route crosses the desert, Asgarnia, Kandarin, Morytania, and Misthalin; Wilderness was not unavoidable in the pinned route.",
@@ -1945,15 +1949,15 @@
       "id": "Devious Minds",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Devious_Minds&oldid=15265971",
-        "revision": 15265971,
-        "revisionTimestamp": "2026-07-17T11:12:13Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Devious_Minds&oldid=15292315",
+        "revision": 15292315,
+        "revisionTimestamp": "2026-08-10T23:32:12Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Paterdomus\",\"Entrana\",\"Falador\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"skills\":{\"Fletching\":50,\"Runecraft\":50,\"Smithing\":65},\"prereqs\":[\"Wanted!\",\"Troll Stronghold\",\"Doric's Quest\"],\"oneOf\":[{\"skills\":{\"Crafting\":10}},{\"merchants\":[\"Archery Shops\"]}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Paterdomus\",\"Entrana\",\"Falador\"],\"locations\":[{\"chunkOptions\":[{\"cx\":48,\"cy\":55}],\"id\":\"edgeville-ditch\",\"label\":\"Edgeville ditch\",\"standardAreas\":[\"Edgeville\"]}],\"skills\":{\"Fletching\":50,\"Runecraft\":50,\"Smithing\":65},\"prereqs\":[\"Wanted!\",\"Troll Stronghold\",\"Doric's Quest\"],\"oneOf\":[{\"skills\":{\"Crafting\":10}},{\"merchants\":[\"Archery Shops\"],\"quests\":[\"Zogre Flesh Eaters\"],\"regions\":[\"Feldip Hills\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,52",
@@ -1984,7 +1988,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Devious Minds were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Bow string, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Bow string, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the Archery Shops route now needs Feldip Hills and Zogre Flesh Eaters (which itself needs the Herblore 8 for the balm), because Uglug's shop in Jiggig is the only bow string seller and opens when he is sold a relicym's balm after starting Zogre Flesh Eaters."
         ],
         "travel": [
           "The fixed route crosses Misthalin and Asgarnia, entering the Wilderness only at the Edgeville ditch; the exact ditch replaces the over-broad parent Wilderness gate.",
@@ -2029,15 +2034,15 @@
       "id": "Dragon Slayer I",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_I&oldid=15266013",
-        "revision": 15266013,
-        "revisionTimestamp": "2026-07-17T12:47:32Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_I&oldid=15405352",
+        "revision": 15405352,
+        "revisionTimestamp": "2026-11-18T13:03:59Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Edgeville\",\"Draynor Village\",\"Lumbridge\",\"Rimmington\",\"Port Sarim\",\"Crandor\",\"Dwarven Mine\"],\"skills\":{\"Crafting\":8,\"Quest Points\":32},\"equipmentRequirements\":[{\"reason\":\"Equip the anti-dragon shield against Elvarg's dragonfire\",\"slot\":\"Shield\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Bars & Inns\",\"Clothes Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Bars & Inns\",\"Silk Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Bars & Inns\"],\"skills\":{\"Smithing\":34,\"Thieving\":20}},{\"merchants\":[\"Bars & Inns\"],\"regions\":[\"Civitas illa Fortis\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\",\"Clothes Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\",\"Silk Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\"],\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\"],\"regions\":[\"Civitas illa Fortis\"]},{\"merchants\":[\"Sawmill Operators\",\"General Stores\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"Edgeville\",\"Draynor Village\",\"Lumbridge\",\"Rimmington\",\"Port Sarim\",\"Crandor\",\"Dwarven Mine\"],\"skills\":{\"Crafting\":8,\"Quest Points\":32},\"equipmentRequirements\":[{\"reason\":\"Equip the anti-dragon shield against Elvarg's dragonfire\",\"slot\":\"Shield\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"merchants\":[\"Bars & Inns\",\"Clothes Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Bars & Inns\",\"Silk Shops\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"Bars & Inns\"],\"skills\":{\"Smithing\":34,\"Thieving\":20}},{\"merchants\":[\"Bars & Inns\"],\"regions\":[\"Civitas illa Fortis\"],\"skills\":{\"Smithing\":34}},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67,\"Smithing\":34}},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\",\"Clothes Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\",\"Silk Shops\"]},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\"],\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Sawmill Operators\",\"Bars & Inns\"],\"regions\":[\"Civitas illa Fortis\"]},{\"merchants\":[\"Sawmill Operators\",\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "44,50",
@@ -2084,7 +2089,8 @@
         "items": [
           "The pinned Wiki item requirements for Dragon Slayer I were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Item gate review 2026-10-09: gated for Unfired bowl; Wizard's mind bomb; 90 steel nails; Silk; Anti-dragon shield, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): silk also spawns in Civitas illa Fortis."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): silk also spawns in Civitas illa Fortis.",
+          "Item gate review 2026-11-23: the General Stores silk routes now need Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with silk."
         ],
         "travel": [
           "The route crosses Misthalin, Asgarnia, and Karamja; Crafting 8 is not a pinned skill requirement.",
@@ -2346,15 +2352,15 @@
       "id": "Eadgar's Ruse",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Eadgar's_Ruse&oldid=15256448",
-        "revision": 15256448,
-        "revisionTimestamp": "2026-07-07T17:38:17Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Eadgar's_Ruse&oldid=15376618",
+        "revision": 15376618,
+        "revisionTimestamp": "2026-10-20T08:00:31Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Taverley\",\"East Ardougne\"],\"skills\":{\"Herblore\":31},\"prereqs\":[\"Druidic Ritual\",\"Troll Stronghold\"],\"oneOf\":[{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"General Stores\"]}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Burthorpe\",\"Taverley\",\"East Ardougne\"],\"skills\":{\"Herblore\":31},\"prereqs\":[\"Druidic Ritual\",\"Troll Stronghold\"],\"oneOf\":[{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"General Stores\"],\"quests\":[\"Horror from the Deep\"],\"regions\":[\"Lighthouse\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "44,57",
@@ -2370,7 +2376,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Eadgar's Ruse were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Vodka, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Vodka, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the General Stores vodka route now needs the Lighthouse and Horror from the Deep, because the Lighthouse store is the only General Store with vodka."
         ],
         "travel": [
           "The Troll Stronghold and Taverley route remains represented by Fremennik and Asgarnia.",
@@ -2532,15 +2539,15 @@
       "id": "Enlightened Journey",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Enlightened_Journey&oldid=15267751",
-        "revision": 15267751,
-        "revisionTimestamp": "2026-07-19T18:09:40Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Enlightened_Journey&oldid=15375125",
+        "revision": 15375125,
+        "revisionTimestamp": "2026-10-18T15:34:29Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":43,\"cy\":52}],\"id\":\"west-entrana\",\"label\":\"West Entrana\",\"standardAreas\":[\"Entrana\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":53}],\"id\":\"south-taverley\",\"label\":\"South Taverley\",\"standardAreas\":[\"Taverley\"]}],\"skills\":{\"Crafting\":36,\"Farming\":30,\"Firemaking\":20,\"Quest Points\":20},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Clothes Shops\"]},{\"merchants\":[\"Silk Shops\"]},{\"merchants\":[\"General Stores\"]}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":43,\"cy\":52}],\"id\":\"west-entrana\",\"label\":\"West Entrana\",\"standardAreas\":[\"Entrana\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":53}],\"id\":\"south-taverley\",\"label\":\"South Taverley\",\"standardAreas\":[\"Taverley\"]}],\"skills\":{\"Crafting\":36,\"Farming\":30,\"Firemaking\":20,\"Quest Points\":20},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Clothes Shops\"]},{\"merchants\":[\"Silk Shops\"]},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67}}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "43,52",
@@ -2556,7 +2563,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Enlightened Journey were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for 10 silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for 10 silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the General Stores silk route now needs Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with silk."
         ],
         "travel": [
           "The fixed Entrana and Taverley rows are represented as exact locations."
@@ -2837,15 +2845,15 @@
       "id": "Family Crest",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Family_Crest&oldid=15352494",
-        "revision": 15352494,
-        "revisionTimestamp": "2026-09-21T04:43:46Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Family_Crest&oldid=15403894",
+        "revision": 15403894,
+        "revisionTimestamp": "2026-11-16T18:57:34Z"
       },
       "chunkSourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Misthalin\",\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":53}],\"id\":\"dimintheis-house\",\"label\":\"Dimintheis's house in south-east Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":51}],\"id\":\"witchaven\",\"label\":\"Witchaven\",\"standardAreas\":[\"Witchaven\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":53}],\"id\":\"catherby\",\"label\":\"Caleb's house in Catherby\",\"standardAreas\":[\"Catherby\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":53},{\"cx\":47,\"cy\":52}],\"id\":\"dwarven-mine-boot\",\"label\":\"Boot in the Dwarven Mine\",\"standardAreas\":[\"Dwarven Mine\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"edgeville-dungeon-chronozon\",\"label\":\"Chronozon in Edgeville Dungeon\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"north-al-kharid\",\"label\":\"North Al Kharid\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":51}],\"id\":\"al-kharid-mine\",\"label\":\"Al Kharid mine\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Crafting\":40,\"Magic\":59,\"Mining\":40,\"Smithing\":40},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Cooking\":45,\"Fishing\":50}},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"Fishing Shops\",\"General Stores\"],\"skills\":{\"Cooking\":45}}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Asgarnia\",\"Kandarin\",\"Misthalin\",\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":53}],\"id\":\"dimintheis-house\",\"label\":\"Dimintheis's house in south-east Varrock\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":42,\"cy\":51}],\"id\":\"witchaven\",\"label\":\"Witchaven\",\"standardAreas\":[\"Witchaven\"]},{\"chunkOptions\":[{\"cx\":44,\"cy\":53}],\"id\":\"catherby\",\"label\":\"Caleb's house in Catherby\",\"standardAreas\":[\"Catherby\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":53},{\"cx\":47,\"cy\":52}],\"id\":\"dwarven-mine-boot\",\"label\":\"Boot in the Dwarven Mine\",\"standardAreas\":[\"Dwarven Mine\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"edgeville-dungeon-chronozon\",\"label\":\"Chronozon in Edgeville Dungeon\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"north-al-kharid\",\"label\":\"North Al Kharid\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":51}],\"id\":\"al-kharid-mine\",\"label\":\"Al Kharid mine\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":54}],\"id\":\"jolly-boar-inn\",\"label\":\"Jolly Boar Inn\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{\"Crafting\":40,\"Magic\":59,\"Mining\":40,\"Smithing\":40},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Cooking\":45,\"Fishing\":50}},{\"merchants\":[\"Fishing Shops\",\"General Stores\"],\"skills\":{\"Cooking\":45}}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "42,51",
@@ -2897,7 +2905,8 @@
         "items": [
           "The pinned Wiki item requirements for Family Crest were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Item gate review 2026-10-09: gated for Cooked shrimps, salmon, tuna, bass, swordfish, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): raw fish also from Fishing Shops, cooked at 45 Cooking."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): raw fish also from Fishing Shops, cooked at 45 Cooking.",
+          "Item gate review 2026-11-23: the Food Shops-only route is removed, because no shop sells cooked shrimps."
         ],
         "travel": [
           "Boot requires either the Falador 47,52 or Ice Mountain 47,53 mine entrance. Edgeville 48,54 remains a separate required visit to Chronozon, not a mine entrance.",
@@ -3221,7 +3230,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\",\"Dragontooth Island\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear gloves to pick nettles for the nettle tea\",\"slot\":\"Gloves\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"oneOf\":[{\"skills\":{\"Fletching\":25,\"Thieving\":20}},{\"merchants\":[\"Clothes Shops\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Silk Shops\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"General Stores\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Archery Shops\"],\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Archery Shops\",\"Clothes Shops\"]},{\"merchants\":[\"Archery Shops\",\"Silk Shops\"]},{\"merchants\":[\"Archery Shops\",\"General Stores\"]},{\"regions\":[\"Civitas illa Fortis\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Archery Shops\"],\"regions\":[\"Civitas illa Fortis\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Port Phasmatys\",\"Fenkenstrain's Castle\",\"Dragontooth Island\"],\"skills\":{\"Agility\":25,\"Cooking\":20},\"equipmentRequirements\":[{\"reason\":\"Wear the enchanted ghostspeak amulet to command Necrovarus\",\"slot\":\"Neck\",\"tier\":1},{\"reason\":\"Wear the bedsheet disguise to gather signatures\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear gloves to pick nettles for the nettle tea\",\"slot\":\"Gloves\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"oneOf\":[{\"skills\":{\"Fletching\":25,\"Thieving\":20}},{\"merchants\":[\"Clothes Shops\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Silk Shops\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Fletching\":25,\"Sailing\":67}},{\"merchants\":[\"Archery Shops\"],\"skills\":{\"Thieving\":20}},{\"merchants\":[\"Archery Shops\",\"Clothes Shops\"]},{\"merchants\":[\"Archery Shops\",\"Silk Shops\"]},{\"merchants\":[\"Archery Shops\",\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67}},{\"regions\":[\"Civitas illa Fortis\"],\"skills\":{\"Fletching\":25}},{\"merchants\":[\"Archery Shops\"],\"regions\":[\"Civitas illa Fortis\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,55",
@@ -3246,7 +3255,8 @@
           "Item gate review 2026-10-09: gated for Oak longbow, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for Silk, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): silk also spawns in Civitas illa Fortis.",
-          "Item gate review 2026-11-23: gated for Gloves (worn), because the nettles for the nettle tea can only be picked while wearing gloves and nettle tea has no shop or drop source."
+          "Item gate review 2026-11-23: gated for Gloves (worn), because the nettles for the nettle tea can only be picked while wearing gloves and nettle tea has no shop or drop source.",
+          "Item gate review 2026-11-23 (shops): the General Stores silk routes now need Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with silk."
         ],
         "travel": [
           "Port Phasmatys, the Ectofuntus, and the mausoleum remain within Morytania.",
@@ -3651,15 +3661,15 @@
       "id": "Icthlarin's Little Helper",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-02",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15264128",
-        "revision": 15264128,
-        "revisionTimestamp": "2026-07-15T12:54:13Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Icthlarin's_Little_Helper&oldid=15401465",
+        "revision": 15401465,
+        "revisionTimestamp": "2026-11-12T20:39:22Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{},\"prereqs\":[\"Gertrude's Cat\"],\"merchants\":[\"Clothes Shops\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Sophanem\"],\"skills\":{},\"prereqs\":[\"Gertrude's Cat\"],\"oneOf\":[{\"skills\":{\"Woodcutting\":30}},{\"quests\":[\"In Aid of the Myreque\"]},{\"quests\":[\"Priest in Peril\"]}],\"merchants\":[\"Clothes Shops\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "51,43",
@@ -3675,7 +3685,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Icthlarin's Little Helper were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the linen is sold only by Raetul's cloth store in Sophanem (Wiki revision 15292330); the quest now needs Clothes Shops."
+          "Accuracy review 2026-10-02: Owner decision of 2 Oct: the linen is sold only by Raetul's cloth store in Sophanem (Wiki revision 15292330); the quest now needs Clothes Shops.",
+          "Item gate review 2026-11-23: gated for the willow log (no shop sells one): Woodcutting 30, Vampyre Juvinates (In Aid of the Myreque) or swamp crabs (Priest in Peril)."
         ],
         "travel": [
           "The desert wanderer, Sophanem, pyramid, and tomb route remains within the Kharidian Desert.",
@@ -4971,15 +4982,15 @@
       "id": "Nature Spirit",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Nature_Spirit&oldid=15240977",
-        "revision": 15240977,
-        "revisionTimestamp": "2026-06-27T13:39:36Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Nature_Spirit&oldid=15372142",
+        "revision": 15372142,
+        "revisionTimestamp": "2026-10-13T20:53:46Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":53,\"cy\":54}],\"id\":\"paterdomus\",\"label\":\"Paterdomus and Drezel\",\"standardAreas\":[\"Paterdomus\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":52}],\"id\":\"nature-grotto\",\"label\":\"Nature Grotto in Mort Myre Swamp\",\"standardAreas\":[\"Mort Myre Swamp\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Equip amulet of ghostspeak to talk to Filliman\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"oneOf\":[{\"skills\":{\"Crafting\":18}},{\"merchants\":[\"Weapon Shops\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":53,\"cy\":54}],\"id\":\"paterdomus\",\"label\":\"Paterdomus and Drezel\",\"standardAreas\":[\"Paterdomus\"]},{\"chunkOptions\":[{\"cx\":53,\"cy\":52}],\"id\":\"nature-grotto\",\"label\":\"Nature Grotto in Mort Myre Swamp\",\"standardAreas\":[\"Mort Myre Swamp\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Equip amulet of ghostspeak to talk to Filliman\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\",\"The Restless Ghost\"],\"oneOf\":[{\"skills\":{\"Crafting\":18}}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "53,52",
@@ -4995,7 +5006,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Nature Spirit were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Silver sickle; Ghostspeak amulet (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Silver sickle; Ghostspeak amulet (worn), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the Weapon Shops route is removed, because the only shops that sell a silver sickle (Ivan's, Efaritay's and Old Man Ral's Supplies) open after Sins of the Father or The Blood Moon Rises, which both need Nature Spirit; Crafting 18 is the route."
         ],
         "travel": [
           "Paterdomus and the Nature Grotto are both unavoidable; the two exact chunks replace the coarse Morytania gate.",
@@ -5333,7 +5345,7 @@
       "id": "Plague City",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Plague_City&oldid=15343824",
         "revision": 15343824,
@@ -5341,7 +5353,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"merchants\":[\"Cooking Shops\"]},{\"merchants\":[\"Cooking Shops\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"regions\":[\"Zanaris\"]},{\"regions\":[\"Zanaris\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"guilds\":[\"Cooks' Guild\"]},{\"guilds\":[\"Cooks' Guild\"],\"skills\":{\"Farming\":61}}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kandarin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":40,\"cy\":52}],\"id\":\"east-ardougne-edmond\",\"label\":\"Edmond's house in East Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":39,\"cy\":51}],\"id\":\"west-ardougne\",\"label\":\"West Ardougne\",\"standardAreas\":[\"West Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the gas mask when entering West Ardougne from the sewer\",\"slot\":\"Head\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"merchants\":[\"Cooking Shops\"]},{\"merchants\":[\"Cooking Shops\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"regions\":[\"Zanaris\"]},{\"regions\":[\"Zanaris\"],\"skills\":{\"Farming\":61}},{\"anyOfRegions\":[\"Rimmington\",\"Hosidius\",\"Karamja\",\"Waterbirth Island\"],\"guilds\":[\"Cooks' Guild\"],\"skills\":{\"Cooking\":32}},{\"guilds\":[\"Cooks' Guild\"],\"skills\":{\"Cooking\":32,\"Farming\":61}}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "39,51",
@@ -5359,7 +5371,8 @@
           "The pinned Wiki item requirements for Plague City were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Fate equipment review 2026-09-22: Head T1: Wear the gas mask when entering West Ardougne from the sewer. These are slot permissions for mandatory wearing/wielding, not pre-owned inventory requirements. Official OSRS skill requirements are unchanged.",
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for Chocolate bar; Snape grass, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): snape grass also spawns on Waterbirth Island; chocolate bars also spawn in the Cooks' Guild."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): snape grass also spawns on Waterbirth Island; chocolate bars also spawn in the Cooks' Guild.",
+          "Item gate review 2026-11-23: the Cooks' Guild chocolate bar routes now need Cooking 32 to enter the guild, as Skippy and the Mogres does."
         ],
         "travel": [
           "Edmond's East Ardougne garden and West Ardougne are the fixed quest locations represented by the two pinned chunks.",
@@ -5454,15 +5467,15 @@
       "id": "Prying Times",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Prying_Times&oldid=15263595",
-        "revision": 15263595,
-        "revisionTimestamp": "2026-07-14T22:42:13Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Prying_Times&oldid=15400401",
+        "revision": 15400401,
+        "revisionTimestamp": "2026-11-12T02:49:53Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"The Open Seas\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":46}],\"id\":\"the-pandemonium\",\"label\":\"The Pandemonium\",\"standardAreas\":[\"The Pandemonium\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-docks\",\"label\":\"Port Sarim docks\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"thurgos-hut\",\"label\":\"Thurgo's hut south of Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{\"Sailing\":12,\"Smithing\":30},\"prereqs\":[\"Pandemonium\",\"The Knight's Sword\"],\"oneOf\":[{\"skills\":{\"Cooking\":10}},{\"merchants\":[\"Food Shops\"]}],\"manualRequirements\":[\"One open Sailing task slot\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"The Open Seas\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":46}],\"id\":\"the-pandemonium\",\"label\":\"The Pandemonium\",\"standardAreas\":[\"The Pandemonium\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"port-sarim-docks\",\"label\":\"Port Sarim docks\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":49}],\"id\":\"thurgos-hut\",\"label\":\"Thurgo's hut south of Port Sarim\",\"standardAreas\":[\"Port Sarim\"]}],\"skills\":{\"Sailing\":12,\"Smithing\":30},\"prereqs\":[\"Pandemonium\",\"The Knight's Sword\"],\"oneOf\":[{\"skills\":{\"Cooking\":10}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Cam Torum\"]}],\"manualRequirements\":[\"One open Sailing task slot\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "46,49",
@@ -5483,7 +5496,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Prying Times were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Redberry pie, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Redberry pie, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the Food Shops route for the redberry pie now needs Cam Torum (Yarnio), as The Knight's Sword already does; the Cooks' Guild pie shop needs Cooking 32."
         ],
         "travel": [
           "The fixed route uses The Pandemonium, Port Sarim docks, and Thurgo's hut; the nearby sealed-crate trip is quest-directed Sailing travel.",
@@ -5704,15 +5718,15 @@
       "id": "Regicide",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Regicide&oldid=15271309",
-        "revision": 15271309,
-        "revisionTimestamp": "2026-07-21T15:50:23Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Regicide&oldid=15396547",
+        "revision": 15396547,
+        "revisionTimestamp": "2026-11-08T00:48:19Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tyras Camp\",\"Iorwerth Camp\",\"Isafdar\",\"Arandar\",\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Poison Waste\"],\"skills\":{\"Agility\":56,\"Crafting\":10},\"equipmentRequirements\":[{\"reason\":\"Gloves must be worn when using limestone on a furnace and grinding quicklime\",\"slot\":\"Gloves\",\"tier\":1}],\"prereqs\":[\"Underground Pass\"],\"oneOf\":[{\"skills\":{\"Mining\":10}},{\"merchants\":[\"Real Estate Agents\"]}],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tyras Camp\",\"Iorwerth Camp\",\"Isafdar\",\"Arandar\",\"East Ardougne\",\"West Ardougne\",\"Rimmington\",\"Poison Waste\"],\"skills\":{\"Agility\":56,\"Crafting\":10},\"equipmentRequirements\":[{\"reason\":\"Gloves must be worn when using limestone on a furnace and grinding quicklime\",\"slot\":\"Gloves\",\"tier\":1}],\"prereqs\":[\"Underground Pass\"],\"oneOf\":[{\"skills\":{\"Mining\":10}},{\"merchants\":[\"Real Estate Agents\"],\"quests\":[\"Shades of Mort'ton\"],\"regions\":[\"Mort'ton\"]}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -5748,7 +5762,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Regicide were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Limestone; Gloves, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Limestone; Gloves, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the Real Estate Agents route now needs Mort'ton and Shades of Mort'ton, because Razmire Builders Merchants is the only limestone seller and opens after that quest."
         ],
         "travel": [
           "The quest starts and ends in Ardougne/Kandarin and traverses the Underground Pass into the fixed Tirannwn route.",
@@ -5807,11 +5822,11 @@
       "id": "RFD: Evil Dave",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster%2FFreeing_Evil_Dave&oldid=15294908",
-        "revision": 15294908,
-        "revisionTimestamp": "2026-08-12T22:22:21Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Recipe_for_Disaster/Freeing_Evil_Dave&oldid=15366289",
+        "revision": 15366289,
+        "revisionTimestamp": "2026-10-05T22:28:54Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
@@ -5827,7 +5842,8 @@
         "items": [
           "The pinned Wiki item requirements for RFD: Evil Dave were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Item gate review 2026-10-09: gated for Stews (up to 9), so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): stew also sold by the food shops in Prifddinas and the Warriors' Guild."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): stew also sold by the food shops in Prifddinas and the Warriors' Guild.",
+          "Item gate review 2026-11-23: the Warriors' Guild food shop route for stew now also needs the guild door (99 Attack or Strength, or 130 combined), which the quest route check applies to every Warriors' Guild route."
         ],
         "travel": [
           "Compatibility-preserved Evil Dave chapter evidence covers Lumbridge and Edgeville for the Recipe for Disaster parent route.",
@@ -6906,7 +6922,7 @@
       "id": "Sleeping Giants",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-11-23",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Sleeping_Giants&oldid=15241064",
         "revision": 15241064,
@@ -6914,7 +6930,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":49}],\"id\":\"giants-plateau-foundry\",\"label\":\"Giants' Plateau and Giants' Foundry\",\"standardAreas\":[\"Giants' Plateau\"]}],\"skills\":{\"Smithing\":15},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":49}],\"id\":\"giants-plateau-foundry\",\"label\":\"Giants' Plateau and Giants' Foundry\",\"standardAreas\":[\"Giants' Plateau\"]}],\"skills\":{\"Smithing\":15},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Woodcutting\":15}},{\"quests\":[\"Pandemonium\"],\"skills\":{\"Sailing\":15}},{\"quests\":[\"The Ides of Milk\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "52,49",
@@ -6924,7 +6940,8 @@
       ],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Sleeping Giants were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Sleeping Giants were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Item gate review 2026-11-23: gated for the 3 oak logs (no shop sells them): Woodcutting 15, small salvage at Sailing 15, or Brutus after The Ides of Milk."
         ],
         "travel": [
           "Giants' Plateau and the attached Giants' Foundry tutorial are represented by the pinned entrance chunk.",
@@ -7235,19 +7252,20 @@
       "id": "Tears of Guthix",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-07-28T00:00:00.000Z",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tears_of_Guthix&oldid=15271661",
-        "revision": 15271661,
-        "revisionTimestamp": "2026-07-22T01:02:27Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Tears_of_Guthix&oldid=15292296",
+        "revision": 15292296,
+        "revisionTimestamp": "2026-08-10T23:23:23Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-swamp-caves\",\"label\":\"Lumbridge Swamp Caves\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":49,\"Mining\":20,\"Quest Points\":43},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-swamp-caves\",\"label\":\"Lumbridge Swamp Caves\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{\"Crafting\":20,\"Firemaking\":49,\"Mining\":20,\"Quest Points\":43},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Smithing\":49}},{\"quests\":[\"Sins of the Father\"],\"regions\":[\"Darkmeyer\"]},{\"quests\":[\"Death to the Dorgeshuun\"],\"skills\":{\"Thieving\":36}},{\"skills\":{\"Slayer\":35}},{\"quests\":[\"Haunted Mine\"]},{\"merchants\":[\"Candle Shops\"],\"quests\":[\"Death to the Dorgeshuun\"]}],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "The pinned Wiki item requirements for Tears of Guthix were reviewed; inventory possession and pre-obtained supplies are not machine-enforced."
+          "The pinned Wiki item requirements for Tears of Guthix were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
+          "Item gate review 2026-11-23: gated for the bullseye lantern (or unf) that the sapphire lantern is made from: Smithing 49, the Darkmeyer spawn (Sins of the Father), cave goblin pickpockets (Thieving 36, Death to the Dorgeshuun), wall beasts (Slayer 35), Tarn's Lair skeletons (Haunted Mine) or Miltog's Lamps (Candle Shops, Death to the Dorgeshuun)."
         ],
         "travel": [
           "The two valid Lumbridge Swamp Cave entrances are represented as alternative chunks 49,49 and 50,50 under one location gate; no pinned Chunk Picker activity row exists for this quest."
@@ -8073,15 +8091,15 @@
       "id": "The Fremennik Trials",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Trials&oldid=15271703",
-        "revision": 15271703,
-        "revisionTimestamp": "2026-07-22T01:56:55Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fremennik_Trials&oldid=15411210",
+        "revision": 15411210,
+        "revisionTimestamp": "2026-11-21T22:06:17Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\"],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Fishing\":76}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Canifis\"]},{\"merchants\":[\"Fishing Shops\"]},{\"regions\":[\"East Ardougne\"],\"skills\":{\"Thieving\":72}}],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\"],\"skills\":{},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Fishing\":76}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Canifis\"]},{\"merchants\":[\"Fishing Shops\"],\"regions\":[\"Piscarilius\"]},{\"regions\":[\"East Ardougne\"],\"skills\":{\"Thieving\":72}}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "41,56",
@@ -8108,7 +8126,8 @@
         "items": [
           "The pinned Wiki item requirements for The Fremennik Trials were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for Raw shark, manta ray or sea turtle, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
-          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): raw shark also from the Ardougne Castle chest (72 Thieving)."
+          "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): raw shark also from the Ardougne Castle chest (72 Thieving).",
+          "Item gate review 2026-11-23: the Fishing Shops route now needs Piscarilius, because Frankie's Fishing Emporium is the only fishmonger with raw shark."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Fremennik Province (41,56, step); Rellekka (41,57, first); Seers' Village (42,54, step); Fremennik Forest (42,56, step), and unavoidable travel remains represented by region gate Fremennik.",
@@ -8265,15 +8284,15 @@
       "id": "The Giant Dwarf",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Giant_Dwarf&oldid=15265910",
-        "revision": 15265910,
-        "revisionTimestamp": "2026-07-17T06:32:16Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Giant_Dwarf&oldid=15412711",
+        "revision": 15412711,
+        "revisionTimestamp": "2026-11-22T20:52:33Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Keldagrim\",\"Varrock\",\"Port Sarim\"],\"skills\":{\"Crafting\":12,\"Firemaking\":16,\"Magic\":33,\"Smithing\":15,\"Thieving\":14},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Crafting\":20,\"Mining\":15}},{\"merchants\":[\"Ore Merchants\"],\"skills\":{\"Crafting\":20}},{\"merchants\":[\"Gem Shops\"],\"skills\":{\"Mining\":15}},{\"merchants\":[\"Gem Shops\",\"Ore Merchants\"]}],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Keldagrim\",\"Varrock\",\"Port Sarim\"],\"skills\":{\"Crafting\":12,\"Firemaking\":16,\"Magic\":33,\"Smithing\":15,\"Thieving\":14},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Cooking\":10,\"Crafting\":20,\"Mining\":15}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Cam Torum\"],\"skills\":{\"Crafting\":20,\"Mining\":15}},{\"merchants\":[\"Ore Merchants\"],\"skills\":{\"Cooking\":10,\"Crafting\":20}},{\"merchants\":[\"Ore Merchants\",\"Food Shops\"],\"regions\":[\"Cam Torum\"],\"skills\":{\"Crafting\":20}},{\"merchants\":[\"Gem Shops\"],\"skills\":{\"Cooking\":10,\"Mining\":15}},{\"merchants\":[\"Gem Shops\",\"Food Shops\"],\"regions\":[\"Cam Torum\"],\"skills\":{\"Mining\":15}},{\"merchants\":[\"Gem Shops\",\"Ore Merchants\"],\"skills\":{\"Cooking\":10}},{\"merchants\":[\"Gem Shops\",\"Ore Merchants\",\"Food Shops\"],\"regions\":[\"Cam Torum\"]}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "42,58",
@@ -8294,7 +8313,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for The Giant Dwarf were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for 3 cut sapphires; Iron bar, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for 3 cut sapphires; Iron bar, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: gated for the redberry pie (pies given in The Knight's Sword and Prying Times do not count): Cooking 10, or Food Shops with Cam Torum for Yarnio (the Cooks' Guild pie shop needs Cooking 32), crossed with the sapphire and iron bar routes."
         ],
         "travel": [
           "The Keldagrim route plus unavoidable Reldo and Thurgo consultations is represented by Fremennik, Misthalin and Asgarnia.",
@@ -8747,15 +8767,15 @@
       "id": "The Queen of Thieves",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Queen_of_Thieves&oldid=15241048",
-        "revision": 15241048,
-        "revisionTimestamp": "2026-06-27T15:17:07Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Queen_of_Thieves&oldid=15380705",
+        "revision": 15380705,
+        "revisionTimestamp": "2026-10-23T22:40:00Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hosidius\",\"Piscarilius\"],\"skills\":{\"Thieving\":20},\"prereqs\":[\"Client of Kourend\"],\"oneOf\":[{\"skills\":{\"Cooking\":25}},{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Food Shops\"]}],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hosidius\",\"Piscarilius\"],\"skills\":{\"Thieving\":20},\"prereqs\":[\"Client of Kourend\"],\"oneOf\":[{\"skills\":{\"Cooking\":25}},{\"merchants\":[\"Bars & Inns\"]},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Prifddinas\"]},{\"guilds\":[\"Warriors' Guild\"],\"merchants\":[\"Food Shops\"]}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "26,57",
@@ -8776,7 +8796,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for The Queen of Thieves were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Stew, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Stew, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "Item gate review 2026-11-23: the Food Shops stew route now needs Prifddinas or the Warriors' Guild (with its door), the only Food Shops that sell stew, as RFD: Evil Dave does."
         ],
         "travel": [
           "The stable Wiki route was reviewed end-to-end; pinned Chunk Picker markers are Kingstown (26,57, step); Piscarilius Foodhall (28,58, step); Piscarilius Bank (28,59, first), and unavoidable travel remains represented by region gate Kourend & Kebos.",

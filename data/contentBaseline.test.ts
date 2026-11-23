@@ -495,7 +495,7 @@ describe('deterministic current content baseline', () => {
       regions: ['The Open Seas'], locations: ['the-pandemonium', 'port-sarim-docks', 'thurgos-hut'],
       skills: { Smithing: 30, Sailing: 12 }, combatLevel: undefined,
       prereqs: ['Pandemonium', "The Knight's Sword"],
-      oneOf: [{ skills: { Cooking: 10 } }, { merchants: ['Food Shops'] }],
+      oneOf: [{ skills: { Cooking: 10 } }, { merchants: ['Food Shops'], regions: ['Cam Torum'] }],
       manualRequirements: ['One open Sailing task slot'],
     });
     expect(questRequirementFields('Current Affairs')).toEqual({

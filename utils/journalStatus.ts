@@ -130,6 +130,13 @@ export const meetsSkillRequirement = (
   return tier > 0 && effectiveSkillLevel(unlocks, skill) >= required;
 };
 
+/** The Warriors' Guild door: 99 Attack or Strength, or 130 combined. Tier-capped,
+ *  like the diary's "Enter the Warriors' Guild" task. A quest route through the
+ *  guild needs it as well as the guild unlock. */
+export const meetsWarriorsGuildEntry = (unlocks: Pick<UnlockState, 'skills' | 'levels'>): boolean =>
+  meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99)
+  || effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength') >= 130;
+
 export const countMetSkillRequirements = (
   requirements: Record<string, number> | undefined,
   unlocks: Pick<UnlockState, 'skills' | 'levels'>,
@@ -210,7 +217,8 @@ export const questRequirementOptionMet = (
   (!option.anyOfRegions?.length || option.anyOfRegions.some(region =>
     isAreaReachable(region, unlocks, gameModeId))) &&
   (option.guilds ?? []).every(guild =>
-    unlocks.guilds.includes(guild)) &&
+    unlocks.guilds.includes(guild)
+    && (guild !== "Warriors' Guild" || meetsWarriorsGuildEntry(unlocks))) &&
   (option.locations ?? []).every(location =>
     locationRequirementMet(location, unlocks, gameModeId)) &&
   Object.entries(option.skills ?? {}).every(([skill, level]) =>

@@ -249,11 +249,11 @@ describe('evaluateQuestDoability', () => {
     const row = evaluateQuestDoability(
       QUEST_DATA['Prying Times'],
       unlocks({
-        regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
+        regions: ['Cam Torum', 'The Pandemonium', 'Port Sarim', 'Rimmington'],
         quests: ['Pandemonium', "The Knight's Sword"],
         skills: { Smithing: 3, Sailing: 2 },
         levels: { Smithing: 30, Sailing: 12 },
-        // Food Shops sell the redberry pie the quest needs.
+        // Food Shops in Cam Torum (Yarnio) sell the redberry pie the quest needs.
         merchants: ['Food Shops'],
       }),
       reachableChunk,
