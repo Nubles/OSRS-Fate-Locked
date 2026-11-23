@@ -2628,7 +2628,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Mage Training Arena', regions: ['Kharidian Desert'], unlockId: 'Mage Training Arena', notes: 'Reward Shop' }
   ],
   'Broad Arrowheads': [
-    { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Requires Broader Fletching unlock (300 Slayer points)' }
+    { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Slayer Equipment shop (55 coins)' }
   ],
   'Dragon Axe': [
     { type: 'DROP', name: 'Dagannoth Kings', regions: ['Fremennik'], unlockId: 'Dagannoth Kings', rarity: '1/128' }

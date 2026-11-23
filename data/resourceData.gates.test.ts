@@ -268,3 +268,14 @@ describe('broad arrows (resource-b.d2[3])', () => {
     expect(fletch(s)[0].missing).toContain('Skill Locked: Slayer');
   });
 });
+
+describe('broad arrowheads (resource-b.d4[1])', () => {
+  // Wiki 'Broad arrowheads': 55 coins at every Slayer Equipment shop, no
+  // unlock. Broader Fletching only teaches fletching them into arrows.
+  it('buying them needs no Slayer unlock', () => {
+    const [shop] = rows('Broad Arrowheads', 'Slayer Master');
+    expect(shop.unlockId).toBeUndefined();
+    expect(shop.notes).not.toMatch(/Broader Fletching/);
+    expect(shop.notes).toMatch(/55 coins/);
+  });
+});
