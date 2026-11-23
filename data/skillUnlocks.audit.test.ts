@@ -186,3 +186,39 @@ describe('unlocks added in the 9 November 2026 review', () => {
     ]);
   });
 });
+
+// Deep pass of 23 November 2026 (skills-b.d1, skills-b.d2), each row from a fresh Wiki fetch of the item's own
+// page: Little crack, Clay fireplace, Remote Island, Red Rock, Barracuda Trials, Moss lizard, Cooked moss lizard,
+// Rocks (Catherby), Strong Tree (Karamja volcano), Rogues' Den, Leaping trout/salmon/sturgeon.
+describe('unlocks corrected in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Agility', 'God Wars Dungeon Access (Little Crack)', 60],
+    ['Construction', 'Crude Furniture', 1],
+    ['Construction', 'Clay Fireplace', 3],
+    ['Sailing', 'Remote Island', 45],
+    ['Sailing', 'Dock Red Rock (The Red Reef)', 52],
+    ['Sailing', 'Barracuda Trials (The Tempor Tantrum)', 30],
+    ['Sailing', 'Barracuda Trials (The Jubbly Jive)', 55],
+    ['Sailing', 'Barracuda Trials (The Gwenith Glide; Regicide)', 72],
+    ['Hunter', 'Moss Lizards (Perilous Moons)', 20],
+    ['Cooking', 'Moss Lizards (Perilous Moons)', 30],
+    ['Agility', 'Catherby Grapple (Strength 35, Ranged 35)', 32],
+    ['Agility', 'Catherby Rocks (No Grapple)', 68],
+    ['Agility', 'Karamja Strong Tree (Grapple; Strength 21, Ranged 42)', 53],
+    ['Agility', 'Karamja Strong Tree (No Grapple)', 78],
+    ['Agility', 'Rogues\' Den Minigame Access (Thieving 50)', 50],
+    ['Agility', 'Catch Leaping Trout (Fishing 48, Strength 15; Barbarian Fishing)', 15],
+    ['Agility', 'Catch Leaping Salmon (Fishing 58, Strength 30)', 30],
+    ['Agility', 'Catch Leaping Sturgeon (Fishing 70, Strength 45)', 45],
+  ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('no longer names the Strength boulder in Agility or fireplaces at Construction 1', () => {
+    expect(rowsFor('Agility').some(row => row.text.includes('Boulder'))).toBe(false);
+    expect(rowsFor('Construction').some(row => row.level === 1 && /fireplace/i.test(row.text))).toBe(false);
+    expect(rowsFor('Sailing').filter(row => row.text.includes('Barracuda Trials')).map(row => row.level)).toEqual([30, 55, 72]);
+  });
+});

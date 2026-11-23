@@ -69,7 +69,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     2: [
       'Lvl 12: Western Brimhaven Stepping Stones',
-      'Lvl 15: Catch Leaping Trout (Barbarian Fishing)',
+      'Lvl 15: Catch Leaping Trout (Fishing 48, Strength 15; Barbarian Fishing)',
       'Lvl 15: Edgeville Monkeybars & Corsair Cove Pillar',
       'Lvl 16: Yanille Underwall Tunnel',
       'Lvl 18: Slayer Tower Broken Window Shortcut',
@@ -82,12 +82,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 26: Falador Underwall Tunnel',
       'Lvl 29: Mount Karuulm Lower Rocks',
       'Lvl 30: Agility Pyramid & Varrock Rooftop Course',
-      'Lvl 30: Catch Leaping Salmon',
+      'Lvl 30: Catch Leaping Salmon (Fishing 58, Strength 30)',
       'Lvl 30: Penguin Agility Course (Quest Req)'
     ],
     4: [
       'Lvl 31: Champions\' Guild Stepping Stone',
-      'Lvl 32: Catherby Grapple & Shilo Village Steps',
+      'Lvl 32: Catherby Grapple (Strength 35, Ranged 35) & Shilo Village Steps',
       'Lvl 35: Barbarian Outpost Course',
       'Lvl 37: Tree Gnome Stronghold Rocks',
       'Lvl 40: Brimhaven Arena (High Obstacles)',
@@ -95,21 +95,21 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     5: [
       'Lvl 42: Dwarven Mine Crevice & Draynor Tunnel',
-      'Lvl 45: Catch Leaping Sturgeon',
+      'Lvl 45: Catch Leaping Sturgeon (Fishing 70, Strength 45)',
       'Lvl 45: Shayzien Advanced Course',
       'Lvl 47: Trollheim Hard Rocks',
       'Lvl 48: Ape Atoll Agility Course',
       'Lvl 49: Yanille Dungeon Pipe',
       'Lvl 50: Falador Rooftop & Colossal Wyrm Basic Courses',
-      'Lvl 50: Rogues\' Den Minigame Access'
+      'Lvl 50: Rogues\' Den Minigame Access (Thieving 50)'
     ],
     6: [
       'Lvl 52: Hallowed Sepulchre (Floor 1) & Wilderness Course',
-      'Lvl 53: Karamja Strong Tree (Grapple)',
+      'Lvl 53: Karamja Strong Tree (Grapple; Strength 21, Ranged 42)',
       'Lvl 54: Motherlode Mine Dark Tunnels',
       'Lvl 55: Miscellania Stepping Stone',
       'Lvl 57: Yanille Dungeon Monkeybars',
-      'Lvl 60: God Wars Dungeon Access (Boulder)',
+      'Lvl 60: God Wars Dungeon Access (Little Crack)',
       'Lvl 60: Seers\' Village Rooftop & Werewolf Courses'
     ],
     7: [
@@ -119,6 +119,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 63: Darkmeyer Wall & Taverley Railing',
       'Lvl 65: Revenant Caves Easy Pillar',
       'Lvl 66: Taverley Rocks & Lumbridge Swamp Stone',
+      'Lvl 68: Catherby Rocks (No Grapple)',
       'Lvl 70: Pollnivneach Rooftop & Dorgesh-Kaan Courses',
       'Lvl 70: Saradomin Encampment (GWD)',
       'Lvl 70: Taverley Dungeon Pipe (Blue Dragons)'
@@ -131,6 +132,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 75: Prifddinas Agility Course',
       'Lvl 76: Zul-Andra Stepping Stone',
       'Lvl 77: Hallowed Sepulchre (Floor 4)',
+      'Lvl 78: Karamja Strong Tree (No Grapple)',
       'Lvl 80: Rellekka Rooftop Course',
       'Lvl 80: Taverley Strange Floor'
     ],
@@ -252,9 +254,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Sailing: Wooden Hull, Mast, Bronze Helm',
       'Lvl 1: Basic Wood Decor, Garden, Parlour',
-      'Lvl 1: Crude Furniture, Fireplaces',
+      'Lvl 1: Crude Furniture',
       'Lvl 1: Mahogany Homes (Beginner)',
       'Lvl 1: Move to Rimmington',
+      'Lvl 3: Clay Fireplace',
       'Lvl 5: Kitchen',
       'Lvl 9: Wooden Larder',
       'Lvl 10: Basic Stone Decor, Dining Room, Wood Dining Table',
@@ -377,6 +380,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 25: Salmon, Stew, Fruit Batta',
       'Lvl 28: Sweetcorn, Slimy Eel',
       'Lvl 30: Karambwan (Thoroughly), Chompy Bird',
+      'Lvl 30: Moss Lizards (Perilous Moons)',
       'Lvl 30: Tuna, Apple Pie'
     ],
     4: [
@@ -1115,7 +1119,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 15: Ruby Harvests, Sandworms, Prael Bats, Butterfly Jars',
       'Lvl 17: Puro-Puro, Baby Implings',
       'Lvl 17: Black Honey Buzzards (The Birds and the Wasps)',
-      'Lvl 19: Tropical Wagtails'
+      'Lvl 19: Tropical Wagtails',
+      'Lvl 20: Moss Lizards (Perilous Moons)'
     ],
     3: [
       'Lvl 21: Red Crabs',
@@ -1750,7 +1755,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 27: Steel Salvaging Hook',
       'Lvl 28: Dock Ardougne, 3 Port Tasks, Bronze Cannon',
       'Lvl 29: Teak Cargo Hold',
-      'Lvl 30: Dock Port Khazard, Barracuda Trials',
+      'Lvl 30: Dock Port Khazard, Barracuda Trials (The Tempor Tantrum)',
       'Lvl 30: Bounty Port Tasks'
     ],
     4: [
@@ -1770,7 +1775,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 41: Recolour Sails (Construction 27)',
       'Lvl 42: Dock Cairn Isle, Chinchompa Island, Salvaging Station',
       'Lvl 44: Dock Sunset Coast, Mithril Salvaging Hook',
-      'Lvl 45: Dock Summer Shore, Little Pearl',
+      'Lvl 45: Dock Summer Shore, Little Pearl, Remote Island',
       'Lvl 46: Dock Vatrachos Island, Aldarin, Mahogany Cargo Hold',
       'Lvl 47: Dock Onyx Crest, Steel Cannon',
       'Lvl 48: Dock Ruins of Unkah, Mahogany Hull',
@@ -1782,10 +1787,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     6: [
       'Lvl 51: Dock Anglers\' Retreat',
+      'Lvl 52: Dock Red Rock (The Red Reef)',
       'Lvl 52: Mahogany Mast, Canvas Sails',
       'Lvl 53: Salvage Large Shipwrecks, Wind Catcher',
       'Lvl 54: Dock Minotaurs\' Rest, Mithril Keel',
       'Lvl 55: 2 Crewmates (Adventurer Ada)',
+      'Lvl 55: Barracuda Trials (The Jubbly Jive)',
       'Lvl 55: Dock Isle of Souls, Mithril Helm, Teleport Focus',
       'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net',
       'Lvl 56: Chum Station (Construction 45)',
@@ -1812,6 +1819,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 70: Dock Prifddinas, Fathom Stone'
     ],
     8: [
+      'Lvl 72: Barracuda Trials (The Gwenith Glide; Regicide)',
       'Lvl 72: Dock Sunbleak Island, Adamant Helm',
       'Lvl 73: Dock Ynysdail, Salvage Mercenary Shipwrecks, Crystal Extractor',
       'Lvl 74: Dock Waterbirth Island, Rune Salvaging Hook',
