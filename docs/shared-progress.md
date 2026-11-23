@@ -27,7 +27,11 @@ browser: only the summary in `utils/progressSnapshot.ts` is sent.
    unchanged summary is not sent again, and the relay doesn't store one it
    already holds (after a reload): it answers `{ updatedAt, unchanged: true }`
    with no KV write and nothing for the bot, unless the stored summary is
-   30 days old, so a shared run doesn't expire.
+   30 days old, so a shared run doesn't expire. Only the tab that owns the
+   save publishes (a held tab's progress is older), and it reads the stored
+   record when it publishes, so Stop sharing or Public: off in another tab of
+   the profile holds there too. A held tab's settings change is saved and
+   published by the owner tab.
 
 ## Unlock feed and roles
 
@@ -90,7 +94,9 @@ account name as its title and heading, with the mode, start date, counts, last
 few unlocks and map. Anyone with the link can read the whole summary, account
 name included, through `GET /p/<id>`; a private summary and a missing one both answer
 `404`, so a private run can't be found by guessing. Turning it off republishes
-without the flag, and **Stop sharing** deletes the summary, page and all.
+without the flag, and **Stop sharing** deletes the summary, page and all. When
+the relay asks the switch to wait (one summary a minute), the driver sends the
+change within a few minutes and the toast says it is on its way, not done.
 
 ## Clan feed
 

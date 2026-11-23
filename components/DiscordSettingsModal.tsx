@@ -12,7 +12,7 @@ import { X, Webhook, Send, Link2, BookOpen, Copy } from 'lucide-react';
 import { relaySync } from '../services/relaySync';
 import {
   deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
-  readProgressShare, replaceRefusedShare, requestLinkCode, writeProgressShare,
+  readProgressShare, replaceRefusedShare, requestLinkCode, writeProgressShare, type PublishResult,
 } from '../utils/progressShare';
 import {
   PROGRESS_SHARE_EVENT, type ProgressShareEventDetail, type ProgressShareRecord,
@@ -154,15 +154,20 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     return () => window.clearInterval(timer);
   }, [link.kind]);
 
-  /** Publish the run's summary now, as `next` says (public or not), instead of waiting for the driver. */
-  const publishNow = useCallback(async (next: ProgressShareRecord) => {
+  /**
+   * Publish the run's summary now, as `next` says (public or not), instead of
+   * waiting for the driver. A tab that does not own the save holds older
+   * progress, so it only saves the record: the owner tab's driver publishes it.
+   */
+  const publishNow = useCallback(async (next: ProgressShareRecord): Promise<PublishResult | { ok: false; held: true }> => {
+    if (game.saveOwnershipStatus !== 'owner') return { ok: false, held: true };
     const { buildProgressSnapshot } = await import('../utils/progressSnapshot');
     const snapshot = buildProgressSnapshot({
       unlocks: game.unlocks, history: game.history, gameModeId: game.gameModeId,
       customMode: game.customMode, linkedAccount: game.linkedAccount, publicLog: next.publicLog === true,
     });
     return publishProgress(relaySync.base(), next, snapshot);
-  }, [game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
+  }, [game.saveOwnershipStatus, game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
 
   /**
    * Publish `next`; when the relay refuses this run's id because another token
@@ -203,7 +208,8 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
   /**
    * Make the run's Adventurer's Log public (sharing turns on with it) or
    * private again. The change is published straight away; if the relay asks
-   * to wait, ProgressShareDriver sends it once the minute is up.
+   * to wait, ProgressShareDriver sends it within a few minutes, and the toast
+   * says so rather than claiming it is done.
    */
   const setPublicLog = useCallback(async (on: boolean) => {
     setLogBusy(true);
@@ -216,8 +222,12 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     setLogBusy(false);
     if (moved) {
       // replaceRefusedShare has told the player the link changed.
+    } else if (!published.ok && 'held' in published) {
+      showToast('Saved. It goes to the relay from the tab that is saving your progress.');
     } else if (!published.ok && 'error' in published) {
       showToast('Could not reach the relay. It will try again shortly.');
+    } else if (!published.ok) {
+      showToast(on ? 'Your Adventurer\'s Log goes public within a few minutes' : 'Your Adventurer\'s Log goes private within a few minutes');
     } else if (on) {
       showToast('Your Adventurer\'s Log is public');
     } else {
