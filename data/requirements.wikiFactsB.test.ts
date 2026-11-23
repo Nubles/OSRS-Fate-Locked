@@ -197,7 +197,8 @@ describe('requirements part B, deep pass: started quests and shop stock', () => 
     for (const key of new Set([...FAIRY_RING_ENTRIES, ...ringKeyed])) {
       const req = entry(key);
       expect(req.quests, key).toContain('Fairytale I - Growing Pains');
-      expect(req.manualRequirements, key).toContain(FAIRY_RING_ACCESS);
+      expect(req.questProgress, key).toContainEqual({ quest: 'Fairytale II - Cure a Queen', label: FAIRY_RING_ACCESS });
+      expect(req.manualRequirements ?? [], key).not.toContain(FAIRY_RING_ACCESS);
     }
     expect(entry('Fairy Ring BJS (Zulrah)').quests).toContain('Regicide');
   });
@@ -210,18 +211,61 @@ describe('requirements part B, deep pass: started quests and shop stock', () => 
       expect(result.missingChecks, key).toContain(FAIRY_RING_ACCESS);
     }
   });
+  // Completing Fairytale II proves the started check, so the cards can be Ready again.
+  it('a player who has completed Fairytale II has no fairy ring check left', () => {
+    const u = createFreshState().unlocks;
+    u.quests = ['Fairytale I - Growing Pains', 'Fairytale II - Cure a Queen', 'Regicide'];
+    u.regions = [...REGIONS_LIST];
+    u.mobility = ['Fairy Rings'];
+    u.minigames = ['Enchanted Valley', 'Gorak Plane', 'Abyssal Area'];
+    u.skills = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10]));
+    u.levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99]));
+    for (const key of FAIRY_RING_ENTRIES) {
+      const result = analyzeRequirement(entry(key), u, 'vanilla');
+      expect(result.missingChecks, key).toEqual([]);
+      expect(result.isFullyPlayable, key).toBe(true);
+    }
+  });
   it('Jatizso and Neitiznot shops need The Fremennik Trials and a started Fremennik Isles (Wiki: Jatizso, Neitiznot, Mord Gunnars)', () => {
     for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
       expect(entry(key).quests, key).toEqual(['The Fremennik Trials']);
-      expect(entry(key).manualRequirements, key).toEqual(['Confirm you have started The Fremennik Isles']);
+      expect(entry(key).questProgress, key).toEqual([{ quest: 'The Fremennik Isles', label: 'Confirm you have started The Fremennik Isles' }]);
+      expect(entry(key).manualRequirements, key).toBeUndefined();
+    }
+  });
+  it('the started Fremennik Isles check stays until the quest is completed', () => {
+    const u = createFreshState().unlocks;
+    u.quests = ['The Fremennik Trials'];
+    for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
+      expect(analyzeRequirement(entry(key), u, 'vanilla').missingChecks, key).toContain('Confirm you have started The Fremennik Isles');
+    }
+    u.quests = ['The Fremennik Trials', 'The Fremennik Isles'];
+    for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
+      expect(analyzeRequirement(entry(key), u, 'vanilla').missingChecks, key).not.toContain('Confirm you have started The Fremennik Isles');
     }
   });
   it('Dragonfire Shield (Smithing) needs 90 Smithing and Dragon Slayer I started, not completed (Wiki: Dragonfire shield, Anti-dragon shield)', () => {
     const req = entry('Dragonfire Shield (Smithing)');
     expect(req.skills).toEqual({ Smithing: 90 });
     expect(req.quests ?? []).toEqual([]);
-    expect(req.manualRequirements?.join(' ')).toMatch(/started Dragon Slayer I/);
+    expect(req.questProgress).toEqual([{ quest: 'Dragon Slayer I', label: expect.stringMatching(/started Dragon Slayer I/) }]);
+    expect(req.manualRequirements).toBeUndefined();
     expect(req.description).toMatch(/Oziach 1,250,000 coins after Dragon Slayer I/);
+  });
+  it('Dragonfire Shield (Smithing) has no check left once Dragon Slayer I is completed', () => {
+    const u = createFreshState().unlocks;
+    u.regions = [...REGIONS_LIST];
+    u.merchants = ['Dragonfire Shield'];
+    u.skills.Smithing = 10;
+    u.levels = { ...u.levels, Smithing: 90 };
+    const started = analyzeRequirement(entry('Dragonfire Shield (Smithing)'), u, 'vanilla');
+    expect(started.missingChecks.join(' ')).toMatch(/started Dragon Slayer I/);
+    u.quests = ['Dragon Slayer I'];
+    const done = analyzeRequirement(entry('Dragonfire Shield (Smithing)'), u, 'vanilla');
+    expect(done.missingChecks).toEqual([]);
+    expect(done.isFullyPlayable).toBe(true);
+    // The pinned goal follows the card: it turns green once the quest is done.
+    expect(calculateGoalProgress(entry('Dragonfire Shield (Smithing)'), u, 'vanilla').percentage).toBe(100);
   });
   const stock: [string, RegExp, RegExp][] = [
     // [entry, must match, must not match]. Wiki pages: Tony's Pizza Bases, Blair's Armour, Shayzien armour,

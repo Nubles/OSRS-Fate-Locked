@@ -21,6 +21,7 @@ import { currentQuestPoints, evaluateQuestEligibility, meetsSkillRequirement } f
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { effectiveSkillLevel } from './slayerReach';
+import { pendingQuestProgress } from '../data/questProgress';
 
 /** The ids a Key can roll in each table. Any other id in a table needs no Key of its own. */
 const ROOT_UNLOCKS: Partial<Record<TableType, Set<string>>> = {
@@ -89,7 +90,8 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const missingAlternatives = req.alternatives ?? [];
     const activityRequirement = getActivityReq(req.activity ?? req.id);
     const readiness = canonical || req.category === TableType.DIARIES || !activityRequirement ? null : evaluateActivityReadiness(true, activityRequirement, unlocks, gameModeId);
-    const manualChecks = req.manualRequirements ?? [];
+    // A started quest stays a check until the quest is completed, which proves it.
+    const manualChecks = [...(req.manualRequirements ?? []), ...pendingQuestProgress(req.questProgress, unlocks.quests)];
     const chunkChecks = partlyHeld.map(area => `Check it is in your chunks: ${area}`);
     const missingDiaries = (req.diaries ?? []).filter(d => !unlocks.diaries.includes(d));
     // Quest entries take their points from the canonical journal above.

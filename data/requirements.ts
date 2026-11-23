@@ -1,4 +1,5 @@
 import { TableType } from '../types';
+import type { QuestProgressRequirement } from './questProgress';
 import { QUEST_DATA } from './questData';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 
@@ -21,6 +22,8 @@ export interface ContentRequirement {
   description?: string;
   items?: string[];      // Optional specific item requirements
   manualRequirements?: string[];
+  /** A quest that must be started: a check until the quest is completed, which proves it (data/questProgress.ts). */
+  questProgress?: QuestProgressRequirement[];
   alternatives?: ContentAlternativeRequirement[]; // One complete route is sufficient.
   accessRoutes?: Array<{ label: string; skills?: Record<string, number>; diaries?: string[] }>;
   /** Borrow this activity's readiness (data/activityRequirements.ts) when the id is another unlock. */
@@ -40,6 +43,9 @@ const KARUULM_HEAT_OR_WYRMSCRAIG = KARUULM_HEAT + ', or fight wyrms in the Wyrms
 const GOD_WARS_ENTRY = 'God Wars Dungeon access through Troll Stronghold progress (defeated Dad) or the Easy Combat Achievement hilt teleport; the Wilderness God Wars Dungeon needs neither';
 // Wiki 'Fairy ring': Fairytale I completed, Fairytale II only started (same wording as the 'Fairy Rings' activity).
 export const FAIRY_RING_ACCESS = 'Reached fairy ring access during Fairytale II - Cure a Queen (full completion is not required)';
+const FAIRY_RING_PROGRESS: QuestProgressRequirement = { quest: 'Fairytale II - Cure a Queen', label: FAIRY_RING_ACCESS };
+// The Fremennik Isles started: Mord and Maria Gunnars ferry you to Jatizso and Neitiznot.
+const FREMENNIK_ISLES_STARTED: QuestProgressRequirement = { quest: 'The Fremennik Isles', label: 'Confirm you have started The Fremennik Isles' };
 // Wiki 'Smoke devil': a facemask or Slayer helmet is needed to kill them; the gas mask also works.
 const SMOKE_DEVIL_FACE = 'Wear a facemask, gas mask or Slayer helmet.';
 
@@ -1911,7 +1917,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'], // Jatizso
     skills: {},
     quests: ['The Fremennik Trials'], // Mord Gunnars ferries you once The Fremennik Isles is started
-    manualRequirements: ['Confirm you have started The Fremennik Isles'],
+    questProgress: [FREMENNIK_ISLES_STARTED],
     description: 'Ores up to adamantite (no runite).'
   },
   'Neitiznot Supplies': {
@@ -1920,7 +1926,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'], // Neitiznot
     skills: {},
     quests: ['The Fremennik Trials'], // Maria Gunnars ferries you once The Fremennik Isles is started
-    manualRequirements: ['Confirm you have started The Fremennik Isles'],
+    questProgress: [FREMENNIK_ISLES_STARTED],
     description: 'Thread, needles, knives, hammers, bronze axes and balls of wool.'
   },
 
@@ -2302,7 +2308,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // BKQ code
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Tree Spirits (Rune Axe farming).'
   },
   'Gorak Plane': {
@@ -2311,7 +2317,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // DIR code
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Goraks (Drop Shield Left Half frequently).'
   },
   'Abyssal Area (Fairy Ring)': {
@@ -2320,7 +2326,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // ALR code
     skills: { 'Slayer': 85 }, // Abyssal demons
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Abyssal demons (85 Slayer) and other Abyss creatures.'
   },
 
@@ -2546,7 +2552,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos'], // Shayzien
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to Chasm of Fire (Demons).'
   },
   'Fairy Ring BJS (Zulrah)': {
@@ -2556,7 +2562,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Tirannwn'],
     skills: { 'Agility': 76 }, // Shortcut to useful area
     quests: ['Fairytale I - Growing Pains', 'Regicide'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport near Zul-Andra (Requires Agility).'
   },
   'Fairy Ring DKS (Polar)': {
@@ -2566,7 +2572,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'], // Hunter area
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to Snowy Hunter Area (Sabre-toothed Kebbits).'
   },
   'Fairy Ring CIQ (Yanille)': {
@@ -2576,7 +2582,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kandarin'],
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport near Yanille (North).'
   },
   'Fairy Ring ALP (Lighthouse)': {
@@ -2586,7 +2592,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'], // Lighthouse
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to Lighthouse/Dagannoths.'
   },
   'Fairy Ring CKS (Canifis)': {
@@ -2596,7 +2602,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Morytania'],
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to Canifis (Mushroom patch).'
   },
   'Fairy Ring DKP (Karambwan)': {
@@ -2606,7 +2612,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Karamja'],
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to Karambwan fishing spot.'
   },
   'Fairy Ring BIP (Poly)': {
@@ -2616,7 +2622,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // Salve River
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to an island on the River Salve, south-west of Mort Myre.'
   },
   'Fairy Ring CIR (Mount K)': {
@@ -2626,7 +2632,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos'],
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport south of Mount Karuulm.'
   },
   'Fairy Ring BLP (TzHaar)': {
@@ -2636,7 +2642,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Karamja'],
     skills: {},
     quests: ['Fairytale I - Growing Pains'],
-    manualRequirements: [FAIRY_RING_ACCESS],
+    questProgress: [FAIRY_RING_PROGRESS],
     description: 'Teleport to TzHaar area (Mor Ul Rek).'
   },
 
@@ -2812,7 +2818,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // Lumbridge Castle: Duke Horacio gives the anti-dragon shield
     skills: { 'Smithing': 90 }, // At any anvil with a hammer; no quest for the recipe itself
     quests: [],
-    manualRequirements: ['Confirm you have started Dragon Slayer I (Duke Horacio gives the anti-dragon shield; also needed to wear the shield)'],
+    questProgress: [{ quest: 'Dragon Slayer I', label: 'Confirm you have started Dragon Slayer I (Duke Horacio gives the anti-dragon shield; also needed to wear the shield)' }],
     description: 'Attach a draconic visage to an anti-dragon shield at any anvil (90 Smithing), or pay Oziach 1,250,000 coins after Dragon Slayer I.'
   },
   'Spirit Shield (Making)': {
