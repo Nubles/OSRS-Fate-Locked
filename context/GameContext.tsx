@@ -4238,7 +4238,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
             <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
             {saveStatus === 'failed' && <button type="button" className="px-4 py-2 rounded border border-gray-500 text-gray-300" onClick={() => {
               const result = downloadFateSave(serializeCurrent(), storageKey);
-              showToast(result.ok ? FATE_EXPORT_DONE_MESSAGE : result.message);
+              showToast(result.ok === false ? result.message : FATE_EXPORT_DONE_MESSAGE);
             }}>Export backup</button>}
           </div>
         </div>
