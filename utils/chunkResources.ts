@@ -57,6 +57,8 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/basalt rock/i, { skill: 'Mining', level: 72 }],
   [/adamantite rocks/i, { skill: 'Mining', level: 70 }],
   [/lovakite rocks/i, { skill: 'Mining', level: 65 }],
+  // Daeyalt rocks (Meiyerditch mine) need 20 Mining; Daeyalt essence needs 60 (Wiki 'Daeyalt rocks').
+  [/daeyalt rocks/i, { skill: 'Mining', level: 20 }],
   [/daeyalt/i, { skill: 'Mining', level: 60 }],
   [/mithril rocks/i, { skill: 'Mining', level: 55 }],
   [/granite rocks/i, { skill: 'Mining', level: 45 }],
@@ -75,7 +77,8 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   //    opens at its lowest) ────────────────────────────────────────────────
   [/fishing spot \(sacred eel\)/i, { skill: 'Fishing', level: 87 }],
   [/fishing spot \(dark crab\)/i, { skill: 'Fishing', level: 85 }],
-  [/fishing spot \(lantern\)/i, { skill: 'Fishing', level: 87 }],
+  // Swordtip squid by harpoon (Wiki 'Fishing spot (lantern)').
+  [/fishing spot \(lantern\)/i, { skill: 'Fishing', level: 52 }],
   [/fishing spot \(anglerfish\)/i, { skill: 'Fishing', level: 82 }],
   [/fishing spot \(minnow\)/i, { skill: 'Fishing', level: 82 }],
   [/fishing spot \(infernal eel\)/i, { skill: 'Fishing', level: 80 }],
@@ -85,7 +88,8 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/fishing spot \(barbarian\)/i, { skill: 'Fishing', level: 48 }],
   // Bluegills need 43 Fishing (and 35 Hunter).
   [/fishing spot \(aerial fishing\)/i, { skill: 'Fishing', level: 43 }],
-  [/fishing spot \(cage, harpoon\)/i, { skill: 'Fishing', level: 40 }],
+  // Lobster by cage at 40, tuna by harpoon at 35.
+  [/fishing spot \(cage, harpoon\)/i, { skill: 'Fishing', level: 35 }],
   [/fishing spot \(harpoon\)/i, { skill: 'Fishing', level: 35 }],
   // Piscatoris's spots give monkfish (62) to a net and tuna (35) to a harpoon
   // (Piscatoris Fishing Colony, oldid 15319704).

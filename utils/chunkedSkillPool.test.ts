@@ -238,6 +238,14 @@ describe('Chunked Skills rolls', () => {
     }
   });
 
+  it('stores the deep audit d3[0] node levels per chunk (lantern 52, cage/harpoon 35, Daeyalt rocks 20, no Menaphite guard)', () => {
+    for (const chunk of ['18,42', '32,40', '32,57', '46,35']) expect(chunkFactLevel(chunk, 'Fishing'), chunk).toBe(52);
+    expect(chunkFactLevel('21,44', 'Fishing')).toBe(35);
+    expect(chunkFactLevel('49,61', 'Fishing')).toBe(85); // the dark crab spot stays at 85
+    expect(chunkFactLevel('56,51', 'Mining')).toBe(20);
+    expect(chunkFactLevel('52,42', 'Thieving')).toBeUndefined();
+  });
+
   it('round-trips a tier-10 fact: the Wrath altar (95) is stored as "0" and read back as tier 10 (content review 13)', () => {
     expect(chunkedTrainingTiers(['38,44']).get('Runecraft')).toBe(10);
     // With essence (Rune Mysteries, Mining, Aubury in Varrock 50,53) and level 95.
