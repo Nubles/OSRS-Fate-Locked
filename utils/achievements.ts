@@ -30,7 +30,7 @@ import { isAreaReachable, bankLocksActive } from './reachability';
 import { unlockableAreas } from './freeAreas';
 import { chunkTotals } from './runProgress';
 import { getPoolAndStateKey } from './gameEngine';
-import { isRollEntry } from './logEntry';
+import { isRollEntry, ownsChaosAward } from './logEntry';
 import { mergedBankId } from './bankUnlockMerges';
 import { AchievementPayout, fateDue, rewardLabel, ritualName } from './achievementRewards';
 import { QUEST_CAPE_ACHIEVEMENT_ID } from './questCapeAchievement';
@@ -170,7 +170,7 @@ export const runStats = (history: readonly LogEntry[] = []): RunStats => {
   const barrowsBrothers = new Set<string>();
   for (const e of history) {
     const chaos = e.meta?.chaosKeysAwarded;
-    if (typeof chaos === 'number') chaosKeys += count(chaos);
+    if (typeof chaos === 'number') chaosKeys += ownsChaosAward(e) ? count(chaos) : 0;
     else if (e.type === 'LEVEL_UP' && /Chaos Key Drop/.test(e.message)) chaosKeys += 1;
 
     if (e.meta?.ward === true) wardKeys += 1;
