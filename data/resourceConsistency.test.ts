@@ -3,7 +3,7 @@ import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from './resourceData
 import { ACTIVITY_REGIONS } from './activityRegions';
 import {
   BOSSES_LIST, MINIGAMES_LIST, GUILDS_LIST, MOBILITY_LIST, ARCANA_LIST,
-  POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
+  POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, SKILLS_LIST,
   REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
 import { computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, calculateSupplyChain, getNextAchievableItems, calculateEngineItemProgress } from '../utils/supplyChain';
@@ -102,7 +102,7 @@ describe('every unlockId references a real unlock', () => {
   const valid = new Set<string>([
     ...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST, ...MOBILITY_LIST,
     ...ARCANA_LIST, ...POH_LIST, ...MERCHANTS_LIST, ...STORAGE_LIST,
-    ...FARMING_PATCH_LIST,
+    ...FARMING_PATCH_LIST, ...SLAYER_UNLOCKS_LIST,
   ]);
   it('no source carries an unlockId that no unlock list knows about', () => {
     const bad: string[] = [];
