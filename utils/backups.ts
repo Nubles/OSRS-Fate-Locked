@@ -15,7 +15,7 @@ import type { SaveWriteAuthorization } from './profileWriterLease';
 import { visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { simpleHash } from './integrity';
 import { checksumSave } from './saveIntegrity';
-import type { RecoveryCheckpoint, RecoveryRepository } from './recoveryTypes';
+import type { RecoveryCheckpoint, RecoveryCheckpointReason, RecoveryRepository } from './recoveryTypes';
 const MAX_BACKUPS = 8;
 /**
  * The ring's share of the browser's storage, about half of the 5 MB a site
@@ -151,13 +151,21 @@ const compareNewest = (a: BackupMeta, b: BackupMeta): number => {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 };
 
+/** One title per journal checkpoint reason, shared with the ring copy GameContext writes beside it. */
+export const CHECKPOINT_LABELS: Record<RecoveryCheckpointReason, string> = {
+  'session-start': 'Session start',
+  'pre-replacement': 'Before replacement',
+  interval: 'Interval checkpoint',
+  'legacy-import': 'Legacy import',
+};
+
 const checkpointMeta = (
   profileId: string,
   checkpoint: RecoveryCheckpoint,
 ): BackupMeta => ({
   id: checkpointId(profileId, checkpoint.persistenceRevision),
   ts: checkpoint.capturedAt,
-  reason: checkpoint.reason,
+  reason: CHECKPOINT_LABELS[checkpoint.reason] ?? checkpoint.reason,
   summary: summarizeSave(checkpoint.data),
   checksum: checkpoint.checksum,
   source: 'checkpoint',
@@ -168,7 +176,7 @@ const checkpointMeta = (
  * Return one restore list spanning the journal checkpoints and the old ring.
  * Equal save bytes are represented once. When both stores contain a
  * byte-identical snapshot, the newest record supplies its timestamp and label;
- * journal-only entries retain their checkpoint reason. Journal failures are
+ * journal-only entries take their reason's CHECKPOINT_LABELS title. Journal failures are
  * intentionally best-effort and leave the old ring readable.
  */
 export const listCombinedBackups = async (

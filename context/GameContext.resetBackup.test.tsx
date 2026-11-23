@@ -15,6 +15,7 @@ import type { RecoveryHead, RecoveryRepository } from '../utils/recoveryTypes';
 import { checksumSave } from '../utils/saveIntegrity';
 import { resolveSaveRecovery, type SaveRecoveryDecision } from '../utils/saveRecovery';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
+import { profileBackupKey } from '../utils/profileStorage';
 import { confirmReset, RESET_CONFIRM_MESSAGE, RESET_NO_BACKUP_MESSAGE } from '../utils/backups';
 import { GameProvider, initialState, useGame } from '../context/GameContext';
 
@@ -204,5 +205,7 @@ describe('Reset all progress when no backup can be kept', () => {
     expect(game().userNotes?.goal).toBeUndefined();
     const backups = await game().listBackups();
     expect(backups.some(backup => backup.summary.startsWith('5 keys'))).toBe(true);
+    // The reset's ring copy is titled as the confirm promises.
+    expect(JSON.parse(values.get(profileBackupKey(keyFor(profileId))) ?? '[]')[0]?.reason).toBe('Before reset');
   });
 });

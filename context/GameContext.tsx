@@ -39,6 +39,7 @@ import { levelsToLog, summarizeLevelBatch, type LevelBatchSummary } from '../uti
 import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
+  CHECKPOINT_LABELS,
   getBackupDataById,
   listBackups as readBackups,
   pushBackup,
@@ -3805,14 +3806,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const createCoordinatedCheckpoint = useCallback(async (
     data: string,
     reason: RecoveryCheckpointReason,
+    compatibilityReason = CHECKPOINT_LABELS[reason],
   ): Promise<BackupWriteResult> => {
-    const compatibilityReason = reason === 'session-start'
-      ? 'Session start'
-      : reason === 'pre-replacement'
-        ? 'Before replacement'
-        : reason === 'legacy-import'
-          ? 'Legacy import'
-          : 'Interval checkpoint';
     if (coordinator === null) return pushOwnedBackup(data, compatibilityReason);
     const expectedGeneration = replacementGenerationRef.current;
     const checkpoint = await coordinator.createCheckpoint(data, reason);
@@ -3960,7 +3955,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const isCurrent = beginReplacement();
     const backup = coordinator === null
       ? pushOwnedBackup(serializeCurrent(), 'Before reset')
-      : await createCoordinatedCheckpoint(serializeCurrent(), 'pre-replacement');
+      : await createCoordinatedCheckpoint(serializeCurrent(), 'pre-replacement', 'Before reset');
     const unbacked = backup.stored === false && backup.reason === 'storage_unavailable';
     if (!isCurrent()) return true;
     if (unbacked && !anyway) return false;
