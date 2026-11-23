@@ -45,14 +45,21 @@ references them.
 
 ```ts
 for (const [item, extra] of Object.entries(ENRICHED_SOURCES)) {
-  const target = RESOURCE_MAP[item];
-  if (target) target.push(...extra);
+  const target = RESOURCE_MAP[currentResourceName(item)];
+  if (target) target.push(...extra.map(enrichResourceSource));
 }
 ```
 
 So the in-memory `RESOURCE_MAP` is curated entries + wiki-enriched entries,
-merged at load. Do **not** hand-edit `resourceEnrichment.ts` — re-run the
-generator.
+merged at load. `currentResourceName` reads a key through
+`RENAMED_RESOURCES`, so rows generated under an old item name ('Steel Sword')
+land on the current one ('Steel Shortsword'). `enrichResourceSource` marks
+every Wiki row `requirementsUnverified: true`; when a curated row has the
+same name and type, the Wiki row borrows its fields (requirements, regions,
+unlock) but keeps its own `rarity` and `notes`. `analyzeSource` never counts
+a `requirementsUnverified` row as available ("Source access requirements have
+not been verified"), so Wiki rows show routes but never unlock an item.
+Do **not** hand-edit `resourceEnrichment.ts`: re-run the generator.
 
 ### `RESOURCE_CATEGORIES` / `ITEM_CATEGORY`
 
@@ -135,22 +142,37 @@ the data file.
   up to 6 DROP sources from the wiki.
 - **Curation applied:**
   - Strips wiki page anchors / sub-paths (`Lundail#Easy Diary` → `Lundail`).
-  - Skips skilling "drop tables" (rocks, trees, patches) — already covered as
-    SKILL sources.
-  - Names drop sources from clue caskets as `CLUE` type, others `DROP`.
+  - Skips skilling "drop tables" (rocks, trees, patches) that the Wiki does
+    not call a combat drop; they are already SKILL sources. Monsters with such
+    names (Tree spirit, Rock Crab) are kept.
+  - Types Treasure Trail rows (`Reward casket (...)`, `Clue scroll (...)`) as
+    `CLUE`, everything else `DROP`, and leaves out one-time quest rewards
+    (the Pirate's Treasure casket).
   - Resolves `unlockId` by matching drop-source name against
     `BOSSES_LIST` ∪ `MINIGAMES_LIST` (incl. reward-chest parentheticals like
-    `Reward Chest (The Gauntlet)`). When set, realigns the region to
-    `ACTIVITY_REGIONS[unlockId]`.
+    `Reward Chest (The Gauntlet)`), the `UNLOCK_ALIAS` names (reward pool,
+    hallowed sack, reward token, raid chests...) and the Shade Catacombs
+    chests. When set, realigns the region to `ACTIVITY_REGIONS[unlockId]`.
+  - Picks drops commonest first by the whole fraction (`21/128` before
+    `1/128`; words on the same scale), one row per source and one per
+    activity, at most 6.
   - Drop region fallback: drop_json's "League region" → infobox_monster's
     `league_region` → `'Any'`.
-  - Shop region: a tiny hand-curated `SHOP_REGION` map → infobox_shop's
-    `[[Place]]` location parsed and mapped via `REGION_GROUPS` /
-    `MISTHALIN_AREAS` → `'Any'`.
+  - Shop region: a small `SHOP_REGION` map keyed by Wiki seller name →
+    infobox_shop's location, where every `[[Place]]` link (target, shown
+    text, or a link starting with a place, e.g. `[[Lumbridge Castle]]`) is
+    looked up in `REGION_GROUPS`, `MISTHALIN_AREAS` and the guilds and
+    activities of `ACTIVITY_REGIONS` → `'Any'`.
 - **Self-reference guard:** because `resourceData` merges `ENRICHED_SOURCES`
-  at load, the generator strips its own previous output off `RESOURCE_MAP`
-  before deduping (otherwise everything looks "already present" and you get
-  zero new entries).
+  at load, the generator dedups only against the curated rows of
+  `RESOURCE_MAP` (those without `requirementsUnverified`), so its own previous
+  output, also under an old item name, never hides a Wiki row.
+- **Rules:** the pure rules (rarity ranking, filters, unlocks, shop places,
+  drop pick) live in `scripts/sourceEnrichmentRules.ts` with unit tests in
+  `scripts/sourceEnrichmentRules.test.ts`.
+- **Run:** `node_modules/.bin/jiti scripts/buildSourceEnrichment.ts`. Set
+  `WIKI_BUCKET_DIR` to a folder of saved `<bucket>.json` row arrays to run
+  from saved copies instead of fetching.
 - **Writes:** `data/resourceEnrichment.ts`, overwriting the whole file.
 - **Re-run after:** adding new curated items or changing the unlock lists
   (so newly-added items get their wiki shops/drops too).
@@ -224,7 +246,7 @@ quest-only intermediate steps. Update this set when:
    breakdown UI. If you genuinely intend it as a leaf, add to
    `INTENTIONAL_INPUT_LEAVES`.
 4. **(Optional) Re-run enrichment** if the new item has shop/drop sources:
-   `npx tsx scripts/buildSourceEnrichment.ts`.
+   `node_modules/.bin/jiti scripts/buildSourceEnrichment.ts`.
 5. **Run the suite:** `npx tsc --noEmit && npx vitest run`. The integrity
    tests will tell you exactly what's broken.
 
@@ -272,10 +294,11 @@ quest-only intermediate steps. Update this set when:
   Sailing skill itself isn't modelled yet.
 - **GE prices** integration was deliberately deferred (one of the original
   PLAN.md features). `services/PriceService.ts` exists.
-- **~1,158 enriched drops still tagged `'Any'`** — mostly multi-region
-  monsters (Bronze/Iron/Steel/Mithril dragons, etc.) the wiki doesn't pin to
-  a single Leagues region. Improving these further needs a hand-curated
-  monster → region map.
+- **About a fifth of enriched drops are tagged `'Any'`** (412 of 1,998 at
+  the 23 Nov 2026 regeneration): sources the Wiki pins to no Leagues region
+  in either the drop row or `infobox_monster` (Adventurer Jon's starter
+  rewards, Sailing salvage and crates, implings, and some monsters). `'Any'` on a Wiki row is display
+  only, since those rows never count as available.
 - **Quest-requirement audit** — `quests` tags are accurate on curated
   sources but absent on enriched ones.
 
@@ -294,11 +317,11 @@ npx vitest run
 npx vite build
 
 # Refresh wiki-sourced enrichment after changing RESOURCE_MAP
-npx tsx scripts/buildSourceEnrichment.ts
+node_modules/.bin/jiti scripts/buildSourceEnrichment.ts
 
 # Refresh smithed-item / potion coverage (revert the data file first!)
 git checkout data/resourceData.ts
 node scripts/buildCraftables.mjs
 node scripts/buildPotions.mjs
-npx tsx scripts/buildSourceEnrichment.ts
+node_modules/.bin/jiti scripts/buildSourceEnrichment.ts
 ```
