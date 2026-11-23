@@ -527,6 +527,29 @@ describe('ownership of a shared-progress id outlives its record', () => {
     expect(sent).toHaveLength(0);
   });
 
+  it('keeps an older link away from a new owner who stops sharing and starts again', async () => {
+    seedOldLink(DISCORD_ID, false);
+    expect((await publish(env, snapshot({ account: 'Someone' }), OTHER_TOKEN)).status).toBe(200);
+    const claimedAt = now;
+    // The new owner stops sharing: the summary goes, and the claim's time stays in the owner record.
+    later();
+    expect((await del(OTHER_TOKEN)).status).toBe(200);
+    expect(kv.records.get(`own:p:${RUN}`)).toMatch(new RegExp(`:${now}:${claimedAt}$`));
+    // With no summary to compare with, the bot's read still finds the older link and indexes it.
+    expect(await (await botRead()).json()).toEqual({ linked: true, snapshot: null });
+    expect(kv.records.get(`ld:${RUN}`)).toBe(DISCORD_ID);
+
+    later();
+    expect((await publish(env, snapshot({ account: 'Someone' }), OTHER_TOKEN)).status).toBe(200);
+    later();
+    expect((await publish(env, withUnlock('Unlocked Something', { account: 'Someone' }), OTHER_TOKEN)).status).toBe(200);
+    expect(sent).toHaveLength(0);
+    const read = await botRead();
+    expect(read.status).toBe(404);
+    expect(await read.json()).toEqual({ linked: false });
+    expect(kv.records.has(`l:${DISCORD_ID}`)).toBe(false);
+  });
+
   it('drops every link of a run whose summary and owner record both expired, when another token claims it', async () => {
     expect((await publish(env, snapshot())).status).toBe(200);
     expect((await linkAs(OTHER_DISCORD_ID)).status).toBe(200);
