@@ -211,3 +211,20 @@ describe('recipes behind a quest (resource-b.d1[0])', () => {
     expect(anyOpen('Emerald Amulet', 'Crafting', state(allAreas, { quests: [] }))).toBe(true);
   });
 });
+
+describe('gem rocks (resource-b.d2[0])', () => {
+  // Wiki 'Gem rocks': mined at Shilo Village after Shilo Village, at the Lunar
+  // Isle mine after Lunar Diplomacy, or on The Onyx Crest with 47 Sailing.
+  const gems = ['Gem Rock', 'Uncut Jade', 'Uncut Opal', 'Uncut Red Topaz'];
+  const noGemQuests = allQuests.filter(q => q !== 'Shilo Village' && q !== 'Lunar Diplomacy');
+  it.each(gems)('%s needs Shilo Village or Lunar Diplomacy', item => {
+    expect(anyOpen(item, 'Mining Rocks', state(areasOf('Karamja', 'Fremennik'), { quests: noGemQuests }))).toBe(false);
+    expect(anyOpen(item, 'Mining Rocks', state(['Shilo Village'], { quests: ['Shilo Village'] }))).toBe(true);
+    expect(anyOpen(item, 'Mining Rocks', state(['Lunar Isle'], { quests: ['Lunar Diplomacy'] }))).toBe(true);
+  });
+  it.each(gems)('%s can be mined on The Onyx Crest with 47 Sailing', item => {
+    // Sailing itself needs Pandemonium.
+    expect(anyOpen(item, 'Mining Rocks', state(['The Onyx Crest'], { quests: ['Pandemonium'] }))).toBe(true);
+    expect(anyOpen(item, 'Mining Rocks', state(['The Onyx Crest'], { quests: ['Pandemonium'], levels: { Sailing: 46 } }))).toBe(false);
+  });
+});

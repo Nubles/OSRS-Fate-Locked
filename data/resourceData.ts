@@ -446,8 +446,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining', regions: ['Kourend & Kebos'], skills: {'Mining': 38, 'Crafting': 38}, notes: 'Arceuus Essence Mine (pickaxe and chisel)' }
   ],
   'Gem Rock': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja'], skills: {'Mining': 40}, quests: ['Shilo Village'], notes: 'Shilo Village' },
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Fremennik'], skills: {'Mining': 40}, quests: ['Lunar Diplomacy'], notes: 'Lunar Isle' }
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Shilo Village'], skills: { 'Mining': 40 }, quests: ['Shilo Village'], notes: 'Shilo Village' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Lunar Isle'], skills: { 'Mining': 40 }, quests: ['Lunar Diplomacy'], notes: 'Lunar Isle mine' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['The Onyx Crest'], skills: { 'Mining': 40, 'Sailing': 47 }, notes: 'The Onyx Crest' }
   ],
   'Gold Ore': [
     { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace', notes: 'Ordan (Best source)' },
@@ -1325,13 +1326,17 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Uncut Opal': 1, 'Chisel': 0 }, notes: 'May crush at low level' }
   ],
   'Uncut Opal': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Gem rocks (Shilo / Lunar Isle)' }
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Shilo Village'], skills: { 'Mining': 40 }, quests: ['Shilo Village'], notes: 'Shilo Village' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Lunar Isle'], skills: { 'Mining': 40 }, quests: ['Lunar Diplomacy'], notes: 'Lunar Isle mine' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['The Onyx Crest'], skills: { 'Mining': 40, 'Sailing': 47 }, notes: 'The Onyx Crest' }
   ],
   'Red Topaz': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 16 }, inputs: { 'Uncut Red Topaz': 1, 'Chisel': 0 } }
   ],
   'Uncut Red Topaz': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Gem rocks (Shilo / Lunar Isle)' }
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Shilo Village'], skills: { 'Mining': 40 }, quests: ['Shilo Village'], notes: 'Shilo Village' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Lunar Isle'], skills: { 'Mining': 40 }, quests: ['Lunar Diplomacy'], notes: 'Lunar Isle mine' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['The Onyx Crest'], skills: { 'Mining': 40, 'Sailing': 47 }, notes: 'The Onyx Crest' }
   ],
 
   // --- COOKED FOOD ---
@@ -2701,7 +2706,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 13 }, inputs: { 'Uncut Jade': 1, 'Chisel': 0 } }
   ],
   'Uncut Jade': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Gem rocks (Shilo / Lunar Isle)' }
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Shilo Village'], skills: { 'Mining': 40 }, quests: ['Shilo Village'], notes: 'Shilo Village' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Lunar Isle'], skills: { 'Mining': 40 }, quests: ['Lunar Diplomacy'], notes: 'Lunar Isle mine' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['The Onyx Crest'], skills: { 'Mining': 40, 'Sailing': 47 }, notes: 'The Onyx Crest' }
   ],
   'Amulet Mould': [
     { type: 'SHOP', name: 'Crafting Shop', regions: ['Asgarnia', 'Kharidian Desert'], notes: 'Falador / Al Kharid' }
