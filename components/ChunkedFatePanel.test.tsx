@@ -156,6 +156,17 @@ describe('Chunked fate panel', () => {
     expect(fought.title).toBe('Needs a combat style (melee, Magic, or Ranged with a Weapon slot).');
   });
 
+  it('says a Fortunate omen stops at the 95% cap like every other Fortunate text (chunked-fate.d1[3])', async () => {
+    dry({ keys: 1, rituals: { fortunateRollsLeft: 3 } });
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    const first = render(<ChunkedFatePanel />);
+    expect(screen.getByText('Fortunate: your next 3 Key rolls are 5% better, up to 95%.')).toBeTruthy();
+    first.unmount();
+    dry({ keys: 1, rituals: { fortunateRollsLeft: 1 } });
+    render(<ChunkedFatePanel osrs />);
+    expect(screen.getByText('Fortunate: your next Key roll is 5% better, up to 95%.')).toBeTruthy();
+  });
+
   it('draws the same rolls in the OSRS layout, one chunk when compact', async () => {
     const fresh = createFreshState();
     dry({

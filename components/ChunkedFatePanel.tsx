@@ -5,6 +5,7 @@ import { Sparkles } from './OsrsIcon';
 import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_FORTUNATE_ODDS } from '../config/economy';
 import { DROP_RATES } from '../constants';
 import { keyChance } from '../utils/keyChance';
+import { BOOST_CAP } from '../utils/ritualEffects';
 import { DropSource } from '../types';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
 import { mercyOpenText, mercyShutReason } from '../utils/chunkedMercyText';
@@ -86,7 +87,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const clouded = rituals?.cloudedRollsLeft ?? 0;
   const rolls = (n: number) => (n === 1 ? 'Key roll is' : `${n} Key rolls are`);
   const omens: { text: string; bane: boolean }[] = [
-    ...(fortunate > 0 ? [{ text: `Fortunate: your next ${rolls(fortunate)} ${FATE_MARK_FORTUNATE_ODDS}% better.`, bane: false }] : []),
+    ...(fortunate > 0 ? [{ text: `Fortunate: your next ${rolls(fortunate)} ${FATE_MARK_FORTUNATE_ODDS}% better, up to ${BOOST_CAP}%.`, bane: false }] : []),
     ...(cursed > 0 ? [{ text: `Cursed: your next ${rolls(cursed)} ${FATE_MARK_CURSED_ODDS}% worse, but each fail among them gives double Fate.`, bane: true }] : []),
     ...(clouded > 0 ? [{ text: `Clouded: your next ${clouded === 1 ? 'Key roll gives' : `${clouded} Key rolls give`} no Fate if ${clouded === 1 ? 'it fails' : 'they fail'}.`, bane: true }] : []),
     ...(fateLand?.tangled ? [{ text: "Tangled: Fate's Thread doesn't pull your next chunk.", bane: true }] : []),
