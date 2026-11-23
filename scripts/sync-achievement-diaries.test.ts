@@ -629,6 +629,7 @@ describe('Achievement Diary id-classification audit', () => {
       'mor_med_4',
       'var_easy_12',
       'var_easy_13',
+      'var_elite_2',
       'var_elite_3',
       'var_elite_4',
       'var_elite_5',

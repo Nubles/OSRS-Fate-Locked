@@ -345,6 +345,15 @@ const SERVICE_NAMES: Readonly<Record<string, string>> = { Sawmill: 'Sawmill Oper
 const merchantsOf = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])].flatMap(requirement => requirement.merchants ?? []);
 
 describe('Diary tasks that use a shop or a service', () => {
+  it('takes mahogany logs from Managing Miscellania for Plank Make, as for the other mahogany plank tasks', () => {
+    // Varrock Diary rev 15404243, Elite 2 names 20 mahogany logs, not a Woodcutting level. Etceteria's hardwood
+    // labour (after Royal Trouble) cuts mahogany (Wiki Managing Miscellania).
+    const miscellania = { label: 'Managing Miscellania', regions: ['Miscellania & Etceteria'], quests: ['Royal Trouble'] };
+    expect(task('var_elite_2')).toMatchObject({ skills: { Magic: 86 }, quests: ['Dream Mentor'], arcana: ['Lunar Spellbook'] });
+    expect(task('var_elite_2').oneOf).toEqual([{ skills: { Woodcutting: 50 } }, miscellania]);
+    expect(task('var_med_10').oneOf).toEqual([{ skills: { Woodcutting: 50 } }, miscellania]);
+  });
+
   it.each([
     ['mor_easy_5', 'Tanners', 'Sbott tans a hide'],
     ['var_easy_4', 'Sawmill Operators', 'the Sawmill makes a plank'],

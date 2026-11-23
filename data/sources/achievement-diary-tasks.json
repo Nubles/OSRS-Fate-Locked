@@ -14772,8 +14772,7 @@
       "ordinal": 2,
       "description": "Use Lunar magic to make 20 mahogany planks at the Lumberyard.",
       "skills": {
-        "Magic": 86,
-        "Woodcutting": 50
+        "Magic": 86
       },
       "quests": [
         "Dream Mentor"
@@ -14786,6 +14785,22 @@
       "sourceRequirements": "Completion of Dream Mentor 86 Magic Lunar spellbook selected 21,000 coins and 20 mahogany logs Means to cast Plank Make twenty times ( )",
       "arcana": [
         "Lunar Spellbook"
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Woodcutting": 50
+          }
+        },
+        {
+          "label": "Managing Miscellania",
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Royal Trouble"
+          ]
+        }
       ]
     },
     {
