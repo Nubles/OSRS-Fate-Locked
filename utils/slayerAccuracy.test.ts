@@ -3,6 +3,8 @@ import content from '../public/chunk-content.json';
 import { ChunkContentService } from '../services/ChunkContentService';
 import { locateSlayerTask } from './slayerTaskLocations';
 import corrections from '../data/sources/slayer-corrections.json';
+import families from '../data/slayerTaskFamilies.json';
+import familyExclusions from '../data/sources/slayer-family-exclusions.json';
 import type { SlayerMasters } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { slayerReachability, type LocateFn } from './slayerReach';
@@ -363,5 +365,141 @@ describe('God Wars Dungeon tasks need 60 Strength or 60 Agility (slayer.d1[0])',
   it('keep tasks with other places open: Nieve’s bloodvelds and Konar’s Slayer Tower bloodvelds', () => {
     expect(status('Nieve', 'Bloodvelds', maxed(50, 50))).toBe('ready');
     expect(status('Konar quo Maten', 'Bloodvelds - Slayer Tower', maxed(50, 50))).toBe('ready');
+  });
+});
+
+/**
+ * Map monsters whose own Wiki page (infobox_monster slayer_category, live query
+ * 23 November 2026) puts them in a task the family left out (slayer.d1[2]).
+ */
+const WIKI_CATEGORY_GAPS = `
+  spiders|Acidic Araxyte
+  araxytes|Acidic Araxyte
+  shades|Asyn shadow (Temple Trekking)
+  rats|Blessed giant rat
+  hellhounds|Bouncer
+  ogres|City guard
+  hill giants|Cyclops (Ardougne Zoo)
+  hill giants|Cyclops (Catacombs of Kourend)
+  dagannoths|Dagannoth Rex
+  dagannoths|Dagannoth Supreme
+  birds|Duckling
+  green dragons|Elvarg
+  ogres|Enclave guard
+  birds|Evil Chicken
+  ghosts|Ghost (Grave of Scorpius)
+  ghosts|Ghost (Melzar's Maze)
+  skeletons|Giant skeleton (Shadow Dungeon)
+  skeletons|Giant skeleton (Tarn's Lair)
+  goblins|Goblin (Goblin Village)
+  goblins|Goblin (God Wars Dungeon)
+  goblins|Goblin guard
+  ogres|Gorad
+  skeletons|Greater Skeleton Hellhound (Calvar'ion)
+  skeletons|Greater Skeleton Hellhound (Vet'ion)
+  goblins|Guard (Cave goblin)
+  ghosts|Haze
+  tzhaar|Jal-Ak
+  tzhaar|Jal-ImKot
+  tzhaar|Jal-MejJak
+  tzhaar|Jal-MejRah
+  tzhaar|Jal-Nib
+  tzhaar|Jal-Xil
+  tzhaar|Jal-Zek
+  tzhaar|JalTok-Jad
+  tzhaar|Ket-Zek
+  lizardmen|Lizardman shaman (Chambers of Xeric)
+  monkeys|Maniacal Monkey Archer
+  spiders|Mirrorback Araxyte
+  araxytes|Mirrorback Araxyte
+  monkeys|Monkey Archer
+  birds|Mounted terrorbird gnome
+  ogres|Ogre chieftain
+  ghosts|Revenant cyclops
+  ghosts|Revenant dark beast
+  ghosts|Revenant demon
+  ghosts|Revenant dragon
+  ghosts|Revenant goblin
+  ghosts|Revenant hellhound
+  ghosts|Revenant hobgoblin
+  ghosts|Revenant imp
+  ghosts|Revenant knight
+  ghosts|Revenant ork
+  ghosts|Revenant pyrefiend
+  shades|Riyl shadow (Temple Trekking)
+  spiders|Ruptura Araxyte
+  araxytes|Ruptura Araxyte
+  chaos druids|Salarin the twisted
+  scorpions|Scorpia's offspring (monster)
+  goblins|Sergeant Grimspike
+  goblins|Sergeant Steelwill
+  shades|Shade (Temple Trekking)
+  skeletons|Skeletal Mystic
+  skeletons|Skeletal miner
+  skeletons|Skeleton (Catacombs of Kourend)
+  skeletons|Skeleton (Forthos Ruin)
+  skeletons|Skeleton (Lucien's camp)
+  skeletons|Skeleton (Wilderness Agility Course)
+  skeletons|Skeleton Hellhound (Calvar'ion)
+  skeletons|Skeleton Hellhound (Vet'ion)
+  skeletons|Skeleton brute
+  skeletons|Skeleton fremennik
+  skeletons|Skeleton heavy
+  skeletons|Skeleton hero
+  skeletons|Skeleton thug
+  skeletons|Skeleton warlord
+  zombies|Skogre
+  zombies|Summoned Zombie
+  tzhaar|Tok-Xil
+  tzhaar|Tz-Kek
+  tzhaar|Tz-Kih
+  skeletons|Undead one
+  goblins|Wormbrain
+  tzhaar|Yt-HurKot
+  tzhaar|Yt-MejKot
+  zombies|Zombie (Entrana Dungeon)
+  zombies|Zombie (Kourend)
+  zombies|Zombie (Melzar's Maze)
+  zombies|Zombie (Sepulchre of Death)
+  zombies|Zombie (Shayzien Crypts)
+  zombies|Zombie (Stronghold of Security)
+  zombies|Zombie (Tarn's Lair)
+  zombies|Zombie (Temple Trekking)
+  zombies|Zombie (Wilderness)
+  pirates|Zombie pirate
+  zombies|Zombie pirate (Harmony Island)
+`.trim().split('\n').map(line => line.trim().split('|') as [string, string]);
+
+describe('task families hold every map monster the Wiki counts for the task (slayer.d1[2])', () => {
+  const service = new ChunkContentService();
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await service.init();
+    vi.unstubAllGlobals();
+  });
+  const list = families.families as Record<string, string[]>;
+  const excluded: Record<string, Record<string, string>> = familyExclusions.excluded;
+
+  it('list each audited monster, or leave it out with a reason (event, boss-fight spawn, raid or quest only)', () => {
+    expect(WIKI_CATEGORY_GAPS).toHaveLength(95);
+    for (const [family, name] of WIKI_CATEGORY_GAPS) {
+      const listed = list[family].includes(name);
+      const reason = excluded[family]?.[name];
+      expect(listed !== Boolean(reason), `${family}: ${name}`).toBe(true);
+    }
+    for (const [family, names] of Object.entries(excluded)) for (const [name, reason] of Object.entries(names)) {
+      expect(list[family], family).toBeDefined();
+      expect(list[family].includes(name), `${family}: ${name}`).toBe(false);
+      expect(reason.trim().length, `${family}: ${name}`).toBeGreaterThan(0);
+    }
+  });
+
+  it('count Krystilia’s zombies at the Graveyard of Shadows, her pirates at the Chaos Temple and ghosts in the Revenant Caves', () => {
+    const at = (master: string, task: string, monster: string) =>
+      locateSlayerTask(task, [service.entityLocations(monster, ['monster'])!], MASTERS[master][task], master);
+    expect(at('Krystilia', 'Zombies', 'Zombie (Wilderness)').length).toBeGreaterThan(0);
+    expect(at('Krystilia', 'Pirates', 'Zombie pirate').length).toBeGreaterThan(0);
+    expect(at('Mazchna', 'Ghosts', 'Revenant imp').map(hit => hit.location.locationName)).toContain('Revenant Caves');
+    expect(at('Nieve', 'Dagannoths', 'Dagannoth Rex').length).toBeGreaterThan(0);
   });
 });

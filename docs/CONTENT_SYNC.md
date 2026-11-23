@@ -166,7 +166,11 @@ overhaul) are removed by `interiorEntityRemovals` in
 through `UnlocksArea` challenges, which the transform does not read; each such
 gate is added to `interior-access.json` after a Wiki check (Jormungand's Prison,
 the Myths' Guild basement and others, November 2026). `data/slayerTaskFamilies.json` records exact
-task-family membership and its source references. See
+task-family membership and its source references. Monsters the Wiki's Slayer
+category counts for a task but that appear only in an event, a raid, a boss
+fight or once in a quest are listed with a reason in
+`data/sources/slayer-family-exclusions.json`, which `utils/slayerAccuracy.test.ts`
+checks. See
 [the repair review](CONTENT_REPAIR_REVIEW.md) for coverage and remaining gaps.
 
 Interior policy schema 2 supports common named rules (including `#Section`
