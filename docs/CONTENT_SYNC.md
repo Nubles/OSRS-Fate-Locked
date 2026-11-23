@@ -13,8 +13,8 @@ and conditions whenever the pinned source or authored guide revision changes.
 
 The app **detects collection-log additions in the browser**, while changes to
 the playable catalogue ship through a reviewed build. A weekly repository
-workflow checks the Wiki and a weekly Claude routine turns what it finds into a
-draft pull request.
+workflow checks the Wiki and opens an issue for the owner when the tracker is
+behind. A content update then turns what it found into a draft pull request.
 
 ## The two layers
 
@@ -43,31 +43,56 @@ updates before they become collectible slots.
 
 ### 2. Weekly check, then a curated draft pull request
 
-Two scheduled jobs keep the bundled data current. Neither touches `main`.
+A scheduled workflow watches the Wiki and tells the owner, and a content update
+does the rest. Neither touches `main`.
 
 1. **`.github/workflows/sync-content.yml`** runs every Thursday at 05:00 UTC,
    the morning after the Wednesday game update (and on demand from the Actions
-   tab). The Wiki's API is only reachable from GitHub's runners, so this is
-   where the exact checks happen: it syncs the collection log, re-renders the
-   Combat Achievements, and writes `docs/SYNC_STATUS.md` with the quest list
-   by name, Combat Achievement counts, and whether the Chunk Picker
-   export has moved past its pin. Then it runs the tests; failures are not a
-   gate, they are the curation to-do list (a new pet fails `data/pets.test.ts`
-   until it is wired in). When anything changed it force-pushes the result to
-   `bot/wiki-content-sync`, with the report as the commit message and the job
-   summary. When nothing changed it deletes that branch.
-2. **A weekly Claude routine** runs a few hours later. It reads that branch's
-   report and the week's game update notes on the Wiki, does the curation the
-   tests and notes call for (the boss, quest or minigame cascade, Diary or CA
-   snapshot updates, the skill lists, the Discord area guide, golden bundles),
-   adds the What's New entry and opens one draft pull request. A maintainer
-   reviews and merges; the merge deploys. Weeks with nothing to change open
-   nothing.
+   tab). This is where the exact checks happen: it syncs the collection log,
+   re-renders the Combat Achievements, and writes `docs/SYNC_STATUS.md` with
+   the quest list by name, Combat Achievement counts, and whether the Chunk
+   Picker export has moved past its pin. Then it runs the tests; failures are
+   not a gate, they are the curation to-do list (a new pet fails
+   `data/pets.test.ts` until it is wired in). When anything changed it
+   force-pushes the result to `bot/wiki-content-sync`, with the report as the
+   commit message and the job summary. When nothing changed it deletes that
+   branch.
+
+   Nobody reads that branch unprompted, so the same run tells the owner
+   (`scripts/sync-alert.mjs`). While `docs/SYNC_STATUS.md` lists something to
+   do under **Action needed**, or the collection log sync finds an item that
+   is new, renamed, possibly renamed or moved, or a page it could not add, one
+   issue labelled `content-sync` and assigned to the repository owner carries
+   the list. A line under Action needed that only says a source was
+   unavailable is not on it. The run opens the issue when there is something
+   the last such issue did not list, adds a comment when something new joins
+   the list, and closes it when nothing is left. Only a change on the Wiki's
+   side counts as new: a count that moves because the tracker caught up does
+   not. Closing the issue by hand keeps it quiet until something new appears.
+   While the issue is open the run writes its text anew every week, so notes
+   belong in a comment. A part of the check that could not be read takes
+   nothing of its own off the list, and a check that did not write its status
+   at all fails the run instead. The failing tests are not on the issue: they
+   are in the run's summary, and in the commit message on the branch. Only the
+   weekly run and a manual run on `main` touch the issue; a manual run on a
+   curation branch does not. When the alert job fails, start the workflow
+   again on `main` from the Actions tab: that checks afresh. The failed run's
+   own report is kept for one day only, so that an old answer is not reported
+   later as this week's.
+2. **A content update**, started by a maintainer when the issue arrives. It
+   reads that branch's report and the week's game update notes on the Wiki,
+   does the curation the tests and notes call for (the boss, quest or minigame
+   cascade, Diary or CA snapshot updates, the skill lists, the Discord area
+   guide, golden bundles), adds the What's New entry and opens one draft pull
+   request. A maintainer reviews and merges; the merge deploys. Nothing starts
+   a content update on its own.
 
 The install, sync, check and tests run in a read-only job that keeps no git
 credentials, from the lockfile (`npm ci`). Only the generated files, the CA
 evidence and the report pass to a second job, which runs no npm code and alone
-may write, and only to `bot/wiki-content-sync`.
+may write code, and only to `bot/wiki-content-sync`. Only the status file and
+the report pass to a third job, which keeps the issue: it runs one script that
+uses Node's own modules only, and may write issues and nothing else.
 
 Run it locally any time:
 
@@ -259,8 +284,9 @@ wiki's own authoritative numbers next to the app's in **`docs/SYNC_STATUS.md`**:
 
 Because the report is **deterministic** (no timestamps), git only shows a diff
 when an upstream number actually moves — so the weekly workflow turns "a new
-quest/CA shipped" into a change on `bot/wiki-content-sync`, which the weekly
-routine curates into the real entry in `data/questData.ts` /
+quest/CA shipped" into a change on `bot/wiki-content-sync` and an issue for
+the owner, which a content update curates into the real entry in
+`data/questData.ts` /
 `data/sources/combat-achievement-tasks.json`. When a CA tier drifts, the live
 Wiki rows are saved to `docs/sync-evidence/combat-achievements-live.json` so the
 new tasks can be copied exactly; delete that file once the snapshot is updated.

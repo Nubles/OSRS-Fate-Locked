@@ -1,7 +1,6 @@
 # Checks the tracker's game data against the OSRS Wiki every week.
 #
-# The Wiki can only be read from here (Claude's cloud sessions can't reach its
-# API), so this workflow does the exact, machine-checkable part:
+# This workflow does the exact, machine-checkable part:
 #   1. syncs the collection log and re-renders Combat Achievements,
 #   2. writes docs/SYNC_STATUS.md (quest list by name, CA counts, Chunk Picker
 #      movement),
@@ -10,18 +9,25 @@
 #
 # When anything changed it pushes the result to the bot/wiki-content-sync
 # branch, with the report as the commit message and the job summary. It never
-# opens a pull request and never touches main. A weekly Claude routine reads
-# that branch a few hours later, reads the week's game update notes, does the
-# curation, adds the What's New entry and opens one draft pull request for a
-# maintainer to merge. When nothing changed the branch is deleted, so its
-# existence alone means "something to review".
+# opens a pull request and never touches main. When nothing changed the branch
+# is deleted, so its existence alone means "something to review".
 #
-# Two jobs, so the step that runs third-party code never holds a write token:
-# `sync` installs the lockfile's dependencies, runs the wiki sync, the check
-# and the tests with read-only permissions and no stored git credentials, and
-# hands only the generated files plus the report to `push-branch` as an
-# artifact. `push-branch` runs no npm code; it alone may write, and only to
-# bot/wiki-content-sync.
+# Nobody reads that branch unprompted, so the workflow also tells the owner.
+# While the check lists something to act on, one issue assigned to the
+# repository owner carries the list: it gets a comment when something new
+# joins the list and is closed when nothing is left. A content update, started
+# by a maintainer, then reads the branch and the week's game update notes,
+# does the curation, adds the What's New entry and opens one draft pull
+# request.
+#
+# Three jobs, so the step that runs third-party code never holds a write
+# token: `sync` installs the lockfile's dependencies, runs the wiki sync, the
+# check and the tests with read-only permissions and no stored git
+# credentials, and hands its results on as artifacts. `push-branch` gets the
+# generated files plus the report; it runs no npm code and alone may write
+# code, and only to bot/wiki-content-sync. `alert` gets the status file and
+# the report; it runs one script of this repository that uses Node's own
+# modules only, and may write issues and nothing else.
 name: Sync content from the OSRS Wiki
 
 on:
@@ -34,7 +40,10 @@ permissions:
 
 concurrency:
   group: wiki-content-sync
-  cancel-in-progress: true
+  # The weekly run and a manual run on main replace a run in progress. A
+  # manual run on a curation branch waits for its turn instead, so it does not
+  # cancel a weekly run that is on its way to telling the owner what it found.
+  cancel-in-progress: ${{ github.event_name == 'schedule' || github.ref == 'refs/heads/main' }}
 
 jobs:
   sync:
@@ -43,6 +52,7 @@ jobs:
       contents: read
     outputs:
       changed: ${{ steps.report.outputs.changed }}
+      sync_outcome: ${{ steps.sync.outcome }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -142,6 +152,21 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      # The alert job reads these two every week, also when no data file
+      # changed: the check can list something to do without changing a file.
+      # Kept for one day only. To try a failed alert again, start a new run:
+      # that checks afresh, where an old report would describe the tracker as
+      # it was and could undo what a later run has told the owner.
+      - name: Hand the status and the report to the alert job
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: wiki-content-sync-report
+          path: |
+            docs/SYNC_STATUS.md
+            sync-report.md
+          if-no-files-found: error
+          retention-days: 1
+
   push-branch:
     needs: sync
     runs-on: ubuntu-latest
@@ -173,3 +198,42 @@ jobs:
       - name: Clear the branch when nothing changed
         if: needs.sync.outputs.changed != 'true'
         run: git push origin --delete bot/wiki-content-sync 2>/dev/null || true
+
+  # Tells the owner what the check found (scripts/sync-alert.mjs).
+  alert:
+    needs: [sync, push-branch]
+    # The weekly run and a manual run on main speak for the tracker; a manual
+    # run on a curation branch compares that branch, so it stays silent. The
+    # alert waits for the bot branch, but a failed push does not silence it.
+    if: ${{ !cancelled() && needs.sync.result == 'success' && (github.event_name == 'schedule' || github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      # Into a scratch folder: the script below runs from the checkout, and
+      # nothing the sync job produced is unpacked over it.
+      - name: Take the status and the report from the sync job
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: wiki-content-sync-report
+          path: ${{ runner.temp }}/wiki-content-sync-report
+
+      - name: Open, update or close the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_REPORT_DIR: ${{ runner.temp }}/wiki-content-sync-report
+          ALERT_SYNC_OUTCOME: ${{ needs.sync.outputs.sync_outcome }}
+          ALERT_BRANCH_PUSHED: ${{ needs.sync.outputs.changed == 'true' && needs.push-branch.result == 'success' }}
+        run: node scripts/sync-alert.mjs
