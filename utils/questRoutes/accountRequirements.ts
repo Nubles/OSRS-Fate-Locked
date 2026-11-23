@@ -101,8 +101,11 @@ const parseSkill = (raw: string): RouteGate | null => {
   // (the Mining Guild's door and the Slayer lairs, data/sources/named-task-unlock-locations.json).
   const named = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
   const short = named ? null : raw.match(/^(\d+)\s+(.+)$/);
-  const skill = skills.get(normalise((named?.[1] ?? short?.[2]) ?? ''));
+  const word = normalise((named?.[1] ?? short?.[2]) ?? '');
   const level = Number(named?.[2] ?? short?.[1]);
+  // "32 Quest Points" (the Champions' Guild): evaluateRouteGates counts it from finished quests.
+  if (word === 'quest points' && level > 0) return { type: 'SKILL', skill: 'Quest Points', level, label: `${level} Quest Points` };
+  const skill = skills.get(word);
   return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
 };
 
