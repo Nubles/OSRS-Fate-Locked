@@ -1517,7 +1517,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: { 'Smithing': 90 }, inputs: { 'Rune Bar': 1 }, outputYield: 15 }
   ],
   'Broad Arrows': [
-    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 52 }, inputs: { 'Headless Arrow': 1, 'Broad Arrowheads': 1 }, notes: 'Requires Slayer unlock' },
+    { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: { 'Fletching': 52, 'Slayer': 1 }, unlockId: 'Broader Fletching', unlockTable: TableType.SLAYER_UNLOCKS, inputs: { 'Headless Arrow': 1, 'Broad Arrowheads': 1 }, notes: 'Broader Fletching (300 Slayer points)' },
     { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Buy with Slayer Points/coins' }
   ],
   'Amethyst Arrow': [

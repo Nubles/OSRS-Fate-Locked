@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createFreshState } from '../context/GameContext';
 import { QUEST_DATA } from './questData';
-import { REGION_GROUPS, SKILLS_LIST } from './items';
+import { MERCHANTS_LIST, REGION_GROUPS, SKILLS_LIST } from './items';
 import { RESOURCE_MAP, type ResourceSource } from './resourceData';
 import { calculateSupplyChain } from '../utils/supplyChain';
 
@@ -240,5 +240,31 @@ describe('gorak claws (resource-b.d3[1])', () => {
   it('the God Wars Dungeon goraks count', () => {
     expect(anyOpen('Gorak Claw', 'Gorak', state(areasOf('Asgarnia'), { quests: [ft2] }))).toBe(true);
     expect(anyOpen('Gorak Claw', 'Gorak', state(['Wilderness God Wars Dungeon'], { quests: [ft2] }))).toBe(true);
+  });
+});
+
+describe('broad arrows (resource-b.d2[3])', () => {
+  // Wiki 'Broad arrows': fletching them needs Broader Fletching, bought with
+  // 300 Slayer reward points. Buying them from a Slayer master needs nothing.
+  const withUnlock = (s: ReturnType<typeof state>, unlocked: boolean) => {
+    s.unlocks.slayerUnlocks = unlocked ? ['Broader Fletching'] : [];
+    s.unlocks.merchants = [...MERCHANTS_LIST];
+    return s;
+  };
+  const fletch = (s: ReturnType<typeof state>) =>
+    calculateSupplyChain('Broad Arrows', s)!.sources.filter(r => r.source.name === 'Fletching').map(r => r.status);
+  it('fletching broad arrows needs the Broader Fletching unlock', () => {
+    const [locked] = fletch(withUnlock(state(allAreas), false));
+    expect(locked.isAvailable).toBe(false);
+    expect(locked.missing).toContain('Unlock: Broader Fletching');
+    expect(fletch(withUnlock(state(allAreas), true))[0]).toMatchObject({ isAvailable: true, missing: [] });
+    const chunked = withUnlock(state([]), false);
+    chunked.gameModeId = 'chunked';
+    expect(fletch(chunked)[0].missing).toContain('Unlock: Broader Fletching');
+  });
+  it('fletching broad arrows needs Slayer to earn the points', () => {
+    const s = withUnlock(state(allAreas), true);
+    s.unlocks.skills = { ...s.unlocks.skills, Slayer: 0 };
+    expect(fletch(s)[0].missing).toContain('Skill Locked: Slayer');
   });
 });

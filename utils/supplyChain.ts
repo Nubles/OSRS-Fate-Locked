@@ -101,6 +101,7 @@ export interface AvailabilityContext {
   arcana: Set<string>;
   storage: Set<string>;
   housing: Set<string>;
+  slayerUnlocks: Set<string>;
   levels: Record<string, number>;
   skillsUnlocked: Set<string>;
   /** Explicit player inventory. Owning inputs permits crafting without a new supply route. */
@@ -138,6 +139,7 @@ export const buildAvailabilityContext = (gs: GameState, owned: Readonly<Record<s
     arcana: new Set(u.arcana),
     storage: new Set(u.storage),
     housing: new Set(u.housing),
+    slayerUnlocks: new Set(u.slayerUnlocks ?? []),
     levels: u.levels || {},
     skillsUnlocked,
     owned,
@@ -160,6 +162,7 @@ const hasTypedUnlock = (
     case TableType.ARCANA: return ctx.arcana.has(id);
     case TableType.STORAGE: return ctx.storage.has(id);
     case TableType.POH: return ctx.housing.has(id);
+    case TableType.SLAYER_UNLOCKS: return ctx.slayerUnlocks.has(id);
     default: return false;
   }
 };
@@ -246,7 +249,9 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
       if (dependency) unlockDependencies.push(dependency);
       if (!fail(`Unlock: ${u}`)) return result(false);
     }
-    if (ok) {
+    // A Slayer reward is bought with points; it has no access requirements
+    // of its own to confirm (the source's Slayer skill gate covers earning them).
+    if (ok && dependency?.table !== TableType.SLAYER_UNLOCKS) {
       const readiness = evaluateActivityReadiness(true, getActivityReq(u), ctx.gameState.unlocks, ctx.gameState.gameModeId);
       const checks = readiness.status === 'NOT_READY' ? readiness.blockers.map(b => b.label)
         : readiness.status === 'NEEDS_CONFIRMATION' ? readiness.checks : [];
