@@ -123,6 +123,8 @@ describe('classifyShop', () => {
       ['Temple Supplies', 'Reward Shops'],
       ["Sian's Ranged Weaponry", 'Archery Shops'],
       ['Ore seller', 'Ore Merchants'],
+      // Elven clothing and a crystal crown; Clothes shop icon (audit minigames-misc d3 1).
+      ["Lliann's Wares", 'Clothes Shops'],
     ];
     for (const [name, want] of cases) {
       expect(classifyShop(name), name).toBe(want);

@@ -144,6 +144,8 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "simon's wilderness cape shop": 'Clothes Shops',
   "trader sven's black-market goods": 'Clothes Shops',
   "where wyrmscraig's wear wares were": 'Clothes Shops',
+  // Elven clothing and a crystal crown in Prifddinas; Clothes shop icon (wiki rev 15294630).
+  "lliann's wares": 'Clothes Shops',
   "william's wilderness cape shop": 'Clothes Shops',
   "yrsa's accoutrements": 'Clothes Shops',
 
