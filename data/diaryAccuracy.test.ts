@@ -640,6 +640,28 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
 });
 
 describe('Diary tasks with Raiments of the Eye routes', () => {
+  it.each([
+    // Lumbridge & Draynor Diary rev 15399339: "57 Runecraft with 3 Raiments of the Eye pieces, (2 pieces with Abyssal
+    // lantern lit with magic logs)". Varrock Diary rev 15404243: "52 Runecraft with 2+ Raiments of the Eye (1 piece
+    // with Abyssal lantern lit with magic logs)".
+    ['lum_elite_5', 57, 2, 12, { regions: ['Lumbridge'], quests: ['Rune Mysteries'] }],
+    ['var_elite_5', 52, 1, 16, { regions: ['Varrock'], quests: ['Rune Mysteries'] }],
+  ] as const)('%s takes %i Runecraft with %i Raiments piece(s) and a lit abyssal lantern', (id, level, pieces, count, place) => {
+    const lantern = (task(id).oneOf ?? []).filter(route => route.label?.includes('abyssal lantern'));
+    expect(lantern).toHaveLength(count);
+    for (const route of lantern) {
+      expect(route.skills?.Runecraft).toBe(level);
+      expect(route.items).toContain('Abyssal lantern lit with magic logs');
+      const slots = route.equipmentRequirements?.map(requirement => requirement.slot) ?? [];
+      expect(slots.filter(slot => slot !== 'Shield')).toHaveLength(pieces);
+      expect(slots).toContain('Shield');
+    }
+    const head = pieces === 2 ? { Head: 1, Body: 1 } : { Head: 1 };
+    const crafter = account({ skills: { Runecraft: 10 }, levels: { Runecraft: level }, ...place, equipment: head });
+    expect(evaluateDiaryTaskEligibility(task(id), crafter).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task(id), { ...crafter, equipment: { ...head, Shield: 1 } }).machineEligible).toBe(true);
+  });
+
   it('crafts 252 air runes at 77 Runecraft with one Raiments piece and a lit abyssal lantern', () => {
     // Falador Diary rev 15404232: "77 Runecraft with 2 Raiments of the Eye pieces or 1 Raiments of the Eye
     // piece and abyssal lantern (with willow, magic, or redwood logs)". The lantern is worn in the shield slot.
