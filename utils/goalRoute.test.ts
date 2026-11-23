@@ -7,6 +7,10 @@ import { REGION_GROUPS } from '../constants';
 import { displayAreaName } from '../data/areaMapPolicy';
 import type { ContentRequirement } from '../data/requirements';
 import { calculateGoalProgress } from './goalLogic';
+import { STRATEGY_DATABASE } from '../data/requirements';
+import { analyzeRequirement } from './strategyRequirement';
+import { createFreshState } from '../context/GameContext';
+import { REGIONS_LIST, SKILLS_LIST, MINIGAMES_LIST, GUILDS_LIST, BOSSES_LIST, MERCHANTS_LIST, STORAGE_LIST } from '../data/items';
 
 /** Minimal game state with the bits the route builder reads. */
 const stateWith = (over: Partial<any> = {}): GameState => ({
@@ -379,5 +383,45 @@ describe('suggestTables', () => {
 
   it('returns nothing when nothing is needed', () => {
     expect(suggestTables([], stateWith().unlocks)).toEqual([]);
+  });
+});
+
+describe('buildGoalRoute — a pinned Strategy Guide entry agrees with its guide card', () => {
+  // Every area, quest and Key held at 99, except the levels that the access routes ask for.
+  const unlocks = {
+    ...createFreshState().unlocks,
+    regions: [...REGIONS_LIST], quests: Object.keys(QUEST_DATA),
+    skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+    levels: { ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])), Strength: 1, Agility: 1, Woodcutting: 1, Crafting: 40 },
+    minigames: [...MINIGAMES_LIST], guilds: [...GUILDS_LIST], bosses: [...BOSSES_LIST], merchants: [...MERCHANTS_LIST],
+    storage: [...STORAGE_LIST],
+  };
+  const state = { unlocks, gameModeId: 'vanilla' } as unknown as GameState;
+  const entries = Object.entries(STRATEGY_DATABASE).filter(([key, req]) => !QUEST_DATA[key]
+    && (req.accessRoutes?.length || req.manualRequirements?.length || analyzeRequirement(req, unlocks, 'vanilla').parts.confirmChecks.length));
+  it('covers the entries with access routes or checks to confirm', () => {
+    expect(entries.map(([key]) => key)).toEqual(expect.arrayContaining([
+      'Wilderness God Wars Dungeon', 'Spiritual Rangers', 'Crafting Guild Bank', 'Lletya Bank', 'Burgh de Rott Bank', 'Smoke Devils',
+    ]));
+  });
+  it.each(entries)('%s shows its access route and checks, and is not complete while they are open', (key, req) => {
+    const { parts } = analyzeRequirement(req, unlocks, 'vanilla');
+    const route = buildGoalRoute(key, state)!;
+    if (parts.missingAccessRoute) {
+      expect(route.alternatives).toContainEqual(expect.objectContaining({ name: parts.missingAccessRoute, met: false }));
+    }
+    for (const check of [...parts.manualChecks, ...parts.confirmChecks]) {
+      expect(route.manualChecks ?? []).toContainEqual(expect.objectContaining({ name: check, met: false }));
+    }
+    if (parts.missingAccessRoute || parts.manualChecks.length || parts.confirmChecks.length) {
+      expect(route.percentage).toBeLessThan(100);
+      expect(route.completedSteps).toBeLessThan(route.totalSteps);
+    }
+  });
+  it('marks a met access route as met', () => {
+    const strong = { ...state, unlocks: { ...unlocks, levels: { ...unlocks.levels, Strength: 60 } } } as unknown as GameState;
+    const route = buildGoalRoute('Wilderness God Wars Dungeon', strong)!;
+    expect(route.alternatives).toContainEqual(expect.objectContaining({ name: 'One of: 60 Strength or 60 Agility', met: true }));
+    expect(route.percentage).toBe(100);
   });
 });

@@ -36,7 +36,7 @@ export const calculateGoalProgress = (req: ContentRequirement, unlocks: UnlockSt
       ? `${skill.skill} (Lvl ${skill.currentLevel}/${skill.reqLevel})` : `${skill.skill} (Locked)`),
     ...analysis.missingQuests.map(quest => `Quest: ${quest}`),
     ...parts.missingDiaries.map(diary => `Diary: ${diary}`),
-    ...(analysis.isCategoryUnlocked ? [] : [`Unlock: ${req.id}`]),
+    ...analysis.missingUnlocks.map(unlock => `Unlock: ${unlock}`),
     ...(parts.missingAccessRoute ? [parts.missingAccessRoute] : []),
     ...parts.otherBlockers,
     // The tracker can never tick these, so the card can never claim Ready while they stand.

@@ -7,7 +7,7 @@ import { QUEST_DATA } from './questData';
 import { TableType } from '../types';
 import { analyzeRequirement } from '../components/StrategyGuide';
 import { createFreshState } from '../context/GameContext';
-import { REGIONS_LIST, SKILLS_LIST } from './items';
+import { REGIONS_LIST, SKILLS_LIST, REGION_GROUPS, MINIGAMES_LIST, GUILDS_LIST, BOSSES_LIST, MERCHANTS_LIST } from './items';
 import { BANK_ACCESS_GATES } from './bankAccess';
 
 const S = STRATEGY_DATABASE;
@@ -36,7 +36,9 @@ describe('Calcified Rocks (Wiki: Cam Torum mine, Calcified rocks)', () => {
 
 describe('Dark Beasts (Wiki: Dark beast, Mourner Tunnels)', () => {
   it('live in the Mourner Tunnels and the Iorwerth Dungeon, behind Mourning\'s End Part II', () => {
-    expect(S['Dark Beasts'].regions).toEqual(['Kandarin', 'Tirannwn']);
+    // Either place will do, and regions are all required, so only the Mourner Tunnels side is listed.
+    expect(S['Dark Beasts'].regions).toEqual(['Kandarin']);
+    expect(S['Dark Beasts'].description).toMatch(/Iorwerth Dungeon/);
     expect(S['Dark Beasts'].quests).toEqual(["Mourning's End Part II"]);
     expect(S['Dark Beasts'].skills).toEqual({ Slayer: 90 });
     expect(analyzeRequirement(S['Dark Beasts'], maxed(), 'vanilla').isFullyPlayable).toBe(false);
@@ -164,5 +166,101 @@ describe('Saves that pinned a removed or renamed entry', () => {
     }
     expect(goalNeedsResourceEngine('The Fremennik Exiles')).toBe(false);
     expect(goalNeedsResourceEngine('Dark Beasts')).toBe(false);
+  });
+});
+
+// Every Key and area held except the areas of the named continents; every quest and the named diaries done.
+const everythingBut = (continents: string[], { quests = Object.keys(QUEST_DATA), diaries = [] as string[], levels = {} as Record<string, number> } = {}) => {
+  const u = maxed(quests);
+  const skip = new Set(continents.flatMap(c => [c, ...(REGION_GROUPS[c] ?? [])]));
+  u.regions = REGIONS_LIST.filter(r => !skip.has(r));
+  u.minigames = [...MINIGAMES_LIST];
+  u.guilds = [...GUILDS_LIST];
+  u.bosses = [...BOSSES_LIST];
+  u.merchants = [...MERCHANTS_LIST];
+  u.diaries = diaries;
+  u.levels = { ...u.levels, ...levels };
+  return u;
+};
+
+describe('Entries that asked for a second continent their content never uses', () => {
+  // Holy wrench: Rum Deal, re-obtained from Davey on Braindeath Island. Crystal tool seed: a drop from Zalcano.
+  // Smouldering stone: Cerberus (Taverley Dungeon) and hellhounds. Mining enhancers: the Varrock armour's
+  // extra ore works on any standard rock; the Varrock diary is in Misthalin.
+  const CASES: Array<[string, string[], string, { diaries?: string[] }]> = [
+    ['Holy Wrench', ['Morytania'], 'Kharidian Desert', {}],
+    ['Crystal Tool Seed', ['Tirannwn'], 'Kourend & Kebos', {}],
+    ['Infernal Tools', ['Asgarnia'], 'Kourend & Kebos', {}],
+    ['Varrock Armor (Mining)', ['Misthalin'], 'Asgarnia', { diaries: ['Varrock Easy'] }],
+  ];
+  it.each(CASES)('%s needs only %j, not %s', (key, regions, dropped, opts) => {
+    expect(S[key].regions).toEqual(regions);
+    const result = analyzeRequirement(S[key], everythingBut([dropped], opts), 'vanilla');
+    expect(result.missingRegions).toEqual([]);
+    expect(result.isFullyPlayable).toBe(true);
+  });
+
+  it('Dark Beasts open with the Mourner Tunnels and no Tirannwn area', () => {
+    const result = analyzeRequirement(S['Dark Beasts'], everythingBut(['Tirannwn']), 'vanilla');
+    expect(result.missingRegions).toEqual([]);
+    expect(result.isFullyPlayable).toBe(true);
+  });
+});
+
+describe('Ogre Enclave (Wiki: Ogre Enclave)', () => {
+  it('names no ogre shamans, which are there only during Watchtower', () => {
+    expect(S['Ogre Enclave'].quests).toEqual(['Watchtower']);
+    expect(S['Ogre Enclave'].description).not.toMatch(/shaman/i);
+    expect(S['Ogre Enclave'].description).toMatch(/blue dragons/i);
+  });
+});
+
+describe('Hunter Rumours (Wiki: Varlamore, Hunter Guild)', () => {
+  it('needs Children of the Sun, as every part of Varlamore does', () => {
+    const allButCots = Object.keys(QUEST_DATA).filter(q => q !== 'Children of the Sun');
+    expect(analyzeRequirement(S['Hunter Rumours'], everythingBut([], { quests: allButCots }), 'vanilla').isFullyPlayable).toBe(false);
+    expect(analyzeRequirement(S['Hunter Rumours'], everythingBut([]), 'vanilla').isFullyPlayable).toBe(true);
+  });
+});
+
+describe('Ecumenical Keys (Wiki: Wilderness God Wars Dungeon, Ecumenical key)', () => {
+  it('take the same 60 Strength or 60 Agility as the dungeon they drop in', () => {
+    expect(S['Ecumenical Keys'].accessRoutes).toEqual(S['Wilderness God Wars Dungeon'].accessRoutes);
+    const low = analyzeRequirement(S['Ecumenical Keys'], everythingBut([], { levels: { Strength: 1, Agility: 1 } }), 'vanilla');
+    expect(low.missingChecks).toContain('One of: 60 Strength or 60 Agility');
+    expect(low.isFullyPlayable).toBe(false);
+    expect(analyzeRequirement(S['Ecumenical Keys'], everythingBut([], { levels: { Strength: 1, Agility: 60 } }), 'vanilla').isFullyPlayable).toBe(true);
+  });
+});
+
+describe('God Books (Completed) (Wiki: God book)', () => {
+  it('need no Prayer level to wield; 50 Prayer is for blessing symbols', () => {
+    expect(S['God Books (Completed)'].skills).toEqual({});
+    expect(S['God Books (Completed)'].quests).toEqual(['Horror from the Deep']);
+    expect(S['God Books (Completed)'].description).toMatch(/50 Prayer/);
+    const low = analyzeRequirement(S['God Books (Completed)'], everythingBut([], { levels: { Prayer: 1 } }), 'vanilla');
+    expect(low.missingSkills).toEqual([]);
+  });
+});
+
+describe('Every Varlamore entry needs Children of the Sun (Wiki: Varlamore)', () => {
+  // "Varlamore can only be accessed upon completion of Children of the Sun." An entry may ask for it
+  // directly, through a quest that needs it, or through its activity (Hunter Rumours borrows the Hunter Guild's).
+  const needsCots = new Set(['Children of the Sun']);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const quest of Object.values(QUEST_DATA)) {
+      if (!needsCots.has(quest.id) && (quest.prereqs ?? []).some(p => needsCots.has(p))) { needsCots.add(quest.id); grew = true; }
+    }
+  }
+  const varlamore = new Set(['Varlamore', ...REGION_GROUPS['Varlamore']]);
+  const entries = Object.entries(S).filter(([, req]) => req.category !== TableType.QUESTS && req.regions.some(r => varlamore.has(r)));
+  it('covers the Varlamore entries', () => {
+    expect(entries.map(([key]) => key)).toEqual(expect.arrayContaining(['Hunter Rumours', 'Wealthy Citizens']));
+  });
+  it.each(entries)('%s is not ready without it', (_key, req) => {
+    const quests = Object.keys(QUEST_DATA).filter(q => !needsCots.has(q));
+    expect(analyzeRequirement(req, everythingBut([], { quests }), 'vanilla').isFullyPlayable).toBe(false);
+    expect(analyzeRequirement(req, everythingBut([]), 'vanilla').isFullyPlayable).toBe(true);
   });
 });
