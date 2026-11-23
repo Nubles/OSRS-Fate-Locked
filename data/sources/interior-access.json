@@ -423,16 +423,24 @@
         "11578"
       ],
       "requirements": [
-        "God Wars Dungeon: entry route, rope and 60 Strength or Agility need confirmation"
+        "60 Strength or 60 Agility"
       ],
-      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15348774",
-      "note": "Source 11346 contains Armadyl-area content. This establishes geography only; the dungeon and encampment gates are not inferred from chunk ownership.",
+      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15384639",
+      "note": "Source 11346 contains Armadyl-area content. The boulder (60 Strength) or the crack (60 Agility) on the way to the hole gates the whole dungeon; the one-time rope is carried equipment and is not inferred. The encampment gates are not inferred from chunk ownership.",
       "coordinates": [
         {
           "x": 2918,
           "y": 3745
         }
       ]
+    },
+    "God Wars Dungeon": {
+      "requirements": [
+        "60 Strength or 60 Agility"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15384639",
+      "evidence": ["https://oldschool.runescape.wiki/w/Boulder_(God_Wars_Dungeon)", "https://oldschool.runescape.wiki/w/Little_crack"],
+      "note": "The Trollheim God Wars Dungeon is entered past a boulder that needs 60 Strength or a crack that needs 60 Agility (slayer.d1[0])."
     },
     "Entrana Dungeon": {
       "anchors": [
@@ -512,6 +520,13 @@
     }
   },
   "records": {
+    "12190": {
+      "requirements": [
+        "60 Strength or 60 Agility"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Wilderness_God_Wars_Dungeon?oldid=15303152",
+      "note": "The main Wilderness God Wars Dungeon lies past the boulder (60 Strength) or the jutting wall (60 Agility) and the crevice behind them; the antechamber holding the obstacles stays open (slayer.d1[0])."
+    },
     "12690": {
       "name": "Kalphite Lair (potato cactus chamber)",
       "anchors": ["12848"],

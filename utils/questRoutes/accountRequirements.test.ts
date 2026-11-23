@@ -90,6 +90,21 @@ describe('account requirements', () => {
     ]);
   });
 
+  it('reads "60 Strength or 60 Agility" as one gate that either level meets (the God Wars Dungeons, slayer.d1[0])', () => {
+    const gates = compileRawRequirements([chunkEntry('60 Strength or 60 Agility')]);
+    expect(gates).toEqual([{
+      type: 'SKILL', skill: 'Strength', level: 60, label: 'Strength level 60 or Agility level 60',
+      anyOf: [{ skill: 'Agility', level: 60 }],
+    }]);
+    const at = (levels: Record<string, number>) => evaluateRouteGates(gates, unlocks({ skills: { Strength: 10, Agility: 10 }, levels }));
+    expect(at({ Strength: 50, Agility: 50 })).toEqual({ blockers: gates, hasDataGap: false });
+    expect(at({ Strength: 60, Agility: 1 })).toEqual({ blockers: [], hasDataGap: false });
+    expect(at({ Strength: 1, Agility: 60 })).toEqual({ blockers: [], hasDataGap: false });
+    // Anything but skill levels on either side stays evidence for a person to check.
+    expect(compileRawRequirements([entity('60 Strength or a rope')]))
+      .toEqual([{ type: 'UNRESOLVED', label: '60 Strength or a rope', raw: '60 Strength or a rope' }]);
+  });
+
   it('reads "60 Mining", the reviewed entrance wording, as a skill gate (the Mining Guild door)', () => {
     expect(compileRawRequirements([chunkEntry('60 Mining'), chunkEntry('91 Slayer')])).toEqual([
       { type: 'SKILL', skill: 'Mining', level: 60, label: 'Mining level 60' },

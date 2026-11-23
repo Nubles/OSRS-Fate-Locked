@@ -323,3 +323,45 @@ describe('Slayer rows from the November 2026 audit', () => {
     }
   });
 });
+
+describe('God Wars Dungeon tasks need 60 Strength or 60 Agility (slayer.d1[0])', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+  const maxed = (strength: number, agility: number) => {
+    const unlocks = account({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: { ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])), Strength: strength, Agility: agility },
+      regions: [...REGIONS_LIST, ...MISTHALIN_AREAS],
+      mobility: [...MOBILITY_LIST],
+      bosses: [...BOSSES_LIST],
+      slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA),
+    });
+    return unlocks;
+  };
+  const status = (master: string, task: string, unlocks: UnlockState, mode = 'vanilla') =>
+    slayerReachability({ [master]: { [task]: MASTERS[master][task] } }, unlocks, slayerLocate(chunkContentService, unlocks, mode), mode)
+      .masters[0].rows[0].status;
+  const tasks: [string, string][] = [
+    ['Krystilia', 'Aviansies'], ['Krystilia', 'Bloodvelds'], ['Krystilia', 'Spiritual creatures'],
+    ['Nieve', 'Spiritual creatures'], ['Nieve', 'Aviansies'], ['Vannaka', 'Spiritual creatures'],
+    ['Konar quo Maten', 'Aviansies - God Wars Dungeon'], ['Konar quo Maten', 'Bloodvelds - God Wars Dungeon'],
+  ];
+
+  it('are not ready below both levels, and ready with either', () => {
+    for (const [master, task] of tasks) {
+      expect(status(master, task, maxed(50, 50)), `${master} ${task} at 50/50`).not.toBe('ready');
+      expect(status(master, task, maxed(60, 1)), `${master} ${task} with 60 Strength`).toBe('ready');
+      expect(status(master, task, maxed(1, 60)), `${master} ${task} with 60 Agility`).toBe('ready');
+    }
+  });
+
+  it('keep tasks with other places open: Nieve’s bloodvelds and Konar’s Slayer Tower bloodvelds', () => {
+    expect(status('Nieve', 'Bloodvelds', maxed(50, 50))).toBe('ready');
+    expect(status('Konar quo Maten', 'Bloodvelds - Slayer Tower', maxed(50, 50))).toBe('ready');
+  });
+});
