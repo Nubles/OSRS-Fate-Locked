@@ -69,14 +69,16 @@ does the rest. Neither touches `main`.
    the list, and closes it when nothing is left. Only a change on the Wiki's
    side counts as new: a count that moves because the tracker caught up does
    not. Closing the issue by hand keeps it quiet until something new appears.
-   The run writes the issue's text anew every week, so notes belong in a
-   comment. A part of the check that could not be read takes nothing of its
-   own off the list, and a check that did not write its status at all fails
-   the run instead. The failing tests are not on the issue: they are in the
-   run's summary, and in the commit message on the branch. Only the weekly run
-   and a manual run on `main` touch the issue; a manual run on a curation
-   branch does not. An alert job that failed can be run again from the run's
-   page for a week.
+   While the issue is open the run writes its text anew every week, so notes
+   belong in a comment. A part of the check that could not be read takes
+   nothing of its own off the list, and a check that did not write its status
+   at all fails the run instead. The failing tests are not on the issue: they
+   are in the run's summary, and in the commit message on the branch. Only the
+   weekly run and a manual run on `main` touch the issue; a manual run on a
+   curation branch does not. When the alert job fails, start the workflow
+   again on `main` from the Actions tab: that checks afresh. The failed run's
+   own report is kept for one day only, so that an old answer is not reported
+   later as this week's.
 2. **A content update**, started by a maintainer when the issue arrives. It
    reads that branch's report and the week's game update notes on the Wiki,
    does the curation the tests and notes call for (the boss, quest or minigame

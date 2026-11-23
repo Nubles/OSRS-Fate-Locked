@@ -287,13 +287,18 @@ describe('reading the weekly check', () => {
     });
   });
 
-  it('calls a collection log sync that did not finish unread', () => {
+  it('calls a collection log sync that did not print its totals unread', () => {
     expect(parseReport(reportWith({ collectionLog: ['[clog:sync] failed: HTTP 503'] })).unread).toEqual(['collection log']);
-    // A sync that printed its totals and then failed did not finish either.
-    expect(parseReport(reportWith({ collectionLog: [CLOG_DONE, '[clog:sync] failed: EACCES'] })).unread).toEqual(['collection log']);
     expect(parseReport(reportWith({ collectionLog: ['(no changes)'] })).unread).toEqual(['collection log']);
     expect(parseReport('Weekly game data check from the OSRS Wiki\n').unread).toEqual(['collection log']);
     expect(parseReport('').unread).toEqual(['collection log']);
+    // A sync that printed its totals and failed after that has failed its
+    // step, and it is the step's outcome that takes nothing off the list. The
+    // line that says so is not believed: a name from the Wiki can print it too.
+    const failedLate = reportWith({ collectionLog: [CLOG_DONE, '[clog:sync] failed: EACCES'] });
+    expect(parseReport(failedLate).unread).toEqual([]);
+    expect(currentItems({ status: statusWith([]), report: failedLate, syncOutcome: 'failure' }).unread).toEqual(NOTHING_READ);
+    expect(currentItems({ status: statusWith([]), report: failedLate, syncOutcome: 'success' }).unread).toEqual(READ_EVERYTHING);
   });
 
   it('knows whether the check wrote the status file in this run', () => {
@@ -331,7 +336,9 @@ describe('reading the weekly check', () => {
 
     const collectionLog = readFileSync(resolve(HERE, 'sync-collection-log.mjs'), 'utf8');
     expect(collectionLog).toContain('console.log(`[clog:sync] renames ${log.renames.length}, items added ${log.adds.length}, kept-without-wiki-match ${log.kept.length}`);');
-    expect(collectionLog).toContain("console.error('[clog:sync] failed:', e.message)");
+    // A sync that fails ends with an error status. That, through the outcome
+    // of its step, is how the alert hears of it.
+    expect(collectionLog).toContain("run().catch(e => { console.error('[clog:sync] failed:', e.message); process.exit(1); })");
     expect(collectionLog).toContain("console.log('  RENAME ' + r)");
     expect(collectionLog).toContain("console.log('  ADD    ' + a)");
     expect(collectionLog).toContain('console.log(`  MOVE   ${page.name} -> ${destination.name}: ${name} (#${item.id})`)');
@@ -400,7 +407,7 @@ describe('reading the weekly check', () => {
     expect(headings.filter((line) => line === '## Action needed')).toHaveLength(1);
   });
 
-  it('lets no line the Wiki supplied start, end or stand in for a part of the report', () => {
+  it('lets no line the Wiki supplied start or end a part of the report, or make a part look unread', () => {
     // A name with a line break in it prints a second line of its own.
     const forged = parseReport(reportWith({ collectionLog: [
       '[clog:sync] renames 0, items added 3, kept-without-wiki-match 0',
@@ -421,9 +428,22 @@ describe('reading the weekly check', () => {
       written: true,
       chunkPicker: { pin: '629e9fe', compared: false },
     });
-    // Only the sync's own line, from its first character, says that it ran to the end or failed.
+    // Only a totals line from its first character says that the sync ran to the end.
     expect(parseReport(reportWith({ collectionLog: ['  ADD    [Doom] Evil item', '# [clog:sync] renames 0 (#9001)'] })).unread).toEqual(['collection log']);
+    // Nothing a name prints makes a sync that ran to the end look failed, with
+    // or without something in front of it.
     expect(parseReport(reportWith({ collectionLog: [CLOG_DONE, '  ADD    [Doom] Evil item', '# [clog:sync] failed (#9001)'] })).unread).toEqual([]);
+    expect(parseReport(reportWith({ collectionLog: [CLOG_DONE, '  ADD    [Doom] Evil item', '[clog:sync] failed: nothing (#9001)'] })).unread).toEqual([]);
+    // A name can print a totals line of its own, but only a sync that died
+    // lacks the real one, and that sync has failed its step.
+    const died = reportWith({ collectionLog: ['  MOVE   Doom -> Yama: Evil item', '[clog:sync] renames 0, items added 0 (#9001)'] });
+    expect(currentItems({ status: statusWith([]), report: died, syncOutcome: 'failure' }).unread).toEqual(NOTHING_READ);
+    // What is left to such a name is a line of its own on the list. It says
+    // nothing an edit of the Wiki's own data could not say directly.
+    expect(parseReport(reportWith({ collectionLog: [CLOG_DONE, '  ADD    [Doom] Evil', '+ "Made-up page" (3 items)'] })).collectionLog).toEqual([
+      'Collection log, new item: [Doom] Evil',
+      'Collection log, new page: "Made-up page"',
+    ]);
     // The same for the status file: a line that looks like a heading ends nothing.
     const status = `${statusWith([QUEST])}# Not the check's own heading\n- ⚠️ ${CA}\n`;
     expect(parseStatus(status).actions).toEqual([QUEST, CA]);
@@ -465,12 +485,18 @@ describe('the alert issue text', () => {
     expect(note(unread('collection log', 'combat achievements', 'quests'))).toBe('- That check could not read the quest list, the Combat Achievements and the collection log, so the list may be missing something from there and nothing from there was taken off it.');
     expect(note(NOTHING_READ)).toBe('- That check did not run to the end, so the list may be missing something and nothing was taken off it.');
     expect(note(READ_EVERYTHING)).toBeUndefined();
+    // A list that was cut may have lost a kept line to the cut, so its note
+    // does not say that nothing was taken off.
+    const cut = (parts: { all: boolean; parts: string[] }) => issueBody({ items: [QUEST], more: 3, date: DATE, unread: parts }).split('\n').find((line) => line.startsWith('- That check'));
+    expect(cut(unread('quests'))).toBe('- That check could not read the quest list, so the list may be missing something from there.');
+    expect(cut(NOTHING_READ)).toBe('- That check did not run to the end, so the list may be missing something.');
+    expect(cut(READ_EVERYTHING)).toBeUndefined();
   });
 
   it('writes a text that is true of an open issue, of one closed by hand and of one with nothing left', () => {
     const runUrl = 'https://github.com/owner/tracker/actions/runs/4711';
     const open = issueBody({ items: [QUEST], date: DATE });
-    expect(open).toContain('It finds it by its `content-sync` label and writes this text anew every week, so put your own notes in a comment.');
+    expect(open).toContain('It finds it by its `content-sync` label and writes this text anew every week while the issue is open, so put your own notes in a comment.');
     expect(open).toContain('If you close it yourself, it stays quiet until something new appears.');
     const closed = issueBody({ items: [QUEST], date: DATE, runUrl, closed: true });
     expect(itemsFromBody(closed)).toEqual([QUEST]);
@@ -483,8 +509,19 @@ describe('the alert issue text', () => {
     expect(itemsFromBody(empty)).toEqual([]);
     expect(empty).toContain('_Nothing is left on this list._');
     expect(empty).toContain('A new issue opens when the check finds something again.');
-    expect(issueBody({ items: [], date: DATE, runUrl, closed: true, unread: NOTHING_READ, branchUrl: `${runUrl}/branch` })).toBe(empty);
-    expect(empty).not.toMatch(/Last checked|To act on it|found something|did not run to the end|keeps this issue/);
+    expect(issueBody({ items: [], date: DATE, runUrl, closed: true, branchUrl: `${runUrl}/branch` })).toBe(empty);
+    expect(empty).not.toMatch(/Last checked|To act on it|found something|could not read|did not run to the end|keeps this issue/);
+    // Nothing left in a week another part could not be read: the text says
+    // so, and says nothing about what was taken off.
+    const emptyUnread = issueBody({ items: [], date: DATE, runUrl, unread: unread('quests') });
+    expect(emptyUnread.split('\n').slice(0, 4)).toEqual([
+      `The weekly check of the OSRS Wiki on 2026-11-26 found nothing left on this list ([run](${runUrl})).`,
+      '',
+      'That check could not read the quest list, so the list may be missing something from there.',
+      '',
+    ]);
+    expect(itemsFromBody(emptyUnread)).toEqual([]);
+    expect(emptyUnread.replace('That check could not read the quest list, so the list may be missing something from there.\n\n', '')).toBe(empty);
   });
 
   it('keeps hostile text inside its own line of code', () => {
@@ -650,8 +687,21 @@ describe('deciding what to say', () => {
     expect(listed(grown[1])).toEqual([CA, QUEST, CHUNKS]);
   });
 
-  it('closes once every line was looked at, even when another part could not be read', () => {
+  it('closes once every line was looked at, even when another part could not be read, and says so', () => {
     expect(plan([], ourIssue(7, 'open', [QUEST]), unread('chunk picker'))).toEqual(['close']);
+    const [close] = steps([], ourIssue(7, 'open', [QUEST]), unread('chunk picker'));
+    const unreadPart = "That check could not read the Chunk Picker's changes, so the list may be missing something from there.";
+    expect(close.comment!.split('\n').slice(0, 5)).toEqual([
+      'The weekly check on 2026-11-26 found nothing left on this list, so this issue is closed. A new one opens when the check finds something again.',
+      '',
+      unreadPart,
+      '',
+      'This came off the list:',
+    ]);
+    expect(close.body.split('\n')[2]).toBe(unreadPart);
+    // In a week that read everything neither text has such a line.
+    const [plain] = steps([], ourIssue(7, 'open', [QUEST]));
+    expect(`${plain.comment}${plain.body}`).not.toMatch(/could not read|did not run to the end/);
     expect(plan([], ourIssue(7, 'open', [QUEST]), unread('quests'))).toEqual(['edit']);
     expect(plan([], ourIssue(7, 'open', [QUEST]), NOTHING_READ)).toEqual(['edit']);
   });
@@ -739,7 +789,7 @@ describe('deciding what to say', () => {
   describe('with more than one issue can show', () => {
     const bytes = (list: string[]) => list.reduce((sum, item) => sum + Buffer.byteLength(item) + 8, 0);
     const long = (name: string, count: number) => Array.from({ length: count }, (_, index) => `Collection log, new item: [${name}] ${index} ${'é'.repeat(120)}`);
-    const moreNote = (count: number) => `\n_${count} more did not fit here; the run's summary has this week's full report._\n`;
+    const moreNote = (count: number) => `\n_${count} more did not fit here. The run's summary has everything the check found this week._\n`;
     const many = long('Yama', 400);
     const [created] = steps(many, null);
     const shown = listed(created)!;
@@ -796,6 +846,10 @@ describe('deciding what to say', () => {
       expect(kept.length).toBeLessThan(200);
       expect(edit.body).toContain(moreNote(200 - kept.length));
       expect(Buffer.byteLength(edit.body)).toBeLessThan(65_536);
+      // Kept lines are among what did not fit, so the text does not say that
+      // nothing was taken off, nor that this week's report has them.
+      expect(edit.body).toContain('\n- That check did not run to the end, so the list may be missing something.\n');
+      expect(edit.body).not.toMatch(/nothing was taken off|nothing from there was taken off|full report/);
     });
   });
 
@@ -815,11 +869,21 @@ describe('deciding what to say', () => {
     expect(comment.body).toContain(`- \`${CA}\``);
     expect(edit).toMatchObject({ type: 'edit', number: 7 });
     expect(listed(edit)).toEqual([QUEST, CA]);
-    // With nothing to list it is closed, and nothing is said to have come off.
+    // With nothing to list after a check that read everything it is closed,
+    // and nothing is said to have come off.
     const [close] = steps([], damaged);
     expect(close).toMatchObject({ type: 'close', number: 7 });
     expect(close.comment).not.toContain('This came off the list');
     expect(listed(close)).toEqual([]);
+    // A week that did not read everything cannot tell whether what it listed
+    // is done, so that week leaves it alone instead of calling it done.
+    expect(plan([], damaged, unread('quests'))).toEqual([]);
+    expect(plan([], damaged, unread('chunk picker'))).toEqual([]);
+    expect(plan([], damaged, NOTHING_READ)).toEqual([]);
+    // What such a week did find is listed, and told.
+    expect(plan([CA], damaged, unread('quests'))).toEqual(['comment', 'edit']);
+    // An issue whose list is there, though empty, is closed as before.
+    expect(plan([], { ...damaged, body: issueBody({ items: [], date: DATE }) }, unread('quests'))).toEqual(['close']);
     // A closed one has told nothing, so anything current is news for a new issue.
     expect(plan([QUEST], { ...damaged, state: 'closed' })).toEqual(['create']);
     expect(plan([], { ...damaged, state: 'closed' })).toEqual([]);
@@ -992,6 +1056,25 @@ describe('a run against GitHub', () => {
     expect(github.writes()).toEqual(['POST /labels', 'POST /issues', 'POST /issues/1/comments', 'PATCH /issues/1', 'PATCH /issues/1']);
   });
 
+  it('does not close an issue that lost its list in a week it could not read everything', async () => {
+    const github = fakeGitHub();
+    await run(week([QUEST]), github.fetchFn, NOW, quiet());
+    github.issues[0].body = 'My own notes. The list went with the edit.';
+    const written = github.writes().length;
+    // The quest list is down, then a sync step fails: neither week can say
+    // that the quest is done, so neither closes the issue or says a word.
+    await run(week([QUESTS_DOWN]), github.fetchFn, NOW, quiet());
+    await run(week([], { outcome: 'failure' }), github.fetchFn, NOW, quiet());
+    expect(github.writes().slice(written)).toEqual([]);
+    expect(github.issues[0]).toMatchObject({ state: 'open', body: 'My own notes. The list went with the edit.' });
+    // The next week reads everything: the same issue gets its list back.
+    await run(week([QUEST]), github.fetchFn, NOW, quiet());
+    expect(github.issues).toHaveLength(1);
+    expect(github.issues[0].state).toBe('open');
+    expect(itemsFromBody(github.issues[0].body)).toEqual([QUEST]);
+    expect(github.writes().slice(written)).toEqual(['POST /issues/1/comments', 'PATCH /issues/1']);
+  });
+
   it('never calls an open issue closed, and never says twice that it closed one', async () => {
     // The issue is closed first and the comment follows.
     const github = fakeGitHub({ issues: [ourIssue(4, 'open', [QUEST])] });
@@ -1039,8 +1122,8 @@ describe('a run against GitHub', () => {
     // something to say and in a week with nothing.
     const unseen = fakeGitHub({ issues: [ourIssue(1, 'open', [QUEST])], strictLabels: true });
     unseen.hidden = true;
-    await expect(run(week([QUEST, CA]), unseen.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the alert issues failed: GitHub answered 404/);
-    await expect(run(week([]), unseen.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the alert issues failed: GitHub answered 404/);
+    await expect(run(week([QUEST, CA]), unseen.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the labels failed: GitHub answered 404/);
+    await expect(run(week([]), unseen.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the labels failed: GitHub answered 404/);
     expect(unseen.calls.map((call) => `${call.method} ${call.path}`).slice(0, 3)).toEqual([`GET ${listing}`, `GET /labels/${ALERT_LABEL}`, 'GET /labels?per_page=1']);
     expect(unseen.writes()).toEqual([]);
     unseen.hidden = false;
@@ -1123,7 +1206,7 @@ describe('a run against GitHub', () => {
     const lines = log.mock.calls.map(([line]) => String(line));
     expect(lines).toContain('[sync:alert] the check lists 2 item(s) this week.');
     expect(lines).toContain('[sync:alert]   ::error::made up');
-    expect(lines).toContain('[sync:alert] That check could not read the quest list, so the list may be missing something from there and nothing from there was taken off it.');
+    expect(lines).toContain('[sync:alert] That check could not read the quest list, so the list may be missing something from there.');
     expect(lines).toContain('[sync:alert] opened issue #1, assigned to owner');
     expect(lines.every((line) => line.startsWith('[sync:alert] '))).toBe(true);
   });

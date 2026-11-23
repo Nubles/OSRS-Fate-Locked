@@ -689,9 +689,10 @@ describe('content sync workflow contract', () => {
 
     // The sync job hands over the status and the report every week, also when
     // no data file changed: the check can list something without changing one.
-    // They are kept for a week, so that a failed alert job can be run again.
+    // They are kept for one day only: an old report must not be reported
+    // later as this week's answer. A new run checks afresh.
     expect(syncJob).toMatch(
-      /- name: Hand the status and the report to the alert job\n\s+uses: [^\n]+\n\s+with:\n\s+name: wiki-content-sync-report\n\s+path: \|\n\s+docs\/SYNC_STATUS\.md\n\s+sync-report\.md\n\s+if-no-files-found: error\n\s+retention-days: 7(?:\n|$)/,
+      /- name: Hand the status and the report to the alert job\n\s+uses: [^\n]+\n\s+with:\n\s+name: wiki-content-sync-report\n\s+path: \|\n\s+docs\/SYNC_STATUS\.md\n\s+sync-report\.md\n\s+if-no-files-found: error\n\s+retention-days: 1(?:\n|$)/,
     );
     // They are read from a scratch folder, never unpacked over the checkout
     // the script runs from.
@@ -736,6 +737,17 @@ describe('content sync workflow contract', () => {
     // sync fails.
     expect(syncJob).toContain('npm run --silent clog:sync 2>&1 | tee "$RUNNER_TEMP/clog.txt" || status=1\n');
     expect(syncJob).toContain('npm run --silent content:check 2>&1 | tee "$RUNNER_TEMP/check.txt" || status=1\n');
+    // A command that fails fails the step, whatever it printed. The alert
+    // takes a failed sync from the step's outcome, never from a line of a log
+    // that also holds text from the Wiki.
+    expect(syncJob).toContain(
+      '          set -o pipefail\n'
+      + '          status=0\n'
+      + '          npm run --silent clog:sync 2>&1 | tee "$RUNNER_TEMP/clog.txt" || status=1\n'
+      + '          npm run --silent ca:sync 2>&1 | tee "$RUNNER_TEMP/ca.txt" || status=1\n'
+      + '          npm run --silent content:check 2>&1 | tee "$RUNNER_TEMP/check.txt" || status=1\n'
+      + '          exit $status\n',
+    );
     // scripts/sync-alert.mjs reads the collection log lines under the first
     // heading, and under the second the two lines the check prints about the
     // status file it wrote and about the Chunk Picker.

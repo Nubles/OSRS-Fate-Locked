@@ -177,9 +177,11 @@ export function parseStatus(markdown) {
  */
 export function parseReport(report) {
   const lines = section(report, '## Collection log', REPORT_HEADINGS) ?? [];
-  // A sync that ran to the end always prints its totals.
+  // A sync that ran to the end always prints its totals. That it failed is
+  // not read here: a name from the Wiki with a line break in it can print a
+  // line of its own, and so could say that too. A sync that fails also fails
+  // its step, which currentItems() hears of from the job itself.
   const finished = lines.some((line) => /^\[clog:sync\] renames \d+/.test(line));
-  const failed = lines.some((line) => /^\[clog:sync\] failed/.test(line));
   const collectionLog = [];
   for (const line of lines) {
     const match = line.match(/^\s*(RENAME|ADD|MOVE|\?|\+)\s+(.+)$/s);
@@ -197,7 +199,7 @@ export function parseReport(report) {
     const match = line.match(/^\[content:check\] Chunk Picker pinned=([0-9a-f]{7,40}) upstream=[0-9a-f]{7,40} exportChanged=(true|false|\?)\s*$/);
     if (match) chunkPicker = { pin: match[1].slice(0, 7), compared: match[2] !== '?' };
   }
-  return { collectionLog: unique(collectionLog), unread: failed || !finished ? ['collection log'] : [], written, chunkPicker };
+  return { collectionLog: unique(collectionLog), unread: finished ? [] : ['collection log'], written, chunkPicker };
 }
 
 /**
@@ -239,18 +241,21 @@ const bullets = (items) => items.map((item) => `- \`${tidy(item)}\``).join('\n')
 // as an item.
 const listBlock = (items, more = 0) => [
   items.length ? bullets(items) : NOTHING_LEFT,
-  ...(more > 0 ? ['', `_${more} more did not fit here; the run's summary has this week's full report._`] : []),
+  ...(more > 0 ? ['', `_${more} more did not fit here. The run's summary has everything the check found this week._`] : []),
 ].join('\n');
 
 const listOf = (names) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names.join(''));
-// True of a list that is new this week as well as of one that was there before.
-const unreadNote = (unread) => {
-  if (unread.all) return 'That check did not run to the end, so the list may be missing something and nothing was taken off it.';
+// What a week that was not read in full means for the list. True of a list
+// that is new this week as well as of one that was there before. That nothing
+// was taken off is said only where it holds (`kept`): not of a list that was
+// cut, whose kept lines may be among what did not fit, and not of an empty one.
+const unreadNote = (unread, { kept = true } = {}) => {
+  if (unread.all) return `That check did not run to the end, so the list may be missing something${kept ? ' and nothing was taken off it' : ''}.`;
   const names = PARTS.filter(({ part }) => unread.parts.includes(part)).map(({ name }) => name);
-  return names.length ? `That check could not read ${listOf(names)}, so the list may be missing something from there and nothing from there was taken off it.` : '';
+  return names.length ? `That check could not read ${listOf(names)}, so the list may be missing something from there${kept ? ' and nothing from there was taken off it' : ''}.` : '';
 };
 
-const OPEN_FOOTER = `The weekly check keeps this issue. It finds it by its \`${ALERT_LABEL}\` label and writes this text anew every week, so put your own notes in a comment. It adds a comment when it finds something new and closes the issue when nothing is left. If you close it yourself, it stays quiet until something new appears.`;
+const OPEN_FOOTER = `The weekly check keeps this issue. It finds it by its \`${ALERT_LABEL}\` label and writes this text anew every week while the issue is open, so put your own notes in a comment. It adds a comment when it finds something new and closes the issue when nothing is left. If you close it yourself, it stays quiet until something new appears.`;
 const CLOSED_FOOTER = 'This issue is closed, so the weekly check stays quiet about what it lists. It takes off the list what gets done, and it opens a new issue when it finds something new.';
 
 /**
@@ -261,8 +266,12 @@ const CLOSED_FOOTER = 'This issue is closed, so the weekly check stays quiet abo
 export function issueBody({ items, more = 0, date, runUrl = '', branchUrl = '', unread = READ_EVERYTHING, closed = false }) {
   const run = runUrl ? ` ([run](${runUrl}))` : '';
   if (!items.length) {
+    // An issue closes once every line on it was looked at, also in a week in
+    // which another part of the check could not be read. It says so.
+    const unreadPart = unreadNote(unread, { kept: false });
     return [
       `The weekly check of the OSRS Wiki on ${date} found nothing left on this list${run}.`,
+      ...(unreadPart ? ['', unreadPart] : []),
       '',
       LIST_START,
       '',
@@ -274,7 +283,7 @@ export function issueBody({ items, more = 0, date, runUrl = '', branchUrl = '', 
       '',
     ].join('\n');
   }
-  const note = unreadNote(unread);
+  const note = unreadNote(unread, { kept: more === 0 });
   return [
     'The weekly check of the OSRS Wiki found something the tracker does not have yet, or that needs a review.',
     '',
@@ -336,11 +345,15 @@ const newItemsComment = (fresh, date) => [
   '',
 ].join('\n');
 
-const closingComment = (gone, date) => [
-  `The weekly check on ${date} found nothing left on this list, so this issue is closed. A new one opens when the check finds something again.`,
-  ...(gone.length ? ['', 'This came off the list:', '', bullets(fit(gone).shown)] : []),
-  '',
-].join('\n');
+const closingComment = (gone, date, unread = READ_EVERYTHING) => {
+  const unreadPart = unreadNote(unread, { kept: false });
+  return [
+    `The weekly check on ${date} found nothing left on this list, so this issue is closed. A new one opens when the check finds something again.`,
+    ...(unreadPart ? ['', unreadPart] : []),
+    ...(gone.length ? ['', 'This came off the list:', '', bullets(fit(gone).shown)] : []),
+    '',
+  ].join('\n');
+};
 
 /**
  * What to do this week, as a list of steps for GitHub. Pure: the same inputs
@@ -353,7 +366,8 @@ const closingComment = (gone, date) => [
 export function planAlert({ items, unread = READ_EVERYTHING, latest, date, runUrl = '', branchUrl = '' }) {
   const ours = isAlert(latest) ? latest : null;
   // An issue of ours whose list can no longer be read has told nothing.
-  const previous = ours ? itemsFromBody(ours.body) ?? [] : [];
+  const stored = ours ? itemsFromBody(ours.body) : [];
+  const previous = stored ?? [];
   const current = new Set(items.map(newsKey));
   const told = new Set(previous.map(newsKey));
   // A part the check could not read this week keeps its lines on the list.
@@ -373,7 +387,11 @@ export function planAlert({ items, unread = READ_EVERYTHING, latest, date, runUr
     // An empty list means the check looked at the part every line came from
     // and found none of them: a part it could not read keeps its lines.
     if (!listed.length) {
-      return [{ type: 'close', number: ours.number, comment: closingComment(previous, date), body: text() }];
+      // With its list lost, a week that did not read everything cannot tell
+      // whether what the issue listed is done. It is left as it is until a
+      // week can: then it gets its list back, or is closed.
+      if (stored === null && !complete(unread)) return [];
+      return [{ type: 'close', number: ours.number, comment: closingComment(previous, date, unread), body: text() }];
     }
     return [
       // The comment goes first: if the run stops between the two, the next
@@ -462,8 +480,8 @@ async function carryOut(step, api, owner) {
   }
   // The assignee is how the issue reaches the owner. GitHub answers 204 when
   // the owner can be assigned and 404 when not (an organisation cannot be).
-  // Anything else is a failed check: stop, so that a re-run of this job or
-  // next week's run tries again, instead of opening an issue nobody hears of.
+  // Anything else is a failed check: stop, so that the next run tries again,
+  // instead of opening an issue nobody hears of.
   let assignees = [];
   if (LOGIN_RE.test(owner)) {
     const check = await api('GET', `/assignees/${owner}`);
@@ -509,18 +527,19 @@ export async function run(env = process.env, fetchFn = fetch, now = Date.now(), 
   const printed = fit(items);
   for (const item of printed.shown) log(`[sync:alert]   ${item}`);
   if (printed.more) log(`[sync:alert]   and ${printed.more} more.`);
-  if (!complete(unread)) log(`[sync:alert] ${unreadNote(unread)}`);
+  if (!complete(unread)) log(`[sync:alert] ${unreadNote(unread, { kept: false })}`);
 
   const api = githubApi({ repository, token }, fetchFn);
   const listing = await api('GET', `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`);
-  // GitHub answers with an empty list while the label does not exist. Should
-  // it ever answer "not found" or "invalid" instead, the first run must not
-  // fail for good: no label means no alert issue yet. That takes a "not found"
-  // for the label from a repository that does list its labels, so a
-  // repository this run cannot see is a failure, not an empty list.
+  // GitHub is expected to answer with an empty list while the label does not
+  // exist; its documentation does not say. Should it answer "not found" or
+  // "invalid" instead, the first run must not fail for good: no label means
+  // no alert issue yet. That takes a "not found" for the label from a
+  // repository that does list its labels, so a repository this run cannot
+  // see is a failure, not an empty list.
   const noLabelYet = (listing.status === 404 || listing.status === 422)
     && (await api('GET', `/labels/${ALERT_LABEL}`)).status === 404
-    && Array.isArray(must(await api('GET', '/labels?per_page=1'), 'Listing the alert issues').json);
+    && Array.isArray(must(await api('GET', '/labels?per_page=1'), 'Listing the labels').json);
   const issues = noLabelYet ? [] : must(listing, 'Listing the alert issues').json;
   // Anything but a list would read as "no alert issue yet" and open a second one.
   if (!Array.isArray(issues)) throw new Error('Listing the alert issues failed: GitHub did not answer with a list.');

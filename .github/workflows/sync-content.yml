@@ -154,8 +154,9 @@ jobs:
 
       # The alert job reads these two every week, also when no data file
       # changed: the check can list something to do without changing a file.
-      # Kept for a week, so a failed alert job can be run again until the next
-      # weekly run.
+      # Kept for one day only. To try a failed alert again, start a new run:
+      # that checks afresh, where an old report would describe the tracker as
+      # it was and could undo what a later run has told the owner.
       - name: Hand the status and the report to the alert job
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -164,7 +165,7 @@ jobs:
             docs/SYNC_STATUS.md
             sync-report.md
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 1
 
   push-branch:
     needs: sync
