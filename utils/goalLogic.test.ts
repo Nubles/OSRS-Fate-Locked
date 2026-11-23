@@ -110,9 +110,11 @@ describe('calculateGoalProgress for pinned Strategy Guide entries', () => {
       for (const state of [unlocks([]), maxed()]) {
         const progress = calculateGoalProgress(req, state, 'vanilla');
         for (const item of progress.missing.filter(entry => entry.startsWith('Unlock: '))) {
-          const id = item.slice('Unlock: '.length);
           // Usually its own table's Key; Soda Ash (Charter Ships) needs the Mobility Key.
-          expect(Object.values(ROLLABLE).some(list => list?.includes(id)), `${key}: ${item}`).toBe(true);
+          // A Key with several sources reads 'Temple Trekking or Forestry': each must be rollable.
+          for (const id of item.slice('Unlock: '.length).split(' or ')) {
+            expect(Object.values(ROLLABLE).some(list => list?.includes(id)), `${key}: ${item}`).toBe(true);
+          }
         }
         expect(progress.percentage === 100, key).toBe(analyzeRequirement(req, state, 'vanilla').isFullyPlayable);
         expect(progress.percentage === 100, key).toBe(progress.missing.length === 0);

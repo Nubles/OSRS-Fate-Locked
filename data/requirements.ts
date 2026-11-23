@@ -25,6 +25,11 @@ export interface ContentRequirement {
   accessRoutes?: Array<{ label: string; skills?: Record<string, number>; diaries?: string[] }>;
   /** Borrow this activity's readiness (data/activityRequirements.ts) when the id is another unlock. */
   activity?: string;
+  /**
+   * A Key this entry needs besides its id's own: any one of these names, each
+   * looked up in the keyed table that rolls it (fairy rows need 'Fairy Rings').
+   */
+  needsKey?: string[];
 }
 
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
@@ -365,7 +370,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Zero-supply combat training (Free potions).'
   },
   'Hunter Rumours': {
-    id: 'Hunter Rumours',
+    id: 'Hunter Guild',
     category: TableType.MINIGAMES, // Activity
     regions: ['Varlamore'], // Hunter Guild
     skills: { 'Hunter': 46 },
@@ -437,8 +442,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Best Thieving GP/hr (Rogues Chests) & Hard Clues.'
   },
   'Scorpia\'s Cave': {
-    id: 'Scorpia\'s Cave',
-    category: TableType.MINIGAMES,
+    id: 'Scorpia',
+    category: TableType.BOSSES,
     regions: ['Wilderness'],
     skills: {},
     description: 'Scorpia boss and Odium/Malediction shards.'
@@ -565,7 +570,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Components for BiS mid-level boots.'
   },
   'Hydra Leather': {
-    id: 'Hydras',
+    id: 'Alchemical Hydra',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Slayer': 95 },
@@ -639,8 +644,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Shop sells an adamant platebody and black platelegs.'
   },
   'Ranging Guild (Minigame)': {
-    id: 'Ranging Guild',
-    category: TableType.GUILDS,
+    id: 'Archery Competition',
+    category: TableType.MINIGAMES,
+    needsKey: ['Ranging Guild'],
     regions: ['Kandarin'],
     skills: { 'Ranged': 40 },
     description: 'Archery target minigame for tickets.'
@@ -813,7 +819,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Restores extra prayer points from potions.'
   },
   'Ectoplasmator': {
-    id: 'Ectoplasmator',
+    id: 'Soul Wars',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Soul Wars
     skills: { 'Prayer': 40 },
@@ -1166,30 +1172,30 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Combine Black Mask with Earmuffs/Facemask/etc.'
   },
   'Imbued Rings (NMZ)': {
-    id: 'Imbued Rings (NMZ)',
+    id: 'Nightmare Zone',
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Yanille
     skills: {},
     description: 'Double stats of DK rings via Nightmare Zone.'
   },
   'Imbued Rings (Soul Wars)': {
-    id: 'Imbued Rings (Soul Wars)',
+    id: 'Soul Wars',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Edgeville Portal
     skills: {},
     description: 'Imbue rings using Zeal Tokens.'
   },
   'Imbued Rings (PvP Arena)': {
-    id: 'Imbued Rings (PvP Arena)',
+    id: 'Emir\'s Arena',
     category: TableType.MINIGAMES,
-    regions: ['Kharidian Desert'], // Duel Arena
+    regions: ['Kharidian Desert'], // Emir's Arena
     skills: {},
     description: 'Imbue rings using Scroll of Imbuing.'
   },
   'Crystal Tool Seed': {
-    id: 'Crystal Tool Seed',
+    id: 'Zalcano',
     category: TableType.MINIGAMES,
-    regions: ['Tirannwn', 'Kourend & Kebos'], // Zalcano or CoX (rare)
+    regions: ['Tirannwn', 'Kourend & Kebos'], // Zalcano
     skills: {},
     quests: ['Song of the Elves'],
     description: 'Create Crystal Pickaxe/Axe/Harpoon.'
@@ -1202,8 +1208,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Create Infernal Pickaxe/Axe/Harpoon.'
   },
   'Rune Defender': {
-    id: 'Rune Defender',
-    category: TableType.MINIGAMES,
+    id: 'Warriors\' Guild',
+    category: TableType.GUILDS,
     regions: ['Asgarnia'], // Warriors Guild
     skills: {},
     activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
@@ -1245,15 +1251,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Required to make Ultracompost.'
   },
   'Redwoods': {
-    id: 'Redwoods',
+    id: 'Woodcutting Guild',
     category: TableType.MINIGAMES,
-    regions: ['Kourend & Kebos'], // Farming Guild / WC Guild
+    regions: ['Kourend & Kebos'], // Woodcutting Guild
     skills: { 'Woodcutting': 90 },
     description: 'Best AFK Woodcutting XP.'
   },
   'Sacred Oil': {
     id: 'Sacred Oil',
     category: TableType.MINIGAMES,
+    needsKey: ['Shades of Mort\'ton'],
     regions: ['Morytania'], // Mort'ton
     skills: { 'Firemaking': 5 }, // And combat
     quests: ['Shades of Mort\'ton'],
@@ -1289,7 +1296,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Reduces the damage of Lizardman shamans\' acid attack.'
   },
   'Mining Gloves': {
-    id: 'Mining Gloves',
+    id: 'Mining Guild',
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Mining Guild
     skills: { 'Mining': 60 },
@@ -1305,19 +1312,20 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Lumberjack Outfit': {
     id: 'Lumberjack Outfit',
     category: TableType.MINIGAMES,
-    regions: ['Morytania'], // Temple Trekking
+    needsKey: ['Temple Trekking', 'Forestry'],
+    regions: ['Morytania'], // Temple Trekking or the Forestry shop
     skills: {},
     description: 'Woodcutting XP boosting set.'
   },
   'Pyromancer Outfit': {
-    id: 'Pyromancer Outfit',
+    id: 'Wintertodt',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Wintertodt
     skills: { 'Firemaking': 50 },
     description: 'Firemaking XP boosting set.'
   },
   'Rogues\' Outfit': {
-    id: 'Rogues\' Outfit',
+    id: 'Rogues\' Den',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // Rogues Den
     skills: { 'Thieving': 50, 'Agility': 50 },
@@ -1331,7 +1339,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Mining XP boosting set.'
   },
   'Farmer\'s Outfit': {
-    id: 'Farmer\'s Outfit',
+    id: 'Tithe Farm',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Tithe Farm
     skills: { 'Farming': 34 },
@@ -1340,8 +1348,10 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Zealot\'s Robes': {
     id: 'Zealot\'s Robes',
     category: TableType.MINIGAMES,
+    needsKey: ['Shades of Mort\'ton'],
     regions: ['Morytania'], // Shades of Mort'ton
     skills: { 'Firemaking': 80 }, // Gold keys recommended
+    quests: ['Shades of Mort\'ton'],
     description: 'Chance to save bones/ashes.'
   },
 
@@ -1384,7 +1394,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Essential Magic damage necklace.'
   },
   'Eternal/Pegasian/Primordial Crystals': {
-    id: 'Cerberus Boots',
+    id: 'Cerberus',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // Cerberus
     skills: { 'Slayer': 91 },
@@ -1563,7 +1573,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Cave entry. Bring a light source unless the fire pit is lit, and a witchwood icon for protection. Cave horrors require 58 Slayer to kill.'
   },
   'Champions\' Challenge': {
-    id: 'Champions\' Challenge',
+    id: 'Champions\' Guild',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
@@ -1750,7 +1760,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Source of Easy clues. Gems need rich chests (78).'
   },
   'Wall Safes': {
-    id: 'Wall Safes',
+    id: 'Rogues\' Den',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // Rogues Den
     skills: { 'Thieving': 50 },
@@ -1835,14 +1845,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Sells Attack Potions, Vials, Steel Arrows.'
   },
   'Sawmill Operator': {
-    id: 'Sawmill Operator',
+    id: 'Sawmill Operators',
     category: TableType.MERCHANTS,
     regions: ['Misthalin', 'Kourend & Kebos'], // Varrock, Woodcutting Guild
     skills: {},
     description: 'Convert Logs to Planks. Buy Saws/Cloth/Nails.'
   },
   'Stonemason': {
-    id: 'Stonemason',
+    id: 'Stonemasons',
     category: TableType.MERCHANTS,
     regions: ['Fremennik'], // Keldagrim
     skills: {},
@@ -1897,7 +1907,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Strong defensive shield (TokTz-Ket-Xil).'
   },
   'Granite Body': {
-    id: 'Granite Body',
+    id: 'Barbarian Assault',
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Barbarian Assault
     skills: { 'Defence': 50, 'Strength': 50 },
@@ -1912,42 +1922,42 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Buyable from Eblis after quest.'
   },
   'Mud Battlestaff': {
-    id: 'Mud Battlestaff',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth Island (Dagannoth Kings)
     skills: { 'Magic': 30, 'Attack': 30 },
     description: 'Drop from Dagannoth Prime.'
   },
   'Seercull': {
-    id: 'Seercull',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth
     skills: { 'Ranged': 50 },
     description: 'Drop from Dagannoth Supreme.'
   },
   'Warrior Ring': {
-    id: 'Warrior Ring',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth
     skills: {},
     description: 'Slash bonus ring. Dagannoth Rex.'
   },
   'Berserker Ring': {
-    id: 'Berserker Ring',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth
     skills: {},
     description: 'Best Strength ring. Dagannoth Rex.'
   },
   'Archers Ring': {
-    id: 'Archers Ring',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth
     skills: {},
     description: 'Best Ranged ring. Dagannoth Supreme.'
   },
   'Seers Ring': {
-    id: 'Seers Ring',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Waterbirth
     skills: {},
@@ -1975,7 +1985,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Drop from Infernal Mages.'
   },
   'Mystic Robes (Blue/Shop)': {
-    id: 'Mystic Robes (Blue)',
+    id: 'Wizards\' Guild',
     category: TableType.MERCHANTS, // Wizards Guild
     regions: ['Kandarin'],
     skills: { 'Magic': 66 },
@@ -1993,7 +2003,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Enclosed area with Teak/Mahogany trees.'
   },
   'Mess Hall': {
-    id: 'Mess Hall',
+    id: 'Mess',
     category: TableType.MINIGAMES, // Activity
     regions: ['Kourend & Kebos'], // Hosidius
     skills: { 'Cooking': 20 },
@@ -2030,8 +2040,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Safe spot Blue Dragons.'
   },
   'Farming Guild Spirit Tree': {
-    id: 'Farming Guild Spirit Tree',
+    id: 'Farming Guild',
     category: TableType.MOBILITY,
+    needsKey: ['Spirit Tree'],
     regions: ['Kourend & Kebos'],
     skills: { 'Farming': 85 }, // Level for high tier
     description: 'High tier wing of Farming Guild.'
@@ -2039,6 +2050,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Port Sarim Spirit Tree': {
     id: 'Port Sarim Spirit Tree',
     category: TableType.MOBILITY,
+    needsKey: ['Spirit Tree'],
     regions: ['Asgarnia'], // Port Sarim
     skills: { 'Farming': 83 },
     description: 'Spirit Tree patch.'
@@ -2046,6 +2058,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Etceteria Spirit Tree': {
     id: 'Etceteria Spirit Tree',
     category: TableType.MOBILITY,
+    needsKey: ['Spirit Tree'],
     regions: ['Fremennik'], // Etceteria
     skills: { 'Farming': 83 },
     quests: ['The Fremennik Trials'], // Every way to the island
@@ -2054,6 +2067,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Brimhaven Spirit Tree': {
     id: 'Brimhaven Spirit Tree',
     category: TableType.MOBILITY,
+    needsKey: ['Spirit Tree'],
     regions: ['Karamja'], // Brimhaven
     skills: { 'Farming': 83 },
     description: 'Spirit Tree patch.'
@@ -2061,6 +2075,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Hosidius Spirit Tree': {
     id: 'Hosidius Spirit Tree',
     category: TableType.MOBILITY,
+    needsKey: ['Spirit Tree'],
     regions: ['Kourend & Kebos'], // Hosidius
     skills: { 'Farming': 83 },
     description: 'Spirit Tree patch.'
@@ -2198,7 +2213,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Source of Shield Left Half.'
   },
   'Heroes\' Guild Dungeon (Blue Dragons)': {
-    id: 'Heroes\' Guild Dungeon',
+    id: 'Heroes\' Guild',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // Burthorpe
     skills: {},
@@ -2216,6 +2231,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Harmony Island (Herb Patch)': {
     id: 'Harmony Island',
     category: TableType.FARMING_LAYERS,
+    needsKey: ['Herb'],
     regions: ['Morytania'],
     skills: { 'Farming': 1 }, // Elite Diary usually
     quests: ['The Great Brain Robbery'], diaries: ['Morytania Elite'], // Elite
@@ -2415,7 +2431,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   // Mapping specific bosses/methods to the tools they provide.
   // ============================================================================
   'Dragon Pickaxe (Chaos Ele)': {
-    id: 'Dragon Pickaxe (Chaos Ele)',
+    id: 'Chaos Elemental',
     category: TableType.MINIGAMES, // Boss Grind
     regions: ['Wilderness'],
     skills: {},
@@ -2424,26 +2440,27 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dragon Pickaxe (Wildy Bosses)': {
     id: 'Dragon Pickaxe (Wildy Bosses)',
     category: TableType.MINIGAMES, // Boss Grind
+    needsKey: ['Callisto', 'Venenatis', 'Vet\'ion'],
     regions: ['Wilderness'],
     skills: {},
     description: 'Drop from Callisto, Venenatis, Vet\'ion.'
   },
   'Dragon Pickaxe (KBD)': {
-    id: 'Dragon Pickaxe (KBD)',
+    id: 'King Black Dragon',
     category: TableType.MINIGAMES, // Boss Grind
     regions: ['Wilderness'],
     skills: {},
     description: '1/1,000 drop from King Black Dragon.'
   },
   'Dragon Pickaxe (KQ)': {
-    id: 'Dragon Pickaxe (KQ)',
+    id: 'Kalphite Queen',
     category: TableType.MINIGAMES, // Boss Grind
     regions: ['Kharidian Desert'],
     skills: {},
     description: '1/400 drop from Kalphite Queen.'
   },
   'Dragon Pickaxe (Volcanic Mine)': {
-    id: 'Dragon Pickaxe (VM)',
+    id: 'Volcanic Mine',
     category: TableType.MINIGAMES, // Ore Pack
     regions: ['Islands & Others'], // Fossil Island
     skills: { 'Mining': 50 },
@@ -2451,14 +2468,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Broken pickaxe from Ore Packs (Low chance).'
   },
   'Dragon Axe (Wintertodt)': {
-    id: 'Dragon Axe (Wintertodt)',
+    id: 'Wintertodt',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Firemaking': 50 },
     description: '1/10,000 from the reward cart.'
   },
   'Dragon Axe (Dagannoth)': {
-    id: 'Dragon Axe (Dagannoth)',
+    id: 'Dagannoth Kings',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'],
     skills: {},
@@ -2472,7 +2489,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: '1/10,000 from wyrms (1/2,000 on a wyrm task).'
   },
   'Dragon Harpoon (Tempoross)': {
-    id: 'Dragon Harpoon (Tempoross)',
+    id: 'Tempoross',
     category: TableType.MINIGAMES,
     regions: ['Kharidian Desert'],
     skills: { 'Fishing': 35 },
@@ -2486,6 +2503,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring DJR (Chasm)': {
     id: 'Fairy Ring DJR',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Kourend & Kebos'], // Shayzien
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2494,6 +2512,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring BJS (Zulrah)': {
     id: 'Fairy Ring BJS',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Tirannwn'],
     skills: { 'Agility': 76 }, // Shortcut to useful area
     quests: ['Fairytale II - Cure a Queen', 'Regicide'],
@@ -2502,6 +2521,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring DKS (Polar)': {
     id: 'Fairy Ring DKS',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Fremennik'], // Hunter area
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2510,6 +2530,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring CIQ (Yanille)': {
     id: 'Fairy Ring CIQ',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Kandarin'],
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2518,6 +2539,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring ALP (Lighthouse)': {
     id: 'Fairy Ring ALP',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Fremennik'], // Lighthouse
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2526,6 +2548,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring CKS (Canifis)': {
     id: 'Fairy Ring CKS',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Morytania'],
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2534,6 +2557,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring DKP (Karambwan)': {
     id: 'Fairy Ring DKP',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Karamja'],
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2542,6 +2566,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring BIP (Poly)': {
     id: 'Fairy Ring BIP',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Misthalin'], // Salve River
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2550,6 +2575,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring CIR (Mount K)': {
     id: 'Fairy Ring CIR',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Kourend & Kebos'],
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2558,6 +2584,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Fairy Ring BLP (TzHaar)': {
     id: 'Fairy Ring BLP',
     category: TableType.MOBILITY,
+    needsKey: ['Fairy Rings'],
     regions: ['Karamja'],
     skills: {},
     quests: ['Fairytale II - Cure a Queen'],
@@ -2570,6 +2597,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Games Necklace (Wintertodt)': {
     id: 'Games Necklace (Wintertodt)',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Kourend & Kebos'],
     skills: { 'Crafting': 22 }, // Sapphire necklace
     description: 'Direct teleport to Wintertodt Camp.'
@@ -2577,6 +2605,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Games Necklace (Barb Assault)': {
     id: 'Games Necklace (BA)',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Kandarin'],
     skills: { 'Crafting': 22 }, // Sapphire necklace
     description: 'Direct teleport to Barbarian Outpost.'
@@ -2584,6 +2613,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dueling Ring (Ferox)': {
     id: 'Dueling Ring (Ferox)',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Wilderness'],
     skills: { 'Crafting': 27 }, // Emerald
     description: 'Direct teleport to Ferox Enclave (Pool).'
@@ -2591,6 +2621,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dueling Ring (Castle Wars)': {
     id: 'Dueling Ring (Castle Wars)',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Kandarin'],
     skills: { 'Crafting': 27 },
     description: 'Direct teleport to Castle Wars.'
@@ -2598,6 +2629,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Necklace of Passage': {
     id: 'Necklace of Passage',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Misthalin', 'Kandarin'], // Wizards Tower / Outpost
     skills: { 'Crafting': 25 }, // Jade necklace
     description: 'Teleport to Wizards Tower or Outpost.'
@@ -2605,6 +2637,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Skills Necklace': {
     id: 'Skills Necklace',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Kandarin', 'Asgarnia', 'Kourend & Kebos'], // Fishing/Mining/Woodcutting guilds
     skills: { 'Crafting': 72 }, // Dragonstone
     description: 'Teleport to various Skilling Guilds.'
@@ -2612,6 +2645,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Combat Bracelet': {
     id: 'Combat Bracelet',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Asgarnia', 'Misthalin', 'Kandarin'], // Warriors/Champs/Ranging guilds
     skills: { 'Crafting': 74 }, // Dragonstone
     description: 'Teleport to Combat Guilds.'
@@ -2619,6 +2653,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Ring of Wealth (Miscellania)': {
     id: 'Ring of Wealth (Misc)',
     category: TableType.MOBILITY,
+    needsKey: ['Jewelry Teleports'],
     regions: ['Fremennik'],
     skills: { 'Crafting': 55 }, // Dragonstone
     quests: ['Throne of Miscellania'],
@@ -2632,6 +2667,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Superglass Make': {
     id: 'Superglass Make',
     category: TableType.ARCANA,
+    needsKey: ['Lunar Spellbook'],
     regions: ['Fremennik'], // Lunar Isle access
     skills: { 'Magic': 77 },
     quests: ['Lunar Diplomacy'],
@@ -2640,6 +2676,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Tan Leather (Spell)': {
     id: 'Tan Leather',
     category: TableType.ARCANA,
+    needsKey: ['Lunar Spellbook'],
     regions: ['Fremennik'],
     skills: { 'Magic': 78 },
     diaries: ['Fremennik Hard'], // Hard (Req for spell)
@@ -2648,6 +2685,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Magic Imbue': {
     id: 'Magic Imbue',
     category: TableType.ARCANA,
+    needsKey: ['Lunar Spellbook'],
     regions: ['Fremennik'],
     skills: { 'Magic': 82 },
     quests: ['Lunar Diplomacy'],
@@ -2656,6 +2694,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Spin Flax': {
     id: 'Spin Flax',
     category: TableType.ARCANA,
+    needsKey: ['Lunar Spellbook'],
     regions: ['Fremennik'],
     skills: { 'Magic': 76 },
     quests: ['Lunar Diplomacy'],
@@ -2664,6 +2703,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Plank Make': {
     id: 'Plank Make',
     category: TableType.ARCANA,
+    needsKey: ['Lunar Spellbook'],
     regions: ['Fremennik'],
     skills: { 'Magic': 86 },
     quests: ['Dream Mentor'],
@@ -2672,6 +2712,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Resurrect Crops': {
     id: 'Resurrect Crops',
     category: TableType.ARCANA,
+    needsKey: ['Arceuus Spellbook'],
     regions: ['Kourend & Kebos'], // Arceuus
     skills: { 'Magic': 78 },
     description: 'Save dead farming patches (Crucial for Ranarrs).'
@@ -2679,6 +2720,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Demonic Offering': {
     id: 'Demonic Offering',
     category: TableType.ARCANA,
+    needsKey: ['Arceuus Spellbook'],
     regions: ['Kourend & Kebos'],
     skills: { 'Magic': 84 },
     quests: ['A Kingdom Divided'],
@@ -2687,6 +2729,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dark Lure': {
     id: 'Dark Lure',
     category: TableType.ARCANA,
+    needsKey: ['Arceuus Spellbook'],
     regions: ['Kourend & Kebos'],
     skills: { 'Magic': 50 },
     quests: ['A Kingdom Divided'],
@@ -2695,6 +2738,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Degrime (Herbs)': {
     id: 'Degrime',
     category: TableType.ARCANA,
+    needsKey: ['Arceuus Spellbook'],
     regions: ['Kourend & Kebos'],
     skills: { 'Magic': 70 },
     quests: ['A Kingdom Divided'],
@@ -2708,6 +2752,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Godsword Assembly': {
     id: 'Godsword Assembly',
     category: TableType.MINIGAMES, // Process
+    needsKey: ['General Graardor', 'Commander Zilyana', 'Kree\'arra', 'K\'ril Tsutsaroth'],
     regions: ['Asgarnia'], // God Wars Dungeon or Anvil
     skills: { 'Smithing': 80 },
     description: 'Attach Godsword Hilt to Blade.'
@@ -2728,7 +2773,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Bless a spirit shield (85 Prayer), then attach the sigil yourself (90 Prayer and 85 Smithing) or pay Abbot Langley 1.5M coins.'
   },
   'Ferocious Gloves': {
-    id: 'Ferocious Gloves',
+    id: 'Alchemical Hydra',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos', 'Islands & Others'], // Hydra leather from Karuulm; Lithkren Vault machinery
     skills: {},
@@ -2744,7 +2789,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Combine Basilisk Jaw with Helm of Neitiznot.'
   },
   'Avernic Defender': {
-    id: 'Avernic Defender',
+    id: 'Theatre of Blood',
     category: TableType.MINIGAMES,
     regions: ['Morytania'],
     skills: { 'Attack': 70, 'Defence': 70 },
