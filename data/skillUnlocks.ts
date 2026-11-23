@@ -64,6 +64,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Gnome Stronghold Agility Course',
       'Lvl 1: Shayzien Basic Course',
       'Lvl 1: Shortcuts: Lumbridge Swamp, Brimhaven Dungeon',
+      'Lvl 1: Gnome Ball, Brimhaven Arena (Low Obstacles)',
       'Lvl 5: Falador Crumbling Wall & Yanille Rocks Shortcuts',
       'Lvl 10: Corsair Cove Rocks & Brimhaven Ropeswing'
     ],
@@ -74,6 +75,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 16: Yanille Underwall Tunnel',
       'Lvl 18: Slayer Tower Broken Window Shortcut',
       'Lvl 20: Al Kharid Rooftop Course',
+      'Lvl 20: Brimhaven Arena (Medium Obstacles)',
       'Lvl 20: Coal Trucks Log Balance'
     ],
     3: [
@@ -373,12 +375,14 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 11: Roasted Bird Meat (Firemaking 20)',
       'Lvl 15: Trout',
       'Lvl 18: Cod',
+      'Lvl 20: Mess (Great Kourend)',
       'Lvl 20: Pike, Meat Pie, Nettle Tea'
     ],
     3: [
       'Lvl 22: Fat Snail',
       'Lvl 25: Salmon, Stew, Fruit Batta',
       'Lvl 28: Sweetcorn, Slimy Eel',
+      'Lvl 29: Gnome Restaurant',
       'Lvl 30: Karambwan (Thoroughly), Chompy Bird',
       'Lvl 30: Moss Lizards (Perilous Moons)',
       'Lvl 30: Tuna, Apple Pie'
@@ -386,6 +390,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     4: [
       'Lvl 32: Cooks\' Guild Access',
       'Lvl 35: Plain Pizza, Jug of Wine',
+      'Lvl 40: Trouble Brewing (Cabin Fever)',
       'Lvl 40: Lobster, Cake'
     ],
     5: [
@@ -1955,6 +1960,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 13: Blurite Bars/Limbs/Bronze Claws',
       'Lvl 14: Bronze 2h Sword, Barronite',
       'Lvl 15: Iron Bars/Daggers',
+      'Lvl 15: Giants\' Foundry (Sleeping Giants)',
       'Lvl 16: Iron Axe, Bronze Legs/Skirt',
       'Lvl 17: Iron Mace/Spit',
       'Lvl 18: Bronze Platebody, Iron Med Helm/Bolts',
@@ -2012,6 +2018,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 58: Mithril Sq Shield',
       'Lvl 59: Mithril Warhammer, Mith Grapple Tips, Shayzien T2 Helm',
       'Lvl 60: Aquanite Hoppers',
+      'Lvl 60: Blast Furnace (No Entrance Fee)',
       'Lvl 60: Mithril Battleaxe, Dragon Sq Shield'
     ],
     7: [
@@ -2186,6 +2193,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 45: Bandits, Fremennik Citizens, Autumn Sq\'irk',
       'Lvl 47: Chest (Steel Arrowtips)',
       'Lvl 49: Crossbow Stalls',
+      'Lvl 49: Stealing Artefacts',
       'Lvl 50: Rogues\' Den (Wall Safes)',
       'Lvl 50: Wealthy Citizens, Silver Stalls'
     ],

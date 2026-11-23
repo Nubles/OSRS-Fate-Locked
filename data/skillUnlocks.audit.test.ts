@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { SKILL_UNLOCK_DATA } from './skillUnlocks';
 import { STRATEGY_DATABASE } from './requirements';
+import { MINIGAMES_LIST } from './items';
+import { ACTIVITY_REQUIREMENTS } from './activityRequirements';
 
 // S01–S04: independently reviewed OSRS Wiki revisions and Jagex 12-Aug-2026
 // patch notes, retained in the 22-Sep-2026 skill-reference audit.
@@ -311,5 +313,43 @@ describe('second-skill notes added in the 23 November 2026 deep pass', () => {
     const bare = rowsFor('Sailing')
       .filter(row => /Chum|Trawling Net/.test(row.text) && !/\(Construction \d+\)/.test(row.text)).map(row => row.text);
     expect(bare).toEqual([]);
+  });
+});
+
+// Deep pass of 23 November 2026 (skills-b.d3[1], skills-b.d4[1]): minigames the tracker gates on a skill level had no
+// line in that skill's guide, and three Wiki level-up rows were missing. Each from a fresh Wiki fetch of the activity's
+// own page: Giants' Foundry (Sleeping Giants), Blast Furnace (Smithing 60 skips the fee), Stealing artefacts (49
+// Thieving), Gnome Restaurant (29 Cooking), Mess (20 Cooking), Trouble Brewing (Cabin Fever, 40 Cooking), Gnome Ball
+// and Brimhaven Agility Arena (low obstacles at 1, medium at 20; Agility level-up table).
+describe('minigame lines added in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Smithing', 'Giants\' Foundry (Sleeping Giants)', 15],
+    ['Smithing', 'Blast Furnace (No Entrance Fee)', 60],
+    ['Thieving', 'Stealing Artefacts', 49],
+    ['Cooking', 'Mess (Great Kourend)', 20],
+    ['Cooking', 'Gnome Restaurant', 29],
+    ['Cooking', 'Trouble Brewing (Cabin Fever)', 40],
+    ['Agility', 'Gnome Ball, Brimhaven Arena (Low Obstacles)', 1],
+    ['Agility', 'Brimhaven Arena (Medium Obstacles)', 20],
+    ['Agility', 'Brimhaven Arena (High Obstacles)', 40],
+  ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('lists every minigame the tracker gates on a skill level in that skill at that level', () => {
+    const listedAs: Record<string, string> = { 'Impetuous Impulses': 'Puro-Puro' };
+    // Not yet in the Magic and Ranged guides; left for a later review of those lists.
+    const notYetListed = new Set(['Mage Arena', 'Archery Competition']);
+    const missing: string[] = [];
+    for (const minigame of MINIGAMES_LIST as readonly string[]) {
+      if (notYetListed.has(minigame)) continue;
+      for (const [skill, level] of Object.entries(ACTIVITY_REQUIREMENTS[minigame]?.skills ?? {})) {
+        const name = listedAs[minigame] ?? minigame;
+        if (!rowsFor(skill).some(row => row.level === level && row.text.includes(name))) missing.push(`${skill} ${level}: ${minigame}`);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 });
