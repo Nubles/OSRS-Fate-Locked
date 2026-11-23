@@ -72,8 +72,13 @@ describe('reviewed drop sources', () => {
     ['Manta Ray', 'Zulrah', 35],
     ['Manta Ray', 'Vorkath', 35],
     ['Dragonstone', 'Vorkath', 2],
+    ['Antidote++', 'Zulrah', 10],
   ] as const)('%s from %s yields %d per drop', (item, monster, qty) => {
     expect(curated(item).find(s => s.name === monster)?.outputYield).toBe(qty);
+  });
+
+  it('counts the Zulrah Antidote++ drop in 4-dose bottles', () => {
+    expect(curated('Antidote++').find(s => s.name === 'Zulrah')?.outputDoses).toBe(4);
   });
 
   it.each([

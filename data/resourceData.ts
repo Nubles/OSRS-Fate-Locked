@@ -2292,7 +2292,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Antidote++': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 79 }, inputs: { 'Coconut Milk': 1, 'Irit Leaf': 1, 'Magic Roots': 1 } },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: '10 noted 4-dose potions' }
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Noted', outputYield: 10, outputDoses: 4 }
   ],
   'Antifire Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 69 }, inputs: { 'Lantadyme': 1, 'Vial of Water': 1, 'Dragon Scale Dust': 1 } }
