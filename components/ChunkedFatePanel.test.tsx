@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState } from '../context/GameContext';
+import { MERCY_QUIET_MS } from '../utils/chunkedFate';
 
 const game = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 vi.mock('../context/GameContext', async importOriginal => ({
@@ -15,7 +16,7 @@ vi.mock('../services/ChunkContentService', () => ({ chunkContentService: { get r
 const quests = vi.hoisted(() => ({ rows: [] as { id: string; bucket: string }[] }));
 vi.mock('./QuestDoabilityPanel', () => ({ chunkedQuestRows: () => quests.rows }));
 
-afterEach(() => { cleanup(); quests.rows = []; content.ready = true; content.error = null; content.init.mockClear(); });
+afterEach(() => { cleanup(); vi.useRealTimers(); quests.rows = []; content.ready = true; content.error = null; content.init.mockClear(); });
 
 const dry = (over: Record<string, unknown> = {}) => {
   const fresh = createFreshState();
@@ -108,6 +109,35 @@ describe('Chunked fate panel', () => {
     render(<ChunkedFatePanel osrs />);
     expect(screen.getByText("Fate's Mercy waits while you have 30 Fate: enough for the Ritual of Chaos (25 Fate) at the Void Altar.")).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Call on Fate' })).toBeNull();
+  });
+
+  it('moves the quiet-spell countdown on and opens Mercy when it ends, with the panel left open (chunked-fate.d3[3])', async () => {
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    vi.useFakeTimers();
+    const t0 = Date.parse('2026-11-20T12:00:00Z');
+    vi.setSystemTime(t0);
+    const fresh = createFreshState();
+    dry({ chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 }, chunkedProgressAt: t0 - MERCY_QUIET_MS + 5 * 60_000,
+      unlocks: { ...fresh.unlocks, skills: { Hitpoints: 1, Woodcutting: 2 }, levels: { ...fresh.unlocks.levels, Woodcutting: 15 } } });
+    render(<ChunkedFatePanel />);
+    expect(screen.getByText(/nothing new comes for 5 minutes, it opens anyway\./)).toBeTruthy();
+    await act(async () => { vi.advanceTimersByTime(60_000); });
+    expect(screen.getByText(/nothing new comes for 4 minutes, it opens anyway\./)).toBeTruthy();
+    await act(async () => { vi.advanceTimersByTime(4 * 60_000); });
+    expect(screen.queryByText(/it opens anyway/)).toBeNull();
+    expect((screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByText(/nothing new has come for 3 days/)).toBeTruthy();
+    // The clock stops once nothing on the panel counts down.
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('keeps no clock while the line that shows has no countdown', async () => {
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    vi.useFakeTimers();
+    dry({ chunkedProgressAt: Date.now() });
+    render(<ChunkedFatePanel />);
+    expect(screen.getByText("Fate's Mercy waits until you roll the Breakthrough for Attack.")).toBeTruthy();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('shows nothing while the run still has Keys and nothing is capped', async () => {

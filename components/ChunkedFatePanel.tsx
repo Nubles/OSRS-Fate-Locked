@@ -1,5 +1,5 @@
 import { confirmThen } from '../utils/spendConfirm';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { Sparkles } from './OsrsIcon';
 import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_FORTUNATE_ODDS } from '../config/economy';
@@ -7,7 +7,7 @@ import { DROP_RATES } from '../constants';
 import { keyChance } from '../utils/keyChance';
 import { BOOST_CAP } from '../utils/ritualEffects';
 import { DropSource } from '../types';
-import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
+import { breakthroughTier, mercyBlocker, mercyQuietLeft, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
 import { mercyOpenText, mercyShutReason } from '../utils/chunkedMercyText';
 import { chunksToExplore, exploreBlocker, exploreRollsLeft, exploreThings, exploredIn } from '../utils/chunkExplore';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
@@ -51,8 +51,10 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const rollGilded = (chunk: string, x?: number, y?: number) =>
     confirmThen("Roll this Gilded chunk's Key?", () => game.rollGilded(chunk, x, y));
   const waiting = pendingBreakthroughs(game);
+  // One clock per render, so the line and the button agree.
+  const now = Date.now();
   // Everything but the quest check, which needs the chunk content.
-  const needsQuestCheck = mercyBlocker(game) === null;
+  const needsQuestCheck = mercyBlocker(game, undefined, now) === null;
   const explore = chunksToExplore(game);
 
   // A failed load keeps Mercy shut and offers Retry, never a quest check without the data.
@@ -65,13 +67,23 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
     () => (needsQuestCheck && ready ? chunkedQuestRows(unlocks, gameModeId).filter(row => row.bucket === 'DOABLE').map(row => row.id) : []),
     [needsQuestCheck, ready, unlocks, gameModeId],
   );
-  const mercyOpen = needsQuestCheck && ready && mercyBlocker(game, doableQuests) === null;
+  const blocker = mercyBlocker(game, doableQuests, now);
+  const mercyOpen = needsQuestCheck && ready && blocker === null;
   const showMercy = needsQuestCheck;
+  // These three shut lines count down the quiet spell, and Mercy opens when it
+  // ends: re-render once a minute while one shows, never on a faster clock.
+  const [, tick] = useState(0);
+  const counting = blocker === 'skill_room' || blocker === 'explore' || blocker === 'quest';
+  useEffect(() => {
+    if (!counting) return undefined;
+    const id = window.setTimeout(() => tick(n => n + 1), Math.min(mercyQuietLeft(game, now), 60_000));
+    return () => window.clearTimeout(id);
+  });
   // Why Mercy is shut, when the run has no Keys: a skill with room, Fate for a
   // ritual, a waiting roll or a doable quest. Shown in place of the button.
   const shutReason = needsQuestCheck
-    ? (ready ? mercyShutReason(game, doableQuests) : null)
-    : mercyShutReason(game);
+    ? (ready ? mercyShutReason(game, doableQuests, now) : null)
+    : mercyShutReason(game, undefined, now);
 
   // Fate's Thread and the omens still running (utils/fateLand.ts).
   const thread = fateLand?.thread;
@@ -108,7 +120,7 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
     : needsQuestCheck && !ready
     ? 'Checking your chunks for quests you can still do…'
     : shutReason
-      ?? (showMercy ? mercyOpenText(game) : '');
+      ?? (showMercy ? mercyOpenText(game, now) : '');
   const shown = explore.slice(0, compact ? 1 : EXPLORE_SHOWN);
   const more = explore.length - shown.length;
   const exploreIntro = `The first time you do something new in a chunk you unlocked, roll once at ${exploreChance}%. Tick what you did.`;
