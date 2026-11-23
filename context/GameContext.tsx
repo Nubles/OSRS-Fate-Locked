@@ -3293,7 +3293,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
   }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
   const acknowledgeUnlock = useCallback((id: string) => {
-    if (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved')) return;
+    // Once its reveal has shown, the roll is saved: Continue joins whatever else is saving.
+    if (revealedUnlockIdRef.current !== id && (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved'))) return;
     commitAction({ type: 'ACKNOWLEDGE_UNLOCK', payload: id });
   }, [commitAction, coordinator, storageKey]);
 
@@ -4218,6 +4219,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const rollSaved = saveStatus === 'saved' && !hasPendingChanges;
   const [revealedUnlockId, setRevealedUnlockId] = useState<string | null>(null);
   if (pendingUnlockId && rollSaved && revealedUnlockId !== pendingUnlockId) setRevealedUnlockId(pendingUnlockId);
+  const revealedUnlockIdRef = useRef(revealedUnlockId);
+  revealedUnlockIdRef.current = revealedUnlockId;
   const rollAwaitingSave = !!pendingUnlockId && !rollSaved && revealedUnlockId !== pendingUnlockId;
   const hideRunForFailedRoll = rollAwaitingSave && saveStatus === 'failed';
 

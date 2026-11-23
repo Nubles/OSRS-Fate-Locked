@@ -68,6 +68,9 @@ it('does not expose a failed-save result and retries that same transaction', asy
   // A way out that keeps the run: the backup holds the roll unrevealed.
   expect(screen.getByRole('button', { name: 'Export backup' })).toBeTruthy();
   const selected = current.pendingUnlock!;
+  // Not revealed yet, so Continue cannot clear it.
+  act(() => current.acknowledgeUnlock(selected.id));
+  expect(current.pendingUnlock).toEqual(selected);
   expect(screen.getByText(selected.item).parentElement?.style.display).toBe('none');
   expect(screen.queryByRole('button', { name: 'Accept Destiny' })).toBeNull();
   expect(JSON.parse(localStorage.getItem('roll-audit')!).keys).toBe(3);
@@ -153,4 +156,20 @@ it('keeps the run on screen while a roll saves and does not replay the reveal on
   expect(screen.getByRole('button', { name: 'Continue' })).toBe(reveal);
   expect(states.every(s => !s.startsWith('none'))).toBe(true);
   expect(states.filter((s, i) => s.endsWith('reveal') && !states[i - 1]?.endsWith('reveal'))).toHaveLength(1);
+});
+
+it('closes a shown reveal on the first Continue while another change is still saving', async () => {
+  localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), keys: 3 }));
+  mount(); await settle();
+  act(() => current.rollUnlock(TableType.EQUIPMENT));
+  await act(async () => { await vi.advanceTimersByTimeAsync(550); });
+  const id = current.pendingUnlock!.id;
+  // The docked OSRS reveal leaves the run usable: a change, then Continue at once.
+  act(() => current.saveNote('audit', 'Ticked while the reveal was open'));
+  act(() => current.acknowledgeUnlock(id));
+  expect(current.pendingUnlock).toBeUndefined();
+  await act(async () => { await vi.advanceTimersByTimeAsync(550); });
+  const saved = JSON.parse(localStorage.getItem('roll-audit')!);
+  expect(saved.pendingUnlock).toBeUndefined();
+  expect(saved.keys).toBe(2);
 });
