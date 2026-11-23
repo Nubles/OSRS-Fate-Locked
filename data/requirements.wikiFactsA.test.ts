@@ -9,6 +9,7 @@ import { analyzeRequirement } from '../components/StrategyGuide';
 import { createFreshState } from '../context/GameContext';
 import { REGIONS_LIST, SKILLS_LIST } from './items';
 import { BANK_ACCESS_GATES } from './bankAccess';
+import { RESOURCE_MAP } from './resourceData';
 
 const S = STRATEGY_DATABASE;
 // Every region and skill held at 99: only quests and unlocks can block.
@@ -40,6 +41,14 @@ describe('Dark Beasts (Wiki: Dark beast, Mourner Tunnels)', () => {
     expect(S['Dark Beasts'].quests).toEqual(["Mourning's End Part II"]);
     expect(S['Dark Beasts'].skills).toEqual({ Slayer: 90 });
     expect(analyzeRequirement(S['Dark Beasts'], maxed(), 'vanilla').isFullyPlayable).toBe(false);
+  });
+
+  it('the curated Dark Bow drop row matches the Strategy Guide entry', () => {
+    const rows = (RESOURCE_MAP['Dark Bow'] ?? []).filter(r => r.name === 'Dark Beast' && !r.requirementsUnverified);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].regions).toEqual(S['Dark Beasts'].regions);
+    expect(rows[0].quests).toEqual(S['Dark Beasts'].quests);
+    expect(rows[0].skills).toEqual(S['Dark Beasts'].skills);
   });
 });
 

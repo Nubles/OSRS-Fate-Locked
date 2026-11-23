@@ -349,7 +349,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Soda Ash': [
     { type: 'SHOP', name: 'Charter Ships', regions: ['Kandarin', 'Karamja', 'Asgarnia'], notes: 'Catherby/Port Sarim' },
-    { type: 'DROP', name: 'Killerwatt', regions: ['Kandarin'], skills: {'Slayer': 37}, notes: 'Draynor Manor (Portal)' }
+    { type: 'DROP', name: 'Killerwatt', regions: ['Misthalin'], skills: {'Slayer': 37}, quests: ['Ernest the Chicken'], notes: 'Draynor Manor (Portal)' }
   ],
   'Giant Seaweed': [
     { type: 'SKILL', name: 'Seaweed Patch', regions: ['Islands & Others'], skills: {'Farming': 23}, quests: ['Bone Voyage'], notes: 'Fossil Island Underwater', outputYield: 30 }
@@ -489,7 +489,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Asgarnia'], skills: {'Slayer': 72}, notes: 'Asgarnian Ice Dungeon (Noted)', outputYield: 250 },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Boss Drop (Noted)', outputYield: 1500 },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75}, notes: 'Slayer Tower', outputYield: 150 },
-    { type: 'DROP', name: 'Abyssal Demon', regions: ['Morytania', 'Kourend & Kebos', 'Misthalin'], skills: {'Slayer': 85}, notes: 'Slayer Tower / Catacombs / Abyssal Area', outputYield: 60 }
+    { type: 'DROP', name: 'Abyssal Demon', regions: ['Morytania', 'Kourend & Kebos', 'Wilderness'], skills: {'Slayer': 85}, notes: 'Slayer Tower / Catacombs / Wilderness Slayer Cave', outputYield: 60 },
+    { type: 'DROP', name: 'Abyssal Demon (Abyssal Area)', regions: ['Misthalin'], skills: {'Slayer': 85}, quests: ['Fairytale II - Cure a Queen'], notes: 'Abyssal Area (fairy ring ALR)', outputYield: 60 }
   ],
 
   // --- PICKAXES ---
@@ -556,7 +557,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Adamantite Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} },
+    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia', 'Wilderness'], skills: {'Agility': 70} },
     { type: 'DROP', name: 'Adamant Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'], rarity: 'Always' }
   ],
   'Rune Bar': [
@@ -597,7 +598,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Ice Queen', regions: ['Asgarnia'], notes: 'White Wolf Mountain' }
   ],
   'Smithing Catalyst': [
-    { type: 'MINIGAME', name: 'Giants\' Foundry', regions: ['Kourend & Kebos'], notes: 'Reward Shop' }
+    { type: 'MINIGAME', name: 'Giants\' Foundry', regions: ['Kharidian Desert'], notes: 'Reward Shop' }
   ],
   'Imcando Hammer': [
     { type: 'MINIGAME', name: 'Camdozaal', regions: ['Asgarnia'], skills: {'Mining': 14, 'Smithing': 14}, quests: ['Below Ice Mountain'], notes: 'Barronite Deposits' }
@@ -725,8 +726,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Fishmonger', regions: ['Kourend & Kebos'], notes: 'Piscarilius (Warren)' }
   ],
   'Dark Fishing Bait': [
-    { type: 'DROP', name: 'Ankou', regions: ['Wilderness', 'Kourend & Kebos', 'Misthalin'] },
-    { type: 'DROP', name: 'Zombie', regions: ['Wilderness', 'Kandarin'] }
+    { type: 'DROP', name: 'Ankou', regions: ['Wilderness'], notes: 'Forgotten Cemetery' },
+    { type: 'DROP', name: 'Zombie (Wilderness)', regions: ['Wilderness'] }
   ],
   'Raw Karambwanji': [
     { type: 'SKILL', name: 'Net Fishing', regions: ['Karamja'], skills: {'Fishing': 5}, notes: 'Tai Bwo Wannai Lake' }
@@ -782,7 +783,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Soul Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Kourend & Kebos'], skills: { 'Runecraft': 90 }, notes: 'Arceuus (Zeah)' },
-    { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83} },
+    { type: 'DROP', name: 'Spiritual Mage', regions: ['Asgarnia', 'Wilderness'], skills: {'Slayer': 83} },
     { type: 'DROP', name: 'Cerberus', regions: ['Asgarnia'], skills: {'Slayer': 91}, unlockId: 'Cerberus' }
   ],
   'Death Rune': [
@@ -816,13 +817,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Ancient Wyvern', regions: ['Islands & Others'], skills: {'Slayer': 82}, notes: 'Fossil Island' }
   ],
   'Abyssal Whip': [
-    { type: 'DROP', name: 'Abyssal Demon', regions: ['Morytania', 'Kourend & Kebos', 'Misthalin'], skills: {'Slayer': 85}, notes: 'Slayer Tower / Catacombs / Abyssal Area' }
+    { type: 'DROP', name: 'Abyssal Demon', regions: ['Morytania', 'Kourend & Kebos', 'Wilderness'], skills: {'Slayer': 85}, notes: 'Slayer Tower / Catacombs / Wilderness Slayer Cave' },
+    { type: 'DROP', name: 'Abyssal Demon (Abyssal Area)', regions: ['Misthalin'], skills: {'Slayer': 85}, quests: ['Fairytale II - Cure a Queen'], notes: 'Abyssal Area (fairy ring ALR)' }
   ],
   'Dark Bow': [
     { type: 'DROP', name: 'Dark Beast', regions: ['Tirannwn', 'Misthalin'], skills: {'Slayer': 90}, notes: 'Mourner Tunnels / Isle of Souls' }
   ],
   'Black Mask': [
-    { type: 'DROP', name: 'Cave Horror', regions: ['Islands & Others'], skills: { 'Slayer': 58 }, quests: ['Cabin Fever'], notes: 'Mos Le\'Harmless Caves' }
+    { type: 'DROP', name: 'Cave Horror', regions: ['Morytania'], skills: { 'Slayer': 58 }, quests: ['Cabin Fever'], notes: 'Mos Le\'Harmless Caves' }
   ],
   'Trident of the Seas': [
     { type: 'DROP', name: 'Cave Kraken', regions: ['Kandarin'], skills: {'Slayer': 87}, notes: 'Kraken Cove (Small)' },
@@ -843,11 +845,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
   ],
   'Dragon Boots': [
-    { type: 'DROP', name: 'Spiritual Mage', regions: ['Fremennik', 'Wilderness'], skills: {'Slayer': 83}, notes: 'God Wars Dungeon' }
+    { type: 'DROP', name: 'Spiritual Mage', regions: ['Asgarnia', 'Wilderness'], skills: {'Slayer': 83}, notes: 'God Wars Dungeon' }
   ],
   'Rune Scimitar': [
     { type: 'DROP', name: 'Fire Giant', regions: ['Kandarin', 'Wilderness', 'Kourend & Kebos'], notes: 'Waterfall / Deep Wildy / Catacombs' },
-    { type: 'DROP', name: 'Zamorak Warrior', regions: ['Morytania', 'Kandarin'], notes: 'ZMI / GWD' },
+    { type: 'DROP', name: 'Zamorak Warrior', regions: ['Kandarin'], notes: 'Ourania Cave' },
     { type: 'SKILL', name: 'Smithing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kourend & Kebos', 'Wilderness', 'Fremennik'], skills: {'Smithing': 90}, inputs: {'Rune Bar': 2}, notes: 'Requires 2 Bars + Anvil' }
   ],
   'Dragon Scimitar': [
@@ -861,7 +863,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Iron Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
     { type: 'DROP', name: 'Steel Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 91}, inputs: {'Rune Bar': 1} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} }
+    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia', 'Wilderness'], skills: {'Agility': 70} }
   ],
   'Yew Stock': [
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: {'Fletching': 69}, inputs: {'Yew Logs': 1, 'Knife': 0} }
