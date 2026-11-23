@@ -1082,7 +1082,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'The Nightmare', regions: ['Morytania'], unlockId: 'The Nightmare' }
   ],
   'Soulreaper Axe': [
-    { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {'Leviathan Lure': 1, 'Siren\'s Staff': 1, 'Executioner\'s Axe Head': 1, 'Eye of the Duke': 1} }
+    { type: 'SKILL', name: 'Assembly', regions: ['Any'], inputs: {"Leviathan's Lure": 1, 'Siren\'s Staff': 1, 'Executioner\'s Axe Head': 1, 'Eye of the Duke': 1} }
   ],
   'Virtus Mask': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus' },
@@ -2372,7 +2372,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 1 }, inputs: { 'Corrupted Dust': 10 } }
   ],
   'Extended Anti-venom+': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 94 }, inputs: { 'Anti-venom+': 1, 'Araxyte Venom Sack': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 94 }, inputs: { 'Anti-venom+': 1, 'Araxyte Venom Sac': 1 } }
   ],
   'Extended Antifire': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 84 }, inputs: { 'Antifire Potion': 1, 'Lava Scale Shard': 1 } }
@@ -2488,11 +2488,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: "East Ardougne and Seers' Village" },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: "Morgan's cupboard, Draynor Village" }
   ],
-  'Desert Goat Horn': [
-    { type: 'DROP', name: 'Desert Goat', regions: ['Kharidian Desert'], rarity: 'Common' }
+  'Goat Horn': [
+    { type: 'DROP', name: 'Goat', regions: ['Kharidian Desert'], rarity: 'Always' }
   ],
   'Goat Horn Dust': [
-    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Desert Goat Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Goat Horn': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Unicorn Horn': [
     { type: 'DROP', name: 'Unicorn', regions: ['Misthalin', 'Kandarin', 'Fremennik', 'Asgarnia', 'Kourend & Kebos', 'Varlamore', 'The Open Seas', 'Islands & Others'], rarity: 'Always' }
@@ -2593,13 +2593,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Eye of the Duke': [
     { type: 'DROP', name: 'Duke Sucellus', regions: ['Fremennik'], unlockId: 'Duke Sucellus', rarity: '1/720' }
   ],
-  'Leviathan Lure': [
+  "Leviathan's Lure": [
     { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan', rarity: '1/768' }
   ],
   "Siren's Staff": [
     { type: 'DROP', name: 'The Whisperer', regions: ['Asgarnia'], unlockId: 'The Whisperer', rarity: '1/512' }
   ],
-  'Araxyte Venom Sack': [
+  'Araxyte Venom Sac': [
     { type: 'DROP', name: 'Araxxor', regions: ['Morytania'], unlockId: 'Araxxor' }
   ],
   'Ancient Essence': [
@@ -2730,11 +2730,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Kebbit Teeth Dust': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Kebbit Teeth': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
-  'Gorak Claw': [
+  'Gorak Claws': [
     { type: 'DROP', name: 'Gorak', regions: ['Islands & Others', 'Asgarnia', 'Wilderness God Wars Dungeon'], quests: ['Fairytale II - Cure a Queen'], rarity: '1/3', notes: 'Gorak Plane (fairy ring DIR) / God Wars Dungeon / Wilderness God Wars Dungeon' }
   ],
   'Gorak Claw Powder': [
-    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Gorak Claw': 1 }, notes: 'Grind with a Pestle and mortar' }
+    { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Gorak Claws': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Lily of the Sands': [
     { type: 'DROP', name: 'Tombs of Amascut reward chest', regions: ['Kharidian Desert'], unlockId: 'Tombs of Amascut', notes: 'Raid completion reward' }
@@ -2886,6 +2886,9 @@ export const RENAMED_RESOURCES: Readonly<Record<string, string>> = {
   // 5 November 2025: Cannonball became Steel cannonball. Elemental metal was
   // listed under a made-up name.
   'Cannonball': 'Steel Cannonball', 'Elemental Bar': 'Elemental Metal',
+  // Names that are only Wiki redirects, not the game's item names.
+  'Desert Goat Horn': 'Goat Horn', 'Leviathan Lure': "Leviathan's Lure",
+  'Araxyte Venom Sack': 'Araxyte Venom Sac', 'Gorak Claw': 'Gorak Claws',
 };
 export const currentResourceName = (name: string): string =>
   Object.prototype.hasOwnProperty.call(RENAMED_RESOURCES, name) ? RENAMED_RESOURCES[name] : name;
@@ -2966,13 +2969,13 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Snape Grass', "Red Spiders' Eggs", 'Mort Myre Fungus', 'Blue Dragon Scale',
     'Wine of Zamorak', 'Limpwurt Root', 'White Berries', 'Crushed Nest',
     'Eye of Newt', 'Vial of Water', 'Vial', 'Amylase Crystal', 'Chocolate Dust',
-    'Chocolate Bar', 'Dragon Scale Dust', 'Garlic', 'Desert Goat Horn',
+    'Chocolate Bar', 'Dragon Scale Dust', 'Garlic', 'Goat Horn',
     'Goat Horn Dust', 'Unicorn Horn', 'Unicorn Horn Dust', 'Snake Weed',
     'Coconut Milk', 'Coconut', 'Potato Cactus', 'Magic Roots', 'Yew Roots',
     'Jangerberries', "Toad's Legs", 'Star Flower', "Zulrah's Scales",
     'Crushed Superior Dragon Bones', 'Crystal Shard', 'Crystal Dust',
     'Lava Scale', 'Lava Scale Shard', 'Ashes',
-    'Kebbit Teeth', 'Kebbit Teeth Dust', 'Gorak Claw', 'Gorak Claw Powder',
+    'Kebbit Teeth', 'Kebbit Teeth Dust', 'Gorak Claws', 'Gorak Claw Powder',
     'Lily of the Sands', 'Olive Oil', 'Tree Roots', "Rogue's Purse",
   ],
   'Logs': [
@@ -3063,8 +3066,8 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Serpentine Helm', 'Magic Fang', 'Tanzanite Fang', 'Serpentine Visage',
     'Bludgeon Axon', 'Bludgeon Claw', 'Bludgeon Spine',
     'Godsword Shard 1', 'Godsword Shard 2', 'Godsword Shard 3',
-    "Executioner's Axe Head", 'Eye of the Duke', 'Leviathan Lure',
-    "Siren's Staff", 'Araxyte Venom Sack', 'Ancient Essence', 'Ancient Shard',
+    "Executioner's Axe Head", 'Eye of the Duke', "Leviathan's Lure",
+    "Siren's Staff", 'Araxyte Venom Sac', 'Ancient Essence', 'Ancient Shard',
     'Vial of Blood', 'Nail Beast Nails', 'Nihil Dust', 'Nihil Shard',
     'Helm of Neitiznot', 'Zamorakian Hasta', 'Zamorakian Spear',
   ],

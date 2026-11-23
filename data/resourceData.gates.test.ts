@@ -235,11 +235,11 @@ describe('gorak claws (resource-b.d3[1])', () => {
   // Wars Dungeon and the Gorak Plane.
   const ft2 = 'Fairytale II - Cure a Queen';
   it('goraks drop no claws before Fairytale II', () => {
-    expect(anyOpen('Gorak Claw', 'Gorak', state(allAreas, { quests: allQuests.filter(q => q !== ft2) }))).toBe(false);
+    expect(anyOpen('Gorak Claws', 'Gorak', state(allAreas, { quests: allQuests.filter(q => q !== ft2) }))).toBe(false);
   });
   it('the God Wars Dungeon goraks count', () => {
-    expect(anyOpen('Gorak Claw', 'Gorak', state(areasOf('Asgarnia'), { quests: [ft2] }))).toBe(true);
-    expect(anyOpen('Gorak Claw', 'Gorak', state(['Wilderness God Wars Dungeon'], { quests: [ft2] }))).toBe(true);
+    expect(anyOpen('Gorak Claws', 'Gorak', state(areasOf('Asgarnia'), { quests: [ft2] }))).toBe(true);
+    expect(anyOpen('Gorak Claws', 'Gorak', state(['Wilderness God Wars Dungeon'], { quests: [ft2] }))).toBe(true);
   });
 });
 

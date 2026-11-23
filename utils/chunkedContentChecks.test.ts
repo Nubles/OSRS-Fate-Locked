@@ -319,11 +319,11 @@ describe('Chunked advisors and guides', () => {
     const state = (unlocks: UnlockState, gameModeId = 'chunked') => ({ ...createFreshState(), gameModeId, unlocks }) as never;
     const bosses = ['The Leviathan'];
     const quests = ['Desert Treasure II'];
-    expect(isItemAvailable('Leviathan Lure', state(maxed([], { bosses, quests })))).toBe(false);
-    expect(calculateSupplyChain('Leviathan Lure', state(maxed([], { bosses, quests })))!.sources[0].status.missing)
+    expect(isItemAvailable("Leviathan's Lure", state(maxed([], { bosses, quests })))).toBe(false);
+    expect(calculateSupplyChain("Leviathan's Lure", state(maxed([], { bosses, quests })))!.sources[0].status.missing)
       .toContain('Not in your chunks: The Leviathan');
-    expect(isItemAvailable('Leviathan Lure', state(maxed(['49,50', '48,49'], { bosses, quests })))).toBe(true);
-    expect(isItemAvailable('Leviathan Lure', state(maxed([], { bosses, quests, regions: ['Misthalin'] }), 'vanilla'))).toBe(true);
+    expect(isItemAvailable("Leviathan's Lure", state(maxed(['49,50', '48,49'], { bosses, quests })))).toBe(true);
+    expect(isItemAvailable("Leviathan's Lure", state(maxed([], { bosses, quests, regions: ['Misthalin'] }), 'vanilla'))).toBe(true);
   });
 });
 

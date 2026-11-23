@@ -84,7 +84,7 @@ describe('reviewed drop sources', () => {
   it.each([
     ["Executioner's Axe Head", 'Vardorvis', '1/1088'],
     ['Eye of the Duke', 'Duke Sucellus', '1/720'],
-    ['Leviathan Lure', 'The Leviathan', '1/768'],
+    ["Leviathan's Lure", 'The Leviathan', '1/768'],
     ["Siren's Staff", 'The Whisperer', '1/512'],
     ['Dragon Harpoon', 'Wyrm', '1/10000 (1/2000 on task)'],
     // Imps always drop fiendish ashes; regular ashes are 6/128.

@@ -47,3 +47,15 @@ describe('game item names (resource-a.d1[7])', () => {
   // Wiki 'Elemental metal': the bar's name; 'Elemental bar' is a redirect.
   renames([['Cannonball', 'Steel Cannonball'], ['Elemental Bar', 'Elemental Metal']]);
 });
+
+describe('names that were only Wiki redirects (resource-b.d1[3])', () => {
+  // Wiki infobox names: 'Goat horn' (dropped by goats, Always), "Leviathan's
+  // lure", 'Araxyte venom sac', 'Gorak claws'.
+  renames([
+    ['Desert Goat Horn', 'Goat Horn'], ['Leviathan Lure', "Leviathan's Lure"],
+    ['Araxyte Venom Sack', 'Araxyte Venom Sac'], ['Gorak Claw', 'Gorak Claws'],
+  ]);
+  it('goat horn drops from goats every kill', () => {
+    expect(RESOURCE_MAP['Goat Horn'][0]).toMatchObject({ type: 'DROP', name: 'Goat', rarity: 'Always' });
+  });
+});
