@@ -162,7 +162,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Dwarf Weed': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 79}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' }
   ],
   'Toadflax': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 }
@@ -263,7 +264,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'White Berries': [
     { type: 'SKILL', name: 'Bush Patch', regions: ['Misthalin', 'Rimmington', 'East Ardougne', 'Miscellania & Etceteria', 'Farming Guild'], skills: {'Farming': 59}, notes: 'Requires Seeds', outputYield: 4 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Wilderness'], notes: 'Lava Dragon Isle' },
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' }
   ],
   'Crushed Nest': [
     { type: 'SKILL', name: 'Bird Houses', regions: ['Islands & Others'], skills: {'Hunter': 5}, quests: ['Bone Voyage'], notes: 'Fossil Island runs', outputYield: 10 },
@@ -356,7 +358,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Flax': [
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Massive quantities', outputYield: 1000 },
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: 'Seers\' Village Fields' }
   ],
   'Molten Glass': [
@@ -370,8 +373,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Tanner', merchantCategory: 'Tanners', regions: ['Any'], inputs: {'Black Dragonhide': 1, 'Coins': 20}, notes: 'Use a Tanner' }
   ],
   'Black Dragonhide': [
-    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia', 'Tirannwn'], notes: 'Taverley Dungeon' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin', 'Tirannwn'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia'], notes: 'Taverley Dungeon' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Mynydd' },
     { type: 'DROP', name: 'KBD', regions: ['Wilderness'], unlockId: 'King Black Dragon' },
     { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Kourend & Kebos'], skills: {'Slayer': 77}, notes: 'Catacombs' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' }
@@ -447,7 +451,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Gold Ore': [
     { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace', notes: 'Ordan (Best source)' },
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia', 'Karamja', 'Kharidian Desert', 'Fremennik', 'Tirannwn'], skills: { 'Mining': 40 }, notes: 'Crafting Guild / Brimhaven / Arzinian / TzHaar' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia', 'Karamja', 'Kharidian Desert', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Crafting Guild / Brimhaven / Arzinian / TzHaar' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Tirannwn'], skills: { 'Mining': 40 }, quests: ['Song of the Elves'], notes: 'Mynydd / Trahaearn mine' },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
   ],
   'Calcified Deposit': [
@@ -762,7 +767,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Moss Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Varlamore', 'The Open Seas', 'Islands & Others'] },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'SHOP', name: 'Magic Guild Store', regions: ['Kandarin'], skills: {'Magic': 66} },
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' },
     { type: 'DROP', name: 'Basilisk', regions: ['Fremennik'], skills: {'Slayer': 40} }
   ],
   'Law Rune': [
@@ -807,8 +813,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Blue Dragon', regions: ['Kandarin'], notes: 'Ogre Enclave' },
     { type: 'DROP', name: 'Red Dragon', regions: ['Karamja'], notes: 'Brimhaven Dungeon' },
     { type: 'DROP', name: 'Red Dragon', regions: ['Kourend & Kebos'], notes: 'Forthos Dungeon' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia', 'Tirannwn'], notes: 'Taverley Dungeon' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin', 'Tirannwn'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia'], notes: 'Taverley Dungeon' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
+    { type: 'DROP', name: 'Black Dragon', regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Mynydd' },
     { type: 'DROP', name: 'Brutal Red Dragon', regions: ['Catacombs of Kourend'], rarity: 'Always', notes: "Catacombs of Kourend (Dragon's Den)" },
     { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Catacombs of Kourend'], skills: {'Slayer': 77}, rarity: 'Always', notes: "Catacombs of Kourend (Dragon's Den)" },
     { type: 'DROP', name: 'King Black Dragon', regions: ['Wilderness'], unlockId: 'King Black Dragon' },
@@ -840,11 +847,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75}, notes: 'Slayer Tower' }
   ],
   'Leaf-Bladed Sword': [
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' },
     { type: 'DROP', name: 'Turoth', regions: ['Fremennik'], skills: {'Slayer': 55} }
   ],
   'Leaf-Bladed Battleaxe': [
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
+    { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
+    { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' }
   ],
   'Dragon Boots': [
     { type: 'DROP', name: 'Spiritual Mage', regions: ['Asgarnia', 'Wilderness'], skills: {'Slayer': 83}, notes: 'God Wars Dungeon' }
@@ -1370,7 +1379,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Fire Giant', regions: ['Kandarin', 'Wilderness', 'Kourend & Kebos'], rarity: 'Always' }
   ],
   'Babydragon Bones': [
-    { type: 'DROP', name: 'Baby Blue Dragon', regions: ['Asgarnia', 'Kandarin'], rarity: 'Always', notes: 'Taverley / Ogre Enclave' }
+    { type: 'DROP', name: 'Baby Blue Dragon', regions: ['Asgarnia'], rarity: 'Always', notes: 'Taverley Dungeon' },
+    { type: 'DROP', name: 'Baby Blue Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'], rarity: 'Always', notes: 'Myths\' Guild basement' }
   ],
   'Lava Dragon Bones': [
     { type: 'DROP', name: 'Lava Dragon', regions: ['Wilderness'], rarity: 'Always', notes: 'Lava Dragon Isle' }

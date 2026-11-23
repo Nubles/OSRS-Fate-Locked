@@ -119,3 +119,33 @@ describe('uncut zenyte (resource-a.d3[6])', () => {
     expect(fuse.skills).toEqual({ Crafting: 70 });
   });
 });
+
+describe('spawns behind a quest (resource-a.d4[1])', () => {
+  // Wiki 'Black dragon': the only Tirannwn spawn is Mynydd (Song of the
+  // Elves). 'Kurask': the only Tirannwn spawn is the Iorwerth Dungeon (Song of
+  // the Elves). 'Gold rocks': the Tirannwn rocks are Mynydd and Trahaearn mine.
+  // 'Baby blue dragon': the only Kandarin spawn is the Myths' Guild basement
+  // (Dragon Slayer II).
+  const tirannwn = areasOf('Tirannwn');
+  const cases = [
+    ['Black Dragonhide', 'Black Dragon'],
+    ['Dragon Bones', 'Black Dragon'],
+    ['Dwarf Weed', 'Kurask'],
+    ['White Berries', 'Kurask'],
+    ['Flax', 'Kurask'],
+    ['Nature Rune', 'Kurask'],
+    ['Leaf-Bladed Sword', 'Kurask'],
+    ['Leaf-Bladed Battleaxe', 'Kurask'],
+    ['Gold Ore', 'Mining Rocks'],
+  ] as const;
+  it.each(cases)('%s from %s in Tirannwn needs Song of the Elves', (item, name) => {
+    expect(anyOpen(item, name, state(tirannwn, { quests: [] }))).toBe(false);
+    expect(anyOpen(item, name, state(tirannwn, { quests: ['Song of the Elves'] }))).toBe(true);
+  });
+
+  it('baby blue dragons in Kandarin need Dragon Slayer II', () => {
+    expect(anyOpen('Babydragon Bones', 'Baby Blue Dragon', state(areasOf('Kandarin'), { quests: [] }))).toBe(false);
+    expect(anyOpen('Babydragon Bones', 'Baby Blue Dragon', state(areasOf('Kandarin'), { quests: ['Dragon Slayer II'] }))).toBe(true);
+    expect(anyOpen('Babydragon Bones', 'Baby Blue Dragon', state(areasOf('Asgarnia'), { quests: [] }))).toBe(true);
+  });
+});
