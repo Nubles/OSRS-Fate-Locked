@@ -81,3 +81,14 @@ describe('aviansie (resource-a.d3[2])', () => {
     expect(anyOpen(item, 'Aviansie', state(areasOf('Wilderness'), { quests: [] }))).toBe(true);
   });
 });
+
+describe('dense essence (resource-a.d3[3])', () => {
+  // Wiki 'Dense runestone': 38 Mining and 38 Crafting; the Kourend favour
+  // requirement was removed on 10 January 2024. No quest.
+  it('mines with 38 Mining and 38 Crafting and no quest', () => {
+    const s = state(areasOf('Kourend & Kebos'), { quests: [], levels: { Mining: 38, Crafting: 38 } });
+    const [st] = statuses('Dense Essence Block', 'Mining', s);
+    expect(st.missing).toEqual([]);
+    expect(st.isAvailable).toBe(true);
+  });
+});

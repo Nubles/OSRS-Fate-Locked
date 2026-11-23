@@ -439,7 +439,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Kharidian Desert'], skills: {'Mining': 35}, notes: 'Quarry' }
   ],
   'Dense Essence Block': [
-    { type: 'SKILL', name: 'Mining', regions: ['Kourend & Kebos'], skills: {'Mining': 38, 'Crafting': 38}, quests: ['A Kingdom Divided'], notes: 'Arceuus Essence Mine' }
+    { type: 'SKILL', name: 'Mining', regions: ['Kourend & Kebos'], skills: {'Mining': 38, 'Crafting': 38}, notes: 'Arceuus Essence Mine (pickaxe and chisel)' }
   ],
   'Gem Rock': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja'], skills: {'Mining': 40}, quests: ['Shilo Village'], notes: 'Shilo Village' },
