@@ -91,7 +91,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Sarachnis': { manualRequirements: ['Bring a slash weapon or a knife to cut the webs, or wear Aranea boots'] },
   'Dagannoth Kings': { manualRequirements: ['Bring another player, or a pet rock and a rune thrownaxe, or use the 85 Agility shortcut on Waterbirth Island'] },
   'Hespori': { skills: { Farming: 65 } },
-  'Coral Nursery': { manualRequirements: ['Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.'] },
+  // Coral nursery (patch): the nurseries open after Troubled Tortugans.
+  'Coral Nursery': { quests: ['Troubled Tortugans'], manualRequirements: ['Dive with a diving apparatus and fishbowl helmet, or a Medallion of the deep.'] },
   'Phantom Muspah': { quests: ['Secrets of the North'] },
   'Zulrah': { quests: ['Regicide'] },
   'Wintertodt': { skills: { Firemaking: 50 } },
@@ -198,7 +199,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     totalLevel: 750,
     note: 'Pete Kayer at Ferox Enclave. 750 total level is needed to claim rewards.',
   },
-  'Blast Furnace': { note: '60 Smithing to use free; under 60, pay a fee.' },
+  // Blast Furnace: Keldagrim needs The Giant Dwarf started.
+  'Blast Furnace': { questProgress: [{ quest: 'The Giant Dwarf', label: 'Started The Giant Dwarf to reach Keldagrim' }], note: '60 Smithing to use free; under 60, pay a fee.' },
   'Nightmare Zone': {
     manualRequirements: ['Completed at least five quests with bosses eligible for Nightmare Zone'],
     requiredAreas: ['Yanille'],
@@ -246,7 +248,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
   'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
-  'Dizana\'s Quiver': { note: 'Fortis Colosseum reward (ammo storage).' },
+  // Fortis Colosseum: as with all of Varlamore, Children of the Sun.
+  'Dizana\'s Quiver': { quests: ['Children of the Sun'], note: 'Fortis Colosseum reward (ammo storage).' },
   'Forestry Kit': { note: 'Forestry Shop (anima-infused bark).' },
   "Drakan's Medallion": { quests: ['A Taste of Hope'] },
   'Royal Seed Pod': { quests: ['Monkey Madness II'] },
@@ -276,7 +279,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     requiredAreas: ['Mor Ul Rek (TzHaar City)'],
   },
   'Burthorpe Games Room': { requiredAreas: ['Burthorpe'] },
-  'Mage Training Arena': { requiredAreas: ['Mage Training Arena'] },
+  // Mage Training Arena: 7 Magic to take part (one spell); 33 for all four rooms.
+  'Mage Training Arena': { skills: { Magic: 7 }, requiredAreas: ['Mage Training Arena'] },
   'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).' },
   'Forestry': { note: 'Woodcutting (Forestry events).' },
   'Tears of Guthix': { quests: ['Tears of Guthix'] },
@@ -285,8 +289,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
   // Each place asks for its own way in, and each patch carries it (owner call U6;
   // Special patches/Patches, oldid 15319393): no quest is asked of the unlock itself.
-  'Hardwood Tree': { note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
-  'Seaweed': { quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
+  // Teak tree: teak, the lowest hardwood, needs 35 Farming.
+  'Hardwood Tree': { skills: { Farming: 35 }, note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
+  // Giant seaweed: harvested at 23 Farming.
+  'Seaweed': { skills: { Farming: 23 }, quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
   'Spirit Tree': { skills: { Farming: 83 }, note: 'Grow a spirit tree.' },
   'Celastrus': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },
   'Redwood': { skills: { Farming: 90 }, note: 'Farming Guild (high tier).' },
@@ -306,7 +312,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Lectern': { skills: { Construction: 40 }, note: 'Study.' },
   'Workshop Tools': { skills: { Construction: 15 }, note: 'Workshop.' },
   'Combat Dummy': { skills: { Construction: 48 } },
-  'Mounted Mythical Cape': { skills: { Construction: 47 } },
+  // Mythical cape (mounted): 47 Construction and Dragon Slayer II completed.
+  'Mounted Mythical Cape': { skills: { Construction: 47 }, quests: ['Dragon Slayer II'] },
   "Mounted Xeric's Talisman": { skills: { Construction: 72 }, note: 'Amulet space in the portal nexus room.' },
   'Mounted Digsite Pendant': { skills: { Construction: 82 }, note: 'Amulet space in the portal nexus room.' },
   'Spellbook Altars': { skills: { Construction: 80 }, note: 'Achievement gallery altar space (occult altar at 90).' },
@@ -330,22 +337,36 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Seed Vault': { skills: { Farming: 45 }, requiredAreas: ['Farming Guild'], note: 'Seed storage inside the Farming Guild.' },
   'Fossil Storage': { quests: ['Bone Voyage'], note: 'Fossil Island museum.' },
   'Plank Sack': { note: 'Mahogany Homes reward.' },
-  "Huntsman's Kit": { note: 'Varlamore (Hunter Guild).' },
-  'Meat Pouch': { note: 'Crafted from Hunter furs with a needle and thread.' },
-  'Essence Pouches': { note: 'Larger pouches need higher Runecraft.' },
-  'Seed Box': { note: 'Tithe Farm reward.' },
-  'Herb Sack': { note: 'Purchased with Slayer reward points or Tithe Farm points.' },
-  'Gem Bag': { note: 'Motherlode Mine reward.' },
-  'Coal Bag': { note: 'Motherlode Mine / Prospector reward.' },
-  'Fish Barrel': { note: 'Tempoross reward.' },
-  'Tackle Box': { note: 'Tempoross reward pool.' },
+  // Wiki, November 2026. Huntsman's kit: Hunters' Rumours loot sacks (46 Hunter,
+  // the Hunter Guild in Varlamore). Small meat pouch: 35 Crafting. Essence pouch:
+  // the Abyss (Enter the Abyss), the Abyssal Area (fairy ring ALR) or Guardians of
+  // the Rift (behind Temple of the Eye, so Enter the Abyss). Seed box: Tithe Farm
+  // (34 Farming). Herb sack: buying needs 58 Herblore from either shop. Gem bag,
+  // coal bag: golden nuggets come only from pay-dirt, which needs 30 Mining.
+  // Fish barrel, tackle box: Tempoross (35 Fishing).
+  "Huntsman's Kit": { skills: { Hunter: 46 }, quests: ['Children of the Sun'], note: "Hunters' Rumours reward (Hunter Guild, Varlamore)." },
+  'Meat Pouch': { skills: { Crafting: 35 }, note: 'Crafted from Hunter furs with a needle and thread.' },
+  'Essence Pouches': {
+    oneOf: [
+      { manualRequirements: ['Completed Enter the Abyss (Mage of Zamorak): a free small pouch and Abyss drops'] },
+      { manualRequirements: ['Reached the Abyssal Area by fairy ring code ALR for pouch drops'] },
+    ],
+    note: 'Larger pouches need higher Runecraft.',
+  },
+  'Seed Box': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
+  'Herb Sack': { skills: { Herblore: 58 }, note: 'Bought with 750 Slayer reward points or 250 Tithe Farm points; buying needs 58 Herblore (not boostable).' },
+  'Gem Bag': { skills: { Mining: 30 }, note: 'Motherlode Mine reward.' },
+  'Coal Bag': { skills: { Mining: 30 }, note: 'Motherlode Mine / Prospector reward.' },
+  'Fish Barrel': { skills: { Fishing: 35 }, note: 'Tempoross reward.' },
+  'Tackle Box': { skills: { Fishing: 35 }, note: 'Tempoross reward pool.' },
   'Log Basket': { note: 'Forestry Shop reward.' },
-  'Beginner STASH': { note: 'Clue STASH unit (Construction).' },
-  'Easy STASH': { note: 'Clue STASH unit (Construction).' },
-  'Medium STASH': { note: 'Clue STASH unit (Construction).' },
-  'Hard STASH': { note: 'Clue STASH unit (Construction).' },
-  'Elite STASH': { note: 'Clue STASH unit (Construction).' },
-  'Master STASH': { note: 'Clue STASH unit (Construction).' },
+  // STASH units: build levels 12 / 27 / 42 / 55 / 77 / 88 (boostable).
+  'Beginner STASH': { skills: { Construction: 12 }, note: 'Clue STASH unit (Construction).' },
+  'Easy STASH': { skills: { Construction: 27 }, note: 'Clue STASH unit (Construction).' },
+  'Medium STASH': { skills: { Construction: 42 }, note: 'Clue STASH unit (Construction).' },
+  'Hard STASH': { skills: { Construction: 55 }, note: 'Clue STASH unit (Construction).' },
+  'Elite STASH': { skills: { Construction: 77 }, note: 'Clue STASH unit (Construction).' },
+  'Master STASH': { skills: { Construction: 88 }, note: 'Clue STASH unit (Construction).' },
 };
 
 /**

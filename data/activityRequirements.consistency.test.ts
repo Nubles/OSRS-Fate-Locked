@@ -188,6 +188,70 @@ describe('activity rows follow the Wiki', () => {
     expect(getActivityReq("Rogues' Den")?.skills).toBeUndefined();
   });
 
+  it('storage and house rows carry the gate of the place the item comes from (Wiki, November 2026)', () => {
+    expect(ACTIVITY_REQUIREMENTS['Seed Box'].skills).toEqual({ Farming: 34 });
+    expect(ACTIVITY_REQUIREMENTS['Fish Barrel'].skills).toEqual({ Fishing: 35 });
+    expect(ACTIVITY_REQUIREMENTS['Tackle Box'].skills).toEqual({ Fishing: 35 });
+    expect(ACTIVITY_REQUIREMENTS["Huntsman's Kit"]).toMatchObject({ skills: { Hunter: 46 }, quests: ['Children of the Sun'] });
+    expect(ACTIVITY_REQUIREMENTS["Dizana's Quiver"].quests).toEqual(['Children of the Sun']);
+    expect(ACTIVITY_REQUIREMENTS['Meat Pouch'].skills).toEqual({ Crafting: 35 });
+    expect(ACTIVITY_REQUIREMENTS['Mounted Mythical Cape']).toMatchObject({ skills: { Construction: 47 }, quests: ['Dragon Slayer II'] });
+    for (const item of ['Seed Box', 'Fish Barrel', 'Tackle Box', "Huntsman's Kit", "Dizana's Quiver", 'Meat Pouch', 'Mounted Mythical Cape']) {
+      expect(ready(item, () => {}).status, item).toBe('NOT_READY');
+    }
+    expect(ready('Mounted Mythical Cape', at({ Construction: 47 })).status).toBe('NOT_READY');
+    expect(ready('Mounted Mythical Cape', at({ Construction: 47 }, ['Dragon Slayer II'])).status).toBe('READY');
+    expect(ready('Seed Box', at({ Farming: 34 })).status).toBe('READY');
+  });
+
+  it('the Seaweed patch needs 23 Farming and the Coral Nursery machine-checks Troubled Tortugans (Wiki: Giant seaweed, Coral nursery)', () => {
+    expect(ACTIVITY_REQUIREMENTS.Seaweed).toMatchObject({ skills: { Farming: 23 }, quests: ['Bone Voyage'] });
+    expect(ready('Seaweed', at({ Farming: 22 }, ['Bone Voyage'])).status).toBe('NOT_READY');
+    expect(ready('Seaweed', at({ Farming: 23 }, ['Bone Voyage'])).status).toBe('READY');
+    expect(ACTIVITY_REQUIREMENTS['Coral Nursery'].quests).toEqual(['Troubled Tortugans']);
+    expect(ready('Coral Nursery', () => {}).status).toBe('NOT_READY');
+    // The diving gear stays a check the player confirms once the quest is done.
+    expect(ready('Coral Nursery', at({}, ['Troubled Tortugans'])).status).toBe('NEEDS_CONFIRMATION');
+  });
+
+  it('the Mage Training Arena needs 7 Magic and the Blast Furnace a started Giant Dwarf (Wiki: Mage Training Arena, Blast Furnace)', () => {
+    expect(ACTIVITY_REQUIREMENTS['Mage Training Arena'].skills).toEqual({ Magic: 7 });
+    expect(ready('Mage Training Arena', at({ Magic: 6 })).status).toBe('NOT_READY');
+    expect(ready('Mage Training Arena', at({ Magic: 7 })).status).toBe('READY');
+    expect(ACTIVITY_REQUIREMENTS['Blast Furnace'].questProgress?.map(p => p.quest)).toEqual(['The Giant Dwarf']);
+    expect(ready('Blast Furnace', () => {}).status).toBe('NEEDS_CONFIRMATION');
+    expect(ready('Blast Furnace', at({}, ['The Giant Dwarf'])).status).toBe('READY');
+  });
+
+  it('STASH units need their Construction level and the nugget bags 30 Mining (Wiki: STASH units, Motherlode Mine)', () => {
+    const STASH = { Beginner: 12, Easy: 27, Medium: 42, Hard: 55, Elite: 77, Master: 88 };
+    for (const [tier, level] of Object.entries(STASH)) {
+      expect(ACTIVITY_REQUIREMENTS[`${tier} STASH`].skills, tier).toEqual({ Construction: level });
+      expect(ready(`${tier} STASH`, at({ Construction: level - 1 })).status, tier).toBe('NOT_READY');
+      expect(ready(`${tier} STASH`, at({ Construction: level })).status, tier).toBe('READY');
+    }
+    for (const bag of ['Gem Bag', 'Coal Bag']) {
+      expect(ACTIVITY_REQUIREMENTS[bag].skills, bag).toEqual({ Mining: 30 });
+      expect(ready(bag, at({ Mining: 29 })).status, bag).toBe('NOT_READY');
+    }
+  });
+
+  it('the Hardwood Tree patch needs 35 Farming, the level of teak (Wiki: Teak tree)', () => {
+    expect(ACTIVITY_REQUIREMENTS['Hardwood Tree'].skills).toEqual({ Farming: 35 });
+    expect(ACTIVITY_REQUIREMENTS['Hardwood Tree'].quests).toBeUndefined();
+    expect(ready('Hardwood Tree', at({ Farming: 34 }))).toEqual({ status: 'NOT_READY', blockers: [{ kind: 'skill', label: 'Farming 35' }] });
+    expect(ready('Hardwood Tree', at({ Farming: 35 })).status).toBe('READY');
+  });
+
+  it('the Herb Sack needs 58 Herblore and Essence Pouches a way into the Abyss (Wiki: Herb sack, Essence pouch)', () => {
+    expect(ACTIVITY_REQUIREMENTS['Herb Sack'].skills).toEqual({ Herblore: 58 });
+    expect(ready('Herb Sack', at({ Herblore: 57 }, ['Druidic Ritual'])).status).toBe('NOT_READY');
+    // Herblore itself opens with Druidic Ritual.
+    expect(ready('Herb Sack', at({ Herblore: 58 }, ['Druidic Ritual'])).status).toBe('READY');
+    expect(ready('Essence Pouches', () => {}).status).not.toBe('READY');
+    expect(ACTIVITY_REQUIREMENTS['Essence Pouches'].oneOf?.flatMap(route => route.manualRequirements ?? []).join(' ')).toMatch(/Enter the Abyss.*ALR/);
+  });
+
   it("the Cooks' and Crafting Guild doors ask for a worn item (Wiki: Cooks' Guild, Crafting Guild)", () => {
     expect(ACTIVITY_REQUIREMENTS["Cooks' Guild"]).toMatchObject({ skills: { Cooking: 32 }, note: expect.stringMatching(/chef's hat or golden chef's hat/) });
     expect(ACTIVITY_REQUIREMENTS['Crafting Guild']).toMatchObject({ skills: { Crafting: 40 }, note: expect.stringMatching(/apron/) });
