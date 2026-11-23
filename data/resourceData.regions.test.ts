@@ -90,3 +90,33 @@ describe('monster and activity areas (resource-a.d1[3])', () => {
     expect(open(state(areasOf('Wilderness'), { quests: [] }))).toEqual(['Abyssal Demon']);
   });
 });
+
+describe('shop areas (resource-a.d1[4])', () => {
+  const shops = { merchants: ['Fishing Shops', 'Herblore Shops', 'General Stores'] };
+
+  it.each([
+    ['Small Fishing Net', 'Fishing Shop', ['Asgarnia', 'Kandarin', 'Fremennik']],
+    ['Fishing Rod', 'Fishing Shop', ['Asgarnia', 'Kandarin', 'Karamja', 'Fremennik']],
+    ['Fly Fishing Rod', 'Fishing Shop', ['Asgarnia', 'Kandarin', 'Karamja', 'Fremennik']],
+    ['Harpoon', 'Fishing Shop', ['Asgarnia', 'Kandarin', 'Fremennik']],
+    ['Eye of Newt', 'Herblore Shop', ['Asgarnia', 'Kandarin']],
+    ['Iron Ore', 'Ore Seller', ['Fremennik']],
+    ['Cosmic Rune', "Ali's Discount Wares", ['Kharidian Desert']],
+  ] as const)('%s <- %s sells only in %o', (item, shop, regions) => {
+    expect(row(item, shop).regions).toEqual(regions);
+  });
+
+  it.each([
+    ['Small Fishing Net', 'Fishing Shop'], ['Fishing Rod', 'Fishing Shop'],
+    ['Fly Fishing Rod', 'Fishing Shop'], ['Eye of Newt', 'Herblore Shop'],
+  ])('%s <- %s is not buyable on the free Misthalin start', (item, shop) => {
+    expect(avail(item, shop, state([], shops))).toEqual([false]);
+    expect(avail(item, shop, state(areasOf('Asgarnia'), shops))).toEqual([true]);
+  });
+
+  it('names the shops where they are', () => {
+    expect(row('Harpoon', 'Fishing Shop').notes).toBe('Port Sarim / Catherby');
+    expect(row('Eye of Newt', 'Herblore Shop').notes).toBe("Port Sarim / Taverley / Gu'Tanoth");
+    expect(row('Cosmic Rune', "Ali's Discount Wares").notes).toBe('Al Kharid');
+  });
+});

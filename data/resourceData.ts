@@ -270,7 +270,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', notes: 'Exchange skins/claws' }
   ],
   'Eye of Newt': [
-    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Taverley / Catherby / Port Sarim' }
+    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin'], notes: "Port Sarim / Taverley / Gu'Tanoth" }
   ],
   'Vial of Water': [
     { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Most general stores stock packs' },
@@ -420,7 +420,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Iron Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Any'], skills: {'Mining': 15} },
-    { type: 'SHOP', name: 'Ore Seller', regions: ['Fremennik', 'Kourend & Kebos'] }
+    { type: 'SHOP', name: 'Ore Seller', regions: ['Fremennik'] }
   ],
   'Silver Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia', 'Misthalin', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Karamja'], skills: {'Mining': 20}, notes: 'Crafting Guild / Al Kharid / TzHaar' },
@@ -682,7 +682,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- FISHING SUPPLIES ---
   'Small Fishing Net': [
-    { type: 'SHOP', name: 'Fishing Shop', regions: ['Misthalin', 'Kandarin', 'Karamja', 'Fremennik'] },
+    { type: 'SHOP', name: 'Fishing Shop', regions: ['Asgarnia', 'Kandarin', 'Fremennik'] },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: 'Lumbridge Swamp' }
   ],
   'Big Fishing Net': [
@@ -690,13 +690,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: 'Fishing Guild' }
   ],
   'Fishing Rod': [
-    { type: 'SHOP', name: 'Fishing Shop', regions: ['Misthalin', 'Kandarin', 'Karamja', 'Fremennik'] }
+    { type: 'SHOP', name: 'Fishing Shop', regions: ['Asgarnia', 'Kandarin', 'Karamja', 'Fremennik'] }
   ],
   'Fly Fishing Rod': [
-    { type: 'SHOP', name: 'Fishing Shop', regions: ['Misthalin', 'Kandarin', 'Karamja', 'Fremennik'] }
+    { type: 'SHOP', name: 'Fishing Shop', regions: ['Asgarnia', 'Kandarin', 'Karamja', 'Fremennik'] }
   ],
   'Harpoon': [
-    { type: 'SHOP', name: 'Fishing Shop', regions: ['Kandarin', 'Karamja', 'Fremennik'], notes: 'Catherby / Port Sarim' }
+    { type: 'SHOP', name: 'Fishing Shop', regions: ['Asgarnia', 'Kandarin', 'Fremennik'], notes: 'Port Sarim / Catherby' }
   ],
   'Lobster Pot': [
     { type: 'SHOP', name: 'Fishing Shop', regions: ['Kandarin', 'Karamja', 'Fremennik'], notes: 'Catherby / Port Sarim' }
@@ -773,7 +773,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Cosmic Rune': [
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Misthalin'], skills: { 'Runecraft': 27 }, notes: 'Zanaris (Lost City)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
-    { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Kharidian Desert', 'Misthalin'], quests: ['The Feud'], notes: 'Pollnivneach' }
+    { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Kharidian Desert'], quests: ['The Feud'], notes: 'Al Kharid' }
   ],
   'Blood Rune': [
     { type: 'SKILL', name: 'True Blood Altar', regions: ['Morytania'], skills: { 'Runecraft': 77 }, quests: ['Sins of the Father'] },
