@@ -158,15 +158,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Cadantine': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 67}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Nechryael', regions: ['Morytania', 'Kourend & Kebos'], skills: {'Slayer': 80} }
+    { type: 'DROP', name: 'Greater Nechryael', regions: ['Kourend & Kebos', 'Wilderness'], skills: {'Slayer': 80} }
   ],
   'Dwarf Weed': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 79}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
   ],
   'Toadflax': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 },
-    { type: 'DROP', name: 'Cave Horror', regions: ['Islands & Others'], skills: {'Slayer': 58}, quests: ['Cabin Fever'] }
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 }
   ],
   'Avantoe': [
     { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 50}, notes: 'Seed required', outputYield: 8 },
@@ -214,8 +213,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', outputDoses: 4, regions: ['Any'], skills: { 'Herblore': 77 }, inputs: {'Super Energy(4)': 1, 'Amylase Crystal': 4} }
   ],
   'Ranging Potion': [
-    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 72 }, inputs: {'Dwarf Weed': 1, 'Wine of Zamorak': 1, 'Vial of Water': 1} },
-    { type: 'DROP', name: 'Tarn Razorlor', regions: ['Morytania'], quests: ['Haunted Mine'] }
+    { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 72 }, inputs: {'Dwarf Weed': 1, 'Wine of Zamorak': 1, 'Vial of Water': 1} }
   ],
   'Saradomin Brew': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 81 }, inputs: {'Toadflax': 1, 'Crushed Nest': 1, 'Vial of Water': 1} },
@@ -225,8 +223,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 90}, inputs: {'Super Attack(4)': 1, 'Super Strength(4)': 1, 'Super Defence(4)': 1, 'Torstol': 1}, outputDoses: 4, notes: 'Combine three 4-dose super potions and torstol to produce a 4-dose super combat potion' }
   ],
   'Anti-venom': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 87}, inputs: {'Zulrah\'s Scales': 20, 'Antidote++': 1}, notes: 'Requires Antidote++ (Coconut Milk + Toadflax + Magic Roots)' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Also drops Antidote++' }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 87}, inputs: {'Zulrah\'s Scales': 20, 'Antidote++': 1}, notes: 'Requires Antidote++ (Coconut Milk + Toadflax + Magic Roots)' }
   ],
   'Energy Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: {'Herblore': 26}, inputs: {'Harralander': 1, 'Chocolate Dust': 1, 'Vial of Water': 1} }
@@ -252,8 +249,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Blue Dragon Scale': [
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild (Fastest)' },
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Asgarnia'], notes: 'Taverley Dungeon' },
-    { type: 'DROP', name: 'Blue Dragon', regions: ['Asgarnia', 'Kandarin', 'Misthalin'] }
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Asgarnia'], notes: 'Taverley Dungeon' }
   ],
   'Wine of Zamorak': [
     { type: 'SPAWN', name: 'Telegrab Spawn', regions: ['Asgarnia'], skills: {'Magic': 33}, notes: 'Chaos Temple (Monks will attack)' },
@@ -262,7 +258,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Limpwurt Root': [
     { type: 'SKILL', name: 'Flower Patch', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Fremennik'], skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
-    { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} },
     { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness', 'Kharidian Desert', 'Kourend & Kebos', 'Varlamore'], notes: 'Common drop' }
   ],
   'White Berries': [
@@ -272,8 +267,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Crushed Nest': [
     { type: 'SKILL', name: 'Bird Houses', regions: ['Islands & Others'], skills: {'Hunter': 5}, quests: ['Bone Voyage'], notes: 'Fossil Island runs', outputYield: 10 },
-    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', notes: 'Exchange skins/claws' },
-    { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' }
+    { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', notes: 'Exchange skins/claws' }
   ],
   'Eye of Newt': [
     { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Taverley / Catherby / Port Sarim' }
@@ -398,10 +392,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Brutal Green Dragon', regions: ['Kandarin'], notes: 'Ancient Cavern' }
   ],
   'Uncut Dragonstone': [
-    { type: 'MINIGAME', name: 'Crystal Chest', regions: ['Asgarnia'], notes: 'Reward' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'] },
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
-    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'] }
+    { type: 'MINIGAME', name: 'Crystal Chest', regions: ['Asgarnia'], notes: 'Reward' }
   ],
 
   // --- MINING & ORES ---
@@ -422,7 +413,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Limestone': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Morytania', 'Kandarin', 'Tirannwn'], skills: {'Mining': 10} },
-    { type: 'SHOP', name: 'Razmire Builders Merchants', regions: ['Morytania'], notes: "Mort'ton" }
+    { type: 'SHOP', name: 'Razmire Builders Merchants', regions: ['Morytania'], quests: ["Shades of Mort'ton"], notes: "Mort'ton" }
   ],
   'Barronite Shards': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia'], skills: {'Mining': 14}, quests: ['Below Ice Mountain'], notes: 'Camdozaal' }
@@ -486,7 +477,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Runite Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Wilderness', 'Asgarnia', 'Misthalin', 'Tirannwn', 'Fremennik'], skills: { 'Mining': 85 }, notes: 'Heroes Guild / Wildy / Myths Guild' },
     { type: 'DROP', name: 'Crystal Geode', regions: ['Tirannwn'], skills: {'Woodcutting': 1}, notes: 'Rare from chopping crystal trees' },
-    { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: {'Slayer': 62} },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 2 },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'] }
   ],
@@ -520,7 +510,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Rune Pickaxe': [
     { type: 'SHOP', name: "Gwyn's Mining Emporium", regions: ['Tirannwn'], quests: ['Song of the Elves'], notes: 'Prifddinas' },
-    { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano' },
     { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' },
     { type: 'DROP', name: 'Venenatis', regions: ['Wilderness'], unlockId: 'Venenatis' },
     { type: 'DROP', name: 'Vet\'ion', regions: ['Wilderness'], unlockId: 'Vet\'ion' },
@@ -675,9 +664,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Oily Rod Fishing', regions: ['Karamja'], skills: {'Fishing': 80}, inputs: {'Fishing Bait': 1}, notes: 'Mor Ul Rek (Requires Fire Cape)' }
   ],
   'Raw Manta Ray': [
-    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 81} },
-    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', outputYield: 2 },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 35 }
+    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 81} }
   ],
   'Minnow': [
     { type: 'SKILL', name: 'Net Fishing', regions: ['Kandarin'], skills: {'Fishing': 82}, notes: 'Fishing Guild Platform' }
@@ -901,14 +888,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 80}, inputs: {'Gold Bar': 1, 'Dragonstone': 1, 'Amulet Mould': 0, 'Ball of Wool': 1} }
   ],
   'Dragonstone': [
-    { type: 'MINIGAME', name: 'Crystal Chest', regions: ['Asgarnia'], notes: 'Reward' },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'] },
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Noted', outputYield: 2 },
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 55}, inputs: {'Uncut Dragonstone': 1, 'Chisel': 0} }
   ],
   'Amulet of Power': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 70, 'Magic': 57}, inputs: {'Diamond Amulet': 1, 'Cosmic Rune': 1}, notes: 'Enchant Lvl-4' },
-    { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} },
-    { type: 'SHOP', name: "Davon's Amulet Store", regions: ['Karamja'], notes: 'Brimhaven' }
+    { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} }
   ],
   'Diamond Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 70}, inputs: {'Gold Bar': 1, 'Diamond': 1, 'Amulet Mould': 0, 'Ball of Wool': 1} }
@@ -1363,7 +1349,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 84 }, inputs: { 'Raw Anglerfish': 1 } }
   ],
   'Manta Ray': [
-    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 91 }, inputs: { 'Raw Manta Ray': 1 } }
+    { type: 'SKILL', name: 'Cooking', regions: ['Any'], skills: { 'Cooking': 91 }, inputs: { 'Raw Manta Ray': 1 } },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Noted', outputYield: 35 },
+    { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Noted', outputYield: 35 }
   ],
 
   // --- BONES ---
@@ -2303,7 +2291,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 68 }, inputs: { 'Coconut Milk': 1, 'Toadflax': 1, 'Yew Roots': 1 } }
   ],
   'Antidote++': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 79 }, inputs: { 'Coconut Milk': 1, 'Irit Leaf': 1, 'Magic Roots': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 79 }, inputs: { 'Coconut Milk': 1, 'Irit Leaf': 1, 'Magic Roots': 1 } },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: '10 noted 4-dose potions' }
   ],
   'Antifire Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 69 }, inputs: { 'Lantadyme': 1, 'Vial of Water': 1, 'Dragon Scale Dust': 1 } }
