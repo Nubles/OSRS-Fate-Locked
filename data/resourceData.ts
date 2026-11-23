@@ -1448,21 +1448,21 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- SEEDS ---
   'Ranarr Seed': [
     { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore'], skills: { 'Thieving': 38 }, rarity: 'Uncommon', notes: 'Draynor / Ardougne / Hosidius / Varlamore' },
-    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
+    { type: 'DROP', name: 'Bird Nest (Wyson)', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '4/684', notes: 'Wyson the gardener trades nests for mole skins and claws' }
   ],
   'Snapdragon Seed': [
     { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
-    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
+    { type: 'DROP', name: 'Bird Nest (Wyson)', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '4/684', notes: 'Wyson the gardener trades nests for mole skins and claws' }
   ],
   'Torstol Seed': [
     { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
-    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' }
+    { type: 'DROP', name: 'Bird Nest (Wyson)', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '4/684', notes: 'Wyson the gardener trades nests for mole skins and claws' }
   ],
   'Yew Seed': [
-    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], inputs: { 'Bird Nest': 1 }, rarity: '27/1011', notes: 'Seed nests from Woodcutting or bird houses' }
   ],
   'Magic Seed': [
-    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' },
+    { type: 'DROP', name: 'Bird Nest', regions: ['Any'], inputs: { 'Bird Nest': 1 }, rarity: '5/1011', notes: 'Seed nests from Woodcutting or bird houses' },
     { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'], notes: 'Hardwood/herb allocation' }
   ],
   'Bird Nest': [
