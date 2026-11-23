@@ -1761,7 +1761,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   },
   'Wall Safes': {
     id: 'Rogues\' Den',
-    category: TableType.MINIGAMES,
+    category: TableType.GUILDS, // lobby safes: the guild Key, as fal_hard_8
     regions: ['Asgarnia'], // Rogues Den
     skills: { 'Thieving': 50 },
     description: 'Source of gems inside Rogues Den.'
@@ -2440,10 +2440,10 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dragon Pickaxe (Wildy Bosses)': {
     id: 'Dragon Pickaxe (Wildy Bosses)',
     category: TableType.MINIGAMES, // Boss Grind
-    needsKey: ['Callisto', 'Venenatis', 'Vet\'ion'],
+    needsKey: ['Callisto', 'Venenatis', 'Vet\'ion', 'Artio', 'Calvar\'ion', 'Spindel'],
     regions: ['Wilderness'],
     skills: {},
-    description: 'Drop from Callisto, Venenatis, Vet\'ion.'
+    description: 'Drop from Callisto, Venenatis, Vet\'ion or their smaller variants.'
   },
   'Dragon Pickaxe (KBD)': {
     id: 'King Black Dragon',

@@ -43,7 +43,7 @@ const KEY_GATED: Record<string, KeyNeed[]> = {
   'Seers Ring': [B('Dagannoth Kings')],
   'Dragon Axe (Dagannoth)': [B('Dagannoth Kings')],
   'Dragon Pickaxe (Chaos Ele)': [B('Chaos Elemental')],
-  'Dragon Pickaxe (Wildy Bosses)': [B('Callisto', 'Venenatis', "Vet'ion")],
+  'Dragon Pickaxe (Wildy Bosses)': [B('Callisto', 'Venenatis', "Vet'ion", 'Artio', "Calvar'ion", 'Spindel')],
   'Dragon Pickaxe (KBD)': [B('King Black Dragon')],
   'Dragon Pickaxe (KQ)': [B('Kalphite Queen')],
   'Godsword Assembly': [B('General Graardor', 'Commander Zilyana', "Kree'arra", "K'ril Tsutsaroth")],
@@ -55,7 +55,7 @@ const KEY_GATED: Record<string, KeyNeed[]> = {
   'Ectoplasmator': [M('Soul Wars')],
   'Imbued Rings (PvP Arena)': [M("Emir's Arena")], // Scroll of imbuing: Emir's Arena reward shop
   "Rogues' Outfit": [M("Rogues' Den")],
-  'Wall Safes': [M("Rogues' Den")],
+  'Wall Safes': [G("Rogues' Den")],
   "Zealot's Robes": [M("Shades of Mort'ton")],
   'Sacred Oil': [M("Shades of Mort'ton")],
   'Lumberjack Outfit': [M('Temple Trekking', 'Forestry')], // Lumberjack outfit: Forestry shop or Temple Trekking
