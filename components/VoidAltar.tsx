@@ -3,8 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { confirmThen } from '../utils/spendConfirm';
 import { resolveModeRules } from '../config/gameModes';
-import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, invocationAllowed, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
+import { BARROWS_BROTHERS, INVOCATIONS, INVOCATION_ROLLS, RITUALS, SACRIFICE_USES_PER_RUN, getRitual, invocationAllowed, invocationOmniBonus, ritualEffect, ritualFateCost, type Invocation } from '../config/economy';
 import { ritualAvailability, rollRitualActive } from '../utils/ritualEffects';
 import type { NewRitualId } from '../context/GameContext';
 import { chunkLabel, parseChunkKey } from '../utils/chunkAdjacency';
@@ -143,7 +144,12 @@ export const VoidAltar: React.FC<VoidAltarProps> = ({ onClose }) => {
     setArmedId(null);
     if (id === 'CARTOGRAPHER') { openCartographer(); return; }
     if (id === 'INVOCATIONS') { setInvocationPick([]); return; }
-    if (id === 'LUCK' || id === 'GREED' || id === 'CHAOS' || id === 'TRANSMUTE') performRitual(id);
+    // Transmutation spends Keys, so Ask before Key clicks asks first.
+    if (id === 'TRANSMUTE') {
+      confirmThen(`Trade ${getRitual('TRANSMUTE').keyCost ?? 5} Keys for 1 Omni-Key?`, () => performRitual('TRANSMUTE'));
+      return;
+    }
+    if (id === 'LUCK' || id === 'GREED' || id === 'CHAOS') performRitual(id);
     else castRitual(id as NewRitualId);
   };
 

@@ -5,7 +5,7 @@ import {
   COMBAT_POWERS_LABEL,
   tableDisplayName,
 } from './tableDisplay';
-import { SPEND_TABLES } from '../config/economy';
+import { SPEND_TABLES } from '../config/economyReference';
 
 describe('Combat Powers presentation', () => {
   it('maps only the persistent Arcana table to Combat Powers', () => {

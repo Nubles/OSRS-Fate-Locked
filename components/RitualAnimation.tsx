@@ -40,17 +40,23 @@ export const RitualAnimation: React.FC<Props> = ({ ritual, meta, ownedChunks, on
         onDone: () => completeRef.current(),
       });
     });
+    // Capture phase, so the scene (the top layer) has the key first: one Esc
+    // closes the scene and leaves the Void Altar under it open.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') playerRef.current?.destroy();
-      else if ((e.key === ' ' || e.key === 'Enter') && playerRef.current) {
+      if (e.key === 'Escape') {
+        if (!playerRef.current) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        playerRef.current.destroy();
+      } else if ((e.key === ' ' || e.key === 'Enter') && playerRef.current) {
         e.preventDefault();
         playerRef.current.skip();
       }
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     return () => {
       cancelled = true;
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
       const player = playerRef.current;
       playerRef.current = null;
       if (player) {

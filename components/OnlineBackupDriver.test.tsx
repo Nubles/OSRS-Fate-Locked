@@ -8,6 +8,7 @@ import {
   ONLINE_BACKUP_HIDDEN_MIN_MS,
   ONLINE_BACKUP_INTERVAL_MS,
   ONLINE_BACKUP_SETTLE_MS,
+  nextRetryDelay,
   nextUploadDelay,
 } from './OnlineBackupDriver';
 
@@ -130,6 +131,40 @@ describe('OnlineBackupDriver', () => {
     expect(backupRun).toHaveBeenCalledTimes(1);
     await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
     expect(backupRun).toHaveBeenCalledTimes(2);
+  });
+
+  it('backs off when the relay keeps refusing, and starts over after an upload', async () => {
+    writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK' });
+    backupRun
+      .mockResolvedValueOnce({ kind: 'retry', afterMs: 60_000 } as never)
+      .mockResolvedValueOnce({ kind: 'retry', afterMs: 60_000 } as never)
+      .mockResolvedValueOnce({ kind: 'retry', afterMs: 60_000 } as never);
+    const view = render(<OnlineBackupDriver />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(ONLINE_BACKUP_SETTLE_MS); });
+    expect(backupRun).toHaveBeenCalledTimes(1);
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(backupRun).toHaveBeenCalledTimes(2);
+    // Second refusal in a row: two minutes, not one.
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(backupRun).toHaveBeenCalledTimes(2);
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(backupRun).toHaveBeenCalledTimes(3);
+    // Third: four minutes. Then it uploads.
+    await act(async () => { await vi.advanceTimersByTimeAsync(4 * 60_000 - 1); });
+    expect(backupRun).toHaveBeenCalledTimes(3);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(backupRun).toHaveBeenCalledTimes(4);
+    // That one uploaded, so the next refusal waits one minute again.
+    backupRun.mockResolvedValueOnce({ kind: 'retry', afterMs: 60_000 } as never);
+    change(view.rerender);
+    await act(async () => { await vi.advanceTimersByTimeAsync(ONLINE_BACKUP_SETTLE_MS); });
+    expect(backupRun).toHaveBeenCalledTimes(5);
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(backupRun).toHaveBeenCalledTimes(6);
+    // Never longer than the normal gap between uploads.
+    expect(nextRetryDelay(60_000, 20)).toBe(ONLINE_BACKUP_INTERVAL_MS);
+    expect(nextRetryDelay(60_000, 0)).toBe(60_000);
+    expect(nextRetryDelay(0, 0)).toBeGreaterThanOrEqual(5_000);
   });
 });
 

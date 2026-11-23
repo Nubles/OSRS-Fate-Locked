@@ -29,7 +29,7 @@ export const PANDEMONIUM_ROUTE: ReadonlySet<string> = new Set([
  * chunk (ownership and routes alone). During the quest, its route opens from
  * Port Sarim. Once it is done, every sea chunk the run owns (Sailing and
  * Pandemonium; the Shipyard is one) opens from Port Sarim too: you sail it
- * from your boat, so no walking route has to reach it (Alex, 9 October 2026).
+ * from your boat, so no walking route has to reach it (the owner, 9 October 2026).
  */
 export const pandemoniumOpens = (
   coord: { cx: number; cy: number },

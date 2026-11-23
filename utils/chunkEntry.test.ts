@@ -73,7 +73,7 @@ describe('chunkEntry', () => {
     expect(chunkEntry({ cx: 47, cy: 46 }, portSarim, 'vanilla', new Set())).toBe('LOCKED');
   });
 
-  // Alex, 9 October 2026: Pandemonium, Port Sarim and Sailing open the whole sea.
+  // The owner, 9 October 2026: Pandemonium, Port Sarim and Sailing open the whole sea.
   it('opens the sea from Port Sarim once Pandemonium is done, with no walking route to it', () => {
     const sea = { cx: 47, cy: 47 };
     const reached = new Set([idOf({ cx: 47, cy: 50 })]);

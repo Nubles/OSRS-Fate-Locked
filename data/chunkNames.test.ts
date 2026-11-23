@@ -26,4 +26,9 @@ describe('generated chunk place names', () => {
       "Groats' Farm", 'Lumbridge Mill', 'Varrock South Gate', 'Varrock Center/Square',
     ]);
   });
+
+  it('spells the Rantz peninsula as the Wiki does, not as the Chunk Picker export does', () => {
+    expect(CHUNK_NAMES['41,47']).toBe('North Rantz Peninsula');
+    expect(Object.values(CHUNK_NAMES).some(name => /Penninsula/.test(name))).toBe(false);
+  });
 });

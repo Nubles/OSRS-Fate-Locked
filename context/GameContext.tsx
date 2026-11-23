@@ -15,7 +15,7 @@ import { BANK_BY_ID } from '../data/banks';
 import { BARROWS_BROTHERS, INVOCATIONS, SACRIFICE_TIERS, WARD_COOLDOWN_ROLLS, invocationAllowed, SACRIFICE_USES_PER_RUN, type BarrowsBrother, type Invocation, type Ritual } from '../config/economy';
 import {
   afterRoll, castBarrows, castInvocations, castPact, castTears, failFate,
-  pickSacrifice, ritualAvailability, rollRitualActive, sacrificeCandidates, tidyRituals, wardApplies,
+  pickSacrifice, ritualAvailability, ritualOddsNote, rollRitualActive, sacrificeCandidates, tidyRituals, wardApplies,
   type RitualState, type SacrificeTier,
 } from '../utils/ritualEffects';
 import { tableDisplayName } from '../utils/tableDisplay';
@@ -56,7 +56,7 @@ import {
   type BackupWriteResult,
   type ImportResult,
 } from '../utils/gamePersistence';
-import { CURRENT_SAVE_VERSION, MAX_COUNTER, parseAndMigrateSave, validateAndMigrateSave, type SaveValidationResult } from '../utils/saveSchema';
+import { CURRENT_SAVE_VERSION, MAX_COUNTER, clampNoteText, parseAndMigrateSave, validateAndMigrateSave, type SaveValidationResult } from '../utils/saveSchema';
 import { readRestoreCounts, rememberRun, stampRestoreCount, writeRestoreCounts, type RestoreKind } from '../utils/restoreCount';
 import { memoizeLast } from '../utils/memoizeLast';
 import { AchievementPayout, pickFreeRitual, settleAchievements } from '../utils/achievementRewards';
@@ -458,6 +458,8 @@ interface PreparedRollResult {
 interface PreparedRitualRoll {
   /** Percentage points the rituals added to (or took from) the odds. */
   oddsBonus: number;
+  /** The points really applied, after boosts stop at BOOST_CAP. Older payloads lack it. */
+  appliedOdds?: number;
   /** A fail that Verac hit through into a success. */
   hitThrough?: boolean;
   /** Karil's second Key on a success. */
@@ -712,7 +714,7 @@ export function prepareKeyRollAction(
       y,
       meta,
       context,
-      ...(state.rituals ? { ritual: { oddsBonus: plan.oddsBonus, hitThrough, secondKey } } : {}),
+      ...(state.rituals ? { ritual: { oddsBonus: plan.oddsBonus, appliedOdds: Math.round((odds.threshold - odds.boostedThreshold) * 100) / 100, hitThrough, secondKey } } : {}),
     },
   };
 }
@@ -1408,7 +1410,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       const missFate = success ? null : failFate(state.rituals, missBase, state.fatePoints, rollRules.pityEnabled, rollRules.pityThreshold);
       const ritualNotes = [
         ...(!success && missBase === 0 && failureFate > 0 ? [`No Fate on a miss under ${MINIGAME_MISS_FATE_MIN_RATE}%.`] : []),
-        ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [`Rituals ${ritualRoll.oddsBonus > 0 ? '+' : ''}${ritualRoll.oddsBonus}% odds.`] : []),
+        ...(ritualRoll && ritualRoll.oddsBonus !== 0 ? [ritualOddsNote(ritualRoll.oddsBonus, ritualRoll.appliedOdds ?? ritualRoll.oddsBonus)] : []),
         ...(success && ritualRoll?.hitThrough ? ['Verac hit through the miss.'] : []),
         ...(secondKey && standardKeysAwarded === 2 ? ["Karil's bolt found a second Key."] : []),
         ...(missFate?.notes.length ? [`${missFate.notes.join(', ')}.`] : []),
@@ -1530,7 +1532,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
             timestamp: now,
             type: 'ROLL_FAIL',
             message: `No Key.${isGreed ? ` (Greed refunded ${greedRefund} Fate)` : ''}`,
-            details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}/${rollRules.pityThreshold}${ritualText}`,
+            details: `Rolled ${rollText} (> ${comparisonChanceText}). Fate: ${newState.fatePoints}${rollRules.pityEnabled ? `/${rollRules.pityThreshold}` : ''}${ritualText}`,
             meta: { ...entryMeta(earned + greedRefund), ...missMeta },
             result: 'FAIL',
             source,
@@ -1990,7 +1992,7 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
         ...state,
         userNotes: {
           ...state.userNotes,
-          [action.payload.id]: action.payload.text
+          [action.payload.id]: clampNoteText(action.payload.text)
         }
       };
     }
@@ -2158,6 +2160,12 @@ const settleKeysOwed = (
   };
 };
 
+/** The record-keeping parts of the unlocks: ticking or logging them is not a Key, an unlock or a level. */
+const NOT_PROGRESS: ReadonlySet<string> = new Set(['quests', 'diaries', 'cas', 'completedTasks', 'collectionLog']);
+const unlocksProgressed = (prev: UnlockState, next: UnlockState): boolean =>
+  prev !== next && Object.keys({ ...prev, ...next }).some(key =>
+    !NOT_PROGRESS.has(key) && prev[key as keyof UnlockState] !== next[key as keyof UnlockState]);
+
 export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, action: Action): GameState & { lastEvent: GameEvent | null } => {
   if (action.type === 'COMMIT_STATE') return action.payload;
   const rawNext = rawReducer(state, action);
@@ -2172,8 +2180,9 @@ export const gameReducer = (state: GameState & { lastEvent: GameEvent | null }, 
     ? settled
     : { ...settled, history: chainAppendedHistory(state.history, settled.history) };
   // A Chunked run's last progress (a Key, an unlock or a level) times Fate's
-  // Mercy's quiet spell (utils/chunkedFate.ts mercyQuietLeft).
-  const progressed = chained.gameModeId === 'chunked' && (chained.unlocks !== state.unlocks
+  // Mercy's quiet spell (utils/chunkedFate.ts mercyQuietLeft). Journal ticks and
+  // collection log entries are not progress, as the Codex says.
+  const progressed = chained.gameModeId === 'chunked' && (unlocksProgressed(state.unlocks, chained.unlocks)
     || chained.keys > state.keys || chained.specialKeys > state.specialKeys || chained.chaosKeys > state.chaosKeys);
   const next = progressed ? { ...chained, chunkedProgressAt: Date.now() } : chained;
   return { ...next, runRevision: state.runRevision + 1 };
@@ -3627,11 +3636,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       blockPendingSave(storageKey, 'ownership_conflict');
       setNewerSaveConflict(true);
     };
+    /**
+     * True when `serialized` (a copy that went through the save validator)
+     * holds the same run as this tab's baseline. The validator rebuilds some
+     * records in its own key order (history entries), so the reducer's text
+     * and the validated text of one run can differ; compare the baseline in
+     * the same validated form, never the raw text alone.
+     */
+    const sameAsBaseline = (serialized: string, baseline: string | null): boolean => {
+      if (baseline === null) return false;
+      if (serialized === baseline) return true;
+      const parsedBaseline = parseAndMigrateSave(baseline, createFreshState());
+      return parsedBaseline.ok && serializeGameState(parsedBaseline.state) === serialized;
+    };
     /** True when this tab now holds `latest`, because it already did or just loaded it. */
     const adoptUnlessUnsaved = (latest: GameState): boolean => {
       const baseline = persistedSnapshotRef.current;
       const serialized = serializeGameState(latest);
-      if (serialized === baseline) return true;
+      if (sameAsBaseline(serialized, baseline)) return true;
       const unsavedChanges = getPendingSave(storageKey) !== null
         || (baseline !== null && serializeCurrent() !== baseline);
       if (unsavedChanges) {
@@ -3655,7 +3677,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (stored === null || stored === persistedSnapshotRef.current) return null;
       const parsed = parseAndMigrateSave(stored, createFreshState());
       if (parsed.ok === false) return null;
-      return serializeGameState(parsed.state) === persistedSnapshotRef.current ? null : parsed.state;
+      return sameAsBaseline(serializeGameState(parsed.state), persistedSnapshotRef.current) ? null : parsed.state;
     };
 
     const repository = journalBacked ? recoveryRepositoryRef.current : null;

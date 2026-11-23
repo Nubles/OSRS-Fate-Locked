@@ -23,6 +23,8 @@ export interface ContentRequirement {
   manualRequirements?: string[];
   alternatives?: ContentAlternativeRequirement[]; // One complete route is sufficient.
   accessRoutes?: Array<{ label: string; skills?: Record<string, number>; diaries?: string[] }>;
+  /** Borrow this activity's readiness (data/activityRequirements.ts) when the id is another unlock. */
+  activity?: string;
 }
 
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
@@ -191,16 +193,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     quests: ['Pirate\'s Treasure', 'Rum Deal'],
     description: 'Unlocks Mos Le\'Harmless and Cave Horrors (Black Mask).'
   },
-  'Fremennik Exiles': {
-    id: 'Fremennik Exiles',
+  'The Fremennik Exiles': {
+    id: 'The Fremennik Exiles',
     category: TableType.QUESTS,
     regions: ['Fremennik'],
     skills: { 'Crafting': 65, 'Slayer': 60, 'Smithing': 60, 'Fishing': 60, 'Runecraft': 55 },
     quests: ['The Fremennik Isles', 'Lunar Diplomacy', 'Mountain Daughter', 'Heroes\' Quest'],
     description: 'Unlocks Basilisk Knights (Jaw) and Neitiznot Faceguard.'
   },
-  'Slug Menace': {
-    id: 'Slug Menace',
+  'The Slug Menace': {
+    id: 'The Slug Menace',
     category: TableType.QUESTS,
     regions: ['Asgarnia', 'Kandarin'], // Witchaven/Falador
     skills: { 'Crafting': 30, 'Runecraft': 30, 'Slayer': 30, 'Thieving': 30 },
@@ -351,8 +353,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Mining Activity
     regions: ['Varlamore'], // Cam Torum
     skills: { 'Mining': 41 },
-    quests: ['Children of the Sun'], // Access to Cam Torum
-    description: 'AFK Mining for Calcified shards/Bone shards.'
+    quests: ['Perilous Moons'], // Partial: Cam Torum opens mid-quest
+    description: 'AFK Mining for blessed bone shards and calcified deposits.'
   },
   'Sulphur Naguas': {
     id: 'Sulphur Naguas',
@@ -361,13 +363,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: { 'Slayer': 48 }, // Technically no slayer req to kill, but effectively slayer creature? Actually 0 req.
     quests: ['Perilous Moons'],
     description: 'Zero-supply combat training (Free potions).'
-  },
-  'Teomat': {
-    id: 'Teomat',
-    category: TableType.MERCHANTS, // Shop
-    regions: ['Varlamore'], // Civitas
-    skills: {},
-    description: 'General store and regional supplies in Civitas.'
   },
   'Hunter Rumours': {
     id: 'Hunter Rumours',
@@ -381,7 +376,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Karuulm
     skills: { 'Slayer': 62 },
-    description: 'Source of Dragon Sword/Harpoon.'
+    description: 'Source of Dragon Shortsword/Harpoon.'
   },
   'Drakes': {
     id: 'Drakes',
@@ -453,7 +448,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: {},
-    description: 'Fire Giants, Chaos Dwarves (D2H), Air Obelisk.'
+    description: 'Fire Giants, Chaos Dwarves and Wine of Zamorak. Single-way combat.'
   },
   'Ferox Enclave': {
     id: 'Ferox Enclave',
@@ -474,7 +469,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Wilderness'],
     skills: { 'Thieving': 39 },
-    description: 'Deep Wildy thieving and food shop.'
+    description: 'Deep Wildy thieving chests. Pick the door lock with a lockpick.'
   },
 
   // ============================================================================
@@ -541,7 +536,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
       { label: '60 Strength', skills: { Strength: 60 } },
       { label: '60 Agility', skills: { Agility: 60 } },
     ],
-    description: 'Source of Dragon Arrowtips.'
+    description: 'Slayer task monster in the God Wars Dungeon.'
   },
   'Spiritual Warriors': {
     id: 'Spiritual Warriors',
@@ -598,7 +593,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Warriors\' Guild',
     category: TableType.GUILDS,
     regions: ['Asgarnia'],
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {}, // Entry rule (130 combined, or 99 in either) comes from the guild's activity readiness
     description: 'Grind for Bronze through Dragon Defenders.'
   },
   'Wizards\' Guild (Runes)': {
@@ -640,7 +635,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Champions\' Guild',
     category: TableType.GUILDS,
     regions: ['Misthalin'],
-    skills: {}, // 32 QP
+    skills: {}, // 32 QP: enforced by its activity requirement
     description: 'Shop sells an adamant platebody and black platelegs.'
   },
   'Ranging Guild (Minigame)': {
@@ -674,7 +669,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Tirannwn'], // Prifddinas
     skills: { 'Hunter': 80 },
     quests: ['Song of the Elves'],
-    description: 'Source of Elven Signet and Amulet of Power (t).'
+    description: 'Source of Elven Signet and noted Amulets of Power.'
   },
   'Lucky Implings': {
     id: 'Lucky Implings',
@@ -694,13 +689,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: { 'Agility': 34 },
     description: 'Crack between the warped jellies and the greater nechryael.'
   },
-  'Xeric\'s Lookout': {
-    id: 'Xeric\'s Lookout',
-    category: TableType.AGILITY_COURSES,
-    regions: ['Kourend & Kebos'],
-    skills: {}, // Grapple
-    description: 'Grapple shortcut in Shayzien.'
-  },
   'Karuulm Dungeon (Upper)': {
     id: 'Karuulm Dungeon (Upper)',
     category: TableType.AGILITY_COURSES,
@@ -714,13 +702,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 62 },
     description: 'Shortcut to Wyrms/Tasakaal.'
-  },
-  'Prifddinas Waterfall': {
-    id: 'Prifddinas Waterfall',
-    category: TableType.AGILITY_COURSES,
-    regions: ['Tirannwn'],
-    skills: { 'Agility': 66, 'Strength': 66, 'Ranged': 66 }, // Mith Grapple
-    description: 'Shortcut to the waterfall fishing spot.'
   },
   'Draynor Underwall Tunnel': {
     id: 'Draynor Underwall Tunnel',
@@ -748,7 +729,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.AGILITY_COURSES,
     regions: ['Kandarin'],
     skills: { 'Agility': 25 },
-    quests: ['Eagles\' Peak'],
     description: 'Climb the rocks to the peak.'
   },
   'Observatory Grapple': {
@@ -778,16 +758,16 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Myreque Hideout Shortcut',
     category: TableType.AGILITY_COURSES,
     regions: ['Morytania'],
-    skills: { 'Agility': 30 }, // Swamp boaty
-    quests: ['Nature Spirit'],
-    description: 'Behind the pub in Canifis.'
+    skills: {},
+    quests: ['In Search of the Myreque'], // Partial: the cellar opens during the quest
+    description: 'Trapdoor behind the pub in Canifis.'
   },
   'Lumbridge Swamp Caves Jump': {
     id: 'Lumbridge Swamp Caves Jump',
     category: TableType.AGILITY_COURSES,
     regions: ['Misthalin'],
-    skills: { 'Agility': 12 },
-    description: 'Jump across to Tears of Guthix.'
+    skills: { 'Agility': 1 },
+    description: 'Stepping stones to the Chasm of Tears.'
   },
 
   // ============================================================================
@@ -836,7 +816,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ectoplasmator',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Soul Wars
-    skills: {},
+    skills: { 'Prayer': 40 },
     description: 'Prayer XP from spectral creatures. Soul Wars.'
   },
   'Fish Sack': {
@@ -1027,14 +1007,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Members bank: Falador Hard diary or 99 Crafting. Wear an apron or suitable cape/hood to enter the guild.'
   },
   'Farming Guild Bank': {
-    id: 'Farming Guild Bank',
+    id: 'Farming Guild',
     category: TableType.GUILDS,
     regions: ['Kourend & Kebos'],
     skills: { 'Farming': 45 },
     description: 'Requires 45 Farming to enter guild.'
   },
   'Myths\' Guild Bank': {
-    id: 'Myths\' Guild Bank',
+    id: 'Myths\' Guild',
     category: TableType.GUILDS,
     regions: ['Kandarin'],
     skills: {},
@@ -1077,23 +1057,25 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Tirannwn'],
     skills: {},
-    quests: ['Mourning\'s End Part I'],
-    description: 'Bank in the elven village.'
+    quests: [],
+    manualRequirements: ['Confirm you have started Mourning\'s End Part I'],
+    description: 'Bank in the elven village, open once Mourning\'s End Part I is started.'
   },
   'Burgh de Rott Bank': {
     id: 'Burgh de Rott Bank',
     category: TableType.MERCHANTS,
     regions: ['Morytania'],
     skills: {},
-    quests: ['In Aid of the Myreque'],
-    description: 'Bank near Barrows.'
+    quests: ['Priest in Peril'],
+    manualRequirements: ['Confirm you have repaired the Burgh de Rott bank in In Aid of the Myreque'],
+    description: 'Bank near Barrows, repaired partway through In Aid of the Myreque.'
   },
   'Ver Sinhaza Bank': {
     id: 'Ver Sinhaza Bank',
     category: TableType.MERCHANTS,
     regions: ['Morytania'],
     skills: {},
-    quests: ['A Taste of Hope'],
+    quests: ['Priest in Peril'],
     description: 'Bank near ToB.'
   },
   'Darkmeyer Bank': {
@@ -1115,7 +1097,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Corsair Cove Bank': {
     id: 'Corsair Cove Bank',
     category: TableType.MERCHANTS,
-    regions: ['Kandarin', 'Fremennik'], // Accessed via Rellekka or Feldip
+    regions: ['Kandarin'], // Feldip Hills
     skills: {},
     quests: ['The Corsair Curse'],
     description: 'Bank in the Corsair Cove.'
@@ -1223,7 +1205,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Rune Defender',
     category: TableType.MINIGAMES,
     regions: ['Asgarnia'], // Warriors Guild
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {},
+    activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Accurate off-hand. Warriors Guild.'
   },
   'Ava\'s Accumulator': {
@@ -1286,8 +1269,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dark Beasts': {
     id: 'Dark Beasts',
     category: TableType.MINIGAMES,
-    regions: ['Tirannwn', 'Misthalin'], // Mourner Tunnels / Isle of Souls
+    regions: ['Kandarin', 'Tirannwn'], // Mourner Tunnels (West Ardougne) / Iorwerth Dungeon
     skills: { 'Slayer': 90 },
+    quests: ['Mourning\'s End Part II'], // Partial: the new key opens the Mourner Tunnels
     description: 'Source of Dark Bow.'
   },
   'Smoke Devils': {
@@ -1382,7 +1366,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Boots of Brimstone',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Drakes/Wyrms (Component)
-    skills: { 'Slayer': 44 }, // To wear (with 70 Defence, Magic or Ranged); no skill to make
+    skills: { 'Slayer': 84 }, // Drake's claw drops only from drakes; 44 Slayer and 70 Defence, Magic, Ranged to wear
     description: 'Best hybrid boots.'
   },
   'Devout Boots': {
@@ -1444,7 +1428,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Barrelchest Anchor',
     category: TableType.MERCHANTS,
     regions: ['Morytania', 'Islands & Others'], // Mos Le'Harmless
-    skills: { 'Prayer': 50, 'Smithing': 50 },
+    skills: { 'Prayer': 50, 'Attack': 60, 'Strength': 40 }, // Quest Prayer; 60 Attack, 40 Strength to wield
     quests: ['The Great Brain Robbery'],
     description: 'Heavy crush weapon. Repairs cost coins.'
   },
@@ -1452,7 +1436,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ancient Mace',
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Dorgesh-Kaan
-    skills: { 'Prayer': 31 },
+    skills: { 'Prayer': 25, 'Attack': 15 },
     quests: ['Another Slice of H.A.M.'],
     description: 'Special attack restores Prayer points.'
   },
@@ -1521,7 +1505,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Wilderness'], // Deep Wildy
     skills: {},
-    description: 'Buys items at High Alch value. Sells blood runes.'
+    description: 'Buys items at High Alch value. Sells tools, pots and jugs.'
   },
   'Mage Arena Staff Shop': {
     id: 'Staff Shops',
@@ -1535,7 +1519,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Wilderness'], // Mage Arena
     skills: {},
-    description: 'Sells Cosmic, Nature, Law, Death, Soul runes.'
+    description: 'Sells Cosmic, Nature, Law, Death runes.'
   },
   'Wilderness Food Shop': {
     id: 'Food Shops',
@@ -1583,7 +1567,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
-    quests: [], // 32 QP + Champion Scroll
+    questPoints: 32, // Champions' Guild entry
+    quests: [], // Plus a champion scroll
     description: 'Defeat champions for the cape.'
   },
   'Chompy Bird Hunting': {
@@ -1622,7 +1607,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Herblore Shops',
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Warriors Guild
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {},
+    activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Cheap Attack/Strength potions.'
   },
   'Yanille Magic Shop': {
@@ -1664,7 +1650,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'], // Rellekka
     skills: { 'Slayer': 40 },
     items: ['Mirror Shield'],
-    description: 'Drop Mystic Boots (light) and Nature runes.'
+    description: 'Drop Mystic Hat (light) and Nature runes.'
   },
   'Rockslugs': {
     id: 'Rockslugs',
@@ -1685,7 +1671,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Harpie Bug Swarms': {
     id: 'Harpie Bug Swarms',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin'], // Bug Swarm Island
+    regions: ['Karamja'], // North-east of Tai Bwo Wannai (Varlamore also has some)
     skills: { 'Slayer': 33, 'Firemaking': 33 },
     items: ['Lit Bug Lantern'],
     description: 'Requires Lit Bug Lantern.'
@@ -1735,7 +1721,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Master Farmers': {
     id: 'Master Farmers',
     category: TableType.MINIGAMES, // Activity
-    regions: ['Misthalin', 'Kandarin', 'Asgarnia'], // Draynor, Ardougne, Varrock
+    regions: ['Misthalin'], // Draynor, south of Varrock (also Ardougne, Hosidius, Farming Guild, Varlamore)
     skills: { 'Thieving': 38 },
     description: 'Essential source of Ranarr/Snapdragon seeds.'
   },
@@ -1761,7 +1747,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Misthalin'], // Dorgesh-Kaan
     skills: { 'Thieving': 52 },
     quests: ['Death to the Dorgeshuun'],
-    description: 'Source of Easy/Hard clues and gems.'
+    description: 'Source of Easy clues. Gems need rich chests (78).'
   },
   'Wall Safes': {
     id: 'Wall Safes',
@@ -1787,14 +1773,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Silk Stalls': {
     id: 'Silk Stalls',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Kharidian Desert'], // Ardougne, Al Kharid
+    regions: ['Kandarin'], // Ardougne market (the Al Kharid stall cannot be stolen from)
     skills: { 'Thieving': 20 },
     description: 'Early game GP method (Steal and sell back).'
   },
   'Gem Stall': {
     id: 'Gem Stall',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Kharidian Desert'], // Ardougne, Al Kharid
+    regions: ['Kandarin'], // East Ardougne (the Al Kharid stall cannot be stolen from)
     skills: { 'Thieving': 75 },
     description: 'Source of gems (Sapphire/Emerald/Ruby).'
   },
@@ -1818,13 +1804,6 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   // ============================================================================
   // SKILLING SUPPLY SHOPS (Ironman Meta)
   // ============================================================================
-  'Sandwich Lady': {
-    id: 'Food Shops',
-    category: TableType.MERCHANTS,
-    regions: ['Kandarin'], // Ardougne Market
-    skills: {},
-    description: 'Sells Chocolate Bars (Compost/Energy Potions).'
-  },
   'Fremennik Fish Shop': {
     id: 'Fishing Shops',
     category: TableType.MERCHANTS,
@@ -1836,7 +1815,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Food Shops',
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Burthorpe
-    skills: { 'Attack': 65, 'Strength': 65 },
+    skills: {},
+    activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Buy Potatoes with Cheese and Plain Pizzas.'
   },
   'Grand Tree Groceries': {
@@ -1873,7 +1853,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kandarin'], // Catherby
     skills: {},
-    description: 'Sells Candles, Lit Candles, Black Candles.'
+    description: 'Sells Candles.'
   },
   'TzHaar Gem Store': {
     id: 'Gem Shops',
@@ -1921,7 +1901,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Barbarian Assault
     skills: { 'Defence': 50, 'Strength': 50 },
-    description: 'Buy with BA points or drop from Penance Queen.'
+    description: 'Buy for 95,000 coins after killing the Penance Queen.'
   },
   'Ancient Staff': {
     id: 'Ancient Staff',
@@ -1934,9 +1914,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Mud Battlestaff': {
     id: 'Mud Battlestaff',
     category: TableType.MINIGAMES,
-    regions: ['Misthalin'], // Lumber Yard / Chaos Dwarves
+    regions: ['Fremennik'], // Waterbirth Island (Dagannoth Kings)
     skills: { 'Magic': 30, 'Attack': 30 },
-    description: 'Drop from Chaos Golems or Dagannoth Prime.'
+    description: 'Drop from Dagannoth Prime.'
   },
   'Seercull': {
     id: 'Seercull',
@@ -2024,14 +2004,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Lovakengj
     skills: { 'Mining': 65 },
-    description: 'Mining for Lovakengj Favor/Dynamite.'
+    description: 'Smelted into Lovakite bars.'
   },
   'Volcanic Sulphur': {
     id: 'Volcanic Sulphur',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Lovakengj
     skills: { 'Mining': 42 },
-    description: 'Mining for Lovakengj Favor/Dynamite.'
+    description: 'Used to make Dynamite.'
   },
   'Myth\'s Guild Green Dragons': {
     id: 'Myth\'s Guild Green Dragons',
@@ -2068,6 +2048,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     regions: ['Fremennik'], // Etceteria
     skills: { 'Farming': 83 },
+    quests: ['The Fremennik Trials'], // Every way to the island
     description: 'Spirit Tree patch.'
   },
   'Brimhaven Spirit Tree': {
@@ -2176,7 +2157,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Salt Mine',
     category: TableType.MINIGAMES,
     regions: ['Fremennik'], // Weiss
-    skills: { 'Mining': 1 },
+    skills: { 'Mining': 72 }, // Every salt and basalt rock
     quests: ['Making Friends with My Arm'],
     description: 'Mine salt for stony basalt teleports/fires.'
   },
@@ -2201,6 +2182,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
     skills: { 'Mining': 22 },
+    quests: ['Bone Voyage'], // Fossil Island
     description: 'Mining Volcanic Ash for Ultracompost.'
   },
 
@@ -2227,7 +2209,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Mos Le\'Harmless Cave',
     category: TableType.MINIGAMES,
     regions: ['Islands & Others'],
-    skills: {},
+    skills: { 'Slayer': 58 }, // Cave horrors
     quests: ['Cabin Fever'],
     description: 'Cave Horrors (Black Mask).'
   },
@@ -2253,7 +2235,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'],
     skills: {},
     quests: ['Royal Trouble'],
-    description: 'Giant Sea Snake (Hard Clues).'
+    description: 'Giant Sea Snake (Medium Clues).'
   },
   'Fisher Realm': {
     id: 'Fisher Realm',
@@ -2283,9 +2265,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Abyssal Area',
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // ALR code
-    skills: {},
+    skills: { 'Slayer': 85 }, // Abyssal demons
     quests: ['Fairytale II - Cure a Queen'],
-    description: 'Safe spot Abyssal Demons (No Slayer requirement on some servers? OSRS requires 85).'
+    description: 'Abyssal demons (85 Slayer) and other Abyss creatures.'
   },
 
   // ============================================================================
@@ -2296,13 +2278,14 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Asgarnia'], // Dwarven Mine
     skills: {},
-    description: 'Sells up to Adamant Pickaxe.'
+    description: 'Sells up to Rune Pickaxe.'
   },
   'Scavvo\'s Rune Store': {
     id: 'Chainbody Shops',
     category: TableType.MERCHANTS,
     regions: ['Misthalin'], // Champions Guild
     skills: {},
+    questPoints: 32,
     description: 'Champions\' Guild access requires 32 Quest Points. Sells rune chainbody, platelegs, plateskirt, weapons, and green d\'hide armour.'
   },
   'Fancy Clothes Store': {
@@ -2313,11 +2296,11 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     description: 'Fancy boots/gloves/capes for Clue Scrolls.'
   },
   'Gnome Glider Clothing': {
-    id: 'Clothes Shops',
-    category: TableType.MERCHANTS,
-    regions: ['Kandarin'], // Grand Tree
-    skills: {},
-    description: 'Gnome goggles/scarves for Clue Scrolls.'
+    id: 'Gnome Restaurant',
+    category: TableType.MINIGAMES, // Not a shop: tips from two hard-delivery customers
+    regions: ['Tree Gnome Stronghold'], // Grand Tree
+    skills: { 'Cooking': 29 },
+    description: 'Gnome goggles and scarf for Clue Scrolls: a 1/17 tip each from Captain Daerkin or Captain Ninto on Gnome Restaurant hard deliveries.'
   },
   'Shayzien Armourer': {
     id: 'Platebody Shops',
@@ -2331,7 +2314,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kourend & Kebos'],
     skills: {},
-    description: 'Spears/Hastae/Battleaxes.'
+    description: 'Spears/Battleaxes/Warhammers.'
   },
   'Dorgesh-Kaan Market': {
     id: 'Food Shops',
@@ -2408,8 +2391,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Sandstorm',
     category: TableType.MINIGAMES,
     regions: ['Kharidian Desert'], // Quarry
-    skills: { 'Mining': 35 },
-    quests: ['Beneath Cursed Sands'], // Access to Circlet helps
+    skills: { 'Mining': 35 }, // No quest needed
     description: 'Fastest sand gathering via Sandstone Grinder.'
   },
   'Zogre Bones': {
@@ -2418,7 +2400,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kandarin'], // Jiggig
     skills: { 'Ranged': 30 },
     quests: ['Zogre Flesh Eaters'],
-    description: 'Farming bones for secondary (Crushed Nest substitute?).'
+    description: 'Prayer bones from Zogres.'
   },
   'Unicorn Horns': {
     id: 'Unicorn Horns',
@@ -2451,7 +2433,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES, // Boss Grind
     regions: ['Wilderness'],
     skills: {},
-    description: '1/1500 drop from King Black Dragon.'
+    description: '1/1,000 drop from King Black Dragon.'
   },
   'Dragon Pickaxe (KQ)': {
     id: 'Dragon Pickaxe (KQ)',
@@ -2473,7 +2455,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Firemaking': 50 },
-    description: '1/10,000 from supply crates.'
+    description: '1/10,000 from the reward cart.'
   },
   'Dragon Axe (Dagannoth)': {
     id: 'Dragon Axe (Dagannoth)',
@@ -2742,22 +2724,22 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Spirit Shield (Making)',
     category: TableType.MINIGAMES,
     regions: ['Wilderness'], // Corp Cave logic usually? Or anvil
-    skills: { 'Prayer': 85, 'Smithing': 85 },
-    description: 'Attach Sigil to Blessed Spirit Shield.'
+    skills: { 'Prayer': 85 }, // To bless the shield; Abbot Langley attaches the sigil with no level
+    description: 'Bless a spirit shield (85 Prayer), then attach the sigil yourself (90 Prayer and 85 Smithing) or pay Abbot Langley 1.5M coins.'
   },
   'Ferocious Gloves': {
     id: 'Ferocious Gloves',
     category: TableType.MINIGAMES,
-    regions: ['Kourend & Kebos'], // Lithkren machine
+    regions: ['Kourend & Kebos', 'Islands & Others'], // Hydra leather from Karuulm; Lithkren Vault machinery
     skills: {},
     quests: ['Dragon Slayer II'],
-    description: 'Combine Hydra Leather with Barrows Gloves.'
+    description: 'Use Hydra Leather on the Lithkren Vault machinery.'
   },
   'Neitiznot Faceguard': {
     id: 'Neitiznot Faceguard',
     category: TableType.MERCHANTS,
     regions: ['Fremennik'],
-    skills: { 'Crafting': 20 }, // Minimal
+    skills: { 'Defence': 70 }, // To wear; made by Olaf the Bard, no skill
     quests: ['The Fremennik Exiles'],
     description: 'Combine Basilisk Jaw with Helm of Neitiznot.'
   },

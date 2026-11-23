@@ -206,7 +206,10 @@ export const computeDps = (input: DpsInput): DpsResult => {
 
   const speedTicks = Math.max(1, gear.speedTicks + stance.speedDelta);
   const attackInterval = speedTicks * 0.6;
-  const dps = (chance * (maxHit / 2)) / attackInterval;
+  // Wiki, Damage per second step eight: a successful hit that rolls 0 is
+  // changed to a 1, so an average hit is Max/2 + 1/(Max+1).
+  const averageHit = maxHit > 0 ? maxHit / 2 + 1 / (maxHit + 1) : 0;
+  const dps = (chance * averageHit) / attackInterval;
   const ttk = dps > 0 ? monster.hp / dps : Infinity;
 
   return { maxHit, hitChance: chance, dps, ttk, effAtk, effStr, attackRoll: aRoll, defenceRoll: dRoll, attackInterval };

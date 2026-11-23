@@ -22,4 +22,4 @@ export const CHUNK_SKILL_SERVICES: Readonly<Record<string, Readonly<Record<strin
 export const CHUNK_ENTRY_QUESTS: Readonly<Record<string, string>> = {"Children of the Sun":"18:48;19:46-49,51-53;20:45-49,51-53;21:44-53;22:44-52;23:46-52;24:45-52;25:45-51;26:45-51;27:45-49;28:47-49;29:48","Priest in Peril":"53:50-55;54:49-55;55:49-51,53-54;56:49-55;57:49-55;58:51-54;59:55","Cabin Fever":"57:46-47;58:46-47;59:44,46-47","Bone Voyage":"57:57-60;58:58-60;59:58-59"};
 
 // Chunk -> [skill, guild]: that skill's content there is inside the guild.
-export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = {"19,58":["Farming","Farming Guild"],"24,54":["Woodcutting","Woodcutting Guild"],"25,54":["Woodcutting","Woodcutting Guild"],"40,53":["Fishing","Fishing Guild"]};
+export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = {"19,58":["Farming","Farming Guild"],"24,54":["Woodcutting","Woodcutting Guild"],"25,54":["Woodcutting","Woodcutting Guild"],"40,53":["Fishing","Fishing Guild"],"45,51":["Mining","Crafting Guild"]};

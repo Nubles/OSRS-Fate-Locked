@@ -4,6 +4,7 @@ import { DropSource, TableType, type LogEntry } from '../../types';
 import { DROP_RATES, BOSSES_LIST } from '../../constants';
 import { bossTier, TIER_SOURCE, TIER_LABEL, TIER_ORDER, type BossTier } from '../../data/bossKeyTiers';
 import { useGame } from '../../context/GameContext';
+import { KEY_CHANCE_BONUS_TITLE } from '../../utils/keyChance';
 import { evaluateActivityReadiness } from '../../utils/activityReadiness';
 import { getUtilityActivityReq } from '../../utils/utilityReadiness';
 import { wikiService } from '../../services/WikiService';
@@ -28,6 +29,7 @@ import { formatKeyPercent, formatKeyRollValue } from '../../utils/keyRoll';
 import { FARM_NO_BOSS, FARM_NO_SLAYER_MASTER, useFarmModel } from '../ActionSection';
 import { slayerCardBlock } from '../../utils/farmGates';
 import { useBossTask } from '../../hooks/useBossTask';
+import { useAreaRoutes } from '../../hooks/useAreaRoutes';
 import { setBossQuery, setFarmTab, useKeysView, type FarmSubTab } from './OsrsKeysState';
 import { OsrsKeysTabs } from './OsrsKeysTabs';
 
@@ -42,7 +44,7 @@ import { OsrsKeysTabs } from './OsrsKeysTabs';
  * and the same GameContext; this file only draws them.
  */
 
-type RollPoint = { clientX: number; clientY: number };
+type RollPoint = { clientX: number; clientY: number; suspense?: () => Promise<void> };
 
 const UI = `${import.meta.env.BASE_URL}osrs-ui/`;
 const KEY_IMG = `${UI}items/key.png`;
@@ -139,13 +141,16 @@ const useRollSuspense = (onRoll: (p: RollPoint) => void) => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
-  const trigger = async (e: React.MouseEvent) => {
+  // useFarmModel's handleRoll asks first (Ask before Key clicks) and plays
+  // the pause only for a roll that happens, then rolls.
+  const trigger = (e: React.MouseEvent) => {
     if (isRolling) return;
-    const point = { clientX: e.clientX, clientY: e.clientY };
-    setIsRolling(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    if (mounted.current) setIsRolling(false);
-    onRoll(point);
+    const suspense = async () => {
+      if (mounted.current) setIsRolling(true);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      if (mounted.current) setIsRolling(false);
+    };
+    onRoll({ clientX: e.clientX, clientY: e.clientY, suspense });
   };
   return { isRolling, trigger };
 };
@@ -215,7 +220,7 @@ const BLOCKED_COLOR = '#ff981f';
 
 // Rounded so summed boosts never print as 0.30000000000000004.
 const BonusTag: React.FC<{ bonus: number }> = ({ bonus }) =>
-  bonus ? <span className="okf-bonus" title="Bonus odds from region passives and achievements" style={{ color: bonus > 0 ? '#00ff00' : '#ff3030' }}>{bonus > 0 ? '+' : '−'}{Number(Math.abs(bonus).toFixed(2))}</span> : null;
+  bonus ? <span className="okf-bonus" title={KEY_CHANCE_BONUS_TITLE} style={{ color: bonus > 0 ? '#00ff00' : '#ff3030' }}>{bonus > 0 ? '+' : '−'}{Number(Math.abs(bonus).toFixed(2))}</span> : null;
 
 /** Wide: the NPC card (FarmKeys-NPCs board). */
 const NpcCard: React.FC<{ card: CardModel; reserveExtra?: boolean }> = ({ card, reserveExtra = false }) => {
@@ -619,7 +624,7 @@ const RecentRolls: React.FC<{ history: readonly LogEntry[] }> = ({ history }) =>
 
 // ── The panel ─────────────────────────────────────────────────────────────
 export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => {
-  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId } = useGame();
+  const { claimPet, petsClaimed, unlocks, bossStandardKeysAwarded, history, gameModeId, hasSeenOnboarding } = useGame();
   const p = useFarmModel();
   const { farmTab: subTab, bossQuery } = useKeysView();
   const [pending, setPending] = useState<PendingRoll | null>(null);
@@ -628,6 +633,9 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
   const { isVanilla, reserves, bonusFor, effectiveRate, handleRoll } = p;
   // Vanilla and Chunked: the Boss Task card asks which boss, and rolls from its stash.
   const bossTask = useBossTask(handleRoll);
+  // An owned area no route reaches is Not ready, as in the Journal.
+  // Not behind the first-visit onboarding (PERF-4): owning an area is enough until then.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
   useEffect(warmFarmArt, []);
 
   const roll = (speaker: Speaker, source: string, chance: number, context?: KeyRollContext) => (pt: RollPoint) => {
@@ -741,7 +749,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       const head = npcHead(name);
       const classLabel = bossClass === 'brutus' ? 'Low' : TIER_LABEL[bossClass];
       const rates = stage.rates.map((r) => `${r}%`).join(', then ');
-      const readiness = evaluateActivityReadiness(true, getUtilityActivityReq(name, TableType.BOSSES, gameModeId), unlocks, gameModeId);
+      const readiness = evaluateActivityReadiness(true, getUtilityActivityReq(name, TableType.BOSSES, gameModeId), unlocks, gameModeId, areaRoutes);
       const notReady = !stage.capped && readiness.status === 'NOT_READY'
         ? `Not ready: needs ${readiness.blockers.map((b) => b.label).join(', ')}`
         : undefined;

@@ -80,7 +80,7 @@ fresh-profile bugs. When comparing "before" behavior, build the prior commit
 git stash pop`) instead of trusting a stale baseline number.
 
 For plugin changes: work only in the standalone `Nubles/OSRS-Fate-Locked-Runelite`
-checkout. Run `gradle clean test jar --no-daemon`, then use its CI, release, and
+checkout. Run `gradle clean check --no-daemon` (it adds the Plugin Hub jar and performance gates to the tests), then use its CI, release, and
 Plugin Hub workflows there. Do not copy plugin files into this web repository.
 
 For data changes: the test suite is the contract. Run the documented sync

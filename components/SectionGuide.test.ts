@@ -15,6 +15,10 @@ describe('help popovers', () => {
     expect(FEATURE_GATES.map(gate => gate.revealMessage).join(' ')).not.toMatch(/tamper/i);
   });
 
+  it('say minigame Key stashes keep their own odds in Chunked as well as Vanilla', () => {
+    expect(Object.keys(GUIDES).map(guideText).join(' ')).toContain('Vanilla and Chunked minigame stashes keep their own odds.');
+  });
+
   it('say an Omni-Key picks any exact unlock, not only a tier', () => {
     expect(guideText('SPEND')).toContain('Omni-Keys (spent on the Dashboard) pick the exact unlock');
     expect(guideText('SKILLS')).toContain('with a Key on the Skills table (a random skill) or an Omni-Key (your choice)');

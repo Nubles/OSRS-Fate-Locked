@@ -129,6 +129,11 @@ export type BackupCopy = 'latest' | 'previous';
 
 type Fetch = typeof fetch;
 
+/** A refused upload whose Retry-After can't be read waits this long: the relay's longest ask. */
+export const BACKUP_THROTTLE_FALLBACK_MS = 60_000;
+/** The shortest wait after a refused upload, whatever Retry-After says. */
+export const BACKUP_THROTTLE_MIN_MS = 5_000;
+
 export const uploadBackup = async (
   base: string, keys: BackupKeys, envelope: string, writer: string, fetchImpl: Fetch = fetch,
 ): Promise<BackupUploadResult> => {
@@ -149,8 +154,17 @@ export const uploadBackup = async (
   if (response.status === 403) return { ok: false, reason: 'forbidden' };
   if (response.status === 413) return { ok: false, reason: 'too-large' };
   if (response.status === 429) {
-    const seconds = Number(response.headers.get('Retry-After'));
-    return { ok: false, reason: 'throttled', retryAfterMs: Number.isFinite(seconds) ? seconds * 1000 : 60_000 };
+    // A browser only sees Retry-After when the relay exposes it (CORS); until then
+    // get() gives null, and Number(null) is 0, so a missing or odd value waits a minute.
+    const header = response.headers.get('Retry-After');
+    const seconds = header === null || header.trim() === '' ? NaN : Number(header);
+    return {
+      ok: false,
+      reason: 'throttled',
+      retryAfterMs: Number.isFinite(seconds) && seconds > 0
+        ? Math.max(BACKUP_THROTTLE_MIN_MS, seconds * 1000)
+        : BACKUP_THROTTLE_FALLBACK_MS,
+    };
   }
   return { ok: false, reason: 'unavailable' };
 };
@@ -274,7 +288,7 @@ export const backupRun = async (
   const keys = await deriveBackupKeys(record.code);
   const result = await uploadBackup(relayBase, keys, await encryptBackup(syncCode, keys.key), writer, options.fetchImpl);
   if (result.ok === false) {
-    if (result.reason === 'throttled') return { kind: 'retry', afterMs: result.retryAfterMs ?? 60_000 };
+    if (result.reason === 'throttled') return { kind: 'retry', afterMs: result.retryAfterMs ?? BACKUP_THROTTLE_FALLBACK_MS };
     return fail(result.reason);
   }
 

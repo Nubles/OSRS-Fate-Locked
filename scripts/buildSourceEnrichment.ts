@@ -11,6 +11,7 @@ import { BOSSES_LIST, MINIGAMES_LIST, REGION_GROUPS, MISTHALIN_AREAS } from '../
 import { ACTIVITY_REGIONS } from '../data/activityRegions';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import chunkDoc from '../public/chunk-content.json';
+import { UNLOCK_ALIAS, leagueRegions } from './sourceEnrichmentRules';
 
 // Chunk-truth: monster (lowercased) -> regions the chunk dataset proves it in.
 // data/resourceChunkTruth.test.ts enforces that every proven region is listed
@@ -67,14 +68,6 @@ const toAppCase = (raw: string) =>
     return w.charAt(0).toUpperCase() + w.slice(1);
   }).join(' ');
 
-// Wiki Leagues region -> app region group.
-const REGION_MAP: Record<string, string> = {
-  Misthalin: 'Misthalin', Karamja: 'Karamja', Asgarnia: 'Asgarnia',
-  Kandarin: 'Kandarin', Fremennik: 'Fremennik', Tirannwn: 'Tirannwn',
-  Morytania: 'Morytania', Wilderness: 'Wilderness', Varlamore: 'Varlamore',
-  Kourend: 'Kourend & Kebos', Desert: 'Kharidian Desert',
-};
-
 // Curated region tags for notably region-locked shops; others fall back to 'Any'.
 const SHOP_REGION: Record<string, string> = {
   'Lletya Seamstress': 'Tirannwn',
@@ -119,11 +112,11 @@ for (const [region, places] of Object.entries(REGION_GROUPS)) {
 
 // monster name (lowercased) -> app region from the wiki's infobox_monster
 // `league_region`, used when a drop's own League region was empty.
-const monsterRegion = new Map<string, string>();
+const monsterRegion = new Map<string, string[]>();
 for (const r of monsterRows) {
   if (!r.name || !r.league_region) continue;
-  const mapped = REGION_MAP[r.league_region];
-  if (mapped) monsterRegion.set(r.name.toLowerCase(), mapped);
+  const mapped = leagueRegions(r.league_region);
+  if (mapped.length) monsterRegion.set(r.name.toLowerCase(), mapped);
 }
 
 // shop page-name (lowercased, period-stripped) -> app region from
@@ -154,7 +147,7 @@ for (const r of storeRows) {
 const SKILLING_SOURCE = /\b(rocks?|trees?|bushes?|patch|vein|deposit|spawn|ore)\b/i;
 
 // item (lowercase) -> drops
-type Drop = { monster: string; region: string; rarity: string; isClue: boolean };
+type Drop = { monster: string; regions: string[]; rarity: string; isClue: boolean };
 const itemDrops = new Map<string, Drop[]>();
 for (const r of dropRows) {
   if (!r.item_name || !r.drop_json) continue;
@@ -169,7 +162,7 @@ for (const r of dropRows) {
   if (!itemDrops.has(key)) itemDrops.set(key, []);
   itemDrops.get(key)!.push({
     monster: cleaned,
-    region: REGION_MAP[dj['League region']] || 'Any',
+    regions: leagueRegions(dj['League region']),
     rarity: String(dj['Rarity'] || '').trim(),
     isClue: /casket|clue/i.test(cleaned),
   });
@@ -194,41 +187,6 @@ const rarityRank = (r: string): number => {
 // can gate enriched drops on whether the player has that unlock.
 const UNLOCK_BY_NAME = new Map<string, string>();
 for (const u of [...BOSSES_LIST, ...MINIGAMES_LIST]) UNLOCK_BY_NAME.set(u.toLowerCase(), u);
-// Activity-rewards drop sources whose bare names don't match a boss/minigame
-// list entry. Without these the lock analysis treated their drops as
-// unconditionally available (e.g. Twisted Bow's "Ancient Chest" source had
-// no unlockId, so the engine showed it unlockable from a fresh state).
-const UNLOCK_ALIAS: Record<string, string> = {
-  barrows: 'Barrows Brothers',
-  "barrows chest": 'Barrows Brothers',
-  'dagannoth kings': 'Dagannoth Kings',
-  // Chambers of Xeric
-  'ancient chest': 'Chambers of Xeric',
-  'great olm': 'Chambers of Xeric',
-  // Tombs of Amascut
-  'monumental chest': 'Tombs of Amascut',
-  // Pest Control
-  'extra supply crate': 'Pest Control',
-  // Wintertodt
-  'reward cart': 'Wintertodt',
-  // Hallowed Sepulchre — the "Coffin (...)" naming is caught by the paren
-  // rule below, but the standalone "Grand Hallowed Coffin" / "Casket" need
-  // an explicit alias.
-  'grand hallowed coffin': 'Hallowed Sepulchre',
-  // Theatre of Blood — final-boss / chamber-chest names that aren't in
-  // BOSSES_LIST/MINIGAMES_LIST as such.
-  'verzik vitur': 'Theatre of Blood',
-  'pestilent bloat': 'Theatre of Blood',
-  'sotetseg': 'Theatre of Blood',
-  'xarpus': 'Theatre of Blood',
-  'nylocas vasilias': 'Theatre of Blood',
-  'maiden of sugadinti': 'Theatre of Blood',
-  // ToA per-room bosses (Wardens (...) is paren-rule, but bare names need this)
-  'akkha': 'Tombs of Amascut',
-  'ba-ba': 'Tombs of Amascut',
-  'kephri': 'Tombs of Amascut',
-  'zebak': 'Tombs of Amascut',
-};
 const resolveUnlock = (name: string): string | undefined => {
   const l = name.toLowerCase();
   if (UNLOCK_BY_NAME.has(l)) return UNLOCK_BY_NAME.get(l);
@@ -287,14 +245,11 @@ for (const [lower, key] of lowerToKey) {
     .sort((a, b) => rarityRank(a.rarity) - rarityRank(b.rarity))
     .slice(0, 6);
   for (const d of picked) {
-    // If the drop's own League region was missing ('Any'), fall back to the
+    // If the drop's own League region names no region, fall back to the
     // monster's infobox_monster league_region.
-    let region = d.region;
-    if (region === 'Any') {
-      const m = monsterRegion.get(d.monster.toLowerCase());
-      if (m) region = m;
-    }
-    const src: any = { type: d.isClue ? 'CLUE' : 'DROP', name: d.monster, regions: [region] };
+    let regions = d.regions;
+    if (!regions.length) regions = monsterRegion.get(d.monster.toLowerCase()) ?? ['Any'];
+    const src: any = { type: d.isClue ? 'CLUE' : 'DROP', name: d.monster, regions: [...regions] };
     const unlock = d.isClue ? undefined : resolveUnlock(d.monster);
     if (unlock) {
       src.unlockId = unlock;

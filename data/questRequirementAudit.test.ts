@@ -158,8 +158,8 @@ const EXPECTED_TZ_SURFACE_ONLY = [
   "Witch's Potion",
   'X Marks the Spot',
 ];
-/** Released 3 and 11 Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
-const NEWER_THAN_CHUNK_PICKER = ['A Shell of a Friend', "Mudfoot's Big Adventure", 'The Birds and the Wasps', "The Writing's on the Wall"];
+/** Released 3, 11 and 18 Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
+const NEWER_THAN_CHUNK_PICKER = ['A New Leaf', 'A Shell of a Friend', "Mudfoot's Big Adventure", 'Rag and Bone Man III', 'The Birds and the Wasps', "The Writing's on the Wall"];
 const expectReviewedBatch = (start: string, end?: string) => {
   const rows = audit.entries.filter(entry =>
     entry.kind === 'quest' &&
@@ -220,11 +220,11 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries).toHaveLength(217);
-    expect(audit.entries).toHaveLength(217);
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(198);
+    expect(official.entries).toHaveLength(219);
+    expect(audit.entries).toHaveLength(219);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(200);
     expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(198);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(200);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
   });
 
@@ -288,6 +288,18 @@ describe('official quest and miniquest audit coverage', () => {
     expect(entry?.source.url).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/index\.php\?title=Fallen_From_Grace&oldid=\d+$/);
   });
 
+  it("drops Enakhra's Lament's bypassable Firemaking 45, as Temple of Ikov drops its Ranged 40", () => {
+    // Wiki Enakhra's Lament (rev 15411975): Firemaking 45 is "bypassable"; the braziers
+    // can be solved by guess and check, so the level is not needed to finish the quest.
+    const quest = QUEST_DATA["Enakhra's Lament"];
+    expect(quest.skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43 });
+    const entry = audit.entries.find(candidate => candidate.id === "Enakhra's Lament");
+    expect(entry?.requirementFingerprint).toBe(questRequirementFingerprint(quest));
+    expect(entry?.notes.partialCompletion).toContain(
+      'Level 45 Firemaking is bypassable by guessing which item goes in each brazier, so it is not gated.',
+    );
+  });
+
   it('matches every runtime requirement fingerprint', () => {
     const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
     expect(Object.values(QUEST_DATA).flatMap(quest => {
@@ -341,7 +353,7 @@ describe('official quest and miniquest audit coverage', () => {
         entry.id.localeCompare('T') < 0 &&
         entry.status === 'unresolved')
       .map(entry => entry.id))
-      .toEqual([]);
+      .toEqual(NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('N') >= 0 && id.localeCompare('T') < 0));
   });
 
   it('leaves no unexplained G-M review placeholders', () => {

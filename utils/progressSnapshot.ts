@@ -10,7 +10,7 @@
  */
 import type { GameModeRules } from '../config/gameModes';
 import { getGameMode, resolveModeRules } from '../config/gameModes';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_CAPE_QUEST_IDS } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { LogEntry, UnlockState } from '../types';
 import { completedCAPoints, earnedCATiers } from './caProgress';
@@ -20,6 +20,8 @@ import { chunkUnlocked } from './chunkLocations';
 import { simpleHash } from './integrity';
 import { runProgress } from './runProgress';
 import { tableDisplayName } from './tableDisplay';
+
+const QUEST_CAPE_IDS: ReadonlySet<string> = new Set(QUEST_CAPE_QUEST_IDS);
 
 export const MAX_RECENT_UNLOCKS = 5;
 export { MAP_GRID };
@@ -104,7 +106,10 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
     .reverse()
     .map(entry => ({ text: unlockText(entry), at: entry.timestamp }));
   const account = linkedAccount?.trim();
-  const questTotal = Object.keys(QUEST_DATA).length;
+  // Quests only, as the Quest Cape counts them: the bot shows this as "Quests"
+  // and gives the Quest Cape role when done reaches total. Miniquests stay out.
+  const questTotal = QUEST_CAPE_QUEST_IDS.length;
+  const questsDone = new Set(unlocks.quests.filter(id => QUEST_CAPE_IDS.has(id))).size;
   const mode = getGameMode(gameModeId);
 
   return {
@@ -116,7 +121,7 @@ export function buildProgressSnapshot(source: ProgressSource): ProgressSnapshot 
     ...(history[0]?.timestamp ? { startedAt: history[0].timestamp } : {}),
     areas: { unit: progress.unit, unlocked: Math.min(progress.unlocked, progress.total), total: progress.total },
     chunks: { unlocked: Math.min(progress.chunks.unlocked, progress.chunks.total), total: progress.chunks.total },
-    quests: { done: Math.min(unlocks.quests.length, questTotal), total: questTotal },
+    quests: { done: Math.min(questsDone, questTotal), total: questTotal },
     diaryTasks: {
       done: unlocks.completedTasks.filter(id => diaryIds.has(id)).length,
       total: ALL_DIARY_TASKS.length,

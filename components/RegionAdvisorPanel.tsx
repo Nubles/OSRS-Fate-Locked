@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Map } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { useAreaRoutesState } from '../hooks/useAreaRoutes';
 import { rankLockedRegions } from '../utils/regionAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';
 import { flashSelector } from '../utils/flash';
@@ -16,7 +17,8 @@ import { displayAreaName } from '../data/areaMapPolicy';
 
 export const RegionAdvisorPanel: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
-  const ranked = useMemo(() => rankLockedRegions(unlocks, gameModeId), [unlocks, gameModeId]);
+  const { routesFor } = useAreaRoutesState(unlocks, gameModeId);
+  const ranked = useMemo(() => rankLockedRegions(unlocks, gameModeId, routesFor), [unlocks, gameModeId, routesFor]);
 
   // Scroll the area's continent card into view + flash a highlight ring.
   const scrollToRegion = (id: string) => {

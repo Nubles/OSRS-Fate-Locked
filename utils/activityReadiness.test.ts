@@ -5,6 +5,8 @@ import { SKILLS_LIST } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { evaluateDiaryTaskEligibility } from './journalStatus';
+import { bossAreaBlocker } from './caTaskAccess';
+import type { AreaRoutes } from './areaRoutes';
 
 const unlocked = (over: Partial<UnlockState> = {}): UnlockState => ({
   equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
@@ -90,12 +92,12 @@ describe('evaluateActivityReadiness', () => {
 
   it('needs the entrance chunk itself in chunked mode, not any chunk of the area', () => {
     const req = getActivityReq('Giant Mole');
-    // 47,52 is Falador, but the mole hole is in 46,51.
+    // 47,52 is Falador, but the mole hills are in 46,52.
     expect(evaluateActivityReadiness(true, req, unlocked({ chunks: ['47,52'] }), 'chunked')).toMatchObject({
       status: 'NOT_READY',
-      blockers: [{ kind: 'area', label: 'Falador (46, 51)' }],
+      blockers: [{ kind: 'area', label: 'Falador (46, 52)' }],
     });
-    expect(evaluateActivityReadiness(true, req, unlocked({ chunks: ['46,51'] }), 'chunked').status).not.toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, req, unlocked({ chunks: ['46,52'] }), 'chunked').status).not.toBe('NOT_READY');
     // Vanilla keeps the named area.
     expect(evaluateActivityReadiness(true, req, unlocked({ regions: ['Falador'] }), 'vanilla').status).not.toBe('NOT_READY');
   });
@@ -262,13 +264,13 @@ describe('evaluateActivityReadiness', () => {
   });
 
   it('needs Druidic Ritual for Mastering Mixology and Pandemonium for the Barracuda Trials', () => {
-    // Their data lists only Herblore 60 and Sailing 30; the skills need the quests.
+    // Their data lists Herblore 60 (plus Children of the Sun) and Sailing 30; the skills need the quests.
     const mixology = unlocked({ regions: ['Aldarin'], skills: { Herblore: 6 }, levels: { Herblore: 60 } });
     expect(evaluateActivityReadiness(true, getActivityReq('Mastering Mixology'), mixology, 'vanilla')).toEqual({
-      status: 'NOT_READY', blockers: [{ kind: 'quest', label: 'Druidic Ritual' }],
+      status: 'NOT_READY', blockers: [{ kind: 'quest', label: 'Children of the Sun' }, { kind: 'quest', label: 'Druidic Ritual' }],
     });
     expect(evaluateActivityReadiness(true, getActivityReq('Mastering Mixology'), {
-      ...mixology, quests: ['Druidic Ritual'],
+      ...mixology, quests: ['Druidic Ritual', 'Children of the Sun'],
     }, 'vanilla')).toEqual({ status: 'READY' });
 
     const trials = unlocked({ skills: { Sailing: 3 }, levels: { Sailing: 30 } });
@@ -278,5 +280,27 @@ describe('evaluateActivityReadiness', () => {
     expect(evaluateActivityReadiness(true, getActivityReq('Barracuda Trials'), {
       ...trials, quests: ['Pandemonium'],
     }, 'vanilla')).toEqual({ status: 'READY' });
+  });
+});
+
+describe('evaluateActivityReadiness with routes', () => {
+  const zulrah = () => unlocked({ regions: ['Lumbridge', 'Zul-Andra'], quests: ['Regicide'], bosses: ['Zulrah'] });
+  const stranded: AreaRoutes = { strandedAreas: new Set(['Zul-Andra']), strandedChunks: new Set() };
+
+  it('is Not ready for an owned area no route reaches, as the Journal says', () => {
+    const unlocks = zulrah();
+    expect(evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla', stranded)).toEqual({
+      status: 'NOT_READY', blockers: [{ kind: 'area', label: 'a route to Zul-Andra' }],
+    });
+    expect(bossAreaBlocker('Zulrah', unlocks, 'vanilla', stranded)).toBe('No route to Zul-Andra yet');
+  });
+
+  it('is unchanged once a route reaches it, and while routes load', () => {
+    const unlocks = zulrah();
+    const reached: AreaRoutes = { strandedAreas: new Set(), strandedChunks: new Set() };
+    const withRoute = evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla', reached);
+    expect(withRoute.status).not.toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla')).toEqual(withRoute);
+    expect(bossAreaBlocker('Zulrah', unlocks, 'vanilla', reached)).toBeUndefined();
   });
 });

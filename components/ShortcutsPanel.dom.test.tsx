@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   service: {
     ready: true,
+    error: null as string | null,
+    subscribe: vi.fn(() => () => {}),
     init: vi.fn(async () => true),
     shortcuts: vi.fn(() => [
       { name: 'Mith grapple', skill: 'Agility', level: 10, objects: ['Mith grapple'], chunks: [] },
@@ -53,17 +55,38 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('ShortcutsPanel duplicate-name rows', () => {
-  it('renders every same-named shortcut without a duplicate React key warning', () => {
+describe('ShortcutsPanel after a failed chunk-content load', () => {
+  it('offers Retry instead of disappearing', () => {
+    mocks.service.ready = false;
+    mocks.service.error = 'HTTP 503';
+    try {
+      render(<ShortcutsPanel />);
+      expect(screen.getByRole('alert').textContent).toContain('Could not load the Agility shortcuts.');
+      const calls = mocks.service.init.mock.calls.length;
+      fireEvent.click(screen.getByRole('button', { name: 'Retry shortcuts' }));
+      expect(mocks.service.init.mock.calls.length).toBe(calls + 1);
+      expect(mocks.service.shortcuts).not.toHaveBeenCalled();
+    } finally {
+      mocks.service.ready = true;
+      mocks.service.error = null;
+    }
+  });
+});
+
+describe('ShortcutsPanel multi-skill shortcuts', () => {
+  // Was: three rows for the one grapple (L10, L20, L30), each judged on one skill.
+  // Now the grapple is one row on its Agility level, judged on all three skills.
+  it('renders a same-named shortcut once without a duplicate React key warning', () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     render(<ShortcutsPanel />);
     fireEvent.click(screen.getByRole('button', { name: /Agility Shortcuts/ }));
 
-    expect(screen.getAllByText('Mith grapple')).toHaveLength(3);
+    expect(screen.getAllByText('Mith grapple')).toHaveLength(1);
     expect(screen.getByText('L10')).toBeTruthy();
-    expect(screen.getByText('L20')).toBeTruthy();
-    expect(screen.getByText('L30')).toBeTruthy();
+    expect(screen.queryByText('L20')).toBeNull();
+    expect(screen.getByText('0')).toBeTruthy(); // 0 / 1 usable now
+    expect(screen.getByText(/\/ 1 usable now/)).toBeTruthy();
 
     const duplicateKeyWarning = consoleError.mock.calls.some(([message]) =>
       typeof message === 'string' && message.includes('same key'));

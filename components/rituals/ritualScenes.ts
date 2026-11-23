@@ -658,7 +658,7 @@ const pact: Scene = (k) => {
     end: 2200,
     title: getRitual('PACT').name,
     icon: () => spriteImg('unholy_symbol', 2),
-    text: `Your next ${PACT_ROLLS} rolls get +${PACT_ODDS_BONUS}% odds. Then Zamorak takes the next ${PACT_DEBT} Fate you earn.`,
+    text: `Your next ${PACT_ROLLS} rolls get +${PACT_ODDS_BONUS}% odds, up to 95%. Then Zamorak takes the next ${PACT_DEBT} Fate you earn.`,
   };
 };
 

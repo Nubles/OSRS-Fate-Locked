@@ -54,7 +54,7 @@ describe('curated source index', () => {
       if (!target) continue;
       const expected = extra.map(source => {
         const known = linearFind(source);
-        return known ? { ...source, ...known, rarity: source.rarity, requirementsUnverified: true }
+        return known ? { ...source, ...known, rarity: source.rarity, notes: source.notes, requirementsUnverified: true }
           : { ...source, requirementsUnverified: true };
       });
       expect(target.slice(target.length - extra.length)).toEqual(expected);

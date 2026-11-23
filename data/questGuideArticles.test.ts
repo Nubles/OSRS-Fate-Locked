@@ -38,6 +38,9 @@ describe('reviewed Wiki-style quest articles', () => {
     expect(sheep.steps['sheep-shearer:spin-wool'].details!.join(' ')).toContain('separate from the quest reward');
     const runes = questGuideArticleFor('Rune Mysteries')!;
     expect(runes.rewards).toContain('5 Kudos, claimed separately from Historian Minas in Varrock Museum.');
+    // The 3 November 2026 update added a Runecraft reward (Wiki: Rune Mysteries, Changes).
+    expect(runes.rewards).toContain('500 Runecraft XP');
+    expect(runes.sourceUrl).toBe('https://oldschool.runescape.wiki/w/Rune_Mysteries?oldid=15403897');
     expect(runes.rewards).not.toContain('Unlocks Runecraft.');
   });
 

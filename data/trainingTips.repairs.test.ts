@@ -16,6 +16,8 @@ const thresholds: [string, RegExp, number][] = [
   ['Magic', /Superheat/, 43], ['Magic', /High Level Alchemy/, 55],
   ['Mining', /Amethyst/, 92], ['Runecraft', /[Dd]ouble.*nature/, 91], ['Runecrafting', /[Dd]ouble nature/, 91],
   ['Smithing', /iron platebodies/, 33], ['Smithing', /Steel platebodies/, 48], ['Smithing', /Mithril platebodies/, 68],
+  // Sailing training (rev 15379238): the trials open at 30, 55 and 72; the quests need 12 and 22.
+  ['Sailing', /Tempor Tantrum/, 30], ['Sailing', /Jubbly Jive/, 55], ['Sailing', /Gwenith Glide/, 72],
   ['Thieving', /knights of Ardougne/, 55], ['Thieving', /Silk stalls/, 20], ['Woodcutting', /^Teak trees$/, 35],
 ];
 
@@ -43,7 +45,7 @@ describe('fact-checked training suggestions', () => {
       'Herblore_training', 'Hitpoints', 'Hunter_training', 'Pay-to-play_Magic_training',
       'Pay-to-play_Mining_training', 'Pay-to-play_Prayer_training', 'Pay-to-play_Ranged_training',
       'Pay-to-play_Runecraft_training', 'Slayer_training', 'Pay-to-play_Smithing_training',
-      'Thieving_training', 'Pay-to-play_Woodcutting_training',
+      'Thieving_training', 'Pay-to-play_Woodcutting_training', 'Sailing_training',
     ]);
     for (const skill of Object.keys(TRAINING_TIPS)) {
       const url = new URL(getWikiTrainingUrl(skill));
@@ -51,6 +53,7 @@ describe('fact-checked training suggestions', () => {
       expect(verified.has(url.pathname.slice(3)), skill).toBe(true);
     }
     expect(getWikiTrainingUrl('Runecraft')).toBe(getWikiTrainingUrl('Runecrafting'));
-    expect(getWikiTrainingUrl('Sailing')).not.toContain('Training:');
+    expect(getWikiTrainingUrl('Sailing')).toBe('https://oldschool.runescape.wiki/w/Sailing_training');
+    expect(TRAINING_TIPS.Sailing.find(tip => /Courier/.test(tip.method))?.note).toBe('Prying Times at 12 and Current Affairs at 22 Sailing');
   });
 });

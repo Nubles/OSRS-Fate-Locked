@@ -132,6 +132,10 @@ export const applyOddsBonus = (threshold: number, bonus: number): number => {
   return Math.max(threshold, Math.min(threshold + bonus, BOOST_CAP));
 };
 
+/** The roll history's note on what the rituals did to the odds: the points really applied. */
+export const ritualOddsNote = (nominal: number, applied: number): string =>
+  `Rituals ${applied >= 0 ? '+' : ''}${applied}% odds${nominal > 0 && applied < nominal ? ` (boosts stop at ${BOOST_CAP}%)` : ''}.`;
+
 export interface FailFate {
   /** Fate added to the bar. */
   earned: number;
@@ -147,7 +151,8 @@ export interface FailFate {
 
 /**
  * What a failed roll does to Fate under the run's rituals. `base` is the
- * source's Fate (plus Greed's refund). Order: Walk the Path, Tears, Guthan
+ * source's Fate (Greed's refund is added after, and only when no Pity Key
+ * comes; utils/runAudit.ts allows the overflow). Order: Walk the Path, Tears, Guthan
  * and Torag add up what the fail would give, Zamorak takes his share of it,
  * then Blood Price takes Fate from the bar.
  */

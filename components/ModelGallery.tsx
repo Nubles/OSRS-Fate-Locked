@@ -94,9 +94,10 @@ export const ModelGallery: React.FC<{ onClose: () => void }> = ({ onClose }) => 
                 <div className="w-full h-full flex items-center justify-center text-gray-600 text-sm">No model selected</div>
               )}
             </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <h3 className="text-lg font-bold text-white">{prettify(sel)}</h3>
-              <span className="text-[11px] font-mono text-gray-600">{loadedModelFiles()[sel]}</span>
+            <div className="mt-3 flex items-baseline justify-between gap-2 min-w-0">
+              <h3 className="text-lg font-bold text-white min-w-0 break-words">{prettify(sel)}</h3>
+              {/* The file name is for review on wide screens; a phone has no room for it. */}
+              <span data-testid="model-file" className="hidden sm:inline min-w-0 truncate text-[11px] font-mono text-gray-600">{loadedModelFiles()[sel]}</span>
             </div>
             <p className="text-[11px] text-gray-500 mt-1">Unlocked bosses render as rotatable 3D models.</p>
           </div>

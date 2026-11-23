@@ -218,6 +218,25 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
     expect(evaluateDiaryTaskEligibility(island, { ...dock, quests: ['Rum Deal'] }, 'vanilla').eligible).toBe(true);
   });
 
+  it('lists the enchanted lyre to Waterbirth Island, Neitiznot and Jatizso, leaving the diary tier to confirm', () => {
+    for (const [island, tier] of [['Waterbirth Island', 'hard'], ['Neitiznot', 'elite'], ['Jatizso', 'elite']]) {
+      const route = AREA_ENTRY_ROUTES[island].find(row => row.label.startsWith('Enchanted lyre'));
+      expect(route, island).toEqual({
+        label: `Enchanted lyre teleport (${tier} Fremennik Diary)`,
+        mobility: ['Enchanted Lyre'],
+        quests: ['The Fremennik Trials'],
+        manualRequirements: [`Complete the ${tier} Fremennik Diary, which adds ${island} to the enchanted lyre`],
+        source: 'https://oldschool.runescape.wiki/w/Enchanted_lyre?oldid=15361207',
+      });
+    }
+    const onWaterbirth = { ...task('frem_hard_8'), id: 'test_waterbirth', skills: {}, arcana: [], quests: [] };
+    const owner = account({ regions: ['Waterbirth Island'], quests: ['The Fremennik Trials'] });
+    const check = 'Complete the hard Fremennik Diary, which adds Waterbirth Island to the enchanted lyre';
+    expect(evaluateDiaryTaskEligibility(onWaterbirth, owner, 'vanilla').confirmable).toBe(false);
+    expect(evaluateDiaryTaskEligibility(onWaterbirth, { ...owner, mobility: ['Enchanted Lyre'] }, 'vanilla'))
+      .toMatchObject({ eligible: false, confirmable: true, manualChecks: [check] });
+  });
+
   it('reaches Harmony Island through a reachable Mos Le\'Harmless', () => {
     const watermelon = task('mor_hard_3');
     const islands = account({

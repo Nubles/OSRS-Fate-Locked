@@ -43,8 +43,12 @@ const REVIEWED: Record<string, string> = {
   wild_hard_6: 'Chaos Elemental',
   wild_hard_7: 'Crazy Archaeologist, Chaos Fanatic, Scorpia',
   // 13 October 2026 item recheck: Zalcano drops runite ore, one way of three.
-  kan_elite_5: 'Zalcano',
+  // 22 November 2026: the reward cart's logs come from fighting the Wintertodt, as kou_med_11 does.
+  kan_elite_5: 'Zalcano, Wintertodt',
   var_elite_4: 'Zalcano',
+  kan_hard_6: 'Wintertodt',
+  mor_elite_2: 'Wintertodt',
+  west_elite_1: 'Wintertodt',
 };
 
 const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
@@ -124,6 +128,21 @@ describe('diary tasks that mean fighting a boss', () => {
     const unlocked = { ...locked, bosses: ['Giant Mole'] };
     expect(evaluateDiaryTaskEligibility(row, unlocked, 'vanilla').eligible).toBe(true);
     expect(getDiaryStatus(DIARY_DATA[row.tierId], unlocked, 'vanilla')).toBe('AVAILABLE');
+  });
+
+  it('take the Wintertodt reward cart only with the Wintertodt unlocked', () => {
+    // Reward Cart rev 15388221: "After earning at least 500 points during the fight against the Wintertodt".
+    for (const id of ['kan_hard_6', 'kan_elite_5', 'mor_elite_2', 'west_elite_1']) {
+      const cart = (task(id).oneOf ?? []).filter(option => option.regions?.includes('Wintertodt Camp'));
+      expect(cart.length, id).toBeGreaterThan(0);
+      for (const option of cart) expect(option.bosses, `${id} ${option.label}`).toContain('Wintertodt');
+    }
+    const burner = account({
+      skills: { Firemaking: 10 }, levels: { Firemaking: 99 }, regions: ["Seers' Village", 'Wintertodt Camp'],
+    });
+    expect(evaluateDiaryTaskEligibility(task('kan_hard_6'), burner, 'vanilla').machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('kan_hard_6'), { ...burner, bosses: ['Wintertodt'] }, 'vanilla').machineEligible)
+      .toBe(true);
   });
 
   it('accept the Fight Pits or the Fight Cave for the TzHaar attempt', () => {

@@ -36,20 +36,20 @@ describe('Wise Old Man boss mapping', () => {
   });
 
   it('takes a baseline once per name and only fills what it could not read', () => {
-    const first = recordScores(undefined, 'Whim', 'whim', { vorkath: 10, nex: null }, 100)!;
-    expect(first).toEqual({ account: 'Whim', scores: { vorkath: 10, nex: null }, takenAt: 100 });
-    expect(recordScores(first, 'Whim', 'Whim', { vorkath: 50, nex: 3 }, 200)).toEqual({ ...first, scores: { vorkath: 10, nex: 3 } });
-    expect(recordScores(first, 'Whim', 'Whim', { vorkath: 50 }, 200)).toBe(first);
-    expect(recordScores(first, 'Whim', 'Other', { vorkath: 1 }, 200)).toBe(first);
+    const first = recordScores(undefined, 'Runner', 'runner', { vorkath: 10, nex: null }, 100)!;
+    expect(first).toEqual({ account: 'Runner', scores: { vorkath: 10, nex: null }, takenAt: 100 });
+    expect(recordScores(first, 'Runner', 'Runner', { vorkath: 50, nex: 3 }, 200)).toEqual({ ...first, scores: { vorkath: 10, nex: 3 } });
+    expect(recordScores(first, 'Runner', 'Runner', { vorkath: 50 }, 200)).toBe(first);
+    expect(recordScores(first, 'Runner', 'Other', { vorkath: 1 }, 200)).toBe(first);
     expect(recordScores(first, 'New Name', 'New Name', { vorkath: 60 }, 300)).toEqual({ account: 'New Name', scores: { vorkath: 60 }, takenAt: 300 });
-    expect(recordScores(undefined, undefined, 'Whim', { vorkath: 1 }, 1)).toBeUndefined();
+    expect(recordScores(undefined, undefined, 'Runner', { vorkath: 1 }, 1)).toBeUndefined();
   });
 });
 
 describe('planActivitySync', () => {
   const takenAt = 1_000;
   const scores: SyncScores = {
-    account: 'Whim', takenAt,
+    account: 'Runner', takenAt,
     scores: { ...Object.fromEntries(SCORE_METRICS.map(m => [m, 0])), vorkath: 10, dagannoth_prime: 5, dagannoth_rex: 4, nex: null },
   };
   const reading: Record<string, ScoreReading> = {
@@ -67,7 +67,7 @@ describe('planActivitySync', () => {
       roll(1_600, { source: DropSource.BOSS_MID, meta: { bossName: 'Vorkath' } }),
       roll(1_700, { source: DropSource.CLUE_EASY, meta: { clueTier: 'Easy' } }),
     ];
-    const plan = planActivitySync({ scores, linkedAccount: 'whim', reading, history, gameModeId: 'vanilla', reserves: true, bosses: ['Vorkath', 'Zulrah'] });
+    const plan = planActivitySync({ scores, linkedAccount: 'runner', reading, history, gameModeId: 'vanilla', reserves: true, bosses: ['Vorkath', 'Zulrah'] });
     const by = Object.fromEntries(plan.map(p => [p.label, p]));
     expect(by.Vorkath).toMatchObject({ gained: 5, rolled: 2, count: 3, context: { kind: 'boss', bossName: 'Vorkath' } });
     expect(by.Zulrah).toMatchObject({ gained: 3, count: 3 });
@@ -79,7 +79,7 @@ describe('planActivitySync', () => {
 
   it('rolls kills per tier outside Vanilla and Chunked, with no clue context', () => {
     const history = [roll(2_000, { source: DropSource.BOSS_MID })];
-    const plan = planActivitySync({ scores, linkedAccount: 'Whim', reading, history, gameModeId: 'xtreme', reserves: false, bosses: [] });
+    const plan = planActivitySync({ scores, linkedAccount: 'Runner', reading, history, gameModeId: 'xtreme', reserves: false, bosses: [] });
     const mid = plan.find(p => p.source === DropSource.BOSS_MID)!;
     // Vorkath 5 + Zulrah 3, less the one mid-tier roll; Dagannoth Kings are low tier.
     expect(mid).toMatchObject({ gained: 8, rolled: 1, count: 7, rate: DROP_RATES[DropSource.BOSS_MID] });
@@ -90,6 +90,6 @@ describe('planActivitySync', () => {
 
   it('rolls nothing for another name, or before a baseline', () => {
     expect(planActivitySync({ scores, linkedAccount: 'Someone', reading, history: [], gameModeId: 'vanilla', reserves: true, bosses: ['Vorkath'] })).toEqual([]);
-    expect(planActivitySync({ scores: undefined, linkedAccount: 'Whim', reading, history: [], gameModeId: 'vanilla', reserves: true, bosses: ['Vorkath'] })).toEqual([]);
+    expect(planActivitySync({ scores: undefined, linkedAccount: 'Runner', reading, history: [], gameModeId: 'vanilla', reserves: true, bosses: ['Vorkath'] })).toEqual([]);
   });
 });

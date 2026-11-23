@@ -39,6 +39,8 @@ export interface ActivityReq {
 }
 
 const GOD_WARS_ENTRY = ['Unlocked God Wars Dungeon access through Troll Stronghold progress (defeated Dad), or the Easy Combat Achievement hilt teleport; entry also requires 60 Strength or Agility and a rope for first entry'];
+// One fee covers Callisto's Den, Hunter's End, the Skeletal Tomb, Vet'ion's Rest, the Silk Chasm and the Web Chasm.
+const WILDERNESS_LAIR_FEE = "Entry costs 50,000 coins, taken from the bank if not carried; one fee covers all six Wilderness boss lairs.";
 const GOD_WARS_CHAMBER = 'Meet this faction’s kill-count requirement for your Combat Achievement tier, or use an ecumenical key';
 
 export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
@@ -53,23 +55,23 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     quests: ['Desert Treasure I'],
     manualRequirements: [...GOD_WARS_ENTRY, 'Completed The Frozen Door miniquest with a frozen key from all four generals', 'Meet the Ancient Prison kill-count requirement for your Combat Achievement tier, or use an ecumenical key'],
   },
-  'General Graardor': { skills: { Strength: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
-  'Commander Zilyana': { skills: { Agility: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
-  "Kree'arra": { skills: { Ranged: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
+  'General Graardor': { skills: { Strength: 70 }, manualRequirements: [...GOD_WARS_ENTRY, 'Bring a hammer (or a dragon warhammer or elder maul) to enter the Bandos stronghold', GOD_WARS_CHAMBER] },
+  'Commander Zilyana': { skills: { Agility: 70 }, manualRequirements: [...GOD_WARS_ENTRY, 'Bring two ropes on your first visit to the Saradomin encampment', GOD_WARS_CHAMBER] },
+  "Kree'arra": { skills: { Ranged: 70 }, manualRequirements: [...GOD_WARS_ENTRY, 'Wield a crossbow with a mith grapple to reach the Armadyl encampment', GOD_WARS_CHAMBER] },
   "K'ril Tsutsaroth": { skills: { Hitpoints: 70 }, manualRequirements: [...GOD_WARS_ENTRY, GOD_WARS_CHAMBER] },
   'Abyssal Sire': {
     skills: { Slayer: 85 },
-    manualRequirements: ['Abyssal demon Slayer task.'],
+    manualRequirements: ['Abyssal demon Slayer task or Abyssal Sire boss task.'],
     oneOf: [
       { manualRequirements: ['Reached the Abyssal Nexus through fairy ring DIP'] },
       { manualRequirements: ['Reached the Abyss through the Mage of Zamorak in the Wilderness'] },
     ],
   },
-  'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task; Karuulm Slayer Dungeon.'] },
-  'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task.'] },
+  'Alchemical Hydra': { skills: { Slayer: 95 }, manualRequirements: ['Hydra Slayer task or Alchemical Hydra boss task; Karuulm Slayer Dungeon.'] },
+  'Cerberus': { skills: { Slayer: 91 }, manualRequirements: ['Hellhound Slayer task or Cerberus boss task.'] },
   'Grotesque Guardians': { skills: { Slayer: 75 }, quests: ['Priest in Peril'], manualRequirements: ['Permanently unlocked the Slayer Tower roof using a brittle key', 'An active gargoyle or Grotesque Guardians boss Slayer task'] },
-  'Kraken': { skills: { Slayer: 87 }, manualRequirements: ['Cave kraken Slayer task.'] },
-  'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, manualRequirements: ['Smoke devil Slayer task.'] },
+  'Kraken': { skills: { Slayer: 87 }, manualRequirements: ['Cave kraken Slayer task or Kraken boss task.'] },
+  'Thermonuclear Smoke Devil': { skills: { Slayer: 93 }, manualRequirements: ['Smoke devil Slayer task or Thermonuclear smoke devil boss task.'] },
   'Araxxor': { skills: { Slayer: 92 }, quests: ['Priest in Peril'], manualRequirements: ['Araxyte/spider Slayer task or boss task.'] },
   'Skotizo': { manualRequirements: ['Summoned with a Dark totem in the Catacombs of Kourend.'] },
   'Vorkath': { quests: ['Dragon Slayer II'] },
@@ -84,6 +86,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Theatre of Blood': { quests: ['Priest in Peril'] },
   'The Nightmare': { quests: ['Priest in Peril'] },
   'Deranged Archaeologist': { quests: ['Bone Voyage'] },
+  'Giant Mole': { manualRequirements: ['Dig into a mole hill with a spade, carrying a light source unless the Fire of Eternal Light is lit'] },
+  'Kalphite Queen': { manualRequirements: ['Bring two ropes for the Kalphite Lair (the Hard Desert Diary keeps them tied once placed)'] },
+  'Sarachnis': { manualRequirements: ['Bring a slash weapon or a knife to cut the webs, or wear Aranea boots'] },
+  'Dagannoth Kings': { manualRequirements: ['Bring another player, or a pet rock and a rune thrownaxe, or use the 85 Agility shortcut on Waterbirth Island'] },
   'Hespori': { skills: { Farming: 65 } },
   'Coral Nursery': { manualRequirements: ['Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.'] },
   'Phantom Muspah': { quests: ['Secrets of the North'] },
@@ -96,17 +102,17 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Yama': { quests: ['A Kingdom Divided'] },
   'Doom of Mokhaiotl': { quests: ['The Final Dawn'] },
   'Gemstone Crab': { quests: ['Children of the Sun'] },
-  'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], manualRequirements: ['Gryphon Slayer task.'] },
+  'Shellbane Gryphon': { skills: { Slayer: 51 }, quests: ['Troubled Tortugans'], manualRequirements: ['Gryphon Slayer task or Shellbane gryphon boss task.'] },
   'The Mad Angel': { quests: ['Fallen From Grace'], requiredAreas: ['Wyrmscraig'] },
   'Mimic': { manualRequirements: ['Opted in at the strange casket in Watson’s house', 'Obtained a Mimic from an elite or master reward casket'] },
 
-  "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
-  'Artio': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }] },
-  'Spindel': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }] },
+  "Calvar'ion": { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }], note: WILDERNESS_LAIR_FEE },
+  'Artio': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
+  'Spindel': { oneOf: [{ diaries: ['Wilderness Hard'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
   // The big three's lairs ask for the Medium diary instead of the Hard one.
-  'Callisto': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }], note: "Entry to Callisto's Den costs 50,000 coins, taken from the bank if not carried." },
-  'Venenatis': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }] },
-  "Vet'ion": { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }] },
+  'Callisto': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Callisto boss Slayer task (a bear task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
+  'Venenatis': { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ['Have an active Venenatis boss Slayer task (a spider task does not qualify)'] }], note: WILDERNESS_LAIR_FEE },
+  "Vet'ion": { oneOf: [{ diaries: ['Wilderness Medium'] }, { manualRequirements: ["Have an active Vet'ion boss Slayer task (a skeleton task does not qualify)"] }], note: WILDERNESS_LAIR_FEE },
   // B-4: the Maggot King can only be killed after The Blood Moon Rises.
   'Maggot King': { quests: ['The Blood Moon Rises'] },
   'Obor': { manualRequirements: ['Permanently unlocked Obor’s lair using a giant key (first access only)'] },
@@ -114,8 +120,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 
   // ===== Guilds =============================================================
   "Champions' Guild": { questPoints: 32, requiredAreas: ['Varrock'], note: 'South of Varrock.' },
-  "Cooks' Guild": { skills: { Cooking: 32 } },
-  'Crafting Guild': { skills: { Crafting: 40 } },
+  "Cooks' Guild": { skills: { Cooking: 32 }, note: "Wear a chef's hat or golden chef's hat, Cooking cape or hood, Max cape or hood, or Varrock armour 3 or 4 to enter." },
+  'Crafting Guild': { skills: { Crafting: 40 }, note: 'Wear a brown or golden apron, Crafting cape or Max cape to enter by the door.' },
   'Mining Guild': { skills: { Mining: 60 } },
   'Prayer Guild': { skills: { Prayer: 31 }, note: 'Edgeville Monastery chapel.' },
   'Farming Guild': { skills: { Farming: 45 }, requiredAreas: ['Farming Guild'], note: 'Tiered access: 45 / 65 / 85 Farming.' },
@@ -172,16 +178,16 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Tithe Farm': { skills: { Farming: 34 } },
   'Hallowed Sepulchre': { skills: { Agility: 52 }, quests: ['Sins of the Father'] },
   "Giants' Foundry": { skills: { Smithing: 15 }, quests: ['Sleeping Giants'] },
-  'Mastering Mixology': { skills: { Herblore: 60 } },
+  'Mastering Mixology': { skills: { Herblore: 60 }, quests: ['Children of the Sun'] },
   'Volcanic Mine': { skills: { Mining: 50 }, quests: ['Bone Voyage'], note: 'Petrified Pete takes 30 numulite each entry, or 3,000 once for good.' },
   'Pyramid Plunder': { skills: { Thieving: 21 }, questProgress: [{ quest: "Icthlarin's Little Helper", label: "Gained access to Sophanem by starting Icthlarin's Little Helper" }] },
   'Trouble Brewing': { skills: { Cooking: 40 }, quests: ['Cabin Fever'] },
   'Tai Bwo Wannai Cleanup': { quests: ['Jungle Potion'] },
   "Shades of Mort'ton": { quests: ["Shades of Mort'ton"] },
   'Temple Trekking': { quests: ['In Aid of the Myreque'] },
-  // Either way in is enough: a crop circle at 17 Hunter, or Zanaris's wheat-field portal.
-  'Impetuous Impulses': { oneOf: [{ skills: { Hunter: 17 } }, { manualRequirements: ['Completed Lost City, for the portal in Zanaris'] }] },
-  'Vale Totems': { skills: { Fletching: 20 }, note: 'Vale Totems miniquest (Auburn Valley).' },
+  // 17 Hunter is needed by either way in; Lost City only opens the Zanaris portal.
+  'Impetuous Impulses': { skills: { Hunter: 17 }, note: 'Enter by a crop circle, or the Zanaris portal after Lost City.' },
+  'Vale Totems': { skills: { Fletching: 20 }, quests: ['Children of the Sun', 'Vale Totems'], note: 'Vale Totems miniquest (Auburn Valley) first.' },
   'Barracuda Trials': { skills: { Sailing: 30 }, note: 'Trials at 30 / 55 / 72 Sailing; the 72 trial needs Regicide.' },
   // Anyone can take the challenges; claiming the rewards needs 750 total level.
   // The Easy Wilderness Diary requirement was removed on 14 October 2026
@@ -198,7 +204,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   },
   "Sorceress's Garden": { quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
   'Stealing Artefacts': { skills: { Thieving: 49 }, manualRequirements: ['Have a lockpick or hair clip'], note: 'Piscarilius access (Kourend & Kebos).' },
-  'Mess': { note: "Hosidius kitchen — a cook's duties in Great Kourend." },
+  'Mess': { skills: { Cooking: 20 }, note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
   // ===== Player-Owned House (Construction room-build levels) ================
   // Only the standard room-build levels and Superior Garden features, which are
@@ -236,7 +242,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: "Bought from Veos; each teleport page comes from a Great Kourend quest (Depths of Despair, Queen of Thieves, Tale of the Righteous, The Forsaken Tower, The Ascent of Arceuus)." },
   'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
-  'Colossal Pouch': { skills: { Runecraft: 25 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
+  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
   'Dizana\'s Quiver': { note: 'Fortis Colosseum reward (ammo storage).' },
   'Forestry Kit': { note: 'Forestry Shop (anima-infused bark).' },
@@ -301,12 +307,12 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Mounted Mythical Cape': { skills: { Construction: 47 } },
   "Mounted Xeric's Talisman": { skills: { Construction: 72 }, note: 'Amulet space in the portal nexus room.' },
   'Mounted Digsite Pendant': { skills: { Construction: 82 }, note: 'Amulet space in the portal nexus room.' },
-  'Spellbook Altars': { note: 'Chapel / altar (Construction).' },
-  'Armour Case': { note: 'Costume room (Construction).' },
-  'Magic Wardrobe': { note: 'Costume room (Construction).' },
-  'Cape Rack': { note: 'Costume room (Construction).' },
-  'Treasure Chest (Clues)': { note: 'Costume room (Construction).' },
-  'Toy Box': { note: 'Costume room (Construction).' },
+  'Spellbook Altars': { skills: { Construction: 80 }, note: 'Achievement gallery altar space (occult altar at 90).' },
+  'Armour Case': { skills: { Construction: 46 }, note: 'Costume room (Construction).' },
+  'Magic Wardrobe': { skills: { Construction: 42 }, note: 'Costume room (Construction).' },
+  'Cape Rack': { skills: { Construction: 54 }, note: 'Costume room (Construction).' },
+  'Treasure Chest (Clues)': { skills: { Construction: 48 }, note: 'Costume room (Construction).' },
+  'Toy Box': { skills: { Construction: 50 }, note: 'Costume room (Construction).' },
   'Armour Repair Stand': { skills: { Construction: 55 }, note: 'Repairs Barrows armour.' },
   'Telescope': { skills: { Construction: 44 }, note: 'Study.' },
   'Aquarium': { unverified: true, note: 'Legacy entry: an OSRS housing facility has not been verified.' },
