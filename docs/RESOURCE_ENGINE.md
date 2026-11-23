@@ -154,15 +154,24 @@ the data file.
     hallowed sack, reward token, raid chests...) and the Shade Catacombs
     chests. When set, realigns the region to `ACTIVITY_REGIONS[unlockId]`.
   - Picks drops commonest first by the whole fraction (`21/128` before
-    `1/128`; words on the same scale), one row per source and one per
+    `1/128`; words on the same scale, with `Varies`, the Wiki's word for
+    point-based activity rewards such as Wintertodt's Reward Cart and
+    Fishing Trawler, just after `Always`), one row per source and one per
     activity, at most 6.
   - Drop region fallback: drop_json's "League region" → infobox_monster's
     `league_region` → `'Any'`.
   - Shop region: a small `SHOP_REGION` map keyed by Wiki seller name →
     infobox_shop's location, where every `[[Place]]` link (target, shown
     text, or a link starting with a place, e.g. `[[Lumbridge Castle]]`) is
-    looked up in `REGION_GROUPS`, `MISTHALIN_AREAS` and the guilds and
-    activities of `ACTIVITY_REGIONS` → `'Any'`.
+    looked up in `REGION_GROUPS` (its places and the region names
+    themselves), `MISTHALIN_AREAS`, the guilds and activities of
+    `ACTIVITY_REGIONS`, the `PLACE_ALIAS` Wiki spellings (`Grand Tree`,
+    `Port Piscarilius`) and `PLACE_REGION` (places checked against their
+    Wiki leagueRegion) → `'Any'`. Shop pages match sellers without a
+    trailing `(shop)`; a shop the Wiki lists at several places (Slayer
+    Rewards, Lost Property shop) lists each region; NPC sellers with no shop
+    page use `SELLER_LOCATION`. 10 of 714 shop rows stay `'Any'` (Last Man
+    Standing, the Sailing shipyard, Deepfin Mine).
 - **Self-reference guard:** because `resourceData` merges `ENRICHED_SOURCES`
   at load, the generator dedups only against the curated rows of
   `RESOURCE_MAP` (those without `requirementsUnverified`), so its own previous
@@ -294,7 +303,7 @@ quest-only intermediate steps. Update this set when:
   Sailing skill itself isn't modelled yet.
 - **GE prices** integration was deliberately deferred (one of the original
   PLAN.md features). `services/PriceService.ts` exists.
-- **About a fifth of enriched drops are tagged `'Any'`** (412 of 1,998 at
+- **About a fifth of enriched drops are tagged `'Any'`** (388 of 1,998 at
   the 23 Nov 2026 regeneration): sources the Wiki pins to no Leagues region
   in either the drop row or `infobox_monster` (Adventurer Jon's starter
   rewards, Sailing salvage and crates, implings, and some monsters). `'Any'` on a Wiki row is display

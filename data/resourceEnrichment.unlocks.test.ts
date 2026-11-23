@@ -60,6 +60,14 @@ describe('generated Wiki rows', () => {
     expect(item('Steel Axe').some((s) => s.type === 'DROP' && s.name === 'Tree Spirit')).toBe(true);
   });
 
+  it("keeps point-based activity rewards (Wiki rarity 'Varies')", () => {
+    // Wiki 'Coal' and 'Magic logs': Wintertodt's Reward Cart; Wiki 'Raw shark': Fishing Trawler.
+    const wintertodt = (key: string) => item(key).some((s) => s.type === 'DROP' && s.unlockId === 'Wintertodt');
+    expect(wintertodt('Coal')).toBe(true);
+    expect(wintertodt('Magic Logs')).toBe(true);
+    expect(item('Raw Shark').some((s) => s.type === 'DROP' && s.name === 'Fishing Trawler')).toBe(true);
+  });
+
   it('lists at most one row per activity for an item', () => {
     for (const [key, rows] of Object.entries(ENRICHED_SOURCES)) {
       const ids = rows.filter((s) => s.type !== 'SHOP' && s.unlockId).map((s) => s.unlockId);
@@ -74,5 +82,10 @@ describe('generated Wiki rows', () => {
     expect(region('Armour Store')).toEqual(['Fremennik']);
     expect(region("Scavvo's Rune Store")).toEqual(['Misthalin']);
     for (const r of region('Mistrock Mining Supplies')) expect(r).toBe('Varlamore');
+    // Wiki infobox_shop: Gulluck and Sons in the Grand Tree, Oziach (shop) in
+    // Edgeville, Leenz's General Supplies in Port Piscarilius.
+    expect(region('Gulluck and Sons')).toEqual(['Kandarin']);
+    expect(region('Oziach')).toEqual(['Misthalin']);
+    expect(region("Leenz's General Supplies")).toEqual(['Kourend & Kebos']);
   });
 });
