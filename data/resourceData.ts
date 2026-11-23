@@ -821,7 +821,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Abyssal Demon (Abyssal Area)', regions: ['Misthalin'], skills: {'Slayer': 85}, quests: ['Fairytale II - Cure a Queen'], notes: 'Abyssal Area (fairy ring ALR)' }
   ],
   'Dark Bow': [
-    { type: 'DROP', name: 'Dark Beast', regions: ['Tirannwn', 'Misthalin'], skills: {'Slayer': 90}, notes: 'Mourner Tunnels / Isle of Souls' }
+    { type: 'DROP', name: 'Dark Beast', regions: ['Kandarin', 'Tirannwn'], skills: {'Slayer': 90}, quests: ["Mourning's End Part II"], notes: 'Mourner Tunnels / Iorwerth Dungeon' }
   ],
   'Black Mask': [
     { type: 'DROP', name: 'Cave Horror', regions: ['Morytania'], skills: { 'Slayer': 58 }, quests: ['Cabin Fever'], notes: 'Mos Le\'Harmless Caves' }
