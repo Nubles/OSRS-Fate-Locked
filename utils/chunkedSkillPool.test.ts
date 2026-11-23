@@ -160,6 +160,13 @@ describe('Chunked Skills rolls', () => {
     const guild = withTiers({ Farming: 4 }, { chunks: ['19,58'], farming: [...FARMING_PATCH_LIST] });
     expect(chunkedTrainingTiers(guild.chunks, guild).get('Farming')).toBeUndefined();
     expect(chunkedTrainingTiers(guild.chunks, { ...guild, guilds: ['Farming Guild'] }).get('Farming')).toBe(5);
+    // Each patch at its own tier's level (OSRS Wiki 'Farming Guild'): beginner 45, west wing 65, north wing 85 (deep audit d2[2]).
+    expect(built.patches['19,58']).toMatchObject({ Allotment: 45, Flower: 45, Bush: 45, Cactus: 55, Herb: 65, 'Wood Tree': 65, 'Hespori Patch': 65, Anima: 76, 'Fruit Tree': 85, 'Spirit Tree': 85, Celastrus: 85, Redwood: 90 });
+    expect(levelsIn('19,58')['@herb']).toBe(65);
+    expect(levelsIn('19,58').Farming).toBe(45);
+    const member = { ...guild, guilds: ['Farming Guild'] };
+    expect(chunkedTrainingLevels(member.chunks, { ...member, levels: { ...fresh().levels, Farming: 45 } }).has('Herblore')).toBe(false);
+    expect(chunkedTrainingLevels(member.chunks, atCap({ Farming: 7 }, { ...member, levels: { ...fresh().levels, Farming: 65 } })).get('Herblore')).toBe(1);
   });
 
   it('reads each chunk\'s skill facts at their real skill and level (content review 8)', () => {

@@ -87,6 +87,13 @@ describe('Chunked exploring rolls', () => {
     expect(exploreBlocker(oasis, '26,46', 'Farming')).toBe('Needs The Ribbiting Tale done.');
     expect(exploreBlocker({ ...oasis, unlocks: { ...oasis.unlocks, quests: ['Children of the Sun', 'The Ribbiting Tale'] } }, '26,46', 'Farming')).toBeNull();
 
+    // The Farming Guild's herb patch is in its west wing, which needs 65 Farming (deep audit d2[2]).
+    const farmingGuild = run({ unlocks: { ...run().unlocks, chunks: ['19,58'], skills: { Hitpoints: 1, Farming: 5 }, levels: { ...initialState.unlocks.levels, Farming: 45 }, farming: ['Herb'], guilds: ['Farming Guild'] } });
+    expect(exploreBlocker(farmingGuild, '19,58', '@herb')).toBe('Needs Farming tier 7.');
+    const westWing = { ...farmingGuild, unlocks: { ...farmingGuild.unlocks, skills: { Hitpoints: 1, Farming: 7 }, levels: { ...initialState.unlocks.levels, Farming: 64 } } };
+    expect(exploreBlocker(westWing, '19,58', '@herb')).toBe('Needs Farming level 65.');
+    expect(exploreBlocker({ ...westWing, unlocks: { ...westWing.unlocks, levels: { ...initialState.unlocks.levels, Farming: 65 } } }, '19,58', '@herb')).toBeNull();
+
     // Port Sarim's only patch is the spirit tree patch, which needs 83 Farming (tier 9).
     const sarim = run({ unlocks: { ...run().unlocks, chunks: ['47,50'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Spirit Tree'] } });
     expect(exploreBlocker(sarim, '47,50', 'Farming')).toBe('Needs Farming tier 9.');

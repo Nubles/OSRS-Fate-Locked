@@ -136,6 +136,17 @@ export const GUILD_CHUNKS: Readonly<Record<string, { skill: string; guild: strin
   '45,51': { skill: 'Mining', guild: 'Crafting Guild', level: 1 },
 };
 
+/**
+ * Guild chunks whose patches sit in wings with a higher level than the
+ * guild's own (GUILD_CHUNKS): the Farming Guild's beginner tier (45) holds the
+ * allotment, flower, bush and cactus patches, its west wing (65) the herb,
+ * tree, Hespori and anima patches, its north wing (85) the fruit tree, spirit
+ * tree, celastrus and redwood patches (OSRS Wiki 'Farming Guild').
+ */
+export const GUILD_PATCH_LEVELS: Readonly<Record<string, Readonly<Record<string, number>>>> = {
+  '19,58': { Herb: 65, 'Wood Tree': 65, 'Hespori Patch': 65, Anima: 65, 'Fruit Tree': 85, 'Spirit Tree': 85, Celastrus: 85, Redwood: 85 },
+};
+
 /** A quest (QUEST_DATA id) or an achievement diary tier (DIARY_DATA id) a patch needs done. */
 export interface PatchLock { quest?: string; diary?: string }
 
@@ -230,6 +241,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     if (!LAND.has(chunk)) continue;
     const guild = GUILD_CHUNKS[chunk];
     const floor = (skill: string, level: number) => (guild?.skill === skill ? Math.max(level, guild.level) : level);
+    const patchFloor = (patch: string, level: number) => Math.max(floor('Farming', level), GUILD_PATCH_LEVELS[chunk]?.[patch] ?? 0);
     const facts: Record<string, number> = {};
     const note = (skill: string, level: number) => { facts[skill] = Math.min(facts[skill] ?? level, level); };
     const chunkPatches: Record<string, number> = {};
@@ -269,10 +281,10 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
           const ruins = RUNE_ALTAR_RUINS[chunk];
           req = ruins ? { skill: 'Runecraft', level: ruins.level } : null;
         }
-        if (req) note(req.skill, floor(req.skill, req.level));
         const patch = kind === 'object' ? farmingPatchOf(name) : null;
-        if (patch && req) chunkPatches[patch] = Math.min(chunkPatches[patch] ?? 99, floor('Farming', req.level));
-        if (kind === 'object' && HERB_PATCH.test(name) && patch === 'Herb') note('@herb', floor('Farming', req!.level));
+        if (req) note(req.skill, patch && req.skill === 'Farming' ? patchFloor(patch, req.level) : floor(req.skill, req.level));
+        if (patch && req) chunkPatches[patch] = Math.min(chunkPatches[patch] ?? 99, patchFloor(patch, req.level));
+        if (kind === 'object' && HERB_PATCH.test(name) && patch === 'Herb') note('@herb', patchFloor(patch, req!.level));
         if (kind !== 'object' && masters.has(name)) note('@slayer', 1);
       }
       if ((entry.m ?? []).length > 0) note('@monster', 1);
