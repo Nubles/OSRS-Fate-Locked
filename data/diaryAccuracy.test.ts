@@ -854,6 +854,18 @@ describe('Diary tasks that use a house room or a Slayer reward', () => {
     expect(task('var_med_7').oneOf?.[2].housing).toBeUndefined();
   });
 
+  it('needs the Workshop for the tool store routes', () => {
+    // Wiki Tool store 3 (level 35, brown aprons) and Tool store 4 (level 44, amulet moulds) are built in the Workshop.
+    expect(ROLLABLE_POH_ITEMS).toContain('Workshop Tools');
+    expect(task('lum_hard_11').oneOf?.find(route => route.label === 'House tool store'))
+      .toEqual({ label: 'House tool store', skills: { Construction: 44 }, housing: ['Workshop Tools'] });
+    expect(task('fal_med_10').oneOf?.find(route => route.label === 'Wear an apron (tool store)'))
+      .toMatchObject({ skills: { Construction: 35 }, housing: ['Workshop Tools'] });
+    const builder = account({ skills: { Construction: 10, Crafting: 10, Magic: 10 }, levels: { Construction: 99, Crafting: 99, Magic: 99 }, regions: ['Lumbridge'] });
+    expect(evaluateDiaryTaskEligibility(task('lum_hard_11'), builder).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('lum_hard_11'), { ...builder, housing: ['Workshop Tools'] }).machineEligible).toBe(true);
+  });
+
   it('needs the Malevolent Masquerade reward to make the Slayer helmet', () => {
     expect(task('des_hard_6').slayerUnlocks).toEqual(['Malevolent Masquerade']);
   });

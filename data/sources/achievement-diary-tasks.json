@@ -3615,6 +3615,9 @@
               "reason": "Brown or golden apron",
               "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "housing": [
+            "Workshop Tools"
           ]
         },
         {
@@ -11627,7 +11630,10 @@
           "label": "House tool store",
           "skills": {
             "Construction": 44
-          }
+          },
+          "housing": [
+            "Workshop Tools"
+          ]
         }
       ]
     },
