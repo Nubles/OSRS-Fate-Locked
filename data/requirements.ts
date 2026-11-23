@@ -2663,7 +2663,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Kourend & Kebos'],
-    skills: { 'Crafting': 22 }, // Sapphire necklace
+    skills: { 'Crafting': 22, 'Magic': 7 }, // Sapphire necklace, Lvl-1 Enchant
     description: 'Direct teleport to Wintertodt Camp.'
   },
   'Games Necklace (Barb Assault)': {
@@ -2671,7 +2671,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Kandarin'],
-    skills: { 'Crafting': 22 }, // Sapphire necklace
+    skills: { 'Crafting': 22, 'Magic': 7 }, // Sapphire necklace, Lvl-1 Enchant
     description: 'Direct teleport to Barbarian Outpost.'
   },
   'Dueling Ring (Ferox)': {
@@ -2679,7 +2679,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Wilderness'],
-    skills: { 'Crafting': 27 }, // Emerald
+    skills: { 'Crafting': 27, 'Magic': 27 }, // Emerald ring, Lvl-2 Enchant
     description: 'Direct teleport to Ferox Enclave (Pool).'
   },
   'Dueling Ring (Castle Wars)': {
@@ -2687,7 +2687,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Kandarin'],
-    skills: { 'Crafting': 27 },
+    skills: { 'Crafting': 27, 'Magic': 27 }, // Emerald ring, Lvl-2 Enchant
     description: 'Direct teleport to Castle Wars.'
   },
   'Necklace of Passage': {
@@ -2695,7 +2695,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Misthalin', 'Kandarin'], // Wizards Tower / Outpost
-    skills: { 'Crafting': 25 }, // Jade necklace
+    skills: { 'Crafting': 25, 'Magic': 27 }, // Jade necklace, Lvl-2 Enchant
     description: 'Teleport to Wizards Tower or Outpost.'
   },
   'Skills Necklace': {
@@ -2703,25 +2703,25 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Kandarin', 'Asgarnia', 'Kourend & Kebos'], // Fishing/Mining/Woodcutting guilds
-    skills: { 'Crafting': 72 }, // Dragonstone
-    description: 'Teleport to various Skilling Guilds.'
+    skills: { 'Crafting': 72, 'Magic': 68 }, // Dragon necklace, Lvl-5 Enchant (uncharged)
+    description: "Teleport to various Skilling Guilds. Charge it at the Legends' Guild totem, the Myths' Guild fountain or with Recharge Dragonstone."
   },
   'Combat Bracelet': {
     id: 'Combat Bracelet',
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
     regions: ['Asgarnia', 'Misthalin', 'Kandarin'], // Warriors/Champs/Ranging guilds
-    skills: { 'Crafting': 74 }, // Dragonstone
-    description: 'Teleport to Combat Guilds.'
+    skills: { 'Crafting': 74, 'Magic': 68 }, // Dragonstone bracelet, Lvl-5 Enchant (uncharged)
+    description: "Teleport to Combat Guilds. Charge it at the Legends' Guild totem, the Myths' Guild fountain or with Recharge Dragonstone."
   },
   'Ring of Wealth (Miscellania)': {
     id: 'Ring of Wealth (Misc)',
     category: TableType.MOBILITY,
     needsKey: ['Jewelry Teleports'],
-    regions: ['Fremennik'],
-    skills: { 'Crafting': 55 }, // Dragonstone
+    regions: ['Fremennik', 'Fountain of Rune'], // Wiki 'Ring of wealth': charged only at the Fountain of Rune
+    skills: { 'Crafting': 55, 'Magic': 68 }, // Dragonstone ring, Lvl-5 Enchant (uncharged)
     quests: ['Throne of Miscellania'],
-    description: 'Teleport to Miscellania.'
+    description: 'Teleport to Miscellania. Charge the ring at the Fountain of Rune in the Wilderness.'
   },
 
   // ============================================================================

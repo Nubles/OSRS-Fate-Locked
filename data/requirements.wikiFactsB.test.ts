@@ -333,4 +333,35 @@ describe('requirements part B, deep pass 2: access the content needs', () => {
     expect(done.missingChecks).toEqual([]);
     expect(done.isFullyPlayable).toBe(true);
   });
+
+  // Wiki 'Lvl-1 Enchant' 7, 'Lvl-2 Enchant' 27, 'Lvl-5 Enchant' 68 (sapphire; emerald and jade; dragonstone).
+  const JEWELLERY: [string, Record<string, number>][] = [
+    ['Games Necklace (Wintertodt)', { Crafting: 22, Magic: 7 }],
+    ['Games Necklace (Barb Assault)', { Crafting: 22, Magic: 7 }],
+    ['Dueling Ring (Ferox)', { Crafting: 27, Magic: 27 }],
+    ['Dueling Ring (Castle Wars)', { Crafting: 27, Magic: 27 }],
+    ['Necklace of Passage', { Crafting: 25, Magic: 27 }],
+    ['Skills Necklace', { Crafting: 72, Magic: 68 }],
+    ['Combat Bracelet', { Crafting: 74, Magic: 68 }],
+    ['Ring of Wealth (Miscellania)', { Crafting: 55, Magic: 68 }],
+  ];
+  it.each(JEWELLERY)('%s asks for the enchant spell as well as the Crafting level', (key, skills) => {
+    expect(entry(key).skills).toEqual(skills);
+  });
+  it('every Jewelry Teleports entry that asks for Crafting also asks for Magic', () => {
+    const offenders = Object.entries(STRATEGY_DATABASE)
+      .filter(([, req]) => req.needsKey?.includes('Jewelry Teleports') && req.skills.Crafting && !req.skills.Magic)
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+  it('the ring of wealth is charged only at the Fountain of Rune; the skills necklace and combat bracelet name their recharge (Wiki: Ring of wealth, Skills necklace, Combat bracelet)', () => {
+    expect(entry('Ring of Wealth (Miscellania)').regions).toContain('Fountain of Rune');
+    expect(entry('Ring of Wealth (Miscellania)').description).toMatch(/Fountain of Rune/);
+    const u = allAccess();
+    u.regions = u.regions.filter((r: string) => r !== 'Fountain of Rune');
+    expect(analyzeRequirement(entry('Ring of Wealth (Miscellania)'), u, 'vanilla').missingRegions).toEqual(['Fountain of Rune']);
+    for (const key of ['Skills Necklace', 'Combat Bracelet']) {
+      expect(entry(key).description, key).toMatch(/Legends' Guild totem.*Myths' Guild fountain.*Recharge Dragonstone/);
+    }
+  });
 });
