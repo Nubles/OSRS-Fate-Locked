@@ -252,7 +252,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
                       <QuestGeographyChips
                         display={geography}
                         completed={isCompleted}
-                        evidence={eligibility.evidence}
+                        evidence={placeEvidence}
                         onShowChunk={showChunkOnMap}
                       />
                       {combatReqs.map((level: number) => {

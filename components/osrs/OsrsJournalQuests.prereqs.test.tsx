@@ -75,6 +75,24 @@ describe('quest and area with the same name', () => {
     expect(osrsLines(id, name, unlocks)).toEqual({ game: [true], fate: [true] });
   });
 
+  it.each(SAME_NAME)('classic card %s: area chip for %s stays unmet when only the quest is done', (id, name, parent) => {
+    const chipClasses = (unlocks: UnlockState) => {
+      const html = renderToStaticMarkup(React.createElement(QuestCard as any, {
+        quest: card(id, unlocks), unlocks, gameModeId: 'vanilla', currentQP: currentQuestPoints(unlocks), onToggle: () => {},
+      })).replace(/<!-- -->/g, '');
+      const chip = new RegExp(`<span class="([^"]*)"><img[^>]*World_map_icon[^>]*/> ${name}</span>`, 'g');
+      return [...html.matchAll(chip)].map(match => match[1]);
+    };
+    const areaMissing = chipClasses(state([id], [name, parent]));
+    expect(areaMissing.length).toBeGreaterThan(0);
+    for (const cls of areaMissing) {
+      expect(cls).toContain('bg-red-900/10');
+      expect(cls).not.toContain('bg-black/30');
+    }
+    const bothMet = chipClasses(state([id]));
+    for (const cls of bothMet) expect(cls).toContain('bg-black/30');
+  });
+
   it.each(SAME_NAME.filter(([id]) => id !== 'While Guthix Sleeps'))(
     'classic card %s counts one unmet requirement in either case (%s)', (id, name, parent) => {
       const questMissing = classicCounter(id, state([id, name]));
