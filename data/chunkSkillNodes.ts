@@ -23,3 +23,6 @@ export const CHUNK_ENTRY_QUESTS: Readonly<Record<string, string>> = {"Children o
 
 // Chunk -> [skill, guild]: that skill's content there is inside the guild.
 export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = {"19,58":["Farming","Farming Guild"],"24,54":["Woodcutting","Woodcutting Guild"],"25,54":["Woodcutting","Woodcutting Guild"],"40,53":["Fishing","Fishing Guild"],"45,51":["Mining","Crafting Guild"]};
+
+// Chunk -> patch type -> the quest or diary the game locks that patch behind.
+export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = {"26,46":{"Hardwood Tree":{"quest":"The Ribbiting Tale"}},"44,57":{"Herb":{"quest":"My Arm's Big Adventure"}},"44,61":{"Herb":{"quest":"Making Friends with My Arm"}},"48,37":{"Calquat":{"quest":"Troubled Tortugans"}},"59,44":{"Herb":{"diary":"Morytania Elite"}}};

@@ -78,6 +78,15 @@ describe('Chunked exploring rolls', () => {
     expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'] } }, '47,51', '@herb')).toBeNull();
     expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'], levels: initialState.unlocks.levels } }, '47,51', '@herb')).toBe('Needs Farming level 9.');
 
+    // The Troll Stronghold roof's herb patch needs My Arm's Big Adventure; Locus Oasis' hardwood patch The Ribbiting Tale (deep audit d2[1]).
+    const roof = run({ unlocks: { ...run().unlocks, chunks: ['44,57'], skills: { Hitpoints: 1, Farming: 1 }, levels: { ...initialState.unlocks.levels, Farming: 9 }, farming: ['Herb'] } });
+    expect(exploreBlocker(roof, '44,57', '@herb')).toBe("Needs My Arm's Big Adventure done.");
+    expect(exploreBlocker(roof, '44,57', 'Farming')).toBe("Needs My Arm's Big Adventure done.");
+    expect(exploreBlocker({ ...roof, unlocks: { ...roof.unlocks, quests: ["My Arm's Big Adventure"] } }, '44,57', '@herb')).toBeNull();
+    const oasis = run({ unlocks: { ...run().unlocks, chunks: ['26,46'], skills: { Hitpoints: 1, Farming: 4 }, levels: { ...initialState.unlocks.levels, Farming: 35 }, farming: ['Hardwood Tree'], quests: ['Children of the Sun'] } });
+    expect(exploreBlocker(oasis, '26,46', 'Farming')).toBe('Needs The Ribbiting Tale done.');
+    expect(exploreBlocker({ ...oasis, unlocks: { ...oasis.unlocks, quests: ['Children of the Sun', 'The Ribbiting Tale'] } }, '26,46', 'Farming')).toBeNull();
+
     // Port Sarim's only patch is the spirit tree patch, which needs 83 Farming (tier 9).
     const sarim = run({ unlocks: { ...run().unlocks, chunks: ['47,50'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Spirit Tree'] } });
     expect(exploreBlocker(sarim, '47,50', 'Farming')).toBe('Needs Farming tier 9.');

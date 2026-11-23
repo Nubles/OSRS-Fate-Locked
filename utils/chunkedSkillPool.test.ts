@@ -6,7 +6,10 @@ import { readFileSync } from 'node:fs';
 import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
 import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import chunkDoc from '../public/chunk-content.json';
-import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingTiers, chunkFactLevel } from './chunkedSkillPool';
+import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingLevels, chunkedTrainingTiers, chunkFactLevel, chunkPatchBlocker } from './chunkedSkillPool';
+import { PATCH_LOCKS } from './chunkSkillNodesBuild';
+import { QUEST_DATA } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
 import { chunkedSkillHasRoom, mercyBlocker, skillsWithRoom } from './chunkedFate';
 import { randomUnlockPool } from './gameEngine';
 import { chunkKey, getChunkFrontier } from './chunkAdjacency';
@@ -188,6 +191,37 @@ describe('Chunked Skills rolls', () => {
     const mine = { chunks: ['45,51'] };
     expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: [] })).toBe(false);
     expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: ['Crafting Guild'] })).toBe(true);
+  });
+
+  it('locks the patches the game puts behind a quest or a diary (deep audit d2[1])', () => {
+    // OSRS Wiki 'Farming/Patch locations' and 'Herb patch'.
+    expect(chunkPatchBlocker('44,57', 'Herb', { quests: [] })).toBe("Needs My Arm's Big Adventure done.");
+    expect(chunkPatchBlocker('44,57', 'Herb', { quests: ["My Arm's Big Adventure"] })).toBeNull();
+    expect(chunkPatchBlocker('44,61', 'Herb', { quests: [] })).toBe('Needs Making Friends with My Arm done.');
+    expect(chunkPatchBlocker('59,44', 'Herb', { quests: ['Cabin Fever'], diaries: [] })).toBe('Needs the Morytania Elite diary done.');
+    expect(chunkPatchBlocker('59,44', 'Herb', { quests: ['Cabin Fever'], diaries: ['Morytania Elite'] })).toBeNull();
+    expect(chunkPatchBlocker('59,44', 'Allotment', {})).toBeNull();
+    expect(chunkPatchBlocker('26,46', 'Hardwood Tree', { quests: ['Children of the Sun'] })).toBe('Needs The Ribbiting Tale done.');
+    expect(chunkPatchBlocker('48,37', 'Calquat', { quests: [] })).toBe('Needs Troubled Tortugans done.');
+    // Farming and Herblore count there only once the lock is met.
+    const roof = atCap({ Farming: 1 }, { chunks: ['44,57'], farming: ['Herb'], levels: { ...fresh().levels, Farming: 9 } });
+    expect(chunkedTrainingLevels(roof.chunks, roof).has('Herblore')).toBe(false);
+    expect(chunkedTrainingLevels(roof.chunks, roof).has('Farming')).toBe(false);
+    const done = { ...roof, quests: ["My Arm's Big Adventure"] };
+    expect(chunkedTrainingLevels(done.chunks, done).get('Herblore')).toBe(1);
+    expect(chunkedTrainingLevels(done.chunks, done).get('Farming')).toBe(9);
+    const harmony = atCap({ Farming: 1 }, { chunks: ['59,44'], farming: ['Herb', 'Allotment'], quests: ['Cabin Fever'], levels: { ...fresh().levels, Farming: 9 } });
+    expect(chunkedTrainingLevels(harmony.chunks, harmony).has('Herblore')).toBe(false);
+    expect(chunkedTrainingLevels(harmony.chunks, harmony).get('Farming')).toBe(1); // its allotment is open
+    expect(chunkedTrainingLevels(harmony.chunks, { ...harmony, diaries: ['Morytania Elite'] }).get('Herblore')).toBe(1);
+    // Every lock names a patch the chunk has, and a quest or diary the tracker knows.
+    for (const [chunk, types] of Object.entries(PATCH_LOCKS)) {
+      for (const [type, lock] of Object.entries(types)) {
+        expect(built.patches[chunk]?.[type], `${chunk} ${type}`).toBeDefined();
+        if (lock.quest) expect(QUEST_DATA[lock.quest], lock.quest).toBeDefined();
+        if (lock.diary) expect(DIARY_DATA[lock.diary], lock.diary).toBeDefined();
+      }
+    }
   });
 
   it('round-trips a tier-10 fact: the Wrath altar (95) is stored as "0" and read back as tier 10 (content review 13)', () => {

@@ -9,7 +9,8 @@
  * content counts only when the player can use it:
  * - a chunk whose entry needs a quest (Canifis, Priest in Peril) counts once
  *   that quest is done; a guild's fishing spots, patches or trees count once
- *   that guild is unlocked;
+ *   that guild is unlocked; a patch the game locks behind a quest or a diary
+ *   (the Troll Stronghold roof's herb patch) counts once that is done;
  * - Farming counts the patch types the run has unlocked, at each type's tier;
  *   Herblore needs a usable herb patch;
  * - skills trained by using something on a station need the input too:
@@ -42,7 +43,7 @@
  */
 import type { UnlockState } from '../types';
 import {
-  CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_TYPES, CHUNK_SKILL_FACTS,
+  CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_LOCKS, CHUNK_PATCH_TYPES, CHUNK_SKILL_FACTS,
   CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
 } from '../data/chunkSkillNodes';
 import { CHUNKED_START_KEY } from './chunkAdjacency';
@@ -56,7 +57,7 @@ const INPUT_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Farming'];
 
 /** What of the run decides whether chunk content is usable. */
 export type TrainingRun = Pick<UnlockState, 'skills'>
-  & Partial<Pick<UnlockState, 'levels' | 'equipment' | 'farming' | 'quests' | 'guilds' | 'merchants'>>;
+  & Partial<Pick<UnlockState, 'levels' | 'equipment' | 'farming' | 'quests' | 'guilds' | 'merchants' | 'diaries'>>;
 
 const ENTRY_QUEST_OF = new Map<string, string[]>();
 for (const [quest, columns] of Object.entries(CHUNK_ENTRY_QUESTS)) {
@@ -82,6 +83,14 @@ export const chunkGuildFor = (chunk: string, fact: string): string | null => {
 export const chunkPatches = (chunk: string): [string, number, number][] =>
   [...(CHUNK_FARMING_PATCHES[chunk] ?? '').matchAll(/([a-z])(\d+)/g)]
     .map(([, letter, level]): [string, number, number] => [CHUNK_PATCH_TYPES[letter.charCodeAt(0) - 97], tierForLevel(Number(level)), Number(level)]);
+
+/** Why the run can't use a chunk's patch of this type (the quest or diary the game locks it behind), or null when it can. */
+export const chunkPatchBlocker = (chunk: string, type: string, run: Partial<Pick<UnlockState, 'quests' | 'diaries'>>): string | null => {
+  const lock = CHUNK_PATCH_LOCKS[chunk]?.[type];
+  if (lock?.quest && !(run.quests ?? []).includes(lock.quest)) return `Needs ${lock.quest} done.`;
+  if (lock?.diary && !(run.diaries ?? []).includes(lock.diary)) return `Needs the ${lock.diary} diary done.`;
+  return null;
+};
 
 const NO_FACTS: ReadonlyMap<string, number> = new Map();
 const FACT_LEVELS = new Map<string, ReadonlyMap<string, number>>();
@@ -149,7 +158,7 @@ let cachedTiers = new Map<string, number>();
 
 const signatureOf = (chunks: readonly string[], run?: TrainingRun): string => chunks.join(';') + (run ? `|${JSON.stringify([
   INPUT_SKILLS.map(skill => [run.skills[skill] ?? 0, runLevel(run, skill)]),
-  run.farming ?? [], run.quests ?? [], run.guilds ?? [], run.merchants ?? [], chunkedCombatStyleUsable(run), rangedWeapon(run),
+  run.farming ?? [], run.quests ?? [], run.guilds ?? [], run.merchants ?? [], run.diaries ?? [], chunkedCombatStyleUsable(run), rangedWeapon(run),
 ])}` : '');
 
 const training = (chunks: readonly string[], run?: TrainingRun): Training => {
@@ -175,7 +184,7 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     }
     if (run && gated !== 'Farming') {
       for (const [type, , level] of chunkPatches(key)) {
-        if (!farming.has(type)) continue;
+        if (!farming.has(type) || chunkPatchBlocker(key, type, run)) continue;
         note('Farming', level);
         if (type === 'Herb') note('@herb', level);
       }

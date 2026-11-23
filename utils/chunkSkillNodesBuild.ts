@@ -27,6 +27,8 @@
  *                          so its content counts only once that quest is done
  *   CHUNK_GUILD_GATES      chunks whose skill content sits inside a guild, so
  *                          it counts only with that guild unlocked
+ *   CHUNK_PATCH_LOCKS      patches the game locks behind a quest or a diary
+ *                          beyond the chunk's entry (PATCH_LOCKS)
  */
 import { farmingPatchOf, trainingReqFor } from './skillChunkNodes';
 import type { EntityKind } from '../services/ChunkContentService';
@@ -58,6 +60,8 @@ export interface ChunkSkillData {
   entryQuests: Record<string, string[]>;
   /** Per chunk, the guild its skill's content needs: [skill, guild]. */
   guildGates: Record<string, [string, string]>;
+  /** Per chunk, its patch types the game locks behind a quest or a diary (PATCH_LOCKS). */
+  patchLocks: Record<string, Record<string, PatchLock>>;
 }
 
 const HERB_PATCH = /\bherb patch\b/i;
@@ -132,6 +136,24 @@ export const GUILD_CHUNKS: Readonly<Record<string, { skill: string; guild: strin
   '45,51': { skill: 'Mining', guild: 'Crafting Guild', level: 1 },
 };
 
+/** A quest (QUEST_DATA id) or an achievement diary tier (DIARY_DATA id) a patch needs done. */
+export interface PatchLock { quest?: string; diary?: string }
+
+/**
+ * Patches the game locks behind a quest or a diary beyond the chunk's own
+ * entry (OSRS Wiki 'Farming/Patch locations', 'Herb patch'). Each counts for
+ * Farming, and a herb patch for Herblore, only once the run has it done. The
+ * tracker records a quest only as done, so a patch the game opens partway
+ * through a quest (The Summer Shore's) waits for the whole quest.
+ */
+export const PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, PatchLock>>>> = {
+  '44,57': { Herb: { quest: "My Arm's Big Adventure" } }, // Troll Stronghold roof
+  '44,61': { Herb: { quest: 'Making Friends with My Arm' } }, // Weiss: the Fire of Nourishment must be built too
+  '59,44': { Herb: { diary: 'Morytania Elite' } }, // Harmony Island (its allotment is open)
+  '26,46': { 'Hardwood Tree': { quest: 'The Ribbiting Tale' } }, // Locus Oasis
+  '48,37': { Calquat: { quest: 'Troubled Tortugans' } }, // The Summer Shore: partial completion in the game
+};
+
 /**
  * Player-owned house portals (Construction is trained in your house). The
  * Castle Wars and Trouble Brewing portals in the data are minigame portals.
@@ -202,6 +224,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
   const services: ChunkSkillData['services'] = Object.fromEntries(SKILL_SERVICES.map(service => [service, {}]));
   const entryQuests: ChunkSkillData['entryQuests'] = {};
   const guildGates: ChunkSkillData['guildGates'] = {};
+  const patchLocks: ChunkSkillData['patchLocks'] = {};
   for (const id of [...entriesById.keys()].sort((a, b) => Number(a) - Number(b))) {
     const chunk = key(id);
     if (!LAND.has(chunk)) continue;
@@ -261,13 +284,15 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     if (Object.keys(facts).length === 0 && !hasShops && Object.keys(offers).length === 0) continue;
     if (Object.keys(facts).length > 0) nodes[chunk] = facts;
     if (Object.keys(chunkPatches).length > 0) patches[chunk] = chunkPatches;
+    const locks = Object.entries(PATCH_LOCKS[chunk] ?? {}).filter(([type]) => chunkPatches[type] !== undefined);
+    if (locks.length > 0) patchLocks[chunk] = Object.fromEntries(locks.map(([type, lock]) => [type, { ...lock }]));
     if (hasShops) oreShops[chunk] = chunkOreShops;
     for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
     const quests = doc.questSections?.[id];
     if (quests?.length) entryQuests[chunk] = [...quests];
     if (guild && facts[guild.skill] !== undefined) guildGates[chunk] = [guild.skill, guild.guild];
   }
-  return { nodes, patches, oreShops, services, entryQuests, guildGates };
+  return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks };
 }
 
 const LAND = new Set(ALL_CHUNK_KEYS);
@@ -339,5 +364,7 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
     + `// Quest -> the chunks whose entry needs it: "cx:cy,cy-cy;cx:…".\n`
     + `export const CHUNK_ENTRY_QUESTS: Readonly<Record<string, string>> = ${JSON.stringify(questChunks)};\n\n`
     + `// Chunk -> [skill, guild]: that skill's content there is inside the guild.\n`
-    + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = ${JSON.stringify(data.guildGates)};\n`;
+    + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = ${JSON.stringify(data.guildGates)};\n\n`
+    + `// Chunk -> patch type -> the quest or diary the game locks that patch behind.\n`
+    + `export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = ${JSON.stringify(data.patchLocks)};\n`;
 };
