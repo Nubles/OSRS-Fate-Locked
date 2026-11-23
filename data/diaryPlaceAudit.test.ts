@@ -87,8 +87,12 @@ describe('Rune altars reached through the Abyss', () => {
 describe('Diary tasks the game counts in more than one place', () => {
   it.each([
     // [task, run, why]
-    ['west_hard_7', { regions: ['Prifddinas'], quests: ['Song of the Elves'] }, 'adamantite in the Trahaearn mine'],
-    ['west_elite_7', { regions: ['Prifddinas'], quests: ['Song of the Elves'] }, 'the elves of Prifddinas'],
+    // A Song of the Elves player has also done the quests Regicide and Mourning's End Part I need before they start.
+    ['west_hard_7', { regions: ['Prifddinas'], quests: ['Song of the Elves', 'Underground Pass'] }, 'adamantite in the Trahaearn mine'],
+    ['west_elite_7', {
+      regions: ['Prifddinas'], quests: ['Song of the Elves', 'Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'],
+      skills: { Thieving: 10, Ranged: 10 }, levels: { Thieving: 99, Ranged: 99 },
+    }, 'the elves of Prifddinas'],
     ['west_hard_13', { regions: ['Gnome Village'] }, 'gnomes in Tree Gnome Village'],
     ['west_hard_13', { regions: ['Khazard Battlefield'] }, 'gnomes on the Battlefield of Khazard'],
     ['kar_hard_10', { regions: ['Tai Bwo Wannai'], quests: ['Jungle Potion'], minigames: ['Tai Bwo Wannai Cleanup'], skills: { Woodcutting: 10 }, levels: { Woodcutting: 99 } }, "Banisoch's entrance"],

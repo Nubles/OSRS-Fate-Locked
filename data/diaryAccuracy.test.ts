@@ -530,6 +530,63 @@ describe('Diary tasks that need only part of a quest', () => {
     });
   });
 
+  it('keep what a started quest needs before it can be started', () => {
+    // A quest in progress is only a check the player confirms, so the quests it needs first are hard gates on the
+    // same route (the rule of the Burgh de Rott shark repair). Prerequisites come from QUEST_DATA. These are the
+    // tasks checked against the quest pages on 23 Nov 2026; tasks of other diaries are not yet reviewed this way.
+    const reviewed = new Set([
+      'mor_elite_1', 'mor_med_7', 'mor_med_9', 'mor_med_11', 'mor_hard_3', 'kou_hard_2', 'wild_hard_8',
+      'west_med_4', 'west_med_5', 'west_hard_1', 'west_hard_5', 'west_hard_6', 'west_hard_7', 'west_hard_8',
+      'west_hard_11', 'west_elite_1', 'west_elite_7', 'wilderness_med_10', 'var_med_3', 'western_med_7',
+      'kou_med_1', 'lum_med_4',
+    ]);
+    const missing: string[] = [];
+    for (const row of ALL_DIARY_TASKS.filter(candidate => reviewed.has(candidate.id))) {
+      for (const route of row.oneOf?.length ? row.oneOf : [undefined]) {
+        const done = new Set<string>();
+        for (const quest of [...(row.quests ?? []), ...(route?.quests ?? [])]) {
+          done.add(quest);
+          prerequisitesOf(quest, done);
+        }
+        for (const { quest } of [...(row.questProgress ?? []), ...(route?.questProgress ?? [])]) {
+          // Barbarian Training starts without Tai Bwo Wannai Trio (Questreqstart=no); only its smithing part needs it.
+          if (quest === 'Barbarian Training') continue;
+          for (const before of QUEST_DATA[quest]?.prereqs ?? []) {
+            if (!done.has(before)) missing.push(`${row.id}${route?.label ? ` (${route.label})` : ''}: ${before} for ${quest}`);
+          }
+        }
+      }
+    }
+    expect([...new Set(missing)]).toEqual([]);
+  });
+
+  it('asks for the start gates of each quest a task needs only started', () => {
+    // Quest pages (23 Nov 2026), Quest details: the quests needed first, and the skills marked Questreqstart=yes.
+    expect(task('mor_med_11')).toMatchObject({
+      quests: ['In Search of the Myreque'], skills: { Herblore: 22, Agility: 25, Crafting: 25, Mining: 15, Magic: 7 },
+    });
+    expect(task('mor_med_9')).toMatchObject({ quests: ['Zogre Flesh Eaters', 'Priest in Peril'], skills: { Slayer: 42 } });
+    expect(task('mor_hard_3').quests).toEqual(['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete']);
+    for (const id of ['west_med_4', 'west_med_5', 'west_hard_5', 'west_hard_6']) {
+      expect(task(id).quests, id).toEqual(['The Grand Tree', 'Tree Gnome Village']);
+    }
+    for (const id of ['west_hard_7', 'west_hard_11', 'west_elite_1']) expect(task(id).quests, id).toEqual(['Underground Pass']);
+    expect(task('west_hard_8')).toMatchObject({
+      quests: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], skills: { Farming: 68, Ranged: 60, Thieving: 50 },
+    });
+    expect(task('west_elite_7')).toMatchObject({
+      quests: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], skills: { Thieving: 85, Ranged: 60 },
+    });
+    expect(task('west_hard_1').oneOf?.[0]).toMatchObject({
+      regions: ['Lletya'], quests: ['Big Chompy Bird Hunting', 'Sheep Herder'], skills: { Thieving: 50 },
+    });
+    expect(task('west_hard_1').oneOf?.[1]).toEqual({ regions: ['Iorwerth Camp'] });
+    expect(task('wilderness_med_10').quests).toEqual(['Dwarf Cannon', 'Fishing Contest']);
+    expect(task('var_med_3')).toMatchObject({ quests: ["Gertrude's Cat", 'Creature of Fenkenstrain'], skills: { Farming: 25 } });
+    expect(task('western_med_7').quests).toEqual(['The Grand Tree', 'Rune Mysteries', 'Shilo Village']);
+    for (const id of ['kou_med_1', 'lum_med_4']) expect(task(id).quests, id).toEqual(['Fairytale I - Growing Pains']);
+  });
+
   it('never ask for the whole quest where the wiki asks for part of it', () => {
     const quests = Object.keys(QUEST_DATA);
     const partial: string[] = [];
