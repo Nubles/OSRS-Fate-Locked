@@ -199,3 +199,10 @@ describe('gathering areas (resource-a.d3[0])', () => {
     }
   });
 });
+
+describe('needle spawns (resource-a.d3[5])', () => {
+  it('has no needle spawn on the free Misthalin start', () => {
+    expect(avail('Needle', 'Ground Spawn', state([]))).not.toContain(true);
+    expect(avail('Needle', 'Ground Spawn', state(['Shayzien']))).toContain(true);
+  });
+});

@@ -1410,7 +1410,9 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Needle': [
     { type: 'SHOP', name: 'Crafting Shop', regions: ['Misthalin', 'Asgarnia', 'Kandarin'] },
-    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Misthalin'], notes: 'Various buildings' }
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Shayzien', 'Kebos Lowlands', 'Hunter\'s Guild', 'Civitas illa Fortis', 'Ralos\' Rise', 'Auburnvale'], notes: 'Shayzien Encampment / Kebos Lowlands / Varlamore' },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Darkmeyer'], quests: ['Sins of the Father'], notes: 'Darkmeyer Seamstress' },
+    { type: 'SPAWN', name: 'Ground Spawn', regions: ['Prifddinas'], quests: ['Song of the Elves'], notes: 'Lliann\'s Wares' }
   ],
 
   // --- TOOLS & CONTAINERS ---
