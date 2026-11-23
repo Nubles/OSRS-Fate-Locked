@@ -598,8 +598,8 @@ describe('content sync workflow contract', () => {
   it('only ever pushes the bot branch, never main, and opens no pull request', async () => {
     const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
 
-    // The weekly Claude routine opens the one draft pull request; this
-    // workflow only leaves the Wiki's answers on bot/wiki-content-sync.
+    // A content update opens the one draft pull request; this workflow only
+    // leaves the Wiki's answers on bot/wiki-content-sync and keeps one issue.
     expect(workflow).not.toMatch(/create-pull-request|gh pr create|gh workflow run/);
     const pushes = activeRunCommands(workflow).filter(command => /git push/.test(command));
     expect(pushes.length).toBeGreaterThan(0);
@@ -634,7 +634,7 @@ describe('content sync workflow contract', () => {
     expect(syncJob).toMatch(
       new RegExp(`- name: Checkout\\n\\s+uses: ${escapeRegExp(CHECKOUT)}\\n\\s+with:\\n\\s+persist-credentials: false`),
     );
-    expect(activeUses(syncJob)).toEqual([CHECKOUT, SETUP_NODE, UPLOAD_ARTIFACT]);
+    expect(activeUses(syncJob)).toEqual([CHECKOUT, SETUP_NODE, UPLOAD_ARTIFACT, UPLOAD_ARTIFACT]);
 
     // Only the job that runs no npm code may write, and it gets only the
     // generated files, the CA evidence and the report from the sync job.
@@ -644,6 +644,106 @@ describe('content sync workflow contract', () => {
     expect(activeRunCommands(pushJob).filter((command) => /\b(?:npm|npx|node)\b/.test(command))).toEqual([]);
     expect(syncJob).toMatch(
       /path: \|\n\s+data\/collectionLogData\.ts\n\s+data\/caTasks\.ts\n\s+data\/sources\/quest-list\.json\n\s+data\/sources\/quest-requirement-audit\.json\n\s+docs\/SYNC_STATUS\.md\n\s+docs\/sync-evidence\/\n\s+sync-report\.md\n/,
+    );
+  });
+
+  it('tells the owner through one issue, from a job that may write issues and nothing else', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+    const jobsBlock = yamlBlock(workflow, 'jobs');
+    const syncJob = yamlBlock(jobsBlock, 'sync', 2);
+    const alertJob = yamlBlock(jobsBlock, 'alert', 2);
+
+    // It waits for the bot branch without depending on that push, and speaks
+    // only for the weekly run or a manual run on main: a manual run on a
+    // curation branch compares that branch.
+    expect(alertJob).toMatch(/^\s{4}needs:\s*\[sync,\s*push-branch\]\s*$/m);
+    expect(alertJob).toContain(
+      "\n    if: ${{ !cancelled() && needs.sync.result == 'success' && (github.event_name == 'schedule' || github.ref == 'refs/heads/main') }}\n",
+    );
+
+    // Issues, and nothing that can change code or settings. The job has these
+    // keys and no other: no container, service, default or job-wide variable
+    // that could change what its one command runs.
+    const alertEntries = yamlEntries(alertJob);
+    expect(alertEntries.filter((entry) => entry.path.length === 2).map((entry) => entry.key)).toEqual(
+      ['needs', 'if', 'runs-on', 'timeout-minutes', 'permissions', 'steps'],
+    );
+    expect(yamlBlock(alertJob, 'permissions', 4).trim()).toBe('permissions:\n      contents: read\n      issues: write');
+    expect(alertJob).toMatch(
+      new RegExp(`- name: Checkout\\n\\s+uses: ${escapeRegExp(CHECKOUT)}\\n\\s+with:\\n\\s+persist-credentials: false`),
+    );
+    expect(activeUses(alertJob)).toEqual([CHECKOUT, SETUP_NODE, DOWNLOAD_ARTIFACT]);
+
+    // Its one command is this repository's own script, which uses Node's own
+    // modules only (scripts/sync-alert.test.ts): no npm code meets the token.
+    expect(activeRunCommands(alertJob)).toEqual(['node scripts/sync-alert.mjs']);
+    expect(alertJob).toContain('\n          GITHUB_TOKEN: ${{ github.token }}\n');
+    // Only that command gets variables, and only these four.
+    expect(alertJob.match(/^\s+env:\s*$/gm)).toHaveLength(1);
+    expect(alertEntries.filter((entry) => entry.path.join('.').startsWith('alert.steps.env.')).map((entry) => entry.key)).toEqual(
+      ['GITHUB_TOKEN', 'ALERT_REPORT_DIR', 'ALERT_SYNC_OUTCOME', 'ALERT_BRANCH_PUSHED'],
+    );
+    expect(alertEntries.filter((entry) => entry.path.join('.').startsWith('alert.steps.with.')).map((entry) => entry.key)).toEqual(
+      ['persist-credentials', 'node-version', 'name', 'path'],
+    );
+
+    // The sync job hands over the status and the report every week, also when
+    // no data file changed: the check can list something without changing one.
+    expect(syncJob).toMatch(
+      /- name: Hand the status and the report to the alert job\n\s+uses: [^\n]+\n\s+with:\n\s+name: wiki-content-sync-report\n\s+path: \|\n\s+docs\/SYNC_STATUS\.md\n\s+sync-report\.md\n\s+if-no-files-found: error\n/,
+    );
+    // They are read from a scratch folder, never unpacked over the checkout
+    // the script runs from.
+    expect(alertJob).toContain(
+      '\n          name: wiki-content-sync-report\n          path: ${{ runner.temp }}/wiki-content-sync-report\n',
+    );
+    expect(alertJob).toContain('\n          ALERT_REPORT_DIR: ${{ runner.temp }}/wiki-content-sync-report\n');
+
+    // A check that failed part-way must not look like "nothing left", and the
+    // issue links the bot branch only when this run pushed it.
+    expect(syncJob).toMatch(/^\s{6}sync_outcome:\s*\$\{\{ steps\.sync\.outcome \}\}\s*$/m);
+    expect(alertJob).toContain('\n          ALERT_SYNC_OUTCOME: ${{ needs.sync.outputs.sync_outcome }}\n');
+    expect(alertJob).toContain(
+      "\n          ALERT_BRANCH_PUSHED: ${{ needs.sync.outputs.changed == 'true' && needs.push-branch.result == 'success' }}\n",
+    );
+  });
+
+  it('has these three jobs and no other, and lets no curation run cancel the weekly alert', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+
+    expect(yamlEntries(workflow).filter((entry) => entry.path.length === 1).map((entry) => entry.key)).toEqual(
+      ['name', 'on', 'permissions', 'concurrency', 'jobs'],
+    );
+    expect(yamlEntries(yamlBlock(workflow, 'jobs')).filter((entry) => entry.path.length === 2).map((entry) => entry.key)).toEqual(
+      ['sync', 'push-branch', 'alert'],
+    );
+    // One run at a time. The weekly run and a manual run on main replace a
+    // run in progress; a manual run on a curation branch waits instead, so it
+    // cannot cancel the weekly run before that has told the owner.
+    expect(yamlBlock(workflow, 'concurrency').trim()).toBe(
+      "concurrency:\n  group: wiki-content-sync\n  cancel-in-progress: ${{ github.event_name == 'schedule' || github.ref == 'refs/heads/main' }}",
+    );
+  });
+
+  it('writes the report in the shape the alert reads', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
+    const syncJob = yamlBlock(yamlBlock(workflow, 'jobs'), 'sync', 2);
+
+    // Each sync command keeps its own log, and a failing one does not stop
+    // the next: the check still writes its status when the collection log
+    // sync fails.
+    expect(syncJob).toContain('npm run --silent clog:sync 2>&1 | tee "$RUNNER_TEMP/clog.txt" || status=1\n');
+    expect(syncJob).toContain('npm run --silent content:check 2>&1 | tee "$RUNNER_TEMP/check.txt" || status=1\n');
+    // scripts/sync-alert.mjs reads the collection log lines under the first
+    // heading, and under the second the two lines the check prints about the
+    // status file it wrote and about the Chunk Picker.
+    expect(syncJob).toContain(
+      'echo "## Collection log"\n'
+      + "            strip < \"$RUNNER_TEMP/clog.txt\" | grep -E '^\\s*(RENAME|ADD|MOVE|\\+|\\?)|\\[clog:sync\\] (renames|failed|WARNING|[0-9]+ NEW)' || echo \"(no changes)\"\n",
+    );
+    expect(syncJob).toContain(
+      'echo "## Freshness check"\n'
+      + "            strip < \"$RUNNER_TEMP/check.txt\" | grep -E '\\[content:check\\]|^\\s{2}' | grep -v 'wrote docs' || true\n",
     );
   });
 });
