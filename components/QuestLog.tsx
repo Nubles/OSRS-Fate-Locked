@@ -142,12 +142,22 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
 
     // Req-met accounting — drives the progress bar shown on LOCKED cards so
     // players can see at a glance how close they are without counting chips.
+    // Includes the quest a gated skill needs, such as Druidic Ritual for Herblore.
+    const prereqReqs: string[] = withSkillGateQuests(quest.prereqs, quest.skills, quest.id);
+    const metPrereqs = prereqReqs.filter((qid: string) => unlocks.quests.includes(qid));
+    // An owned area can share a prerequisite quest's name (Shilo Village), so
+    // area lines read the evidence left once each done prerequisite takes its own.
+    const placeEvidence = [...eligibility.evidence];
+    for (const qid of metPrereqs) {
+      const index = placeEvidence.indexOf(qid);
+      if (index >= 0) placeEvidence.splice(index, 1);
+    }
     const regionReqs = geography.regions;
     const metRegions = regionReqs.filter((region: string) =>
-      eligibility.evidence.includes(region));
+      placeEvidence.includes(region));
     const locationReqs = geography.locations;
     const metLocations = locationReqs.filter((location: { label: string }) =>
-      eligibility.evidence.includes(location.label));
+      placeEvidence.includes(location.label));
     // The canonical evaluator replaces an accepted skill alternative with its
     // own confirmation. Do not also present the replaced skill as mandatory.
     const skillReqs = Object.entries(quest.skills as Record<string, number>).filter(([skill, level]) =>
@@ -174,10 +184,6 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, unlocks, gameModeId
       blocker => blocker.kind === requirement.kind && blocker.label === requirement.label,
     );
     const metUnlocks = unlockReqs.filter(unlockMet);
-    // Includes the quest a gated skill needs, such as Druidic Ritual for Herblore.
-    const prereqReqs: string[] = withSkillGateQuests(quest.prereqs, quest.skills, quest.id);
-    const metPrereqs = prereqReqs.filter((qid: string) =>
-      eligibility.evidence.includes(qid));
     const hasAlternative = Boolean(quest.oneOf?.length);
     const alternativeLabel = hasAlternative
       ? quest.oneOf.map(questRequirementOptionLabel).join(' or ')
