@@ -249,12 +249,32 @@ describe('boss tasks (Like a Boss)', () => {
       offered.push((assignment?.bosses ?? []).map(boss => boss.name));
       return { cx: 1, cy: 1, unlocked: true, accessStatus: 'ALLOWED' };
     };
-    const unlocks = masters({ levels: { ...account().levels, Slayer: 50 }, slayerUnlocks: ['Like a Boss'] });
+    const unlocks = masters({ levels: { ...account().levels, Slayer: 50 }, slayerUnlocks: ['Like a Boss'], quests: [...masters().quests, 'Regicide', 'Dragon Slayer II'] });
     expect(slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } }, unlocks, record).masters[0].rows[0].status).toBe('ready');
     expect(offered[0]).toContain('Zulrah');
     expect(offered[0]).toContain('Vorkath');
     expect(offered[0]).not.toContain('Shellbane gryphon');
     expect(offered[0]).not.toContain('Cerberus');
+  });
+
+  it('offer only the bosses whose quests and levels the run has (slayer.d1[3])', () => {
+    let offered: string[] = [];
+    const record: LocateFn = (_task, assignment) => {
+      offered = (assignment?.bosses ?? []).map(boss => boss.name);
+      return { cx: 1, cy: 1, unlocked: true, accessStatus: 'ALLOWED' };
+    };
+    const base = masters({ slayerUnlocks: ['Like a Boss'], quests: ['Lost City'] });
+    slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } }, base, record);
+    for (const boss of ['King Black Dragon', 'Vorkath', 'Zulrah', 'Barrows brothers', 'General Graardor', 'Duke Sucellus']) expect(offered, boss).not.toContain(boss);
+    expect(offered).toContain('Giant Mole');
+    slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } },
+      masters({ slayerUnlocks: ['Like a Boss'], quests: ['Lost City', 'Dragon Slayer I', 'Dragon Slayer II', 'Regicide', 'Priest in Peril', 'Death Plateau', 'Desert Treasure II'] }), record);
+    for (const boss of ['King Black Dragon', 'Vorkath', 'Zulrah', 'Barrows brothers', 'General Graardor', 'Duke Sucellus']) expect(offered, boss).toContain(boss);
+    // With the quest, the God Wars generals still need their own level.
+    slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } },
+      masters({ slayerUnlocks: ['Like a Boss'], quests: ['Lost City', 'Death Plateau'], levels: { ...account().levels, Strength: 65 } }), record);
+    expect(offered).not.toContain('General Graardor');
+    expect(offered).toContain("Kree'arra");
   });
 });
 

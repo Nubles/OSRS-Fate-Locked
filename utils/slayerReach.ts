@@ -153,9 +153,12 @@ export function slayerReachability(
     const masterGate = masterBlocker(master, unlocks, gameModeId, questSet, combat);
     const rows: SlayerTaskRow[] = [];
     for (const [monster, info] of Object.entries(tasks)) {
-      // A boss task: the master picks only a boss whose Slayer level the run has.
+      // A boss task: the master picks only a boss whose Slayer level, quests and other levels the run has.
       const assignment = info.bosses
-        ? { ...info, bosses: info.bosses.filter(boss => slayerLevel >= (boss.slayer ?? 1)) }
+        ? { ...info, bosses: info.bosses.filter(boss => slayerLevel >= (boss.slayer ?? 1)
+          && (boss.quests ?? []).every(quest => questSet.has(quest))
+          && Object.entries(boss.skills ?? {}).every(([skill, level]) => effectiveSkillLevel(unlocks, skill) >= level)
+          && (!boss.anySkill || Object.entries(boss.anySkill).some(([skill, level]) => effectiveSkillLevel(unlocks, skill) >= level))) }
         : info;
       const loc = locate(monster, assignment, master);
       // Fate Locked locks each boss too: a boss task with none of its bosses unlocked says so.

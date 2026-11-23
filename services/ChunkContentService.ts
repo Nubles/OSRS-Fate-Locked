@@ -72,6 +72,10 @@ export interface SlayerBossOption {
   monsters: string[];
   /** The Slayer level the master needs before assigning this boss. */
   slayer?: number;
+  /** Quests, levels, and levels any one of which is enough, the master needs too (Boss Slayer table). */
+  quests?: string[];
+  skills?: Record<string, number>;
+  anySkill?: Record<string, number>;
 }
 export type SlayerMasters = Record<string, Record<string, SlayerAssignment>>;
 

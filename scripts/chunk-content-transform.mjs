@@ -182,10 +182,14 @@ function applySlayerCorrections(masters) {
     if (!tasks) continue;
     const bosses = bossTasks.bosses
       .filter(({ boss }) => (!rule.only || rule.only.includes(boss)) && !(rule.except ?? []).includes(boss))
-      .map(({ boss, slayer, monsters, substitutes }) => ({
+      .map(({ boss, slayer, monsters, substitutes, quests, skills, anySkill }) => ({
         name: boss,
         monsters: [...(monsters ?? [boss]), ...((rule.noSubstitutes ?? []).includes(boss) ? [] : substitutes ?? [])],
         ...(slayer ? { slayer } : {}),
+        // The Boss Slayer table's other requirements: a master assigns the boss only once they are met.
+        ...(quests ? { quests } : {}),
+        ...(skills ? { skills } : {}),
+        ...(anySkill ? { anySkill } : {}),
       }));
     tasks.Bosses = { weight: rule.weight, unlock: bossTasks.unlock, bosses };
   }
