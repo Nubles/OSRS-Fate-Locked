@@ -1554,13 +1554,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 81 }, inputs: { 'Adamantite Bar': 3 } }
   ],
   'Adamant Claws': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 83 }, inputs: { 'Adamantite Bar': 2 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 83 }, quests: ['Death Plateau'], inputs: { 'Adamantite Bar': 2 } }
   ],
   'Adamant Dagger': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 70 }, inputs: { 'Adamantite Bar': 1 } }
   ],
   'Adamant Dart Tip': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 74 }, inputs: { 'Adamantite Bar': 1 }, outputYield: 10 }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 74 }, quests: ['The Tourist Trap'], inputs: { 'Adamantite Bar': 1 }, outputYield: 10 }
   ],
   'Adamant Full Helm': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 77 }, inputs: { 'Adamantite Bar': 2 } }
@@ -1569,7 +1569,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 76 }, inputs: { 'Adamantite Bar': 1 }, outputYield: 5 }
   ],
   'Adamant Keel Parts': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 74 }, inputs: { 'Adamantite Bar': 5 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 74 }, quests: ['Pandemonium'], inputs: { 'Adamantite Bar': 5 } }
   ],
   'Adamant Kiteshield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 82 }, inputs: { 'Adamantite Bar': 3 } }
@@ -1677,13 +1677,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 11 }, inputs: { 'Bronze Bar': 3 } }
   ],
   'Bronze Claws': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 13 }, inputs: { 'Bronze Bar': 2 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 13 }, quests: ['Death Plateau'], inputs: { 'Bronze Bar': 2 } }
   ],
   'Bronze Dagger': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 1 }, inputs: { 'Bronze Bar': 1 } }
   ],
   'Bronze Dart Tip': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 4 }, inputs: { 'Bronze Bar': 1 }, outputYield: 10 }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 4 }, quests: ['The Tourist Trap'], inputs: { 'Bronze Bar': 1 }, outputYield: 10 }
   ],
   'Bronze Full Helm': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 7 }, inputs: { 'Bronze Bar': 2 } }
@@ -1692,7 +1692,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 6 }, inputs: { 'Bronze Bar': 1 }, outputYield: 5 }
   ],
   'Bronze Keel Parts': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 10 }, inputs: { 'Bronze Bar': 5 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 10 }, quests: ['Pandemonium'], inputs: { 'Bronze Bar': 5 } }
   ],
   'Bronze Kiteshield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 12 }, inputs: { 'Bronze Bar': 3 } }
@@ -1774,7 +1774,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Emerald Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Emerald Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Emerald Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Emerald Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Emerald Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 31 }, inputs: { 'Emerald': 1, 'Gold Bar': 1 } }
@@ -1796,7 +1796,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Gold Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Gold Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Gold Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Gold Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Gold Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 8 }, inputs: { 'Gold Bar': 1 } }
@@ -1850,13 +1850,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 26 }, inputs: { 'Iron Bar': 3 } }
   ],
   'Iron Claws': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 28 }, inputs: { 'Iron Bar': 2 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 28 }, quests: ['Death Plateau'], inputs: { 'Iron Bar': 2 } }
   ],
   'Iron Dagger': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 15 }, inputs: { 'Iron Bar': 1 } }
   ],
   'Iron Dart Tip': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 19 }, inputs: { 'Iron Bar': 1 }, outputYield: 10 }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 19 }, quests: ['The Tourist Trap'], inputs: { 'Iron Bar': 1 }, outputYield: 10 }
   ],
   'Iron Full Helm': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 22 }, inputs: { 'Iron Bar': 2 } }
@@ -1865,7 +1865,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 21 }, inputs: { 'Iron Bar': 1 }, outputYield: 5 }
   ],
   'Iron Keel Parts': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 22 }, inputs: { 'Iron Bar': 5 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 22 }, quests: ['Pandemonium'], inputs: { 'Iron Bar': 5 } }
   ],
   'Iron Kiteshield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 27 }, inputs: { 'Iron Bar': 3 } }
@@ -1901,7 +1901,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 20 }, inputs: { 'Iron Bar': 2 } }
   ],
   'Iron Sheet': [
-    { type: 'SKILL', name: 'Metal Press', regions: ['Any'], skills: { 'Smithing': 45 }, inputs: { 'Iron Bar': 1 } }
+    { type: 'SKILL', name: 'Metal Press', regions: ['Any'], skills: { 'Smithing': 45 }, quests: ['Swan Song'], inputs: { 'Iron Bar': 1 } }
   ],
   'Iron Spit': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 17 }, inputs: { 'Iron Bar': 1 } }
@@ -1917,7 +1917,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Jade Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Jade Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Jade Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Jade Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Jade Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 34 }, inputs: { 'Jade': 1, 'Silver Bar': 1 } }
@@ -1968,13 +1968,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 61 }, inputs: { 'Mithril Bar': 3 } }
   ],
   'Mithril Claws': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 63 }, inputs: { 'Mithril Bar': 2 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 63 }, quests: ['Death Plateau'], inputs: { 'Mithril Bar': 2 } }
   ],
   'Mithril Dagger': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 50 }, inputs: { 'Mithril Bar': 1 } }
   ],
   'Mithril Dart Tip': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 54 }, inputs: { 'Mithril Bar': 1 }, outputYield: 10 }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 54 }, quests: ['The Tourist Trap'], inputs: { 'Mithril Bar': 1 }, outputYield: 10 }
   ],
   'Mithril Full Helm': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 57 }, inputs: { 'Mithril Bar': 2 } }
@@ -1983,7 +1983,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 56 }, inputs: { 'Mithril Bar': 1 }, outputYield: 5 }
   ],
   'Mithril Keel Parts': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 56 }, inputs: { 'Mithril Bar': 5 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 56 }, quests: ['Pandemonium'], inputs: { 'Mithril Bar': 5 } }
   ],
   'Mithril Kiteshield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 62 }, inputs: { 'Mithril Bar': 3 } }
@@ -2031,11 +2031,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 49 }, inputs: { 'Topaz Necklace': 1, 'Cosmic Rune': 1, 'Fire Rune': 5 } }
   ],
   'Onyx Amulet': [
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Onyx Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Onyx Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Opal Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Opal Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Opal Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Opal Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Opal Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 27 }, inputs: { 'Silver Bar': 1, 'Opal': 1 } }
@@ -2090,7 +2090,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Ruby Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Ruby Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Ruby Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Ruby Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Ruby Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 50 }, inputs: { 'Ruby': 1, 'Gold Bar': 1 } }
@@ -2117,13 +2117,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 96 }, inputs: { 'Rune Bar': 3 } }
   ],
   'Rune Claws': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 98 }, inputs: { 'Rune Bar': 2 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 98 }, quests: ['Death Plateau'], inputs: { 'Rune Bar': 2 } }
   ],
   'Rune Dagger': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 85 }, inputs: { 'Rune Bar': 1 } }
   ],
   'Rune Dart Tip': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 89 }, inputs: { 'Rune Bar': 1 }, outputYield: 10 }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 89 }, quests: ['The Tourist Trap'], inputs: { 'Rune Bar': 1 }, outputYield: 10 }
   ],
   'Rune Full Helm': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 92 }, inputs: { 'Rune Bar': 2 } }
@@ -2132,7 +2132,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 91 }, inputs: { 'Rune Bar': 1 }, outputYield: 5 }
   ],
   'Rune Keel Parts': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 86 }, inputs: { 'Rune Bar': 5 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 86 }, quests: ['Pandemonium'], inputs: { 'Rune Bar': 5 } }
   ],
   'Rune Kiteshield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 97 }, inputs: { 'Rune Bar': 3 } }
@@ -2172,7 +2172,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Sapphire Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Sapphire Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Sapphire Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Sapphire Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Sapphire Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 24 }, inputs: { 'Sapphire': 1, 'Gold Bar': 1 } }
@@ -2205,13 +2205,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 41 }, inputs: { 'Steel Bar': 3 } }
   ],
   'Steel Claws': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 43 }, inputs: { 'Steel Bar': 2 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 43 }, quests: ['Death Plateau'], inputs: { 'Steel Bar': 2 } }
   ],
   'Steel Dagger': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 30 }, inputs: { 'Steel Bar': 1 } }
   ],
   'Steel Dart Tip': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 34 }, inputs: { 'Steel Bar': 1 }, outputYield: 10 }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 34 }, quests: ['The Tourist Trap'], inputs: { 'Steel Bar': 1 }, outputYield: 10 }
   ],
   'Steel Full Helm': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 37 }, inputs: { 'Steel Bar': 2 } }
@@ -2220,7 +2220,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 36 }, inputs: { 'Steel Bar': 1 }, outputYield: 5 }
   ],
   'Steel Keel Parts': [
-    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 38 }, inputs: { 'Steel Bar': 5 } }
+    { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 38 }, quests: ['Pandemonium'], inputs: { 'Steel Bar': 5 } }
   ],
   'Steel Kiteshield': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 42 }, inputs: { 'Steel Bar': 3 } }
@@ -2275,7 +2275,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Topaz Amulet': [
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: { 'Crafting': 1 }, inputs: { 'Topaz Amulet (u)': 1, 'Ball of Wool': 1 } },
-    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, inputs: { 'Topaz Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
+    { type: 'SKILL', name: 'Magic', regions: ['Any'], skills: { 'Magic': 80 }, quests: ['Lunar Diplomacy'], inputs: { 'Topaz Amulet (u)': 1, 'Water Rune': 5, 'Earth Rune': 10, 'Astral Rune': 2 } }
   ],
   'Topaz Amulet (u)': [
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: { 'Crafting': 45 }, inputs: { 'Red Topaz': 1, 'Silver Bar': 1 } }
@@ -2298,7 +2298,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 85 }, inputs: { 'Dwarf Weed': 1, 'Vial of Water': 1, 'Nihil Dust': 1 } }
   ],
   'Anti-poison Supermix': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 51 }, inputs: { 'Superantipoison': 1, 'Caviar': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 51 }, quests: ['Barbarian Training'], inputs: { 'Superantipoison': 1, 'Caviar': 1 } }
   ],
   'Anti-venom+': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 94 }, inputs: { 'Anti-venom': 1, 'Torstol': 1 } },
@@ -2376,8 +2376,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 85 }, inputs: { 'Stamina Potion': 1, 'Marlin Scales': 1 } }
   ],
   'Extended Super Antifire': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 98 }, inputs: { 'Super Antifire Potion': 1, 'Lava Scale Shard': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 98 }, inputs: { 'Extended Antifire': 1, 'Crushed Superior Dragon Bones': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 98 }, quests: ['Dragon Slayer II'], inputs: { 'Super Antifire Potion': 1, 'Lava Scale Shard': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 98 }, quests: ['Dragon Slayer II'], inputs: { 'Extended Antifire': 1, 'Crushed Superior Dragon Bones': 1 } }
   ],
   'Extreme Energy Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 66 }, inputs: { 'Super Energy': 1, 'Yellow Fin': 1 } }
@@ -2389,16 +2389,16 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 91 }, inputs: { 'Ancient Brew': 1, 'Ancient Essence': 20 } }
   ],
   'Goblin Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 47 }, inputs: { 'Vial of Water': 1, 'Toadflax': 1, 'Pharmakos Berries': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 47 }, quests: ['Land of the Goblins'], inputs: { 'Vial of Water': 1, 'Toadflax': 1, 'Pharmakos Berries': 1 } }
   ],
   'Guthix Balance': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 22 }, inputs: { 'Restore Potion': 1, 'Garlic': 1, 'Silver Dust': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 22 }, quests: ['In Aid of the Myreque'], inputs: { 'Restore Potion': 1, 'Garlic': 1, 'Silver Dust': 1 } }
   ],
   'Guthix Rest': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, inputs: { 'Cup of Hot Water': 1, 'Guam Leaf': 2, 'Harralander': 1, 'Marrentill': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, inputs: { 'Marrentill': 1, 'Herb Tea Mix (2 Guams and Harralander)': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, inputs: { 'Harralander': 1, 'Herb Tea Mix (2 Guams and Marrentill)': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, inputs: { 'Guam Leaf': 1, 'Herb Tea Mix (harralander, Marrentill and Guam)': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, quests: ['One Small Favour'], inputs: { 'Cup of Hot Water': 1, 'Guam Leaf': 2, 'Harralander': 1, 'Marrentill': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, quests: ['One Small Favour'], inputs: { 'Marrentill': 1, 'Herb Tea Mix (2 Guams and Harralander)': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, quests: ['One Small Favour'], inputs: { 'Harralander': 1, 'Herb Tea Mix (2 Guams and Marrentill)': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 18 }, quests: ['One Small Favour'], inputs: { 'Guam Leaf': 1, 'Herb Tea Mix (harralander, Marrentill and Guam)': 1 } }
   ],
   'Haemostatic Dressing': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 56 }, inputs: { 'Haemostatic Poultice': 1, 'Cotton Yarn': 1 } }
@@ -2416,32 +2416,32 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 88 }, inputs: { 'Dwarf Weed': 1, 'Vial of Water': 1, 'Lily of the Sands': 1 } }
   ],
   'Relicym\'s Balm': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 8 }, inputs: { 'Vial of Water': 1, 'Rogue\'s Purse': 1, 'Snake Weed': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 8 }, inputs: { 'Unfinished Potion (Rogue\'s Purse)': 1, 'Snake Weed': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 8 }, inputs: { 'Snakeweed Mixture': 1, 'Rogue\'s Purse': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 8 }, quests: ['Zogre Flesh Eaters'], inputs: { 'Vial of Water': 1, 'Rogue\'s Purse': 1, 'Snake Weed': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 8 }, quests: ['Zogre Flesh Eaters'], inputs: { 'Unfinished Potion (Rogue\'s Purse)': 1, 'Snake Weed': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 8 }, quests: ['Zogre Flesh Eaters'], inputs: { 'Snakeweed Mixture': 1, 'Rogue\'s Purse': 1 } }
   ],
   'Restore Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 22 }, inputs: { 'Harralander': 1, 'Vial of Water': 1, 'Red Spiders\' Eggs': 1 } }
   ],
   'Sacred Oil': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 1 }, inputs: { 'Olive Oil': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 1 }, quests: ["Shades of Mort'ton"], inputs: { 'Olive Oil': 1 } }
   ],
   'Sanfew Serum': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 65 }, inputs: { 'Mixture - Step 2': 1, 'Nail Beast Nails': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 65 }, inputs: { 'Super Restore': 1, 'Unicorn Horn Dust': 1, 'Snake Weed': 1, 'Nail Beast Nails': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 65 }, quests: ['Zogre Flesh Eaters'], inputs: { 'Mixture - Step 2': 1, 'Nail Beast Nails': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 65 }, quests: ['Zogre Flesh Eaters'], inputs: { 'Super Restore': 1, 'Unicorn Horn Dust': 1, 'Snake Weed': 1, 'Nail Beast Nails': 1 } }
   ],
   'Serum 207': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 15 }, inputs: { 'Tarromin': 1, 'Vial of Water': 1, 'Ashes': 1 } },
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 15 }, inputs: { 'Unfinished Potion': 1, 'Tarromin': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 15 }, quests: ["Shades of Mort'ton"], inputs: { 'Tarromin': 1, 'Vial of Water': 1, 'Ashes': 1 } },
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 15 }, quests: ["Shades of Mort'ton"], inputs: { 'Unfinished Potion': 1, 'Tarromin': 1 } }
   ],
   'Serum 208': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 15 }, inputs: { 'Serum 207': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 15 }, quests: ["Shades of Mort'ton"], inputs: { 'Serum 207': 1 } }
   ],
   'Strength Potion': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 12 }, inputs: { 'Tarromin': 1, 'Vial of Water': 1, 'Limpwurt Root': 1 } }
   ],
   'Super Antifire Potion': [
-    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 92 }, inputs: { 'Antifire Potion': 1, 'Crushed Superior Dragon Bones': 1 } }
+    { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 92 }, quests: ['Dragon Slayer II'], inputs: { 'Antifire Potion': 1, 'Crushed Superior Dragon Bones': 1 } }
   ],
   'Super Energy': [
     { type: 'SKILL', name: 'Herblore', regions: ['Any'], skills: { 'Herblore': 52 }, inputs: { 'Avantoe': 1, 'Vial of Water': 1, 'Mort Myre Fungus': 1 } }
@@ -2633,7 +2633,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Tempoross', regions: ['Kharidian Desert'], unlockId: 'Tempoross' }
   ],
   'Zamorakian Hasta': [
-    { type: 'SKILL', name: 'Otto Godblessed', regions: ['Kandarin'], inputs: { 'Zamorakian Spear': 1, 'Coins': 300000 }, notes: "Otto's Grotto conversion" }
+    { type: 'SKILL', name: 'Otto Godblessed', regions: ['Kandarin'], quests: ['Barbarian Training'], inputs: { 'Zamorakian Spear': 1, 'Coins': 300000 }, notes: "Otto's Grotto conversion" }
   ],
   'Zamorakian Spear': [
     { type: 'DROP', name: "K'ril Tsutsaroth", regions: ['Asgarnia'], unlockId: "K'ril Tsutsaroth", rarity: '1/127' }

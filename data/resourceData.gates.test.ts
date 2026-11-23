@@ -171,3 +171,43 @@ describe('altars and Plank Make need their quest (resource-a.d4[2])', () => {
       .toContain('Quest: Dream Mentor');
   });
 });
+
+describe('recipes behind a quest (resource-b.d1[0])', () => {
+  // Wiki {{Recipe}} notes on each item page. 'Partial completion' is held as
+  // the whole quest, like Superglass Make. Amulets keep their quest-free
+  // Crafting route; only the String Jewellery (Magic 80) route is gated.
+  const metals = ['Bronze', 'Iron', 'Steel', 'Mithril', 'Adamant', 'Rune'];
+  const cases: [string, string, string][] = [
+    ...metals.map(m => [`${m} Claws`, 'Anvil', 'Death Plateau'] as [string, string, string]),
+    ...metals.map(m => [`${m} Dart Tip`, 'Anvil', 'The Tourist Trap'] as [string, string, string]),
+    ...metals.map(m => [`${m} Keel Parts`, 'Anvil', 'Pandemonium'] as [string, string, string]),
+    ['Iron Sheet', 'Metal Press', 'Swan Song'],
+    ...['Emerald', 'Gold', 'Jade', 'Onyx', 'Opal', 'Ruby', 'Sapphire', 'Topaz']
+      .map(g => [`${g} Amulet`, 'Magic', 'Lunar Diplomacy'] as [string, string, string]),
+    ['Serum 207', 'Herblore', "Shades of Mort'ton"],
+    ['Serum 208', 'Herblore', "Shades of Mort'ton"],
+    ['Sacred Oil', 'Herblore', "Shades of Mort'ton"],
+    ['Guthix Rest', 'Herblore', 'One Small Favour'],
+    ['Goblin Potion', 'Herblore', 'Land of the Goblins'],
+    ["Relicym's Balm", 'Herblore', 'Zogre Flesh Eaters'],
+    ['Sanfew Serum', 'Herblore', 'Zogre Flesh Eaters'],
+    ['Guthix Balance', 'Herblore', 'In Aid of the Myreque'],
+    ['Super Antifire Potion', 'Herblore', 'Dragon Slayer II'],
+    ['Extended Super Antifire', 'Herblore', 'Dragon Slayer II'],
+    ['Anti-poison Supermix', 'Herblore', 'Barbarian Training'],
+    ['Zamorakian Hasta', 'Otto Godblessed', 'Barbarian Training'],
+  ];
+  it.each(cases)('%s (%s) needs %s', (item, name, quest) => {
+    expect(rows(item, name).length).toBeGreaterThan(0);
+    const s = state(allAreas, { quests: allQuests.filter(q => q !== quest) });
+    const routes = calculateSupplyChain(item, s)!.sources
+      .filter(r => r.source.name === name && !r.source.requirementsUnverified);
+    for (const r of routes) {
+      expect(r.status.isAvailable).toBe(false);
+      expect(r.status.missing).toContain(`Quest: ${quest}`);
+    }
+  });
+  it('amulets keep the quest-free Crafting route', () => {
+    expect(anyOpen('Emerald Amulet', 'Crafting', state(allAreas, { quests: [] }))).toBe(true);
+  });
+});
