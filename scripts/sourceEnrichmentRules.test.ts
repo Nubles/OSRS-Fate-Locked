@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { MINIGAMES_LIST, BOSSES_LIST, REGION_GROUPS } from '../data/items';
 import { enrichResourceSource, RESOURCE_MAP } from '../data/resourceData';
 import {
-  UNLOCK_ALIAS, buildPlaceIndex, curatedRows, isClueSource, isQuestRewardSource, isSkillingSource,
-  leagueRegions, makeUnlockResolver, pickDrops, rarityRank, shopLocationRegion, shopRegionOverride,
+  UNLOCK_ALIAS, buildPlaceIndex, buildShopRegions, curatedRows, isClueSource, isQuestRewardSource, isSkillingSource,
+  leagueRegions, makeUnlockResolver, pickDrops, placePairs, rarityRank, SELLER_LOCATION, shopKey,
+  shopLocationRegion, shopRegionOverride,
 } from './sourceEnrichmentRules';
 
 describe('enrichment unlock aliases', () => {
@@ -61,10 +62,15 @@ describe('rarityRank (commonest first)', () => {
   it('orders words and fractions on one scale', () => {
     expect(order(['Very rare', '1/128', 'Rare', 'Unknown', '10/128', 'Common', 'Always', '1/1'])).toEqual(
       ['Always', '1/1', '10/128', 'Common', '1/128', 'Rare', 'Very rare', 'Unknown']);
-    expect(rarityRank('Varies')).toBeLessThan(rarityRank('Rare'));
-    expect(rarityRank('Uncommon')).toBeLessThan(rarityRank('Varies'));
     expect(rarityRank('Once')).toBe(rarityRank('Unknown'));
     expect(rarityRank('1/1,000')).toBeLessThan(rarityRank('Once'));
+  });
+  it("ranks 'Varies' (point-based activity rewards) just after 'Always'", () => {
+    // Wiki: Wintertodt's Reward Cart and Fishing Trawler give their items in
+    // amounts that depend on points; the Wiki writes their rarity 'Varies'.
+    expect(rarityRank('Always')).toBeLessThan(rarityRank('Varies'));
+    expect(rarityRank('Varies')).toBeLessThan(rarityRank('1/3'));
+    expect(rarityRank('Varies')).toBeLessThan(rarityRank('Common'));
   });
 });
 
@@ -128,12 +134,13 @@ describe('curatedRows', () => {
 });
 
 describe('shop regions', () => {
-  const places = buildPlaceIndex([
-    ...Object.entries(REGION_GROUPS).flatMap(([region, ps]) => ps.map((p) => [p, region] as const)),
+  const places = buildPlaceIndex(placePairs(REGION_GROUPS, [
     ['Lumbridge', 'Misthalin'],
+    ['Draynor Village', 'Misthalin'],
+    ['Edgeville', 'Misthalin'],
     ["Champions' Guild", 'Misthalin'],
     ["Wizards' Guild", 'Kandarin'],
-  ]);
+  ]));
   // Wiki infobox_shop locations.
   it.each([
     ['[[Blast Furnace]] in [[Keldagrim]]', 'Fremennik'],
@@ -144,6 +151,20 @@ describe('shop regions', () => {
     ['[[Mor Ul Rek]]', 'Karamja'],
     ['[[Mistrock]]', 'Varlamore'],
     ['[[Tyras Camp]]', 'Tirannwn'],
+    // Wiki spellings of a known place, and places checked against their
+    // Wiki leagueRegion.
+    ['[[Grand Tree]], 2nd floor', 'Kandarin'],
+    ['[[Port Piscarilius]]', 'Kourend & Kebos'],
+    ['[[Dwarven Mines]]', 'Asgarnia'],
+    ['[[Miscellania]]', 'Fremennik'],
+    ['[[Draynor Manor]]', 'Misthalin'],
+    ['[[Ice Mountain]] workshop', 'Asgarnia'],
+    ['[[White Wolf Mountain]]', 'Asgarnia'],
+    ["[[Gu'Tanoth]]", 'Kandarin'],
+    ['[[Outer Fortis]]', 'Varlamore'],
+    // A region named as the location.
+    ['[[Karamja]]', 'Karamja'],
+    ['[[Lumbridge]]', 'Misthalin'],
   ])('%s is in %s', (location, region) => {
     expect(shopLocationRegion(location, places)).toBe(region);
   });
@@ -154,6 +175,33 @@ describe('shop regions', () => {
     expect(shopRegionOverride('Mistrock Mining Supplies')).toBe('Varlamore');
     expect(shopRegionOverride("tzhaar-mej-roh's rune store")).toBe('Karamja');
     expect(shopRegionOverride('Mistrock')).toBeUndefined();
+  });
+  it('matches a Wiki shop page to its seller name', () => {
+    // infobox_shop page 'Oziach (shop)' sells as 'Oziach'; 'Grud's Herblore Stall.' ends in a full stop.
+    expect(shopKey('Oziach (shop)')).toBe(shopKey('Oziach'));
+    expect(shopKey("Grud's Herblore Stall.")).toBe(shopKey("Grud's Herblore Stall"));
+    expect(shopKey('Crossbow Shop (Dwarven Mine)')).toBe('crossbow shop (dwarven mine)');
+  });
+  it('places sellers that have no shop page by their Wiki NPC location', () => {
+    expect(shopLocationRegion(SELLER_LOCATION.Trufitus, places)).toBe('Karamja');
+    expect(shopLocationRegion(SELLER_LOCATION['Mawnis Burowgar'], places)).toBe('Fremennik');
+    for (const loc of Object.values(SELLER_LOCATION)) expect(shopLocationRegion(loc, places), loc).toBeDefined();
+  });
+  it('lists every region of a shop the Wiki places in several spots', () => {
+    // Wiki infobox_shop rows.
+    const regions = buildShopRegions([
+      { page_name: 'Forestry Shop', location: '[[Draynor Village]]' },
+      { page_name: 'Forestry Shop', location: "[[Seers' Village]]" },
+      { page_name: 'Forestry Shop', location: '[[Nowhere]]' },
+      { page_name: 'Forestry Shop', location: '[[Draynor Village]]' },
+      { page_name: 'Oziach (shop)', location: '[[Edgeville]]' },
+    ], places);
+    expect(regions.get(shopKey('Forestry Shop'))).toEqual(['Misthalin', 'Kandarin']);
+    expect(regions.get(shopKey('Oziach'))).toEqual(['Misthalin']);
+    expect(regions.get(shopKey('Trufitus'))).toEqual(['Karamja']);
+  });
+  it('only aliases to places the app knows', () => {
+    expect(() => placePairs({ Kandarin: ['Yanille'] }, [])).toThrow(/Tree Gnome Stronghold/);
   });
 });
 
@@ -172,5 +220,12 @@ describe('pickDrops', () => {
     const drops = ['red', 'brown', 'crimson', 'black', 'purple'].map((c) => d(`Bronze Chest (${c})`, '4/98.56'));
     const picked = pickDrops([...drops, d('Rusty Sword', '6/100'), d('White Knight', '1/128')], new Set(), resolve);
     expect(picked.map((x) => x.monster)).toEqual(['Rusty Sword', 'Bronze Chest (red)', 'White Knight']);
+  });
+  it("keeps a 'Varies' activity reward ahead of fractions", () => {
+    // Wiki 'Coal': Reward Cart (Wintertodt) 'Varies', and many 1/10 rows.
+    const drops = ['A', 'B', 'C', 'D', 'E', 'F'].map((m) => d(`Monster ${m}`, '1/10'));
+    const picked = pickDrops([...drops, d('Reward Cart', 'Varies')], new Set(), resolve);
+    expect(picked[0].monster).toBe('Reward Cart');
+    expect(picked).toHaveLength(6);
   });
 });

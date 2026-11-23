@@ -73,9 +73,12 @@ export const UNLOCK_ALIAS: Record<string, string> = {
 // --- drop rarity ------------------------------------------------------------
 // Chance per kill for the Wiki's rarity words. The Wiki colours a drop common
 // down to 1/25, uncommon to 1/99, rare to 1/999 and very rare below that; each
-// word sits inside its band. 'Varies' sits between uncommon and rare.
+// word sits inside its band. 'Varies' is not a chance: the Wiki uses it for
+// point-based activity rewards (Wintertodt's Reward Cart, Fishing Trawler,
+// Hunters' loot sacks), which give the item every time in an amount that
+// depends on points, so it ranks just after 'Always', ahead of 1/3.
 const RARITY_WORDS: Record<string, number> = {
-  always: 1, common: 1 / 16, uncommon: 1 / 64, varies: 1 / 128, rare: 1 / 512, 'very rare': 1 / 5000,
+  always: 1, varies: 1 / 2, common: 1 / 16, uncommon: 1 / 64, rare: 1 / 512, 'very rare': 1 / 5000,
 };
 
 /**
@@ -161,6 +164,74 @@ const SHOP_REGION_LOWER = new Map(Object.entries(SHOP_REGION).map(([k, v]) => [k
 export const shopRegionOverride = (shop: string): string | undefined => SHOP_REGION_LOWER.get(shop.toLowerCase());
 
 /**
+ * Key that matches an infobox_shop page to a storeline seller: the page
+ * 'Oziach (shop)' sells as 'Oziach', and some pages end in a full stop.
+ */
+export const shopKey = (name: string): string =>
+  name.trim().replace(/\.$/, '').replace(/\s*\(shop\)$/i, '').toLowerCase();
+
+/**
+ * Wiki NPC location of sellers that have no infobox_shop page (they sell from
+ * their own NPC page), resolved through the place index like a shop location.
+ */
+export const SELLER_LOCATION: Record<string, string> = {
+  Trufitus: '[[Tai Bwo Wannai]]',
+  'Grandpa Jack': '[[Hemenster]]',
+  'Mawnis Burowgar': '[[Neitiznot]]',
+  'Franklin Caranos': '[[Piscatoris Fishing Colony]]',
+  Selim: '[[Al Kharid]]',
+  'Fritz the Glassblower': '[[Entrana]]',
+};
+
+// Wiki location spellings of a place REGION_GROUPS already lists: each takes
+// that place's region.
+export const PLACE_ALIAS: Record<string, string> = {
+  'Grand Tree': 'Tree Gnome Stronghold',
+  'Port Piscarilius': 'Piscarilius',
+  'Dwarven Mines': 'Dwarven Mine',
+  Miscellania: 'Miscellania & Etceteria',
+  Etceteria: 'Miscellania & Etceteria',
+  'Draynor Manor': 'Draynor Village',
+};
+
+// Shop locations REGION_GROUPS does not list, with the region from the place's
+// Wiki leagueRegion (checked 23 Nov 2026).
+export const PLACE_REGION: Record<string, string> = {
+  'Ice Mountain': 'Asgarnia',
+  'South Falador Farm': 'Asgarnia',
+  'White Wolf Mountain': 'Asgarnia',
+  "Gu'Tanoth": 'Kandarin',
+  'Combat Training Camp': 'Kandarin',
+  'Outer Fortis': 'Varlamore',
+  'Tal Teklan': 'Varlamore',
+};
+
+/**
+ * [place, region] pairs for buildPlaceIndex: every REGION_GROUPS place, then
+ * `more` (other areas, guilds and activities), then PLACE_REGION, the
+ * PLACE_ALIAS spellings and each region's own name ('[[Karamja]]'). An alias
+ * whose place is missing throws, so a renamed place cannot go unnoticed.
+ */
+export const placePairs = (
+  regionGroups: Record<string, readonly string[]>, more: Iterable<readonly [string, string]>,
+): [string, string][] => {
+  const pairs: [string, string][] = [
+    ...Object.entries(regionGroups).flatMap(([region, ps]) => ps.map((p) => [p, region] as [string, string])),
+    ...[...more].map(([p, r]) => [p, r] as [string, string]),
+    ...Object.entries(PLACE_REGION),
+  ];
+  const regionOf = new Map<string, string>();
+  for (const [p, r] of pairs) if (!regionOf.has(p.toLowerCase())) regionOf.set(p.toLowerCase(), r);
+  for (const [alias, place] of Object.entries(PLACE_ALIAS)) {
+    const region = regionOf.get(place.toLowerCase());
+    if (!region) throw new Error(`PLACE_ALIAS '${alias}' names '${place}', which is not a known place`);
+    pairs.push([alias, region]);
+  }
+  for (const region of new Set(pairs.map(([, r]) => r))) pairs.push([region, region]);
+  return pairs;
+};
+
+/**
  * Place index (lower-case place -> app region) from [place, region] pairs;
  * the first pair for a place wins. A place written with a note in brackets
  * ('Mor Ul Rek (TzHaar City)') is also found without it.
@@ -198,6 +269,32 @@ export const shopLocationRegion = (location: string, places: ReadonlyMap<string,
     if (best) return places.get(best);
   }
   return undefined;
+};
+
+/**
+ * Shop (shopKey of its infobox_shop page) -> app regions of its locations. A
+ * shop the Wiki lists at several places (Slayer Rewards, Forestry Shop) gets
+ * each place's region, in the Wiki's order; a seller with no shop page is
+ * placed by SELLER_LOCATION.
+ */
+export const buildShopRegions = (
+  rows: readonly { page_name?: unknown; location?: unknown }[], places: ReadonlyMap<string, string>,
+): Map<string, string[]> => {
+  const out = new Map<string, string[]>();
+  const fromRows = new Set(rows.filter((r) => r.page_name).map((r) => shopKey(String(r.page_name))));
+  const sellers = Object.entries(SELLER_LOCATION)
+    .filter(([name]) => !fromRows.has(shopKey(name)))
+    .map(([page_name, location]) => ({ page_name, location }));
+  for (const r of [...rows, ...sellers]) {
+    if (!r.page_name || !r.location) continue;
+    const region = shopLocationRegion(String(r.location), places);
+    if (!region) continue;
+    const key = shopKey(String(r.page_name));
+    const list = out.get(key) ?? [];
+    if (!list.includes(region)) list.push(region);
+    out.set(key, list);
+  }
+  return out;
 };
 
 // --- picking drop rows ------------------------------------------------------

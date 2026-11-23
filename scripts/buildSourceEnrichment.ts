@@ -19,7 +19,8 @@ import { REGION_CHUNKS } from '../data/regionChunks';
 import chunkDoc from '../public/chunk-content.json';
 import {
   buildPlaceIndex, curatedRows, isClueSource, isQuestRewardSource, isSkillingSource, leagueRegions,
-  makeUnlockResolver, pickDrops, shopLocationRegion, shopRegionOverride, type WikiDrop,
+  buildShopRegions, makeUnlockResolver, pickDrops, placePairs, shopKey, shopRegionOverride,
+  type WikiDrop,
 } from './sourceEnrichmentRules';
 
 // Chunk-truth: monster (lowercased) -> regions the chunk dataset proves it in.
@@ -97,11 +98,10 @@ console.log(`  ${shopRows.length} shop rows`);
 // REGION_GROUPS and MISTHALIN_AREAS, then the guilds and activities of
 // ACTIVITY_REGIONS (e.g. "Wizards' Guild"), so any shop located in a known
 // place can be region-tagged automatically.
-const placeToRegion = buildPlaceIndex([
-  ...Object.entries(REGION_GROUPS).flatMap(([region, places]) => places.map((p) => [p, region] as const)),
+const placeToRegion = buildPlaceIndex(placePairs(REGION_GROUPS as Record<string, string[]>, [
   ...MISTHALIN_AREAS.map((p) => [p, 'Misthalin'] as const),
   ...Object.entries(ACTIVITY_REGIONS),
-]);
+]));
 
 // monster name (lowercased) -> app region from the wiki's infobox_monster
 // `league_region`, used when a drop's own League region was empty.
@@ -112,16 +112,8 @@ for (const r of monsterRows) {
   if (mapped.length) monsterRegion.set(r.name.toLowerCase(), mapped);
 }
 
-// shop page-name (lowercased, period-stripped) -> app region from
-// infobox_shop.location, parsed out of wiki "[[Place]]" markup.
-const shopRegion = new Map<string, string>();
-for (const r of shopRows) {
-  if (!r.page_name || !r.location) continue;
-  const region = shopLocationRegion(String(r.location), placeToRegion);
-  if (!region) continue;
-  const key = String(r.page_name).replace(/\.$/, '').toLowerCase();
-  shopRegion.set(key, region);
-}
+// shop (shopKey of its page name) -> app regions from infobox_shop.location.
+const shopRegion = buildShopRegions(shopRows, placeToRegion);
 
 // item (lowercase) -> shops
 const itemShops = new Map<string, { shop: string; currency: string }[]>();
@@ -187,8 +179,9 @@ for (const [lower, key] of lowerToKey) {
     if (haveShop.has(sl) || seenShop.has(sl)) continue;
     seenShop.add(sl);
     if ([...seenShop].length > 3) break;
-    const region = shopRegionOverride(shop) || shopRegion.get(sl) || 'Any';
-    const src: any = { type: 'SHOP', name: shop, regions: [region] };
+    const override = shopRegionOverride(shop);
+    const regions = override ? [override] : [...(shopRegion.get(shopKey(shop)) ?? ['Any'])];
+    const src: any = { type: 'SHOP', name: shop, regions };
     if (currency && currency !== 'Coins') src.notes = `Bought with ${currency}`;
     added.push(src);
     shopCount++;
