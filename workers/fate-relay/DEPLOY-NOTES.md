@@ -91,3 +91,28 @@ curl.exe -s -o NUL -w "%{http_code}\n" https://fate-relay.fatelocked.workers.dev
 ```
 
 Rolling back: `npx wrangler@latest rollback`; records stay readable by both.
+
+---
+
+# Shared-progress ownership outlives its record (November 2026)
+
+**This change needs a relay deploy** (`npx wrangler@latest deploy` from
+`workers/fate-relay/`; no new binding, secret or `wrangler.toml` change).
+Until it is deployed the relay keeps its earlier behaviour: there are no
+owner records for shared progress yet.
+
+- `own:p:<id>` owner records (180 days, refreshed at most weekly; Stop sharing
+  refreshes it once) keep a run's id its owner's after Stop sharing or expiry.
+  Existing runs gain one on their owner's next publish; nobody is locked out.
+- A write that claims an id nobody holds removes the Discord link its
+  `ld:<id>` names first, and links older than the claim are not served or
+  notified. Links now carry `linkedAt` metadata; the bot's payload and every
+  response the tracker and the bot already handle are unchanged.
+- KV writes: an unchanged publish still writes nothing, a changed one still
+  writes the summary, plus the owner record at most once a week per run.
+
+The tracker side (a run refused its own id moves to a new id once, with a
+message) works against both the old and the new relay.
+
+Rolling back: `npx wrangler@latest rollback`. The old relay ignores owner
+records and link metadata, so records stay readable by both.

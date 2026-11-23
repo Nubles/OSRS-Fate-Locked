@@ -131,6 +131,13 @@ record expires; after 90 days without a publish it can be claimed again,
 which is safe for random 122-bit codes (a type-4 UUID without dashes). Codes published before owner records
 existed are adopted on their owner's next publish.
 
+Shared progress (`/p/<id>`) has owner records too, `own:p:<id>`, because a
+public Adventurer's Log shows its id to anyone with the link. They last 180
+days, longer than the 90-day summary, are refreshed the same way, and Stop
+sharing keeps (and refreshes) the owner record while it deletes the summary.
+A write that claims an id nobody holds first removes any Discord link to it;
+see "Ownership" in [shared-progress.md](shared-progress.md).
+
 The pairing dialog asks the player to continue only if they just pressed
 **Connect tracker** in RuneLite, because any website can open a pairing link.
 It shows only the code's last four characters, such as `…a1b2`, so a stream
@@ -258,12 +265,13 @@ near the limit.
 |---|---|---|
 | Profile publish (`r:<code>`) | The tracker tab saving a paired profile | When something RuneLite uses changes: after 15 s of quiet, at most every 2 min while changes never pause, at once when the tab is hidden; an unchanged profile is not re-sent for six hours, which keeps it well inside RuneLite's 12-hour limit for Strict Mode (see step 4 above) |
 | Owner record (`own:r:<code>`) | A publish or Disconnect | At most once a week per code |
+| Owner record (`own:p:<id>`) | A first publish, a stored summary, a link code, Stop sharing | At most once a week per run, plus once on Stop sharing; an unchanged summary writes it only for a run stored before owner records |
 | Tombstone (`r:<code>`, `gone`) | Disconnect | Once |
 | Backup (`b:<id>`) | `OnlineBackupDriver` | Changed runs only: at most every 30 min, or every 15 min when the tab is hidden with a change waiting; Back up now at once |
 | Previous backup copy (`b:<id>:previous`) | The first upload each day, or from another browser | At most about once a day |
 | Shared progress (`p:<id>`) | `ProgressShareDriver` | When the summary changes: after a minute of quiet, at least 3 min apart; the relay skips an unchanged summary |
 | Link code (`lc:<code>`) | Asking for a Discord link code | Once per code |
-| Discord link (`l:<id>`, `ld:<run>`; deletes `lc:`, old links) | The bot's `/link` and `/unlink` | Once per link; `ld:` once more for a link made before it existed |
+| Discord link (`l:<id>`, `ld:<run>`; deletes `lc:`, old links) | The bot's `/link` and `/unlink`; a claim of an id a link was left on, or the bot reading a link older than its run's claim, deletes it | Once per link; `ld:` once more for a link made before it existed |
 | Deletes (`b:`, `p:`) | Turning backup or sharing off | Once |
 
 Error reports (`/e`), public Adventurer's Log reads (`GET /p/<id>`) and the

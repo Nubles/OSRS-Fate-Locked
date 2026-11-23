@@ -48,7 +48,7 @@ export const ProgressShareDriver: React.FC = () => {
     let timer: number | undefined;
 
     const send = async () => {
-      const [{ buildProgressSnapshot }, { publishProgress }] = await Promise.all([
+      const [{ buildProgressSnapshot }, { publishProgress, replaceRefusedShare }] = await Promise.all([
         import('../utils/progressSnapshot'),
         import('../utils/progressShare'),
       ]);
@@ -62,6 +62,11 @@ export const ProgressShareDriver: React.FC = () => {
       if (cancelled) return;
       if (result.ok) lastSent.current = { id: record.id, body };
       else if ('retryAfterMs' in result) timer = window.setTimeout(send, result.retryAfterMs);
+      else if ('error' in result && result.error === 'forbidden') {
+        // Another token holds this run's id: move to a new one, once (replaceRefusedShare).
+        const next = replaceRefusedShare(storageKey, record);
+        if (next && next.id !== record.id) setRecord(next);
+      }
     };
 
     // The first publish after turning sharing on (or loading) goes out quickly,
@@ -73,7 +78,7 @@ export const ProgressShareDriver: React.FC = () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [record, unlocks, history, gameModeId, customMode, linkedAccount]);
+  }, [record, storageKey, unlocks, history, gameModeId, customMode, linkedAccount]);
 
   return null;
 };

@@ -6,6 +6,12 @@
  */
 
 export const PROGRESS_TTL_SECONDS = 90 * 86400;
+/**
+ * A run's owner record (own:p:<id>) lasts this long after its last refresh,
+ * longer than the summary, so a run stays its owner's after Stop sharing or
+ * after its summary expires.
+ */
+export const PROGRESS_OWNER_TTL_SECONDS = 2 * PROGRESS_TTL_SECONDS;
 export const MAX_PROGRESS_BYTES = 8 * 1024;
 /** One publish a minute per run: each is a KV write. */
 export const PROGRESS_MIN_INTERVAL_MS = 60 * 1000;

@@ -5,6 +5,7 @@ import {
   FEED_WINDOW_MS,
   LINK_CODE_TTL_SECONDS,
   feedForPublish,
+  PROGRESS_OWNER_TTL_SECONDS,
   PROGRESS_TTL_SECONDS,
   PROGRESS_UNCHANGED_REFRESH_MS,
   newLinkCode,
@@ -176,7 +177,8 @@ describe('Fate relay shared progress', () => {
   it('writes nothing for the summary it already holds, until it is a month old', async () => {
     const first = await publish(env, snapshot());
     const { updatedAt } = await first.json() as { updatedAt: number };
-    expect(kv.puts).toEqual([`p:${RUN}`]);
+    // The first publish claims the run: its summary and its owner record.
+    expect(kv.puts).toEqual([`p:${RUN}`, `own:p:${RUN}`]);
 
     // A reload sends the same summary, within the minute or later: no KV write.
     const same = await publish(env, snapshot());
@@ -184,7 +186,7 @@ describe('Fate relay shared progress', () => {
     expect(await same.json()).toEqual({ updatedAt, unchanged: true });
     vi.spyOn(Date, 'now').mockReturnValue(updatedAt + 10 * 86_400_000);
     expect((await publish(env, snapshot())).status).toBe(200);
-    expect(kv.puts).toEqual([`p:${RUN}`]);
+    expect(kv.puts).toEqual([`p:${RUN}`, `own:p:${RUN}`]);
     // Another token still can't touch it.
     expect((await publish(env, snapshot(), OTHER_TOKEN)).status).toBe(403);
 
@@ -192,7 +194,8 @@ describe('Fate relay shared progress', () => {
     vi.spyOn(Date, 'now').mockReturnValue(updatedAt + PROGRESS_UNCHANGED_REFRESH_MS);
     const refreshed = await publish(env, snapshot());
     expect(await refreshed.json()).toEqual({ updatedAt: updatedAt + PROGRESS_UNCHANGED_REFRESH_MS });
-    expect(kv.puts).toEqual([`p:${RUN}`, `p:${RUN}`]);
+    // The owner record is over a week old, so it is refreshed with it.
+    expect(kv.puts).toEqual([`p:${RUN}`, `own:p:${RUN}`, `p:${RUN}`, `own:p:${RUN}`]);
   });
 
   it('has no public read of a private run: a GET answers 404, the same as a missing run', async () => {
@@ -215,7 +218,7 @@ describe('Fate relay shared progress', () => {
     expect(body.snapshot).toEqual(snapshot({ public: true, map }));
     expect(body.updatedAt).toBeGreaterThan(0);
     // Reads never write.
-    expect(kv.puts).toEqual([`p:${RUN}`]);
+    expect(kv.puts).toEqual([`p:${RUN}`, `own:p:${RUN}`]);
   });
 
   it('accepts only a well-formed map and a public flag of true', () => {
@@ -364,6 +367,9 @@ describe('Fate relay shared progress', () => {
 
     it('gives a link made before the reverse index its pointer when the bot reads it', async () => {
       await publish(env, snapshot());
+      // Such a link only exists on a run stored before claims and owner records were recorded.
+      kv.metadata.set(`p:${RUN}`, { ...kv.metadata.get(`p:${RUN}`) as object, claimedAt: undefined });
+      kv.records.delete(`own:p:${RUN}`);
       kv.records.set(`l:${DISCORD_ID}`, RUN);
       await bot(env, 'GET');
       expect(kv.records.get(`ld:${RUN}`)).toBe(DISCORD_ID);
@@ -374,5 +380,194 @@ describe('Fate relay shared progress', () => {
     expect((await bot(env, 'GET', undefined, 'x'.repeat(40))).status).toBe(403);
     delete env.PROGRESS_BOT_SECRET;
     expect((await bot(env, 'GET')).status).toBe(403);
+  });
+});
+
+describe('ownership of a shared-progress id outlives its record', () => {
+  const EVENTS_URL = 'https://bot.test/api/progress-events';
+  const OTHER_DISCORD_ID = '876543210987654321';
+  let kv: MemoryKv;
+  let env: Record<string, unknown>;
+  let sent: { discordId: string; snapshot: Record<string, unknown> }[];
+  let now: number;
+
+  const sha256 = async (text: string) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)))]
+    .map(byte => byte.toString(16).padStart(2, '0')).join('');
+  const del = (token = TOKEN) => call(env, `/p/${RUN}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  const askCode = (token = TOKEN) => call(env, `/p/${RUN}/link-code`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+  const linkAs = async (discordId: string) => {
+    const issued = await askCode();
+    expect(issued.status).toBe(200);
+    return call(env, `/l/${discordId}`, { method: 'POST', headers: { Authorization: `Bearer ${SECRET}` }, body: JSON.stringify(await issued.json()) });
+  };
+  const botRead = (discordId = DISCORD_ID) => call(env, `/l/${discordId}`, { headers: { Authorization: `Bearer ${SECRET}` } });
+  const later = (ms = 61_000) => { now += ms; };
+  const withUnlock = (text: string, extra: Record<string, unknown> = {}) =>
+    snapshot({ recent: [{ text, at: now - 1_000 }, ...snapshot().recent], ...extra });
+  /** A run stored before owner records: its write token's hash only in the summary's metadata. */
+  const seedOldRecord = async () => {
+    kv.records.set(`p:${RUN}`, JSON.stringify(validProgressSnapshot(snapshot())));
+    kv.metadata.set(`p:${RUN}`, { writeHash: await sha256(TOKEN), updatedAt: now - 2 * 86_400_000 });
+  };
+  /** A Discord link as relays before this change stored it: plain values, no metadata. */
+  const seedOldLink = (discordId = DISCORD_ID, reverse = true) => {
+    kv.records.set(`l:${discordId}`, RUN);
+    if (reverse) kv.records.set(`ld:${RUN}`, discordId);
+  };
+
+  beforeEach(() => {
+    kv = new MemoryKv();
+    env = { RELAY: kv, PROGRESS_BOT_SECRET: SECRET, DISCORD_EVENTS_URL: EVENTS_URL };
+    sent = [];
+    now = 1_790_000_500_000;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init: RequestInit) => {
+      sent.push(JSON.parse(init.body as string));
+      return new Response('{}');
+    }));
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps a stopped run its owner\'s: another token can\'t take the id or reach its Discord link', async () => {
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect((await linkAs(DISCORD_ID)).status).toBe(200);
+
+    const stopped = await del();
+    expect(stopped.status).toBe(200);
+    expect(await stopped.json()).toEqual({ deleted: true });
+    expect(kv.records.has(`p:${RUN}`)).toBe(false);
+
+    later();
+    const taken = await publish(env, withUnlock('Unlocked Forged Thing', { account: 'Forged' }), OTHER_TOKEN);
+    expect(taken.status).toBe(403);
+    expect(await taken.text()).toBe('forbidden');
+    expect(kv.records.has(`p:${RUN}`)).toBe(false);
+    expect((await askCode(OTHER_TOKEN)).status).toBe(403);
+    expect((await del(OTHER_TOKEN)).status).toBe(403);
+    expect(sent).toHaveLength(0);
+    expect(await (await botRead()).json()).toEqual({ linked: true, snapshot: null });
+
+    // The owner turns sharing back on with the same id and token, and keeps the link.
+    later();
+    expect((await publish(env, snapshot())).status).toBe(200);
+    later();
+    expect((await publish(env, withUnlock('Unlocked Lava Maze'))).status).toBe(200);
+    expect(sent.map(event => event.discordId)).toEqual([DISCORD_ID, DISCORD_ID]);
+    expect(sent[1].snapshot.account).toBeUndefined();
+  });
+
+  it('keeps an expired run its owner\'s while the owner record lives, which outlasts the summary', async () => {
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect((await linkAs(DISCORD_ID)).status).toBe(200);
+    expect(kv.ttls.get(`own:p:${RUN}`)).toBe(PROGRESS_OWNER_TTL_SECONDS);
+    expect(PROGRESS_OWNER_TTL_SECONDS).toBeGreaterThan(PROGRESS_TTL_SECONDS);
+    // docs/shared-progress.md and docs/online-relay.md say 180 days.
+    expect(PROGRESS_OWNER_TTL_SECONDS).toBe(180 * 86400);
+
+    // The summary expires (90 days without a store); the owner record is still there.
+    kv.records.delete(`p:${RUN}`);
+    kv.metadata.delete(`p:${RUN}`);
+    later();
+    expect((await publish(env, withUnlock('Unlocked Forged Thing'), OTHER_TOKEN)).status).toBe(403);
+    expect(sent).toHaveLength(0);
+
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect(kv.records.get(`ld:${RUN}`)).toBe(DISCORD_ID);
+  });
+
+  it('lets the owner of a run stored before owner records keep it, and records the owner on their next request', async () => {
+    await seedOldRecord();
+    seedOldLink();
+    expect((await publish(env, snapshot(), OTHER_TOKEN)).status).toBe(403);
+
+    // The owner's tab reloads: the same summary, accepted as before, and the owner record is made.
+    const same = await publish(env, snapshot());
+    expect(same.status).toBe(200);
+    expect(await same.json()).toEqual({ updatedAt: now - 2 * 86_400_000, unchanged: true });
+    expect(kv.puts).toEqual([`own:p:${RUN}`]);
+
+    later();
+    expect((await publish(env, withUnlock('Unlocked Lava Maze'))).status).toBe(200);
+    expect(sent.map(event => event.discordId)).toEqual([DISCORD_ID]);
+    expect((await del()).status).toBe(200);
+    later();
+    expect((await publish(env, snapshot(), OTHER_TOKEN)).status).toBe(403);
+    expect(kv.records.get(`l:${DISCORD_ID}`)).toBe(RUN);
+  });
+
+  it('removes a Discord link left on an id nobody holds before a new token claims it', async () => {
+    // Stopped or expired before this change: links remain, with no summary and no owner record.
+    seedOldLink();
+    const claimed = await publish(env, snapshot({ account: 'Someone' }), OTHER_TOKEN);
+    expect(claimed.status).toBe(200);
+    expect(kv.records.has(`l:${DISCORD_ID}`)).toBe(false);
+    expect(kv.records.has(`ld:${RUN}`)).toBe(false);
+    later();
+    expect((await publish(env, withUnlock('Unlocked Something', { account: 'Someone' }), OTHER_TOKEN)).status).toBe(200);
+    expect(sent).toHaveLength(0);
+    const read = await botRead();
+    expect(read.status).toBe(404);
+    expect(await read.json()).toEqual({ linked: false });
+  });
+
+  it('never serves a new owner an older link the relay cannot find from the run', async () => {
+    // A link made before the reverse index existed: l: only.
+    seedOldLink(DISCORD_ID, false);
+    expect((await publish(env, snapshot({ account: 'Someone' }), OTHER_TOKEN)).status).toBe(200);
+    const read = await botRead();
+    expect(read.status).toBe(404);
+    expect(await read.json()).toEqual({ linked: false });
+    expect(kv.records.has(`ld:${RUN}`)).toBe(false);
+    later();
+    expect((await publish(env, withUnlock('Unlocked Something'), OTHER_TOKEN)).status).toBe(200);
+    expect(sent).toHaveLength(0);
+  });
+
+  it('drops every link of a run whose summary and owner record both expired, when another token claims it', async () => {
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect((await linkAs(OTHER_DISCORD_ID)).status).toBe(200);
+    later();
+    expect((await linkAs(DISCORD_ID)).status).toBe(200);
+    expect(kv.records.get(`ld:${RUN}`)).toBe(DISCORD_ID);
+
+    for (const key of [`p:${RUN}`, `own:p:${RUN}`]) {
+      kv.records.delete(key);
+      kv.metadata.delete(key);
+    }
+    later();
+    expect((await publish(env, snapshot({ account: 'Someone' }), OTHER_TOKEN)).status).toBe(200);
+    later();
+    expect((await publish(env, withUnlock('Unlocked Something'), OTHER_TOKEN)).status).toBe(200);
+    expect(sent).toHaveLength(0);
+    expect((await botRead(DISCORD_ID)).status).toBe(404);
+    expect((await botRead(OTHER_DISCORD_ID)).status).toBe(404);
+
+    // The new owner can link their own Discord account as usual.
+    expect((await call(env, `/p/${RUN}/link-code`, { method: 'POST', headers: { Authorization: `Bearer ${OTHER_TOKEN}` } })).status).toBe(200);
+  });
+
+  it('refreshes the owner record at most weekly: an unchanged publish writes nothing, a changed one only the summary', async () => {
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect(kv.puts).toEqual([`p:${RUN}`, `own:p:${RUN}`]);
+    kv.puts = [];
+
+    later();
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect(kv.puts).toEqual([]);
+    expect((await publish(env, withUnlock('Unlocked Lava Maze'))).status).toBe(200);
+    expect(kv.puts).toEqual([`p:${RUN}`]);
+    kv.puts = [];
+
+    later(8 * 86_400_000);
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect(kv.puts).toEqual([`p:${RUN}`, `own:p:${RUN}`]);
+    kv.puts = [];
+    later(86_400_000);
+    expect((await publish(env, snapshot())).status).toBe(200);
+    expect(kv.puts).toEqual([]);
   });
 });
