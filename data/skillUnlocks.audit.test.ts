@@ -284,3 +284,32 @@ describe('quest notes added in the 23 November 2026 deep pass', () => {
     expect(bare('Smithing', /Crystal (Helm|Legs|Body|Tools|Weapon|Key)/, 'Song of the Elves)')).toEqual([]);
   });
 });
+
+// Deep pass of 23 November 2026 (skills-b.d4[0]): lines that hid a second-skill level the same list or its twin writes
+// on sibling lines. Each row from a fresh Wiki fetch of the item's own page (infobox skill2): Bluegill, Mottled eel,
+// Greater siren, Rope trawling net, Advanced chum station, Chum spreader, Cotton trawling net, Spirit tree & fairy
+// ring, Ancient wyvern shield, Arcane spirit shield. The leaping fish lines are pinned in the block above.
+describe('second-skill notes added in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Hunter', 'Bluegills (Fishing 43)', 35],
+    ['Hunter', 'Mottled Eels (Fishing 73)', 68],
+    ['Hunter', 'Greater Sirens (Fishing 91)', 87],
+    ['Sailing', 'Rope Trawling Net (Construction 45)', 56],
+    ['Sailing', 'Advanced Chum Station (Construction 61)', 68],
+    ['Sailing', 'Chum Spreader (Construction 74)', 82],
+    ['Sailing', 'Cotton Trawling Net (Construction 73)', 84],
+    ['Construction', 'Spirit Tree & Fairy Ring (Farming 83)', 95],
+    ['Smithing', 'Wyvern Shield (Magic 66)', 66],
+    ['Smithing', 'Spirit Sigils (Prayer 90)', 85],
+  ] as const)('%s: %s is listed with its second skill at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('notes the Construction level on every chum facility and trawling net', () => {
+    const bare = rowsFor('Sailing')
+      .filter(row => /Chum|Trawling Net/.test(row.text) && !/\(Construction \d+\)/.test(row.text)).map(row => row.text);
+    expect(bare).toEqual([]);
+  });
+});

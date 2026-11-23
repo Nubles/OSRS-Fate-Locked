@@ -355,7 +355,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     10: [
       'Lvl 91: Ornate Jewellery Box',
-      'Lvl 95: Spirit Tree & Fairy Ring',
+      'Lvl 95: Spirit Tree & Fairy Ring (Farming 83)',
       'Lvl 95: Crystal Throne',
       'Lvl 99: Demonic Throne',
       'Lvl 99: Construction Cape (Teleports)'
@@ -1138,7 +1138,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 31: Spined Larupias, Teasing Sticks',
       'Lvl 33: Barb-tailed Kebbits',
       'Lvl 34: Teak Bird Houses',
-      'Lvl 35: Bluegills, Snowy Knights',
+      'Lvl 35: Bluegills (Fishing 43), Snowy Knights',
       'Lvl 36: Earth Implings',
       'Lvl 37: Prickly Kebbits',
       'Lvl 38: Graahk Gear',
@@ -1176,7 +1176,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 65: Magpie Implings, Sunlight Moths',
       'Lvl 66: Spottier Cape',
       'Lvl 67: Black Salamanders',
-      'Lvl 68: Mottled Eels',
+      'Lvl 68: Mottled Eels (Fishing 73)',
       'Lvl 69: Dashing Kebbits'
     ],
     8: [
@@ -1193,7 +1193,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     9: [
       'Lvl 82: Stymphikes (The Blood Moon Rises)',
       'Lvl 83: Dragon Implings',
-      'Lvl 87: Greater Sirens',
+      'Lvl 87: Greater Sirens (Fishing 91)',
       'Lvl 89: Lucky Implings, Redwood Bird Houses',
       'Lvl 90: Psykk Bats'
     ],
@@ -1794,7 +1794,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: 2 Crewmates (Adventurer Ada)',
       'Lvl 55: Barracuda Trials (The Jubbly Jive)',
       'Lvl 55: Dock Isle of Souls, Mithril Helm, Teleport Focus',
-      'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net',
+      'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net (Construction 45)',
       'Lvl 56: Chum Station (Construction 45)',
       'Lvl 57: Weather Pattern Charting, Mithril Cannon',
       'Lvl 58: Dock Laguna Aurorae',
@@ -1813,7 +1813,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 66: Dock Port Tyras, Lledrith Island, Adamant Keel',
       'Lvl 67: Dock Deepfin Point, Camphor Hull',
       'Lvl 68: Dock Jatizso/Neitiznot, Camphor Mast',
-      'Lvl 68: Advanced Chum Station',
+      'Lvl 68: Advanced Chum Station (Construction 61)',
       'Lvl 69: Dock Rainbow\'s End, Adamant Cannon',
       'Lvl 70: 3 Crewmates (Jittery Jim)',
       'Lvl 70: Dock Prifddinas, Fathom Stone'
@@ -1833,9 +1833,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     9: [
       'Lvl 81: Dock Brittle Isle, Ironwood Hull',
-      'Lvl 82: Chum Spreader',
+      'Lvl 82: Chum Spreader (Construction 74)',
       'Lvl 83: Ironwood Mast, Cotton Sails',
-      'Lvl 84: 5 Port Tasks, Cotton Trawling Net',
+      'Lvl 84: 5 Port Tasks, Cotton Trawling Net (Construction 73)',
       'Lvl 85: Rune Keel, 4 Crewmates (Jolly Jim)',
       'Lvl 86: Dragon Salvaging Hook',
       'Lvl 87: Dock Grimstone, Salvage Merchant Shipwrecks, Rune Helm',
@@ -2020,7 +2020,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 63: Mithril Claws, Shayzien T2 Body',
       'Lvl 64: Mithril 2h Sword',
       'Lvl 65: Shayzien T3 Gloves',
-      'Lvl 66: Mithril Legs/Skirt, Wyvern Shield',
+      'Lvl 66: Mithril Legs/Skirt, Wyvern Shield (Magic 66)',
       'Lvl 67: Shayzien T3 Boots',
       'Lvl 68: Mithril Platebody',
       'Lvl 69: Shayzien T3 Helm',
@@ -2052,7 +2052,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 83: Oathplate Armour (A Kingdom Divided)',
       'Lvl 84: Adamant 2h Sword',
       'Lvl 85: Infernal Pickaxe, Ursine Chainmace, Shayzien T5 Gloves',
-      'Lvl 85: Runite Bars/Daggers, Spirit Sigils',
+      'Lvl 85: Runite Bars/Daggers, Spirit Sigils (Prayer 90)',
       'Lvl 86: Adamant Legs/Skirt, Rune Axe/Keel',
       'Lvl 87: Rune Mace, Shayzien T5 Boots',
       'Lvl 88: Adamant Platebody, Rune Med Helm/Bolts',
