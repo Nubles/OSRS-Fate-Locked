@@ -1360,15 +1360,15 @@
       "id": "Creature of Fenkenstrain",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-23",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Creature_of_Fenkenstrain&oldid=15166587",
-        "revision": 15166587,
-        "revisionTimestamp": "2026-04-06T15:40:28Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Creature_of_Fenkenstrain&oldid=15385731",
+        "revision": 15385731,
+        "revisionTimestamp": "2026-10-29T17:40:24Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Canifis\",\"Fenkenstrain's Castle\",\"Haunted Woods\"],\"skills\":{\"Crafting\":20,\"Smithing\":4,\"Thieving\":25},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet to talk to the Gardener Ghost\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\"],\"oneOf\":[{\"skills\":{\"Mining\":20,\"Smithing\":20}},{\"merchants\":[\"Silver Shops\"]},{\"regions\":[\"East Ardougne\"],\"skills\":{\"Thieving\":50}},{\"regions\":[\"Barbarian Village\"]}],\"manualRequirements\":[\"Started The Restless Ghost\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Canifis\",\"Fenkenstrain's Castle\",\"Haunted Woods\"],\"skills\":{\"Crafting\":20,\"Smithing\":4,\"Thieving\":25},\"equipmentRequirements\":[{\"reason\":\"Wear the ghostspeak amulet to talk to the Gardener Ghost\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Priest in Peril\"],\"oneOf\":[{\"skills\":{\"Mining\":20,\"Smithing\":20}},{\"merchants\":[\"Silver Shops\"]},{\"regions\":[\"East Ardougne\"],\"skills\":{\"Thieving\":50}},{\"regions\":[\"Barbarian Village\"]}],\"questProgress\":[{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "54,54",
@@ -1401,7 +1401,7 @@
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
         ],
         "partialCompletion": [
-          "The Restless Ghost need only be started, so it is a manual requirement rather than a completion prerequisite."
+          "The Restless Ghost need only be started, so it is quest progress rather than a completion prerequisite: the check clears once The Restless Ghost is complete and is otherwise confirmed by hand (2026-11-23)."
         ]
       }
     },
@@ -1451,15 +1451,15 @@
       "id": "Curse of the Empty Lord",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Curse_of_the_Empty_Lord&oldid=15270784",
-        "revision": 15270784,
-        "revisionTimestamp": "2026-07-20T23:21:59Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Curse_of_the_Empty_Lord&oldid=15365488",
+        "revision": 15365488,
+        "revisionTimestamp": "2026-10-05T16:16:40Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Baxtorian Falls\"],\"skills\":{\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear the ring of visibility while speaking to the ghosts\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear the ghostspeak amulet (sequence 1 requires the amulet)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Temple\",\"Rogues' Castle\",\"Entrana\",\"Wizards' Tower\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Port Sarim\",\"Edgeville\",\"Slayer Tower\"]},{\"regions\":[\"Bandit Camp\",\"Lava Maze\",\"Tree Gnome Stronghold\",\"Falador\",\"Edgeville\"]}],\"manualRequirements\":[\"Started Desert Treasure I\",\"Started The Restless Ghost\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Baxtorian Falls\"],\"skills\":{\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear the ring of visibility while speaking to the ghosts\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear the ghostspeak amulet (sequence 1 requires the amulet)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Temple\",\"Rogues' Castle\",\"Entrana\",\"Wizards' Tower\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Port Sarim\",\"Edgeville\",\"Slayer Tower\"]},{\"regions\":[\"Bandit Camp\",\"Lava Maze\",\"Tree Gnome Stronghold\",\"Falador\",\"Edgeville\"]}],\"questProgress\":[{\"label\":\"Started Desert Treasure I\",\"quest\":\"Desert Treasure I\"},{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1478,7 +1478,7 @@
         ],
         "instances": [],
         "partialCompletion": [
-          "The Wiki requires starting Desert Treasure I and The Restless Ghost, represented as manual requirements rather than full quest prerequisites. 53 Thieving is unavoidable for the ring of visibility; 31 Prayer applies only to one randomized sequence."
+          "The Wiki requires starting Desert Treasure I and The Restless Ghost, represented as quest progress rather than full quest prerequisites: each check clears once that quest is complete and is otherwise confirmed by hand (2026-11-23). 53 Thieving is unavoidable for the ring of visibility; 31 Prayer applies only to one randomized sequence."
         ]
       }
     },
@@ -2107,15 +2107,15 @@
       "id": "Dragon Slayer II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-13",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_II&oldid=15270141",
-        "revision": 15270141,
-        "revisionTimestamp": "2026-07-20T12:42:51Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Dragon_Slayer_II&oldid=15413070",
+        "revision": 15413070,
+        "revisionTimestamp": "2026-11-23T00:14:12Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Draynor Village\",\"Varrock\",\"Falador\",\"Baxtorian Falls\",\"Corsair Cove\",\"Lunar Isle\",\"Rellekka\",\"Shayzien\",\"Crandor\",\"Kharazi Jungle\",\"Musa Point\",\"Sophanem\",\"Port Phasmatys\",\"Fossil Island\",\"Lithkren\",\"Mort Myre Swamp\",\"East Ardougne\"],\"locations\":[{\"chunkOptions\":[{\"cx\":35,\"cy\":63}],\"id\":\"ungael\",\"label\":\"Ungael\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":60,\"Construction\":50,\"Crafting\":62,\"Hitpoints\":50,\"Magic\":75,\"Mining\":68,\"Quest Points\":200,\"Smithing\":70,\"Thieving\":60},\"prereqs\":[\"Legends' Quest\",\"Dream Mentor\",\"A Tail of Two Cats\",\"Animal Magnetism\",\"Ghosts Ahoy\",\"Bone Voyage\",\"Client of Kourend\"],\"oneOf\":[{\"skills\":{\"Runecraft\":40}},{\"merchants\":[\"Magic Shops\"]}],\"manualRequirements\":[\"Started the pyre ship portion of Barbarian Training\"],\"points\":5}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Draynor Village\",\"Varrock\",\"Falador\",\"Baxtorian Falls\",\"Corsair Cove\",\"Lunar Isle\",\"Rellekka\",\"Shayzien\",\"Crandor\",\"Kharazi Jungle\",\"Musa Point\",\"Sophanem\",\"Port Phasmatys\",\"Fossil Island\",\"Lithkren\",\"Mort Myre Swamp\",\"East Ardougne\"],\"locations\":[{\"chunkOptions\":[{\"cx\":35,\"cy\":63}],\"id\":\"ungael\",\"label\":\"Ungael\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":60,\"Construction\":50,\"Crafting\":62,\"Hitpoints\":50,\"Magic\":75,\"Mining\":68,\"Quest Points\":200,\"Smithing\":70,\"Thieving\":60},\"prereqs\":[\"Legends' Quest\",\"Dream Mentor\",\"A Tail of Two Cats\",\"Animal Magnetism\",\"Ghosts Ahoy\",\"Bone Voyage\",\"Client of Kourend\"],\"oneOf\":[{\"skills\":{\"Runecraft\":40}},{\"merchants\":[\"Magic Shops\"]}],\"questProgress\":[{\"label\":\"Started the pyre ship portion of Barbarian Training\",\"quest\":\"Barbarian Training\"}],\"points\":5}",
       "chunkEvidence": [
         {
           "chunkId": "24,55",
@@ -2220,7 +2220,7 @@
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
         ],
         "partialCompletion": [
-          "The pyre-ship portion of Barbarian Training need only be started and is represented manually."
+          "The pyre-ship portion of Barbarian Training need only be started, so it is quest progress: it clears once Barbarian Training is complete and is otherwise confirmed by hand (2026-11-23)."
         ]
       }
     },
@@ -3584,15 +3584,15 @@
       "id": "Hopespear's Will",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15262386",
-        "revision": 15262386,
-        "revisionTimestamp": "2026-07-13T10:45:53Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Hopespear's_Will&oldid=15335611",
+        "revision": 15335611,
+        "revisionTimestamp": "2026-09-08T18:45:54Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Prayer\":50},\"equipmentRequirements\":[{\"reason\":\"Equip ring of visibility or ring of shadows inside the temple\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Equip ghostspeak amulet inside the temple (Morytania legs 2+ in Legs slot also works)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Desert Treasure I\",\"Fairytale II - Cure a Queen\",\"Land of the Goblins\"],\"manualRequirements\":[\"Started The Restless Ghost\"],\"mobility\":[\"Fairy Rings\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Hemenster\"],\"skills\":{\"Prayer\":50},\"equipmentRequirements\":[{\"reason\":\"Equip ring of visibility or ring of shadows inside the temple\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Equip ghostspeak amulet inside the temple (Morytania legs 2+ in Legs slot also works)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Desert Treasure I\",\"Fairytale II - Cure a Queen\",\"Land of the Goblins\"],\"questProgress\":[{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"mobility\":[\"Fairy Rings\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
@@ -3608,7 +3608,7 @@
           "The Goblin Temple crypt and Yu'biusk are special route spaces reached from Kandarin/fairy-ring access."
         ],
         "partialCompletion": [
-          "Started The Restless Ghost is represented as a manual requirement; Desert Treasure I, Fairytale II - Cure a Queen, and Land of the Goblins require full completion."
+          "Started The Restless Ghost is quest progress: it clears once The Restless Ghost is complete and is otherwise confirmed by hand (2026-11-23); Desert Treasure I, Fairytale II - Cure a Queen, and Land of the Goblins require full completion."
         ]
       }
     },
@@ -5617,15 +5617,15 @@
       "id": "Ratcatchers",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-23",
+      "reviewedAt": "2026-11-23",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ratcatchers&oldid=15265969",
-        "revision": 15265969,
-        "revisionTimestamp": "2026-07-17T11:05:25Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Ratcatchers&oldid=15412924",
+        "revision": 15412924,
+        "revisionTimestamp": "2026-11-22T22:52:53Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"East Ardougne\",\"Pollnivneach\",\"Keldagrim\",\"Port Sarim\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the catspeak amulet for Smokin' Joe (not needed after Dragon Slayer II)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Icthlarin's Little Helper\"],\"manualRequirements\":[\"Started The Giant Dwarf to access Keldagrim\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Varrock\",\"East Ardougne\",\"Pollnivneach\",\"Keldagrim\",\"Port Sarim\"],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the catspeak amulet for Smokin' Joe (not needed after Dragon Slayer II)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Icthlarin's Little Helper\"],\"questProgress\":[{\"label\":\"Started The Giant Dwarf to access Keldagrim\",\"quest\":\"The Giant Dwarf\"}],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "42,58",
@@ -5676,7 +5676,7 @@
           "Jimmy Dazzler's guarded mansion is a quest-teleported instance and is recorded without a separate unlock gate."
         ],
         "partialCompletion": [
-          "Starting The Giant Dwarf for Keldagrim access remains an explicit manual check."
+          "Starting The Giant Dwarf for Keldagrim access is quest progress: it clears once The Giant Dwarf is complete and is otherwise confirmed by hand (2026-11-23)."
         ]
       }
     },

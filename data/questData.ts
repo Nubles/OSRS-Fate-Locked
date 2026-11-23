@@ -1066,7 +1066,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Creature of Fenkenstrain', name: 'Creature of Fenkenstrain',
     regions: ['Canifis', 'Fenkenstrain\'s Castle', 'Haunted Woods'],
     skills: { 'Crafting': 20, 'Thieving': 25, 'Smithing': 4 }, prereqs: ["Priest in Peril"],
-    manualRequirements: ["Started The Restless Ghost"], points: 2,
+    questProgress: [{ quest: 'The Restless Ghost', label: 'Started The Restless Ghost' }], points: 2,
     // Slots checked on the Wiki (23 Oct): ghostspeak amulet.
     equipmentRequirements: [
       { slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet to talk to the Gardener Ghost' },
@@ -1420,7 +1420,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Ratcatchers', name: 'Ratcatchers',
     regions: ['Varrock', 'East Ardougne', 'Pollnivneach', 'Keldagrim', 'Port Sarim'],
-    manualRequirements: ['Started The Giant Dwarf to access Keldagrim'],
+    questProgress: [{ quest: 'The Giant Dwarf', label: 'Started The Giant Dwarf to access Keldagrim' }],
     skills: {}, prereqs: ['Icthlarin\'s Little Helper'], points: 2,
     // Slots checked on the Wiki (23 Oct): catspeak amulet.
     equipmentRequirements: [
@@ -2133,7 +2133,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'ungael', label: 'Ungael', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 35, cy: 63 }] },
     ],
     skills: { 'Magic': 75, 'Smithing': 70, 'Mining': 68, 'Crafting': 62, 'Agility': 60, 'Thieving': 60, 'Construction': 50, 'Hitpoints': 50, 'Quest Points': 200 }, prereqs: ['Legends\' Quest', 'Dream Mentor', 'A Tail of Two Cats', 'Animal Magnetism', 'Ghosts Ahoy', 'Bone Voyage', 'Client of Kourend'],
-    manualRequirements: ["Started the pyre ship portion of Barbarian Training"], points: 5, series: 'Dragonkin',
+    questProgress: [{ quest: 'Barbarian Training', label: 'Started the pyre ship portion of Barbarian Training' }], points: 5, series: 'Dragonkin',
     // Items checked on the Wiki: Machete; Astral rune.
     oneOf: [
       { skills: { 'Runecraft': 40 } },
@@ -2846,7 +2846,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { regions: ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville'] },
     ],
     skills: { 'Thieving': 53 }, prereqs: [],
-    manualRequirements: ['Started Desert Treasure I', 'Started The Restless Ghost'],
+    questProgress: [
+      { quest: 'Desert Treasure I', label: 'Started Desert Treasure I' },
+      { quest: 'The Restless Ghost', label: 'Started The Restless Ghost' },
+    ],
     points: 0, series: 'Mahjarrat',
     // Items checked on the Wiki: Ring of visibility and ghostspeak amulet.
     equipmentRequirements: [
@@ -2951,7 +2954,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Hemenster'],
     skills: { 'Prayer': 50 },
     prereqs: ['Desert Treasure I', 'Fairytale II - Cure a Queen', 'Land of the Goblins'],
-    manualRequirements: ['Started The Restless Ghost'], points: 0,
+    questProgress: [{ quest: 'The Restless Ghost', label: 'Started The Restless Ghost' }], points: 0,
     // Yu'biusk is reached only by fairy ring BLQ.
     mobility: ['Fairy Rings'],
     // Items checked on the Wiki: Ghostspeak amulet and Ring of visibility (worn).
