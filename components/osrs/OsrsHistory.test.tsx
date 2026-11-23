@@ -25,4 +25,17 @@ describe('History entry detail', () => {
     const key = render(<EntryDetail entry={unlock({ cost: 1, costType: 'key' })} num={1} total={1} />);
     expect(key.container.textContent).toContain('1 Key');
   });
+
+  it('says a Rift chunk was free and keeps its details, from the meta fateLand stores (chunked-fate.d3[2])', () => {
+    // The exact entry utils/fateLand.ts writes for a Rift's second chunk.
+    const rift: LogEntry = {
+      id: 'r', timestamp: 0, type: 'UNLOCK', message: 'Unlocked Draynor Village (48, 51) · Rift',
+      details: 'A Rift: fate drew a second chunk. Nothing was spent.',
+      meta: { item: '48,51', category: TableType.CHUNKS, cost: 0, costType: 'rift' },
+    };
+    const { container } = render(<EntryDetail entry={rift} num={1} total={1} />);
+    expect(container.textContent).toContain('Paid withNothing: a Rift');
+    expect(container.textContent).toContain('A Rift: fate drew a second chunk. Nothing was spent.');
+    expect(container.textContent).not.toContain('0 Keys');
+  });
 });
