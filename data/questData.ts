@@ -692,8 +692,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['East Ardougne', 'West Ardougne'],
     skills: { 'Ranged': 25 }, prereqs: ['Biohazard'], points: 5, series: 'Elf',
     // Slots checked on the Wiki (23 Oct): Klank's gauntlets (the Zamorak robes need Body and Legs, which Biohazard already needs).
+    // Items checked on the Wiki (23 Nov): Bow and arrows, equipped to shoot the bridge guide rope (Regicide inherits these).
     equipmentRequirements: [
       { slot: 'Gloves', tier: 2, reason: "Wear Klank's gauntlets to take Iban's dove" },
+      { slot: 'Weapon', tier: 1, reason: 'Wield a bow to fire the lit arrow at the bridge guide rope' },
+      { slot: 'Ammo', tier: 1, reason: 'Equip the lit fire arrow to shoot the bridge guide rope' },
     ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
@@ -705,6 +708,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'observatory', label: 'Observatory and Observatory Dungeon', standardAreas: ['Observatory'], chunkOptions: [{ cx: 38, cy: 49 }] },
     ],
     skills: {}, prereqs: [], points: 2,
+    // Items checked on the Wiki (23 Nov): Molten glass (no shop sells it).
+    preparationRequirements: [{
+      skill: 'Crafting', level: 1, action: 'make molten glass',
+      alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
+    }],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'The Tourist Trap': {
@@ -962,6 +970,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Horror from the Deep', name: 'Horror from the Deep',
     regions: ['Lighthouse'],
     skills: { 'Agility': 35 }, prereqs: ["Alfred Grimhand's Barcrawl"], points: 2,
+    // Items checked on the Wiki (23 Nov): Molten glass (no shop sells it).
+    preparationRequirements: [{
+      skill: 'Crafting', level: 1, action: 'make molten glass',
+      alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
+    }],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Throne of Miscellania': {
@@ -1071,10 +1084,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     equipmentRequirements: [
       { slot: 'Neck', tier: 1, reason: 'Wear the enchanted ghostspeak amulet to command Necrovarus' },
       { slot: 'Head', tier: 1, reason: 'Wear the bedsheet disguise to gather signatures' },
+      { slot: 'Gloves', tier: 1, reason: 'Wear gloves to pick nettles for the nettle tea' },
     ],
     regions: ['Port Phasmatys', 'Fenkenstrain\'s Castle', 'Dragontooth Island'],
     skills: { 'Agility': 25, 'Cooking': 20 }, prereqs: ['Priest in Peril', 'The Restless Ghost'], points: 2,
-    // Items checked on the Wiki: Oak longbow; Silk.
+    // Items checked on the Wiki: Oak longbow; Silk; Nettle tea (nettles are picked wearing gloves, 23 Nov).
     oneOf: [
       { skills: { 'Fletching': 25, 'Thieving': 20 } },
       { skills: { 'Fletching': 25 }, merchants: ['Clothes Shops'] },
@@ -1154,7 +1168,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'jaldraocht-pyramid', label: 'Jaldraocht Pyramid', standardAreas: ['Bandit Camp'], chunkOptions: [{ cx: 50, cy: 45 }] },
     ],
     skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50, 'Smithing': 30 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
-    // Items checked on the Wiki: Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots; 12 magic logs; 6 steel bars.
+    // Items checked on the Wiki: Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots; 12 magic logs; 6 steel bars; 6 molten glass (23 Nov).
+    preparationRequirements: [{
+      skill: 'Crafting', level: 1, action: 'make molten glass',
+      alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
+    }],
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon' },
       { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility for the Damis fight' },
@@ -1419,8 +1437,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: "desert-quarry-and-temple", label: "Desert Quarry and Enakhra's Temple", standardAreas: ["Bandit Camp"], chunkOptions: [{ cx: 49, cy: 45 }] },
     ],
-    skills: { 'Crafting': 50, 'Magic': 39, 'Prayer': 43 }, prereqs: [],
+    skills: { 'Crafting': 50, 'Magic': 39, 'Prayer': 43, 'Mining': 45 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
+    // Items checked on the Wiki (23 Nov): Sandstone (Mining 35) and granite (Mining 45), mined only; normal, oak, willow and maple logs.
+    // Maple logs also from Managing Miscellania or the Wintertodt reward cart; Woodcutting 30 covers the willow, oak and normal logs.
+    oneOf: [
+      { skills: { 'Woodcutting': 45 } },
+      { skills: { 'Woodcutting': 30 }, regions: ['Miscellania & Etceteria'], quests: ['Throne of Miscellania'] },
+      { skills: { 'Woodcutting': 30, 'Firemaking': 50 }, regions: ['Wintertodt Camp'] },
+    ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Cabin Fever': {
@@ -1863,7 +1888,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
       // The ice trolls' land (36,60) belongs to Neitiznot; its bridges cross from Neitiznot.
       { id: 'ice-troll-lands', label: 'Ice troll lands north of Neitiznot', standardAreas: ['Neitiznot'], chunkOptions: [{ cx: 36, cy: 60 }] },
     ],
-    skills: { 'Construction': 20 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
+    skills: { 'Construction': 20, 'Woodcutting': 56, 'Crafting': 46 }, prereqs: ['The Fremennik Trials'], points: 1, series: 'Fremennik',
+    // Items checked on the Wiki (23 Nov): Split logs and the Neitiznot shield (Woodcutting 56, even for dropped arctic pine logs); yak-hide armour (Crafting 46).
     // Slots checked on the Wiki (23 Oct): jester costume.
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear the jester hat to entertain the Burgher' },
@@ -2828,6 +2854,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     regions: ['Burthorpe'],
     skills: { 'Agility': 70, 'Strength': 70, 'Ranged': 70, 'Hitpoints': 70 },
     prereqs: ['Desert Treasure I'], points: 0,
+    // Items checked on the Wiki (23 Nov): Mith grapple and a crossbow, to reach Kree'arra.
+    equipmentRequirements: [
+      { slot: 'Weapon', tier: 1, reason: 'Equip a crossbow to fire the grapple' },
+      { slot: 'Ammo', tier: 3, reason: 'Equip the mith grapple' },
+    ],
     difficulty: DropSource.QUEST_MASTER
   },
   'The General\'s Shadow': {
@@ -2928,7 +2959,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Skippy and the Mogres', name: 'Skippy and the Mogres',
     regions: ['Asgarnia'], locations: [LOCATIONS.skippysCamp],
     skills: { 'Cooking': 20 }, prereqs: [], points: 0,
-    // Items checked on the Wiki: Chocolate bar (for chocolate dust).
+    // Items checked on the Wiki: Chocolate bar (for chocolate dust); Nettle tea (nettles are picked wearing gloves, 23 Nov).
+    equipmentRequirements: [
+      { slot: 'Gloves', tier: 1, reason: 'Wear gloves to pick nettles for the nettle tea' },
+    ],
     difficulty: DropSource.QUEST_NOVICE,
     // Alternatives rechecked on the Wiki (13 Oct): chocolate bars also spawn in the Cooks' Guild and Zanaris.
     oneOf: [

@@ -3,6 +3,8 @@ import { DropSource } from '../types';
 import { QUEST_DATA } from './questData';
 import * as questDataModule from './questData';
 import chunkDoc from '../public/chunk-content.json';
+import type { UnlockState } from '../types';
+import { evaluateQuestEligibility } from '../utils/journalStatus';
 
 describe('audited current quest requirements', () => {
   it("puts A Ruff Situation's Outlaw Camp fight in 48,54, not the Grand Exchange chunk", () => {
@@ -146,5 +148,55 @@ describe('quest cape eligibility', () => {
     expect(questCapeIds).not.toContain("Alfred Grimhand's Barcrawl");
     expect(questCapeIds).not.toContain('Mage Arena II');
     expect(questCapeIds?.every(id => QUEST_DATA[id].points > 0)).toBe(true);
+  });
+});
+
+describe('quest item gates checked on the Wiki (23 Nov 2026)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+
+  it("gates Enakhra's Lament's sandstone and granite on Mining 45", () => {
+    // Wiki Enakhra's Lament (rev 15411975): ironman field "Mining 45 to mine granite";
+    // sandstone needs Mining 35. Neither stone has a shop or monster source.
+    expect(QUEST_DATA["Enakhra's Lament"].skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43, Mining: 45 });
+  });
+
+  it("gates Enakhra's Lament's normal, oak, willow and maple logs on a route for each", () => {
+    // Wiki Enakhra's Lament (rev 15411975): maple from Woodcutting 45, Managing Miscellania or the
+    // Wintertodt reward cart; willow needs Woodcutting 30, which also covers oak and normal logs.
+    expect(QUEST_DATA["Enakhra's Lament"].oneOf).toEqual([
+      { skills: { Woodcutting: 45 } },
+      { skills: { Woodcutting: 30 }, regions: ['Miscellania & Etceteria'], quests: ['Throne of Miscellania'] },
+      { skills: { Woodcutting: 30, Firemaking: 50 }, regions: ['Wintertodt Camp'] },
+    ]);
+  });
+
+  it('gates The Fremennik Isles on the Woodcutting and Crafting it makes you use', () => {
+    // Wiki The Fremennik Isles (rev 15413385): ironman field Woodcutting 56 (split logs, Neitiznot
+    // shield) and Crafting 46 (yak-hide armour); no shop or monster gives any of them.
+    expect(QUEST_DATA['The Fremennik Isles'].skills).toEqual({ Construction: 20, Woodcutting: 56, Crafting: 46 });
+  });
+
+  it.each(['Observatory Quest', 'Horror from the Deep', 'Desert Treasure I'])(
+    '%s asks for Crafting 1 to make its molten glass, as Sheep Shearer does for spinning', id => {
+      // Wiki Molten glass (rev 15288555): "cannot be bought in any shop"; made at Crafting 1.
+      expect(QUEST_DATA[id].preparationRequirements).toEqual([{
+        skill: 'Crafting', level: 1, action: 'make molten glass',
+        alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
+      }]);
+    });
+
+  it('does not call Observatory Quest ready while Crafting is locked', () => {
+    const quest = QUEST_DATA['Observatory Quest'];
+    const regions = [...quest.regions, ...(quest.locations ?? []).flatMap(location => location.standardAreas)];
+    const locked = evaluateQuestEligibility(quest, unlocks({ regions }), 'vanilla');
+    expect(locked.eligible).toBe(false);
+    expect(locked.manualChecks).toContainEqual(expect.stringContaining('Crafting (level 1) to make molten glass'));
+    const open = evaluateQuestEligibility(quest, unlocks({ regions, skills: { Crafting: 1 }, levels: { Crafting: 1 } }), 'vanilla');
+    expect(open).toMatchObject({ eligible: true, manualChecks: [] });
   });
 });
