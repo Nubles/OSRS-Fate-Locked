@@ -42,6 +42,15 @@ const withinRingBudget = <T extends { data: string }>(entries: T[]): T[] => {
 export const RESET_CONFIRM_MESSAGE =
   'Reset all progress? A backup of the current save is kept under Sync Code → Backups.';
 
+/** Asked when that backup could not be kept: this browser has no room for one. */
+export const RESET_NO_BACKUP_MESSAGE =
+  'No backup could be kept in this browser, so this reset could not be undone. Cancel to export the run first (Sync Code → Export), or OK to reset anyway.';
+
+/** Reset all progress in both layouts: confirm, and ask again if no backup could be kept. */
+export const confirmReset = async (resetGame: (anyway?: boolean) => Promise<boolean>): Promise<void> => {
+  if (window.confirm(RESET_CONFIRM_MESSAGE) && !(await resetGame()) && window.confirm(RESET_NO_BACKUP_MESSAGE)) await resetGame(true);
+};
+
 export interface BackupMeta {
   /** Stable identifier used by the restore action across renders. */
   id: string;

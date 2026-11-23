@@ -319,7 +319,8 @@ interface GameContextType extends GameState {
    */
   nextFloat: (purpose: string, index?: number) => number;
   importSave: (data: unknown) => Promise<ImportResult>;
-  resetGame: () => Promise<void>;
+  /** False, with the run untouched, when no backup could be kept; `anyway` resets regardless. */
+  resetGame: (anyway?: boolean) => Promise<boolean>;
   /** Snapshot the current run before something overwrites it. */
   createBackup: (reason: string) => BackupWriteResult | Promise<BackupWriteResult>;
   /** Backups for the active profile, newest first. */
@@ -3815,15 +3816,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     if (coordinator === null) return pushOwnedBackup(data, compatibilityReason);
     const expectedGeneration = replacementGenerationRef.current;
     const checkpoint = await coordinator.createCheckpoint(data, reason);
-    // Keep the old eight-entry ring as a best-effort rollback path, while
-    // preserving the journal result as the source of durability truth.
+    // Keep the old eight-entry ring as a rollback path too: a run it holds is
+    // backed up even when the journal could not store it.
     if (checkpoint.stored === true) intervalCheckpointBaselineRef.current = data;
-    if (
+    const ring = (
       mountedRef.current
       && !profileEvictedRef.current
       && replacementGenerationRef.current === expectedGeneration
-    ) pushOwnedBackup(data, compatibilityReason);
-    return checkpoint;
+    ) ? pushOwnedBackup(data, compatibilityReason) : checkpoint;
+    return checkpoint.stored === true ? checkpoint : ring;
   }, [coordinator, pushOwnedBackup]);
 
   // Every import and restore carries the run's restore count, merged with
@@ -3953,36 +3954,30 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }));
   }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, stampReplacement, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
-  const resetGame = useCallback(async (): Promise<void> => {
-    // Auto-snapshot so an accidental reset is recoverable.
+  const resetGame = useCallback(async (anyway = false): Promise<boolean> => {
+    // Back up first so an accidental reset is recoverable. Where no backup
+    // can be kept, leave the run alone unless the player said reset anyway.
     const isCurrent = beginReplacement();
+    const backup = coordinator === null
+      ? pushOwnedBackup(serializeCurrent(), 'Before reset')
+      : await createCoordinatedCheckpoint(serializeCurrent(), 'pre-replacement');
+    const unbacked = backup.stored === false && backup.reason === 'storage_unavailable';
+    if (!isCurrent()) return true;
+    if (unbacked && !anyway) return false;
     // Remember the run being reset, so importing it again counts as a restore.
     writeRestoreCounts(localStorage, storageKey, rememberRun(readRestoreCounts(localStorage, storageKey), stateRef.current));
-    if (coordinator !== null) {
-      const replacement = createFreshState();
-      const backup = await createCoordinatedCheckpoint(
-        serializeCurrent(),
-        'pre-replacement',
-      );
-      if (!isCurrent()) return;
-      const durability = await writeCoordinatedReplacement(
-        serializeGameState(replacement),
-        'reset',
-        isCurrent,
-      );
-      if (!isCurrent()) return;
-      if (durability.primary === 'saved') replaceState(replacement);
-      if (
-        backup.stored === false
-        && backup.reason === 'storage_unavailable'
-        && durability.primary === 'saved'
-      ) setSaveStatus('saved');
-      return;
+    if (coordinator === null) {
+      setStateReplacements(count => count + 1);
+      commitAction({ type: 'RESET' });
+      return true;
     }
-    if (!isCurrent()) return;
-    pushOwnedBackup(serializeCurrent(), 'Before reset');
-    setStateReplacements(count => count + 1);
-    commitAction({ type: 'RESET' });
+    const replacement = createFreshState();
+    const durability = await writeCoordinatedReplacement(serializeGameState(replacement), 'reset', isCurrent);
+    if (isCurrent() && durability.primary === 'saved') {
+      replaceState(replacement);
+      if (unbacked) setSaveStatus('saved');
+    }
+    return true;
   }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, storageKey, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const toggleHope = useCallback((key: string) => commitAction({ type: 'TOGGLE_HOPE', payload: key }), [commitAction]);

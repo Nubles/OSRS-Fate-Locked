@@ -3,7 +3,7 @@ import { Download, History, Info, Link2, PauseCircle, PlayCircle, Radio, RotateC
 import { confirmSpendPref, tableOutlookPref, welcomeBackPref } from '../utils/viewerPrefs';
 import { BookOpen, Lightbulb, ScrollText } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { RESET_CONFIRM_MESSAGE } from '../utils/backups';
+import { confirmReset } from '../utils/backups';
 import { FATE_EXPORT_HINT } from '../utils/fateSaveFile';
 import { OSRS_MIN_WIDTH, setUiStyle, useIsWideEnoughForOsrs, useUiStyle } from '../utils/uiStyle';
 import { DropdownMenu } from './DropdownMenu';
@@ -104,7 +104,7 @@ const HeaderSettingsMenu: React.FC<HeaderSettingsMenuProps> = ({
            <Radio size={13} /> Discord notifications
         </button>
         <div role="separator" className="my-1 border-t border-white/10" />
-        <button type="button" role="menuitem" onClick={() => pickUtil(() => { if(window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); })} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
+        <button type="button" role="menuitem" onClick={() => pickUtil(() => { void confirmReset(resetGame); })} className="w-full flex items-center gap-2.5 px-3 py-1.5 focus-visible:outline-none focus-visible:bg-white/10 text-red-300/90 hover:bg-red-900/20 hover:text-red-200">
            <RotateCcw size={13} /> Reset all progress
         </button>
     </DropdownMenu>
