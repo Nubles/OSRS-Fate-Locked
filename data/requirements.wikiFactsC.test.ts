@@ -38,7 +38,8 @@ describe('Strategy Guide entries for things that are not shops', () => {
 });
 
 describe("Warriors' Guild entries use the guild's real rule (Wiki: 130 combined, or 99 in either)", () => {
-  const GUILD_ENTRIES = ["Warriors' Guild (Cyclopes)", 'Rune Defender', 'Warrior Guild Potions', 'Warrior Guild Food'];
+  // Rune Defender also has the defender's own wield levels, so it has its own test below.
+  const GUILD_ENTRIES = ["Warriors' Guild (Cyclopes)", 'Warrior Guild Potions', 'Warrior Guild Food'];
   const RULE = '99 Attack or Strength, or 130 combined';
   const at = (attack: number, strength: number) => {
     const u = createFreshState().unlocks;
@@ -67,6 +68,25 @@ describe("Warriors' Guild entries use the guild's real rule (Wiki: 130 combined,
     },
   );
 
+  it('Rune Defender adds the 40 Attack and 40 Defence to wield (Wiki: Rune defender)', () => {
+    const req = S['Rune Defender'];
+    expect(req.skills).toEqual({ Attack: 40, Defence: 40 });
+    expect(req.activity).toBe("Warriors' Guild");
+    const ready = (attack: number, strength: number, defence = 99) => {
+      const u = at(attack, strength);
+      u.levels = { ...u.levels, Defence: defence };
+      return analyzeRequirement(req, u, 'vanilla');
+    };
+    expect(ready(70, 60).isFullyPlayable).toBe(true);
+    expect(ready(40, 99).isFullyPlayable).toBe(true);
+    expect(ready(64, 65).missingChecks).toContain(RULE);
+    // 99 Strength passes the door, but the defender still needs 40 Attack.
+    expect(ready(1, 99).missingChecks).not.toContain(RULE);
+    expect(ready(1, 99).missingSkills.map(s => s.skill)).toEqual(['Attack']);
+    expect(ready(70, 60, 39).missingSkills.map(s => s.skill)).toEqual(['Defence']);
+    expect(calculateGoalProgress(req, at(70, 60), 'vanilla').percentage).toBe(100);
+  });
+
   it('shows the rule as a step in the goal route', () => {
     const state = createFreshState();
     state.unlocks = at(64, 65);
@@ -76,5 +96,23 @@ describe("Warriors' Guild entries use the guild's real rule (Wiki: 130 combined,
     state.unlocks = at(70, 60);
     expect(buildGoalRoute('Warrior Guild Potions', state)!.alternatives)
       .toEqual([expect.objectContaining({ name: RULE, met: true })]);
+  });
+});
+
+describe('Lumberjack Outfit (Wiki: Lumberjack outfit)', () => {
+  it('needs 44 Woodcutting to wear', () => {
+    const req = S['Lumberjack Outfit'];
+    expect(req.skills).toEqual({ Woodcutting: 44 });
+    const at = (woodcutting: number) => {
+      const u = createFreshState().unlocks;
+      u.regions = [...items.REGIONS_LIST];
+      u.skills = Object.fromEntries(items.SKILLS_LIST.map(s => [s, 10]));
+      u.levels = { ...Object.fromEntries(items.SKILLS_LIST.map(s => [s, 99])), Woodcutting: woodcutting };
+      u.minigames = [...items.MINIGAMES_LIST];
+      return analyzeRequirement(req, u, 'vanilla');
+    };
+    expect(at(43).missingSkills.map(s => s.skill)).toEqual(['Woodcutting']);
+    expect(at(44).missingSkills).toEqual([]);
+    expect(req.description).toMatch(/In Aid of the Myreque/);
   });
 });

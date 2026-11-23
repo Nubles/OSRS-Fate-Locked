@@ -431,7 +431,11 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Ecumenical Keys',
     category: TableType.MINIGAMES, // Grind
     regions: ['Wilderness'],
-    skills: {}, // Every Wilderness God Wars Dungeon monster can drop one
+    skills: {}, // Every Wilderness God Wars Dungeon monster can drop one; past the entrance cavern
+    accessRoutes: [
+      { label: '60 Strength', skills: { Strength: 60 } },
+      { label: '60 Agility', skills: { Agility: 60 } },
+    ],
     description: 'Farm keys in Wildy GWD to skip boss KC.'
   },
   'Rogues\' Castle': {
@@ -509,7 +513,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kandarin'], // Gu'Tanoth
     skills: {},
     quests: ['Watchtower'],
-    description: 'Safe-spot Blue Dragons and Shamans.'
+    description: 'Blue dragons and greater demons. Single-way combat, far from a bank.'
   },
   'Blue Dragons (Taverley)': {
     id: 'Taverley Dungeon Pipe', // Mapped to shortcut for access
@@ -813,7 +817,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Holy Wrench': {
     id: 'Holy Wrench',
     category: TableType.MINIGAMES,
-    regions: ['Morytania', 'Kharidian Desert'], // Rum Deal start
+    regions: ['Morytania'], // Rum Deal: Braindeath Island, reached from Port Phasmatys
     skills: { 'Prayer': 47 },
     quests: ['Rum Deal'],
     description: 'Restores extra prayer points from potions.'
@@ -992,7 +996,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Varrock Armor (Mining)': {
     id: 'Varrock Armor',
     category: TableType.MINIGAMES,
-    regions: ['Misthalin', 'Asgarnia'],
+    regions: ['Misthalin'], // The Varrock diary; the extra ore works on any standard rock
     skills: { 'Mining': 1 },
     diaries: ['Varrock Easy'],
     description: 'Chance to mine double ores (up to Amethyst at Elite).'
@@ -1195,7 +1199,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Crystal Tool Seed': {
     id: 'Zalcano',
     category: TableType.MINIGAMES,
-    regions: ['Tirannwn', 'Kourend & Kebos'], // Zalcano
+    regions: ['Tirannwn'], // Zalcano, in Prifddinas
     skills: {},
     quests: ['Song of the Elves'],
     description: 'Create Crystal Pickaxe/Axe/Harpoon.'
@@ -1203,7 +1207,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Infernal Tools': {
     id: 'Infernal Tools',
     category: TableType.MINIGAMES,
-    regions: ['Kourend & Kebos', 'Asgarnia'], // Cerberus (Smouldering Stone) + Tool
+    regions: ['Asgarnia'], // Cerberus in Taverley Dungeon (smouldering stone); the dragon tool has many sources
     skills: { 'Slayer': 91, 'Smithing': 85 }, // The pickaxe; the axe needs 85 Firemaking, the harpoon 85 Cooking and 75 Fishing
     description: 'Create Infernal Pickaxe/Axe/Harpoon.'
   },
@@ -1211,7 +1215,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Warriors\' Guild',
     category: TableType.GUILDS,
     regions: ['Asgarnia'], // Warriors Guild
-    skills: {},
+    skills: { 'Attack': 40, 'Defence': 40 }, // To wield
     activity: "Warriors' Guild", // 130 combined Attack and Strength, or 99 in either
     description: 'Accurate off-hand. Warriors Guild.'
   },
@@ -1227,9 +1231,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'God Books',
     category: TableType.MERCHANTS,
     regions: ['Fremennik'], // Lighthouse
-    skills: { 'Prayer': 50 }, // To wield
+    skills: {}, // No level to wield
     quests: ['Horror from the Deep'],
-    description: 'Unholy Book (Offense) or Book of Law (Ranged).'
+    description: 'Unholy Book (Offense) or Book of Law (Ranged). 50 Prayer to bless symbols.'
   },
 
   // ============================================================================
@@ -1276,10 +1280,10 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dark Beasts': {
     id: 'Dark Beasts',
     category: TableType.MINIGAMES,
-    regions: ['Kandarin', 'Tirannwn'], // Mourner Tunnels (West Ardougne) / Iorwerth Dungeon
+    regions: ['Kandarin'], // Mourner Tunnels (West Ardougne); the Iorwerth Dungeon in Prifddinas is the other place
     skills: { 'Slayer': 90 },
     quests: ['Mourning\'s End Part II'], // Partial: the new key opens the Mourner Tunnels
-    description: 'Source of Dark Bow.'
+    description: 'Source of Dark Bow. Mourner Tunnels, or the Iorwerth Dungeon in Prifddinas.'
   },
   'Smoke Devils': {
     id: 'Smoke Devils',
@@ -1314,8 +1318,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     needsKey: ['Temple Trekking', 'Forestry'],
     regions: ['Morytania'], // Temple Trekking or the Forestry shop
-    skills: {},
-    description: 'Woodcutting XP boosting set.'
+    skills: { 'Woodcutting': 44 }, // To wear
+    description: 'Woodcutting XP boosting set. Temple Trekking needs In Aid of the Myreque; the Forestry shop is slower.'
   },
   'Pyromancer Outfit': {
     id: 'Wintertodt',
