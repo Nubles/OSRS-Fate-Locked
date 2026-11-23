@@ -73,10 +73,14 @@ for (const [quest, columns] of Object.entries(CHUNK_ENTRY_QUESTS)) {
 /** The quests a chunk's entry needs (Canifis: Priest in Peril). */
 export const chunkEntryQuests = (chunk: string): readonly string[] => ENTRY_QUEST_OF.get(chunk) ?? [];
 
-/** The guild a chunk's content for this fact sits inside, or null (the Farming Guild holds its herb patch too). */
+/** Whether a guild gate's skills cover this fact (the Farming Guild holds its herb patch too). */
+const gateCovers = (skills: readonly string[], fact: string): boolean =>
+  skills.includes(fact) || (fact === '@herb' && skills.includes('Farming'));
+
+/** The guild a chunk's content for this fact sits inside, or null. */
 export const chunkGuildFor = (chunk: string, fact: string): string | null => {
   const gate = CHUNK_GUILD_GATES[chunk];
-  return gate && (fact === gate[0] || (gate[0] === 'Farming' && fact === '@herb')) ? gate[1] : null;
+  return gate && gateCovers(gate[0], fact) ? gate[1] : null;
 };
 
 /** A chunk's Farming patch types, each with the tier and the Farming level it needs. */
@@ -177,12 +181,12 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     const gate = CHUNK_GUILD_GATES[key];
     const gated = run && gate && !guilds.has(gate[1]) ? gate[0] : null;
     for (const [fact, level] of chunkFacts(key)) {
-      if (fact === gated || (gated === 'Farming' && fact === '@herb')) continue;
+      if (gated && gateCovers(gated, fact)) continue;
       // With a run, Farming comes from the unlocked patch types below.
       if (run && (fact === 'Farming' || fact === '@herb')) continue;
       note(fact, level);
     }
-    if (run && gated !== 'Farming') {
+    if (run && !gated?.includes('Farming')) {
       for (const [type, , level] of chunkPatches(key)) {
         if (!farming.has(type) || chunkPatchBlocker(key, type, run)) continue;
         note('Farming', level);

@@ -158,6 +158,10 @@ describe('Chunked exploring rolls', () => {
     const guild = at(['40,53'], { Fishing: 7 }, { levels: { ...initialState.unlocks.levels, Fishing: 68 } });
     expect(exploreBlocker(guild, '40,53', 'Fishing')).toBe('Needs the Fishing Guild unlocked.');
     expect(exploreBlocker({ ...guild, unlocks: { ...guild.unlocks, guilds: ['Fishing Guild'] } }, '40,53', 'Fishing')).toBeNull();
+    // The Crafting Guild's wheels and oven are inside the guild (deep audit d2[3]).
+    const craftingGuild = at(['45,51'], { Crafting: 4 }, { levels: { ...initialState.unlocks.levels, Crafting: 40 } });
+    expect(exploreBlocker(craftingGuild, '45,51', 'Crafting')).toBe('Needs the Crafting Guild unlocked.');
+    expect(exploreBlocker({ ...craftingGuild, unlocks: { ...craftingGuild.unlocks, guilds: ['Crafting Guild'] } }, '45,51', 'Crafting')).toBeNull();
     // Sailing opens with Pandemonium.
     const port = at(['47,50'], { Sailing: 1 });
     expect(exploreBlocker(port, '47,50', 'Sailing')).toBe('Needs Pandemonium done.');

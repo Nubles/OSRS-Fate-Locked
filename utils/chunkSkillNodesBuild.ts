@@ -58,8 +58,8 @@ export interface ChunkSkillData {
   services: Record<string, Record<string, string>>;
   /** Per chunk with facts, the quests its entry needs. */
   entryQuests: Record<string, string[]>;
-  /** Per chunk, the guild its skill's content needs: [skill, guild]. */
-  guildGates: Record<string, [string, string]>;
+  /** Per chunk, the guild its skills' content needs: [skills, guild]. */
+  guildGates: Record<string, [string[], string]>;
   /** Per chunk, its patch types the game locks behind a quest or a diary (PATCH_LOCKS). */
   patchLocks: Record<string, Record<string, PatchLock>>;
 }
@@ -123,17 +123,18 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;
 
 /**
- * Guild chunks whose skill content is inside the guild: it needs the guild's
- * own level (OSRS Wiki entry requirements) and, at roll time, the guild unlock.
- * The Crafting Guild mine's rocks keep their own level (1): its entry level
- * is in Crafting, which the guild unlock itself requires.
+ * Guild chunks whose skill content is inside the guild: each skill listed
+ * needs the guild's own level (OSRS Wiki entry requirements) and, at roll
+ * time, the guild unlock. The Crafting Guild's potter's wheels, pottery oven
+ * and spinning wheels need its 40 Crafting; its mine's rocks keep their own
+ * level (1), since its entry level is in Crafting, not Mining.
  */
-export const GUILD_CHUNKS: Readonly<Record<string, { skill: string; guild: string; level: number }>> = {
-  '40,53': { skill: 'Fishing', guild: 'Fishing Guild', level: 68 },
-  '19,58': { skill: 'Farming', guild: 'Farming Guild', level: 45 },
-  '24,54': { skill: 'Woodcutting', guild: 'Woodcutting Guild', level: 60 },
-  '25,54': { skill: 'Woodcutting', guild: 'Woodcutting Guild', level: 60 },
-  '45,51': { skill: 'Mining', guild: 'Crafting Guild', level: 1 },
+export const GUILD_CHUNKS: Readonly<Record<string, { guild: string; skills: Readonly<Record<string, number>> }>> = {
+  '40,53': { guild: 'Fishing Guild', skills: { Fishing: 68 } },
+  '19,58': { guild: 'Farming Guild', skills: { Farming: 45 } },
+  '24,54': { guild: 'Woodcutting Guild', skills: { Woodcutting: 60 } },
+  '25,54': { guild: 'Woodcutting Guild', skills: { Woodcutting: 60 } },
+  '45,51': { guild: 'Crafting Guild', skills: { Mining: 1, Crafting: 40 } },
 };
 
 /**
@@ -240,7 +241,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     const chunk = key(id);
     if (!LAND.has(chunk)) continue;
     const guild = GUILD_CHUNKS[chunk];
-    const floor = (skill: string, level: number) => (guild?.skill === skill ? Math.max(level, guild.level) : level);
+    const floor = (skill: string, level: number) => Math.max(level, guild?.skills[skill] ?? 0);
     const patchFloor = (patch: string, level: number) => Math.max(floor('Farming', level), GUILD_PATCH_LEVELS[chunk]?.[patch] ?? 0);
     const facts: Record<string, number> = {};
     const note = (skill: string, level: number) => { facts[skill] = Math.min(facts[skill] ?? level, level); };
@@ -302,7 +303,8 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
     const quests = doc.questSections?.[id];
     if (quests?.length) entryQuests[chunk] = [...quests];
-    if (guild && facts[guild.skill] !== undefined) guildGates[chunk] = [guild.skill, guild.guild];
+    const gatedSkills = Object.keys(guild?.skills ?? {}).filter(skill => facts[skill] !== undefined);
+    if (guild && gatedSkills.length > 0) guildGates[chunk] = [gatedSkills, guild.guild];
   }
   return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks };
 }
@@ -375,8 +377,8 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
     + `export const CHUNK_SKILL_SERVICES: Readonly<Record<string, Readonly<Record<string, string>>>> = ${JSON.stringify(data.services)};\n\n`
     + `// Quest -> the chunks whose entry needs it: "cx:cy,cy-cy;cx:…".\n`
     + `export const CHUNK_ENTRY_QUESTS: Readonly<Record<string, string>> = ${JSON.stringify(questChunks)};\n\n`
-    + `// Chunk -> [skill, guild]: that skill's content there is inside the guild.\n`
-    + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = ${JSON.stringify(data.guildGates)};\n\n`
+    + `// Chunk -> [skills, guild]: those skills' content there is inside the guild.\n`
+    + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [readonly string[], string]>> = ${JSON.stringify(data.guildGates)};\n\n`
     + `// Chunk -> patch type -> the quest or diary the game locks that patch behind.\n`
     + `export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = ${JSON.stringify(data.patchLocks)};\n`;
 };

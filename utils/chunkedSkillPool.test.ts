@@ -181,7 +181,7 @@ describe('Chunked Skills rolls', () => {
     expect(levelsIn('51,54').Construction).toBeUndefined();
     expect(levelsIn('46,50').Construction).toBe(1);
     // The Fishing Guild needs 68 Fishing.
-    expect(levelsIn('40,53').Fishing).toBe(GUILD_CHUNKS['40,53'].level);
+    expect(levelsIn('40,53').Fishing).toBe(GUILD_CHUNKS['40,53'].skills.Fishing);
     // Ambient butterflies and the Museum's specimen rocks train nothing.
     expect(levelsIn('50,50').Hunter).toBeUndefined();
     expect(levelsIn('50,53').Mining).toBeUndefined();
@@ -198,6 +198,13 @@ describe('Chunked Skills rolls', () => {
     const mine = { chunks: ['45,51'] };
     expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: [] })).toBe(false);
     expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: ['Crafting Guild'] })).toBe(true);
+    // Its potter's wheels, pottery oven and spinning wheels are inside the guild too, which needs 40 Crafting (deep audit d2[3]).
+    expect(chunkContentBlocker('45,51', 'Crafting', { quests: [], guilds: [] })).toBe('Needs the Crafting Guild unlocked.');
+    expect(chunkContentBlocker('45,51', 'Crafting', { quests: [], guilds: ['Crafting Guild'] })).toBeNull();
+    expect(levelsIn('45,51').Crafting).toBe(40);
+    const crafter = atCap({ Crafting: 4 }, { chunks: ['45,51'], levels: { ...fresh().levels, Crafting: 40 } });
+    expect(chunkedTrainingLevels(['45,51'], { ...crafter, guilds: [] }).get('Crafting')).toBe(1); // Lumbridge's own spinning wheel
+    expect(chunkedTrainingLevels(['45,51'], { ...crafter, guilds: ['Crafting Guild'] }).get('Crafting')).toBe(1);
   });
 
   it('locks the patches the game puts behind a quest or a diary (deep audit d2[1])', () => {
