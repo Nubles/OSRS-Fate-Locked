@@ -279,3 +279,14 @@ describe('broad arrowheads (resource-b.d4[1])', () => {
     expect(shop.notes).toMatch(/55 coins/);
   });
 });
+
+describe('Superglass Make (resource-a.d1[6])', () => {
+  // Wiki 'Molten glass' recipe: 18 buckets of sand, 3 giant seaweed, 2 astral,
+  // 6 fire and 10 air runes give 28.8 molten glass on average.
+  it('uses the Wiki giant seaweed recipe and yield', () => {
+    const [spell] = rows('Molten Glass', 'Superglass Make');
+    expect(spell.inputs).toEqual({ 'Bucket of Sand': 18, 'Giant Seaweed': 3, 'Astral Rune': 2, 'Fire Rune': 6, 'Air Rune': 10 });
+    expect(spell.outputYield).toBe(28.8);
+    expect(spell.notes).not.toMatch(/= 6 Glass/);
+  });
+});

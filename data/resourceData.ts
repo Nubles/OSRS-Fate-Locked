@@ -363,7 +363,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: 'Seers\' Village Fields' }
   ],
   'Molten Glass': [
-    { type: 'SKILL', name: 'Superglass Make', regions: ['Fremennik'], skills: {'Magic': 77, 'Crafting': 61}, quests: ['Lunar Diplomacy'], inputs: {'Bucket of Sand': 1, 'Giant Seaweed': 0.16}, notes: 'Giant Seaweed = 6 Glass' },
+    { type: 'SKILL', name: 'Superglass Make', regions: ['Fremennik'], skills: {'Magic': 77, 'Crafting': 61}, quests: ['Lunar Diplomacy'], inputs: {'Bucket of Sand': 18, 'Giant Seaweed': 3, 'Astral Rune': 2, 'Fire Rune': 6, 'Air Rune': 10}, outputYield: 28.8, notes: '18 sand and 3 giant seaweed make 28.8 glass on average' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Crafting': 1}, inputs: {'Bucket of Sand': 1, 'Soda Ash': 1} }
   ],
   'Black D\'hide Body': [
