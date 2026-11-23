@@ -2705,7 +2705,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- ADDITIONAL SECONDARIES ---
   'Kebbit Teeth': [
-    { type: 'SKILL', name: 'Hunter', regions: ['Kandarin'], skills: { 'Hunter': 51 }, notes: 'Sabre-toothed kebbit (Rellekka Hunter area)' }
+    { type: 'SKILL', name: 'Hunter', regions: ['Rellekka'], skills: { 'Hunter': 51 }, notes: 'Sabre-toothed kebbit (Rellekka Hunter area)' }
   ],
   'Kebbit Teeth Dust': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Kebbit Teeth': 1 }, notes: 'Grind with a Pestle and mortar' }

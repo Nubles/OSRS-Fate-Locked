@@ -217,3 +217,11 @@ describe('limestone and shrimps (resource-a.d4[3])', () => {
     expect(row('Raw Shrimps', 'Net Fishing').regions).not.toContain('Tirannwn');
   });
 });
+
+describe('kebbit teeth (resource-b.d2[2])', () => {
+  it('sabre-toothed kebbits are in the Rellekka Hunter area', () => {
+    expect(row('Kebbit Teeth', 'Hunter').regions).toEqual(['Rellekka']);
+    expect(avail('Kebbit Teeth', 'Hunter', state(['Rellekka']))).toEqual([true]);
+    expect(avail('Kebbit Teeth', 'Hunter', state(areasOf('Kandarin')))).toEqual([false]);
+  });
+});
