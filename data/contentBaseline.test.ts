@@ -205,6 +205,8 @@ describe('cross-surface quest eligibility contract', () => {
       gameModeId: undefined,
       unlocks: maxedQuestUnlocks('The Frozen Door', {
         regions: ['Burthorpe'],
+        // The crossbow and mith grapple slots since the 23 Nov 2026 item gate review.
+        equipment: { Weapon: 1, Ammo: 3 },
         quests: Object.keys(QUEST_DATA).filter(
           id => id !== 'The Frozen Door' && id !== 'Desert Treasure I',
         ),
@@ -217,7 +219,7 @@ describe('cross-surface quest eligibility contract', () => {
       label: 'The Frozen Door after its prerequisite',
       id: 'The Frozen Door',
       gameModeId: undefined,
-      unlocks: maxedQuestUnlocks('The Frozen Door', { regions: ['Burthorpe'] }),
+      unlocks: maxedQuestUnlocks('The Frozen Door', { regions: ['Burthorpe'], equipment: { Weapon: 1, Ammo: 3 } }),
       expectedStatus: 'AVAILABLE',
       expectedReadiness: 'READY',
       firstBlocker: undefined,
@@ -493,7 +495,7 @@ describe('deterministic current content baseline', () => {
       regions: ['The Open Seas'], locations: ['the-pandemonium', 'port-sarim-docks', 'thurgos-hut'],
       skills: { Smithing: 30, Sailing: 12 }, combatLevel: undefined,
       prereqs: ['Pandemonium', "The Knight's Sword"],
-      oneOf: [{ skills: { Cooking: 10 } }, { merchants: ['Food Shops'] }],
+      oneOf: [{ skills: { Cooking: 10 } }, { merchants: ['Food Shops'], regions: ['Cam Torum'] }],
       manualRequirements: ['One open Sailing task slot'],
     });
     expect(questRequirementFields('Current Affairs')).toEqual({

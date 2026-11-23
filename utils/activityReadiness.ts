@@ -1,10 +1,10 @@
 import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
-import { evaluateDiaryTaskEligibility, meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
+import { evaluateDiaryTaskEligibility, meetsSkillRequirement, meetsWarriorsGuildEntry, withSkillGateQuests } from './journalStatus';
 import type { AreaRoutes } from './areaRoutes';
 import { isAreaReachable } from './reachability';
 import { chunkPlaceLabel, ownsAnyChunk } from './activityAccess';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { actualCombatLevel } from './slayerReach';
 import { QUEST_DATA } from '../data/questData';
 import { pendingQuestProgress } from '../data/questProgress';
 
@@ -24,11 +24,8 @@ export type ActivityReadiness =
 
 export const WARRIORS_GUILD_ENTRY_LABEL = '99 Attack or Strength, or 130 combined';
 
-/** The Warriors' Guild door: 99 Attack or Strength, or 130 combined. Tier-capped,
- *  like the diary's "Enter the Warriors' Guild" task. */
-export const meetsWarriorsGuildEntry = (unlocks: UnlockState): boolean =>
-  meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99)
-  || effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength') >= 130;
+/** The Warriors' Guild door (defined beside the quest route check that also uses it). */
+export { meetsWarriorsGuildEntry };
 
 export function evaluateActivityReadiness(
   isOwned: boolean,

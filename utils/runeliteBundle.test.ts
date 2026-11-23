@@ -541,7 +541,8 @@ describe('buildRuneliteBundle - v4 category snapshot', () => {
       regions: [...REGIONS_LIST], bosses: ['General Graardor'], merchants: ['General Stores'],
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
-      quests: Object.keys(QUEST_DATA).filter(id => id !== 'Dragon Slayer II'),
+      // Barbarian Training stays open so the pyre-ship milestone is still pending.
+      quests: Object.keys(QUEST_DATA).filter(id => id !== 'Dragon Slayer II' && id !== 'Barbarian Training'),
     };
     const manifest = await buildRuneliteRulesManifest({
       unlocks, run: { runId: 'confirmation-parity', runRevision: 1, gameModeId: 'vanilla' },

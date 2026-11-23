@@ -14,8 +14,8 @@ const pryingTimesUnlocks = (): UnlockState => ({
   equipment: {},
   skills: { Smithing: 3, Sailing: 2 },
   levels: { Smithing: 30, Sailing: 12 },
-  regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
-  // Food Shops sell the redberry pie the quest needs.
+  regions: ['Cam Torum', 'The Pandemonium', 'Port Sarim', 'Rimmington'],
+  // Food Shops in Cam Torum (Yarnio) sell the redberry pie the quest needs.
   mobility: [], arcana: [], housing: [], merchants: ['Food Shops'], minigames: [],
   bosses: [], storage: [], guilds: [], farming: [], slayerUnlocks: [],
   quests: ['Pandemonium', "The Knight's Sword"],

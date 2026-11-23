@@ -105,9 +105,16 @@ export const questLines = (
   const { evidence, blockers, manualChecks } = quest.eligibility;
   const used = new Set<string>();
   const usedBlockers = new Set<EligibilityBlocker>();
+  // An owned area can share a prerequisite quest's name (Shilo Village), so a
+  // quest line reads the completed quests and takes only its own evidence entry.
+  const questEntries = new Map<string, number>();
 
   for (const id of prereqs) {
-    if (evidence.includes(id)) { used.add(id); game.push({ key: 'q:' + id, text: id, met: true }); continue; }
+    if (unlocks.quests.includes(id)) {
+      questEntries.set(id, (questEntries.get(id) ?? 0) + 1);
+      game.push({ key: 'q:' + id, text: id, met: true });
+      continue;
+    }
     const blocker = blockers.find(b => b.kind === 'quest' && b.label === id);
     if (blocker) usedBlockers.add(blocker);
     game.push({
@@ -149,7 +156,12 @@ export const questLines = (
     game.push({ key: 'combat', text: label, met });
   }
 
-  evidence.filter(item => !used.has(item)).forEach(item => fate.push({ key: 'e:' + item, text: item, met: true }));
+  evidence.filter(item => {
+    if (used.has(item)) return false;
+    const owed = questEntries.get(item) ?? 0;
+    if (owed > 0) { questEntries.set(item, owed - 1); return false; }
+    return true;
+  }).forEach(item => fate.push({ key: 'e:' + item, text: item, met: true }));
   blockers.filter(b => !usedBlockers.has(b)).forEach((b, i) => {
     const chunk = chunkOfBlocker(b);
     fate.push({

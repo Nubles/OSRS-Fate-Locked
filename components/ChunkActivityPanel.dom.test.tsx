@@ -396,10 +396,10 @@ describe('ChunkActivityPanel activity accordions', () => {
       quests: { 'Prying Times': 'first' },
     };
     mocks.state.completedQuests = ['Pandemonium', "The Knight's Sword"];
-    mocks.state.regions = ['The Pandemonium', 'Port Sarim', 'Rimmington'];
+    mocks.state.regions = ['Cam Torum', 'The Pandemonium', 'Port Sarim', 'Rimmington'];
     mocks.state.skills = { Smithing: 3, Sailing: 2 };
     mocks.state.levels = { Smithing: 30, Sailing: 12 };
-    // Food Shops sell the redberry pie the quest needs.
+    // Food Shops in Cam Torum (Yarnio) sell the redberry pie the quest needs.
     mocks.state.merchants = ['Food Shops'];
 
     render(<ChunkActivityPanel {...baseProps} />);

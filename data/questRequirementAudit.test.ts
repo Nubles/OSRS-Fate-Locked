@@ -292,7 +292,8 @@ describe('official quest and miniquest audit coverage', () => {
     // Wiki Enakhra's Lament (rev 15411975): Firemaking 45 is "bypassable"; the braziers
     // can be solved by guess and check, so the level is not needed to finish the quest.
     const quest = QUEST_DATA["Enakhra's Lament"];
-    expect(quest.skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43 });
+    // Mining 45 for the sandstone and granite since the 23 Nov 2026 item gate review.
+    expect(quest.skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43, Mining: 45 });
     const entry = audit.entries.find(candidate => candidate.id === "Enakhra's Lament");
     expect(entry?.requirementFingerprint).toBe(questRequirementFingerprint(quest));
     expect(entry?.notes.partialCompletion).toContain(

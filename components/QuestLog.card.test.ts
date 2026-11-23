@@ -144,7 +144,7 @@ describe('QuestCard shop and travel unlocks', () => {
     const quest = {
       ...QUEST_DATA["Hopespear's Will"],
       accessPolicy: 'regions' as const, regions: ['Misthalin'], locations: [], skills: {}, prereqs: [],
-      manualRequirements: [], merchants: ['Clothes Shops'], mobility: ['Fairy Rings'],
+      manualRequirements: [], questProgress: [], merchants: ['Clothes Shops'], mobility: ['Fairy Rings'],
       equipmentRequirements: [],
     };
     const state = { ...unlocks, ...over };
