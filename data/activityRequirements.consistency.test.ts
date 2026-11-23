@@ -194,7 +194,8 @@ describe('activity rows follow the Wiki', () => {
     expect(ACTIVITY_REQUIREMENTS['Tackle Box'].skills).toEqual({ Fishing: 35 });
     expect(ACTIVITY_REQUIREMENTS["Huntsman's Kit"]).toMatchObject({ skills: { Hunter: 46 }, quests: ['Children of the Sun'] });
     expect(ACTIVITY_REQUIREMENTS["Dizana's Quiver"].quests).toEqual(['Children of the Sun']);
-    expect(ACTIVITY_REQUIREMENTS['Meat Pouch'].skills).toEqual({ Crafting: 35 });
+    // The only Ironman source of fox fur is the pyre fox (57 Hunter, Avium Savannah); the fur shops stock none.
+    expect(ACTIVITY_REQUIREMENTS['Meat Pouch']).toMatchObject({ skills: { Crafting: 35, Hunter: 57 }, quests: ['Children of the Sun'] });
     expect(ACTIVITY_REQUIREMENTS['Mounted Mythical Cape']).toMatchObject({ skills: { Construction: 47 }, quests: ['Dragon Slayer II'] });
     for (const item of ['Seed Box', 'Fish Barrel', 'Tackle Box', "Huntsman's Kit", "Dizana's Quiver", 'Meat Pouch', 'Mounted Mythical Cape']) {
       expect(ready(item, () => {}).status, item).toBe('NOT_READY');
@@ -202,6 +203,9 @@ describe('activity rows follow the Wiki', () => {
     expect(ready('Mounted Mythical Cape', at({ Construction: 47 })).status).toBe('NOT_READY');
     expect(ready('Mounted Mythical Cape', at({ Construction: 47 }, ['Dragon Slayer II'])).status).toBe('READY');
     expect(ready('Seed Box', at({ Farming: 34 })).status).toBe('READY');
+    expect(ready('Meat Pouch', at({ Crafting: 35 })).status).toBe('NOT_READY');
+    expect(ready('Meat Pouch', at({ Crafting: 35, Hunter: 56 }, ['Children of the Sun'])).status).toBe('NOT_READY');
+    expect(ready('Meat Pouch', at({ Crafting: 35, Hunter: 57 }, ['Children of the Sun'])).status).toBe('READY');
   });
 
   it('the Seaweed patch needs 23 Farming and the Coral Nursery machine-checks Troubled Tortugans (Wiki: Giant seaweed, Coral nursery)', () => {

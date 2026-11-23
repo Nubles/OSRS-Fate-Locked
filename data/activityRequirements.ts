@@ -338,14 +338,15 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Fossil Storage': { quests: ['Bone Voyage'], note: 'Fossil Island museum.' },
   'Plank Sack': { note: 'Mahogany Homes reward.' },
   // Wiki, November 2026. Huntsman's kit: Hunters' Rumours loot sacks (46 Hunter,
-  // the Hunter Guild in Varlamore). Small meat pouch: 35 Crafting. Essence pouch:
+  // the Hunter Guild in Varlamore). Small meat pouch: 35 Crafting from fox fur
+  // (pyre foxes, 57 Hunter, Varlamore; the fur shops stock none). Essence pouch:
   // the Abyss (Enter the Abyss), the Abyssal Area (fairy ring ALR) or Guardians of
   // the Rift (behind Temple of the Eye, so Enter the Abyss). Seed box: Tithe Farm
   // (34 Farming). Herb sack: buying needs 58 Herblore from either shop. Gem bag,
   // coal bag: golden nuggets come only from pay-dirt, which needs 30 Mining.
   // Fish barrel, tackle box: Tempoross (35 Fishing).
   "Huntsman's Kit": { skills: { Hunter: 46 }, quests: ['Children of the Sun'], note: "Hunters' Rumours reward (Hunter Guild, Varlamore)." },
-  'Meat Pouch': { skills: { Crafting: 35 }, note: 'Crafted from Hunter furs with a needle and thread.' },
+  'Meat Pouch': { skills: { Crafting: 35, Hunter: 57 }, quests: ['Children of the Sun'], note: 'Crafted at 35 Crafting from 4 fox fur (pyre foxes, 57 Hunter, Avium Savannah).' },
   'Essence Pouches': {
     oneOf: [
       { manualRequirements: ['Completed Enter the Abyss (Mage of Zamorak): a free small pouch and Abyss drops'] },
