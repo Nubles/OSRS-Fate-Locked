@@ -9,8 +9,8 @@ const rowsFor = (skill: string) => Object.entries(SKILL_UNLOCK_DATA[skill])
 
 describe('reviewed skill-reference facts', () => {
   it.each([
-    ['Agility', 'Hallowed Sepulchre (Floor 4)', 77],
-    ['Agility', 'Hallowed Sepulchre (Floor 5)', 87],
+    ['Agility', 'Hallowed Sepulchre (Floor 4; Sins of the Father)', 77],
+    ['Agility', 'Hallowed Sepulchre (Floor 5; Sins of the Father)', 87],
     ['Attack', 'Mystic Staves', 40],
     ['Construction', 'Kitchen', 5],
     ['Construction', 'Combat Room', 32],
@@ -220,5 +220,67 @@ describe('unlocks corrected in the 23 November 2026 deep pass', () => {
     expect(rowsFor('Agility').some(row => row.text.includes('Boulder'))).toBe(false);
     expect(rowsFor('Construction').some(row => row.level === 1 && /fireplace/i.test(row.text))).toBe(false);
     expect(rowsFor('Sailing').filter(row => row.text.includes('Barracuda Trials')).map(row => row.level)).toEqual([30, 55, 72]);
+  });
+});
+
+// Deep pass of 23 November 2026 (skills-b.d3[0]): lines that hid the quest the game needs, while the same list or its
+// twin list notes that quest on matching lines. Each row from a fresh Wiki fetch of the item's or activity's own page
+// and its skill's level-up table: Chinchompa (Hunter), Carnivorous chinchompa, Black chinchompa (Hunter), Magic Stall,
+// Pyramid Plunder, Hallowed Sepulchre, Crystal helm, Bronze dart tip, Bronze brutal, Crew Management.
+describe('quest notes added in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Hunter', 'Grey Chinchompas (Eagles\' Peak)', 53],
+    ['Hunter', 'Red Chinchompas (Eagles\' Peak)', 63],
+    ['Hunter', 'Black Chinchompas (Eagles\' Peak)', 73],
+    ['Thieving', 'Magic Stalls (Monkey Madness I)', 65],
+    ['Thieving', 'Pyramid Plunder (Room 1; Icthlarin\'s Little Helper)', 21],
+    ['Thieving', 'Pyramid Plunder (Room 2; Icthlarin\'s Little Helper)', 31],
+    ['Thieving', 'Pyramid Plunder (Room 3; Icthlarin\'s Little Helper)', 41],
+    ['Thieving', 'Pyramid Plunder (Room 4; Icthlarin\'s Little Helper)', 51],
+    ['Thieving', 'Pyramid Plunder (Room 5; Icthlarin\'s Little Helper)', 61],
+    ['Thieving', 'Pyramid Plunder (Room 6; Icthlarin\'s Little Helper)', 71],
+    ['Thieving', 'Pyramid Plunder (Room 7; Icthlarin\'s Little Helper)', 81],
+    ['Thieving', 'Pyramid Plunder (Room 8; Icthlarin\'s Little Helper)', 91],
+    ['Agility', 'Hallowed Sepulchre (Floor 1; Sins of the Father)', 52],
+    ['Agility', 'Hallowed Sepulchre (Floor 2; Sins of the Father)', 62],
+    ['Agility', 'Hallowed Sepulchre (Floor 3; Sins of the Father)', 72],
+    ['Smithing', 'Crystal Helm, Celestial Signet (Crafting 70; Song of the Elves)', 70],
+    ['Smithing', 'Crystal Legs (Crafting 72; Song of the Elves)', 72],
+    ['Smithing', 'Crystal Body (Crafting 74; Song of the Elves)', 74],
+    ['Smithing', 'Crystal Tools (Crafting 76; Song of the Elves)', 76],
+    ['Smithing', 'Crystal Weapon/Shield (Crafting 78; Song of the Elves)', 78],
+    ['Smithing', 'Crystal Key/Teleport (Crafting 80; Song of the Elves)', 80],
+    ['Smithing', 'Bronze Darts (The Tourist Trap)', 4],
+    ['Smithing', 'Iron Darts (The Tourist Trap)', 19],
+    ['Smithing', 'Steel Darts (The Tourist Trap)', 34],
+    ['Smithing', 'Mithril Darts (The Tourist Trap)', 54],
+    ['Smithing', 'Adamant Darts (The Tourist Trap)', 74],
+    ['Smithing', 'Rune Darts (The Tourist Trap)', 89],
+    ['Fletching', 'Bronze Brutal Arrows (Zogre Flesh Eaters)', 7],
+    ['Fletching', 'Iron Brutal Arrows (Zogre Flesh Eaters)', 18],
+    ['Fletching', 'Steel Brutal Arrows (Zogre Flesh Eaters)', 33],
+    ['Fletching', 'Black Brutal Arrows (Zogre Flesh Eaters)', 38],
+    ['Fletching', 'Mithril Brutal Arrows (Zogre Flesh Eaters)', 49],
+    ['Fletching', 'Adamant Brutal Arrows (Zogre Flesh Eaters)', 62],
+    ['Fletching', 'Rune Brutal Arrows (Zogre Flesh Eaters)', 77],
+    ['Sailing', 'Recruit Captain Siad (The Tourist Trap)', 50],
+    ['Sailing', 'Recruit Cabin Boy Jenkins (Dragon Slayer I; The Restless Ghost)', 60],
+    ['Sailing', 'Recruit Oarswoman Olga (In Aid of the Myreque)', 65],
+    ['Sailing', 'Recruit Bosun Zarah (Royal Trouble; Hard Fremennik Diary)', 80],
+  ] as const)('%s: %s is listed with its quest at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('notes the quest on every chinchompa, Pyramid Plunder, Sepulchre floor, dart tip and brutal arrow line', () => {
+    const bare = (skill: string, pattern: RegExp, note: string) => rowsFor(skill)
+      .filter(row => pattern.test(row.text) && !row.text.includes(note)).map(row => row.text);
+    expect(bare('Hunter', /Chinchompas/, '(Eagles\' Peak)')).toEqual([]);
+    expect(bare('Thieving', /Pyramid Plunder/, 'Icthlarin\'s Little Helper')).toEqual([]);
+    expect(bare('Agility', /Hallowed Sepulchre \(Floor/, 'Sins of the Father')).toEqual([]);
+    expect(bare('Smithing', /Darts/, '(The Tourist Trap)')).toEqual([]);
+    expect(bare('Fletching', /Brutal Arrows/, '(Zogre Flesh Eaters)')).toEqual([]);
+    expect(bare('Smithing', /Crystal (Helm|Legs|Body|Tools|Weapon|Key)/, 'Song of the Elves)')).toEqual([]);
   });
 });
