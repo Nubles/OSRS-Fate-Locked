@@ -46,6 +46,10 @@ export const FAIRY_RING_ACCESS = 'Reached fairy ring access during Fairytale II 
 const FAIRY_RING_PROGRESS: QuestProgressRequirement = { quest: 'Fairytale II - Cure a Queen', label: FAIRY_RING_ACCESS };
 // The Fremennik Isles started: Mord and Maria Gunnars ferry you to Jatizso and Neitiznot.
 const FREMENNIK_ISLES_STARTED: QuestProgressRequirement = { quest: 'The Fremennik Isles', label: 'Confirm you have started The Fremennik Isles' };
+// Wiki 'Keldagrim': first visited during The Giant Dwarf (the Fremennik Diary asks for it started to browse the Stonemason).
+const GIANT_DWARF_STARTED: QuestProgressRequirement = { quest: 'The Giant Dwarf', label: 'Confirm you have started The Giant Dwarf (Keldagrim)' };
+// Wiki 'Harmony Island': Brother Tranquility sails there once the quest is started (same wording as the area rule in areaAccess.ts).
+const GREAT_BRAIN_ROBBERY_STARTED: QuestProgressRequirement = { quest: 'The Great Brain Robbery', label: 'Started The Great Brain Robbery, so Brother Tranquility sails to Harmony Island' };
 // Wiki 'Smoke devil': a facemask or Slayer helmet is needed to kill them; the gas mask also works.
 const SMOKE_DEVIL_FACE = 'Wear a facemask, gas mask or Slayer helmet.';
 
@@ -1404,8 +1408,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Granite Boots': {
     id: 'Granite Boots',
     category: TableType.MINIGAMES,
-    regions: ['Islands & Others'], // Ancient Wyverns
+    regions: ['Islands & Others'], // Fossil Island Wyvern Cave
     skills: { 'Slayer': 66 },
+    quests: ['Bone Voyage'], // Wiki 'Granite boots': dropped only by the Wyvern Cave wyverns on Fossil Island
     description: 'Good defense boots, required for Karuulm dungeon.'
   },
   'Boots of Brimstone': {
@@ -1561,6 +1566,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Wilderness'], // Mage Arena
     skills: {},
+    quests: ['Mage Arena I'], // Wiki 'Mage Arena Staffs.': opens only after the miniquest (60 Magic)
     description: 'Sells God Staves (Guthix/Sara/Zammy).'
   },
   'Lundail\'s Rune Shop': {
@@ -1895,6 +1901,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Fremennik'], // Keldagrim
     skills: {},
+    questProgress: [GIANT_DWARF_STARTED],
     description: 'Sells Limestone brick, Marble block, Gold leaf.'
   },
   'Candle Maker': {
@@ -2276,7 +2283,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Herb'],
     regions: ['Morytania'],
     skills: { 'Farming': 1 }, // Elite Diary usually
-    quests: ['The Great Brain Robbery'], diaries: ['Morytania Elite'], // Elite
+    diaries: ['Morytania Elite'], // Wiki 'Harmony Island': the patch needs the Elite diary
+    questProgress: [GREAT_BRAIN_ROBBERY_STARTED], // the island opens once the quest is started
     description: 'Disease-free herb patch (Elite Diary).'
   },
   'Sophanem Dungeon': {
@@ -2293,7 +2301,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Fremennik'],
     skills: {},
     quests: ['Royal Trouble'],
-    description: 'Giant Sea Snake (Medium Clues).'
+    description: 'Sea snake young (Medium Clues) and hatchlings, a sea snake Slayer task from 40 Slayer. The Giant Sea Snake is fought only once, in Royal Trouble.'
   },
   'Fisher Realm': {
     id: 'Fisher Realm',

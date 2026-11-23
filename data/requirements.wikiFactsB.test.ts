@@ -7,6 +7,7 @@ import { createFreshState } from '../context/GameContext';
 import { analyzeRequirement } from '../components/StrategyGuide';
 import { calculateGoalProgress } from '../utils/goalLogic';
 import { buildGoalRoute } from '../utils/goalRoute';
+import { AREA_ENTRY_ROUTES } from './areaAccess';
 
 /**
  * Wiki facts for the second half of the Strategy Guide / Goal Tracker table
@@ -93,7 +94,8 @@ describe('requirements part B: shop stock, drops and removed systems', () => {
     ['Granite Body', /95,000 coins/, /BA points|drop from/i],
     ['Lovakite Ore', /Lovakite bars/, /Favou?r|Dynamite/i],
     ['Volcanic Sulphur', /Dynamite/, /Favou?r/i],
-    ['Miscellania Dungeon', /Medium Clues/, /Hard/],
+    // Deep pass: the Giant Sea Snake cannot be fought after Royal Trouble; the young drop medium clues (Wiki: Sea Snake Young).
+    ['Miscellania Dungeon', /Sea snake young \(Medium Clues\)/, /Hard|Giant Sea Snake \(/],
     ["Nurmof's Pickaxe Shop", /Rune Pickaxe/, /Adamant/],
     ['Mount Karuulm Weapon Shop', /Warhammers/, /Hastae/],
     ['Zogre Bones', /Prayer/, /Crushed Nest|\?/],
@@ -281,5 +283,54 @@ describe('requirements part B, deep pass: started quests and shop stock', () => 
     const { description } = entry(key);
     expect(description).toMatch(yes);
     expect(description).not.toMatch(no);
+  });
+});
+
+describe('requirements part B, deep pass 2: access the content needs', () => {
+  const allAccess = () => {
+    const u = createFreshState().unlocks;
+    u.regions = [...REGIONS_LIST];
+    u.quests = Object.keys(QUEST_DATA);
+    for (const skill of SKILLS_LIST) u.skills[skill] = 10;
+    u.levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99]));
+    u.merchants = ['Staff Shops', 'Stonemasons'];
+    u.minigames = ['Granite Boots'];
+    u.farming = ['Harmony Island', 'Herb'];
+    u.mobility = ['Jewelry Teleports'];
+    u.diaries = ['Morytania Elite'];
+    return u;
+  };
+  const without = (quest: string) => { const u = allAccess(); u.quests = u.quests.filter((q: string) => q !== quest); return u; };
+
+  it('Granite Boots needs Bone Voyage: the boots drop only from the Fossil Island wyverns (Wiki: Granite boots, Fossil Island)', () => {
+    expect(entry('Granite Boots').quests).toEqual(['Bone Voyage']);
+    expect(analyzeRequirement(entry('Granite Boots'), without('Bone Voyage'), 'vanilla').missingQuests).toEqual(['Bone Voyage']);
+  });
+  it('Mage Arena Staff Shop needs Mage Arena I; the god staves shop opens after the miniquest (Wiki: Mage Arena Staffs.)', () => {
+    expect(entry('Mage Arena Staff Shop').quests).toEqual(['Mage Arena I']);
+    const blocked = analyzeRequirement(entry('Mage Arena Staff Shop'), without('Mage Arena I'), 'vanilla');
+    expect(blocked.isFullyPlayable).toBe(false);
+    expect(blocked.missingQuests).toEqual(['Mage Arena I']);
+    // Lundail's shop in the bank room has no gate.
+    expect(entry("Lundail's Rune Shop").quests ?? []).toEqual([]);
+  });
+  it('Stonemason (Keldagrim) asks for The Giant Dwarf started until it is completed (Wiki: Fremennik Diary, Easy task 5)', () => {
+    expect(entry('Stonemason').quests ?? []).toEqual([]);
+    expect(entry('Stonemason').questProgress).toEqual([{ quest: 'The Giant Dwarf', label: expect.stringMatching(/started The Giant Dwarf/) }]);
+    expect(analyzeRequirement(entry('Stonemason'), without('The Giant Dwarf'), 'vanilla').missingChecks.join(' ')).toMatch(/started The Giant Dwarf/);
+    expect(analyzeRequirement(entry('Stonemason'), allAccess(), 'vanilla').isFullyPlayable).toBe(true);
+  });
+  it('Harmony Island (Herb Patch) needs The Great Brain Robbery started, as the area rule does, and the Elite Morytania Diary (Wiki: Harmony Island)', () => {
+    const req = entry('Harmony Island (Herb Patch)');
+    expect(req.quests ?? []).not.toContain('The Great Brain Robbery');
+    expect(req.diaries).toEqual(['Morytania Elite']);
+    const areaRule = AREA_ENTRY_ROUTES['Harmony Island'][0].questProgress;
+    expect(req.questProgress).toEqual(areaRule);
+    const started = analyzeRequirement(req, without('The Great Brain Robbery'), 'vanilla');
+    expect(started.missingQuests).toEqual([]);
+    expect(started.missingChecks).toEqual([areaRule![0].label]);
+    const done = analyzeRequirement(req, allAccess(), 'vanilla');
+    expect(done.missingChecks).toEqual([]);
+    expect(done.isFullyPlayable).toBe(true);
   });
 });
