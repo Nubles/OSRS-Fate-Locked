@@ -9775,7 +9775,23 @@
       "sourceRequirements": "Combat gear",
       "minigames": [
         "Intelligence Gathering"
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Captain Ginea",
+          "chunkOptions": [
+            {
+              "cx": 23,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-11-23",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Intelligence drops at the rotating gang meetings and is handed to Captain Ginea in her tent in the South Shayzien Encampment (23,56); Chunked also needs one meeting chunk (diaryChunks MD8)."
+      }
     },
     {
       "id": "kou_med_9",
