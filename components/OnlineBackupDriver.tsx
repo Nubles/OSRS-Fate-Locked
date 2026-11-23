@@ -113,9 +113,10 @@ export const OnlineBackupDriver: React.FC = () => {
   }, [storageKey, clearTimer]);
 
   // Leaving the page with a change waiting: send it now, unless one went lately.
+  // A pending retry after a refusal is not a change waiting: it keeps its back-off.
   useEffect(() => {
     const onHide = () => {
-      if (document.visibilityState !== 'hidden' || timer.current === null) return;
+      if (document.visibilityState !== 'hidden' || timer.current === null || retryStreak.current > 0) return;
       const record = readOnlineBackupRecord(storageKey);
       if (Date.now() - (record.lastUploadAt ?? 0) < ONLINE_BACKUP_HIDDEN_MIN_MS) return;
       clearTimer();
