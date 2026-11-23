@@ -578,7 +578,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Blurite Bar': [
     { type: 'SKILL', name: 'Furnace', regions: ['Asgarnia'], skills: {'Smithing': 13}, inputs: {'Blurite Ore': 1}, quests: ['The Knight\'s Sword'] }
   ],
-  'Elemental Bar': [
+  'Elemental Metal': [
     { type: 'SKILL', name: 'Elemental Furnace', regions: ['Kandarin'], skills: {'Smithing': 20}, inputs: {'Elemental Ore': 1, 'Coal': 4}, quests: ['Elemental Workshop I'], notes: 'Seers Village' }
   ],
   'Elemental Ore': [
@@ -587,7 +587,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Lovakite Bar': [
     { type: 'SKILL', name: 'Furnace', regions: ['Kourend & Kebos'], skills: {'Smithing': 45}, inputs: {'Lovakite Ore': 1, 'Coal': 2}, notes: 'Lovakengj Furnace' }
   ],
-  'Cannonball': [
+  'Steel Cannonball': [
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 35}, inputs: {'Steel Bar': 1, 'Ammo Mould': 0}, notes: '4 per bar', outputYield: 4 },
     { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast', notes: '2000 Noted', outputYield: 2000 }
   ],
@@ -2883,6 +2883,9 @@ export const RENAMED_RESOURCES: Readonly<Record<string, string>> = {
   'Bronze Sword': 'Bronze Shortsword', 'Iron Sword': 'Iron Shortsword',
   'Steel Sword': 'Steel Shortsword', 'Mithril Sword': 'Mithril Shortsword',
   'Adamant Sword': 'Adamant Shortsword', 'Rune Sword': 'Rune Shortsword',
+  // 5 November 2025: Cannonball became Steel cannonball. Elemental metal was
+  // listed under a made-up name.
+  'Cannonball': 'Steel Cannonball', 'Elemental Bar': 'Elemental Metal',
 };
 export const currentResourceName = (name: string): string =>
   Object.prototype.hasOwnProperty.call(RENAMED_RESOURCES, name) ? RENAMED_RESOURCES[name] : name;
@@ -2997,8 +3000,8 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   ],
   'Bars & Smithing': [
     'Bronze Bar', 'Iron Bar', 'Steel Bar', 'Gold Bar', 'Mithril Bar',
-    'Adamantite Bar', 'Rune Bar', 'Blurite Bar', 'Elemental Bar',
-    'Elemental Ore', 'Lovakite Bar', 'Silver Bar', 'Cannonball', 'Hammer',
+    'Adamantite Bar', 'Rune Bar', 'Blurite Bar', 'Elemental Metal',
+    'Elemental Ore', 'Lovakite Bar', 'Silver Bar', 'Steel Cannonball', 'Hammer',
     'Ammo Mould', 'Goldsmith Gauntlets', 'Ice Gloves',
     'Smithing Catalyst', 'Imcando Hammer', 'Adamantite Nails', 'Sinew', 'Raw Beef',
   ],
