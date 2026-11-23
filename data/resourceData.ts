@@ -915,7 +915,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Demonic Gorilla', regions: ['Kandarin'], quests: ['Monkey Madness II'], notes: '1/300 Drop — no Slayer level required' }
   ],
   'Uncut Zenyte': [
-    { type: 'SKILL', name: 'Flames of Zamorak (Ape Atoll)', regions: ['Islands & Others'], skills: {'Crafting': 70}, inputs: {'Zenyte Shard': 1, 'Onyx': 1}, quests: ['Monkey Madness I'], manualRequirements: ['Use a zombie monkey greegree at the Flames of Zamorak beneath Ape Atoll'], notes: 'Fuse the shard with a cut onyx; cutting the resulting uncut zenyte separately requires 89 Crafting' }
+    { type: 'SKILL', name: 'Wall of flame (Ape Atoll)', regions: ['Islands & Others'], skills: {'Crafting': 70}, inputs: {'Zenyte Shard': 1, 'Onyx': 1}, quests: ['Monkey Madness II'], manualRequirements: ['Wear a zombie monkey greegree at the wall of flame beneath the Temple of Marimbo'], notes: 'Fuse the shard with a cut onyx; cutting the resulting uncut zenyte separately requires 89 Crafting' }
   ],
   'Uncut Onyx': [
     { type: 'SHOP', name: 'TzHaar-Hur-Lek', regions: ['Karamja'], notes: 'Costs 260k Tokkul' },

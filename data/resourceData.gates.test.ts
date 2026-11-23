@@ -108,3 +108,14 @@ describe('Catacombs dragons (resource-a.d3[4])', () => {
     expect(anyOpen('Dragon Bones', 'Brutal Black Dragon', state(kourend, { levels: { Slayer: 77 } }))).toBe(true);
   });
 });
+
+describe('uncut zenyte (resource-a.d3[6])', () => {
+  // Wiki 'Uncut zenyte': fused at the wall of flame beneath the Temple of
+  // Marimbo; needs Monkey Madness II and 70 Crafting.
+  it('names the wall of flame and Monkey Madness II', () => {
+    const [fuse] = curated('Uncut Zenyte').filter(r => r.inputs?.['Zenyte Shard']);
+    expect(fuse.name).toBe('Wall of flame (Ape Atoll)');
+    expect(fuse.quests).toEqual(['Monkey Madness II']);
+    expect(fuse.skills).toEqual({ Crafting: 70 });
+  });
+});
