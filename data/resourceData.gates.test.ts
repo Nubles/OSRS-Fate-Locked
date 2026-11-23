@@ -92,3 +92,19 @@ describe('dense essence (resource-a.d3[3])', () => {
     expect(st.isAvailable).toBe(true);
   });
 });
+
+describe('Catacombs dragons (resource-a.d3[4])', () => {
+  // Wiki 'Catacombs of Kourend': the Dragon's Den holds brutal red dragons
+  // (no Slayer level) and brutal black dragons (77 Slayer); no black dragons.
+  const kourend = areasOf('Kourend & Kebos');
+  it('no Dragon Bones row puts black dragons in Kourend', () => {
+    expect(rows('Dragon Bones', 'Black Dragon').some(r => r.regions.some(x => x.includes('Kourend')))).toBe(false);
+  });
+  it('brutal red dragons need no Slayer level', () => {
+    expect(anyOpen('Dragon Bones', 'Brutal Red Dragon', state(kourend, { levels: { Slayer: 1 } }))).toBe(true);
+  });
+  it('brutal black dragons need 77 Slayer', () => {
+    expect(anyOpen('Dragon Bones', 'Brutal Black Dragon', state(kourend, { levels: { Slayer: 76 } }))).toBe(false);
+    expect(anyOpen('Dragon Bones', 'Brutal Black Dragon', state(kourend, { levels: { Slayer: 77 } }))).toBe(true);
+  });
+});

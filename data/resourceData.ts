@@ -809,7 +809,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Red Dragon', regions: ['Kourend & Kebos'], notes: 'Forthos Dungeon' },
     { type: 'DROP', name: 'Black Dragon', regions: ['Asgarnia', 'Tirannwn'], notes: 'Taverley Dungeon' },
     { type: 'DROP', name: 'Black Dragon', regions: ['Kandarin', 'Tirannwn'], quests: ['Dragon Slayer II'], notes: 'Myths\' Guild' },
-    { type: 'DROP', name: 'Black Dragon', regions: ['Kourend & Kebos', 'Tirannwn'], notes: 'Catacombs' },
+    { type: 'DROP', name: 'Brutal Red Dragon', regions: ['Catacombs of Kourend'], rarity: 'Always', notes: "Catacombs of Kourend (Dragon's Den)" },
+    { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Catacombs of Kourend'], skills: {'Slayer': 77}, rarity: 'Always', notes: "Catacombs of Kourend (Dragon's Den)" },
     { type: 'DROP', name: 'King Black Dragon', regions: ['Wilderness'], unlockId: 'King Black Dragon' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Superior Dragon Bones' }
   ],
