@@ -43,11 +43,11 @@ describe('Karuulm Slayer Dungeon heat (Wiki: Karuulm Slayer Dungeon, Wyrm, Drake
   // wyrms also live in the Wyrmscraig Cavern (partial Fallen From Grace), which needs no boots.
   const KARUULM = /\b(wyrms?|drakes?|drake's|hydras?)\b/i;
   const entries = Object.entries(S).filter(([key, req]) =>
-    (KARUULM.test(key) || KARUULM.test(req.id) || key === 'Boots of Brimstone') && !key.startsWith('Karuulm Dungeon'));
+    (KARUULM.test(key) || KARUULM.test(req.id) || key === 'Boots of Brimstone' || key === 'Devout Boots') && !key.startsWith('Karuulm Dungeon'));
   it('covers every entry whose content is past the entrance chamber', () => {
     expect(entries.map(([key]) => key)).toEqual(expect.arrayContaining([
       'Wyrms', 'Drakes', 'Hydras', "Drake's Tooth/Claw", 'Hydra Leather',
-      'Boots of Brimstone', 'Dragon Harpoon (Wyrms)', 'Ferocious Gloves',
+      'Boots of Brimstone', 'Devout Boots', 'Dragon Harpoon (Wyrms)', 'Ferocious Gloves',
     ]));
   });
   it.each(entries)('%s asks for the heat-proof boots or the Kourend & Kebos Elite reward', (key, req) => {
@@ -57,7 +57,7 @@ describe('Karuulm Slayer Dungeon heat (Wiki: Karuulm Slayer Dungeon, Wyrm, Drake
   });
   it('offers the Wyrmscraig Cavern for the wyrms', () => {
     for (const key of ['Wyrms', 'Dragon Harpoon (Wyrms)']) {
-      expect(S[key].manualRequirements?.join(' '), key).toMatch(/Wyrmscraig Cavern.*Fallen From Grace/);
+      expect(S[key].manualRequirements?.join(' '), key).toMatch(/Wyrmscraig Cavern partway through Fallen From Grace/);
     }
   });
   it('describes the 88 Agility pipe as the way to the Alchemical Hydra, past the hydras', () => {

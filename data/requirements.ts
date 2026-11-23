@@ -35,7 +35,7 @@ export interface ContentRequirement {
 // Wiki 'Karuulm Slayer Dungeon': past the entrance chamber the floor burns without these boots.
 const KARUULM_HEAT = 'Wear boots of stone, boots of brimstone or granite boots past the Karuulm Slayer Dungeon entrance (not needed with the Kourend & Kebos Elite reward)';
 // Wiki 'Wyrm': wyrms also live in the Wyrmscraig Cavern, which needs no boots.
-const KARUULM_HEAT_OR_WYRMSCRAIG = KARUULM_HEAT + ', or fight wyrms in the Wyrmscraig Cavern after starting Fallen From Grace';
+const KARUULM_HEAT_OR_WYRMSCRAIG = KARUULM_HEAT + ', or fight wyrms in the Wyrmscraig Cavern partway through Fallen From Grace';
 // Wiki 'God Wars Dungeon': partial Troll Stronghold or the full Easy Combat Achievements tier.
 const GOD_WARS_ENTRY = 'God Wars Dungeon access through Troll Stronghold progress (defeated Dad) or the Easy Combat Achievement hilt teleport; the Wilderness God Wars Dungeon needs neither';
 // Wiki 'Smoke devil': a facemask or Slayer helmet is needed to kill them; the gas mask also works.
@@ -1412,7 +1412,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Devout Boots',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Hydra (Drake Tooth)
-    skills: { 'Slayer': 84 },
+    skills: { 'Slayer': 84 }, // Drake's tooth drops only from drakes, in the Karuulm Slayer Dungeon
+    manualRequirements: [KARUULM_HEAT],
     description: 'Best Prayer bonus boots.'
   },
   'Occult Necklace': {
