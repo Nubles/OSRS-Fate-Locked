@@ -10912,6 +10912,12 @@
               "tier": 1,
               "reason": "Insect net or magic insect net",
               "manualCheck": "Have Insect net or magic insect net and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
             }
           ],
           "items": [
@@ -10919,6 +10925,9 @@
           ],
           "regions": [
             "Zanaris"
+          ],
+          "quests": [
+            "Lost City"
           ]
         },
         {
@@ -11027,6 +11036,17 @@
           ],
           "regions": [
             "Zanaris"
+          ],
+          "quests": [
+            "Lost City"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
@@ -11586,6 +11606,12 @@
           },
           "regions": [
             "Keldagrim"
+          ],
+          "questProgress": [
+            {
+              "quest": "The Giant Dwarf",
+              "label": "Reached the required progress in The Giant Dwarf for: Craft, string and enchant an Amulet of Power in Lumbridge."
+            }
           ]
         },
         {

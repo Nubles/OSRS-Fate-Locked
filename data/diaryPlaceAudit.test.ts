@@ -145,6 +145,29 @@ describe('Diary tasks the game counts in more than one place', () => {
     expect(circles.some(({ cx, cy }) => cx === 59 && cy === 44)).toBe(false);
   });
 
+  it('enters Puro-Puro through Zanaris only after Lost City, with a dramen or lunar staff', () => {
+    // Wiki Zanaris: "The Lost City quest is a pre-requisite to visiting Zanaris", entered by wielding a dramen or
+    // lunar staff in the Lumbridge Swamp shed (50,49). Wiki Puro-Puro: only the crop circles skip Lost City.
+    const impling = task('lum_med_11');
+    for (const route of impling.oneOf!.filter(option => option.regions?.includes('Zanaris'))) {
+      expect(route.quests, route.label).toEqual(['Lost City']);
+      expect(route.equipmentRequirements?.map(item => item.reason), route.label)
+        .toContain('Dramen or lunar staff to enter Zanaris');
+    }
+    const hunter = {
+      chunks: ['50,49'], equipment: { Weapon: 1 }, skills: { Hunter: 10 }, levels: { Hunter: 99 }, minigames: ['Impetuous Impulses'],
+    };
+    expect(doable('lum_med_11', account(hunter), 'chunked')).toBe(false);
+    expect(doable('lum_med_11', account({ ...hunter, quests: ['Lost City'] }), 'chunked')).toBe(true);
+  });
+
+  it('reaches the Keldagrim crafting stall only once The Giant Dwarf is started', () => {
+    // Wiki Keldagrim: "Travelling to Keldagrim requires starting The Giant Dwarf quest." Same check as frem_easy_5.
+    const stall = task('lum_hard_11').oneOf!.find(option => option.label === 'Keldagrim crafting stall');
+    expect(stall).toMatchObject({ regions: ['Keldagrim'], questProgress: [expect.objectContaining({ quest: 'The Giant Dwarf' })] });
+    expect(task('frem_easy_5').questProgress).toEqual([expect.objectContaining({ quest: 'The Giant Dwarf' })]);
+  });
+
   it('names the places with travel rules as areas', () => {
     expect(task('frem_easy_3').anyOfRegions).toEqual(['Rellekka', 'Waterbirth Island']);
     expect(task('kar_med_2').anyOfRegions).toEqual(['Musa Point', 'Crandor']);
