@@ -1,7 +1,7 @@
 import { TableType } from '../types';
 import { BANK_BY_ID } from '../data/banks';
 import { REGIONS_LIST, GUILDS_LIST } from '../data/items';
-import { getActivityReq, type ActivityReq } from '../data/activityRequirements';
+import { getActivityReq, MINIGAME_REQUIREMENT_OVERRIDES, type ActivityReq } from '../data/activityRequirements';
 
 /** Missing catalogue data is a check for the player, never proof of access. */
 export function getUtilityActivityReq(id: string, table: TableType, mode?: string): ActivityReq | undefined {
@@ -14,6 +14,8 @@ export function getUtilityActivityReq(id: string, table: TableType, mode?: strin
         : `Reach ${name} and meet its entry requirements`] };
   }
   const req = getActivityReq(id);
+  const minigame = table === TableType.MINIGAMES ? MINIGAME_REQUIREMENT_OVERRIDES[id] : undefined;
+  if (minigame) return { ...req, ...minigame, skills: { ...req?.skills, ...minigame.skills } };
   if (GUILDS_LIST.includes(id) && REGIONS_LIST.includes(id)) return { ...req, requiredAreas: [id] };
   return req;
 }

@@ -131,7 +131,9 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Legends' Guild": { quests: ["Legends' Quest"] },
   "Myths' Guild": { quests: ['Dragon Slayer II'] },
   'Ranging Guild': { skills: { Ranged: 40 } },
-  "Rogues' Den": { note: 'Free entry; the safecracking maze needs 50 Thieving & 50 Agility.' },
+  // The Guilds row is the hideout (free; its wall safes need 50 Thieving). The Minigames
+  // table reads MINIGAME_REQUIREMENT_OVERRIDES for the maze.
+  "Rogues' Den": { note: 'Free entry; the wall safes need 50 Thieving, the maze 50 Thieving and 50 Agility.' },
   "Servants' Guild": { note: 'Hire household servants (Construction).' },
   "Warriors' Guild": {
     warriorsGuildEntry: true,
@@ -344,6 +346,15 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Hard STASH': { note: 'Clue STASH unit (Construction).' },
   'Elite STASH': { note: 'Clue STASH unit (Construction).' },
   'Master STASH': { note: 'Clue STASH unit (Construction).' },
+};
+
+/**
+ * Gates that apply only when a name the Guilds table shares is rolled as a
+ * minigame. Rogues' Den, oldid 15379507: the maze needs 50 Thieving and 50
+ * Agility (not boostable), while the hideout itself is free.
+ */
+export const MINIGAME_REQUIREMENT_OVERRIDES: Record<string, ActivityReq> = {
+  "Rogues' Den": { skills: { Thieving: 50, Agility: 50 } },
 };
 
 /**

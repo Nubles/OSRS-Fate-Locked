@@ -11,6 +11,9 @@ import { REGIONS_LIST, REGION_GROUPS } from './items';
 import { createFreshState } from '../context/GameContext';
 import { isAreaReachable } from '../utils/reachability';
 import { evaluateActivityReadiness } from '../utils/activityReadiness';
+import { getUtilityActivityReq } from '../utils/utilityReadiness';
+import { wardUsable } from '../utils/ritualWard';
+import { TableType } from '../types';
 
 const ALL_ACTIVITY_ITEMS = new Set<string>([
   ...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST, ...MOBILITY_LIST, ...ARCANA_LIST,
@@ -156,6 +159,33 @@ describe('activity rows follow the Wiki', () => {
 
   it('the Colossal Pouch needs 56 Crafting as well as 25 Runecraft (Wiki: Colossal pouch)', () => {
     expect(ACTIVITY_REQUIREMENTS['Colossal Pouch'].skills).toEqual({ Runecraft: 25, Crafting: 56 });
+  });
+
+  const at = (levels: Record<string, number>, quests: string[] = []) => (u: ReturnType<typeof createFreshState>['unlocks']) => {
+    for (const [skill, level] of Object.entries(levels)) { u.skills[skill] = 10; u.levels[skill] = level; }
+    u.quests = quests;
+  };
+
+  it("the Rogues' Den maze needs 50 Thieving and 50 Agility; the hideout stays free (Wiki: Rogues' Den, oldid 15379507)", () => {
+    const minigame = (levels: Record<string, number>) => {
+      const u = createFreshState().unlocks;
+      u.regions = [...REGIONS_LIST];
+      u.minigames = ["Rogues' Den"];
+      u.guilds = ["Rogues' Den"];
+      at(levels)(u);
+      return {
+        status: evaluateActivityReadiness(true, getUtilityActivityReq("Rogues' Den", TableType.MINIGAMES, 'vanilla'), u, 'vanilla').status,
+        ward: wardUsable(TableType.MINIGAMES, "Rogues' Den", u, 'vanilla'),
+        guild: evaluateActivityReadiness(true, getUtilityActivityReq("Rogues' Den", TableType.GUILDS, 'vanilla'), u, 'vanilla').status,
+        guildWard: wardUsable(TableType.GUILDS, "Rogues' Den", u, 'vanilla'),
+      };
+    };
+    expect(minigame({ Thieving: 1, Agility: 1 })).toEqual({ status: 'NOT_READY', ward: false, guild: 'READY', guildWard: true });
+    expect(minigame({ Thieving: 49, Agility: 50 }).status).toBe('NOT_READY');
+    expect(minigame({ Thieving: 50, Agility: 49 }).status).toBe('NOT_READY');
+    expect(minigame({ Thieving: 50, Agility: 50 })).toEqual({ status: 'READY', ward: true, guild: 'READY', guildWard: true });
+    // The diary's wall safes sit in the hideout, not the maze: the guild row asks for nothing.
+    expect(getActivityReq("Rogues' Den")?.skills).toBeUndefined();
   });
 
   it("the Cooks' and Crafting Guild doors ask for a worn item (Wiki: Cooks' Guild, Crafting Guild)", () => {
