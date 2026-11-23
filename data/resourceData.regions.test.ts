@@ -59,10 +59,15 @@ describe('monster and activity areas (resource-a.d1[3])', () => {
   });
 
   it.each([
-    ['Adamantite Bar', 'Aviansie'], ['Runite Limbs', 'Aviansie'],
     ['Soul Rune', 'Spiritual Mage'], ['Dragon Boots', 'Spiritual Mage'],
   ])('%s from %s is in the God Wars Dungeons', (item, monster) => {
     expect(row(item, monster).regions).toEqual(['Asgarnia', 'Wilderness']);
+  });
+
+  // Aviansie are split by entrance since resource-a.d3[2]: the main dungeon
+  // needs Troll Stronghold, the Wilderness one does not.
+  it.each(['Adamantite Bar', 'Runite Limbs'])('%s from Aviansie is in the God Wars Dungeons', item => {
+    expect(rows(item, 'Aviansie').map(r => r.regions)).toEqual([['Asgarnia'], ['Wilderness God Wars Dungeon']]);
   });
 
   it('zamorak warriors are in the Ourania Cave', () => {

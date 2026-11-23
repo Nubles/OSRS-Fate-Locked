@@ -60,3 +60,24 @@ describe('seed nests (resource-a.d3[1])', () => {
     expect(anyOpen(item, 'Bird Nest', fresh)).toBe(false);
   });
 });
+
+describe('aviansie (resource-a.d3[2])', () => {
+  // Wiki 'God Wars Dungeon': aviansie live in the shared central chamber; the
+  // 70-stat gates are for the generals' bases. Entry needs Troll Stronghold
+  // progress. 'Aviansie': also in the Wilderness God Wars Dungeon.
+  it.each(['Adamantite Bar', 'Runite Limbs'])('%s from aviansie is not blocked by Agility', item => {
+    expect(rows(item, 'Aviansie').every(r => !r.skills?.Agility)).toBe(true);
+    expect(anyOpen(item, 'Aviansie', state(allAreas, { levels: { Agility: 1 } }))).toBe(true);
+  });
+
+  it.each(['Adamantite Bar', 'Runite Limbs'])('%s from the main dungeon needs Troll Stronghold', item => {
+    const s = state(areasOf('Asgarnia'), { quests: [] });
+    expect(anyOpen(item, 'Aviansie', s)).toBe(false);
+    expect(statuses(item, 'Aviansie', s).flatMap(st => st.missing)).toContain('Quest: Troll Stronghold');
+    expect(anyOpen(item, 'Aviansie', state(areasOf('Asgarnia'), { quests: ['Troll Stronghold'] }))).toBe(true);
+  });
+
+  it.each(['Adamantite Bar', 'Runite Limbs'])('%s from the Wilderness dungeon needs no quest', item => {
+    expect(anyOpen(item, 'Aviansie', state(areasOf('Wilderness'), { quests: [] }))).toBe(true);
+  });
+});

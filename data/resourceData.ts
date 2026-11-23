@@ -557,7 +557,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   'Adamantite Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia', 'Wilderness'], skills: {'Agility': 70} },
+    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia'], quests: ['Troll Stronghold'], notes: 'God Wars Dungeon main chamber; entry needs 60 Strength or 60 Agility' },
+    { type: 'DROP', name: 'Aviansie', regions: ['Wilderness God Wars Dungeon'], notes: 'Entry needs 60 Strength or 60 Agility' },
     { type: 'DROP', name: 'Adamant Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'], rarity: 'Always' }
   ],
   'Rune Bar': [
@@ -863,7 +864,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Iron Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
     { type: 'DROP', name: 'Steel Dragon', regions: ['Karamja', 'Kourend & Kebos'] },
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 91}, inputs: {'Rune Bar': 1} },
-    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia', 'Wilderness'], skills: {'Agility': 70} }
+    { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia'], quests: ['Troll Stronghold'], notes: 'God Wars Dungeon main chamber; entry needs 60 Strength or 60 Agility' },
+    { type: 'DROP', name: 'Aviansie', regions: ['Wilderness God Wars Dungeon'], notes: 'Entry needs 60 Strength or 60 Agility' }
   ],
   'Yew Stock': [
     { type: 'SKILL', name: 'Fletching', regions: ['Any'], skills: {'Fletching': 69}, inputs: {'Yew Logs': 1, 'Knife': 0} }
