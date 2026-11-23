@@ -93,6 +93,27 @@ describe('where a master’s task is fought', () => {
     expect(wilderness.every(hit => hit.location.locationName === 'Wilderness God Wars Dungeon')).toBe(true);
   });
 
+  it('keeps Krystilia’s tasks in the Wilderness: not the Entrana Dungeon nor the King Black Dragon (slayer.d1[1])', () => {
+    // Wiki "Entrana Dungeon" oldid 15353043 (its Wilderness door is an exit only) and "Krystilia" oldid 15389119.
+    for (const task of ['Zombies', 'Black demons', 'Greater demons']) {
+      expect(located('Krystilia', task).filter(hit => hit.location.locationName === 'Entrana Dungeon'), task).toEqual([]);
+    }
+    expect(located('Krystilia', 'Black dragons').map(hit => hit.name)).not.toContain('King Black Dragon');
+    expect(located('Krystilia', 'Black dragons').length).toBeGreaterThan(0);
+    expect(located('Vannaka', 'Greater demons').filter(hit => hit.location.locationName === 'Entrana Dungeon')
+      .map(hit => `${hit.location.cx},${hit.location.cy}`)).toEqual(['44,52']);
+  });
+
+  it('finds no moved-out monster in the Revenant Caves, and the revenants still there (slayer.d2[0])', () => {
+    // Wiki "Revenant Caves" oldid 15397220: the 2020 overhaul moved them to the Wilderness Slayer Cave.
+    for (const [master, task] of [['Vannaka', 'Lesser demons'], ['Vannaka', 'Ankous'], ['Krystilia', 'Greater demons'], ['Nieve', 'Hellhounds'], ['Krystilia', 'Ice giants'], ['Krystilia', 'Green dragons']]) {
+      const hits = located(master, task);
+      expect(hits.filter(hit => hit.location.locationName === 'Revenant Caves'), `${master}/${task}`).toEqual([]);
+      expect(hits.some(hit => hit.location.locationName === 'Wilderness Slayer Cave'), `${master}/${task}`).toBe(true);
+    }
+    expect(located('Krystilia', 'Revenants').some(hit => hit.location.locationName === 'Revenant Caves')).toBe(true);
+  });
+
   it('names boss monsters the map knows', () => {
     for (const master of ['Konar quo Maten', 'Nieve', 'Krystilia']) {
       for (const boss of MASTERS[master].Bosses.bosses!) for (const monster of boss.monsters) {
@@ -166,6 +187,38 @@ describe('gates a player on the task meets (accuracy audit S-9)', () => {
       ['Nieve', 'Smoke devils'], ['Nieve', 'Gargoyles'], ['Nieve', 'Cave krakens'], ['Nieve', 'Kalphites'], ['Nieve', 'Frost dragons'],
       ['Duradel', 'Hellhounds'], ['Krystilia', 'Abyssal demons'], ['Krystilia', 'Magic axes'], ['Krystilia', 'Pirates'],
     ]) expect(status(master, task), `${master}/${task}`).toBe('ready');
+  });
+});
+
+describe('quest-locked places the source marks as area unlocks (slayer.d3[0])', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+  const maxed = (without: string[] = []) => account({
+    skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+    levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+    regions: [...REGIONS_LIST, ...MISTHALIN_AREAS],
+    mobility: [...MOBILITY_LIST],
+    bosses: [...BOSSES_LIST],
+    slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+    quests: Object.keys(QUEST_DATA).filter(quest => !without.includes(quest)),
+    diaries: Object.keys(DIARY_DATA),
+  });
+  const status = (unlocks: UnlockState, task: string) =>
+    slayerReachability({ 'Konar quo Maten': { [task]: MASTERS['Konar quo Maten'][task] } }, unlocks, slayerLocate(chunkContentService, unlocks, 'vanilla'), 'vanilla')
+      .masters[0].rows[0].status;
+
+  it('asks for the quest that opens the only place Konar names', () => {
+    for (const [task, quest] of [
+      ["Basilisks - Jormungand's Prison", 'The Fremennik Exiles'],
+      ["Dagannoths - Jormungand's Prison", 'The Fremennik Exiles'],
+      ['Fire giants - Waterfall Dungeon', 'Waterfall Quest'],
+    ]) {
+      expect(status(maxed(), task), task).toBe('ready');
+      expect(status(maxed([quest]), task), `${task} without ${quest}`).not.toBe('ready');
+    }
   });
 });
 

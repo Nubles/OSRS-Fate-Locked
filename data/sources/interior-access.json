@@ -433,6 +433,82 @@
           "y": 3745
         }
       ]
+    },
+    "Entrana Dungeon": {
+      "anchors": [
+        "11316"
+      ],
+      "requirements": [],
+      "coordinates": [
+        {
+          "x": 2820,
+          "y": 3374
+        }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Entrana_Dungeon?oldid=15353043",
+      "note": "Entered by the ladder on Entrana. The magic door to level 32 Wilderness (3250,3772) is a one-way exit, not an entrance."
+    },
+    "Jormungand's Prison": {
+      "requirements": [
+        "The Fremennik Exiles Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Jormungand%27s_Prison?oldid=15271568",
+      "note": "Haskell sails to the Island of Stone during and after The Fremennik Exiles; the dagannoths and basilisks are there after the quest."
+    },
+    "Myth's Guild#Basement": {
+      "requirements": [
+        "Dragon Slayer II Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Corsair_Cove_Dungeon?oldid=15369031",
+      "note": "The western side of the Corsair Cove Dungeon. Its eastern, ogress side is open to all and is a separate record."
+    },
+    "Heroes' Guild#Basement": {
+      "requirements": [
+        "Heroes' Quest Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Heroes%27_Guild?oldid=15352680"
+    },
+    "Legends' Guild#Dungeon": {
+      "requirements": [
+        "Legends' Quest Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Legends%27_Guild?oldid=15352122",
+      "note": "The grounds need the quest started; the building, and the dungeon below it, need it completed."
+    },
+    "Smoke Dungeon": {
+      "requirements": [
+        "Started Desert Treasure I"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Smoke_Dungeon?oldid=15386435",
+      "note": "Opens once Desert Treasure I reaches the mystical mirrors; completion meets it."
+    },
+    "Shadow Dungeon": {
+      "requirements": [
+        "Started Desert Treasure I"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Shadow_Dungeon?oldid=15127725",
+      "note": "The ladder shows only to a player wearing the ring of visibility (Desert Treasure I) or the ring of shadows (Desert Treasure II, which needs Desert Treasure I)."
+    },
+    "Waterfall Dungeon": {
+      "requirements": [
+        "Started Waterfall Quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Waterfall_Dungeon?oldid=15372021",
+      "note": "Open during and after the Waterfall Quest."
+    },
+    "Glarial's Tomb": {
+      "requirements": [
+        "Started Waterfall Quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Glarial%27s_Tomb?oldid=15322676",
+      "note": "Glarial's pebble comes from the Waterfall Quest; the tomb can be re-entered after it."
+    },
+    "Lighthouse#Dungeon": {
+      "requirements": [
+        "Started Horror from the Deep"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Lighthouse?oldid=15375076",
+      "note": "The Lighthouse opens during and after Horror from the Deep."
     }
   },
   "records": {

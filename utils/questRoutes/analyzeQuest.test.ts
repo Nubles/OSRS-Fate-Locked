@@ -928,6 +928,8 @@ describe('analyzeQuest', () => {
       chunks: ['54,51'],
       blockers: [
         { type: 'UNLOCK', category: 'merchants', id: 'Real Estate Agents', label: 'Real Estate Agents' },
+        // Wiki "Razmire Builders Merchants" oldid 15318751: the store opens after Shades of Mort'ton.
+        { type: 'QUEST', questId: "Shades of Mort'ton", label: "Shades of Mort'ton" },
         { type: 'QUEST', questId: 'Priest in Peril', label: 'Priest in Peril' },
       ],
       hasDataGap: false,

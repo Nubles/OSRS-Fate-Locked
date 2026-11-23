@@ -25,7 +25,8 @@
   "requirementRewrites": [
     { "from": "Access the Farming Guild#Beginner tier", "to": ["Access the Farming Guild", "Farming level 45"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
     { "from": "Access the Farming Guild#Intermediate tier", "to": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
-    { "from": "Access the Farming Guild#Advanced tier", "to": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" }
+    { "from": "Access the Farming Guild#Advanced tier", "to": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
+    { "from": "Champions Guild Questpoints", "to": ["32 Quest Points"], "source": "https://oldschool.runescape.wiki/w/Champions%27_Guild?oldid=15364426", "note": "The guild, its shops and champion scrolls need 32 quest points (Champion scroll oldid 15341877)." }
   ],
   "entityRequirements": [
     { "category": "Objects", "name": "Herb patch", "chunkId": "4922", "requirements": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002", "note": "The intermediate tier, the west wing." },
@@ -38,5 +39,8 @@
     { "category": "Objects", "name": "Herb patch", "chunkId": "11321", "requirements": ["My Arm's Big Adventure Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch on the Troll Stronghold's roof." },
     { "category": "Objects", "name": "Herb patch", "chunkId": "11325", "requirements": ["Making Friends with My Arm Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Herb_patch?oldid=15359652", "note": "The patch in Weiss." },
     { "category": "Objects", "name": "Hardwood tree patch", "chunkId": "9770", "requirements": ["Sailing level 51"], "source": "https://oldschool.runescape.wiki/w/Special_patches/Patches?oldid=15319393", "note": "The patch on Anglers' Retreat, where mooring needs 51 Sailing." }
+  ],
+  "interiorEntityRemovals": [
+    { "interior": "Revenant Caves", "category": "Monsters", "names": ["Ankou", "Black demon", "Black dragon", "Greater demon", "Green dragon", "Hellhound", "Ice giant", "Lesser demon"], "source": "https://oldschool.runescape.wiki/w/Revenant_Caves?oldid=15397220", "note": "The 21 October 2020 overhaul moved the caves' other monsters to the Wilderness Slayer Cave, where the source already lists them." }
   ]
 }

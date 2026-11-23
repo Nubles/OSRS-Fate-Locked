@@ -7,6 +7,8 @@ const PLACE_ALIASES: Readonly<Record<string, string>> = {
   abyss: 'abyssalarea',
   mournertunnels: 'mournertunnelstempleoflight',
 };
+/** Family members Krystilia's tasks do not count: the King Black Dragon's lair is not part of the Wilderness (wiki "Krystilia" oldid 15389119). */
+const NOT_FOR_KRYSTILIA = new Set(['king black dragon']);
 export interface SlayerLocation { name: string; location: EntityLocation; }
 /** Exact reviewed monster families and the assignment's actual location constraint. */
 export function locateSlayerTask(task: string, entities: readonly EntityHit[], assignment?: SlayerAssignment, master?: string): SlayerLocation[] {
@@ -24,6 +26,7 @@ export function locateSlayerTask(task: string, entities: readonly EntityHit[], a
   const hits: SlayerLocation[] = [];
   for (const entity of entities) {
     if (!names.has(entity.name.toLowerCase())) continue;
+    if (master === 'Krystilia' && NOT_FOR_KRYSTILIA.has(entity.name.toLowerCase())) continue;
     for (const location of entity.locations) {
       const place = placeOf(location.cx, location.cy);
       // Krystilia assigns only in the Wilderness: on Wilderness land, or a dungeon's Wilderness part,

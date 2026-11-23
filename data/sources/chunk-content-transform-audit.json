@@ -33,8 +33,8 @@
     },
     "taskUnlocks": {
       "source": 1958,
-      "imported": 1300,
-      "normalized": 654,
+      "imported": 1295,
+      "normalized": 659,
       "excluded": 4,
       "unresolved": 0
     },
@@ -178214,6 +178214,22 @@
     },
     {
       "category": "lite",
+      "sourceKey": "11316/mon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "lite-cap",
+      "targetKeys": [
+        "Black demon",
+        "Chicken",
+        "Monk",
+        "Unicorn",
+        "Zombie",
+        "Zombie (Entrana Dungeon)"
+      ],
+      "detail": "8 source values capped at 6"
+    },
+    {
+      "category": "lite",
       "sourceKey": "11318/mon",
       "terminal": false,
       "disposition": "normalized",
@@ -178607,14 +178623,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Ankou",
-        "Greater demon",
-        "Green dragon",
+        "Ghost",
         "Grizzly bear",
-        "Ice giant",
-        "Lesser demon"
+        "Revenant cyclops",
+        "Revenant dark beast",
+        "Revenant ork",
+        "Revenant pyrefiend"
       ],
-      "detail": "18 source values capped at 6"
+      "detail": "11 source values capped at 6"
     },
     {
       "category": "lite",
@@ -178623,14 +178639,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Ankou",
-        "Black demon",
-        "Greater demon",
+        "Black chinchompa (Hunter)",
         "Green dragon",
-        "Ice giant",
-        "Lesser demon"
+        "Revenant cyclops",
+        "Revenant imp",
+        "Revenant ork",
+        "Revenant pyrefiend"
       ],
-      "detail": "20 source values capped at 6"
+      "detail": "13 source values capped at 6"
     },
     {
       "category": "lite",
@@ -179973,6 +179989,22 @@
         "8753"
       ],
       "detail": "https://oldschool.runescape.wiki/w/Roving_Elves?oldid=15315441"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removal/Revenant Caves/Monsters",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12701",
+        "12702",
+        "12703",
+        "12957",
+        "12958",
+        "12959"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Revenant_Caves?oldid=15397220"
     },
     {
       "category": "overrides",
@@ -220905,6 +220937,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Earth warrior champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -221678,6 +221721,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Ghoul champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -221717,6 +221771,17 @@
       "targetKeys": [
         "Giant champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Giant champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -221792,6 +221857,17 @@
       "targetKeys": [
         "Goblin champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Goblin champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -222448,6 +222524,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Hobgoblin champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -222523,6 +222610,17 @@
       "targetKeys": [
         "Imp champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Imp champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -222877,6 +222975,17 @@
       "targetKeys": [
         "Jogre champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Jogre champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -224099,6 +224208,17 @@
       "targetKeys": [
         "Lesser demon champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Lesser demon champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -226954,6 +227074,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Skeleton champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -229322,6 +229453,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Zombie champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -230057,6 +230199,17 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Chicken/12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Chicken/12596-1",
       "terminal": true,
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
@@ -230495,6 +230648,17 @@
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
       "targetKeys": []
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Evil Chicken/12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -234249,6 +234413,17 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Objects/Range/12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Range/12596-1",
       "terminal": true,
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
@@ -235047,10 +235222,10 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Aaron's Archery Appendages./10549",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Aaron's Archery Appendages./10549"
+        "Aaron's Archery Appendages/10549"
       ]
     },
     {
@@ -235058,9 +235233,9 @@
       "sourceKey": "Shops/Ali's Discount Wares./13106-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ali's Discount Wares./13106"
+        "Ali's Discount Wares/13106"
       ]
     },
     {
@@ -235234,19 +235409,19 @@
       "sourceKey": "Shops/Arnold's Eclectic Supplies./9273-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Arnold's Eclectic Supplies./9273"
+        "Arnold's Eclectic Supplies/9273"
       ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Authentic Throwing Weapons./10549",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Authentic Throwing Weapons./10549"
+        "Authentic Throwing Weapons/10549"
       ]
     },
     {
@@ -235309,9 +235484,9 @@
       "sourceKey": "Shops/Blades by Urbi./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Blades by Urbi./13099"
+        "Blades by Urbi/13099"
       ]
     },
     {
@@ -235710,10 +235885,10 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Dargaud's Bow and Arrows./10549",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Dargaud's Bow and Arrows./10549"
+        "Dargaud's Bow and Arrows/10549"
       ]
     },
     {
@@ -236140,19 +236315,19 @@
       "sourceKey": "Shops/Fernahei's Fishing Hut./11310-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Fernahei's Fishing Hut./11310"
+        "Fernahei's Fishing Hut/11310"
       ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Fishing Guild Shop./10293",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Fishing Guild Shop./10293"
+        "Fishing Guild Shop/10293"
       ]
     },
     {
@@ -236189,7 +236364,7 @@
       "sourceKey": "Shops/Frincos' Fabulous Herb Store./11060-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236197,9 +236372,9 @@
       "sourceKey": "Shops/Gabooty's Tai Bwo Wannai Cooperative./11055-2",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gabooty's Tai Bwo Wannai Cooperative./11055"
+        "Gabooty's Tai Bwo Wannai Cooperative/11055"
       ]
     },
     {
@@ -236207,9 +236382,9 @@
       "sourceKey": "Shops/Gabooty's Tai Bwo Wannai Drinky Store./11055-2",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gabooty's Tai Bwo Wannai Drinky Store./11055"
+        "Gabooty's Tai Bwo Wannai Drinky Store/11055"
       ]
     },
     {
@@ -236226,7 +236401,7 @@
       "sourceKey": "Shops/Gaius' Two Handed Shop./11573-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236302,10 +236477,10 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Grud's Herblore Stall./10031",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Grud's Herblore Stall./10031"
+        "Grud's Herblore Stall/10031"
       ]
     },
     {
@@ -236313,9 +236488,9 @@
       "sourceKey": "Shops/Happy Heroes' H'emporium./11574-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Happy Heroes' H'emporium./11574"
+        "Happy Heroes' H'emporium/11574"
       ]
     },
     {
@@ -236332,7 +236507,7 @@
       "sourceKey": "Shops/Harry's Fishing Shop./11317-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236349,7 +236524,7 @@
       "sourceKey": "Shops/Hickton's Archery Emporium./11317-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236387,9 +236562,9 @@
       "sourceKey": "Shops/Jamila's Craft Stall./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Jamila's Craft Stall./13099"
+        "Jamila's Craft Stall/13099"
       ]
     },
     {
@@ -236406,7 +236581,7 @@
       "sourceKey": "Shops/Jatix's Herblore Shop./11573-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236461,9 +236636,9 @@
       "sourceKey": "Shops/Legends Guild General Store./10804-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Legends Guild General Store./10804"
+        "Legends Guild General Store/10804"
       ]
     },
     {
@@ -236471,9 +236646,9 @@
       "sourceKey": "Shops/Legends Guild Shop of Useful Items./10804-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Legends Guild Shop of Useful Items./10804"
+        "Legends Guild Shop of Useful Items/10804"
       ]
     },
     {
@@ -236483,7 +236658,17 @@
       "disposition": "normalized",
       "reason": "named-location-mapped",
       "targetKeys": [
-        "Mage Arena Staffs./12349"
+        "Mage Arena Staffs/12349"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Mage Arena Staffs./Mage Arena bank",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Mage Arena Staffs/12349"
       ]
     },
     {
@@ -236523,7 +236708,17 @@
       "disposition": "normalized",
       "reason": "named-location-mapped",
       "targetKeys": [
-        "Martin Thwait's Lost and Found./11575"
+        "Martin Thwait's Lost and Found/11575"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Martin Thwait's Lost and Found./Rogues' Den",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Martin Thwait's Lost and Found/11575"
       ]
     },
     {
@@ -236618,9 +236813,9 @@
       "sourceKey": "Shops/Nathifa's Bake Stall./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Nathifa's Bake Stall./13099"
+        "Nathifa's Bake Stall/13099"
       ]
     },
     {
@@ -236628,9 +236823,9 @@
       "sourceKey": "Shops/Obli's General Store./11310-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Obli's General Store./11310"
+        "Obli's General Store/11310"
       ]
     },
     {
@@ -236734,9 +236929,9 @@
       "sourceKey": "Shops/Raetul and Co's Cloth Store./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Raetul and Co's Cloth Store./13099"
+        "Raetul and Co's Cloth Store/13099"
       ]
     },
     {
@@ -236764,9 +236959,9 @@
       "sourceKey": "Shops/Razmire Builders Merchants./13875-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Razmire Builders Merchants./13875"
+        "Razmire Builders Merchants/13875"
       ]
     },
     {
@@ -236774,9 +236969,9 @@
       "sourceKey": "Shops/Razmire General Store./13875-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Razmire General Store./13875"
+        "Razmire General Store/13875"
       ]
     },
     {
@@ -236803,17 +236998,28 @@
       "sourceKey": "Shops/Sarah's Farming shop./12083-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Scavvo's Rune Store./12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Scavvo's Rune Store./12596-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Scavvo's Rune Store./12596"
+        "Scavvo's Rune Store/12596"
       ]
     },
     {
@@ -237019,9 +237225,9 @@
       "sourceKey": "Shops/The Spice Is Right./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "The Spice Is Right./13099"
+        "The Spice Is Right/13099"
       ]
     },
     {
@@ -237098,11 +237304,22 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Valaine's Shop of Champions./12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Valaine's Shop of Champions./12596-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Valaine's Shop of Champions./12596"
+        "Valaine's Shop of Champions/12596"
       ]
     },
     {
@@ -237199,7 +237416,7 @@
       "sourceKey": "Shops/Ye olde Tea Shoppe./13109-2",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {

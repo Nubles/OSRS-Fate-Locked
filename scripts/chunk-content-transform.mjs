@@ -440,7 +440,27 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
     ((taskUnlocks[override.category] ??= {})[override.name] ??= {})[override.chunkId] = [...override.requirements].sort();
     audit.add('overrides', `requirements/${override.category}/${override.name}/${override.chunkId}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
   }
+  // Entities the source still lists in an interior the game has since emptied of them, such as the
+  // monsters the 2020 overhaul moved out of the Revenant Caves.
+  for (const override of contentOverrides.interiorEntityRemovals ?? []) {
+    const field = ENTITY_FIELDS[override.category];
+    if (!field) throw new Error(`Unknown reviewed removal category: ${override.category}`);
+    const kind = REQUIREMENT_KINDS[override.category], names = new Set(override.names), touched = [];
+    for (const [id, interior] of Object.entries(interiors)) {
+      if (interior.name !== override.interior) continue;
+      const before = interior.content[field] ?? [];
+      const kept = before.filter(value => !names.has(Array.isArray(value) ? value[0] : value));
+      if (kept.length === before.length) continue;
+      if (kept.length) interior.content[field] = kept; else delete interior.content[field];
+      for (const name of names) delete interior.requirements?.[kind]?.[name];
+      if (interior.requirements?.[kind] && !Object.keys(interior.requirements[kind]).length) delete interior.requirements[kind];
+      touched.push(id);
+    }
+    if (touched.length) audit.add('overrides', `removal/${override.interior}/${override.category}`, 'normalized', 'reviewed-content-override', touched, false, override.source);
+  }
 }
+
+const REQUIREMENT_KINDS = { Monsters: 'monster', NPCs: 'npc', Objects: 'object', Shops: 'shop', Spawns: 'spawn' };
 
 const ENTITY_FIELDS = { Monsters: 'm', NPCs: 'p', Objects: 'o', Shops: 's', Spawns: 'i' };
 
@@ -504,7 +524,11 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
   for (const [category, entities] of Object.entries(data.taskUnlocks ?? {})) {
     const result = {};
     for (const [rawName, value] of Object.entries(entities)) {
-      const name = cleanName(rawName), locations = Array.isArray(value) ? [['*', value]] : Object.entries(value ?? {}), byChunk = result[name] ?? {};
+      // A shop keeps the name the chunk lists give it, without the source's trailing full stop,
+      // so its requirements reach the shop where it stands.
+      const name = category === 'Shops' ? cleanName(rawName).replace(/\.$/, '') : cleanName(rawName);
+      const renamed = rawName.includes('#') || name !== cleanName(rawName);
+      const locations = Array.isArray(value) ? [['*', value]] : Object.entries(value ?? {}), byChunk = result[name] ?? {};
       for (const [location, requirements] of locations) {
         const sourceKey = `${category}/${rawName}/${location}`;
         if (!Array.isArray(requirements)) { audit.add('taskUnlocks', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
@@ -522,7 +546,7 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
             const chunkIds = [...new Set(entranceChunks)].sort(numericSort);
             const targetKeys = reqs.length ? chunkIds.map((chunkId) => `${name}/${chunkId}`) : [];
             const duplicate = entranceChunks.length !== chunkIds.length || chunkIds.some((chunkId) => Boolean(byChunk[chunkId]));
-            if (rawName.includes('#')) audit.add('taskUnlocks', sourceKey, 'normalized', 'variant-name-cleaned', targetKeys, false);
+            if (renamed) audit.add('taskUnlocks', sourceKey, 'normalized', 'variant-name-cleaned', targetKeys, false);
             if (duplicate) audit.add('taskUnlocks', sourceKey, 'normalized', 'duplicate-deduped', targetKeys, false);
             if (reqs.length) for (const chunkId of chunkIds) byChunk[chunkId] = [...new Set([...(byChunk[chunkId] ?? []), ...reqs])].sort();
             audit.add('taskUnlocks', sourceKey, 'normalized', 'named-location-mapped', targetKeys);
@@ -530,12 +554,12 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
           }
           const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'), duplicate = Boolean(byChunk[base]);
           if (reqs.length) byChunk[base] = [...new Set([...(byChunk[base] ?? []), ...reqs])].sort();
-          const normalized = rawName.includes('#') || String(location).includes('-') || duplicate;
-          audit.add('taskUnlocks', sourceKey, normalized ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : rawName.includes('#') ? 'variant-name-cleaned' : String(location).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', reqs.length ? [`${name}/${base}`] : []);
+          const normalized = renamed || String(location).includes('-') || duplicate;
+          audit.add('taskUnlocks', sourceKey, normalized ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : renamed ? 'variant-name-cleaned' : String(location).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', reqs.length ? [`${name}/${base}`] : []);
         } else {
           const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'), duplicate = Boolean(byChunk['*']);
           if (reqs.length) byChunk['*'] = [...new Set([...(byChunk['*'] ?? []), ...reqs])].sort();
-          audit.add('taskUnlocks', sourceKey, rawName.includes('#') || duplicate ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : rawName.includes('#') ? 'variant-name-cleaned' : 'base-record', reqs.length ? [`${name}/*`] : []);
+          audit.add('taskUnlocks', sourceKey, renamed || duplicate ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : renamed ? 'variant-name-cleaned' : 'base-record', reqs.length ? [`${name}/*`] : []);
         }
       }
       if (Object.keys(byChunk).length) result[name] = byChunk;
