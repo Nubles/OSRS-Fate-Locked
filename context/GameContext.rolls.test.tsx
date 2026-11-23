@@ -8,12 +8,17 @@ import { TableType } from '../types';
 import { resetPendingSavesForTest } from '../utils/pendingSaves';
 import { WRITER_LEASE_ARBITRATION_MS } from '../utils/profileWriterLease';
 import { runDrawFloat } from '../utils/seededRng';
+import { loadWalkSections } from '../utils/walkSections';
 
 // Every run draws from its seed or hidden salt (runDrawFloat), never
 // Math.random, so a test that needs a given draw sets it here.
 vi.mock('../utils/seededRng', async importOriginal => {
   const actual = await importOriginal<typeof import('../utils/seededRng')>();
   return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
+vi.mock('../utils/walkSections', async importOriginal => {
+  const actual = await importOriginal<typeof import('../utils/walkSections')>();
+  return { ...actual, loadWalkSections: vi.fn(actual.loadWalkSections) };
 });
 
 let current: ReturnType<typeof useGame>;
@@ -172,4 +177,34 @@ it('closes a shown reveal on the first Continue while another change is still sa
   const saved = JSON.parse(localStorage.getItem('roll-audit')!);
   expect(saved.pendingUnlock).toBeUndefined();
   expect(saved.keys).toBe(2);
+});
+
+it('draws a Chunked Chunks Key from the walking frontier only, and a failed walk load spends nothing', async () => {
+  const actual = await vi.importActual<typeof import('../utils/walkSections')>('../utils/walkSections');
+  const load = vi.mocked(loadWalkSections);
+  const toasts: string[] = [];
+  const onToast = (event: Event) => { toasts.push((event as CustomEvent<{ message: string }>).detail.message); };
+  window.addEventListener('fate:toast', onToast);
+  load.mockRejectedValue(new Error('offline'));
+  const fresh = createFreshState();
+  localStorage.setItem('roll-audit', JSON.stringify({ ...fresh, gameModeId: 'chunked', gameModeLocked: true, keys: 3,
+    unlocks: { ...fresh.unlocks, chunks: ['50,49', '49,49'] } }));
+  mount(); await settle();
+  act(() => current.rollUnlock(TableType.CHUNKS));
+  await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+  expect(current.keys).toBe(3);
+  expect(current.pendingUnlock).toBeUndefined();
+  expect(toasts).toContain("The map's walking data couldn't load. Check your connection and try again; your Key is safe.");
+  // Still loading: nothing is drawn from the bare chunk grid (48,49 across the river, 50,48).
+  let open!: () => void;
+  const gate = new Promise<void>(resolve => { open = resolve; });
+  load.mockImplementation(() => gate.then(() => actual.loadWalkSections()));
+  act(() => current.rollUnlock(TableType.CHUNKS));
+  expect(current.keys).toBe(3);
+  open();
+  await act(async () => { await actual.loadWalkSections(); await vi.advanceTimersByTimeAsync(10); });
+  expect(current.keys).toBe(2);
+  expect(['49,50', '50,51', '51,50']).toContain(current.pendingUnlock?.item);
+  load.mockImplementation(actual.loadWalkSections);
+  window.removeEventListener('fate:toast', onToast);
 });

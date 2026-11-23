@@ -30,7 +30,7 @@ import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
 import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
 import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
-import { loadWalkSections } from '../utils/walkSections';
+import { loadWalkSections, walkSectionsLoaded } from '../utils/walkSections';
 import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from '../utils/fateSaveFile';
 import { UNLOCK_COST, randomUnlockPool, pickRandomUnlock, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
@@ -3284,13 +3284,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (coordinator) void settleCoordinatedFlush();
       else flushCurrentSave();
     };
-    const current = stateRef.current;
-    if (current.rituals?.ward !== true || !wardApplies(costType, table, current.gameModeId)) { draw(); return; }
-    // The Ward's activity checks load with the first warded spend, not with the app.
-    import('../utils/ritualWard').then(({ wardUsable }) => {
-      if (!mountedRef.current) return;
-      draw(c => wardUsable(c.table, c.item, stateRef.current.unlocks, stateRef.current.gameModeId ?? DEFAULT_MODE_ID));
-    }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
+    const roll = () => {
+      const current = stateRef.current;
+      if (current.rituals?.ward !== true || !wardApplies(costType, table, current.gameModeId)) { draw(); return; }
+      // The Ward's activity checks load with the first warded spend, not with the app.
+      import('../utils/ritualWard').then(({ wardUsable }) => {
+        if (!mountedRef.current) return;
+        draw(c => wardUsable(c.table, c.item, stateRef.current.unlocks, stateRef.current.gameModeId ?? DEFAULT_MODE_ID));
+      }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
+    };
+    // Chunked: a Chunks (or Chaos) draw takes the walking frontier, never the
+    // bare chunk grid, so it waits for the walking data; a failed load spends nothing.
+    if (stateRef.current.gameModeId !== 'chunked' || (table ?? TableType.CHUNKS) !== TableType.CHUNKS || walkSectionsLoaded()) { roll(); return; }
+    importWithRetry(loadWalkSections).then(() => { if (mountedRef.current) roll(); },
+      () => showToast("The map's walking data couldn't load. Check your connection and try again; your Key is safe."));
   }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
   const acknowledgeUnlock = useCallback((id: string) => {
     // Once its reveal has shown, the roll is saved: Continue joins whatever else is saving.
