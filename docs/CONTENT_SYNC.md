@@ -59,27 +59,31 @@ does the rest. Neither touches `main`.
    branch.
 
    Nobody reads that branch unprompted, so the same run tells the owner
-   (`scripts/sync-alert.mjs`). While `docs/SYNC_STATUS.md` lists something
-   under **Action needed**, or the collection log sync finds an item that is
-   new, renamed or moved, or a page it could not add, one issue labelled
-   `content-sync` and assigned to the repository owner carries the list. The
-   run opens it when there is something the last such issue did not list, adds
-   a comment when something new joins the list, and closes it when nothing is
-   left. Only a change on the Wiki's side counts as new: a count that moves
-   because the tracker caught up does not. Closing the issue by hand keeps it
-   quiet until something new appears. A part of the check that could not be
-   read takes nothing of its own off the list, and a check that did not write
-   its status at all fails the run instead. The failing tests are not on the
-   issue: they are in the run's summary, and in the commit message on the
-   branch. Only the weekly run and a manual run on `main` touch the issue; a
-   manual run on a curation branch does not.
+   (`scripts/sync-alert.mjs`). While `docs/SYNC_STATUS.md` lists something to
+   do under **Action needed**, or the collection log sync finds an item that
+   is new, renamed, possibly renamed or moved, or a page it could not add, one
+   issue labelled `content-sync` and assigned to the repository owner carries
+   the list. A line under Action needed that only says a source was
+   unavailable is not on it. The run opens the issue when there is something
+   the last such issue did not list, adds a comment when something new joins
+   the list, and closes it when nothing is left. Only a change on the Wiki's
+   side counts as new: a count that moves because the tracker caught up does
+   not. Closing the issue by hand keeps it quiet until something new appears.
+   The run writes the issue's text anew every week, so notes belong in a
+   comment. A part of the check that could not be read takes nothing of its
+   own off the list, and a check that did not write its status at all fails
+   the run instead. The failing tests are not on the issue: they are in the
+   run's summary, and in the commit message on the branch. Only the weekly run
+   and a manual run on `main` touch the issue; a manual run on a curation
+   branch does not. An alert job that failed can be run again from the run's
+   page for a week.
 2. **A content update**, started by a maintainer when the issue arrives. It
    reads that branch's report and the week's game update notes on the Wiki,
    does the curation the tests and notes call for (the boss, quest or minigame
    cascade, Diary or CA snapshot updates, the skill lists, the Discord area
    guide, golden bundles), adds the What's New entry and opens one draft pull
    request. A maintainer reviews and merges; the merge deploys. Nothing starts
-   this on its own: until someone does, the issue stays open.
+   a content update on its own.
 
 The install, sync, check and tests run in a read-only job that keeps no git
 credentials, from the lockfile (`npm ci`). Only the generated files, the CA

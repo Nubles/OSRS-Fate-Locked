@@ -689,8 +689,9 @@ describe('content sync workflow contract', () => {
 
     // The sync job hands over the status and the report every week, also when
     // no data file changed: the check can list something without changing one.
+    // They are kept for a week, so that a failed alert job can be run again.
     expect(syncJob).toMatch(
-      /- name: Hand the status and the report to the alert job\n\s+uses: [^\n]+\n\s+with:\n\s+name: wiki-content-sync-report\n\s+path: \|\n\s+docs\/SYNC_STATUS\.md\n\s+sync-report\.md\n\s+if-no-files-found: error\n/,
+      /- name: Hand the status and the report to the alert job\n\s+uses: [^\n]+\n\s+with:\n\s+name: wiki-content-sync-report\n\s+path: \|\n\s+docs\/SYNC_STATUS\.md\n\s+sync-report\.md\n\s+if-no-files-found: error\n\s+retention-days: 7(?:\n|$)/,
     );
     // They are read from a scratch folder, never unpacked over the checkout
     // the script runs from.
@@ -708,7 +709,7 @@ describe('content sync workflow contract', () => {
     );
   });
 
-  it('has these three jobs and no other, and lets no curation run cancel the weekly alert', async () => {
+  it('has these three jobs and no other, and lets no curation run cancel a weekly run in progress', async () => {
     const workflow = await readRepositoryFile('.github/workflows/sync-content.yml');
 
     expect(yamlEntries(workflow).filter((entry) => entry.path.length === 1).map((entry) => entry.key)).toEqual(
@@ -717,9 +718,10 @@ describe('content sync workflow contract', () => {
     expect(yamlEntries(yamlBlock(workflow, 'jobs')).filter((entry) => entry.path.length === 2).map((entry) => entry.key)).toEqual(
       ['sync', 'push-branch', 'alert'],
     );
-    // One run at a time. The weekly run and a manual run on main replace a
-    // run in progress; a manual run on a curation branch waits instead, so it
-    // cannot cancel the weekly run before that has told the owner.
+    // One run at a time, because every run pushes the same bot branch. The
+    // weekly run and a manual run on main replace a run in progress; a manual
+    // run on a curation branch waits instead, so it does not cancel a weekly
+    // run that is on its way to telling the owner.
     expect(yamlBlock(workflow, 'concurrency').trim()).toBe(
       "concurrency:\n  group: wiki-content-sync\n  cancel-in-progress: ${{ github.event_name == 'schedule' || github.ref == 'refs/heads/main' }}",
     );

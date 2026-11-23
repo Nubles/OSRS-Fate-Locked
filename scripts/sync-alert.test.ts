@@ -10,6 +10,7 @@ import {
   ALERT_ISSUE_TITLE,
   ALERT_LABEL,
   READ_EVERYTHING,
+  REPORT_HEADINGS,
   currentItems,
   issueBody,
   itemsFromBody,
@@ -126,24 +127,29 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 /**
  * A GitHub that keeps its issues between runs, so several weeks can be played
  * against it. `assignable` is its answer to "can the owner be assigned": 204
- * yes, 404 no, anything else a failure. It can be changed between runs.
+ * yes, 404 no, anything else a failure. `broken` makes one call fail. Both can
+ * be changed between runs. `strictLabels` makes it refuse a list by a label
+ * that does not exist, which the real one is not known to do.
  */
-function fakeGitHub({ issues = [] as Issue[], assignable = 204, dropLabels = false, dropAssignees = false } = {}) {
-  const labels = new Set<string>();
+function fakeGitHub({ issues = [] as Issue[], assignable = 204, dropLabels = false, dropAssignees = false, strictLabels = false } = {}) {
+  const labels = new Set<string>(issues.flatMap((issue) => issue.labels?.map((label) => label.name) ?? []));
   const github = {
     calls: [] as Call[],
     comments: [] as { number: number; body: string }[],
     issues,
     assignable,
+    broken: null as null | { method: string; path: string; status: number },
     writes: () => github.calls.filter((call) => call.method !== 'GET').map((call) => `${call.method} ${call.path}`),
     fetchFn: vi.fn(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? 'GET';
       const path = url.replace('https://api.github.com/repos/owner/tracker', '');
       const body = init?.body ? JSON.parse(String(init.body)) : undefined;
       github.calls.push({ method, path, body, headers: init?.headers as Record<string, string>, url });
+      if (github.broken?.method === method && github.broken.path === path) return reply({ message: 'Bad Gateway' }, github.broken.status);
       const one = path.match(/^\/issues\/(\d+)(\/comments)?$/);
       const issue = one ? issues.find((candidate) => candidate.number === Number(one[1])) : undefined;
       if (method === 'GET' && path === `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`) {
+        if (strictLabels && !labels.has(ALERT_LABEL)) return reply({ message: 'Validation Failed' }, 422);
         return reply(issues.filter((candidate) => candidate.labels?.some((label) => label.name === ALERT_LABEL)));
       }
       if (method === 'GET' && path === `/labels/${ALERT_LABEL}`) return labels.has(ALERT_LABEL) ? reply({ name: ALERT_LABEL }) : reply({}, 404);
@@ -335,7 +341,6 @@ describe('reading the weekly check', () => {
     };
     expect(currentItems({ ...inputs, syncOutcome: 'success' })).toEqual({
       items: [QUEST, CHUNKS, 'Collection log, new item: [Yama] Oathplate helm'],
-      more: 0,
       unread: READ_EVERYTHING,
     });
     expect(currentItems({ ...inputs, syncOutcome: 'failure' }).unread).toEqual({ all: true, parts: [] });
@@ -346,7 +351,7 @@ describe('reading the weekly check', () => {
       status: statusWith([QUEST, CHUNKS_DOWN, QUESTS_DOWN]),
       report: reportWith({ chunkPicker: null, collectionLog: ['[clog:sync] failed: HTTP 503'] }),
       syncOutcome: 'success',
-    })).toEqual({ items: [QUEST], more: 0, unread: { all: false, parts: ['quests', 'chunk picker', 'collection log'] } });
+    })).toEqual({ items: [QUEST], unread: { all: false, parts: ['quests', 'chunk picker', 'collection log'] } });
   });
 
   it('refuses a status file the check did not write in this run', () => {
@@ -367,29 +372,57 @@ describe('reading the weekly check', () => {
     const guess = buildReport({ ...base, questNames: { liveOnly: [], runtimeMissing: [] }, chunkSource: { moved: true } });
     expect(guess.actions).toContain(CHUNK_ACTION);
     const uncompared = currentItems({ status: statusWith([QUEST, CHUNK_ACTION]), report: reportWith({ chunkPicker: chunkLine(PIN, '?') }), syncOutcome: 'success' });
-    expect(uncompared).toEqual({ items: [QUEST], more: 0, unread: unread('chunk picker') });
+    expect(uncompared).toEqual({ items: [QUEST], unread: unread('chunk picker') });
     // The same when the report does not carry the check's line at all.
     const unprinted = currentItems({ status: statusWith([QUEST, CHUNK_ACTION]), report: reportWith({ chunkPicker: null }), syncOutcome: 'success' });
-    expect(unprinted).toEqual({ items: [QUEST], more: 0, unread: unread('chunk picker') });
+    expect(unprinted).toEqual({ items: [QUEST], unread: unread('chunk picker') });
     // A source that has not moved was read: there was nothing to compare.
     const unmoved = currentItems({ status: statusWith([QUEST]), report: reportWith({ chunkPicker: chunkLine(PIN, '?', PIN) }), syncOutcome: 'success' });
-    expect(unmoved).toEqual({ items: [QUEST], more: 0, unread: READ_EVERYTHING });
+    expect(unmoved).toEqual({ items: [QUEST], unread: READ_EVERYTHING });
   });
 
-  it('cuts a list that would not fit one issue, and counts what it left out', () => {
+  it('lists everything the check found, however much: what one issue can show is decided with its list', () => {
     const many = Array.from({ length: 400 }, (_, index) => `Quests: "Quest ${index} ${'é'.repeat(120)}" (quest) is on the Wiki's Quests/List`);
-    const { items, more } = currentItems({ status: statusWith(many), report: reportWith(), syncOutcome: 'success' });
-    expect(items.length).toBeGreaterThan(100);
-    expect(items).toEqual(many.slice(0, items.length));
-    expect(more).toBe(400 - items.length);
-    const bytes = (list: string[]) => list.reduce((sum, item) => sum + Buffer.byteLength(item) + 8, 0);
-    expect(bytes(items)).toBeLessThanOrEqual(40_000);
-    expect(bytes(many.slice(0, items.length + 1))).toBeGreaterThan(40_000);
-    // The text GitHub gets stays far below what it takes, and reads back whole.
-    const body = issueBody({ items, more, date: DATE });
-    expect(Buffer.byteLength(body)).toBeLessThan(65_536);
-    expect(itemsFromBody(body)).toEqual(items);
-    expect(body).toContain(`\n_${more} more did not fit here; the report on the run lists them._\n`);
+    expect(currentItems({ status: statusWith(many), report: reportWith(), syncOutcome: 'success' }).items).toEqual(many);
+  });
+
+  it('knows every heading the sync job writes into its report, and that the check ends its status with the actions', () => {
+    const workflow = readFileSync(resolve(HERE, '../.github/workflows/sync-content.yml'), 'utf8');
+    expect([...workflow.matchAll(/^\s+echo "(## [^"]+)"$/gm)].map((match) => match[1])).toEqual([...REPORT_HEADINGS]);
+    // The actions are read to the end of the status file, so nothing may follow them.
+    const headings = buildReport(base).markdown.split('\n').filter((line) => /^#{1,6} /.test(line));
+    expect(headings.at(-1)).toBe('## Action needed');
+    expect(headings.filter((line) => line === '## Action needed')).toHaveLength(1);
+  });
+
+  it('lets no line the Wiki supplied start, end or stand in for a part of the report', () => {
+    // A name with a line break in it prints a second line of its own.
+    const forged = parseReport(reportWith({ collectionLog: [
+      '[clog:sync] renames 0, items added 3, kept-without-wiki-match 0',
+      '  ADD    [Doom] Evil item',
+      '# [clog:sync] renames 0 (#9001)',
+      '  ADD    [Doom] Real new item one (#9002)',
+      '## Freshness check (#9003)',
+      ' ## Failing tests',
+      '  ADD    [Doom] Real new item two (#9004)',
+    ] }));
+    expect(forged).toMatchObject({
+      collectionLog: [
+        'Collection log, new item: [Doom] Evil item',
+        'Collection log, new item: [Doom] Real new item one',
+        'Collection log, new item: [Doom] Real new item two',
+      ],
+      unread: [],
+      written: true,
+      chunkPicker: { pin: '629e9fe', compared: false },
+    });
+    // Only the sync's own line, from its first character, says that it ran to the end or failed.
+    expect(parseReport(reportWith({ collectionLog: ['  ADD    [Doom] Evil item', '# [clog:sync] renames 0 (#9001)'] })).unread).toEqual(['collection log']);
+    expect(parseReport(reportWith({ collectionLog: [CLOG_DONE, '  ADD    [Doom] Evil item', '# [clog:sync] failed (#9001)'] })).unread).toEqual([]);
+    // The same for the status file: a line that looks like a heading ends nothing.
+    const status = `${statusWith([QUEST])}# Not the check's own heading\n- ⚠️ ${CA}\n`;
+    expect(parseStatus(status).actions).toEqual([QUEST, CA]);
+    expect(parseStatus(` ## Action needed\n\n- ⚠️ ${QUEST}\n`)).toEqual({ actions: [], unread: [], unanswered: true });
   });
 });
 
@@ -421,11 +454,32 @@ describe('the alert issue text', () => {
 
   it('says which part of the check could not be read', () => {
     const note = (parts: { all: boolean; parts: string[] }) => issueBody({ items: [QUEST], date: DATE, unread: parts }).split('\n').find((line) => line.startsWith('- That check'));
-    expect(note(unread('chunk picker'))).toBe('- That check could not read the Chunk Picker, so nothing from there was taken off the list.');
-    expect(note(unread('quests', 'collection log'))).toBe('- That check could not read the quest list and the collection log, so nothing from there was taken off the list.');
-    expect(note(unread('collection log', 'combat achievements', 'quests'))).toBe('- That check could not read the quest list, the Combat Achievements and the collection log, so nothing from there was taken off the list.');
-    expect(note(NOTHING_READ)).toBe('- That check did not run to the end, so nothing was taken off the list.');
+    // Each note is true of a list that is new this week as well as of an older one.
+    expect(note(unread('chunk picker'))).toBe("- That check could not read the Chunk Picker's changes, so the list may be missing something from there and nothing from there was taken off it.");
+    expect(note(unread('quests', 'collection log'))).toBe('- That check could not read the quest list and the collection log, so the list may be missing something from there and nothing from there was taken off it.');
+    expect(note(unread('collection log', 'combat achievements', 'quests'))).toBe('- That check could not read the quest list, the Combat Achievements and the collection log, so the list may be missing something from there and nothing from there was taken off it.');
+    expect(note(NOTHING_READ)).toBe('- That check did not run to the end, so the list may be missing something and nothing was taken off it.');
     expect(note(READ_EVERYTHING)).toBeUndefined();
+  });
+
+  it('writes a text that is true of an open issue, of one closed by hand and of one with nothing left', () => {
+    const runUrl = 'https://github.com/owner/tracker/actions/runs/4711';
+    const open = issueBody({ items: [QUEST], date: DATE });
+    expect(open).toContain('It finds it by its `content-sync` label and writes this text anew every week, so put your own notes in a comment.');
+    expect(open).toContain('If you close it yourself, it stays quiet until something new appears.');
+    const closed = issueBody({ items: [QUEST], date: DATE, runUrl, closed: true });
+    expect(itemsFromBody(closed)).toEqual([QUEST]);
+    expect(closed).toContain(`- The check last changed this list on 2026-11-26 ([run](${runUrl})).`);
+    expect(closed).toContain('This issue is closed, so the weekly check stays quiet about what it lists. It takes off the list what gets done, and it opens a new issue when it finds something new.');
+    expect(closed).not.toMatch(/Last checked on|adds a comment|If you close it yourself/);
+    // Nothing left: the same text whoever closed the issue, with a date that cannot go stale.
+    const empty = issueBody({ items: [], date: DATE, runUrl });
+    expect(empty.split('\n')[0]).toBe(`The weekly check of the OSRS Wiki on 2026-11-26 found nothing left on this list ([run](${runUrl})).`);
+    expect(itemsFromBody(empty)).toEqual([]);
+    expect(empty).toContain('_Nothing is left on this list._');
+    expect(empty).toContain('A new issue opens when the check finds something again.');
+    expect(issueBody({ items: [], date: DATE, runUrl, closed: true, unread: NOTHING_READ, branchUrl: `${runUrl}/branch` })).toBe(empty);
+    expect(empty).not.toMatch(/Last checked|To act on it|found something|did not run to the end|keeps this issue/);
   });
 
   it('keeps hostile text inside its own line of code', () => {
@@ -467,6 +521,10 @@ describe('the alert issue text', () => {
     expect(latestAlert([stray, pull])).toBeNull();
     expect(latestAlert([stray, pull, ourIssue(3, 'closed', [QUEST]), ourIssue(5, 'closed', [CHUNKS])])?.number).toBe(5);
     expect(latestAlert([ourIssue(3, 'open', [QUEST]), ourIssue(5, 'closed', [CHUNKS]), ourIssue(4, 'open', [CA])])?.number).toBe(4);
+    // One of ours that lost its list to an edit is still ours, by its title.
+    const damaged = { ...ourIssue(6, 'open', [QUEST]), body: 'Edited by hand, and the list is gone.' };
+    expect(latestAlert([stray, damaged, ourIssue(5, 'closed', [CHUNKS])])?.number).toBe(6);
+    expect(latestAlert([{ ...stray, title: 'Another title' }, { ...damaged, pull_request: {} }])).toBeNull();
   });
 
   it('tells news apart by what the Wiki says, not by how far the tracker is', () => {
@@ -480,6 +538,17 @@ describe('the alert issue text', () => {
     expect(newsKey(chunksAt(NEXT_PIN))).not.toBe(newsKey(CHUNKS));
     expect(newsKey(QUEST)).toBe(QUEST);
     expect(newsKey('Quests: "Trapp 5" (quest)')).toBe('Quests: "Trapp 5" (quest)');
+    // Whether the app is behind or ahead moves with the app's count too. The
+    // lines are the check's own, so a change of its words shows up here.
+    const tasks = (app: number, wiki = 42) => buildReport({
+      quests: { app: 217, official: 191, appQuestPoints: 354, wiki: { total: 191, p2p: 167, f2p: 24, questPoints: 354 } },
+      cas: { app: { Easy: app }, wiki: { Easy: wiki } },
+      diaries: { app: {} },
+    }).actions.map(tidy);
+    expect(tasks(41)).toEqual([CA]);
+    expect(tasks(43)).toEqual(['Combat Achievements · Easy: wiki 42, app 43 (app ahead).']);
+    expect(newsKey(tasks(43)[0])).toBe(newsKey(CA));
+    expect(newsKey(tasks(43, 44)[0])).not.toBe(newsKey(CA));
   });
 });
 
@@ -527,10 +596,9 @@ describe('deciding what to say', () => {
     expect(step.comment).toContain(`- \`${CHUNKS}\``);
     // The text is rebuilt, so a closed issue no longer reads as work to do.
     expect(listed(step)).toEqual([]);
-    expect(step.body).toContain('The weekly check of the OSRS Wiki closed this issue.');
+    expect(step.body.split('\n')[0]).toBe('The weekly check of the OSRS Wiki on 2026-11-26 found nothing left on this list.');
     expect(step.body).toContain('_Nothing is left on this list._');
-    expect(step.body).toContain('- Last checked on 2026-11-26.');
-    expect(step.body).not.toMatch(/To act on it|found something/);
+    expect(step.body).not.toMatch(/To act on it|found something|Last checked/);
   });
 
   it('does not call it news when only the tracker has moved', () => {
@@ -547,6 +615,13 @@ describe('deciding what to say', () => {
     expect(more[0].body).not.toContain(CA);
     expect(listed(more[1])).toEqual([questCount(192, 190), CA]);
     expect(plan([questCount(192, 190), CA], ourIssue(7, 'closed', [questCount(191, 189), CA]))).toEqual(['create']);
+    // The tracker overshoots: "behind" becomes "ahead", and the Wiki has not moved.
+    const ahead = 'Combat Achievements · Easy: wiki 42, app 43 (app ahead).';
+    const overshot = steps([ahead], ourIssue(7, 'open', [CA]));
+    expect(overshot.map((step) => step.type)).toEqual(['edit']);
+    expect(listed(overshot[0])).toEqual([ahead]);
+    expect(plan([CA], ourIssue(7, 'open', [ahead]))).toEqual(['edit']);
+    expect(plan([ahead], ourIssue(7, 'closed', [CA]))).toEqual([]);
   });
 
   it('keeps the lines of a part it could not read, and only those', () => {
@@ -556,14 +631,14 @@ describe('deciding what to say', () => {
     expect(rest).toEqual([]);
     expect(chunks.type).toBe('edit');
     expect(listed(chunks)).toEqual([CHUNKS]);
-    expect(chunks.body).toContain('- That check could not read the Chunk Picker, so nothing from there was taken off the list.');
+    expect(chunks.body).toContain("- That check could not read the Chunk Picker's changes, so the list may be missing something from there and nothing from there was taken off it.");
     // The other way round.
     expect(listed(steps([], open, unread('quests'))[0])).toEqual([QUEST]);
     // Nothing was read to the end: nothing comes off, and news still goes out.
     const none = steps([], open, NOTHING_READ);
     expect(none.map((step) => step.type)).toEqual(['edit']);
     expect(listed(none[0])).toEqual([QUEST, CHUNKS]);
-    expect(none[0].body).toContain('- That check did not run to the end, so nothing was taken off the list.');
+    expect(none[0].body).toContain('- That check did not run to the end, so the list may be missing something and nothing was taken off it.');
     const grown = steps([CA], open, NOTHING_READ);
     expect(grown.map((step) => step.type)).toEqual(['comment', 'edit']);
     expect(grown[0].body).toContain(`- \`${CA}\``);
@@ -619,10 +694,22 @@ describe('deciding what to say', () => {
     expect(rest).toEqual([]);
     expect(step).toMatchObject({ type: 'edit', number: 7 });
     expect(listed(step)).toEqual([QUEST]);
-    // Only the list changes; the issue stays closed and keeps its other text.
-    const outsideTheList = (body: string | null) => String(body).replace(/<!-- content-sync-alert:items -->[\s\S]*<!-- \/content-sync-alert:items -->/, '');
-    expect(outsideTheList(step.body)).toBe(outsideTheList(closed.body));
+    // The whole text is written anew, for a closed issue, so that it never
+    // describes another week than its list.
+    expect(step.body).toContain('- The check last changed this list on 2026-11-26.');
+    expect(step.body).toContain('This issue is closed, so the weekly check stays quiet about what it lists.');
+    expect(step.body).not.toMatch(/Last checked on|2026-11-19|keeps this issue/);
     expect(plan([QUEST, CHUNKS], { ...closed, body: step.body })).toEqual(['create']);
+    // Everything is done: the closed issue says so and no longer reads as work to do.
+    const [emptied, ...none] = steps([], closed);
+    expect(none).toEqual([]);
+    expect(emptied).toMatchObject({ type: 'edit', number: 7 });
+    expect(listed(emptied)).toEqual([]);
+    expect(emptied.body.split('\n')[0]).toBe('The weekly check of the OSRS Wiki on 2026-11-26 found nothing left on this list.');
+    expect(emptied.body).not.toMatch(/found something|To act on it|Last checked/);
+    expect(plan([], { ...closed, body: emptied.body })).toEqual([]);
+    // While only the tracker's count moves, the closed issue is left as it is.
+    expect(plan([questCount(191, 190)], ourIssue(7, 'closed', [questCount(191, 189)]))).toEqual([]);
   });
 
   it('leaves a closed issue alone about a part it could not read, and carries those lines into a new issue', () => {
@@ -637,27 +724,113 @@ describe('deciding what to say', () => {
     expect(rest).toEqual([]);
     expect(fresh.type).toBe('create');
     expect(listed(fresh)).toEqual([CA, QUEST]);
-    expect(fresh.body).toContain('- That check could not read the quest list, so nothing from there was taken off the list.');
+    expect(fresh.body).toContain('- That check could not read the quest list, so the list may be missing something from there and nothing from there was taken off it.');
+    // A new issue in a week that did not run to the end: its note is true of a new list too.
+    const [first] = steps([CA], null, NOTHING_READ);
+    expect(first.type).toBe('create');
+    expect(first.body).toContain('- That check did not run to the end, so the list may be missing something and nothing was taken off it.');
   });
 
-  it('carries what did not fit as a count, never as an item', () => {
-    const [step] = planAlert({ items: [QUEST], more: 5, latest: null, date: DATE });
-    expect(listed(step)).toEqual([QUEST]);
-    expect(step.body).toContain('\n_5 more did not fit here; the report on the run lists them._\n');
-    // Lines kept from an unread part can push the list past what one issue shows.
-    const long = (name: string) => Array.from({ length: 100 }, (_, index) => `Quests: "${name} ${index} ${'x'.repeat(270)}"`);
-    const [edit] = planAlert({ items: long('New'), more: 2, unread: NOTHING_READ, latest: ourIssue(7, 'open', long('Old')), date: DATE }).slice(-1);
-    const shown = listed(edit)!;
-    expect(shown.slice(0, 100)).toEqual(long('New'));
-    expect(shown.length).toBeLessThan(200);
-    expect(edit.body).toContain(`\n_${202 - shown.length} more did not fit here; the report on the run lists them._\n`);
-    expect(Buffer.byteLength(edit.body)).toBeLessThan(65_536);
+  describe('with more than one issue can show', () => {
+    const bytes = (list: string[]) => list.reduce((sum, item) => sum + Buffer.byteLength(item) + 8, 0);
+    const long = (name: string, count: number) => Array.from({ length: count }, (_, index) => `Collection log, new item: [${name}] ${index} ${'é'.repeat(120)}`);
+    const moreNote = (count: number) => `\n_${count} more did not fit here; the run's summary has this week's full report._\n`;
+    const many = long('Yama', 400);
+    const [created] = steps(many, null);
+    const shown = listed(created)!;
+    const open = { number: 7, state: 'open', title: ALERT_ISSUE_TITLE, body: created.body };
+
+    it('cuts the list at a whole line and carries the rest as a count, never as an item', () => {
+      expect(created.type).toBe('create');
+      expect(shown.length).toBeGreaterThan(100);
+      expect(shown).toEqual(many.slice(0, shown.length));
+      expect(bytes(shown)).toBeLessThanOrEqual(40_000);
+      expect(bytes(many.slice(0, shown.length + 1))).toBeGreaterThan(40_000);
+      expect(created.body).toContain(moreNote(400 - shown.length));
+      // The text GitHub gets stays below what it takes, and reads back whole.
+      expect(Buffer.byteLength(created.body)).toBeLessThan(65_536);
+      expect(itemsFromBody(issueBody({ items: [QUEST], more: 7, date: DATE }))).toEqual([QUEST]);
+    });
+
+    it('says nothing while the same long list stands, although part of it was never named', () => {
+      const again = steps(many, open);
+      expect(again.map((step) => step.type)).toEqual(['edit']);
+      expect(listed(again[0])).toEqual(shown);
+      expect(plan(many, { ...open, state: 'closed' })).toEqual([]);
+    });
+
+    it('names what is new at the top of a full list, and never more than the list shows', () => {
+      // The check's own order puts its actions first, so they are always named.
+      // Together these three take more room than one of the long lines.
+      const news = [QUEST, CA, questCount(192, 190)];
+      expect(bytes(news)).toBeGreaterThan(bytes([many[0]]));
+      const [comment, edit, ...rest] = steps([...news, ...many], open);
+      expect(rest).toEqual([]);
+      expect(itemsFromBody(`<!-- content-sync-alert:items -->\n${comment.body}\n<!-- /content-sync-alert:items -->`)).toEqual(news);
+      const next = listed(edit)!;
+      expect(next.slice(0, 3)).toEqual(news);
+      expect(next.slice(3)).toEqual(many.slice(0, next.length - 3));
+      expect(edit.body).toContain(moreNote(403 - next.length));
+      expect(Buffer.byteLength(edit.body)).toBeLessThan(65_536);
+      // What the cut pushed off the list is forgotten, so it is told again once
+      // it fits: telling twice beats not telling.
+      const pushedOff = shown.filter((item) => !next.includes(item));
+      expect(pushedOff.length).toBeGreaterThan(0);
+      const later = steps(many, { ...open, body: edit.body });
+      expect(later.map((step) => step.type)).toEqual(['comment', 'edit']);
+      expect(itemsFromBody(`<!-- content-sync-alert:items -->\n${later[0].body}\n<!-- /content-sync-alert:items -->`)).toEqual(pushedOff);
+    });
+
+    it('lets the lines of an unread part give way to this week\'s, and counts them', () => {
+      const old = long('Old', 100);
+      const fresh = long('New', 100);
+      const [edit] = planAlert({ items: fresh, unread: NOTHING_READ, latest: ourIssue(7, 'open', old), date: DATE }).slice(-1);
+      const kept = listed(edit)!;
+      expect(kept.slice(0, 100)).toEqual(fresh);
+      expect(kept.slice(100)).toEqual(old.slice(0, kept.length - 100));
+      expect(kept.length).toBeLessThan(200);
+      expect(edit.body).toContain(moreNote(200 - kept.length));
+      expect(Buffer.byteLength(edit.body)).toBeLessThan(65_536);
+    });
   });
 
   it('ignores a labelled issue that is not one of its own', () => {
     const stray = { number: 9, state: 'open', body: 'A player report someone labelled by hand.' };
     expect(plan([QUEST], stray)).toEqual(['create']);
     expect(plan([], stray)).toEqual([]);
+  });
+
+  it('gives an issue of its own that lost its list the list back, instead of opening a second one', () => {
+    // The owner edited the text and the markers went with it. The title still says whose it is.
+    const damaged = { ...ourIssue(7, 'open', [QUEST]), body: 'My own notes instead of the list.' };
+    const [comment, edit, ...rest] = steps([QUEST, CA], damaged);
+    expect(rest).toEqual([]);
+    expect(comment).toMatchObject({ type: 'comment', number: 7 });
+    expect(comment.body).toContain(`- \`${QUEST}\``);
+    expect(comment.body).toContain(`- \`${CA}\``);
+    expect(edit).toMatchObject({ type: 'edit', number: 7 });
+    expect(listed(edit)).toEqual([QUEST, CA]);
+    // With nothing to list it is closed, and nothing is said to have come off.
+    const [close] = steps([], damaged);
+    expect(close).toMatchObject({ type: 'close', number: 7 });
+    expect(close.comment).not.toContain('This came off the list');
+    expect(listed(close)).toEqual([]);
+    // A closed one has told nothing, so anything current is news for a new issue.
+    expect(plan([QUEST], { ...damaged, state: 'closed' })).toEqual(['create']);
+    expect(plan([], { ...damaged, state: 'closed' })).toEqual([]);
+  });
+
+  it('takes an older issue the owner opened again as the one in use, and tells it the current list', () => {
+    // #2 listed the quest and was closed by hand; then #1, long done, is opened again.
+    const reopened = { ...ourIssue(1, 'open', []), body: issueBody({ items: [], date: '2026-11-12' }) };
+    const latest = latestAlert([reopened, ourIssue(2, 'closed', [QUEST])]);
+    expect(latest?.number).toBe(1);
+    const [comment, edit] = steps([QUEST], latest);
+    expect(comment).toMatchObject({ type: 'comment', number: 1 });
+    expect(comment.body).toContain(`- \`${QUEST}\``);
+    expect(listed(edit)).toEqual([QUEST]);
+    // From then on that issue carries the list, and says it once.
+    expect(plan([QUEST], { ...reopened, body: edit.body })).toEqual(['edit']);
   });
 
   it('gives the same plan for the same inputs', () => {
@@ -674,7 +847,7 @@ describe('a run against GitHub', () => {
   it('opens one labelled issue assigned to the repository owner', async () => {
     const github = fakeGitHub();
     const result = await run(week([QUEST, CHUNK_ACTION]), github.fetchFn, NOW, quiet());
-    expect(result).toEqual({ items: [QUEST, CHUNKS], more: 0, unread: READ_EVERYTHING, did: ['opened issue #1, assigned to owner'] });
+    expect(result).toEqual({ items: [QUEST, CHUNKS], unread: READ_EVERYTHING, did: ['opened issue #1, assigned to owner'] });
     expect(github.writes()).toEqual(['POST /labels', 'POST /issues']);
     const [issue] = github.issues;
     expect(issue).toMatchObject({ number: 1, state: 'open', title: ALERT_ISSUE_TITLE, labels: [{ name: ALERT_LABEL }], assignees: [{ login: 'owner' }] });
@@ -750,9 +923,9 @@ describe('a run against GitHub', () => {
     expect(list()).toEqual([CHUNKS]);
     expect(github.issues[0].body).toContain('could not read the Chunk Picker');
     expect(github.comments).toHaveLength(1);
-    // Week 7: the export was reviewed and re-pinned. Nothing is left: a
-    // closing comment, and the issue is closed.
-    expect(await play([], { pin: NEXT_PIN })).toEqual(['POST /issues/1/comments', 'PATCH /issues/1']);
+    // Week 7: the export was reviewed and re-pinned. Nothing is left: the
+    // issue is closed, with a comment that says what came off.
+    expect(await play([], { pin: NEXT_PIN })).toEqual(['PATCH /issues/1', 'POST /issues/1/comments']);
     expect(github.issues[0]).toMatchObject({ state: 'closed', state_reason: 'completed' });
     expect(github.comments[1].body).toContain(`- \`${CHUNKS}\``);
     expect(list()).toEqual([]);
@@ -790,12 +963,68 @@ describe('a run against GitHub', () => {
     expect(github.writes()).toEqual(['PATCH /issues/4']);
     expect(github.issues[0].state).toBe('closed');
     expect(itemsFromBody(github.issues[0].body)).toEqual([CHUNKS]);
+    expect(github.issues[0].body).toContain('This issue is closed, so the weekly check stays quiet about what it lists.');
     expect(github.comments).toEqual([]);
 
     // A new quest: a new issue, which lists everything that needs doing.
     await run(week([QUEST, CHUNK_ACTION]), github.fetchFn, NOW, quiet());
-    expect(github.writes()).toEqual(['PATCH /issues/4', 'POST /labels', 'POST /issues']);
+    expect(github.writes()).toEqual(['PATCH /issues/4', 'POST /issues']);
     expect(itemsFromBody(github.issues[1].body)).toEqual([QUEST, CHUNKS]);
+  });
+
+  it('gives its issue the list back after an edit that lost it, instead of opening a second one', async () => {
+    const github = fakeGitHub();
+    await run(week([QUEST]), github.fetchFn, NOW, quiet());
+    github.issues[0].body = 'My own notes. The list went with the edit.';
+    await run(week([QUEST, CA]), github.fetchFn, NOW, quiet());
+    expect(github.issues).toHaveLength(1);
+    expect(itemsFromBody(github.issues[0].body)).toEqual([QUEST, CA]);
+    // It has to say the whole list again, once: it no longer knows what it told.
+    expect(github.comments).toHaveLength(1);
+    expect(github.comments[0].body).toContain(`- \`${QUEST}\``);
+    await run(week([QUEST, CA]), github.fetchFn, NOW, quiet());
+    expect(github.comments).toHaveLength(1);
+    expect(github.writes()).toEqual(['POST /labels', 'POST /issues', 'POST /issues/1/comments', 'PATCH /issues/1', 'PATCH /issues/1']);
+  });
+
+  it('never calls an open issue closed, and never says twice that it closed one', async () => {
+    // The issue is closed first and the comment follows.
+    const github = fakeGitHub({ issues: [ourIssue(4, 'open', [QUEST])] });
+    github.broken = { method: 'PATCH', path: '/issues/4', status: 502 };
+    await expect(run(week([]), github.fetchFn, NOW, quiet())).rejects.toThrow(/Closing the alert issue failed: GitHub answered 502/);
+    expect(github.issues[0].state).toBe('open');
+    expect(github.comments).toEqual([]);
+    // The next run closes it, and says so once.
+    github.broken = null;
+    await run(week([]), github.fetchFn, NOW, quiet());
+    expect(github.issues[0].state).toBe('closed');
+    expect(github.comments).toHaveLength(1);
+    expect(github.comments[0].body).toContain('so this issue is closed');
+
+    // The comment fails once the issue is closed: it stays closed, and the next run adds nothing.
+    const other = fakeGitHub({ issues: [ourIssue(4, 'open', [QUEST])] });
+    other.broken = { method: 'POST', path: '/issues/4/comments', status: 502 };
+    await expect(run(week([]), other.fetchFn, NOW, quiet())).rejects.toThrow(/Commenting on the closed alert issue failed: GitHub answered 502/);
+    expect(other.issues[0].state).toBe('closed');
+    other.broken = null;
+    await run(week([]), other.fetchFn, NOW, quiet());
+    expect(other.writes()).toEqual(['PATCH /issues/4', 'POST /issues/4/comments']);
+    expect(other.comments).toEqual([]);
+  });
+
+  it('does not fail for good should GitHub refuse a list by a label that does not exist yet', async () => {
+    const github = fakeGitHub({ strictLabels: true });
+    // Nothing to say and no label: nothing is written, and the run does not fail.
+    expect((await run(week([]), github.fetchFn, NOW, quiet())).did).toEqual([]);
+    expect(github.writes()).toEqual([]);
+    const result = await run(week([QUEST]), github.fetchFn, NOW, quiet());
+    expect(result.did).toEqual(['opened issue #1, assigned to owner']);
+    // Once the label is there the list is read again, and a refusal is a failure.
+    await run(week([QUEST]), github.fetchFn, NOW, quiet());
+    expect(github.writes()).toEqual(['POST /labels', 'POST /issues', 'PATCH /issues/1']);
+    github.broken = { method: 'GET', path: `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`, status: 422 };
+    await expect(run(week([QUEST]), github.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the alert issues failed: GitHub answered 422/);
+    expect(github.writes()).toEqual(['POST /labels', 'POST /issues', 'PATCH /issues/1']);
   });
 
   it('announces a Chunk Picker change that follows a re-pin, even after an outage elsewhere', async () => {
@@ -865,11 +1094,27 @@ describe('a run against GitHub', () => {
     const log = vi.fn();
     await run(week(['::error::made up', QUEST, QUESTS_DOWN]), fakeGitHub().fetchFn, NOW, log);
     const lines = log.mock.calls.map(([line]) => String(line));
-    expect(lines).toContain('[sync:alert] 2 item(s) need action.');
+    expect(lines).toContain('[sync:alert] the check lists 2 item(s) this week.');
     expect(lines).toContain('[sync:alert]   ::error::made up');
-    expect(lines).toContain('[sync:alert] That check could not read the quest list, so nothing from there was taken off the list.');
+    expect(lines).toContain('[sync:alert] That check could not read the quest list, so the list may be missing something from there and nothing from there was taken off it.');
     expect(lines).toContain('[sync:alert] opened issue #1, assigned to owner');
     expect(lines.every((line) => line.startsWith('[sync:alert] '))).toBe(true);
+  });
+
+  it('prints no more of a long list than one issue shows', async () => {
+    const many = Array.from({ length: 400 }, (_, index) => `Quests: "Quest ${index} ${'é'.repeat(120)}" (quest)`);
+    const log = vi.fn();
+    const github = fakeGitHub();
+    const result = await run(week(many), github.fetchFn, NOW, log);
+    const lines = log.mock.calls.map(([line]) => String(line));
+    expect(result.items).toEqual(many);
+    expect(lines).toContain('[sync:alert] the check lists 400 item(s) this week.');
+    const printed = lines.filter((line) => line.startsWith('[sync:alert]   Quests: '));
+    expect(printed.length).toBeGreaterThan(100);
+    expect(lines).toContain(`[sync:alert]   and ${400 - printed.length} more.`);
+    // The issue shows the same lines, and GitHub is sent a text it takes.
+    expect(itemsFromBody(github.issues[0].body)).toEqual(many.slice(0, printed.length));
+    expect(String(github.issues[0].body).length).toBeLessThan(65_536);
   });
 
   it('fails loudly instead of guessing', async () => {
@@ -906,6 +1151,7 @@ describe('the script itself', () => {
     expect(calls.sort()).toEqual([
       'GET /assignees/${owner}',
       'GET /issues?labels=${ALERT_LABEL}&state=all&per_page=50',
+      'GET /labels/${ALERT_LABEL}',
       'GET /labels/${ALERT_LABEL}',
       'PATCH /issues/${step.number}',
       'PATCH /issues/${step.number}',

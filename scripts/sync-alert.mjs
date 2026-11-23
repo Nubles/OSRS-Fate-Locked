@@ -37,11 +37,18 @@ const LIST_START = '<!-- content-sync-alert:items -->';
 const LIST_END = '<!-- /content-sync-alert:items -->';
 const NOTHING_LEFT = '_Nothing is left on this list._';
 const GITHUB_API = 'https://api.github.com';
+// No real line comes near this length. Two lines that agree up to the cut
+// count as one.
 const MAX_ITEM_LENGTH = 300;
 // The bytes of list one issue shows. GitHub takes 65,536 characters for the
 // whole text; real weeks stay far below this, so the cut only guards against
 // junk.
 const LIST_BUDGET = 40_000;
+/**
+ * The headings the sync job writes into its report. A section ends at the next
+ * of them and at nothing else, so no line the Wiki supplied can cut one short.
+ */
+export const REPORT_HEADINGS = Object.freeze(['## Changed files', '## Collection log', '## Freshness check', '## Quest sources', '## Failing tests']);
 const MAX_FILE_BYTES = 2_000_000;
 const REPOSITORY_RE = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const LOGIN_RE = /^[A-Za-z0-9-]+$/;
@@ -58,7 +65,8 @@ const CLOG_KINDS = { RENAME: 'rename', ADD: 'new item', MOVE: 'moved item', '?':
 const PARTS = [
   { part: 'quests', name: 'the quest list', pattern: /^(?:Quest|Comparable official quest)/ },
   { part: 'combat achievements', name: 'the Combat Achievements', pattern: /^Combat Achievement/ },
-  { part: 'chunk picker', name: 'the Chunk Picker', pattern: /^Chunk Picker/ },
+  // Not being able to compare the export counts as not having read it.
+  { part: 'chunk picker', name: "the Chunk Picker's changes", pattern: /^Chunk Picker/ },
   { part: 'collection log', name: 'the collection log', pattern: /^Collection log/ },
 ];
 const partOf = (text) => PARTS.find(({ pattern }) => pattern.test(text))?.part ?? null;
@@ -96,10 +104,13 @@ export const tidy = (text) => {
 
 /**
  * What makes a line the same piece of news from week to week. The app's own
- * count moves as the work gets done ("wiki 191, app 189", then "app 190"), so
- * it is left out: only a change on the Wiki's side is news.
+ * count moves as the work gets done ("wiki 191, app 189", then "app 190"), and
+ * with it whether the app is behind or ahead, so both are left out: only a
+ * change on the Wiki's side is news.
  */
-export const newsKey = (item) => String(item).replace(/\bapp \d+\b/g, 'app N');
+export const newsKey = (item) => String(item)
+  .replace(/\bapp \d+\b/g, 'app N')
+  .replace(/\(app (?:ahead|behind[^()]*)\)/g, '(app N)');
 
 const unique = (items) => [...new Set(items.filter(Boolean))];
 
@@ -118,13 +129,17 @@ const fit = (items) => {
   return { shown, more: items.length - shown.length };
 };
 
-/** The lines under a Markdown heading, up to the next heading; null when the heading is missing. */
-const section = (text, heading) => {
+/**
+ * The lines under a heading, up to the next of `ends` or else to the end of
+ * the text; null when the heading is missing. Only a line that is exactly a
+ * heading counts, so text the Wiki supplied cannot start or end a section.
+ */
+const section = (text, heading, ends = []) => {
   const lines = String(text ?? '').split(/\r?\n/);
-  const start = lines.findIndex((line) => line.trim() === heading);
+  const start = lines.indexOf(heading);
   if (start < 0) return null;
   const rest = lines.slice(start + 1);
-  const end = rest.findIndex((line) => /^#{1,6}\s/.test(line));
+  const end = rest.findIndex((line) => ends.includes(line));
   return end < 0 ? rest : rest.slice(0, end);
 };
 
@@ -161,10 +176,10 @@ export function parseStatus(markdown) {
  * and whether it could compare the export.
  */
 export function parseReport(report) {
-  const lines = section(report, '## Collection log') ?? [];
+  const lines = section(report, '## Collection log', REPORT_HEADINGS) ?? [];
   // A sync that ran to the end always prints its totals.
-  const finished = lines.some((line) => /\[clog:sync\] renames \d+/.test(line));
-  const failed = lines.some((line) => /\[clog:sync\] failed/.test(line));
+  const finished = lines.some((line) => /^\[clog:sync\] renames \d+/.test(line));
+  const failed = lines.some((line) => /^\[clog:sync\] failed/.test(line));
   const collectionLog = [];
   for (const line of lines) {
     const match = line.match(/^\s*(RENAME|ADD|MOVE|\?|\+)\s+(.+)$/s);
@@ -173,7 +188,7 @@ export function parseReport(report) {
     const what = match[2].replace(/\s*\((?:#\d+|\d+ items?)\)\s*$/, '');
     collectionLog.push(tidy(`Collection log, ${CLOG_KINDS[match[1]]}: ${what}`));
   }
-  const freshness = section(report, '## Freshness check') ?? [];
+  const freshness = section(report, '## Freshness check', REPORT_HEADINGS) ?? [];
   // The check prints its quest counts right after it has written the status
   // file, so this line proves the file is this run's, not the committed one.
   const written = freshness.some((line) => /^\[content:check\] quests wiki=(?:\d+|\?) app=\d+\s*$/.test(line));
@@ -186,9 +201,8 @@ export function parseReport(report) {
 }
 
 /**
- * Everything that needs doing this week, in a stable order: `items` are the
- * lines one issue can show, `more` counts what did not fit, and `unread`
- * names what the check could not read.
+ * Everything that needs doing this week, in a stable order, and what the
+ * check could not read (`unread`).
  *
  * Throws when the check did not write the status file in this run: the file
  * is then the committed one, and an old answer is not this week's.
@@ -212,10 +226,8 @@ export function currentItems({ status, report, syncOutcome }) {
     // change of the export from the next.
     return [tidy(`${action} Reviewed pin: ${fromReport.chunkPicker.pin}.`)];
   });
-  const { shown, more } = fit(unique([...actions, ...fromReport.collectionLog]));
   return {
-    items: shown,
-    more,
+    items: unique([...actions, ...fromReport.collectionLog]),
     unread: { all: fromStatus.unanswered || syncOutcome !== 'success', parts: PARTS.map(({ part }) => part).filter((part) => unread.has(part)) },
   };
 }
@@ -227,29 +239,36 @@ const bullets = (items) => items.map((item) => `- \`${tidy(item)}\``).join('\n')
 // as an item.
 const listBlock = (items, more = 0) => [
   items.length ? bullets(items) : NOTHING_LEFT,
-  ...(more > 0 ? ['', `_${more} more did not fit here; the report on the run lists them._`] : []),
+  ...(more > 0 ? ['', `_${more} more did not fit here; the run's summary has this week's full report._`] : []),
 ].join('\n');
 
 const listOf = (names) => (names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names.at(-1)}` : names.join(''));
+// True of a list that is new this week as well as of one that was there before.
 const unreadNote = (unread) => {
-  if (unread.all) return 'That check did not run to the end, so nothing was taken off the list.';
+  if (unread.all) return 'That check did not run to the end, so the list may be missing something and nothing was taken off it.';
   const names = PARTS.filter(({ part }) => unread.parts.includes(part)).map(({ name }) => name);
-  return names.length ? `That check could not read ${listOf(names)}, so nothing from there was taken off the list.` : '';
+  return names.length ? `That check could not read ${listOf(names)}, so the list may be missing something from there and nothing from there was taken off it.` : '';
 };
 
-export function issueBody({ items, more = 0, date, runUrl = '', branchUrl = '', unread = READ_EVERYTHING }) {
-  const checked = `- Last checked on ${date}${runUrl ? ` ([run](${runUrl}))` : ''}.`;
+const OPEN_FOOTER = `The weekly check keeps this issue. It finds it by its \`${ALERT_LABEL}\` label and writes this text anew every week, so put your own notes in a comment. It adds a comment when it finds something new and closes the issue when nothing is left. If you close it yourself, it stays quiet until something new appears.`;
+const CLOSED_FOOTER = 'This issue is closed, so the weekly check stays quiet about what it lists. It takes off the list what gets done, and it opens a new issue when it finds something new.';
+
+/**
+ * The text of an alert issue. With no items it is the text of an issue with
+ * nothing left to do. `closed` is for an issue the owner closed by hand: its
+ * text is written only when its list changes.
+ */
+export function issueBody({ items, more = 0, date, runUrl = '', branchUrl = '', unread = READ_EVERYTHING, closed = false }) {
+  const run = runUrl ? ` ([run](${runUrl}))` : '';
   if (!items.length) {
     return [
-      'The weekly check of the OSRS Wiki closed this issue.',
+      `The weekly check of the OSRS Wiki on ${date} found nothing left on this list${run}.`,
       '',
       LIST_START,
       '',
       listBlock([]),
       '',
       LIST_END,
-      '',
-      checked,
       '',
       'A new issue opens when the check finds something again.',
       '',
@@ -265,12 +284,12 @@ export function issueBody({ items, more = 0, date, runUrl = '', branchUrl = '', 
     '',
     LIST_END,
     '',
-    checked,
+    closed ? `- The check last changed this list on ${date}${run}.` : `- Last checked on ${date}${run}.`,
     ...(note ? [`- ${note}`] : []),
     ...(branchUrl ? [`- What the check itself changed is on the [\`bot/wiki-content-sync\` branch](${branchUrl}).`] : []),
     '- To act on it, start a content update: `docs/CONTENT_SYNC.md` describes the steps.',
     '',
-    'The weekly check keeps this issue. It adds a comment when it finds something new and closes the issue when nothing is left. If you close it yourself, it stays quiet until something new appears.',
+    closed ? CLOSED_FOOTER : OPEN_FOOTER,
     '',
   ].join('\n');
 }
@@ -290,19 +309,21 @@ export function itemsFromBody(body) {
   return unique(items);
 }
 
-/** The same issue text with another list. Only for a body itemsFromBody() can read. */
-const withList = (body, items) => {
-  const text = String(body);
-  const start = text.indexOf(LIST_START) + LIST_START.length;
-  const end = text.indexOf(LIST_END, start);
-  return `${text.slice(0, start)}\n\n${listBlock(items)}\n\n${text.slice(end)}`;
-};
+/**
+ * Whether an issue is one this script keeps: it carries the list, or at least
+ * the title. One that lost its list to an edit is still ours, so that it gets
+ * its list back instead of a second issue opening next to it.
+ */
+const isAlert = (issue) => Boolean(issue) && !issue.pull_request && Number.isInteger(issue.number)
+  && (itemsFromBody(issue.body) !== null || issue.title === ALERT_ISSUE_TITLE);
 
-/** The alert issue to keep: the newest open one that carries our list, else the newest closed one. */
+/**
+ * The alert issue to keep: the newest open one of ours, else the newest closed
+ * one. An older issue the owner opened again is thereby the one in use, and is
+ * told the current list afresh.
+ */
 export function latestAlert(issues) {
-  const ours = (Array.isArray(issues) ? issues : [])
-    .filter((issue) => issue && !issue.pull_request && Number.isInteger(issue.number) && itemsFromBody(issue.body) !== null)
-    .sort((left, right) => right.number - left.number);
+  const ours = (Array.isArray(issues) ? issues : []).filter(isAlert).sort((left, right) => right.number - left.number);
   return ours.find((issue) => issue.state === 'open') ?? ours[0] ?? null;
 }
 
@@ -329,41 +350,47 @@ const closingComment = (gone, date) => [
  * owner has been told and still stands, so only something that is not on it,
  * by its newsKey(), is news.
  */
-export function planAlert({ items, more = 0, unread = READ_EVERYTHING, latest, date, runUrl = '', branchUrl = '' }) {
-  const ours = latest && itemsFromBody(latest.body) !== null ? latest : null;
-  const previous = ours ? itemsFromBody(ours.body) : [];
+export function planAlert({ items, unread = READ_EVERYTHING, latest, date, runUrl = '', branchUrl = '' }) {
+  const ours = isAlert(latest) ? latest : null;
+  // An issue of ours whose list can no longer be read has told nothing.
+  const previous = ours ? itemsFromBody(ours.body) ?? [] : [];
   const current = new Set(items.map(newsKey));
   const told = new Set(previous.map(newsKey));
-  const fresh = items.filter((item) => !told.has(newsKey(item)));
   // A part the check could not read this week keeps its lines on the list.
   const stands = (item) => current.has(newsKey(item)) || !lookedAt(unread, item);
   const kept = previous.filter((item) => !current.has(newsKey(item)) && stands(item));
-  const { shown: listed, more: cut } = fit([...items, ...kept]);
+  // One issue shows only so much. This week's lines come first, in the check's
+  // own order, so the cut falls in the same place while nothing changes. A
+  // line beyond it is counted, and is told by name once it fits. A line the
+  // cut pushes off the list is forgotten and may be told a second time: with
+  // more than one issue can show, telling twice beats not telling.
+  const { shown: listed, more } = fit([...items, ...kept]);
+  const onList = new Set(listed);
+  const fresh = items.filter((item) => onList.has(item) && !told.has(newsKey(item)));
+  const text = (closed = false) => issueBody({ items: listed, more, date, runUrl, branchUrl, unread, closed });
 
   if (ours?.state === 'open') {
     // An empty list means the check looked at the part every line came from
     // and found none of them: a part it could not read keeps its lines.
     if (!listed.length) {
-      return [{ type: 'close', number: ours.number, comment: closingComment(previous, date), body: issueBody({ items: [], date, runUrl }) }];
+      return [{ type: 'close', number: ours.number, comment: closingComment(previous, date), body: text() }];
     }
     return [
       // The comment goes first: if the run stops between the two, the next
       // run says it again instead of never.
       ...(fresh.length ? [{ type: 'comment', number: ours.number, body: newItemsComment(fresh, date) }] : []),
-      { type: 'edit', number: ours.number, body: issueBody({ items: listed, more: more + cut, date, runUrl, branchUrl, unread }) },
+      { type: 'edit', number: ours.number, body: text() },
     ];
   }
 
   // No alert issue yet, or the last one is closed: speak only for something
   // it did not list.
-  if (fresh.length) {
-    return [{ type: 'create', title: ALERT_ISSUE_TITLE, body: issueBody({ items: listed, more: more + cut, date, runUrl, branchUrl, unread }) }];
-  }
+  if (fresh.length) return [{ type: 'create', title: ALERT_ISSUE_TITLE, body: text() }];
   // What is done comes off the closed issue's list without a word, so that the
-  // same thing coming back later counts as new.
-  const standing = previous.filter(stands);
-  if (ours && standing.length < previous.length) {
-    return [{ type: 'edit', number: ours.number, body: withList(ours.body, standing) }];
+  // same thing coming back later counts as new. The whole text is written
+  // anew, so that it never describes another week than its list.
+  if (ours && previous.some((item) => !stands(item))) {
+    return [{ type: 'edit', number: ours.number, body: text(true) }];
   }
   return [];
 }
@@ -412,11 +439,14 @@ async function carryOut(step, api, owner) {
     return `refreshed the list in issue #${step.number}`;
   }
   if (step.type === 'close') {
-    must(await api('POST', `/issues/${step.number}/comments`, { body: step.comment }), 'Commenting on the alert issue');
+    // Closed first: if the run stops between the two, only the comment is
+    // missing. The other way round, the comment would call an open issue
+    // closed, and the next run would say it a second time.
     must(
       await api('PATCH', `/issues/${step.number}`, { body: step.body, state: 'closed', state_reason: 'completed' }),
       'Closing the alert issue',
     );
+    must(await api('POST', `/issues/${step.number}/comments`, { body: step.comment }), 'Commenting on the closed alert issue');
     return `closed issue #${step.number}`;
   }
 
@@ -432,8 +462,8 @@ async function carryOut(step, api, owner) {
   }
   // The assignee is how the issue reaches the owner. GitHub answers 204 when
   // the owner can be assigned and 404 when not (an organisation cannot be).
-  // Anything else is a failed check: stop, so the next run tries again,
-  // instead of opening an issue nobody hears of.
+  // Anything else is a failed check: stop, so that a re-run of this job or
+  // next week's run tries again, instead of opening an issue nobody hears of.
   let assignees = [];
   if (LOGIN_RE.test(owner)) {
     const check = await api('GET', `/assignees/${owner}`);
@@ -470,22 +500,28 @@ export async function run(env = process.env, fetchFn = fetch, now = Date.now(), 
   const folder = env.ALERT_REPORT_DIR ?? '';
   if (!folder) throw new Error('ALERT_REPORT_DIR is not set, so there is nothing from the sync job to read.');
 
-  const { items, more, unread } = currentItems({
+  const { items, unread } = currentItems({
     status: readText(join(folder, 'docs', 'SYNC_STATUS.md')),
     report: readText(join(folder, 'sync-report.md')),
     syncOutcome: env.ALERT_SYNC_OUTCOME ?? '',
   });
-  log(`[sync:alert] ${items.length + more} item(s) need action.`);
-  for (const item of items) log(`[sync:alert]   ${item}`);
+  log(`[sync:alert] the check lists ${items.length} item(s) this week.`);
+  const printed = fit(items);
+  for (const item of printed.shown) log(`[sync:alert]   ${item}`);
+  if (printed.more) log(`[sync:alert]   and ${printed.more} more.`);
   if (!complete(unread)) log(`[sync:alert] ${unreadNote(unread)}`);
 
   const api = githubApi({ repository, token }, fetchFn);
-  const issues = must(await api('GET', `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`), 'Listing the alert issues').json;
+  const listing = await api('GET', `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`);
+  // GitHub answers with an empty list while the label does not exist. Should
+  // it ever answer "not found" or "invalid" instead, the first run must not
+  // fail for good: no label means no alert issue yet.
+  const noLabelYet = (listing.status === 404 || listing.status === 422) && (await api('GET', `/labels/${ALERT_LABEL}`)).status === 404;
+  const issues = noLabelYet ? [] : must(listing, 'Listing the alert issues').json;
   const server = env.GITHUB_SERVER_URL || 'https://github.com';
   const link = (url) => (LINK_RE.test(url) ? url : '');
   const plan = planAlert({
     items,
-    more,
     unread,
     latest: latestAlert(issues),
     date: utcDay(now),
@@ -499,7 +535,7 @@ export async function run(env = process.env, fetchFn = fetch, now = Date.now(), 
     log(`[sync:alert] ${did.at(-1)}`);
   }
   if (!plan.length) log('[sync:alert] nothing new to say.');
-  return { items, more, unread, did };
+  return { items, unread, did };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

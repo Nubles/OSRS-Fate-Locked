@@ -41,8 +41,8 @@ permissions:
 concurrency:
   group: wiki-content-sync
   # The weekly run and a manual run on main replace a run in progress. A
-  # manual run on a curation branch waits for its turn instead, so it cannot
-  # cancel the weekly run before that has told the owner what it found.
+  # manual run on a curation branch waits for its turn instead, so it does not
+  # cancel a weekly run that is on its way to telling the owner what it found.
   cancel-in-progress: ${{ github.event_name == 'schedule' || github.ref == 'refs/heads/main' }}
 
 jobs:
@@ -154,6 +154,8 @@ jobs:
 
       # The alert job reads these two every week, also when no data file
       # changed: the check can list something to do without changing a file.
+      # Kept for a week, so a failed alert job can be run again until the next
+      # weekly run.
       - name: Hand the status and the report to the alert job
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -162,7 +164,7 @@ jobs:
             docs/SYNC_STATUS.md
             sync-report.md
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
   push-branch:
     needs: sync
