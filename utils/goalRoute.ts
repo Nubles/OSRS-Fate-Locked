@@ -17,6 +17,7 @@ import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { enforcedQuestAreas } from './questGeographyDisplay';
 import { getActivityReq } from '../data/activityRequirements';
 import { WARRIORS_GUILD_ENTRY_LABEL, meetsWarriorsGuildEntry } from './activityReadiness';
+import { analyzeRequirement } from './strategyRequirement';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -490,6 +491,26 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     });
   }
 
+  // The guide card's access route and the checks only the player can confirm
+  // (utils/strategyRequirement.ts), so the route never reads 100% while the card is not ready.
+  let manualChecks: RouteItem[] | undefined;
+  if (kind === 'strategy') {
+    const { parts } = analyzeRequirement(req, unlocks, gameModeId);
+    if (req.accessRoutes?.length) {
+      alternatives.push({
+        name: 'One of: ' + req.accessRoutes.map(route => route.label).join(' or '),
+        met: !parts.missingAccessRoute,
+        routes: req.accessRoutes.map(route => ({
+          name: route.label,
+          met: (route.diaries ?? []).every(d => unlocks.diaries.includes(d))
+            && Object.entries(route.skills ?? {}).every(([skill, level]) => meetsSkillRequirement(unlocks, skill, level)),
+        })),
+      });
+    }
+    const checks = [...new Set([...parts.manualChecks, ...parts.confirmChecks])];
+    if (checks.length) manualChecks = checks.map(name => ({ name, met: false }));
+  }
+
   const haveQp = unlocks.quests.reduce((acc, id) => acc + (QUEST_DATA[id]?.points ?? 0), 0);
   const questPoints = qpNeed > 0 ? { need: qpNeed, have: haveQp, met: haveQp >= qpNeed } : undefined;
 
@@ -522,7 +543,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const items: { met: boolean }[] = [
-    ...quests, ...regions, ...skills, ...equipment, ...alternatives, ...diaries,
+    ...quests, ...regions, ...skills, ...equipment, ...alternatives, ...diaries, ...(manualChecks ?? []),
   ];
   if (questPoints) items.push({ met: questPoints.met });
   const total = Math.max(1, items.length);
@@ -530,7 +551,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   return {
     goalId, kind, description: req.description,
-    quests, regions, skills, equipment, alternatives, diaries, questPoints,
+    quests, regions, skills, equipment, alternatives, diaries, questPoints, manualChecks,
     sources: [], tables,
     totalSteps: total, completedSteps: done,
     percentage: Math.round((done / total) * 100),
