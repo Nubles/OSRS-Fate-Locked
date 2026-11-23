@@ -176,6 +176,7 @@ const mentions = (text: string, name: string) =>
  */
 const NAMES_A_SOURCE_BUT_FREE: Record<string, string> = {
   'Dark Totem': 'The totem pieces drop in the Catacombs of Kourend; only Skotizo itself is the boss Key.',
+  'Karuulm Dungeon (Upper)': 'An Agility shortcut that leads toward the Alchemical Hydra; using the pipe needs no Key.',
   'Limestone Mine': 'A free mine; Temple Trekking is only one use of its limestone.',
   'Potato Cactus (Kalphite)': 'Ground spawns in the Kalphite Lair, not drops of the Kalphite Queen.',
   'Seedicide': 'No such item in the game (left for the owner); it asks for no Key until then.',

@@ -74,7 +74,7 @@ describe('calculateGoalProgress for pinned Strategy Guide entries', () => {
 
   it('still asks for the Key of a root entry such as the Mining Guild', () => {
     const req = STRATEGY_DATABASE['Mining Guild (Amethyst)'];
-    const state = baseUnlocks({ regions: [...REGION_GROUPS.Asgarnia], skills: { Mining: 6 }, levels: { Mining: 60 } });
+    const state = baseUnlocks({ regions: [...REGION_GROUPS.Asgarnia], skills: { Mining: 10 }, levels: { Mining: 92 } });
     expect(calculateGoalProgress(req, state, 'vanilla').missing).toEqual(['Unlock: Mining Guild']);
     expect(calculateGoalProgress(req, { ...state, guilds: ['Mining Guild'] }, 'vanilla').percentage).toBe(100);
   });

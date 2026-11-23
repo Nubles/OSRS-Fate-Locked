@@ -32,6 +32,15 @@ export interface ContentRequirement {
   needsKey?: string[];
 }
 
+// Wiki 'Karuulm Slayer Dungeon': past the entrance chamber the floor burns without these boots.
+const KARUULM_HEAT = 'Wear boots of stone, boots of brimstone or granite boots past the Karuulm Slayer Dungeon entrance (not needed with the Kourend & Kebos Elite reward)';
+// Wiki 'Wyrm': wyrms also live in the Wyrmscraig Cavern, which needs no boots.
+const KARUULM_HEAT_OR_WYRMSCRAIG = KARUULM_HEAT + ', or fight wyrms in the Wyrmscraig Cavern after starting Fallen From Grace';
+// Wiki 'God Wars Dungeon': partial Troll Stronghold or the full Easy Combat Achievements tier.
+const GOD_WARS_ENTRY = 'God Wars Dungeon access through Troll Stronghold progress (defeated Dad) or the Easy Combat Achievement hilt teleport; the Wilderness God Wars Dungeon needs neither';
+// Wiki 'Smoke devil': a facemask or Slayer helmet is needed to kill them; the gas mask also works.
+const SMOKE_DEVIL_FACE = 'Wear a facemask, gas mask or Slayer helmet.';
+
 export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   // ============================================================================
   // GRANDMASTER QUESTS (End-Game Goals)
@@ -381,6 +390,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Karuulm
     skills: { 'Slayer': 62 },
+    manualRequirements: [KARUULM_HEAT_OR_WYRMSCRAIG],
     description: 'Source of Dragon Shortsword/Harpoon.'
   },
   'Drakes': {
@@ -388,6 +398,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Karuulm
     skills: { 'Slayer': 84 },
+    manualRequirements: [KARUULM_HEAT],
     description: 'Source of Drake\'s Tooth/Claw (Boots).'
   },
   'Hydras': {
@@ -395,6 +406,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Karuulm
     skills: { 'Slayer': 95 },
+    manualRequirements: [KARUULM_HEAT],
     description: 'Regular Hydras (if boss not available).'
   },
 
@@ -527,7 +539,13 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Karamja'], // Brimhaven Dungeon
     skills: {},
-    description: 'Source of Red Dragonhide.'
+    // The 22 Woodcutting vine, or the 56 Agility stepping stones past the 10 Woodcutting entrance vine.
+    // Banisoch's trading-stick entrance skips the entrance vine; accessRoutes cannot hold it.
+    accessRoutes: [
+      { label: '22 Woodcutting', skills: { Woodcutting: 22 } },
+      { label: '56 Agility and 10 Woodcutting', skills: { Agility: 56, Woodcutting: 10 } },
+    ],
+    description: 'Source of Red Dragonhide. Bring an axe and the 875-coin entry fee.'
   },
   'Green Dragons (Wilderness)': {
     id: 'Green Dragons',
@@ -545,6 +563,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
       { label: '60 Strength', skills: { Strength: 60 } },
       { label: '60 Agility', skills: { Agility: 60 } },
     ],
+    manualRequirements: [GOD_WARS_ENTRY],
     description: 'Slayer task monster in the God Wars Dungeon.'
   },
   'Spiritual Warriors': {
@@ -556,6 +575,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
       { label: '60 Strength', skills: { Strength: 60 } },
       { label: '60 Agility', skills: { Agility: 60 } },
     ],
+    manualRequirements: [GOD_WARS_ENTRY],
     description: 'Source of Alchables in GWD.'
   },
   'Ancient Wyverns': {
@@ -571,6 +591,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Slayer': 84 },
+    manualRequirements: [KARUULM_HEAT],
     description: 'Components for BiS mid-level boots.'
   },
   'Hydra Leather': {
@@ -578,6 +599,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Slayer': 95 },
+    manualRequirements: [KARUULM_HEAT],
     description: 'Component for Ferocious Gloves.'
   },
 
@@ -588,7 +610,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Mining Guild',
     category: TableType.GUILDS,
     regions: ['Asgarnia'],
-    skills: { 'Mining': 60 },
+    skills: { 'Mining': 92 }, // Amethyst; the guild door asks 60
     description: 'Access to Amethyst crystals (92 Mining).'
   },
   'Crafting Guild (Tanning)': {
@@ -630,8 +652,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Fishing Guild',
     category: TableType.GUILDS,
     regions: ['Kandarin'],
-    skills: { 'Fishing': 68 },
-    description: 'Safe spot for Harpoon/Big Net fishing.'
+    skills: { 'Fishing': 76 }, // Sharks; the guild door asks 68
+    description: 'Harpoon sharks (76 Fishing) at the guild\'s big net and harpoon spots.'
   },
   'Cooking Guild (Range)': {
     id: 'Cooks\' Guild',
@@ -704,7 +726,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.AGILITY_COURSES,
     regions: ['Kourend & Kebos'],
     skills: { 'Agility': 88 },
-    description: 'Shortcut to Hydras.'
+    description: 'Pipe from the entrance chamber to the Alchemical Hydra\'s lair, skipping the hydras.'
   },
   'Karuulm Dungeon (Middle)': {
     id: 'Karuulm Dungeon (Middle)',
@@ -1171,8 +1193,9 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Slayer Helmet': {
     id: 'Slayer Helmet',
     category: TableType.MERCHANTS, // Unlock
-    regions: [], // Global (Slayer Masters)
-    skills: { 'Crafting': 55, 'Slayer': 1 }, // 400 points
+    regions: ['Islands & Others'], // The black mask drops only from cave horrors on Mos Le'Harmless
+    skills: { 'Crafting': 55, 'Slayer': 58, 'Defence': 10 }, // 400 points for Malevolent masquerade; 10 Defence to wear
+    quests: ['Cabin Fever'],
     description: 'Combine Black Mask with Earmuffs/Facemask/etc.'
   },
   'Imbued Rings (NMZ)': {
@@ -1290,6 +1313,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Smoke Dungeon
     skills: { 'Slayer': 93 },
+    manualRequirements: ['Smoke devil Slayer task.', SMOKE_DEVIL_FACE],
     description: 'Best Slayer XP in the game (Barraging).'
   },
   'Shayzien Armor (Tier 5)': {
@@ -1381,6 +1405,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'], // Drakes/Wyrms (Component)
     skills: { 'Slayer': 84 }, // Drake's claw drops only from drakes; 44 Slayer and 70 Defence, Magic, Ranged to wear
+    manualRequirements: [KARUULM_HEAT],
     description: 'Best hybrid boots.'
   },
   'Devout Boots': {
@@ -1395,6 +1420,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kandarin'], // Smoke Devils
     skills: { 'Slayer': 93 },
+    manualRequirements: ['Smoke devil Slayer task or Thermonuclear smoke devil boss task.', SMOKE_DEVIL_FACE],
     description: 'Essential Magic damage necklace.'
   },
   'Eternal/Pegasian/Primordial Crystals': {
@@ -1565,7 +1591,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Red Dragon Isle',
     category: TableType.MINIGAMES,
     regions: ['Karamja'], // Brimhaven Dungeon
-    skills: { 'Agility': 56 }, // No diary since May 2024
+    skills: { 'Agility': 56, 'Woodcutting': 10 }, // No diary since May 2024; the stones are past the 10 Woodcutting entrance vine
     description: 'Shortcut to Red Dragons in Brimhaven Dungeon.'
   },
   'Mos Le\'Harmless Cave': {
@@ -2490,6 +2516,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos'],
     skills: { 'Slayer': 62 },
+    manualRequirements: [KARUULM_HEAT_OR_WYRMSCRAIG],
     description: '1/10,000 from wyrms (1/2,000 on a wyrm task).'
   },
   'Dragon Harpoon (Tempoross)': {
@@ -2782,6 +2809,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     regions: ['Kourend & Kebos', 'Islands & Others'], // Hydra leather from Karuulm; Lithkren Vault machinery
     skills: {},
     quests: ['Dragon Slayer II'],
+    manualRequirements: [KARUULM_HEAT],
     description: 'Use Hydra Leather on the Lithkren Vault machinery.'
   },
   'Neitiznot Faceguard': {
