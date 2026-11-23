@@ -10,21 +10,27 @@ const game = vi.hoisted(() => ({
   gameModeId: 'vanilla',
   customMode: undefined,
   linkedAccount: undefined,
+  saveOwnershipStatus: 'owner',
 }));
 const publishProgress = vi.hoisted(() => vi.fn());
 const replaceRefusedShare = vi.hoisted(() => vi.fn());
+/** The stored record, and the summaries the relay accepted (utils/progressShare.ts keeps those). */
+const stored = vi.hoisted(() => ({ record: null as null | { id: string; token: string; enabled: boolean } }));
+const accepted = vi.hoisted(() => new Map<string, string>());
 
 vi.mock('../context/GameContext', () => ({ useGame: () => game }));
 vi.mock('../context/ProfileContext', () => ({ useProfiles: () => ({ storageKeyForActiveProfile: 'P' }) }));
 vi.mock('../utils/progressShareRecord', () => ({
   PROGRESS_SHARE_EVENT: 'fate:progress-share',
-  readProgressShare: () => ({ id: 'AAAAAAAAAAAAAAAAAAAAAA', token: 'T'.repeat(43), enabled: true }),
+  readProgressShare: () => stored.record,
 }));
 // The summary shows the areas, so each new area is a new summary.
 vi.mock('../utils/progressSnapshot', () => ({
   buildProgressSnapshot: ({ unlocks }: { unlocks: { regions: string[] } }) => ({ areas: unlocks.regions.length }),
 }));
-vi.mock('../utils/progressShare', () => ({ publishProgress, replaceRefusedShare }));
+vi.mock('../utils/progressShare', () => ({
+  publishProgress, replaceRefusedShare, lastAcceptedSummary: (id: string) => accepted.get(id),
+}));
 
 const advance = async (ms: number) => {
   await act(async () => { await vi.advanceTimersByTimeAsync(ms); });
@@ -34,8 +40,13 @@ describe('ProgressShareDriver', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     game.unlocks = { regions: ['Misthalin'] };
+    stored.record = { id: 'AAAAAAAAAAAAAAAAAAAAAA', token: 'T'.repeat(43), enabled: true };
+    accepted.clear();
     publishProgress.mockReset();
-    publishProgress.mockResolvedValue({ ok: true });
+    publishProgress.mockImplementation(async (_base: string, record: { id: string }, snapshot: unknown) => {
+      accepted.set(record.id, JSON.stringify(snapshot));
+      return { ok: true };
+    });
     replaceRefusedShare.mockReset();
   });
 
@@ -78,7 +89,8 @@ describe('ProgressShareDriver', () => {
   it('moves a run whose id another token holds to a new id once, and never loops on refusals', async () => {
     const moved = { id: 'BBBBBBBBBBBBBBBBBBBBBB', token: 'U'.repeat(43), enabled: true };
     publishProgress.mockResolvedValue({ ok: false, error: 'forbidden' });
-    replaceRefusedShare.mockReturnValueOnce(moved).mockReturnValue(null);
+    // replaceRefusedShare stores the new record and returns it.
+    replaceRefusedShare.mockImplementationOnce(() => { stored.record = moved; return moved; }).mockReturnValue(null);
     render(<ProgressShareDriver />);
     await advance(2_000);
     expect(replaceRefusedShare).toHaveBeenCalledTimes(1);

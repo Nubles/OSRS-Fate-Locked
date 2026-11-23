@@ -24,6 +24,14 @@ export type PublishResult =
 
 const auth = (record: ProgressShareRecord) => ({ Authorization: `Bearer ${record.token}` });
 
+/**
+ * The summary the relay last accepted from this page for each run id, as sent,
+ * whichever part of the page sent it (ProgressShareDriver or the Discord
+ * settings), so the driver skips only what the relay really has.
+ */
+const acceptedSummaries = new Map<string, string>();
+export const lastAcceptedSummary = (id: string): string | undefined => acceptedSummaries.get(id);
+
 export async function publishProgress(
   base: string,
   record: ProgressShareRecord,
@@ -31,12 +39,16 @@ export async function publishProgress(
   fetchFn: typeof fetch = fetch,
 ): Promise<PublishResult> {
   try {
+    const body = JSON.stringify(snapshot);
     const response = await fetchFn(`${base}/p/${record.id}`, {
       method: 'POST',
       headers: { ...auth(record), 'Content-Type': 'application/json' },
-      body: JSON.stringify(snapshot),
+      body,
     });
-    if (response.ok) return { ok: true };
+    if (response.ok) {
+      acceptedSummaries.set(record.id, body);
+      return { ok: true };
+    }
     if (response.status === 429) return { ok: false, retryAfterMs: 60_000 };
     if (response.status === 403) return { ok: false, error: 'forbidden' };
     return { ok: false, error: response.status >= 500 ? 'network' : 'rejected' };
@@ -74,6 +86,7 @@ export async function deleteProgress(
   record: ProgressShareRecord,
   fetchFn: typeof fetch = fetch,
 ): Promise<boolean> {
+  acceptedSummaries.delete(record.id);
   try {
     return (await fetchFn(`${base}/p/${record.id}`, { method: 'DELETE', headers: auth(record) })).ok;
   } catch {

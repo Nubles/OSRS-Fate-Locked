@@ -9,7 +9,9 @@ const requestLinkCode = vi.hoisted(() => vi.fn());
 
 vi.mock('../context/ProfileContext', () => ({ useProfiles: () => ({ storageKeyForActiveProfile: 'P' }) }));
 vi.mock('../context/GameContext', () => ({
-  useGame: () => ({ unlocks: {}, history: [], gameModeId: 'vanilla', customMode: undefined, linkedAccount: undefined }),
+  useGame: () => ({
+    unlocks: {}, history: [], gameModeId: 'vanilla', customMode: undefined, linkedAccount: undefined, saveOwnershipStatus: 'owner',
+  }),
 }));
 vi.mock('../hooks/useEscapeKey', () => ({ useEscapeKey: () => undefined }));
 vi.mock('../hooks/useFocusTrap', () => ({ useFocusTrap: () => undefined }));

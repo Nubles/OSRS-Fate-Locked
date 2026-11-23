@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
+  deleteProgress, formatLinkCode, lastAcceptedSummary, newProgressShareRecord, publishProgress,
   readProgressShare, replaceRefusedShare, requestLinkCode, writeProgressShare,
 } from './progressShare';
 import { PROGRESS_ID_RE } from '../workers/fate-relay/protocol.js';
@@ -81,6 +81,19 @@ describe('progress share requests', () => {
     const ok = reply(200, { deleted: true });
     expect(await deleteProgress(BASE, record, ok)).toBe(true);
     expect(ok).toHaveBeenCalledWith(`${BASE}/p/${record.id}`, expect.objectContaining({ method: 'DELETE' }));
+  });
+
+  it('remembers the summary the relay last took, so the driver skips only what the relay has', async () => {
+    const other = newProgressShareRecord(bytes => bytes.fill(9));
+    await publishProgress(BASE, other, { areas: 1, public: true }, reply(200));
+    expect(lastAcceptedSummary(other.id)).toBe('{"areas":1,"public":true}');
+    // Refused or unreachable: the relay still has the earlier summary.
+    await publishProgress(BASE, other, { areas: 1 }, reply(429));
+    await publishProgress(BASE, other, { areas: 1 }, vi.fn(async () => { throw new TypeError('offline'); }));
+    expect(lastAcceptedSummary(other.id)).toBe('{"areas":1,"public":true}');
+    // Stop sharing drops the relay's copy, whether or not the delete got through.
+    await deleteProgress(BASE, other, reply(500));
+    expect(lastAcceptedSummary(other.id)).toBeUndefined();
   });
 });
 
