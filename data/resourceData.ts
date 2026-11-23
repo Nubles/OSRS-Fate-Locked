@@ -2731,7 +2731,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Kebbit Teeth': 1 }, notes: 'Grind with a Pestle and mortar' }
   ],
   'Gorak Claw': [
-    { type: 'DROP', name: 'Gorak', regions: ['Islands & Others'], notes: 'Zanaris / Gorak Plane' }
+    { type: 'DROP', name: 'Gorak', regions: ['Islands & Others', 'Asgarnia', 'Wilderness God Wars Dungeon'], quests: ['Fairytale II - Cure a Queen'], rarity: '1/3', notes: 'Gorak Plane (fairy ring DIR) / God Wars Dungeon / Wilderness God Wars Dungeon' }
   ],
   'Gorak Claw Powder': [
     { type: 'SKILL', name: 'Grinding', regions: ['Any'], inputs: { 'Gorak Claw': 1 }, notes: 'Grind with a Pestle and mortar' }

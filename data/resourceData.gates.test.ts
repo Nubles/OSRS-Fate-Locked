@@ -228,3 +228,17 @@ describe('gem rocks (resource-b.d2[0])', () => {
     expect(anyOpen(item, 'Mining Rocks', state(['The Onyx Crest'], { quests: ['Pandemonium'], levels: { Sailing: 46 } }))).toBe(false);
   });
 });
+
+describe('gorak claws (resource-b.d3[1])', () => {
+  // Wiki 'Gorak': claws (1/3) drop only after partial completion of Fairytale
+  // II - Cure a Queen, from goraks in the God Wars Dungeon, the Wilderness God
+  // Wars Dungeon and the Gorak Plane.
+  const ft2 = 'Fairytale II - Cure a Queen';
+  it('goraks drop no claws before Fairytale II', () => {
+    expect(anyOpen('Gorak Claw', 'Gorak', state(allAreas, { quests: allQuests.filter(q => q !== ft2) }))).toBe(false);
+  });
+  it('the God Wars Dungeon goraks count', () => {
+    expect(anyOpen('Gorak Claw', 'Gorak', state(areasOf('Asgarnia'), { quests: [ft2] }))).toBe(true);
+    expect(anyOpen('Gorak Claw', 'Gorak', state(['Wilderness God Wars Dungeon'], { quests: [ft2] }))).toBe(true);
+  });
+});
