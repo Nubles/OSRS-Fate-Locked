@@ -267,6 +267,17 @@ describe('Diary tasks behind a quest gate on the map', () => {
     expect(task('mor_elite_3').quests).toEqual(['Lunar Diplomacy', 'Priest in Peril']);
   });
 
+  it('enter Port Phasmatys for the furnace with Ghosts Ahoy, ecto-tokens or a charter ship', () => {
+    // Wiki Port Phasmatys rev 15381748: entry through the energy barriers needs two ecto-tokens unless Ghosts Ahoy is
+    // done, or a charter ship; the furnace is inside the town. Same wording as the range task (mor_easy_2).
+    expect(task('mor_med_8').oneOf).toEqual([
+      { label: 'Ghosts Ahoy', quests: ['Ghosts Ahoy'] },
+      { label: 'Ecto-tokens or charter ship', manualRequirements: ['Confirm: Ecto-tokens or charter ship'] },
+    ]);
+    expect(task('mor_easy_2').oneOf?.map(route => route.manualRequirements ?? route.quests))
+      .toContainEqual(['Confirm: Ecto-tokens or charter ship']);
+  });
+
   it('list the quest that opens every area they need, or a quest that needs it first', () => {
     const gated = ALL_DIARY_TASKS.filter(row => [...gatesNeeded(row), ...(row.oneOf ?? []).flatMap(option => [...gatesNeeded(option)])].length);
     // The check covers the Morytania tasks, Mos Le'Harmless and Harmony Island.

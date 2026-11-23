@@ -13197,7 +13197,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Dwarf Cannon 35 Smithing Steel bar and ammo mould (or 2 steel bars and double ammo mould )"
+      "sourceRequirements": "Completion of Dwarf Cannon 35 Smithing Steel bar and ammo mould (or 2 steel bars and double ammo mould )",
+      "oneOf": [
+        {
+          "label": "Ghosts Ahoy",
+          "quests": [
+            "Ghosts Ahoy"
+          ]
+        },
+        {
+          "label": "Ecto-tokens or charter ship",
+          "manualRequirements": [
+            "Confirm: Ecto-tokens or charter ship"
+          ]
+        }
+      ]
     },
     {
       "id": "mor_med_9",
