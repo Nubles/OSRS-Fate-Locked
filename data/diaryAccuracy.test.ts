@@ -676,8 +676,10 @@ describe('Diary tasks with Raiments of the Eye routes', () => {
       expect(slots.filter(slot => slot !== 'Shield')).toHaveLength(pieces);
       expect(slots).toContain('Shield');
     }
-    const head = pieces === 2 ? { Head: 1, Body: 1 } : { Head: 1 };
-    const crafter = account({ skills: { Runecraft: 10 }, levels: { Runecraft: level }, ...place, equipment: head });
+    const head: Record<string, number> = pieces === 2 ? { Head: 1, Body: 1 } : { Head: 1 };
+    const crafter = account({
+      skills: { Runecraft: 10 }, levels: { Runecraft: level }, regions: [...place.regions], quests: [...place.quests], equipment: head,
+    });
     expect(evaluateDiaryTaskEligibility(task(id), crafter).machineEligible).toBe(false);
     expect(evaluateDiaryTaskEligibility(task(id), { ...crafter, equipment: { ...head, Shield: 1 } }).machineEligible).toBe(true);
   });
