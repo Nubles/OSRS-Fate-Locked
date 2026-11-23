@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createFreshState, gameReducerForTest as reduce, stepLevelUp } from '../context/GameContext';
-import type { GameState, LogEntry } from '../types';
+import type { LogEntry } from '../types';
 import { runStats } from './achievements';
 import { lastSession, WELCOME_BACK_AFTER_MS } from './welcomeBack';
 
@@ -13,7 +13,8 @@ import { lastSession, WELCOME_BACK_AFTER_MS } from './welcomeBack';
  * counters are what read it correctly.
  */
 const levelUp = (modeId: 'vanilla' | 'chunked', skill: string) => {
-  let s = { ...createFreshState(), lastEvent: null } as GameState;
+  type State = Parameters<typeof reduce>[0];
+  let s: State = { ...createFreshState(), lastEvent: null };
   s = reduce(s, { type: 'SET_GAME_MODE', payload: { modeId } });
   s = { ...s, unlocks: { ...s.unlocks, skills: { ...s.unlocks.skills, [skill]: 10 }, levels: { ...s.unlocks.levels, [skill]: 29 } } };
   const before = s;
