@@ -478,7 +478,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Wilderness', 'Asgarnia', 'Misthalin', 'Tirannwn', 'Fremennik'], skills: { 'Mining': 85 }, notes: 'Heroes Guild / Wildy / Myths Guild' },
     { type: 'DROP', name: 'Crystal Geode', regions: ['Tirannwn'], skills: {'Woodcutting': 1}, notes: 'Rare from chopping crystal trees' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 2 },
-    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'] }
+    { type: 'DROP', name: 'Rune Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'] }
   ],
   'Amethyst': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia'], skills: {'Mining': 92}, notes: 'Mining Guild' }
@@ -557,14 +557,14 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
     { type: 'DROP', name: 'Aviansie', regions: ['Fremennik'], skills: {'Agility': 70} },
-    { type: 'DROP', name: 'Adamant Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'], rarity: 'Always' }
+    { type: 'DROP', name: 'Adamant Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'], rarity: 'Always' }
   ],
   'Rune Bar': [
     { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 4}, notes: 'Requires 4 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 8} },
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
-    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin'], quests: ['Dragon Slayer II'] },
+    { type: 'DROP', name: 'Rune Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'] },
     { type: 'DROP', name: 'Nechryael', regions: ['Morytania', 'Kourend & Kebos'], skills: {'Slayer': 80} }
   ],
   'Blurite Bar': [
@@ -888,7 +888,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 80}, inputs: {'Gold Bar': 1, 'Dragonstone': 1, 'Amulet Mould': 0, 'Ball of Wool': 1} }
   ],
   'Dragonstone': [
-    { type: 'DROP', name: 'Rune Dragon', regions: ['Kandarin', 'Fremennik'], quests: ['Dragon Slayer II'] },
+    { type: 'DROP', name: 'Rune Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'] },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath', notes: 'Noted', outputYield: 2 },
     { type: 'SKILL', name: 'Crafting', regions: ['Any'], skills: {'Crafting': 55}, inputs: {'Uncut Dragonstone': 1, 'Chisel': 0} }
   ],

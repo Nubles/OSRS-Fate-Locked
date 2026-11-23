@@ -47,6 +47,19 @@ describe('reviewed drop sources', () => {
     expect(wiki?.regions).not.toEqual(['Any']);
   });
 
+  it('places every curated adamant and rune dragon row in Lithkren', () => {
+    // Both dragons live only in the Lithkren Vault (Dragon Slayer II).
+    const rows = Object.values(RESOURCE_MAP).flat()
+      .filter(s => !s.requirementsUnverified && (s.name === 'Rune Dragon' || s.name === 'Adamant Dragon'));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.regions).toEqual(['Lithkren']);
+      expect(row.quests).toEqual(['Dragon Slayer II']);
+    }
+    const wiki = (RESOURCE_MAP['Adamant Javelin Tips'] ?? []).find(s => s.name === 'Adamant Dragon');
+    expect(wiki?.regions).toEqual(['Lithkren']);
+  });
+
   it.each([
     ["Executioner's Axe Head", 'Vardorvis', '1/1088'],
     ['Eye of the Duke', 'Duke Sucellus', '1/720'],
