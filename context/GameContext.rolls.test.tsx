@@ -65,6 +65,8 @@ it('does not expose a failed-save result and retries that same transaction', asy
   vi.mocked(runDrawFloat).mockReturnValue(0.1);
   act(() => current.rollUnlock(TableType.EQUIPMENT));
   expect(screen.getByRole('status').textContent).toContain('waiting to be saved');
+  // A way out that keeps the run: the backup holds the roll unrevealed.
+  expect(screen.getByRole('button', { name: 'Export backup' })).toBeTruthy();
   const selected = current.pendingUnlock!;
   expect(screen.getByText(selected.item).parentElement?.style.display).toBe('none');
   expect(screen.queryByRole('button', { name: 'Accept Destiny' })).toBeNull();

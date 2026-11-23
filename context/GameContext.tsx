@@ -31,6 +31,7 @@ import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
 import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
 import { loadWalkSections } from '../utils/walkSections';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from '../utils/fateSaveFile';
 import { UNLOCK_COST, randomUnlockPool, pickRandomUnlock, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { CURRENT_RNG_VERSION, chaosPicksTableFirst, drawFloat, runDrawFloat, seededContext, usesSemanticContext } from '../utils/seededRng';
@@ -3238,16 +3239,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'UNLOCK', payload: { table, item, costType, cost } });
   }, [commitAction]);
 
+  // A roll is made only when its save can be written: the coordinator's own
+  // test, and no save already failing. A roll whose save fails hides the run
+  // (the banners with it) until Retry save lands.
+  const saveStatusRef = useRef(saveStatus);
+  saveStatusRef.current = saveStatus;
+  const rollRefused = useCallback((action: string): boolean => {
+    const owned = authorizeOwnedWrite().ok;
+    if (owned && saveStatusRef.current !== 'failed') return false;
+    showToast(owned
+      ? `Your progress isn't saving right now. Retry the save or export a backup before ${action}.`
+      : `Save ownership is unavailable. Restore save access before ${action}.`);
+    return true;
+  }, [authorizeOwnedWrite]);
+
   const rollUnlock = useCallback((table?: TableType) => {
     const costType = table === undefined ? 'chaosKey' : 'key';
     const draw = (usable?: (candidate: { table: TableType; item: string }) => boolean) => {
       const current = stateRef.current;
       if (current.pendingUnlock) return;
       if ((costType === 'key' ? current.keys : current.chaosKeys) < UNLOCK_COST) return;
-      if (authorizeOwnership().ok === false) {
-        showToast('Save ownership is unavailable. Restore save access before rolling.');
-        return;
-      }
+      if (rollRefused('rolling')) return;
       // Saradomin's Ward: fate still picks, but only from what the run can use right now.
       const warded = current.rituals?.ward === true && wardApplies(costType, table, current.gameModeId);
       if (warded && !usable) return;
@@ -3279,7 +3291,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (!mountedRef.current) return;
       draw(c => wardUsable(c.table, c.item, stateRef.current.unlocks, stateRef.current.gameModeId ?? DEFAULT_MODE_ID));
     }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
-  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+  }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
   const acknowledgeUnlock = useCallback((id: string) => {
     if (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved')) return;
     commitAction({ type: 'ACKNOWLEDGE_UNLOCK', payload: id });
@@ -3324,10 +3336,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const before = stateRef.current;
     const tier = breakthroughTier(before, skill);
     if (tier === null || before.pendingUnlock) return;
-    if (authorizeOwnership().ok === false) {
-      showToast('Save ownership is unavailable. Restore save access before rolling.');
-      return;
-    }
+    if (rollRefused('rolling')) return;
     const next = commitAction({ type: 'CHUNKED_BREAKTHROUGH', payload: { skill, roll: nextFloat('breakthrough'), revealId: generateId() } });
     if (next === before) return;
     // A win plays the unlock reveal once saved, as a Key's unlock does; a loss
@@ -3339,21 +3348,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     } else {
       showToast(`No Breakthrough: ${skill} stays at tier ${tier - 1}. Levels past ${tierCap(tier - 1)} roll nothing until a Key opens its next tier.`);
     }
-  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+  }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
   const callOnFate = useCallback(() => {
     if (mercyBlocker(stateRef.current) !== null) return;
-    if (authorizeOwnership().ok === false) {
-      showToast('Save ownership is unavailable. Restore save access before calling on fate.');
-      return;
-    }
+    if (rollRefused('calling on fate')) return;
     // Mercy stays shut while a quest in the run's chunks is doable. That needs
     // the chunk content, so the provider loads it and lists the quests itself
     // rather than trusting the caller's list; without the content, no call.
     importWithRetry(() => import('../utils/mercyQuests'))
       .then(({ loadDoableChunkedQuests }) => loadDoableChunkedQuests(() => stateRef.current))
       .then((doableQuests) => {
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || rollRefused('calling on fate')) return;
         if (doableQuests === null) {
           showToast("Fate's Mercy couldn't check your chunks for doable quests. Check your connection and try again.");
           return;
@@ -3365,7 +3371,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         if (coordinator) void settleCoordinatedFlush();
         else flushCurrentSave();
       }, () => showToast("Fate's Mercy couldn't load. Check your connection and try again."));
-  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+  }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
   const rollGilded = useCallback((chunk: string, x?: number, y?: number) => {
     const before = stateRef.current;
@@ -4227,6 +4233,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           <div className={saveStatus === 'failed' ? 'contents' : 'contents [&>*]:opacity-0 [&>*]:animate-[fade-in-up_0.3s_ease-out_0.5s_forwards]'}>
             <p>{saveStatus === 'failed' ? 'Your roll is waiting to be saved. Retry to reveal the same result.' : 'Saving your roll…'}</p>
             <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
+            {saveStatus === 'failed' && <button type="button" className="px-4 py-2 rounded border border-gray-500 text-gray-300" onClick={() => {
+              const result = downloadFateSave(serializeCurrent(), storageKey);
+              showToast(result.ok ? FATE_EXPORT_DONE_MESSAGE : result.message);
+            }}>Export backup</button>}
           </div>
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}
