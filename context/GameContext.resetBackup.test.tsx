@@ -16,7 +16,8 @@ import { checksumSave } from '../utils/saveIntegrity';
 import { resolveSaveRecovery, type SaveRecoveryDecision } from '../utils/saveRecovery';
 import { profileMirrorMetadataKey } from '../utils/storageRecovery';
 import { profileBackupKey } from '../utils/profileStorage';
-import { confirmReset, RESET_CONFIRM_MESSAGE, RESET_NO_BACKUP_MESSAGE } from '../utils/backups';
+import { RESET_CONFIRM_MESSAGE } from '../utils/backups';
+import { confirmReset, RESET_NO_BACKUP_MESSAGE } from '../utils/resetConfirm';
 import { GameProvider, initialState, useGame } from '../context/GameContext';
 
 /**

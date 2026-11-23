@@ -5,7 +5,7 @@ import { useFeatureGates } from '../../hooks/useFeatureGates';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { getGameMode, resolveModeRules } from '../../config/gameModes';
 import { DISCORD_INVITE_URL } from '../../constants';
-import { confirmReset } from '../../utils/backups';
+import { confirmReset } from '../../utils/resetConfirm';
 import { FATE_EXPORT_HINT } from '../../utils/fateSaveFile';
 import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
 import { setSkillOddsHover, useSkillOddsHover } from '../../utils/skillOddsPref';

@@ -3,7 +3,7 @@ import { Download, History, Info, Link2, PauseCircle, PlayCircle, Radio, RotateC
 import { confirmSpendPref, tableOutlookPref, welcomeBackPref } from '../utils/viewerPrefs';
 import { BookOpen, Lightbulb, ScrollText } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
-import { confirmReset } from '../utils/backups';
+import { confirmReset } from '../utils/resetConfirm';
 import { FATE_EXPORT_HINT } from '../utils/fateSaveFile';
 import { OSRS_MIN_WIDTH, setUiStyle, useIsWideEnoughForOsrs, useUiStyle } from '../utils/uiStyle';
 import { DropdownMenu } from './DropdownMenu';
