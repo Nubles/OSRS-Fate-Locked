@@ -3,7 +3,7 @@ import { resourcePlanningKey, readResourceQuantities, hasLegacyResourcePlanning,
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
-import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY, currentResourceName } from '../data/resourceData';
+import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY, currentResourceName, currentResourceList, currentResourceQuantities } from '../data/resourceData';
 import { calculateSupplyChain, isItemAvailableWithCtx, buildAvailabilityContext, computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, getNextAchievableItems } from '../utils/supplyChain';
 import { wikiService } from '../services/WikiService';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -17,16 +17,6 @@ const FAVORITES_KEY = 'FATE_RESOURCE_FAVORITES';
 const RECENT_KEY = 'FATE_RESOURCE_RECENT';
 const MAX_FAVORITES = 20;
 const MAX_RECENT = 10;
-// Stored quantities under the item's current name; plan targets keep only
-// items the engine knows, as the mount loader does.
-const currentQuantities = (stored: Record<string, number>, knownOnly: boolean): Record<string, number> => {
-  const out: Record<string, number> = {};
-  for (const [k, v] of Object.entries(stored)) {
-    const name = currentResourceName(k);
-    if (!knownOnly || RESOURCE_MAP[name]) out[name] = v;
-  }
-  return out;
-};
 
 interface SupplyChainCalculatorProps {
   onClose: () => void;
@@ -103,7 +93,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       const raw = localStorage.getItem(FAVORITES_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed)
-        ? parsed.filter((x): x is string => typeof x === 'string').map(currentResourceName).filter(x => RESOURCE_MAP[x])
+        ? currentResourceList(parsed)
         : [];
     } catch {
       return [];
@@ -117,11 +107,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       const raw = localStorage.getItem(INVENTORY_KEY);
       const parsed = raw ? JSON.parse(raw) : {};
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        const cleaned: Record<string, number> = {};
-        for (const [k, v] of Object.entries(parsed)) {
-          if (typeof v === 'number' && v > 0 && Number.isFinite(v)) cleaned[currentResourceName(k)] = v;
-        }
-        return cleaned;
+        return currentResourceQuantities(parsed, false);
       }
       return {};
     } catch {
@@ -135,7 +121,7 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       const raw = localStorage.getItem(RECENT_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed)
-        ? parsed.filter((x): x is string => typeof x === 'string').map(currentResourceName).filter((x) => RESOURCE_MAP[x]).slice(0, MAX_RECENT)
+        ? currentResourceList(parsed).slice(0, MAX_RECENT)
         : [];
     } catch {
       return [];
@@ -148,12 +134,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
       const raw = localStorage.getItem(PLAN_KEY);
       const parsed = raw ? JSON.parse(raw) : {};
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        const cleaned: Record<string, number> = {};
-        for (const [k, v] of Object.entries(parsed)) {
-          const name = currentResourceName(k);
-          if (typeof v === 'number' && v > 0 && Number.isFinite(v) && RESOURCE_MAP[name]) cleaned[name] = v;
-        }
-        return cleaned;
+        // Plan targets keep only items the engine knows.
+        return currentResourceQuantities(parsed, true);
       }
       return {};
     } catch {
@@ -385,8 +367,8 @@ const RunSupplyChainCalculator: React.FC<SupplyChainCalculatorProps> = ({ onClos
                 <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">The Resource Engine <SectionGuide id="SUPPLY" /></h2>
                 {legacyAvailable && <button type="button" className="text-xs text-amber-300 underline" onClick={() => {
                   if (copyLegacyResourcePlanning(localStorage, runId)) {
-                    setInventory(currentQuantities(readResourceQuantities(localStorage, INVENTORY_KEY), false));
-                    setPlanTargets(currentQuantities(readResourceQuantities(localStorage, PLAN_KEY), true));
+                    setInventory(currentResourceQuantities(readResourceQuantities(localStorage, INVENTORY_KEY), false));
+                    setPlanTargets(currentResourceQuantities(readResourceQuantities(localStorage, PLAN_KEY), true));
                     setLegacyAvailable(false);
                   }
                 }}>Copy previous shared inventory and plan into this run</button>}

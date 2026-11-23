@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState } from '../types';
-import { RESOURCE_MAP, RESOURCE_CATEGORIES, RENAMED_RESOURCES, currentResourceName } from './resourceData';
+import { RESOURCE_MAP, RESOURCE_CATEGORIES, RENAMED_RESOURCES, currentResourceList, currentResourceName, currentResourceQuantities } from './resourceData';
 import { calculateEngineItemProgress } from '../utils/supplyChain';
 import { buildGoalRoute } from '../utils/goalRoute';
 
@@ -57,5 +57,28 @@ describe('names that were only Wiki redirects (resource-b.d1[3])', () => {
   ]);
   it('goat horn drops from goats every kill', () => {
     expect(RESOURCE_MAP['Goat Horn'][0]).toMatchObject({ type: 'DROP', name: 'Goat', rarity: 'Always' });
+  });
+});
+
+describe('one vial (resource-b.d4[2])', () => {
+  // Wiki 'Empty vial': an untradeable Lunar Diplomacy quest item. The shop and
+  // glassblowing item is 'Vial' ('An empty glass vial.').
+  renames([['Empty Vial', 'Vial']]);
+  it('the vial card holds the shop and glassblowing routes', () => {
+    const names = RESOURCE_MAP['Vial'].filter(s => !s.requirementsUnverified).map(s => s.name);
+    expect(names).toEqual(expect.arrayContaining(['Glassblowing', 'Herblore Shop', 'General Store']));
+    expect(RESOURCE_CATEGORIES['Tools & Containers']).toContain('Vial');
+    expect(categorised.filter(n => n === 'Vial')).toHaveLength(1);
+  });
+  it('filling a vial at a fountain needs a vial', () => {
+    const fountain = RESOURCE_MAP['Vial of Water'].find(s => s.name === 'Use Vial on Fountain');
+    expect(fountain?.inputs).toEqual({ Vial: 1 });
+  });
+  it('stored quantities under both names add up', () => {
+    expect(currentResourceQuantities({ 'Empty Vial': 5, Vial: 3, Logs: 2 }, true)).toEqual({ Vial: 8, Logs: 2 });
+    expect(currentResourceQuantities({ 'Empty Vial': 5, Nope: 1, Bad: -1 }, false)).toEqual({ Vial: 5, Nope: 1 });
+  });
+  it('stored lists keep one entry per item', () => {
+    expect(currentResourceList(['Empty Vial', 'Vial', 'Logs', 7, 'Nope'])).toEqual(['Vial', 'Logs']);
   });
 });

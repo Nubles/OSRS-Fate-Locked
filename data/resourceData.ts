@@ -276,7 +276,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Vial of Water': [
     { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Most general stores stock packs' },
-    { type: 'SKILL', name: 'Use Vial on Fountain', regions: ['Any'], notes: 'Requires Empty Vial' }
+    { type: 'SKILL', name: 'Use Vial on Fountain', regions: ['Any'], inputs: { 'Vial': 1 } }
   ],
   'Amylase Crystal': [
     { type: 'MERCHANT', name: 'Grace', regions: ['Asgarnia'], notes: 'Burthorpe (10 Marks of Grace)', outputYield: 100 }
@@ -1458,10 +1458,6 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'General Store', regions: ['Any'] },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Any'] }
   ],
-  'Empty Vial': [
-    { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Sold in packs' },
-    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'] }
-  ],
 
   // --- SEEDS ---
   'Ranarr Seed': [
@@ -2556,7 +2552,8 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Vial': [
     { type: 'SKILL', name: 'Glassblowing', regions: ['Any'], skills: { 'Crafting': 33 }, inputs: { 'Molten Glass': 1 } },
-    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Sold empty in packs' }
+    { type: 'SHOP', name: 'Herblore Shop', regions: ['Asgarnia', 'Kandarin', 'Misthalin'], notes: 'Sold empty in packs' },
+    { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Sold in packs' }
   ],
 
   // --- BOSS & RAID UNIQUE INTERMEDIATES ---
@@ -2889,9 +2886,24 @@ export const RENAMED_RESOURCES: Readonly<Record<string, string>> = {
   // Names that are only Wiki redirects, not the game's item names.
   'Desert Goat Horn': 'Goat Horn', 'Leviathan Lure': "Leviathan's Lure",
   'Araxyte Venom Sack': 'Araxyte Venom Sac', 'Gorak Claw': 'Gorak Claws',
+  // The game's 'Empty vial' is a Lunar Diplomacy quest item; the shop vial is 'Vial'.
+  'Empty Vial': 'Vial',
 };
 export const currentResourceName = (name: string): string =>
   Object.prototype.hasOwnProperty.call(RENAMED_RESOURCES, name) ? RENAMED_RESOURCES[name] : name;
+/** Stored quantities under their current names; two old names for one item add up. */
+export const currentResourceQuantities = (stored: Record<string, unknown>, knownOnly: boolean): Record<string, number> => {
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(stored)) {
+    if (typeof v !== 'number' || !(v > 0) || !Number.isFinite(v)) continue;
+    const name = currentResourceName(k);
+    if (!knownOnly || RESOURCE_MAP[name]) out[name] = (out[name] ?? 0) + v;
+  }
+  return out;
+};
+/** Stored item names under their current names, once each, known items only. */
+export const currentResourceList = (stored: readonly unknown[]): string[] =>
+  [...new Set(stored.filter((x): x is string => typeof x === 'string').map(currentResourceName))].filter(x => RESOURCE_MAP[x]);
 for (const [item, extra] of Object.entries(ENRICHED_SOURCES)) {
   const target = RESOURCE_MAP[currentResourceName(item)];
   if (target) target.push(...extra.map(enrichResourceSource));
@@ -2968,7 +2980,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
   'Secondaries': [
     'Snape Grass', "Red Spiders' Eggs", 'Mort Myre Fungus', 'Blue Dragon Scale',
     'Wine of Zamorak', 'Limpwurt Root', 'White Berries', 'Crushed Nest',
-    'Eye of Newt', 'Vial of Water', 'Vial', 'Amylase Crystal', 'Chocolate Dust',
+    'Eye of Newt', 'Vial of Water', 'Amylase Crystal', 'Chocolate Dust',
     'Chocolate Bar', 'Dragon Scale Dust', 'Garlic', 'Goat Horn',
     'Goat Horn Dust', 'Unicorn Horn', 'Unicorn Horn Dust', 'Snake Weed',
     'Coconut Milk', 'Coconut', 'Potato Cactus', 'Magic Roots', 'Yew Roots',
@@ -3102,7 +3114,7 @@ export const RESOURCE_CATEGORIES: Record<string, string[]> = {
     'Thread', 'Needle',
   ],
   'Tools & Containers': [
-    'Chisel', 'Knife', 'Spade', 'Pot', 'Jug', 'Bucket', 'Empty Vial',
+    'Chisel', 'Knife', 'Spade', 'Pot', 'Jug', 'Bucket', 'Vial',
     'Dragon Axe', 'Dragon Harpoon', 'Amulet Mould', 'Ring Mould',
     'Necklace Mould', 'Bracelet Mould',
   ],
