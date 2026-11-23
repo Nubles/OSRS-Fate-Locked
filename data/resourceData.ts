@@ -332,15 +332,15 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- CONSTRUCTION ---
   'Oak Plank': [
     { type: 'MERCHANT', name: 'Sawmill Operator', regions: ['Misthalin', 'Kourend & Kebos'], inputs: {'Oak Logs': 1, 'Coins': 250}, notes: 'Convert logs' },
-    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Oak Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2}, notes: 'Lunar Spell' }
+    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, quests: ['Dream Mentor'], inputs: {'Oak Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2}, notes: 'Lunar Spell' }
   ],
   'Teak Plank': [
     { type: 'MERCHANT', name: 'Sawmill Operator', regions: ['Misthalin', 'Kourend & Kebos'], inputs: {'Teak Logs': 1, 'Coins': 500} },
-    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Teak Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} }
+    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, quests: ['Dream Mentor'], inputs: {'Teak Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} }
   ],
   'Mahogany Plank': [
     { type: 'MERCHANT', name: 'Sawmill Operator', regions: ['Misthalin', 'Kourend & Kebos'], inputs: {'Mahogany Logs': 1, 'Coins': 1500} },
-    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, inputs: {'Mahogany Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} }
+    { type: 'SKILL', name: 'Plank Make', regions: ['Fremennik'], skills: {'Magic': 86}, quests: ['Dream Mentor'], inputs: {'Mahogany Logs': 1, 'Nature Rune': 1, 'Astral Rune': 2} }
   ],
 
   // --- CRAFTING & PROCESSING ---
@@ -772,13 +772,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Basilisk', regions: ['Fremennik'], skills: {'Slayer': 40} }
   ],
   'Law Rune': [
-    { type: 'SKILL', name: 'Runecraft Altar', regions: ['Asgarnia'], skills: { 'Runecraft': 54 }, notes: 'Entrana (No weapons allowed)' },
+    { type: 'SKILL', name: 'Runecraft Altar', regions: ['Asgarnia'], skills: { 'Runecraft': 54 }, quests: ['Troll Stronghold'], notes: 'Entrana (No weapons allowed)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Kourend & Kebos', 'Wilderness', 'Kharidian Desert', 'Varlamore'] },
     { type: 'DROP', name: 'Cockatrice', regions: ['Fremennik'], skills: {'Slayer': 25} }
   ],
   'Cosmic Rune': [
-    { type: 'SKILL', name: 'Runecraft Altar', regions: ['Misthalin'], skills: { 'Runecraft': 27 }, notes: 'Zanaris (Lost City)' },
+    { type: 'SKILL', name: 'Runecraft Altar', regions: ['Misthalin'], skills: { 'Runecraft': 27 }, quests: ['Lost City'], notes: 'Zanaris (Lost City)' },
     { type: 'SHOP', name: 'Mage Arena Shop', regions: ['Wilderness'], notes: 'Lundail' },
     { type: 'SHOP', name: 'Ali\'s Discount Wares', regions: ['Kharidian Desert'], quests: ['The Feud'], notes: 'Al Kharid' }
   ],

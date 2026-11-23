@@ -149,3 +149,25 @@ describe('spawns behind a quest (resource-a.d4[1])', () => {
     expect(anyOpen('Babydragon Bones', 'Baby Blue Dragon', state(areasOf('Asgarnia'), { quests: [] }))).toBe(true);
   });
 });
+
+describe('altars and Plank Make need their quest (resource-a.d4[2])', () => {
+  // Wiki 'Law Altar': 54 Runecraft and Troll Stronghold. 'Cosmic Altar': 27
+  // Runecraft and Lost City. 'Plank Make': 86 Magic and Dream Mentor.
+  const missingFor = (item: string, name: string, s: ReturnType<typeof state>, note?: string) =>
+    calculateSupplyChain(item, s)!.sources
+      .filter(r => r.source.name === name && !r.source.requirementsUnverified && (!note || r.source.notes?.includes(note)))
+      .flatMap(r => r.status.missing);
+
+  it('the Law Altar needs Troll Stronghold', () => {
+    expect(missingFor('Law Rune', 'Runecraft Altar', state(areasOf('Asgarnia'), { quests: [] }), 'Entrana'))
+      .toContain('Quest: Troll Stronghold');
+  });
+  it('the Cosmic Altar needs Lost City', () => {
+    expect(missingFor('Cosmic Rune', 'Runecraft Altar', state([], { quests: [] }), 'Zanaris'))
+      .toContain('Quest: Lost City');
+  });
+  it.each(['Oak Plank', 'Teak Plank', 'Mahogany Plank'])('Plank Make for %s needs Dream Mentor', item => {
+    expect(missingFor(item, 'Plank Make', state(areasOf('Fremennik'), { quests: ['Lunar Diplomacy'] })))
+      .toContain('Quest: Dream Mentor');
+  });
+});
