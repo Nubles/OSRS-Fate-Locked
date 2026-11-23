@@ -8,7 +8,7 @@ import familyExclusions from '../data/sources/slayer-family-exclusions.json';
 import type { SlayerMasters } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { slayerReachability, type LocateFn } from './slayerReach';
-import { isOnTaskRequirement, slayerLocate, slayerReason } from './slayerDecisions';
+import { isOnTaskRequirement, slayerDecisions, slayerLocate, slayerReason } from './slayerDecisions';
 import { BOSSES_LIST, MISTHALIN_AREAS, MOBILITY_LIST, REGIONS_LIST, SKILLS_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -521,5 +521,37 @@ describe('task families hold every map monster the Wiki counts for the task (sla
     expect(at('Krystilia', 'Pirates', 'Zombie pirate').length).toBeGreaterThan(0);
     expect(at('Mazchna', 'Ghosts', 'Revenant imp').map(hit => hit.location.locationName)).toContain('Revenant Caves');
     expect(at('Nieve', 'Dagannoths', 'Dagannoth Rex').length).toBeGreaterThan(0);
+  });
+});
+
+describe('tasks the game names differently keep their decision and places (slayer.d2[1])', () => {
+  const service = new ChunkContentService();
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await service.init();
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+  // RuneLite's Slayer plugin reads the game's own task names: Fleshcrawlers, Scabarites, Mutated zygomites.
+  const pairs: [string, string][] = [
+    ['flesh crawler', 'fleshcrawler'], ['minions of scabara', 'scabarite'], ['zygomite', 'mutated zygomite'],
+    ['mazchna:flesh crawler', 'mazchna:fleshcrawler'], ['nieve:minions of scabara', 'nieve:scabarite'],
+    ['duradel:zygomite', 'duradel:mutated zygomite'],
+    ['konar quo maten:zygomites - zanari', 'konar quo maten:mutated zygomites - zanari'],
+    ['konar quo maten:zygomites - fossil island', 'konar quo maten:mutated zygomites - fossil island'],
+  ];
+
+  it('answer under the game’s name as under the tracker’s', () => {
+    const unlocks = account({ regions: [...REGIONS_LIST, ...MISTHALIN_AREAS], quests: Object.keys(QUEST_DATA), slayerUnlocks: [...SLAYER_UNLOCKS_LIST] });
+    const decisions = slayerDecisions(slayerReachability(MASTERS, unlocks, slayerLocate(chunkContentService, unlocks, 'vanilla'), 'vanilla'));
+    const index = service.slayerReachIndex();
+    for (const [ours, game] of pairs) {
+      expect(decisions[ours], ours).toBeDefined();
+      expect(decisions[game], game).toEqual(decisions[ours]);
+      expect(index[ours]?.length, ours).toBeGreaterThan(0);
+      expect(index[game], game).toEqual(index[ours]);
+    }
+    // The tracker's own names stay as they are: saves and older plugins use them.
+    expect(Object.keys(MASTERS.Mazchna)).toContain('Flesh Crawlers');
   });
 });

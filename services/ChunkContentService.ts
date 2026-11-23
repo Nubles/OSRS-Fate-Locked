@@ -1,4 +1,4 @@
-import { locateSlayerTask } from '../utils/slayerTaskLocations';
+import { locateSlayerTask, gameTaskName } from '../utils/slayerTaskLocations';
 /**
  * ChunkContentService — what's actually in each map chunk.
  *
@@ -696,11 +696,15 @@ export class ChunkContentService {
     const out: Record<string, { cx: number; cy: number }[]> = {};
     const entities = this.entitiesOfKind('monster');
     for (const [master, tasks] of Object.entries(this.slayerMasters())) for (const [task, assignment] of Object.entries(tasks)) {
-      const norm = task.toLowerCase().trim().replace(/s$/, '');
       const locations = locateSlayerTask(task, entities, assignment, master).map(hit => hit.location);
       const unique = [...new Map(locations.map(({ cx, cy }) => [`${cx},${cy}`, { cx, cy }])).values()];
-      out[`${master.toLowerCase()}:${norm}`] = unique;
-      out[norm] = [...new Map([...(out[norm] ?? []), ...unique].map(loc => [`${loc.cx},${loc.cy}`, loc])).values()];
+      // Also under the game's name where it differs (Mutated zygomites), as the plugin matches the chat.
+      const alias = gameTaskName(task);
+      for (const name of [task, ...(alias ? [alias] : [])]) {
+        const norm = name.toLowerCase().trim().replace(/s$/, '');
+        out[`${master.toLowerCase()}:${norm}`] = unique;
+        out[norm] = [...new Map([...(out[norm] ?? []), ...unique].map(loc => [`${loc.cx},${loc.cy}`, loc])).values()];
+      }
     }
     return out;
   }

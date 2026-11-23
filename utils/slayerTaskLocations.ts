@@ -9,6 +9,23 @@ const PLACE_ALIASES: Readonly<Record<string, string>> = {
 };
 /** Family members Krystilia's tasks do not count: the King Black Dragon's lair is not part of the Wilderness (wiki "Krystilia" oldid 15389119). */
 const NOT_FOR_KRYSTILIA = new Set(['king black dragon']);
+/**
+ * Tasks the game names otherwise than the tracker's rows (RuneLite's Slayer Task
+ * enum, which reads the game's own table; wiki "Zygomite", "Flesh Crawler",
+ * "Slayer task/Scabarites"). The RuneLite plugin looks a task up by the game's
+ * name, so the decisions and places are keyed under both (slayer.d2[1]).
+ */
+const GAME_TASK_NAMES: Readonly<Record<string, string>> = {
+  'flesh crawlers': 'Fleshcrawlers',
+  'minions of scabaras': 'Scabarites',
+  zygomites: 'Mutated zygomites',
+};
+/** The game's name for a tracker task, keeping Konar's " - place", or undefined when it is the same. */
+export function gameTaskName(task: string): string | undefined {
+  const [family, ...place] = task.split(' - ');
+  const game = GAME_TASK_NAMES[family.toLowerCase().trim()];
+  return game ? [game, ...place].join(' - ') : undefined;
+}
 export interface SlayerLocation { name: string; location: EntityLocation; }
 /** Exact reviewed monster families and the assignment's actual location constraint. */
 export function locateSlayerTask(task: string, entities: readonly EntityHit[], assignment?: SlayerAssignment, master?: string): SlayerLocation[] {
