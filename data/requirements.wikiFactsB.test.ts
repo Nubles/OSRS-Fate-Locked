@@ -270,9 +270,10 @@ describe('requirements part B, deep pass: started quests and shop stock', () => 
   const stock: [string, RegExp, RegExp][] = [
     // [entry, must match, must not match]. Wiki pages: Tony's Pizza Bases, Blair's Armour, Shayzien armour,
     // Hring Hring, Neitiznot Supplies, Grand Tree Groceries (store lines checked 23 Nov 2026).
+    // Ore store: Mithril ore and Adamantite ore have stock=0, and Ironmen cannot buy overstock (Wiki: Ironman Mode).
     ['Wilderness Food Shop', /pizza bases/, /Stew/i],
     ['Shayzien Armourer', /Combat Ring/, /Anti-poison/i],
-    ['Jatizso Ore Shop', /adamantite/, /Rune Ore/],
+    ['Jatizso Ore Shop', /coal/i, /Rune Ore|up to adamantite/i],
     ['Neitiznot Supplies', /Thread/, /Rope|Yak/i],
     ['Grand Tree Groceries', /cocktail shaker/, /Gin\/Vodka|Herblore/],
   ];

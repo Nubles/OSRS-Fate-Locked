@@ -1918,7 +1918,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     skills: {},
     quests: ['The Fremennik Trials'], // Mord Gunnars ferries you once The Fremennik Isles is started
     questProgress: [FREMENNIK_ISLES_STARTED],
-    description: 'Ores up to adamantite (no runite).'
+    // Wiki 'Ore store': mithril and adamantite ore have stock=0, and Ironmen cannot buy overstock.
+    description: 'Copper, tin, iron, silver and gold ore and coal (mithril and adamantite have no base stock, so Ironmen cannot buy them).'
   },
   'Neitiznot Supplies': {
     id: 'General Stores',
