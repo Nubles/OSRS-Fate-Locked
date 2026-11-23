@@ -515,9 +515,15 @@ export async function run(env = process.env, fetchFn = fetch, now = Date.now(), 
   const listing = await api('GET', `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`);
   // GitHub answers with an empty list while the label does not exist. Should
   // it ever answer "not found" or "invalid" instead, the first run must not
-  // fail for good: no label means no alert issue yet.
-  const noLabelYet = (listing.status === 404 || listing.status === 422) && (await api('GET', `/labels/${ALERT_LABEL}`)).status === 404;
+  // fail for good: no label means no alert issue yet. That takes a "not found"
+  // for the label from a repository that does list its labels, so a
+  // repository this run cannot see is a failure, not an empty list.
+  const noLabelYet = (listing.status === 404 || listing.status === 422)
+    && (await api('GET', `/labels/${ALERT_LABEL}`)).status === 404
+    && Array.isArray(must(await api('GET', '/labels?per_page=1'), 'Listing the alert issues').json);
   const issues = noLabelYet ? [] : must(listing, 'Listing the alert issues').json;
+  // Anything but a list would read as "no alert issue yet" and open a second one.
+  if (!Array.isArray(issues)) throw new Error('Listing the alert issues failed: GitHub did not answer with a list.');
   const server = env.GITHUB_SERVER_URL || 'https://github.com';
   const link = (url) => (LINK_RE.test(url) ? url : '');
   const plan = planAlert({

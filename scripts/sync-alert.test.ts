@@ -127,9 +127,11 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 /**
  * A GitHub that keeps its issues between runs, so several weeks can be played
  * against it. `assignable` is its answer to "can the owner be assigned": 204
- * yes, 404 no, anything else a failure. `broken` makes one call fail. Both can
- * be changed between runs. `strictLabels` makes it refuse a list by a label
- * that does not exist, which the real one is not known to do.
+ * yes, 404 no, anything else a failure. `broken` makes one call answer with
+ * another status, and `hidden` makes it answer "not found" to everything, as
+ * for a repository the run cannot see. All three can be changed between runs.
+ * `strictLabels` makes it refuse a list by a label that does not exist, which
+ * the real one is not known to do.
  */
 function fakeGitHub({ issues = [] as Issue[], assignable = 204, dropLabels = false, dropAssignees = false, strictLabels = false } = {}) {
   const labels = new Set<string>(issues.flatMap((issue) => issue.labels?.map((label) => label.name) ?? []));
@@ -139,12 +141,14 @@ function fakeGitHub({ issues = [] as Issue[], assignable = 204, dropLabels = fal
     issues,
     assignable,
     broken: null as null | { method: string; path: string; status: number },
+    hidden: false,
     writes: () => github.calls.filter((call) => call.method !== 'GET').map((call) => `${call.method} ${call.path}`),
     fetchFn: vi.fn(async (url: string, init?: RequestInit) => {
       const method = init?.method ?? 'GET';
       const path = url.replace('https://api.github.com/repos/owner/tracker', '');
       const body = init?.body ? JSON.parse(String(init.body)) : undefined;
       github.calls.push({ method, path, body, headers: init?.headers as Record<string, string>, url });
+      if (github.hidden) return reply({ message: 'Not Found' }, 404);
       if (github.broken?.method === method && github.broken.path === path) return reply({ message: 'Bad Gateway' }, github.broken.status);
       const one = path.match(/^\/issues\/(\d+)(\/comments)?$/);
       const issue = one ? issues.find((candidate) => candidate.number === Number(one[1])) : undefined;
@@ -153,6 +157,7 @@ function fakeGitHub({ issues = [] as Issue[], assignable = 204, dropLabels = fal
         return reply(issues.filter((candidate) => candidate.labels?.some((label) => label.name === ALERT_LABEL)));
       }
       if (method === 'GET' && path === `/labels/${ALERT_LABEL}`) return labels.has(ALERT_LABEL) ? reply({ name: ALERT_LABEL }) : reply({}, 404);
+      if (method === 'GET' && path === '/labels?per_page=1') return reply([...labels].slice(0, 1).map((name) => ({ name })));
       if (method === 'POST' && path === '/labels') { labels.add(body.name); return reply(body, 201); }
       if (method === 'GET' && path === '/assignees/owner') {
         return github.assignable === 204 || github.assignable === 404
@@ -1027,6 +1032,28 @@ describe('a run against GitHub', () => {
     expect(github.writes()).toEqual(['POST /labels', 'POST /issues', 'PATCH /issues/1']);
   });
 
+  it('never takes an answer it cannot read for "no alert issue yet"', async () => {
+    const listing = `/issues?labels=${ALERT_LABEL}&state=all&per_page=50`;
+    // A repository the run cannot see answers "not found" to everything, also
+    // to the question about the label. That is a failure in a week with
+    // something to say and in a week with nothing.
+    const unseen = fakeGitHub({ issues: [ourIssue(1, 'open', [QUEST])], strictLabels: true });
+    unseen.hidden = true;
+    await expect(run(week([QUEST, CA]), unseen.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the alert issues failed: GitHub answered 404/);
+    await expect(run(week([]), unseen.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the alert issues failed: GitHub answered 404/);
+    expect(unseen.calls.map((call) => `${call.method} ${call.path}`).slice(0, 3)).toEqual([`GET ${listing}`, `GET /labels/${ALERT_LABEL}`, 'GET /labels?per_page=1']);
+    expect(unseen.writes()).toEqual([]);
+    unseen.hidden = false;
+    await run(week([QUEST, CA]), unseen.fetchFn, NOW, quiet());
+    expect(unseen.writes()).toEqual(['POST /issues/1/comments', 'PATCH /issues/1']);
+    // An answer that is no list is not an empty list: no second issue opens.
+    const odd = fakeGitHub({ issues: [ourIssue(1, 'open', [QUEST])] });
+    odd.broken = { method: 'GET', path: listing, status: 200 };
+    await expect(run(week([QUEST, CA]), odd.fetchFn, NOW, quiet())).rejects.toThrow(/Listing the alert issues failed: GitHub did not answer with a list/);
+    expect(odd.writes()).toEqual([]);
+    expect(odd.issues).toHaveLength(1);
+  });
+
   it('announces a Chunk Picker change that follows a re-pin, even after an outage elsewhere', async () => {
     const github = fakeGitHub();
     await run(week([CHUNK_ACTION]), github.fetchFn, NOW, quiet());
@@ -1153,6 +1180,7 @@ describe('the script itself', () => {
       'GET /issues?labels=${ALERT_LABEL}&state=all&per_page=50',
       'GET /labels/${ALERT_LABEL}',
       'GET /labels/${ALERT_LABEL}',
+      'GET /labels?per_page=1',
       'PATCH /issues/${step.number}',
       'PATCH /issues/${step.number}',
       'POST /issues',
