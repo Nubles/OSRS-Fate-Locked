@@ -27,7 +27,7 @@
  * a real player can't train, which held Fate's Mercy shut for good. With a
  * run, these count too:
  * - levels, not just tiers: content counts once the player's level reaches
- *   it (Draynor rooftop needs Agility 10, the Water altar Runecraft 5), from
+ *   it (Al Kharid rooftop needs Agility 20, the Water altar Runecraft 5), from
  *   the exact levels the generator keeps (chunkFacts);
  * - Ranged needs the Weapon slot at tier 1 to hold a bow or darts, and only
  *   then counts as a combat style; fighting (and so Hitpoints, Prayer's

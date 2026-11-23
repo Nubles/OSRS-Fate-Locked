@@ -90,9 +90,14 @@ describe('Chunked Skills rolls', () => {
     expect(chunkedSkillRollable('Agility', fresh())).toBe(false);
     // Gnome Stronghold course (level 1) is tier 1.
     expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['38,53'] }))).toBe(true);
-    // Draynor rooftop is tier 1 too, but needs level 10: a level-1 player can't use it (deadlock audit, dead end 2).
-    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['48,51'] }))).toBe(false);
-    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['48,51'], levels: { ...fresh().levels, Agility: 10 } }))).toBe(true);
+    // OSRS Wiki: the Draynor rooftop and the Shayzien basic course need Agility 1 since 8 May 2024 (deep audit d2[0]).
+    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['48,51'] }))).toBe(true);
+    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['24,56'] }))).toBe(true);
+    expect(levelsIn('48,51').Agility).toBe(1);
+    expect(levelsIn('24,56').Agility).toBe(1);
+    // Al Kharid rooftop is tier 2, but needs level 20: a level-11 player can't use it (deadlock audit, dead end 2).
+    expect(chunkedSkillRollable('Agility', atCap({ Agility: 1 }, { chunks: ['51,49'], levels: { ...fresh().levels, Agility: 11 } }))).toBe(false);
+    expect(chunkedSkillRollable('Agility', atCap({ Agility: 1 }, { chunks: ['51,49'], levels: { ...fresh().levels, Agility: 20 } }))).toBe(true);
     // Varrock rooftop (30) opens at tier 3, once the player's level reaches 30.
     expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['50,53'] }))).toBe(false);
     expect(chunkedSkillRollable('Agility', atCap({ Agility: 2 }, { chunks: ['50,53'] }))).toBe(false);
@@ -241,12 +246,12 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
   });
 
   it('compares the lowest usable level with the player\'s level, not just its tier (dead end 2)', () => {
-    // Draynor rooftop: Agility 10 at tier 1.
-    const draynor = { chunks: ['49,50', '48,50', '48,51'] };
-    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 1 }, draynor))).toBe(false);
-    expect(mercyBlocker(dry(withTiers({ Agility: 1 }, draynor)), [])).toBeNull();
-    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 1 }, { ...draynor, levels: levels({ Agility: 10 }) }))).toBe(false); // at the tier-1 cap
-    expect(chunkedSkillRollable('Agility', withTiers({ Agility: 1 }, { ...draynor, levels: levels({ Agility: 10 }) }))).toBe(true);
+    // Al Kharid rooftop: Agility 20 at tier 2.
+    const alKharid = { chunks: ['51,50', '51,49'] };
+    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 11 }) }))).toBe(false);
+    expect(mercyBlocker(dry(withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 11 }) })), [])).toBeNull();
+    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 20 }) }))).toBe(false); // at the tier-2 cap
+    expect(chunkedSkillRollable('Agility', withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 20 }) }))).toBe(true);
     // The Water altar: Runecraft 5, two chunks from the start (with essence from Aubury).
     const water = { chunks: ['50,49', '49,49', '50,53'], quests: ['Rune Mysteries'] };
     expect(chunkedSkillHasRoom('Runecraft', withTiers({ Runecraft: 1, Mining: 1 }, water))).toBe(false);
@@ -256,8 +261,8 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     const bush = { chunks: ['49,52'], farming: ['Bush'] };
     expect(chunkedSkillRollable('Farming', withTiers({}, bush))).toBe(false);
     expect(chunkedSkillRollable('Farming', withTiers({}, { ...bush, levels: levels({ Farming: 10 }) }))).toBe(true);
-    // The generator keeps the exact level only above the tier's floor: 10 for Draynor, none for Gnome's level 1.
-    expect(CHUNK_SKILL_TIERS['48,51']).toContain('B9'); // tier 1, nine levels above its floor
+    // The generator keeps the exact level only above the tier's floor: 20 for Al Kharid, none for Gnome's level 1.
+    expect(CHUNK_SKILL_TIERS['51,49']).toContain('C9'); // tier 2, nine levels above its floor
     expect([1, 10, 11, 20, 87, 91, 95].map(factCell)).toEqual(['1', 'B9', '2', 'C9', 'J6', '0', 'A4']);
     expect(levelsIn('38,53').Agility).toBe(1);
     for (const [chunk, facts] of Object.entries(built.nodes)) {

@@ -146,9 +146,11 @@ describe('Chunked exploring rolls', () => {
     const port = at(['47,50'], { Sailing: 1 });
     expect(exploreBlocker(port, '47,50', 'Sailing')).toBe('Needs Pandemonium done.');
     expect(exploreBlocker({ ...port, unlocks: { ...port.unlocks, quests: ['Pandemonium'] } }, '47,50', 'Sailing')).toBeNull();
-    // Draynor rooftop needs Agility 10, not just tier 1.
+    // Al Kharid rooftop needs Agility 20, not just tier 2; Draynor rooftop needs only Agility 1 (OSRS Wiki, 8 May 2024).
+    const alKharid = at(['51,50', '51,49'], { Agility: 2 }, { levels: { ...initialState.unlocks.levels, Agility: 11 } });
+    expect(exploreBlocker(alKharid, '51,49', 'Agility')).toBe('Needs Agility level 20.');
     const draynor = at(['49,50', '48,50', '48,51'], { Agility: 1 });
-    expect(exploreBlocker(draynor, '48,51', 'Agility')).toBe('Needs Agility level 10.');
+    expect(exploreBlocker(draynor, '48,51', 'Agility')).toBeNull();
     // The Water altar needs essence as well as Runecraft 5.
     const water = at(['50,49', '49,49'], { Runecraft: 1 }, { levels: { ...initialState.unlocks.levels, Runecraft: 5 } });
     expect(exploreBlocker(water, '49,49', 'Runecraft')).toMatch(/^Needs essence: Rune Mysteries, Mining and an essence mine teleport/);

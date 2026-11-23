@@ -78,13 +78,15 @@ const key = (id: string | number) => `${Math.floor(Number(id) / 256)},${Number(i
 export const AGILITY_COURSES: readonly { course: string; chunk: string; level: number; marker: string }[] = [
   { course: 'Gnome Stronghold Agility Course', chunk: '38,53', level: 1, marker: 'Log balance' },
   { course: 'Brimhaven Agility Arena', chunk: '43,49', level: 1, marker: 'Brimhaven Agility Arena' },
-  { course: 'Draynor Village Rooftop Course', chunk: '48,51', level: 10, marker: 'Tightrope' },
+  // Draynor's 10 and the Shayzien basic course's 5 were removed on 8 May 2024; the Shayzien basic
+  // and advanced courses both start at its Monkeybars, so the chunk's lowest is the basic course's 1.
+  { course: 'Draynor Village Rooftop Course', chunk: '48,51', level: 1, marker: 'Tightrope' },
   { course: 'Al Kharid Rooftop Course', chunk: '51,49', level: 20, marker: 'Zip line' },
   { course: 'Varrock Rooftop Course', chunk: '50,53', level: 30, marker: 'Clothes line' },
   { course: 'Agility Pyramid', chunk: '52,44', level: 30, marker: 'Climbing rocks (Agility Pyramid entrance)' },
   { course: 'Barbarian Outpost Agility Course', chunk: '39,55', level: 35, marker: 'Ropeswing' },
   { course: 'Canifis Rooftop Course', chunk: '54,54', level: 40, marker: 'Tall tree' },
-  { course: 'Shayzien Basic Agility Course', chunk: '24,56', level: 45, marker: 'Monkeybars' },
+  { course: 'Shayzien Agility Course', chunk: '24,56', level: 1, marker: 'Monkeybars' },
   { course: 'Falador Rooftop Course', chunk: '47,52', level: 50, marker: 'Hand holds' },
   { course: 'Colossal Wyrm Agility Course', chunk: '25,45', level: 50, marker: 'Tightrope' },
   { course: 'Wilderness Agility Course', chunk: '46,61', level: 52, marker: 'Ropeswing' },
@@ -273,8 +275,8 @@ const LAND = new Set(ALL_CHUNK_KEYS);
 /**
  * One fact's cell in a chunk's row: "." for none, else the tier of the lowest
  * level it needs (1-9, 0 for tier 10). A level above its tier's floor keeps
- * its exact value, which Chunked compares with the player's level (Draynor
- * rooftop is Agility 10, a tier-1 node a level-1 player can't use): a letter
+ * its exact value, which Chunked compares with the player's level (Al Kharid
+ * rooftop is Agility 20, a tier-2 node a level-11 player can't use): a letter
  * for the tier (A for tier 10, B for tier 1 … J for tier 9), then how many
  * levels above the floor, so "B9" is level 10 and "J6" level 87.
  */
