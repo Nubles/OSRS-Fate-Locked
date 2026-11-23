@@ -7,13 +7,13 @@ import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell,
 import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import chunkDoc from '../public/chunk-content.json';
 import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingLevels, chunkedTrainingTiers, chunkFactLevel, chunkPatchBlocker } from './chunkedSkillPool';
-import { PATCH_LOCKS } from './chunkSkillNodesBuild';
+import { PATCH_LOCKS, SHOP_LOCKS } from './chunkSkillNodesBuild';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { chunkedSkillHasRoom, mercyBlocker, skillsWithRoom } from './chunkedFate';
 import { randomUnlockPool } from './gameEngine';
 import { chunkKey, getChunkFrontier } from './chunkAdjacency';
-import { FARMING_PATCH_LIST, MERCHANTS_LIST } from '../data/items';
+import { FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST } from '../data/items';
 
 const fresh = () => ({ ...initialState.unlocks, chunks: [] as string[] });
 type Unlocks = ReturnType<typeof fresh>;
@@ -360,6 +360,41 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     expect(chunkedSkillHasRoom('Hunter', desert(['53,45'], ['Hunter Shops']))).toBe(true);
     // At level 1 the warblers are still out of reach.
     expect(chunkedSkillHasRoom('Hunter', { ...desert(['53,45'], ['Hunter Shops']), levels: fresh().levels })).toBe(false);
+  });
+
+  it('counts a locked skill shop only once the run has its lock (deep audit d3[1])', () => {
+    // OSRS Wiki 'Razmire Builders Merchants.' (rev 15318751): Shades of Mort'ton must be done to use the store.
+    // 'Imia's Supplies' (rev 15399191): in the Hunter Guild, and needs 46 Hunter like all its amenities.
+    const morton = (quests: string[]) => withTiers({ Construction: 1 }, {
+      chunks: ['46,50', '46,52', '54,51'], quests: ['Priest in Peril', ...quests], merchants: ['Real Estate Agents'],
+    });
+    expect(chunkedSkillNeeds('Construction', morton([]))).toBe('a house from an estate agent and planks (a sawmill and logs, or a plank shop)');
+    expect(chunkedSkillRollable('Construction', morton([]))).toBe(false);
+    expect(chunkedSkillNeeds('Construction', morton(["Shades of Mort'ton"]))).toBeNull();
+    expect(chunkedSkillRollable('Construction', morton(["Shades of Mort'ton"]))).toBe(true);
+
+    const guild = (guilds: string[], hunter: number, tier = 5) => ({
+      ...withTiers({ Hunter: tier }, { chunks: ['21,48', '24,47'], quests: ['Children of the Sun'], merchants: ['Hunter Shops'], guilds }),
+      levels: { ...fresh().levels, Hunter: hunter },
+    });
+    expect(chunkedSkillNeeds('Hunter', guild([], 46))).toBe('traps from a Hunter shop');
+    expect(chunkedSkillNeeds('Hunter', guild(['Hunter Guild'], 45))).toBe('traps from a Hunter shop');
+    expect(chunkedSkillNeeds('Hunter', guild(['Hunter Guild'], 46, 4))).toBe('traps from a Hunter shop'); // tier 4 stops at 40
+    expect(chunkedSkillNeeds('Hunter', guild(['Hunter Guild'], 46))).toBeNull();
+    expect(chunkedSkillRollable('Hunter', guild(['Hunter Guild'], 46))).toBe(true);
+    // Without a run the content alone counts, as before.
+    expect(CHUNK_SKILL_SERVICES.planks['54,51']).toBe('Real Estate Agents');
+    expect(CHUNK_SKILL_SERVICES.traps['24,47']).toBe('Hunter Shops');
+    expect(built.serviceLocks).toEqual({
+      '24,47': { traps: { guild: 'Hunter Guild', skills: { Hunter: 46 } } },
+      '54,51': { planks: { quest: "Shades of Mort'ton" } },
+    });
+    const shops = new Set(Object.values((chunkDoc as unknown as { chunks: Record<string, { s?: string[] }> }).chunks).flatMap(entry => entry.s ?? []));
+    for (const [shop, lock] of Object.entries(SHOP_LOCKS)) {
+      expect(shops.has(shop), shop).toBe(true);
+      if (lock.quest) expect(QUEST_DATA[lock.quest], lock.quest).toBeDefined();
+      if (lock.guild) expect(GUILDS_LIST, lock.guild).toContain(lock.guild);
+    }
   });
 
   it('opens Smithing through an ore shop only with its merchant type, and never through a Thieving stall (dead end 7)', () => {

@@ -38,13 +38,15 @@
  * - Construction needs a house from an estate agent and planks (a sawmill
  *   and logs, or a plank shop), each of an unlocked merchant type;
  * - Hunter needs traps from a Hunter shop of an unlocked merchant type;
- * - an ore shop is Smithing's input only with its merchant type unlocked.
+ * - an ore shop is Smithing's input only with its merchant type unlocked;
+ * - a shop the game locks (CHUNK_SERVICE_LOCKS) counts only with its quest,
+ *   guild and levels.
  * Magic needs no runes here: they come from drops and the tutorial too.
  */
 import type { UnlockState } from '../types';
 import {
-  CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_LOCKS, CHUNK_PATCH_TYPES, CHUNK_SKILL_FACTS,
-  CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
+  CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_LOCKS, CHUNK_PATCH_TYPES, CHUNK_SERVICE_LOCKS,
+  CHUNK_SKILL_FACTS, CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
 } from '../data/chunkSkillNodes';
 import { CHUNKED_START_KEY } from './chunkAdjacency';
 import { SKILL_QUEST_GATES } from './journalStatus';
@@ -53,7 +55,7 @@ import { tierBand, tierForLevel } from './skillTiers';
 const COMBAT_SKILLS = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Ranged', 'Magic', 'Prayer'];
 const MELEE_AND_MAGIC = ['Attack', 'Strength', 'Defence', 'Magic'];
 /** Skills whose content is another skill's input (logs, ore, fish, herbs). */
-const INPUT_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Farming'];
+const INPUT_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Farming', 'Hunter'];
 
 /** What of the run decides whether chunk content is usable. */
 export type TrainingRun = Pick<UnlockState, 'skills'>
@@ -200,7 +202,12 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     if (gated) continue;
     for (const [service, chunksOffering] of Object.entries(CHUNK_SKILL_SERVICES)) {
       const merchant = chunksOffering[key];
-      if (merchant !== undefined && (!run || merchant === '' || merchants.has(merchant))) services.add(service);
+      if (merchant === undefined || (run && merchant !== '' && !merchants.has(merchant))) continue;
+      // A shop the game locks (Razmire's planks, Imia's traps) needs its quest, guild and levels.
+      const lock = run && CHUNK_SERVICE_LOCKS[key]?.[service];
+      if (lock && ((lock.quest && !quests.has(lock.quest)) || (lock.guild && !guilds.has(lock.guild))
+        || Object.entries(lock.skills ?? {}).some(([skill, level]) => (run.skills[skill] ?? 0) < tierForLevel(level) || runLevel(run, skill) < level))) continue;
+      services.add(service);
     }
   }
   // Without a run, an input only has to exist; with one, its skill's tier and level must reach it.

@@ -29,6 +29,8 @@
  *                          it counts only with that guild unlocked
  *   CHUNK_PATCH_LOCKS      patches the game locks behind a quest or a diary
  *                          beyond the chunk's entry (PATCH_LOCKS)
+ *   CHUNK_SERVICE_LOCKS    services whose only shop in the chunk the game
+ *                          locks behind a quest, a guild or a level (SHOP_LOCKS)
  */
 import { farmingPatchOf, trainingReqFor } from './skillChunkNodes';
 import type { EntityKind } from '../services/ChunkContentService';
@@ -62,6 +64,8 @@ export interface ChunkSkillData {
   guildGates: Record<string, [string[], string]>;
   /** Per chunk, its patch types the game locks behind a quest or a diary (PATCH_LOCKS). */
   patchLocks: Record<string, Record<string, PatchLock>>;
+  /** Per chunk, the services offered there only by a locked shop (SHOP_LOCKS), with the lock. */
+  serviceLocks: Record<string, Record<string, ShopLock>>;
 }
 
 const HERB_PATCH = /\bherb patch\b/i;
@@ -209,6 +213,21 @@ const STALL_SHOP = /\bstall$/i;
  *   traps        a Hunter shop's snares and box traps (Hunter Shops)
  */
 export const SKILL_SERVICES = ['essence', 'estateAgent', 'sawmill', 'planks', 'traps'] as const;
+
+/** A quest (QUEST_DATA id), a guild (GUILDS_LIST name) and skill levels a shop needs before it trades. */
+export interface ShopLock { quest?: string; guild?: string; skills?: Readonly<Record<string, number>> }
+
+/**
+ * Skill shops the game locks beyond their chunk's entry. Razmire Builders
+ * Merchants (Mort'ton) needs Shades of Mort'ton done (OSRS Wiki rev 15318751);
+ * Imia's Supplies is inside the Hunter Guild and, like all its amenities,
+ * needs 46 Hunter (rev 15399191). A service from a locked shop counts only once
+ * the run has the lock; an unlocked shop in the same chunk wins over it.
+ */
+export const SHOP_LOCKS: Readonly<Record<string, ShopLock>> = {
+  'Razmire Builders Merchants': { quest: "Shades of Mort'ton" },
+  "Imia's Supplies": { guild: 'Hunter Guild', skills: { Hunter: 46 } },
+};
 const ESSENCE_NPC = /^(aubury|wizard cromperty|archmage sedridor|brimstail)$/i;
 const ESTATE_AGENT_NPC = /^estate agent$/i;
 const SAWMILL_NPC = /^sawmill operator$/i;
@@ -237,6 +256,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
   const entryQuests: ChunkSkillData['entryQuests'] = {};
   const guildGates: ChunkSkillData['guildGates'] = {};
   const patchLocks: ChunkSkillData['patchLocks'] = {};
+  const serviceLocks: ChunkSkillData['serviceLocks'] = {};
   for (const id of [...entriesById.keys()].sort((a, b) => Number(a) - Number(b))) {
     const chunk = key(id);
     if (!LAND.has(chunk)) continue;
@@ -249,9 +269,14 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     const markers = new Set<string>();
     const chunkOreShops: Record<string, number> = {};
     const offers: Record<string, string> = {};
-    const offer = (service: typeof SKILL_SERVICES[number], merchant: string) => {
-      // One that needs no merchant beats one that does.
-      if (offers[service] === undefined || merchant === '') offers[service] = merchant;
+    const offerLocks: Record<string, ShopLock> = {};
+    const offer = (service: typeof SKILL_SERVICES[number], merchant: string, lock?: ShopLock) => {
+      // An unlocked shop beats a locked one; then one that needs no merchant beats one that does.
+      const held = offerLocks[service];
+      if (offers[service] !== undefined && !(held && !lock) && !(!held === !lock && merchant === '')) return;
+      offers[service] = merchant;
+      if (lock) offerLocks[service] = lock;
+      else delete offerLocks[service];
     };
     for (const { entry, interior } of entriesById.get(id)!) {
       if (interior) markers.add(interior);
@@ -259,8 +284,8 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
         const merchant = classifyShop(shop);
         const level = oreShopLevels.get(shop);
         if (merchant && level !== undefined) chunkOreShops[merchant] = Math.min(chunkOreShops[merchant] ?? level, level);
-        if (merchant === 'Hunter Shops') offer('traps', merchant);
-        if (merchant && (shopItems[shop] ?? []).some(item => /^plank$/i.test(item))) offer('planks', merchant);
+        if (merchant === 'Hunter Shops') offer('traps', merchant, SHOP_LOCKS[shop]);
+        if (merchant && (shopItems[shop] ?? []).some(item => /^plank$/i.test(item))) offer('planks', merchant, SHOP_LOCKS[shop]);
       }
       for (const name of entry.p ?? []) {
         if (ESSENCE_NPC.test(name)) offer('essence', '');
@@ -301,12 +326,13 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     if (locks.length > 0) patchLocks[chunk] = Object.fromEntries(locks.map(([type, lock]) => [type, { ...lock }]));
     if (hasShops) oreShops[chunk] = chunkOreShops;
     for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
+    if (Object.keys(offerLocks).length > 0) serviceLocks[chunk] = Object.fromEntries(Object.entries(offerLocks).map(([service, lock]) => [service, { ...lock }]));
     const quests = doc.questSections?.[id];
     if (quests?.length) entryQuests[chunk] = [...quests];
     const gatedSkills = Object.keys(guild?.skills ?? {}).filter(skill => facts[skill] !== undefined);
     if (guild && gatedSkills.length > 0) guildGates[chunk] = [gatedSkills, guild.guild];
   }
-  return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks };
+  return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks, serviceLocks };
 }
 
 const LAND = new Set(ALL_CHUNK_KEYS);
@@ -380,5 +406,7 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
     + `// Chunk -> [skills, guild]: those skills' content there is inside the guild.\n`
     + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [readonly string[], string]>> = ${JSON.stringify(data.guildGates)};\n\n`
     + `// Chunk -> patch type -> the quest or diary the game locks that patch behind.\n`
-    + `export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = ${JSON.stringify(data.patchLocks)};\n`;
+    + `export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = ${JSON.stringify(data.patchLocks)};\n\n`
+    + `// Chunk -> service -> the quest, guild or levels its only shop there needs before it trades.\n`
+    + `export const CHUNK_SERVICE_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly guild?: string; readonly skills?: Readonly<Record<string, number>> }>>>> = ${JSON.stringify(data.serviceLocks)};\n`;
 };

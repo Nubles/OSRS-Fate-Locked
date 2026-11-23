@@ -26,3 +26,6 @@ export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [readonly strin
 
 // Chunk -> patch type -> the quest or diary the game locks that patch behind.
 export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = {"26,46":{"Hardwood Tree":{"quest":"The Ribbiting Tale"}},"44,57":{"Herb":{"quest":"My Arm's Big Adventure"}},"44,61":{"Herb":{"quest":"Making Friends with My Arm"}},"48,37":{"Calquat":{"quest":"Troubled Tortugans"}},"59,44":{"Herb":{"diary":"Morytania Elite"}}};
+
+// Chunk -> service -> the quest, guild or levels its only shop there needs before it trades.
+export const CHUNK_SERVICE_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly guild?: string; readonly skills?: Readonly<Record<string, number>> }>>>> = {"24,47":{"traps":{"guild":"Hunter Guild","skills":{"Hunter":46}}},"54,51":{"planks":{"quest":"Shades of Mort'ton"}}};
