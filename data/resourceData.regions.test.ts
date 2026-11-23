@@ -206,3 +206,14 @@ describe('needle spawns (resource-a.d3[5])', () => {
     expect(avail('Needle', 'Ground Spawn', state(['Shayzien']))).toContain(true);
   });
 });
+
+describe('limestone and shrimps (resource-a.d4[3])', () => {
+  it('limestone rocks are at the Silvarea and Arandar mines', () => {
+    expect(row('Limestone', 'Mining Rocks').regions).toEqual(['Silvarea', 'Arandar']);
+    expect(avail('Limestone', 'Mining Rocks', state([]))).toEqual([true]);
+  });
+
+  it('has no net fishing spot in Tirannwn', () => {
+    expect(row('Raw Shrimps', 'Net Fishing').regions).not.toContain('Tirannwn');
+  });
+});

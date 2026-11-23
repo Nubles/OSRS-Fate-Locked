@@ -412,7 +412,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia'], skills: {'Mining': 10}, notes: 'Knight\'s Sword Dungeon' }
   ],
   'Limestone': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Morytania', 'Kandarin', 'Tirannwn'], skills: {'Mining': 10} },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Silvarea', 'Arandar'], skills: {'Mining': 10}, notes: 'Silvarea mine / Arandar mine' },
     { type: 'SHOP', name: 'Razmire Builders Merchants', regions: ['Morytania'], quests: ["Shades of Mort'ton"], notes: "Mort'ton" }
   ],
   'Barronite Shards': [
@@ -606,7 +606,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- FISHING & FOOD ---
   'Raw Shrimps': [
-    { type: 'SKILL', name: 'Net Fishing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Wilderness'], skills: {'Fishing': 1} }
+    { type: 'SKILL', name: 'Net Fishing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Kourend & Kebos', 'Fremennik', 'Wilderness', 'Kharidian Desert', 'Varlamore'], skills: {'Fishing': 1} }
   ],
   'Raw Sardine': [
     { type: 'SKILL', name: 'Bait Fishing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness'], skills: {'Fishing': 5}, inputs: {'Fishing Bait': 1} }
