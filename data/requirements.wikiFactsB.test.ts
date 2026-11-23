@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { STRATEGY_DATABASE } from './requirements';
+import { STRATEGY_DATABASE, FAIRY_RING_ACCESS } from './requirements';
+import { getActivityReq } from './activityRequirements';
 import { QUEST_DATA } from './questData';
 import { SKILLS_LIST, REGIONS_LIST } from './items';
 import { createFreshState } from '../context/GameContext';
@@ -72,6 +73,9 @@ describe('requirements part B: regions and sources', () => {
     expect(req.regions).toEqual(['Kourend & Kebos', 'Islands & Others']);
     expect(req.description).toMatch(/Lithkren/);
     expect(req.description).not.toMatch(/Barrows/i);
+  });
+  it('ferocious gloves need 95 Slayer: hydra leather drops only from the Alchemical Hydra (Wiki: Hydra leather, Alchemical Hydra)', () => {
+    expect(entry('Ferocious Gloves').skills).toEqual({ Slayer: 95 });
   });
 });
 
@@ -169,5 +173,68 @@ describe("requirements part B: Champions' Guild 32 Quest Points (Wiki: Champions
     // The Goal Tracker's list names the rule once, not once per source.
     expect(calculateGoalProgress(entry(key), everythingButQuests(), 'vanilla').missing.filter(line => /Quest Points/.test(line)))
       .toEqual(['32 Quest Points']);
+  });
+});
+
+describe('requirements part B, deep pass: started quests and shop stock', () => {
+  // Wiki 'Fairy ring' (rev 15397230): Fairytale I completed, Fairytale II only started
+  // (until the Fairy Godfather grants permission). The rings, and the places reached only by ring.
+  const FAIRY_RING_ENTRIES = [
+    'Enchanted Valley', 'Gorak Plane', 'Abyssal Area (Fairy Ring)',
+    'Fairy Ring DJR (Chasm)', 'Fairy Ring BJS (Zulrah)', 'Fairy Ring DKS (Polar)', 'Fairy Ring CIQ (Yanille)',
+    'Fairy Ring ALP (Lighthouse)', 'Fairy Ring CKS (Canifis)', 'Fairy Ring DKP (Karambwan)', 'Fairy Ring BIP (Poly)',
+    'Fairy Ring CIR (Mount K)', 'Fairy Ring BLP (TzHaar)',
+  ];
+  it('no entry but the quest itself asks for Fairytale II to be completed', () => {
+    const offenders = Object.entries(STRATEGY_DATABASE)
+      .filter(([key, req]) => key !== 'Fairytale II - Cure a Queen' && (req.quests ?? []).includes('Fairytale II - Cure a Queen'))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+  it('every fairy-ring entry asks for Fairytale I and the started-Fairytale II check, worded as the Fairy Rings rule', () => {
+    expect(getActivityReq('Fairy Rings')?.manualRequirements).toEqual([FAIRY_RING_ACCESS]);
+    const ringKeyed = Object.entries(STRATEGY_DATABASE).filter(([, req]) => req.needsKey?.includes('Fairy Rings')).map(([key]) => key);
+    for (const key of new Set([...FAIRY_RING_ENTRIES, ...ringKeyed])) {
+      const req = entry(key);
+      expect(req.quests, key).toContain('Fairytale I - Growing Pains');
+      expect(req.manualRequirements, key).toContain(FAIRY_RING_ACCESS);
+    }
+    expect(entry('Fairy Ring BJS (Zulrah)').quests).toContain('Regicide');
+  });
+  it('a player with Fairytale I done and Fairytale II started is not blocked on a quest', () => {
+    const u = createFreshState().unlocks;
+    u.quests = ['Fairytale I - Growing Pains'];
+    for (const key of FAIRY_RING_ENTRIES.filter(k => k !== 'Fairy Ring BJS (Zulrah)')) {
+      const result = analyzeRequirement(entry(key), u, 'vanilla');
+      expect(result.missingQuests, key).toEqual([]);
+      expect(result.missingChecks, key).toContain(FAIRY_RING_ACCESS);
+    }
+  });
+  it('Jatizso and Neitiznot shops need The Fremennik Trials and a started Fremennik Isles (Wiki: Jatizso, Neitiznot, Mord Gunnars)', () => {
+    for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
+      expect(entry(key).quests, key).toEqual(['The Fremennik Trials']);
+      expect(entry(key).manualRequirements, key).toEqual(['Confirm you have started The Fremennik Isles']);
+    }
+  });
+  it('Dragonfire Shield (Smithing) needs 90 Smithing and Dragon Slayer I started, not completed (Wiki: Dragonfire shield, Anti-dragon shield)', () => {
+    const req = entry('Dragonfire Shield (Smithing)');
+    expect(req.skills).toEqual({ Smithing: 90 });
+    expect(req.quests ?? []).toEqual([]);
+    expect(req.manualRequirements?.join(' ')).toMatch(/started Dragon Slayer I/);
+    expect(req.description).toMatch(/Oziach 1,250,000 coins after Dragon Slayer I/);
+  });
+  const stock: [string, RegExp, RegExp][] = [
+    // [entry, must match, must not match]. Wiki pages: Tony's Pizza Bases, Blair's Armour, Shayzien armour,
+    // Hring Hring, Neitiznot Supplies, Grand Tree Groceries (store lines checked 23 Nov 2026).
+    ['Wilderness Food Shop', /pizza bases/, /Stew/i],
+    ['Shayzien Armourer', /Combat Ring/, /Anti-poison/i],
+    ['Jatizso Ore Shop', /adamantite/, /Rune Ore/],
+    ['Neitiznot Supplies', /Thread/, /Rope|Yak/i],
+    ['Grand Tree Groceries', /cocktail shaker/, /Gin\/Vodka|Herblore/],
+  ];
+  it.each(stock)('%s description matches the shop stock', (key, yes, no) => {
+    const { description } = entry(key);
+    expect(description).toMatch(yes);
+    expect(description).not.toMatch(no);
   });
 });

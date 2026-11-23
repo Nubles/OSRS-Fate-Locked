@@ -38,6 +38,8 @@ const KARUULM_HEAT = 'Wear boots of stone, boots of brimstone or granite boots p
 const KARUULM_HEAT_OR_WYRMSCRAIG = KARUULM_HEAT + ', or fight wyrms in the Wyrmscraig Cavern partway through Fallen From Grace';
 // Wiki 'God Wars Dungeon': partial Troll Stronghold or the full Easy Combat Achievements tier.
 const GOD_WARS_ENTRY = 'God Wars Dungeon access through Troll Stronghold progress (defeated Dad) or the Easy Combat Achievement hilt teleport; the Wilderness God Wars Dungeon needs neither';
+// Wiki 'Fairy ring': Fairytale I completed, Fairytale II only started (same wording as the 'Fairy Rings' activity).
+export const FAIRY_RING_ACCESS = 'Reached fairy ring access during Fairytale II - Cure a Queen (full completion is not required)';
 // Wiki 'Smoke devil': a facemask or Slayer helmet is needed to kill them; the gas mask also works.
 const SMOKE_DEVIL_FACE = 'Wear a facemask, gas mask or Slayer helmet.';
 
@@ -1567,7 +1569,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Wilderness'], // Bandit Camp
     skills: {},
-    description: 'Sells Pizza and Stews in deep wilderness.'
+    description: "Tony's Pizza Bases (Bandit Camp) sells pizza bases; tomato and cheese spawn by the stove."
   },
   'Team Cape Seller': {
     id: 'Clothes Shops',
@@ -1865,7 +1867,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kandarin'], // Grand Tree
     skills: {},
-    description: 'Sells Gin/Vodka/Cocktail ingredients (Herblore).'
+    description: "Gnome cooking ingredients and a cocktail shaker (spirits are at Funch's Fine Groceries)."
   },
   'Legends\' Guild General': {
     id: 'General Stores',
@@ -1908,16 +1910,18 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Fremennik'], // Jatizso
     skills: {},
-    quests: ['The Fremennik Isles'],
-    description: 'Buy Mithril/Addy/Rune Ore.'
+    quests: ['The Fremennik Trials'], // Mord Gunnars ferries you once The Fremennik Isles is started
+    manualRequirements: ['Confirm you have started The Fremennik Isles'],
+    description: 'Ores up to adamantite (no runite).'
   },
   'Neitiznot Supplies': {
     id: 'General Stores',
     category: TableType.MERCHANTS,
     regions: ['Fremennik'], // Neitiznot
     skills: {},
-    quests: ['The Fremennik Isles'],
-    description: 'Buy Rope, Thread, Yak Hides (Curing).'
+    quests: ['The Fremennik Trials'], // Maria Gunnars ferries you once The Fremennik Isles is started
+    manualRequirements: ['Confirm you have started The Fremennik Isles'],
+    description: 'Thread, needles, knives, hammers, bronze axes and balls of wool.'
   },
 
   // ============================================================================
@@ -2297,7 +2301,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // BKQ code
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Tree Spirits (Rune Axe farming).'
   },
   'Gorak Plane': {
@@ -2305,7 +2310,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // DIR code
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Goraks (Drop Shield Left Half frequently).'
   },
   'Abyssal Area (Fairy Ring)': {
@@ -2313,7 +2319,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MINIGAMES,
     regions: ['Misthalin'], // ALR code
     skills: { 'Slayer': 85 }, // Abyssal demons
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Abyssal demons (85 Slayer) and other Abyss creatures.'
   },
 
@@ -2354,7 +2361,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     category: TableType.MERCHANTS,
     regions: ['Kourend & Kebos'], // Shayzien
     skills: {},
-    description: 'Shayzien armor (Anti-poison/Lizardman).'
+    description: "Blair's Armour: bronze to steel chainbodies, platelegs, plateskirts and med helms. Shayzien armour comes from the Combat Ring or Smithing lovakite bars."
   },
   'Mount Karuulm Weapon Shop': {
     id: 'Weapon Shops',
@@ -2538,7 +2545,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Kourend & Kebos'], // Shayzien
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to Chasm of Fire (Demons).'
   },
   'Fairy Ring BJS (Zulrah)': {
@@ -2547,7 +2555,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Tirannwn'],
     skills: { 'Agility': 76 }, // Shortcut to useful area
-    quests: ['Fairytale II - Cure a Queen', 'Regicide'],
+    quests: ['Fairytale I - Growing Pains', 'Regicide'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport near Zul-Andra (Requires Agility).'
   },
   'Fairy Ring DKS (Polar)': {
@@ -2556,7 +2565,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Fremennik'], // Hunter area
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to Snowy Hunter Area (Sabre-toothed Kebbits).'
   },
   'Fairy Ring CIQ (Yanille)': {
@@ -2565,7 +2575,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Kandarin'],
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport near Yanille (North).'
   },
   'Fairy Ring ALP (Lighthouse)': {
@@ -2574,7 +2585,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Fremennik'], // Lighthouse
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to Lighthouse/Dagannoths.'
   },
   'Fairy Ring CKS (Canifis)': {
@@ -2583,7 +2595,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Morytania'],
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to Canifis (Mushroom patch).'
   },
   'Fairy Ring DKP (Karambwan)': {
@@ -2592,7 +2605,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Karamja'],
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to Karambwan fishing spot.'
   },
   'Fairy Ring BIP (Poly)': {
@@ -2601,7 +2615,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Misthalin'], // Salve River
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to an island on the River Salve, south-west of Mort Myre.'
   },
   'Fairy Ring CIR (Mount K)': {
@@ -2610,7 +2625,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Kourend & Kebos'],
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport south of Mount Karuulm.'
   },
   'Fairy Ring BLP (TzHaar)': {
@@ -2619,7 +2635,8 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     needsKey: ['Fairy Rings'],
     regions: ['Karamja'],
     skills: {},
-    quests: ['Fairytale II - Cure a Queen'],
+    quests: ['Fairytale I - Growing Pains'],
+    manualRequirements: [FAIRY_RING_ACCESS],
     description: 'Teleport to TzHaar area (Mor Ul Rek).'
   },
 
@@ -2792,10 +2809,11 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
   'Dragonfire Shield (Smithing)': {
     id: 'Dragonfire Shield',
     category: TableType.MERCHANTS, // Oziach
-    regions: ['Misthalin'], // Edgeville
-    skills: { 'Smithing': 90 }, // Or pay Oziach 1.25m
-    quests: ['Dragon Slayer I'],
-    description: 'Attach Draconic Visage to Anti-Dragon Shield.'
+    regions: ['Misthalin'], // Lumbridge Castle: Duke Horacio gives the anti-dragon shield
+    skills: { 'Smithing': 90 }, // At any anvil with a hammer; no quest for the recipe itself
+    quests: [],
+    manualRequirements: ['Confirm you have started Dragon Slayer I (Duke Horacio gives the anti-dragon shield; also needed to wear the shield)'],
+    description: 'Attach a draconic visage to an anti-dragon shield at any anvil (90 Smithing), or pay Oziach 1,250,000 coins after Dragon Slayer I.'
   },
   'Spirit Shield (Making)': {
     id: 'Spirit Shield (Making)',
@@ -2808,7 +2826,7 @@ export const STRATEGY_DATABASE: Record<string, ContentRequirement> = {
     id: 'Alchemical Hydra',
     category: TableType.MINIGAMES,
     regions: ['Kourend & Kebos', 'Islands & Others'], // Hydra leather from Karuulm; Lithkren Vault machinery
-    skills: {},
+    skills: { 'Slayer': 95 }, // Hydra leather drops only from the Alchemical Hydra (95 Slayer, on task)
     quests: ['Dragon Slayer II'],
     manualRequirements: [KARUULM_HEAT],
     description: 'Use Hydra Leather on the Lithkren Vault machinery.'
