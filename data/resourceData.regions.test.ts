@@ -120,3 +120,30 @@ describe('shop areas (resource-a.d1[4])', () => {
     expect(row('Cosmic Rune', "Ali's Discount Wares").notes).toBe('Al Kharid');
   });
 });
+
+describe('farming patch areas (resource-a.d2[5])', () => {
+  const herb = ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'];
+  it.each([
+    ['Ranarr Weed', 'Herb Patch', herb],
+    ['Snapdragon', 'Herb Patch', herb],
+    ['Torstol', 'Herb Patch', herb],
+    ['Snape Grass', 'Allotment Patch', ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Harmony Island', 'Civitas illa Fortis']],
+    ['Limpwurt Root', 'Flower Patch', ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Civitas illa Fortis', 'Varlamore']],
+    ['White Berries', 'Bush Patch', ['Misthalin', 'Rimmington', 'East Ardougne', 'Miscellania & Etceteria', 'Farming Guild']],
+  ] as const)('%s <- %s lists the patch areas', (item, patch, regions) => {
+    const r = curated(item).filter(s => s.name === patch && s.regions[0] !== 'Any');
+    expect(r).toHaveLength(1);
+    expect(r[0].regions).toEqual(regions);
+  });
+
+  it.each([
+    ['Ranarr Weed', 'Herb Patch'], ['Snape Grass', 'Allotment Patch'], ['Limpwurt Root', 'Flower Patch'],
+  ])('%s <- %s needs a patch area, not the free Misthalin start', (item, patch) => {
+    const fresh = calculateSupplyChain(item, state([]))!.sources
+      .filter(r => r.source.name === patch && !r.source.requirementsUnverified && r.source.regions[0] !== 'Any');
+    expect(fresh.map(r => r.status.isAvailable)).toEqual([false]);
+    const falador = calculateSupplyChain(item, state(['Falador']))!.sources
+      .filter(r => r.source.name === patch && !r.source.requirementsUnverified && r.source.regions[0] !== 'Any');
+    expect(falador.map(r => r.status.isAvailable)).toEqual([true]);
+  });
+});

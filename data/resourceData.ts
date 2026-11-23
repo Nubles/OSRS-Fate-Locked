@@ -131,19 +131,19 @@ export const RESOURCE_ENTITY_SKILLS: Readonly<Record<string, Record<string, numb
 export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- HERBS ---
   'Ranarr Weed': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 32 }, notes: 'Requires Seeds', outputYield: 8 }, 
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 32 }, notes: 'Requires Seeds', outputYield: 8 }, 
     { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Wilderness', 'Morytania'], notes: 'Edgeville Dungeon / Yanille / Wildy' },
     { type: 'DROP', name: 'Aberrant Spectre', regions: ['Morytania', 'Kandarin', 'Kourend & Kebos'], skills: { 'Slayer': 60 }, notes: 'Slayer Tower / Catacombs' },
     { type: 'DROP', name: 'Flesh Crawler', regions: ['Misthalin'], notes: 'Stronghold of Security' },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Requires Sinister Key' }
   ],
   'Snapdragon': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 62 }, notes: 'Requires Seeds', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 62 }, notes: 'Requires Seeds', outputYield: 8 },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Boss Drop' },
     { type: 'DROP', name: 'Hydra', regions: ['Kourend & Kebos'], skills: {'Slayer': 95}, notes: 'Karuulm Dungeon' }
   ],
   'Torstol': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Guaranteed Drop' }
   ],
   'Irit Leaf': [
@@ -234,7 +234,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- SECONDARIES ---
   'Snape Grass': [
-    { type: 'SKILL', name: 'Allotment Patch', regions: ['Misthalin', 'Kandarin', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Fremennik', 'Varlamore'], skills: { 'Farming': 61 }, notes: 'High yield', outputYield: 25 },
+    { type: 'SKILL', name: 'Allotment Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 61 }, notes: 'High yield', outputYield: 25 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Fremennik'], notes: 'Waterbirth Island' },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kourend & Kebos'], notes: 'Hosidius Shore' }
   ],
@@ -257,11 +257,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' }
   ],
   'Limpwurt Root': [
-    { type: 'SKILL', name: 'Flower Patch', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Fremennik'], skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
+    { type: 'SKILL', name: 'Flower Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Civitas illa Fortis', 'Varlamore'], skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
     { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness', 'Kharidian Desert', 'Kourend & Kebos', 'Varlamore'], notes: 'Common drop' }
   ],
   'White Berries': [
-    { type: 'SKILL', name: 'Bush Patch', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Morytania'], skills: {'Farming': 59}, notes: 'Requires Seeds', outputYield: 4 },
+    { type: 'SKILL', name: 'Bush Patch', regions: ['Misthalin', 'Rimmington', 'East Ardougne', 'Miscellania & Etceteria', 'Farming Guild'], skills: {'Farming': 59}, notes: 'Requires Seeds', outputYield: 4 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Wilderness'], notes: 'Lava Dragon Isle' },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik', 'Tirannwn'], skills: {'Slayer': 70} }
   ],
