@@ -1447,15 +1447,15 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- SEEDS ---
   'Ranarr Seed': [
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Uncommon', notes: 'Draynor / Ardougne' },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore'], skills: { 'Thieving': 38 }, rarity: 'Uncommon', notes: 'Draynor / Ardougne / Hosidius / Varlamore' },
     { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
   ],
   'Snapdragon Seed': [
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
     { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Rare' }
   ],
   'Torstol Seed': [
-    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
+    { type: 'PICKPOCKET', name: 'Master Farmer', regions: ['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore'], skills: { 'Thieving': 38 }, rarity: 'Rare' },
     { type: 'DROP', name: 'Bird Nest', regions: ['Any'], rarity: 'Very rare' }
   ],
   'Yew Seed': [
@@ -1529,7 +1529,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Adamant Axe': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 71 }, inputs: { 'Adamantite Bar': 1 } },
-    { type: 'DROP', name: 'Dust Devil', regions: ['Kharidian Desert', 'Kourend & Kebos'], skills: { 'Slayer': 65 }, rarity: '3/128' }
+    { type: 'DROP', name: 'Dust Devil', regions: ['Kharidian Desert', 'Kourend & Kebos', 'Wilderness'], skills: { 'Slayer': 65 }, rarity: '3/128' }
   ],
   'Adamant Battleaxe': [
     { type: 'SKILL', name: 'Anvil', regions: ['Any'], skills: { 'Smithing': 80 }, inputs: { 'Adamantite Bar': 3 } }
@@ -2493,7 +2493,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Palm Tree Patch', regions: ['Any'], skills: { 'Farming': 68 }, outputYield: 6 }
   ],
   'Potato Cactus': [
-    { type: 'SKILL', name: 'Cactus Patch', regions: ['Kharidian Desert'], skills: { 'Farming': 64 }, outputYield: 3 },
+    { type: 'SKILL', name: 'Cactus Patch', regions: ['Kharidian Desert', 'Farming Guild'], skills: { 'Farming': 64 }, outputYield: 3 },
     { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' }
   ],
   'Magic Roots': [

@@ -225,3 +225,17 @@ describe('kebbit teeth (resource-b.d2[2])', () => {
     expect(avail('Kebbit Teeth', 'Hunter', state(areasOf('Kandarin')))).toEqual([false]);
   });
 });
+
+describe('master farmers, cactus patches and dust devils (resource-b.d3[0])', () => {
+  it('potato cactus grows in the Farming Guild', () => {
+    expect(avail('Potato Cactus', 'Cactus Patch', state(['Farming Guild']))).toEqual([true]);
+  });
+
+  it.each(['Ranarr Seed', 'Snapdragon Seed', 'Torstol Seed'])('%s <- Master Farmer includes Kourend and Varlamore', item => {
+    expect(row(item, 'Master Farmer').regions).toEqual(['Misthalin', 'Kandarin', 'Hosidius', 'Farming Guild', 'Varlamore']);
+  });
+
+  it('dust devils include the Wilderness Slayer Cave', () => {
+    expect(row('Adamant Axe', 'Dust Devil').regions).toEqual(['Kharidian Desert', 'Kourend & Kebos', 'Wilderness']);
+  });
+});
