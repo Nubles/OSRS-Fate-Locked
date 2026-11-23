@@ -11528,8 +11528,8 @@
         {
           "slot": "Gloves",
           "tier": 1,
-          "reason": "Gloves must be worn to pick belladonna",
-          "manualCheck": "Have gloves must be worn to pick belladonna and confirm that the specific item is permitted by your equipment tier"
+          "reason": "Gloves to pick belladonna",
+          "manualCheck": "Have Gloves to pick belladonna and confirm that the specific item is permitted by your equipment tier"
         }
       ]
     },
