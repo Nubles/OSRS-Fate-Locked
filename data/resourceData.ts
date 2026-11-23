@@ -276,7 +276,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Vial of Water': [
     { type: 'SHOP', name: 'General Store', regions: ['Any'], notes: 'Most general stores stock packs' },
-    { type: 'SKILL', name: 'Use Vial on Fountain', regions: ['Any'], inputs: { 'Vial': 1 } }
+    { type: 'SKILL', name: 'Use Vial on Fountain', regions: ['Any'], notes: 'Requires a Vial' }
   ],
   'Amylase Crystal': [
     { type: 'MERCHANT', name: 'Grace', regions: ['Asgarnia'], notes: 'Burthorpe (10 Marks of Grace)', outputYield: 100 }

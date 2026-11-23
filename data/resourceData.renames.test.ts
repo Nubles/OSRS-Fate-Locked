@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameState } from '../types';
 import { RESOURCE_MAP, RESOURCE_CATEGORIES, RENAMED_RESOURCES, currentResourceList, currentResourceName, currentResourceQuantities } from './resourceData';
-import { calculateEngineItemProgress } from '../utils/supplyChain';
+import { calculateEngineItemProgress, computeFullBreakdown, flattenRawMaterials } from '../utils/supplyChain';
 import { buildGoalRoute } from '../utils/goalRoute';
 
 // Resource items listed under a name the game does not use (November 2026
@@ -70,9 +70,17 @@ describe('one vial (resource-b.d4[2])', () => {
     expect(RESOURCE_CATEGORIES['Tools & Containers']).toContain('Vial');
     expect(categorised.filter(n => n === 'Vial')).toHaveLength(1);
   });
-  it('filling a vial at a fountain needs a vial', () => {
+  it('filling a vial at a fountain names the vial but stays a leaf in the breakdown', () => {
     const fountain = RESOURCE_MAP['Vial of Water'].find(s => s.name === 'Use Vial on Fountain');
-    expect(fountain?.inputs).toEqual({ Vial: 1 });
+    expect(fountain).toBeDefined();
+    // An input here would make the materials breakdown expand Vial of Water
+    // through Glassblowing and Superglass Make for every potion.
+    expect(fountain?.inputs).toBeUndefined();
+    expect(fountain?.notes).toMatch(/\bVial\b/);
+    expect(fountain?.notes).not.toMatch(/Empty Vial/);
+    const raw = flattenRawMaterials(computeFullBreakdown('Prayer Potion', 100));
+    expect(raw).toContainEqual({ item: 'Vial of Water', qty: 100 });
+    expect(raw.map(r => r.item)).not.toContain('Bucket of Sand');
   });
   it('stored quantities under both names add up', () => {
     expect(currentResourceQuantities({ 'Empty Vial': 5, Vial: 3, Logs: 2 }, true)).toEqual({ Vial: 8, Logs: 2 });
