@@ -299,11 +299,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Woodcutting', regions: ['Any'], skills: {'Woodcutting': 30}, notes: 'Draynor / Catherby' }
   ],
   'Teak Logs': [
-    { type: 'SKILL', name: 'Woodcutting', regions: ['Karamja', 'Islands & Others', 'Kourend & Kebos', 'Feldip Hills'], skills: {'Woodcutting': 35}, notes: 'Hardwood Groves' },
+    { type: 'SKILL', name: 'Woodcutting', regions: ['Karamja', 'Islands & Others', 'Feldip Hills', 'Kharidian Desert', 'Morytania', 'Tirannwn', 'Varlamore', 'The Open Seas'], skills: {'Woodcutting': 35}, notes: 'Hardwood Groves' },
     { type: 'SKILL', name: 'Hardwood Patch', regions: ['Islands & Others'], skills: {'Farming': 35}, outputYield: 20 }
   ],
   'Maple Logs': [
-    { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Misthalin', 'Fremennik'], skills: {'Woodcutting': 45}, notes: 'Seers / Misc' },
+    { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Woodcutting': 45}, notes: 'Seers / Woodcutting Guild' },
     { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'] }
   ],
   'Mahogany Logs': [
@@ -317,7 +317,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole' }
   ],
   'Magic Logs': [
-    { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Islands & Others', 'Wilderness', 'Tirannwn'], skills: {'Woodcutting': 75}, notes: 'Seers / Mage Arena / Prifddinas' },
+    { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Wilderness', 'Tirannwn', 'Kourend & Kebos', 'Kharidian Desert', 'Varlamore', 'The Open Seas'], skills: {'Woodcutting': 75}, notes: 'Seers / Woodcutting Guild / Prifddinas' },
     { type: 'DROP', name: 'Skeletal Wyvern', regions: ['Asgarnia'], skills: {'Slayer': 72} },
     { type: 'DROP', name: 'Callisto', regions: ['Wilderness'], unlockId: 'Callisto' },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
@@ -403,7 +403,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Any'], skills: {'Mining': 1} }
   ],
   'Clay': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Karamja', 'Wilderness'], skills: {'Mining': 1} }
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos'], skills: {'Mining': 1} }
   ],
   'Rune Essence': [
     { type: 'SKILL', name: 'Mining', regions: ['Misthalin'], quests: ['Rune Mysteries'], notes: 'Rune Essence Mine' }
@@ -460,7 +460,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Kharidian Desert'], skills: {'Mining': 45}, notes: 'Quarry' }
   ],
   'Mithril Ore': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik', 'Wilderness'], skills: {'Mining': 55}, notes: 'Mining Guild / Motherlode' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik', 'Wilderness', 'Asgarnia', 'Misthalin', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Mining': 55}, notes: 'Mining Guild / Dwarven Mine / Lumbridge Swamp' },
     { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'] },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 56 }
   ],
@@ -471,11 +471,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Kourend & Kebos'], skills: {'Mining': 65}, notes: 'Lovakengj Mine' }
   ],
   'Adamantite Ore': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Wilderness', 'Tirannwn', 'Fremennik'], skills: {'Mining': 70}, notes: 'Mining Guild / Motherlode' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Wilderness', 'Tirannwn', 'Fremennik', 'Asgarnia', 'Misthalin', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Kourend & Kebos', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Mining': 70}, notes: 'Mining Guild / Dwarven Mine / Lumbridge Swamp' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 51 }
   ],
   'Runite Ore': [
-    { type: 'SKILL', name: 'Mining Rocks', regions: ['Wilderness', 'Asgarnia', 'Misthalin', 'Tirannwn', 'Fremennik'], skills: { 'Mining': 85 }, notes: 'Heroes Guild / Wildy / Myths Guild' },
+    { type: 'SKILL', name: 'Mining Rocks', regions: ['Wilderness', 'Asgarnia', 'Kandarin', 'Fremennik', 'Tirannwn', 'Karamja', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: { 'Mining': 85 }, notes: 'Heroes Guild / Wildy / Myths Guild' },
     { type: 'DROP', name: 'Crystal Geode', regions: ['Tirannwn'], skills: {'Woodcutting': 1}, notes: 'Rare from chopping crystal trees' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 3 },
     { type: 'DROP', name: 'Rune Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'] }
@@ -618,7 +618,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Net Fishing', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Karamja', 'Wilderness'], skills: {'Fishing': 15} }
   ],
   'Raw Trout': [
-    { type: 'SKILL', name: 'Fly Fishing', regions: ['Misthalin', 'Kandarin', 'Fremennik', 'Kourend & Kebos'], skills: {'Fishing': 20}, inputs: {'Feather': 1} }
+    { type: 'SKILL', name: 'Fly Fishing', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Karamja', 'Tirannwn', 'Varlamore'], skills: {'Fishing': 20}, inputs: {'Feather': 1} }
   ],
   'Raw Pike': [
     { type: 'SKILL', name: 'Bait Fishing', regions: ['Misthalin', 'Kandarin', 'Asgarnia'], skills: {'Fishing': 25}, inputs: {'Fishing Bait': 1} }
@@ -627,25 +627,25 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Bait Fishing', regions: ['Misthalin'], skills: {'Fishing': 28}, inputs: {'Fishing Bait': 1}, notes: 'Lumbridge Swamp Caves' }
   ],
   'Raw Salmon': [
-    { type: 'SKILL', name: 'Fly Fishing', regions: ['Misthalin', 'Kandarin', 'Fremennik', 'Kourend & Kebos'], skills: {'Fishing': 30}, inputs: {'Feather': 1} }
+    { type: 'SKILL', name: 'Fly Fishing', regions: ['Misthalin', 'Kandarin', 'Kourend & Kebos', 'Karamja', 'Tirannwn', 'Varlamore', 'Kharidian Desert'], skills: {'Fishing': 30}, inputs: {'Feather': 1} }
   ],
   'Raw Tuna': [
-    { type: 'SKILL', name: 'Harpoon/Cage Fishing', regions: ['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Misthalin'], skills: {'Fishing': 35} }
+    { type: 'SKILL', name: 'Harpoon/Cage Fishing', regions: ['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Kharidian Desert', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Fishing': 35} }
   ],
   'Raw Cave Eel': [
     { type: 'SKILL', name: 'Bait Fishing', regions: ['Misthalin'], skills: {'Fishing': 38}, inputs: {'Fishing Bait': 1}, notes: 'Lumbridge Swamp Caves' }
   ],
   'Raw Lobster': [
-    { type: 'SKILL', name: 'Cage Fishing', regions: ['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Misthalin'], skills: {'Fishing': 40} }
+    { type: 'SKILL', name: 'Cage Fishing', regions: ['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Kharidian Desert', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Fishing': 40} }
   ],
   'Raw Bass': [
     { type: 'SKILL', name: 'Big Net Fishing', regions: ['Kandarin', 'Kourend & Kebos', 'Fremennik'], skills: {'Fishing': 46} }
   ],
   'Raw Swordfish': [
-    { type: 'SKILL', name: 'Harpoon Fishing', regions: ['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Misthalin'], skills: {'Fishing': 50} }
+    { type: 'SKILL', name: 'Harpoon Fishing', regions: ['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Kharidian Desert', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Fishing': 50} }
   ],
   'Raw Lava Eel': [
-    { type: 'SKILL', name: 'Oily Rod Fishing', regions: ['Misthalin', 'Wilderness'], skills: {'Fishing': 53}, inputs: {'Fishing Bait': 1}, quests: ['Heroes\' Quest'] }
+    { type: 'SKILL', name: 'Oily Rod Fishing', regions: ['Asgarnia', 'Wilderness'], skills: {'Fishing': 53}, inputs: {'Fishing Bait': 1}, quests: ['Heroes\' Quest'] }
   ],
   'Raw Monkfish': [
     { type: 'SKILL', name: 'Net Fishing', regions: ['Kandarin'], skills: {'Fishing': 62}, quests: ['Swan Song'], notes: 'Piscatoris' }

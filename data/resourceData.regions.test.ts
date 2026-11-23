@@ -147,3 +147,55 @@ describe('farming patch areas (resource-a.d2[5])', () => {
     expect(falador.map(r => r.status.isAvailable)).toEqual([true]);
   });
 });
+
+describe('gathering areas (resource-a.d3[0])', () => {
+  it.each(['Raw Lobster', 'Raw Tuna', 'Raw Swordfish', 'Raw Lava Eel', 'Maple Logs', 'Runite Ore'])(
+    '%s cannot be gathered on the free Misthalin start', item => {
+      const skill = curated(item).filter(s => s.type === 'SKILL');
+      expect(skill).toHaveLength(1);
+      expect(skill[0].regions).not.toContain('Misthalin');
+      expect(avail(item, skill[0].name, state([]))).toEqual([false]);
+    });
+
+  it('keeps the free-to-play Wilderness cage and harpoon spot', () => {
+    for (const item of ['Raw Lobster', 'Raw Tuna', 'Raw Swordfish']) {
+      const skill = curated(item).find(s => s.type === 'SKILL')!;
+      expect(skill.regions).toEqual(['Karamja', 'Kandarin', 'Wilderness', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Kharidian Desert', 'Varlamore', 'Islands & Others', 'The Open Seas']);
+    }
+  });
+
+  it('lava eels are in Taverley Dungeon and the Lava Maze', () => {
+    expect(row('Raw Lava Eel', 'Oily Rod Fishing').regions).toEqual(['Asgarnia', 'Wilderness']);
+  });
+
+  it('mithril and adamantite rocks are in Asgarnia and Misthalin too', () => {
+    expect(avail('Mithril Ore', 'Mining Rocks', state([]))).toEqual([true]);
+    expect(avail('Adamantite Ore', 'Mining Rocks', state(areasOf('Asgarnia')))).toEqual([true]);
+    for (const item of ['Mithril Ore', 'Adamantite Ore']) {
+      expect(row(item, 'Mining Rocks').regions).toEqual(expect.arrayContaining(['Asgarnia', 'Misthalin', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Kourend & Kebos', 'Varlamore', 'Islands & Others', 'The Open Seas']));
+    }
+  });
+
+  it('Kourend has magic trees but no teak trees', () => {
+    const kourend = areasOf('Kourend & Kebos');
+    expect(avail('Teak Logs', 'Woodcutting', state(kourend))).toEqual([false]);
+    expect(avail('Magic Logs', 'Woodcutting', state(kourend))).toEqual([true]);
+    expect(row('Magic Logs', 'Woodcutting').regions).not.toContain('Islands & Others');
+  });
+
+  it('drops areas with no clay rocks or fly fishing spots', () => {
+    expect(row('Clay', 'Mining Rocks').regions).not.toEqual(expect.arrayContaining(['Karamja']));
+    expect(row('Clay', 'Mining Rocks').regions).not.toContain('Wilderness');
+    expect(row('Raw Trout', 'Fly Fishing').regions).not.toContain('Fremennik');
+    expect(row('Raw Salmon', 'Fly Fishing').regions).not.toContain('Fremennik');
+  });
+
+  it('every gathering row names areas the tracker knows', () => {
+    const known = new Set(['Any', 'Misthalin', ...Object.keys(groups), ...Object.values(groups).flat()]);
+    for (const item of ['Teak Logs', 'Maple Logs', 'Magic Logs', 'Clay', 'Mithril Ore', 'Adamantite Ore', 'Runite Ore',
+      'Raw Trout', 'Raw Salmon', 'Raw Tuna', 'Raw Lobster', 'Raw Swordfish', 'Raw Lava Eel']) {
+      const skill = curated(item).find(s => s.type === 'SKILL')!;
+      for (const r of skill.regions) expect(known.has(r), `${item}: ${r}`).toBe(true);
+    }
+  });
+});
