@@ -164,3 +164,31 @@ describe('the true Blood Altar and the inner Meiyerditch Laboratories (areas.d2[
     expect(entrancesOf('14487').map(entrance => [entrance.chunkId, entrance.requirements])).toEqual([['14387', []]]);
   });
 });
+
+describe('walkable ways into the Motherlode Mine and the Rune essence mine (area-access.d2[2])', () => {
+  const routesOf = (name: string) => interiorsNamed(name).flatMap(([, interior]) => interior.entrances);
+
+  it('enters the Motherlode Mine from the Falador and the Ice Mountain sides of the Dwarven Mine', () => {
+    // Wiki "Motherlode Mine" oldid 15383536 (the Ice Mountain camp route); "Dwarven Mine" oldid 15376949 (main entrance pin 3018,3450 = 47,53).
+    expect(interiorsNamed('Motherlode Mine').length).toBeGreaterThan(0);
+    for (const [id, interior] of interiorsNamed('Motherlode Mine')) {
+      expect(interior.entrances.map(entrance => entrance.chunkId).sort(), id).toEqual(['12084', '12085']);
+    }
+  });
+
+  it('reaches the Rune essence mine through Wizard Distentor and Brimstail too', () => {
+    // Wiki "Rune essence mine" oldid 15366104; "Wizard Distentor" oldid 15347803 (2591,3088 = 40,48, 66 Magic);
+    // "Brimstail's cave" oldid 15376470 (cave entrance 2402,3419 = 37,53).
+    const routes = routesOf('Rune essence mine');
+    expect(new Set(routes.map(entrance => entrance.chunkId))).toEqual(new Set(['9525', '10288', '10547', '12337', '12853']));
+    for (const entrance of routes) expect(entrance.requirements, entrance.chunkId).toContain('Rune Mysteries Complete the quest');
+    for (const entrance of routes.filter(route => route.chunkId === '10288')) {
+      expect(entrance.requirements).toEqual(expect.arrayContaining(['Magic level 66', "Access the Wizards' Guild"]));
+    }
+    for (const entrance of routes.filter(route => route.chunkId !== '10288')) expect(entrance.requirements, entrance.chunkId).toEqual(['Rune Mysteries Complete the quest']);
+  });
+
+  it('keeps Keldagrim on its one walking entrance; the mine carts are a travel unlock', () => {
+    for (const [id, interior] of interiorsNamed('Keldagrim')) expect(interior.entrances.map(entrance => entrance.chunkId), id).toEqual(['11066']);
+  });
+});

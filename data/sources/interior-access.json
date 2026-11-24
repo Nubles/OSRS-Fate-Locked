@@ -169,9 +169,13 @@
     },
     "Motherlode Mine": {
       "anchors": [
-        "12084"
+        "12084",
+        "12085"
       ],
-      "requirements": []
+      "requirements": [],
+      "source": "https://oldschool.runescape.wiki/w/Motherlode_Mine?oldid=15383536",
+      "evidence": ["https://oldschool.runescape.wiki/w/Dwarven_Mine?oldid=15376949"],
+      "note": "Reached through the Dwarven Mine, from north-east Falador (47,52) or from the camp in the southern foothills of Ice Mountain (main entrance 3018,3450, 47,53)."
     },
     "Ancient Cavern": {
       "anchors": [
@@ -416,16 +420,20 @@
       "note": "The first entrance is the physical route through the Mourner Tunnels and Temple of Light. The second is the death rift in the Abyss, entered through the Mage of Zamorak, which also needs Mourning's End Part II. Guardians of the Rift is not asserted."
     },
     "Rune essence mine": {
-      "anchors": [
-        "12853",
-        "12337",
-        "10547"
+      "entrances": [
+        { "chunkId": "12853", "requirements": [] },
+        { "chunkId": "12337", "requirements": [] },
+        { "chunkId": "10547", "requirements": [] },
+        { "chunkId": "10288", "requirements": ["Access the Wizards' Guild", "Magic level 66"] },
+        { "chunkId": "9525", "requirements": [] }
       ],
       "requirements": [
         "Rune Mysteries Complete the quest"
       ],
-      "source": "https://oldschool.runescape.wiki/w/Rune_essence_mine?oldid=15236022",
-      "note": "Reviewed teleport hosts: Aubury in Varrock, Sedridor via the Wizards' Tower basement, and Cromperty in East Ardougne. Guild and Brimstail alternatives remain outside this reviewed set."
+      "coordinates": [{ "x": 2591, "y": 3088 }, { "x": 2402, "y": 3419 }],
+      "source": "https://oldschool.runescape.wiki/w/Rune_essence_mine?oldid=15366104",
+      "evidence": ["https://oldschool.runescape.wiki/w/Wizard_Distentor?oldid=15347803", "https://oldschool.runescape.wiki/w/Brimstail?oldid=15376477", "https://oldschool.runescape.wiki/w/Brimstail%27s_cave?oldid=15376470"],
+      "note": "Teleport hosts: Aubury in Varrock, Sedridor via the Wizards' Tower basement, Cromperty in East Ardougne, Wizard Distentor in the Wizards' Guild in Yanille (40,48; the guild needs 66 Magic) and Brimstail in his cave in the Tree Gnome Stronghold (cave entrance 37,53)."
     },
     "God Wars Entrance": {
       "anchors": [
