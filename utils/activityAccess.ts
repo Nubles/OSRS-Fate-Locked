@@ -153,6 +153,18 @@ export const farmPlaceReachable = (
   name?: string,
 ): boolean => modeId !== 'chunked' || enterableChunk(chunks ?? [], unlocks, name).open;
 
+/**
+ * The named areas that count for an activity, and what to name when none does.
+ * A few count only after a quest (Paterdomus for Temple Trekking, ACTIVITY_AREA_QUESTS).
+ */
+export const countedAreas = (activity: string | undefined, areas: readonly string[], unlocks: UnlockState, modeId?: string) => {
+  const gate = activity && hasOwn(ACTIVITY_AREA_QUESTS, activity) ? ACTIVITY_AREA_QUESTS[activity] : undefined;
+  return {
+    areas: areas.filter(area => isAreaReachable(area, unlocks, modeId) && (gate?.quests[area] ?? []).every(quest => (unlocks.quests ?? []).includes(quest))),
+    label: gate?.label ?? areas.join(' or '),
+  };
+};
+
 /** Resolve the location-only eligibility of an activity for the current mode. */
 export const getActivityAccess = (
   activity: string,
@@ -163,11 +175,8 @@ export const getActivityAccess = (
   if (!usesActivityKeyReserves(modeId) || NO_HARD_LOCATION_GATE.has(activity)) return access(true, []);
   if (!hasOwn(ACTIVITY_ACCESS_AREAS, activity)) return MISSING;
   const requiredAreas = ACTIVITY_ACCESS_AREAS[activity];
-  // An area some activities count only after a quest (Paterdomus for Temple Trekking).
-  const gate = hasOwn(ACTIVITY_AREA_QUESTS, activity) ? ACTIVITY_AREA_QUESTS[activity] : undefined;
-  const result = access(requiredAreas.some((area) => isAreaReachable(area, unlocks, modeId)
-    && (gate?.quests[area] ?? []).every((quest) => (unlocks.quests ?? []).includes(quest))), requiredAreas);
-  return result.eligible || !gate ? result : { ...result, explanation: gate.explanation };
+  const counted = countedAreas(activity, requiredAreas, unlocks, modeId);
+  return counted.areas.length ? access(true, requiredAreas) : { eligible: false, requiredAreas, explanation: `Needs ${counted.label}` };
 };
 
 /**
