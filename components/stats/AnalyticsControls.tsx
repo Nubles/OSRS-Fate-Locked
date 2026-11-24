@@ -21,17 +21,21 @@ const parseScope = (value: string): AnalyticsScope => {
 
 const selectClass = 'osrs-wa-select rounded-lg border border-white/10 bg-[#202020] px-3 py-1.5 text-sm text-gray-200 hover:border-white/20 focus:border-amber-400/60 focus:outline-none';
 
-/** One badge for data quality, with the full count table behind it. */
-const DataQuality: React.FC<{ coverage: AnalyticsCoverage }> = ({ coverage }) => {
-  const rewardEvents = coverage.exactRewardEvents + coverage.unverifiedRewardEvents;
-  const notes = [
+/** The data-quality sentences, one per kind of entry the luck score can't judge or trust. */
+export const dataQualityNotes = (coverage: AnalyticsCoverage): string[] => [
     coverage.legacyEstimates > 0 ? `${plural(coverage.legacyEstimates, 'roll')} from older saves ${coverage.legacyEstimates === 1 ? 'uses' : 'use'} estimated odds.` : null,
     coverage.unscoreableProbabilities > 0 ? `${plural(coverage.unscoreableProbabilities, 'roll')} ${coverage.unscoreableProbabilities === 1 ? 'has' : 'have'} unknown odds and ${coverage.unscoreableProbabilities === 1 ? 'is' : 'are'} not judged.` : null,
     coverage.unverifiedRewardEvents > 0 ? `${plural(coverage.unverifiedRewardEvents, 'reward')} can't be verified, so ${coverage.unverifiedRewardEvents === 1 ? 'it is' : 'they are'} not counted as keys.` : null,
     coverage.invalidTimestamps > 0 ? `${plural(coverage.invalidTimestamps, 'roll')} ${coverage.invalidTimestamps === 1 ? 'has' : 'have'} no valid date.` : null,
     coverage.unknownSources > 0 ? `${plural(coverage.unknownSources, 'roll')} ${coverage.unknownSources === 1 ? 'comes' : 'come'} from an unknown source.` : null,
+    coverage.veracHitThroughs > 0 ? `${plural(coverage.veracHitThroughs, 'win')} came from Verac hitting through a miss and ${coverage.veracHitThroughs === 1 ? 'is' : 'are'} not judged.` : null,
     coverage.inconsistentEntries > 0 ? `${plural(coverage.inconsistentEntries, 'entry', 'entries')} disagree with ${coverage.inconsistentEntries === 1 ? 'itself' : 'themselves'}.` : null,
   ].filter((note): note is string => note !== null);
+
+/** One badge for data quality, with the full count table behind it. */
+const DataQuality: React.FC<{ coverage: AnalyticsCoverage }> = ({ coverage }) => {
+  const rewardEvents = coverage.exactRewardEvents + coverage.unverifiedRewardEvents;
+  const notes = dataQualityNotes(coverage);
   const clean = notes.length === 0;
   const rows: Array<[string, string]> = [
     ['Outcomes verified', `${coverage.exactOutcomes}/${coverage.attempts}`],
@@ -41,6 +45,7 @@ const DataQuality: React.FC<{ coverage: AnalyticsCoverage }> = ({ coverage }) =>
     ['Rewards verified', `${coverage.exactRewardEvents}/${rewardEvents}`],
     ['Invalid dates', String(coverage.invalidTimestamps)],
     ['Unknown sources', String(coverage.unknownSources)],
+    ['Verac hit-throughs', String(coverage.veracHitThroughs)],
     ['Inconsistent entries', String(coverage.inconsistentEntries)],
   ];
   return (
