@@ -58,6 +58,16 @@ describe('fact-checked training suggestions', () => {
   });
 });
 
+describe('Wintertodt rewards', () => {
+  // Wiki "Wintertodt" rev 15413436 (23 November 2026): supply crates were replaced
+  // by the reward cart on 9 October 2024; "Reward Cart" rev 15388221.
+  it('names the reward cart, not the removed supply crates', () => {
+    const note = TRAINING_TIPS.Firemaking.find(tip => tip.method === 'Wintertodt')?.note;
+    expect(note).toBe('Requires 50 Firemaking; rewards come from the reward cart');
+    expect(JSON.stringify(TRAINING_TIPS)).not.toMatch(/supply crate/i);
+  });
+});
+
 describe('XP to go in the training popover', () => {
   // Cumulative XP from the Wiki "Experience" table, rev 15385377 (29 October 2026).
   it.each([[1, 0], [2, 83], [13, 1_833], [62, 333_804], [92, 6_517_253], [99, 13_034_431]])(

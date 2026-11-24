@@ -76,7 +76,7 @@ export const TRAINING_TIPS: Record<string, TrainingTip[]> = {
     { from: 15, to: 30, method: 'Oak logs' },
     { from: 30, to: 45, method: 'Willow logs' },
     { from: 45, to: 50, method: 'Maple logs' },
-    { from: 50, to: 99, method: 'Wintertodt', note: 'Requires 50 Firemaking; rewards supply crates' },
+    { from: 50, to: 99, method: 'Wintertodt', note: 'Requires 50 Firemaking; rewards come from the reward cart' },
   ],
   Fishing: [
     { from: 1,  to: 20, method: 'Shrimp (net fishing)' },
