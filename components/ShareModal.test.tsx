@@ -11,6 +11,7 @@ import {
   BOSSES_LIST, STORAGE_LIST, GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
 } from '../constants';
 import { ShareModal } from './ShareModal';
+import { getGameMode } from '../config/gameModes';
 import type { LogEntry } from '../types';
 import { computeRunId } from '../utils/integrity';
 import { UI_STYLE_KEY } from '../utils/uiStyle';
@@ -59,6 +60,14 @@ vi.mock('./SectionGuide', () => ({
   SectionGuide: () => null,
 }));
 
+/** The area or chunk count the share card states in its description. */
+const cardFigure = (view: ReturnType<typeof render>, unit: 'areas' | 'chunks') => {
+  const label = view.getAllByRole('img').map(el => el.getAttribute('aria-label') ?? '').find(l => l.startsWith('Share card:')) ?? '';
+  const m = label.match(new RegExp(`(\\d+) of (\\d+) ${unit}`));
+  if (!m) throw new Error(`No ${unit} figure in "${label}"`);
+  return { done: Number(m[1]), total: Number(m[2]) };
+};
+
 describe('ShareModal region summary', () => {
   const writeText = vi.fn<(_: string) => Promise<void>>().mockResolvedValue(undefined);
 
@@ -96,15 +105,20 @@ describe('ShareModal region summary', () => {
       regions: ['Baxtorian Falls', 'Taverley'],
       expected: 2,
     },
-  ])('reports $expected visible regions for $label', async ({ regions, expected }) => {
+  ])('copies the card\'s area count for $label', async ({ regions, expected }) => {
     mockGame.current.unlocks.regions = regions;
     const view = render(<ShareModal onClose={vi.fn()} />);
+    // The card counts every area the run can reach: the free start areas as
+    // well as the visible areas it unlocked (aliases and overlaps not twice).
+    const card = cardFigure(view, 'areas');
+    expect(card.done).toBeGreaterThan(expected);
 
     fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     const summary = writeText.mock.calls[0][0];
-    expect(summary).toContain(`Areas: ${expected} Unlocked`);
+    expect(summary).toContain(`Areas: ${card.done}/${card.total}\n`);
+    expect(summary).not.toContain('Unlocked');
     expect(summary).not.toContain("Otto's Grotto");
     expect(summary).not.toContain("Heroes' Guild");
   });
@@ -119,7 +133,9 @@ describe('ShareModal region summary', () => {
 
       fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
       await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
-      expect(writeText.mock.calls[0][0]).toContain('Chunks: 9 Unlocked');
+      const card = cardFigure(view, 'chunks');
+      expect(card.done).toBe(9);
+      expect(writeText.mock.calls[0][0]).toContain(`Chunks: 9/${card.total}\n`);
     } finally {
       mockGame.current.gameModeId = 'vanilla';
     }
@@ -133,6 +149,37 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText.mock.calls[0][0]).toContain(`Banks: 2/${BANK_IDS.length}`);
+  });
+
+  it('copies the same figures as the card in Vanilla, counting only what the card counts', async () => {
+    // Two areas rolled with Keys, a boss and a minigame that are on the
+    // card's lists, and one saved boss name that is not (an old save's).
+    mockGame.current.unlocks.regions = ['Baxtorian Falls', 'Taverley'];
+    mockGame.current.unlocks.bosses = ['Zulrah', 'Not A Boss'];
+    mockGame.current.unlocks.minigames = ['Barbarian Assault'];
+    const view = render(<ShareModal onClose={vi.fn()} />);
+    const card = cardFigure(view, 'areas');
+    expect(card.done).toBeGreaterThan(2);
+
+    fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    const summary = writeText.mock.calls[0][0];
+    expect(summary).toContain(`Areas: ${card.done}/${card.total}\n`);
+    expect(summary).toContain(`Bosses: 1/${BOSSES_LIST.length} | Minigames: 1/${MINIGAMES_LIST.length}\n`);
+  });
+
+  it('leaves Banks out of the summary when the card does, as in a Custom run with banks open', async () => {
+    mockGame.current.gameModeId = 'custom';
+    (mockGame.current as { customMode?: unknown }).customMode = { ...getGameMode('vanilla').rules, bankLocks: false };
+    try {
+      const view = render(<ShareModal onClose={vi.fn()} />);
+      fireEvent.click(view.getByRole('button', { name: 'Copy Summary' }));
+      await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+      expect(writeText.mock.calls[0][0]).not.toContain('Banks:');
+    } finally {
+      mockGame.current.gameModeId = 'vanilla';
+      (mockGame.current as { customMode?: unknown }).customMode = undefined;
+    }
     // The pool includes 124 physical chunk entries plus the virtual registry unlock.
     expect(BANK_IDS).toHaveLength(125);
   });
