@@ -115,3 +115,16 @@ describe('Chunked object rules: scenery that trains nothing (deep audit chunk-sa
     for (const chunk of ['41,37', '48,39', '51,42', '53,52']) expect(chunkFactLevel(chunk, 'Woodcutting'), chunk).toBeUndefined();
   });
 });
+
+describe('Chunked object rules: Blurite rocks (deep audit chunk-sample.d1[2])', () => {
+  it('reads Blurite rocks at 10 Mining and leaves the gated Infernal shale rocks out', () => {
+    // OSRS Wiki 'Blurite rocks', fetched 24 Nov 2026: "It can be mined by a player with level 10 Mining", |level = 10.
+    expect(trainingReqFor('Blurite rocks', 'object')).toEqual({ skill: 'Mining', level: 10 });
+    // 'Infernal shale rocks': "The rocks can only be accessed after speaking to Yama and agreeing to sign his
+    // contract", a gate the tracker does not record.
+    expect(trainingReqFor('Infernal shale rocks', 'object')).toBeNull();
+    // The Asgarnian Ice Dungeon is entered from 47,49 with no requirement.
+    expect(chunkFactLevel('47,49', 'Mining')).toBe(10);
+    expect(chunkFactLevel('22,57', 'Mining')).toBeUndefined();
+  });
+});

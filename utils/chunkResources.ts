@@ -72,6 +72,10 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/lead rocks/i, { skill: 'Mining', level: 25 }],
   [/silver rocks/i, { skill: 'Mining', level: 20 }],
   [/iron rocks/i, { skill: 'Mining', level: 15 }],
+  // Asgarnian Ice Dungeon (Wiki 'Blurite rocks': "can be mined by a player with level 10 Mining").
+  [/blurite rocks/i, { skill: 'Mining', level: 10 }],
+  // Infernal shale rocks (78) are left out on purpose: the Wiki says "The rocks can only be accessed after
+  // speaking to Yama and agreeing to sign his contract", a gate the tracker does not record.
   [/(copper|tin|clay) rocks|dig site specimen/i, { skill: 'Mining', level: 1 }],
 
   // ── Fishing (by the spot's method / catch; a spot with several catches
