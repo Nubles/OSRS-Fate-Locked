@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { assertWikiCoverage } from './sync-collection-log.mjs';
+import { assertWikiCoverage, moveSlots } from './sync-collection-log.mjs';
 
 const HERE = fileURLToPath(new URL('.', import.meta.url));
 
@@ -32,5 +32,46 @@ describe('the collection log sync refuses Wiki data that is empty or cut short',
     const check = body.indexOf('assertWikiCoverage(wikiPages,');
     expect(check).toBeGreaterThan(0);
     for (const effect of ['console.log(', 'writeFileSync(']) expect(body.indexOf(effect)).toBeGreaterThan(check);
+  });
+});
+
+describe('the collection log sync moves a slot between pages', () => {
+  type Slot = { id: number; name: string };
+  const page = (name: string, target: string | undefined, items: Slot[]) => ({ name, target, items, moved: 0 });
+  const printed = () => vi.spyOn(console, 'log').mockImplementation(() => {});
+  afterEach(() => vi.restoreAllMocks());
+
+  it('moves a slot that left its old Wiki page to the one page that now lists it', () => {
+    const from = page('Old page', 'Old page', [{ id: 1, name: 'Dragon spear' }, { id: 2, name: 'Stays' }]);
+    const to = page('New page', 'New page', [{ id: 3, name: 'Other' }]);
+    const log = printed();
+    moveSlots([from, to], { 'Old page': ['Stays'], 'New page': ['Other', 'Dragon spear'] });
+    expect(from.items).toEqual([{ id: 2, name: 'Stays' }]);
+    expect(from.moved).toBe(1);
+    expect(to.items).toEqual([{ id: 3, name: 'Other' }, { id: 1, name: 'Dragon spear' }]);
+    expect(log.mock.calls).toEqual([['  MOVE   Old page -> New page: Dragon spear (#1)']]);
+  });
+
+  it('leaves a slot that both Wiki pages still list where it is', () => {
+    const from = page('Old page', 'Old page', [{ id: 1, name: 'Dragon spear' }]);
+    const to = page('New page', 'New page', []);
+    const log = printed();
+    moveSlots([from, to], { 'Old page': ['Dragon spear'], 'New page': ['Dragon spear'] });
+    expect(log).not.toHaveBeenCalled();
+    expect(from.items).toEqual([{ id: 1, name: 'Dragon spear' }]);
+    expect(to.items).toEqual([]);
+  });
+
+  it('carries on when a page is matched to a Wiki title that the Wiki no longer has', () => {
+    // 'Fight Caves' is matched to 'The Fight Caves' by a fixed table, so it keeps
+    // that target when the Wiki renames or drops the page.
+    const gone = page('Fight Caves', 'The Fight Caves', [{ id: 1, name: 'Fire cape' }]);
+    const other = page('Other', 'Other', [{ id: 2, name: 'Item' }]);
+    const log = printed();
+    expect(() => moveSlots([gone, other], { Other: ['Item'] })).not.toThrow();
+    expect(log).not.toHaveBeenCalled();
+    expect(gone.items).toEqual([{ id: 1, name: 'Fire cape' }]);
+    expect(gone.moved).toBe(0);
+    expect(other.items).toEqual([{ id: 2, name: 'Item' }]);
   });
 });
