@@ -1,10 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { GUIDES, guideIdFor } from './SectionGuide';
 import { FEATURE_GATES } from '../utils/featureGates';
+import { ACHIEVEMENTS } from '../utils/achievements';
 
 const guideText = (id: string): string => [GUIDES[id].blurb, ...GUIDES[id].bullets].join(' ');
 
 describe('help popovers', () => {
+  it('name every achievement reward the code pays: Fate, a Chaos Key for the hardest, a ritual for the biggest', () => {
+    // utils/achievements.ts: every 25-Fate achievement pays a Chaos Key, and
+    // the few completion ones among them (every quest, skill, area and so on)
+    // also pay a free random ritual.
+    const chaos = ACHIEVEMENTS.filter((a) => a.chaosKeys > 0);
+    const rituals = ACHIEVEMENTS.filter((a) => a.freeRituals > 0);
+    expect(chaos.length).toBe(19);
+    expect(chaos.every((a) => a.fate === 25 && a.chaosKeys === 1)).toBe(true);
+    expect(ACHIEVEMENTS.filter((a) => a.fate >= 25)).toEqual(chaos);
+    expect(rituals.length).toBe(8);
+    expect(rituals.every((a) => a.fate === 25 && a.freeRituals === 1)).toBe(true);
+    expect(Math.max(...ACHIEVEMENTS.map((a) => a.fate))).toBe(25);
+    expect(guideText('ACHIEVEMENTS')).toContain(
+      'Each also gives Fate (1 to 5 for first steps, up to 25 for the hardest). The hardest also give a Chaos Key, and the biggest of those a free random ritual.',
+    );
+  });
+
   it('never sell History or the share card as proof for others', () => {
     // The chain is a recomputable checksum, and the card itself says
     // "Local check only; not external verification".
