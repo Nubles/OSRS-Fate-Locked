@@ -11,7 +11,7 @@ import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { ACTIVITY_ACCESS_AREAS } from '../data/activityAccess';
 import { BANK_BY_ID, bankId } from '../data/banks';
 import { BOSSES_LIST, MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_DATA, type QuestLocationRequirement } from '../data/questData';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 
 export interface DiscordAreaEntry {
@@ -55,10 +55,13 @@ export function buildDiscordAreaGuide(): DiscordAreaGuide {
     const gated = Object.entries(ACTIVITY_ACCESS_AREAS)
       .filter(([, gates]) => gates.includes(name))
       .map(([activity]) => activity);
+    // A quest needs the area when it names it, or when every one of its alternative routes does:
+    // an area that only one route uses (or that an anyOfRegions list offers) is not needed.
+    const names = (regions: string[] = [], locations: QuestLocationRequirement[] = []): boolean =>
+      regions.includes(name) || locations.some(location => location.standardAreas.includes(name));
     const quests = Object.values(QUEST_DATA)
-      .filter(quest => quest.regions.includes(name)
-        || (quest.locations ?? []).some(location => location.standardAreas.includes(name))
-        || (quest.oneOf ?? []).some(option => [...(option.regions ?? []), ...(option.anyOfRegions ?? [])].includes(name)))
+      .filter(quest => names(quest.regions, quest.locations)
+        || (Boolean(quest.oneOf?.length) && quest.oneOf!.every(option => names(option.regions, option.locations))))
       .map(quest => quest.name);
     return {
       name,
