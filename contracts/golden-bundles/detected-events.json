@@ -160,12 +160,12 @@
     },
     {
       "id": "collection-log-several-pages",
-      "about": "A name on six pages: the app asks which page.",
+      "about": "A name on six pages is one item in the game's log: the app fills every page that lists it and asks nothing.",
       "signals": [
         { "kind": "chat", "type": "GAMEMESSAGE", "message": "New item added to your collection log: <col=ef1020>Dragon pickaxe</col>" }
       ],
       "events": [
-        { "eventType": "COLLECTION_LOG", "canonicalLabel": "Dragon pickaxe", "confidence": "EXACT", "detectorId": "collection-log-chat-v1", "detectorVersion": 2, "evidence": { "from": "chat" }, "web": { "verdict": "NEEDS_CONFIRMATION" } }
+        { "eventType": "COLLECTION_LOG", "canonicalLabel": "Dragon pickaxe", "confidence": "EXACT", "detectorId": "collection-log-chat-v1", "detectorVersion": 2, "evidence": { "from": "chat" }, "web": { "verdict": "READY" } }
       ]
     },
     {

@@ -75,6 +75,21 @@ function setup(envelope = event(), state = gameState(), storage = new MemoryStor
 
 afterEach(cleanup);
 
+/**
+ * A name one page uses for several items, like the chompy bird hats: the app has to ask which.
+ * A name on several pages is one item (data/collectionLogSlots.ts) and needs no question.
+ */
+function nameOfSeveralItems(): string | undefined {
+  for (const tab of Object.values(COLLECTION_LOG_DATA)) {
+    for (const page of Object.values(tab.pages)) {
+      const names = page.items.map(item => item.name.trim().toLowerCase());
+      const repeated = names.find((name, index) => names.indexOf(name) !== index);
+      if (repeated) return repeated;
+    }
+  }
+  return undefined;
+}
+
 describe('RollInbox', () => {
   it('makes the player pick a pet, then claims its Omni-Key instead of rolling', async () => {
     const user = userEvent.setup();
@@ -187,16 +202,7 @@ describe('RollInbox', () => {
   });
 
   it('reviews an ambiguous candidate before exposing Roll', async () => {
-    const counts = new Map<string, number>();
-    for (const tab of Object.values(COLLECTION_LOG_DATA)) {
-      for (const page of Object.values(tab.pages)) {
-        for (const item of page.items) {
-          const key = item.name.trim().toLowerCase();
-          counts.set(key, (counts.get(key) ?? 0) + 1);
-        }
-      }
-    }
-    const ambiguous = [...counts.entries()].find(([, count]) => count > 1)?.[0];
+    const ambiguous = nameOfSeveralItems();
     expect(ambiguous).toBeTruthy();
 
     const user = userEvent.setup();
@@ -210,10 +216,7 @@ describe('RollInbox', () => {
   });
 
   it('keeps the review select mounted and focused across re-renders', async () => {
-    const names = Object.values(COLLECTION_LOG_DATA)
-      .flatMap(tab => Object.values(tab.pages))
-      .flatMap(page => page.items.map(item => item.name.trim().toLowerCase()));
-    const ambiguous = names.find((name, index) => names.indexOf(name) !== index);
+    const ambiguous = nameOfSeveralItems();
     expect(ambiguous).toBeTruthy();
     const store = createRollInboxStore(new MemoryStorage(), 'run-1');
     store.ingest([event('COLLECTION_LOG', ambiguous!)]);
