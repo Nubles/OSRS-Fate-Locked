@@ -330,7 +330,7 @@ describe('minigame lines added in the 23 November 2026 deep pass', () => {
     ['Cooking', 'Mess (Great Kourend)', 20],
     ['Cooking', 'Gnome Restaurant', 29],
     ['Cooking', 'Trouble Brewing (Cabin Fever)', 40],
-    ['Agility', 'Gnome Ball, Brimhaven Arena (Low Obstacles)', 1],
+    ['Agility', 'Gnome Ball, Brimhaven Agility Arena (Low Obstacles)', 1],
     ['Agility', 'Brimhaven Arena (Medium Obstacles)', 20],
     ['Agility', 'Brimhaven Arena (High Obstacles)', 40],
     ['Magic', 'Mage Training Arena (Enchanting Chamber)', 7],
