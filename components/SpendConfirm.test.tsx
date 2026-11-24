@@ -2,7 +2,7 @@
 // The Yes / No box Ask before Key clicks shows (components/SpendConfirm.tsx):
 // Esc closes only the box, a held key can't answer it, and Tab stays inside it.
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { confirmSpendPref } from '../utils/viewerPrefs';
@@ -24,7 +24,11 @@ const Window: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 const openBox = async (act_: () => void = () => {}) => {
   confirmSpendPref.set(true);
   confirmThen('Spend a Key on Skills?', act_);
-  return screen.findByRole('button', { name: 'Yes' }, { timeout: 10_000 });
+  const yes = await screen.findByRole('button', { name: 'Yes' }, { timeout: 10_000 });
+  // The box takes the keys in the same effect that focuses Yes, and on a busy machine that effect
+  // can run a moment after the button shows. A key sent before it reaches the page behind.
+  await waitFor(() => expect(document.activeElement).toBe(yes));
+  return yes;
 };
 
 describe('the Yes / No box', () => {
