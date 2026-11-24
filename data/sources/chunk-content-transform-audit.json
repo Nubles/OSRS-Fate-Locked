@@ -140393,6 +140393,17 @@
       "sourceKey": "13617",
       "terminal": false,
       "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Rocks (Giants' Plateau)"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13617",
+      "terminal": false,
+      "disposition": "normalized",
       "reason": "section-merged",
       "targetKeys": [
         "13617"
@@ -180202,7 +180213,18 @@
       "targetKeys": [
         "Agility/Access the Giants' Plateau rock scramble shortcut"
       ],
-      "detail": "Rocks (Giants' Plateau) rev 15297332: |location = [[Giants' Plateau]]; Giants' Plateau rev 15356442. The object keeps the source's spelling, which is how the chunk content's object index names it."
+      "detail": "Rocks (Giants' Plateau) rev 15297332: |location = [[Giants' Plateau]]; Giants' Plateau rev 15356442."
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-object/Agility/Access the Giants' Plateau rock scramble shortcut/Rocks (Giant's Plateau)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
     },
     {
       "category": "questSections",

@@ -18,6 +18,10 @@ const REASONS = new Set([
 ]);
 
 const cleanName = (value) => String(value).split('#')[0].trim();
+// Reviewed spellings of shortcut objects the source misspells (data/sources/shortcut-corrections.json),
+// applied to chunk object lists and shortcut rows alike so a shortcut still places by its object.
+const OBJECT_RENAMES = new Map((shortcutCorrections.objectRenames ?? []).map((rename) => [rename.from, rename]));
+const objectName = (value) => { const name = cleanName(value); return OBJECT_RENAMES.get(name)?.to ?? name; };
 const stripWiki = (value) => String(value).replace(/~\|/g, '').replace(/\|~/g, '').trim();
 const tidyReq = (value) => stripWiki(value).replace(/\s+/g, ' ').replace(/\s+Complete the quest$/i, '').replace(/\s+\d[a-z0-9]*$/i, '').trim();
 const numericSort = (a, b) => +a - +b;
@@ -81,7 +85,7 @@ function mergeBlob(rec, blob, slayerReq, audit, sourceKey, isSection) {
     else rec.monsters.set(name, { count, slayer: req ?? null });
   }
   if (blob.NPC) for (const raw of Object.keys(blob.NPC)) { const name = cleanName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (rec.npcs.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.npcs.add(name); }
-  if (blob.Object) for (const [raw, count] of Object.entries(blob.Object)) { const name = cleanName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (rec.objects.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.objects.set(name, (rec.objects.get(name) ?? 0) + count); }
+  if (blob.Object) for (const [raw, count] of Object.entries(blob.Object)) { const name = objectName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (name !== cleanName(raw)) audit.add('chunks', sourceKey, 'normalized', 'name-typo-corrected', [name], false, OBJECT_RENAMES.get(cleanName(raw)).source); if (rec.objects.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.objects.set(name, (rec.objects.get(name) ?? 0) + count); }
   if (blob.Shop) for (const raw of Object.keys(blob.Shop)) { const name = raw.replace(/\.$/, ''); if (rec.shops.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.shops.add(name); }
   if (blob.Quest) for (const [raw, kind] of Object.entries(blob.Quest)) {
     const base = contentAliases.quests[raw] ?? cleanName(raw.split('/')[0]);
@@ -208,9 +212,14 @@ function buildShortcuts(data, audit, accounted = new Set()) {
     const rename = renames.get(`${skill}/${stripWiki(name)}`);
     const shortcutName = rename?.to ?? stripWiki(name);
     const target = `${skill}/${shortcutName}`;
-    out.push({ name: shortcutName, skill, level: info.Level ?? 1, objects: (info.Objects ?? []).map(cleanName), chunks: info.Chunks ?? [] });
+    const objects = (info.Objects ?? []).map(objectName);
+    out.push({ name: shortcutName, skill, level: info.Level ?? 1, objects, chunks: info.Chunks ?? [] });
     audit.add('challenges', sourceKey, name.includes('#') ? 'normalized' : 'imported', name.includes('#') ? 'variant-name-cleaned' : 'base-record', [target]);
     if (rename) audit.add('overrides', `shortcut-name/${skill}/${rename.from}`, 'normalized', 'name-typo-corrected', [target], false, rename.source);
+    for (const raw of info.Objects ?? []) {
+      const objectRename = OBJECT_RENAMES.get(cleanName(raw));
+      if (objectRename) audit.add('overrides', `shortcut-object/${skill}/${shortcutName}/${objectRename.from}`, 'normalized', 'name-typo-corrected', [target], false, objectRename.source);
+    }
   }
   applyShortcutCorrections(out, audit);
   return out;

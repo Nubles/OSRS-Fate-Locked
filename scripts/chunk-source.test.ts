@@ -235,7 +235,7 @@ describe('pinned Chunk Picker source', () => {
       // Up from 28,087: the reviewed A Ruff Situation step override (the Outlaw Camp is in 48,54)
       // and the North Rantz Peninsula spelling correction.
       // Up from 28,108: the eight shortcut corrections, each one ledger event.
-      auditEvents: 28116,
+      auditEvents: 28118,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1958);

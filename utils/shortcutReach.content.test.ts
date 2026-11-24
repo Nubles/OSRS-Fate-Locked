@@ -204,6 +204,20 @@ describe('reviewed shortcut corrections (reach-map.d1[3], d2[1], d2[2])', () => 
     expect(at("Access the Giants' Plateau rock scramble shortcut")).toEqual([{ cx: 53, cy: 49 }]);
   });
 
+  it('spells the Giants\' Plateau rocks as the Wiki does in the shortcut row and in the chunk\'s Objects list', () => {
+    const misspelt = "Rocks (Giant's Plateau)";
+    const fixed = "Rocks (Giants' Plateau)";
+    const shortcutObjects = chunkContentService.shortcuts().flatMap(s => s.objects);
+    expect(shortcutObjects).not.toContain(misspelt);
+    expect(rows("Access the Giants' Plateau rock scramble shortcut").flatMap(s => s.objects)).toEqual([fixed]);
+    // Chunk 13617's Objects list is shown to players in the chunk activity panel.
+    const listed = chunkContentService.contentFor(53, 49)?.objects.map(([name]) => name) ?? [];
+    expect(listed).toContain(fixed);
+    expect(listed).not.toContain(misspelt);
+    expect(JSON.stringify(doc.chunks)).not.toContain(misspelt);
+    expect(JSON.stringify(doc.shortcuts)).not.toContain(misspelt);
+  });
+
   it('records every correction in the transform ledger', () => {
     const ledger = JSON.parse(readFileSync(resolve('data/sources/chunk-content-transform-audit.json'), 'utf8'));
     const keys = ledger.events.filter((e: { category: string; sourceKey: string }) => e.category === 'overrides' && e.sourceKey.startsWith('shortcut'))
@@ -217,6 +231,10 @@ describe('reviewed shortcut corrections (reach-map.d1[3], d2[1], d2[2])', () => 
       'shortcut-level/Agility/Access the Cairn Isle rock slide climb shortcut',
       'shortcut-name/Agility/Access the Burg de Rot fence shortcut',
       "shortcut-name/Agility/Access the Giant's Plateau rock scramble shortcut",
+      "shortcut-object/Agility/Access the Giants' Plateau rock scramble shortcut/Rocks (Giant's Plateau)",
     ]);
+    const chunkRename = ledger.events.filter((e: { category: string; sourceKey: string; reason: string; targetKeys: string[] }) =>
+      e.category === 'chunks' && e.reason === 'name-typo-corrected' && e.targetKeys.includes("Rocks (Giants' Plateau)"));
+    expect(chunkRename.map((e: { sourceKey: string }) => e.sourceKey)).toEqual(['13617']);
   });
 });
