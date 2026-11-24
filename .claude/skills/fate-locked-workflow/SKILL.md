@@ -9,9 +9,12 @@ You are working on a two-repo project: the web app (`Nubles/OSRS-Fate-Locked`,
 React/TS/Vite, deployed to GitHub Pages on every push to main) and a RuneLite
 plugin (`Nubles/OSRS-Fate-Locked-Runelite`, Java). Plugin source, Gradle tests,
 CI, releases, and Plugin Hub work occur only in the standalone repository. The
-web app publishes its rules profile to RuneLite through the relay, which runs
-one way only; RuneLite's detections reach the tracker only by the clipboard
-("Copy for tracker" in RuneLite, then the Roll Inbox's "Paste from RuneLite").
+web app publishes its rules profile to RuneLite through the relay's `/r/<code>`
+route, which runs one way only (the plugin uploads nothing); RuneLite's
+detections reach the tracker only by the clipboard ("Copy for tracker" in
+RuneLite, then the Roll Inbox's "Paste from RuneLite"). The same relay Worker
+(`workers/fate-relay/`) also serves online backups, shared progress for the
+Discord bot, the clan feed and error reports.
 
 ## Before anything else
 
