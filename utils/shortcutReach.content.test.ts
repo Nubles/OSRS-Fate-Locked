@@ -7,6 +7,9 @@ import { chunkContentService } from '../services/ChunkContentService';
 import { createFreshState } from '../context/GameContext';
 import { runShortcutReach, shortcutLocator, shortcutPlaces, shortcutReachability } from './shortcutReach';
 import { computeAreaRoutes } from './areaRoutes';
+import { REGION_CHUNKS } from '../data/regionChunks';
+import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
+import { ALL_CHUNK_KEYS } from './chunkAdjacency';
 import type { UnlockState } from '../types';
 
 // The shortcut panels over the real chunk content (public/chunk-content.json).
@@ -94,4 +97,23 @@ describe('shortcuts no route reaches (reach-map.d2[0])', () => {
     expect(rowOf(runShortcutReach(chunkContentService, run, 'chunked', routes), ge).status).toBe('no-route');
     expect(rowOf(runShortcutReach(chunkContentService, run, 'chunked', null), ge).status).toBe('ready');
   });
+});
+
+describe('shortcuts in a chunk whose entry needs a quest (reach-map.d3[0])', () => {
+  const allAreas = [...Object.keys(REGION_CHUNKS), ...Object.keys(SUB_AREA_CHUNKS)];
+  const cases: [string, string][] = [
+    ['Access the Slayer Tower window shortcut', 'Priest in Peril'],
+    ['Access the Aldarin rock climb shortcut', 'Children of the Sun'],
+    ["Access the Mos Le'Harmless north stepping stones shortcut", 'Cabin Fever'],
+  ];
+
+  for (const [gameModeId, own] of [['vanilla', { regions: allAreas }], ['chunked', { chunks: ALL_CHUNK_KEYS }]] as const) {
+    it(`holds them until that quest is done (${gameModeId})`, () => {
+      const run = skilled(own);
+      const before = runShortcutReach(chunkContentService, run, gameModeId, null);
+      for (const [name, quest] of cases) expect(rowOf(before, name), name).toMatchObject({ status: 'quest', quest });
+      const after = runShortcutReach(chunkContentService, skilled({ ...own, quests: cases.map(([, quest]) => quest) }), gameModeId, null);
+      for (const [name] of cases) expect(rowOf(after, name).status, name).toBe('ready');
+    });
+  }
 });

@@ -14,6 +14,7 @@ import { tierForLevel } from './skillTiers';
 import { chunkForPlace, chunkUnlocked, placeOf } from './chunkLocations';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
+import { unfinishedEntryQuests } from './chunkEntry';
 
 export type ShortcutStatus = 'ready' | 'level' | 'quest' | 'area-locked' | 'no-route' | 'no-location';
 
@@ -44,6 +45,8 @@ export interface ShortcutLoc {
   unlocked: boolean;
   /** Owned, but no route from the run's start reaches it (utils/areaRoutes.ts). */
   stranded?: boolean;
+  /** Quests the chunk's entry needs that the run hasn't finished (chunk content questSections). */
+  entryQuests?: string[];
 }
 
 export interface ShortcutReach {
@@ -85,6 +88,7 @@ export interface ShortcutContent {
   shortcuts(): Shortcut[];
   entityLocations(name: string, kinds?: EntityKind[]): { locations: readonly Coord[] } | null;
   interiorEntranceChunks(keyOrName: string): Coord[];
+  chunkEntryRequirements(cx: number, cy: number): string[];
 }
 
 /** A chunk id as the tables write it: cx * 256 + cy, sometimes with a "-N" suffix. */
@@ -133,7 +137,7 @@ const strandedAt = (cx: number, cy: number, gameModeId: string | undefined, rout
 
 /**
  * The panels' locate: of a shortcut's places, the best for the run (owned,
- * then reached by a route), else the first. Both Agility Shortcuts panels
+ * then with no unfinished entry quest, then reached by a route), else the first. Both Agility Shortcuts panels
  * judge with it. `routes` comes from useAreaRoutes; null while it loads.
  */
 export function shortcutLocator(
@@ -142,12 +146,16 @@ export function shortcutLocator(
   gameModeId: string | undefined,
   routes: AreaRoutes | null | undefined,
 ): LocateFn {
-  const rank = (loc: ShortcutLoc) => (loc.unlocked ? 2 : 0) + (loc.stranded ? 0 : 1);
+  const rank = (loc: ShortcutLoc) => (loc.unlocked ? 4 : 0) + (loc.entryQuests?.length ? 0 : 2) + (loc.stranded ? 0 : 1);
   return (s) => {
     let best: ShortcutLoc | null = null;
     for (const { cx, cy } of shortcutPlaces(s, content)) {
       const unlocked = chunkUnlocked(cx, cy, unlocks, gameModeId);
-      const loc: ShortcutLoc = { cx, cy, unlocked, stranded: unlocked && strandedAt(cx, cy, gameModeId, routes) };
+      const loc: ShortcutLoc = {
+        cx, cy, unlocked,
+        stranded: unlocked && strandedAt(cx, cy, gameModeId, routes),
+        entryQuests: unfinishedEntryQuests(content.chunkEntryRequirements(cx, cy), unlocks),
+      };
       if (!best || rank(loc) > rank(best)) best = loc;
     }
     return best;
@@ -181,9 +189,10 @@ export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState
       const lvl = unlocks.levels?.[skill] ?? 1;
       return !(tier >= tierForLevel(level) && lvl >= level);
     });
-    const unfinished = (SHORTCUT_QUESTS[main.name] ?? []).filter(q => !done.has(q));
-    const quest = unfinished.length > 0 ? unfinished.join(' and ') : null;
     const loc = locate(main);
+    // The shortcut's own quests, then any its chunk's entry needs.
+    const unfinished = [...new Set([...(SHORTCUT_QUESTS[main.name] ?? []), ...(loc?.entryQuests ?? [])])].filter(q => !done.has(q));
+    const quest = unfinished.length > 0 ? unfinished.join(' and ') : null;
 
     let status: ShortcutStatus;
     if (!loc) status = 'no-location';
