@@ -361,6 +361,8 @@ const EXPECTED_CHANGES: string[] = [
   'The Leviathan (strong melee): undergeared -> slow',
   'The Whisperer (strong melee): undergeared -> slow',
   'The Whisperer (strong ranged): undergeared -> slow',
+  // Vardorvis is planned at his Wiki Defence (215) since the catalogue override.
+  'Vardorvis (strong ranged): undergeared -> slow',
   'Phantom Muspah (strong melee): undergeared -> slow',
   'Yama (strong melee): undergeared -> slow',
   'Yama (strong ranged): undergeared -> slow',
