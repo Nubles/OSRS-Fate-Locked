@@ -427,9 +427,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
     regions: ['Kourend & Kebos'],
-    // Released 3 Nov 2026: starts with Betty at Land's End and stays there.
+    // Released 3 Nov 2026: starts with Betty at Land's End, then (Wiki rev 15412011) her uncle's
+    // house by the Tithe Farm (27,55), the Port Piscarilius jail and Captain Jensen's house (27,58),
+    // the War Tent (23,56) and the commissioner's house with Kyle (22,56) in Shayzien, and the
+    // island west of Watson's house (1615,3582, 25,55).
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
+      { id: 'bettys-uncles-house', label: "Betty's uncle's house by the Tithe Farm", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 27, cy: 55 }] },
+      { id: 'captain-jensens-house', label: "Captain Jensen's house in Port Piscarilius", standardAreas: ['Piscarilius'], chunkOptions: [{ cx: 27, cy: 58 }] },
+      { id: 'shayzien-war-tent', label: 'War Tent in the Shayzien Encampment', standardAreas: ['Shayzien'], chunkOptions: [{ cx: 23, cy: 56 }] },
+      { id: 'shayzien-commissioners-house', label: "The commissioner's house in Shayzien", standardAreas: ['Shayzien'], chunkOptions: [{ cx: 22, cy: 56 }] },
+      { id: 'river-hos-island', label: "Island west of Watson's house", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 25, cy: 55 }] },
     ],
     skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
@@ -1367,6 +1375,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Wanted!', name: 'Wanted!',
     regions: ['Falador', 'Taverley', 'Varrock', 'Canifis'],
     skills: { 'Quest Points': 32 }, prereqs: ['Recruitment Drive', 'The Lost Tribe', 'Priest in Peril', 'Enter the Abyss'], points: 1, series: 'Temple Knight',
+    // Wiki ====Random items====: the 2nd, 4th and 6th chase stops are drawn at random per player, so
+    // they are a check the player confirms, not a gate (24 Nov).
+    manualRequirements: [
+      "Access to all three random Solus chase stops, drawn from Rellekka, Musa Point, the Wizards' Tower, Ardougne Market (East Ardougne), Castle Wars, the Grand Tree (Tree Gnome Stronghold), the Slayer Tower, the Brimhaven pub, Ali Morrisane (Al Kharid), the Lumbridge Swamp Caves, Goblin Village, the Dragon Inn (Yanille), McGrubor's Wood (Seers' Village), Diango (Draynor Village) and the Shrine of Scorpius (Ourania Altar)",
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Mourning\'s End Part II': {
@@ -2075,11 +2088,20 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Rag and Bone Man II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Rag and Bone Man II', name: 'Rag and Bone Man II',
-    regions: ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka', 'Canifis', 'Haunted Woods', 'Fenkenstrain\'s Castle', 'Slayer Tower'],
+    // Mudskipper Point (mogre), Port Phasmatys (undead cow) and Paterdomus (ghoul) are each the
+    // only place for a wish-list bone. Bat wings come from the Silvarea bats by the limestone
+    // quarry (52,54), so the Slayer Tower and the Haunted Woods are not needed; Port Phasmatys is
+    // walked to through Fenkenstrain's Castle (55,55).
+    // QuestData has one oneOf list, so each either-or bone below is a check the player confirms.
+    regions: ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka', 'Canifis', 'Fenkenstrain\'s Castle', 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus'],
     manualRequirements: [
-      'Completed Horror from the Deep or started The Fremennik Trials for dagannoth access',
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison after The Fremennik Exiles",
       'Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales',
       'Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route',
+      'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig Cavern',
+      "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
+      'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
     ],
     skills: { 'Slayer': 40 }, prereqs: ['Rag and Bone Man I', 'Skippy and the Mogres'], points: 1, series: 'Rag and Bone Man',
     // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.
@@ -2841,7 +2863,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Curse of the Empty Lord', name: 'Curse of the Empty Lord',
     regions: ['Baxtorian Falls'],
     oneOf: [
-      { regions: ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"] },
+      // Sequence 1's Kharrim stands at the Chaos Temple (church) altar, 2950,3820 (46,59, Chaos Altar).
+      { regions: ['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"] },
       { regions: ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower'] },
       { regions: ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville'] },
     ],
@@ -2873,7 +2896,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Enchanted Key': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'The Enchanted Key', name: 'The Enchanted Key',
-    regions: ['Rellekka', 'Observatory', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid'],
+    // The areas of the Wiki's 11 treasure sites (rev 15336907); none is at the Observatory.
+    regions: ['Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid'],
     skills: {}, prereqs: ['Making History'], points: 0,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -2918,7 +2942,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The General\'s Shadow': {
     kind: 'miniquest', accessPolicy: 'regions-and-locations',
     id: 'The General\'s Shadow', name: 'The General\'s Shadow',
-    regions: ['Rellekka', 'Seers\' Village', 'Tree Gnome Stronghold', 'Shilo Village', 'Falador', 'Draynor Village', 'Shantay Pass'],
+    // The Gnomish scout (38,52) and the Falador scout (48,52) stand outside the Tree Gnome Stronghold and
+    // Falador, in East Ardougne and Draynor Village, so neither of those two areas is asked for.
+    regions: ['Rellekka', 'Seers\' Village', 'Shilo Village', 'Draynor Village', 'Shantay Pass'],
     // Bouncer's ghost is in the Goblin Cave, whose mouth is between the Fishing Guild (40,53) and Hemenster (41,53).
     oneOf: [{ regions: ['Fishing Guild'] }, { regions: ['Hemenster'] }],
     locations: [

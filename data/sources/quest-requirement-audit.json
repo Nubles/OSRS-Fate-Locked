@@ -246,7 +246,7 @@
           "Needle (or costume needle), thread when using a regular needle, one suitable fur and grain; grain can be picked near the Cooks' Guild."
         ],
         "travel": [
-          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode. The Outlaw Camp lies wholly in chunk 48,54 (Wiki Outlaw Camp, oldid 15394973)."
+          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode. The Outlaw Camp lies wholly in chunk 48,54 (Wiki Outlaw Camp, oldid 15394973). The first puppy cutscene, just north of the Cooks' Guild (Wiki A Ruff Situation, oldid 15402249; the dog stops at 3146,3456), keeps the quest in chunk 49,54 too."
         ],
         "instances": [
           "Defeat the two quest outlaws, combat levels 22 and 23."
@@ -1451,7 +1451,7 @@
       "id": "Curse of the Empty Lord",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-11-23",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Curse_of_the_Empty_Lord&oldid=15365488",
         "revision": 15365488,
@@ -1459,7 +1459,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Baxtorian Falls\"],\"skills\":{\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear the ring of visibility while speaking to the ghosts\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear the ghostspeak amulet (sequence 1 requires the amulet)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Temple\",\"Rogues' Castle\",\"Entrana\",\"Wizards' Tower\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Port Sarim\",\"Edgeville\",\"Slayer Tower\"]},{\"regions\":[\"Bandit Camp\",\"Lava Maze\",\"Tree Gnome Stronghold\",\"Falador\",\"Edgeville\"]}],\"questProgress\":[{\"label\":\"Started Desert Treasure I\",\"quest\":\"Desert Treasure I\"},{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Baxtorian Falls\"],\"skills\":{\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear the ring of visibility while speaking to the ghosts\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear the ghostspeak amulet (sequence 1 requires the amulet)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Altar\",\"Rogues' Castle\",\"Entrana\",\"Wizards' Tower\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Port Sarim\",\"Edgeville\",\"Slayer Tower\"]},{\"regions\":[\"Bandit Camp\",\"Lava Maze\",\"Tree Gnome Stronghold\",\"Falador\",\"Edgeville\"]}],\"questProgress\":[{\"label\":\"Started Desert Treasure I\",\"quest\":\"Desert Treasure I\"},{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1474,7 +1474,8 @@
         ],
         "travel": [
           "The three randomized sequences all require Glarial's Tomb in Kandarin and an Asgarnia stop. Their distinct Wilderness and route-only stops are represented as three alternatives instead of requiring every Wilderness subarea. The picker records only Glarial's Tomb (39,53).",
-          "The catalogue-wide parent-region audit replaced Asgarnia, Kandarin with the exact tracked access set: Baxtorian Falls."
+          "The catalogue-wide parent-region audit replaced Asgarnia, Kandarin with the exact tracked access set: Baxtorian Falls.",
+          "Place review 2026-11-24 (Wiki rev 15365488 ===Sequence 1===, mapped through data/subAreaChunks.ts): Kharrim stands at 2950,3820, 'The Chaos Temple (church) altar in Level 38 Wilderness', which is 46,59, the Chaos Altar area since it was split from the Chaos Temple; the first alternative now asks for the Chaos Altar instead of the level 12 Chaos Temple."
         ],
         "instances": [],
         "partialCompletion": [
@@ -5552,7 +5553,7 @@
       "id": "Rag and Bone Man II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
         "revision": 15273866,
@@ -5560,7 +5561,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"merchants\":[\"Wine Traders\",\"Slayer Equipment\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Fenkenstrain's Castle\",\"Mudskipper Point\",\"Port Phasmatys\",\"Paterdomus\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison after The Fremennik Exiles\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\",\"Reached vultures north of Sophanem, the Agility Pyramid or Menaphos\",\"Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig Cavern\",\"Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles\",\"Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)\"],\"merchants\":[\"Wine Traders\",\"Slayer Equipment\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5576,11 +5577,12 @@
         ],
         "travel": [
           "The pinned route explicitly requires monster access across Misthalin, Asgarnia, Kandarin, the desert, Fremennik, and Morytania.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Kharidian Desert, Fremennik, Morytania with the exact tracked access set: Silvarea, Draynor Village, Taverley, Tree Gnome Stronghold, Feldip Hills, Nardah, Rellekka, Canifis, Haunted Woods, Fenkenstrain's Castle, Slayer Tower."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Kharidian Desert, Fremennik, Morytania with the exact tracked access set: Silvarea, Draynor Village, Taverley, Tree Gnome Stronghold, Feldip Hills, Nardah, Rellekka, Canifis, Haunted Woods, Fenkenstrain's Castle, Slayer Tower.",
+          "Place review 2026-11-24 (Wiki rev 15413780 ==List== and the monster pages' LocLines, mapped through data/subAreaChunks.ts): the mogre stands only at Mudskipper Point (46,48), the undead cow only at Alice's farm (56,55, Port Phasmatys) and the ghoul only in 53,54 (Paterdomus), so those three areas are now required. The Slayer Tower and the Haunted Woods were dropped: the bat wing must come from the bats by the limestone quarry near the Odd Old Man (Bat LocLine 52,54, Silvarea, already required), nothing else on the list stands there, and Port Phasmatys is reached through Fenkenstrain's Castle (55,55). The vulture (Sophanem, Agility Pyramid or Menaphos), troll (Burthorpe, Mountain Camp, Mount Quidamortem or Wyrmscraig Cavern), basilisk (Mountain Camp or Jormungand's Prison), dagannoth (Lighthouse, Waterbirth Island, Catacombs of Kourend or Jormungand's Prison) and jogre (Tai Bwo Wannai, Shilo Village, East Ardougne's zoo or the God Wars Dungeon) groups are independent either-or choices that one oneOf list cannot hold, so each is a manual check."
         ],
         "instances": [],
         "partialCompletion": [
-          "Skippy and the Mogres is machine-enforced; the Horror/Fremennik, experiment, and fire-giant alternative access states remain explicit manual checks."
+          "Skippy and the Mogres is machine-enforced; the dagannoth (Horror from the Deep or The Fremennik Trials), experiment, fire-giant, vulture, troll, basilisk and jogre alternative access states remain explicit manual checks."
         ]
       }
     },
@@ -7667,7 +7669,7 @@
       "id": "The Enchanted Key",
       "kind": "miniquest",
       "status": "unresolved",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Enchanted_Key&oldid=15237155",
         "revision": 15237155,
@@ -7675,7 +7677,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Observatory\",\"Tree Gnome Stronghold\",\"East Ardougne\",\"Arandar\",\"Port Sarim\",\"Falador\",\"Lumbridge\",\"Varrock\",\"Al Kharid\"],\"skills\":{},\"prereqs\":[\"Making History\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Tree Gnome Stronghold\",\"East Ardougne\",\"Arandar\",\"Port Sarim\",\"Falador\",\"Lumbridge\",\"Varrock\",\"Al Kharid\"],\"skills\":{},\"prereqs\":[\"Making History\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "37,52",
@@ -7734,7 +7736,8 @@
         ],
         "travel": [
           "The Wiki fixes eleven treasure sites across Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, and the Kharidian Desert.",
-          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock, Al Kharid."
+          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock, Al Kharid.",
+          "Place review 2026-11-24 (Wiki rev 15336907 ==Treasure locations==, mapped through data/subAreaChunks.ts): the 11 sites are in 42,56 Rellekka, 40,50 East Ardougne, 37,52 Arandar, 38,53 Tree Gnome Stronghold, 47,53 and 46,51 Falador, 47,49 Port Sarim, 49,49 Lumbridge, 51,50 Al Kharid, and 51,52 and 49,54 Varrock; the silver merchant who replaces the key is in 41,51 East Ardougne. The page never names the Observatory (37,49 and 38,49), so it was dropped from the regions, leaving Rellekka, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock and Al Kharid."
         ],
         "instances": [],
         "partialCompletion": []
@@ -8227,7 +8230,7 @@
       "id": "The General's Shadow",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_General's_Shadow&oldid=15264172",
         "revision": 15264172,
@@ -8235,7 +8238,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Tree Gnome Stronghold\",\"Shilo Village\",\"Falador\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear ghostly hood\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear ghostly robe top\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear ghostly robe bottom\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear ghostly gloves\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear ghostly boots\",\"slot\":\"Boots\",\"tier\":1},{\"reason\":\"Wear ghostly cloak\",\"slot\":\"Cape\",\"tier\":1},{\"reason\":\"Wear ring of visibility\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ghostspeak amulet\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Rellekka\",\"Seers' Village\",\"Shilo Village\",\"Draynor Village\",\"Shantay Pass\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"general-khazard\",\"label\":\"General Khazard south-east of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":52}],\"id\":\"gnomish-scout\",\"label\":\"Gnomish scout outside the Gnome Stronghold\",\"standardAreas\":[\"East Ardougne\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear ghostly hood\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear ghostly robe top\",\"slot\":\"Body\",\"tier\":1},{\"reason\":\"Wear ghostly robe bottom\",\"slot\":\"Legs\",\"tier\":1},{\"reason\":\"Wear ghostly gloves\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear ghostly boots\",\"slot\":\"Boots\",\"tier\":1},{\"reason\":\"Wear ghostly cloak\",\"slot\":\"Cape\",\"tier\":1},{\"reason\":\"Wear ring of visibility\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ghostspeak amulet\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[\"Fight Arena\",\"Curse of the Empty Lord\"],\"oneOf\":[{\"regions\":[\"Fishing Guild\"]},{\"regions\":[\"Hemenster\"]}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "38,52",
@@ -8272,7 +8275,8 @@
           "The Wiki requires south-east Rellekka, Seers' Village, Tai Bwo Wannai, the Tree Gnome Stronghold entrance, the Falador/Draynor fence, Shantay Pass, and Goblin Cave. The picker omits Tai Bwo Wannai and Goblin Cave, so the source-supported five-region policy is retained.",
           "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Karamja, Asgarnia, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Seers' Village, Tree Gnome Stronghold, Tai Bwo Wannai, Falador, Shantay Pass.",
           "Accuracy review 2026-10-02: The scouts and the Goblin Cave as the map has them: the Karamjan scout is in 44,47 (Shilo Village, replacing Tai Bwo Wannai), the Falador scout in 48,52 (Draynor Village), and Bouncer's ghost in the Goblin Cave between the Fishing Guild and Hemenster (a one-of). General Khazard (42,56) and the Gnomish scout (38,52) are stand-ins for chunks no area owns (owner decision of 2 Oct), asking for Rellekka and the Tree Gnome Stronghold. The Observatory stand-in is dropped (Wiki revision 15336893).",
-          "Map data audit 2026-10-08: Jorral's Outpost (38,52) now belongs to East Ardougne, so the Gnomish scout at the Gnome Stronghold's gate asks for East Ardougne."
+          "Map data audit 2026-10-08: Jorral's Outpost (38,52) now belongs to East Ardougne, so the Gnomish scout at the Gnome Stronghold's gate asks for East Ardougne.",
+          "Place review 2026-11-24 (Wiki rev 15404136 scout table, mapped through data/subAreaChunks.ts): the Gnomish scout at 2461,3374 ('Entrance to the Tree Gnome Stronghold') is in 38,52, East Ardougne, and the Falador Scout at 3072,3344 ('Just between the east wall of Falador and the Draynor Manor western fence') is in 48,52, Draynor Village. No step is in the Tree Gnome Stronghold or Falador areas, so both were dropped from the regions."
         ],
         "instances": [
           "The final Ghost of Bouncer fight occurs beyond a crack in Goblin Cave."
@@ -9044,7 +9048,7 @@
       "id": "The Writing's on the Wall",
       "kind": "quest",
       "status": "unresolved",
-      "reviewedAt": "2026-11-03",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15392368",
         "revision": 15392368,
@@ -9052,20 +9056,21 @@
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"bettys-uncles-house\",\"label\":\"Betty's uncle's house by the Tithe Farm\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":58}],\"id\":\"captain-jensens-house\",\"label\":\"Captain Jensen's house in Port Piscarilius\",\"standardAreas\":[\"Piscarilius\"]},{\"chunkOptions\":[{\"cx\":23,\"cy\":56}],\"id\":\"shayzien-war-tent\",\"label\":\"War Tent in the Shayzien Encampment\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":22,\"cy\":56}],\"id\":\"shayzien-commissioners-house\",\"label\":\"The commissioner's house in Shayzien\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":55}],\"id\":\"river-hos-island\",\"label\":\"Island west of Watson's house\",\"standardAreas\":[\"Hosidius\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Wiki revision 15392368 lists no required items."
         ],
         "travel": [
-          "Wiki revision 15392368 starts with Betty at Land's End and keeps the quest at Land's End."
+          "Wiki revision 15392368 starts with Betty at Land's End and keeps the quest at Land's End.",
+          "Place review 2026-11-24 (Wiki rev 15412011 ==Walkthrough==, mapped through data/subAreaChunks.ts): after Land's End (1519,3438, 23,53) the quest goes to Betty's uncle's house north-west of the Tithe Farm (1784-1790,3521-3527, 27,55 Hosidius) with Joyce and the monk beside it, the Port Piscarilius jail and Captain Jensen's house in its north-west corner (1753-1759,3774-3784, asked as 27,58 Piscarilius; the body upstairs at 1755,3780 is in 27,59, which the map gives to Arceuus), the War Tent in the Shayzien Encampment (1485,3636, 23,56), the commissioner's house with Kyle on the path south of it (1452,3629, 22,56 Shayzien), and the island west of Watson's house (1615,3582, 25,55 Hosidius). Each is now a location."
         ],
         "instances": [],
         "partialCompletion": []
       },
-      "discrepancy": "The Writing's on the Wall uses the locations policy with the Land's End location (23,53) and runtime regions [Kourend & Kebos]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The stable Wiki revision starts and keeps the quest at Land's End.",
-      "conservativeReason": "Keeping The Writing's on the Wall's current locations policy requirements (the Land's End location, 22 Agility and 20 Thieving; it has no quest prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      "discrepancy": "The Writing's on the Wall uses the locations policy with the Land's End (23,53), Hosidius (27,55 and 25,55), Piscarilius (27,58) and Shayzien (23,56 and 22,56) locations and runtime regions [Kourend & Kebos]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The current Wiki revision starts at Land's End and then visits Hosidius, Port Piscarilius, Shayzien and the island in the River Hos.",
+      "conservativeReason": "Keeping The Writing's on the Wall's current locations policy requirements (the Land's End, Hosidius, Piscarilius and Shayzien locations, 22 Agility and 20 Thieving; it has no quest prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "Throne of Miscellania",
@@ -9560,7 +9565,7 @@
       "id": "Wanted!",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Wanted!&oldid=15241008",
         "revision": 15241008,
@@ -9568,7 +9573,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Falador\",\"Taverley\",\"Varrock\",\"Canifis\"],\"skills\":{\"Quest Points\":32},\"prereqs\":[\"Recruitment Drive\",\"The Lost Tribe\",\"Priest in Peril\",\"Enter the Abyss\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Falador\",\"Taverley\",\"Varrock\",\"Canifis\"],\"skills\":{\"Quest Points\":32},\"prereqs\":[\"Recruitment Drive\",\"The Lost Tribe\",\"Priest in Peril\",\"Enter the Abyss\"],\"manualRequirements\":[\"Access to all three random Solus chase stops, drawn from Rellekka, Musa Point, the Wizards' Tower, Ardougne Market (East Ardougne), Castle Wars, the Grand Tree (Tree Gnome Stronghold), the Slayer Tower, the Brimhaven pub, Ali Morrisane (Al Kharid), the Lumbridge Swamp Caves, Goblin Village, the Dragon Inn (Yanille), McGrubor's Wood (Seers' Village), Diango (Draynor Village) and the Shrine of Scorpius (Ourania Altar)\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "45,53",
@@ -9597,7 +9602,8 @@
         ],
         "travel": [
           "The fixed Falador, Taverley, Varrock and Canifis route is represented by Asgarnia, Misthalin and Morytania; random Solus trail destinations are not deterministic gates.",
-          "The catalogue-wide parent-region audit replaced Asgarnia, Misthalin, Morytania with the exact tracked access set: Falador, Taverley, Varrock, Canifis."
+          "The catalogue-wide parent-region audit replaced Asgarnia, Misthalin, Morytania with the exact tracked access set: Falador, Taverley, Varrock, Canifis.",
+          "Place review 2026-11-24 (Wiki rev 15391809 ===Chasing Solus=== and ====Random items====, mapped through data/subAreaChunks.ts): the 2nd, 4th and 6th of the seven stops are drawn per player from Rellekka 41,57, Musa Point 45,49, Wizards' Tower 48,49, Ardougne Market 41,51 East Ardougne, Castle Wars 37,48, the Grand Tree 38,54 Tree Gnome Stronghold, the Slayer Tower 53,55, the Brimhaven pub 43,49, Ali Morrisane 51,50 Al Kharid, the Lumbridge Swamp Caves (entrance 49,49 Lumbridge), Goblin Village, the Dragon Inn 39,48 Yanille, McGrubor's Wood 41,54 Seers' Village, Diango 48,50 Draynor Village and the Shrine of Scorpius 38,50 Ourania Altar. They stay a manual check, not a gate; the fixed regions are unchanged."
         ],
         "instances": [
           "Taverley Dungeon Black Knight hideout, Dorgesh-Kaan Mine, the rune essence mine, and the instanced Solus confrontation."

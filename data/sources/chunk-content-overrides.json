@@ -17,7 +17,7 @@
     { "name": "Mourning's End Part I", "firstChunks": ["8753"], "source": "https://oldschool.runescape.wiki/w/Eluned?oldid=15319636", "note": "The second pre-Song-of-the-Elves location; retain the existing first marker at 9009." }
   ],
   "questSteps": [
-    { "name": "A Ruff Situation", "fromChunks": ["12598"], "toChunks": ["12342"], "source": "https://oldschool.runescape.wiki/w/Outlaw_Camp?oldid=15394973", "note": "The outlaw fight is at the Outlaw Camp entrance; the camp (3117-3129, 3466-3478) is in 48,54, not the Grand Exchange chunk 49,54." }
+    { "name": "A Ruff Situation", "fromChunks": [], "toChunks": ["12342"], "source": "https://oldschool.runescape.wiki/w/Outlaw_Camp?oldid=15394973", "note": "Adds 48,54: the outlaw fight is at the Outlaw Camp entrance and the camp (3117-3129, 3466-3478) is in 48,54. The export's 49,54 (12598) step stays: it is task 3, the first puppy just north of the Cooks' Guild (Wiki A Ruff Situation oldid 15402249; the dog stops at 3146,3456)." }
   ],
   "npcs": [
     { "name": "Chase", "chunkId": "12086", "x": 3037, "y": 3457, "requirements": ["A Ruff Situation Complete the quest"], "source": "https://oldschool.runescape.wiki/w/Chase?oldid=15350971" }

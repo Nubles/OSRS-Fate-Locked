@@ -7,13 +7,20 @@ import type { UnlockState } from '../types';
 import { evaluateQuestEligibility, questRequirementOptionMet } from '../utils/journalStatus';
 
 describe('audited current quest requirements', () => {
-  it("puts A Ruff Situation's Outlaw Camp fight in 48,54, not the Grand Exchange chunk", () => {
+  it("puts A Ruff Situation's Outlaw Camp fight in 48,54 and keeps the first puppy in 49,54", () => {
     // OSRS Wiki 'Outlaw Camp' (rev 15394973): map x=3123 y=3472 r=6, all inside chunk 48,54.
     expect(QUEST_DATA['A Ruff Situation'].locations?.find(location => location.id === 'outlaw-camp'))
       .toMatchObject({ standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 54 }] });
     const chunks = chunkDoc.chunks as Record<string, { q?: Record<string, string> }>;
     expect(chunks['12342'].q?.['A Ruff Situation']).toBe('step');
-    expect(chunks['12598'].q?.['A Ruff Situation']).toBeUndefined();
+    // Wiki 'A Ruff Situation' (rev 15402249) ==== First puppy ====: "the dog will stop just north of
+    // the Cooks' Guild, where a cutscene will play" (the Guild's north wall is y 3454). The export's
+    // only 49,54 task is "Follow the dog until the first puppy is found"; the dog stops at 3146,3456,
+    // and waits before the outlaw fight at 3136,3467, both in 49,54 (12598).
+    expect(chunks['12598'].q?.['A Ruff Situation']).toBe('step');
+    expect(Object.entries(chunkDoc.chunks as Record<string, { q?: Record<string, string> }>)
+      .filter(([, entry]) => entry.q?.['A Ruff Situation']).map(([id, entry]) => `${id}:${entry.q!['A Ruff Situation']}`).sort())
+      .toEqual(['12086:first', '12341:step', '12342:step', '12597:step', '12598:step']);
   });
 
   it("pins Witch's Potion to Rimmington without enforcing all Asgarnia", () => {
@@ -330,5 +337,150 @@ describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
     const state = unlocks({ ...extra, merchants: extraMerchants });
     const met = routes(id, state).filter(option => option.merchants?.includes(merchant));
     expect(met).toEqual([]);
+  });
+});
+
+describe('quest places checked on the Wiki (24 Nov 2026)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: { Slayer: 40 }, levels: { Slayer: 40 }, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+
+  it("asks Rag and Bone Man II for the only areas that hold some of its bones", () => {
+    // Wiki Rag and Bone Man II (rev 15413780) ==List== and the monster pages' LocLines:
+    // Mogre only at Mudskipper Point (46,48); Undead cow only at Alice's farm (56,55, Port
+    // Phasmatys); Ghoul only in 53,54 (Paterdomus). The bat wing is 'Near the Odd Old Man (must be
+    // the bats near the limestone quarry)': the Bat page's Silvarea LocLine is 52,54. Nothing else
+    // on the list stands at the Slayer Tower (53,55) or in the Haunted Woods, so both are dropped.
+    expect(QUEST_DATA['Rag and Bone Man II'].regions).toEqual([
+      'Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka',
+      'Canifis', "Fenkenstrain's Castle", 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus',
+    ]);
+  });
+
+  it("names Rag and Bone Man II's either-or bone areas as checks the player confirms", () => {
+    // Vulture: north of Sophanem (51,44), the Agility Pyramid (52,44) or Menaphos (50,44).
+    // Troll: Death Plateau, Troll Stronghold and Trollheim (Burthorpe), the Keldagrim entrance
+    // (43,58, Mountain Camp), south of Mount Quidamortem, Wyrmscraig Cavern. Basilisk: the
+    // Fremennik Slayer Dungeon (2797,3616, Mountain Camp) or Jormungand's Prison. Dagannoth:
+    // Lighthouse, Waterbirth Island, Catacombs of Kourend, Jormungand's Prison. Jogre: Tai Bwo
+    // Wannai (45,47), Shilo Village (45,46), the Ardougne Zoo (40,51) or the God Wars Dungeon.
+    const manual = QUEST_DATA['Rag and Bone Man II'].manualRequirements ?? [];
+    expect(manual).toEqual(expect.arrayContaining([
+      'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig Cavern',
+      "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison after The Fremennik Exiles",
+      'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
+    ]));
+    expect(manual.filter(line => line.includes('dagannoth'))).toHaveLength(1);
+  });
+
+  it('does not call Rag and Bone Man II available without Mudskipper Point and Port Phasmatys', () => {
+    const quest = QUEST_DATA['Rag and Bone Man II'];
+    // Neither the Slayer Tower nor the Haunted Woods is open here: the quest must open without them.
+    const oldRegions = ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah',
+      'Rellekka', 'Canifis', "Fenkenstrain's Castle", 'Port Sarim', 'Musa Point'];
+    const state = { quests: ['Rag and Bone Man I', 'Skippy and the Mogres'], merchants: ['Wine Traders', 'Slayer Equipment'] };
+    const locked = evaluateQuestEligibility(quest, unlocks({ ...state, regions: oldRegions }), 'vanilla');
+    expect(locked.blockers.filter(blocker => blocker.kind === 'region').map(blocker => blocker.label))
+      .toEqual(['Mudskipper Point', 'Port Phasmatys']);
+    const open = evaluateQuestEligibility(quest,
+      unlocks({ ...state, regions: [...oldRegions, 'Mudskipper Point', 'Port Phasmatys'] }), 'vanilla');
+    expect(open.blockers).toEqual([]);
+    expect(open.manualChecks).toContainEqual('Reached vultures north of Sophanem, the Agility Pyramid or Menaphos');
+  });
+});
+
+describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+  const regionBlockers = (id: string, patch: Partial<UnlockState>, mode = 'vanilla') =>
+    evaluateQuestEligibility(QUEST_DATA[id], unlocks(patch), mode).blockers
+      .filter(blocker => blocker.kind === 'region').map(blocker => blocker.label);
+
+  it("asks The Writing's on the Wall for every place its walkthrough visits", () => {
+    // Wiki The Writing's on the Wall (rev 15412011) ==Walkthrough==: Betty at Land's End (1519,3438);
+    // "Betty's uncle's house, north west of Tithe Farm" (1784-1790,3521-3527) and Joyce (1774,3526);
+    // "House of Captain Jensen, north west corner Port Piscarilius" (1753-1759,3774-3784); "Go to the
+    // War Tent in the Shayzien Encampment" (1485,3636); the commissioner's house and Kyle (1452,3629);
+    // "Cross the bridge to the island west of Watson's House" (1615,3582).
+    const places = (QUEST_DATA["The Writing's on the Wall"].locations ?? [])
+      .map(place => `${place.standardAreas.join('|')} ${place.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`).join(' ')}`);
+    expect(places).toEqual([
+      "Land's End 23,53", 'Hosidius 27,55', 'Piscarilius 27,58', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
+    ]);
+    expect(regionBlockers("The Writing's on the Wall", { regions: ["Land's End"] })).toEqual([
+      "Betty's uncle's house by the Tithe Farm", "Captain Jensen's house in Port Piscarilius",
+      'War Tent in the Shayzien Encampment', "The commissioner's house in Shayzien", "Island west of Watson's house",
+    ]);
+    expect(regionBlockers("The Writing's on the Wall",
+      { regions: ["Land's End", 'Hosidius', 'Piscarilius', 'Shayzien'] })).toEqual([]);
+    expect(regionBlockers("The Writing's on the Wall", { chunks: ['23,53', '27,55', '27,58', '23,56', '25,55'] }, 'chunked'))
+      .toEqual(["The commissioner's house in Shayzien"]);
+  });
+
+  it("asks Curse of the Empty Lord's first sequence for the Chaos Altar, where Kharrim stands", () => {
+    // Wiki Curse of the Empty Lord (rev 15365488) ===Sequence 1===: Kharrim at 2950,3820, "The Chaos
+    // Temple (church) altar in Level 38 Wilderness". 2950,3820 is chunk 46,59, the tracker's Chaos Altar;
+    // its Chaos Temple area is the level 12 temple (50-52,56-59), where no ghost stands.
+    const quest = QUEST_DATA['Curse of the Empty Lord'];
+    expect(quest.oneOf?.[0].regions).toEqual(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]);
+    const route = (areas: string[]) => unlocks({ regions: ['Baxtorian Falls', ...areas] });
+    expect(questRequirementOptionMet(quest.oneOf![0],
+      route(['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(false);
+    expect(questRequirementOptionMet(quest.oneOf![0],
+      route(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(true);
+  });
+
+  it("does not ask The General's Shadow for the Tree Gnome Stronghold or Falador", () => {
+    // Wiki The General's Shadow (rev 15404136) scout table: Gnomish scout at 2461,3374 "Entrance to the
+    // Tree Gnome Stronghold" (38,52, East Ardougne); Falador Scout at 3072,3344 "Just between the east
+    // wall of Falador and the Draynor Manor western fence" (48,52, Draynor Village).
+    expect(QUEST_DATA["The General's Shadow"].regions)
+      .toEqual(['Rellekka', "Seers' Village", 'Shilo Village', 'Draynor Village', 'Shantay Pass']);
+    expect(regionBlockers("The General's Shadow", {
+      regions: ['Rellekka', "Seers' Village", 'Shilo Village', 'Draynor Village', 'Shantay Pass', 'East Ardougne', 'Fishing Guild'],
+      quests: ['Fight Arena', 'Curse of the Empty Lord'],
+    })).toEqual([]);
+  });
+
+  it('does not ask The Enchanted Key for the Observatory', () => {
+    // Wiki The Enchanted Key (rev 15336907) ==Treasure locations==, 11 sites: 2716,3606 Rellekka;
+    // 2621,3239 East Ardougne; 2417,3382 Arandar; 2448,3443 Tree Gnome Stronghold; 3033,3437 and
+    // 2972,3304 Falador; 3016,3166 Port Sarim; 3161,3176 Lumbridge; 3291,3220 Al Kharid; 3299,3349 and
+    // 3160,3490 Varrock. The page never names the Observatory.
+    expect(QUEST_DATA['The Enchanted Key'].regions).toEqual([
+      'Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid',
+    ]);
+  });
+
+  it("warns Wanted! about Solus's three random chase stops without gating on them", () => {
+    // Wiki Wanted! (rev 15391809) ===Chasing Solus===: "There are seven locations in total, and each
+    // location is random, except for the Champions' Guild, the Dorgesh-Kaan Mine, and the Rune essence
+    // mine, which are always the third, fifth, and seventh locations". ====Random items==== ("vary from
+    // player to player"): Rellekka, Musa Point, Wizards' Tower, Ardougne Market, Castle Wars, the Grand
+    // Tree, Canifis Slayer Tower, Brimhaven pub, Ali Morrisane in Al Kharid, Lumbridge Swamp Caves,
+    // Goblin Village, Dragon Inn (Yanille), McGrubor's Wood, Diango in Draynor Village, Shrine of Scorpius.
+    const quest = QUEST_DATA['Wanted!'];
+    expect(quest.regions).toEqual(['Falador', 'Taverley', 'Varrock', 'Canifis']);
+    expect(quest.oneOf).toBeUndefined();
+    expect(quest.manualRequirements).toHaveLength(1);
+    const line = quest.manualRequirements![0];
+    for (const place of [
+      'Rellekka', 'Musa Point', "Wizards' Tower", 'Ardougne Market (East Ardougne)', 'Castle Wars',
+      'Grand Tree (Tree Gnome Stronghold)', 'Slayer Tower', 'Brimhaven', 'Al Kharid', 'Lumbridge Swamp Caves',
+      'Goblin Village', 'Yanille', "McGrubor's Wood (Seers' Village)", 'Draynor Village', 'Shrine of Scorpius (Ourania Altar)',
+    ]) expect(line).toContain(place);
+    // A check the player confirms, never a region blocker.
+    const result = evaluateQuestEligibility(quest, unlocks({ regions: ['Falador', 'Taverley', 'Varrock', 'Canifis'] }), 'vanilla');
+    expect(result.blockers.filter(blocker => blocker.kind === 'region')).toEqual([]);
+    expect(result.manualChecks).toContain(line);
   });
 });
