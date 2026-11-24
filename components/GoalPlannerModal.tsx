@@ -22,7 +22,7 @@ import { UnlockState } from '../types';
 import { QuestRoutePanel } from './questRoutes/QuestRoutePanel';
 import { RuneProofErrorBoundary } from './questRoutes/RuneProofErrorBoundary';
 import { analyzeQuest } from '../utils/questRoutes/analyzeQuest';
-import { reviewedQuestRequirements } from '../data/questItemRequirements';
+import { isPublicRuneProofQuest, reviewedQuestRequirements } from '../data/questItemRequirements';
 import {
   loadQuestStrategyCatalogue,
   loadQuestWalkthroughFor,
@@ -550,10 +550,25 @@ export const GoalPlannerModal: React.FC<Props> = ({
   // RuneProof guide opens the ordinary Goal Planner, drawn as with RuneProof off.
   // Picking a guide quest from its list moves the window to that RuneProof guide.
   const opensInPlanner = runeProofIntegration.availability === 'PUBLIC'
-    && initialTarget !== undefined
-    && (initialTarget.kind !== 'quest' || reviewedQuestRequirements(initialTarget.id) === null);
-  const legacyPlannerActive = opensInPlanner
-    && !(legacySelected?.kind === 'quest' && runeProofQuestIds.has(legacySelected.id));
+    && initialTarget != null
+    && (initialTarget.kind !== 'quest' || !isPublicRuneProofQuest(initialTarget.id));
+  const [plannerLeft, setPlannerLeft] = useState(false);
+  const legacyPlannerActive = opensInPlanner && !plannerLeft;
+  // A guide quest picked in the planner opens once the guides have loaded and
+  // the guide session holds it, so the auto-select cannot put another in its place.
+  useEffect(() => {
+    if (!legacyPlannerActive || !runeProofCatalogueLoaded || !guideSession.isHydrated) return;
+    if (legacySelected?.kind !== 'quest' || !runeProofQuestIds.has(legacySelected.id)) return;
+    guideSession.selectQuest(legacySelected.id);
+    setPlannerLeft(true);
+  }, [
+    guideSession.isHydrated,
+    guideSession.selectQuest,
+    legacyPlannerActive,
+    legacySelected,
+    runeProofCatalogueLoaded,
+    runeProofQuestIds,
+  ]);
   const runeProofView = runeProofEnabled && !legacyPlannerActive;
   const runeProofCatalogueFailed = runeProofView
     && (runeProofCatalogueStatus === 'FAILED' || runeProofCatalogueStatus === 'RETRYING');
@@ -879,13 +894,15 @@ export const GoalPlannerModal: React.FC<Props> = ({
     && plan !== null
     && currentRuneProofState === null;
   const selectTarget = React.useCallback((target: { kind: GoalKind; id: string }) => {
-    const guideQuest = runeProofEnabled && target.kind === 'quest'
-      && (runeProofView || runeProofQuestIds.has(target.id));
+    // In the planner every pick is a planner pick; the effect above moves a
+    // guide quest on to its RuneProof guide.
+    const guideQuest = runeProofView && target.kind === 'quest';
     if (guideQuest) guideSession.selectQuest(target.id);
-    if (!guideQuest || legacyPlannerActive) setLegacySelected(target);
+    else setLegacySelected(target);
     setObjectivePickerOpen(false);
-    setFocusChangeObjective(guideQuest);
-  }, [guideSession.selectQuest, legacyPlannerActive, runeProofEnabled, runeProofQuestIds, runeProofView]);
+    setFocusChangeObjective(runeProofView
+      || (legacyPlannerActive && target.kind === 'quest' && isPublicRuneProofQuest(target.id)));
+  }, [guideSession.selectQuest, legacyPlannerActive, runeProofView]);
 
   useEffect(() => {
     if (!focusChangeObjective || !coachActive) return;
