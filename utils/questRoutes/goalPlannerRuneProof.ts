@@ -105,6 +105,8 @@ export const materializeRuneProofAccount = (
       minigames: [...unlocks.minigames],
       mobility: [...unlocks.mobility],
       slayerUnlocks: [...unlocks.slayerUnlocks],
+      // A boss's drops are item sources once the boss is unlocked.
+      bosses: [...(unlocks.bosses ?? [])],
     },
   };
 };
@@ -123,6 +125,7 @@ export const canonicalRuneProofAccountIdentity = (account: RuneProofAccountSnaps
   minigames: normalizedList(account.unlocks.minigames),
   mobility: normalizedList(account.unlocks.mobility),
   slayerUnlocks: normalizedList(account.unlocks.slayerUnlocks),
+  ...(account.unlocks.bosses?.length ? { bosses: normalizedList(account.unlocks.bosses) } : {}),
 });
 
 export const materializeQuestRouteSnapshot = (

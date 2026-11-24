@@ -155,7 +155,7 @@ export function createChunkedChecks(service: ChunkContentService) {
     const key = JSON.stringify([
       chunks.filter(chunk => owned.has(chunk)),
       unlocks.skills, unlocks.levels, unlocks.equipment, unlocks.quests, unlocks.merchants,
-      unlocks.guilds, unlocks.mobility, unlocks.minigames, unlocks.slayerUnlocks,
+      unlocks.guilds, unlocks.mobility, unlocks.minigames, unlocks.slayerUnlocks, unlocks.bosses,
     ]);
     let verdicts = itemVerdicts.get(q.id);
     if (!verdicts) itemVerdicts.set(q.id, verdicts = new Map());

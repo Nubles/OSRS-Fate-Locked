@@ -97,6 +97,8 @@ export interface QuestRouteAccountSnapshot {
   readonly minigames: readonly string[];
   readonly mobility: readonly string[];
   readonly slayerUnlocks: readonly string[];
+  /** Older materialized snapshots omit bosses and are treated as having none unlocked. */
+  readonly bosses?: readonly string[];
 }
 
 export interface QuestRouteStationRequirement {
@@ -154,6 +156,7 @@ const accountStateFingerprint = (
   minigames: normalizedList(unlocks.minigames),
   mobility: normalizedList(unlocks.mobility),
   slayerUnlocks: normalizedList(unlocks.slayerUnlocks),
+  ...(unlocks.bosses?.length ? { bosses: normalizedList(unlocks.bosses) } : {}),
 });
 
 const serializedGate = (gate: DeepReadonly<RouteGate>): object => {
@@ -258,7 +261,7 @@ const resolverUnlocks = (snapshot: QuestRouteAccountSnapshot): UnlockState => ({
   housing: [],
   merchants: [...snapshot.merchants],
   minigames: [...snapshot.minigames],
-  bosses: [],
+  bosses: [...(snapshot.bosses ?? [])],
   storage: [],
   guilds: [...snapshot.guilds],
   farming: [],

@@ -105,6 +105,15 @@ describe('Chunked quests count only in their own chunks', () => {
     expect(row.bucket).not.toBe('DOABLE');
   });
 
+  it("counts an unlocked boss's drops as an item source (Doric's Quest iron ore from Duke Sucellus)", () => {
+    // One checker, so the second answer must not come from the first one's cached verdict.
+    const checks = createChunkedChecks(chunkContentService);
+    const doric = QUEST_DATA["Doric's Quest"];
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'] })).map(blocker => blocker.label))
+      .toEqual(['Iron ore (no source in your chunks yet)']);
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], bosses: ['Duke Sucellus'] }))).toEqual([]);
+  });
+
   it('the Journal and the Doable tab agree on grown runs', () => {
     for (let i = 1; i <= 6; i++) {
       const unlocks = maxed(walk(i * 7919, 30));
