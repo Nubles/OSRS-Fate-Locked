@@ -260,12 +260,16 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
   }), [activeItems, unlocks, searchTerm]);
 
   const globalStats = useMemo(() => {
-    let obtained = 0, total = 0;
+    // The game's total counts an item once, however many pages list it.
+    const counted = new Set<number>();
+    let obtained = 0;
     Object.values(COLLECTION_LOG_DATA).forEach(tab => Object.values(tab.pages).forEach(page => page.items.forEach(item => {
-        total++;
-        if (unlocks.collectionLog[item.id]) obtained++;
+        const slot = sharedSlotIds(item.id);
+        if (counted.has(slot[0])) return;
+        counted.add(slot[0]);
+        if (slot.some(id => unlocks.collectionLog[id])) obtained++;
     })));
-    return { obtained, total };
+    return { obtained, total: counted.size };
   }, [unlocks.collectionLog, syncVersion]);
 
   // Reachable %: how much of the log is even obtainable given current unlocks
