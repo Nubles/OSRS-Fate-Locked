@@ -257,3 +257,21 @@ describe('pickpocket targets the Wiki confirms (deep audit chunk-sample.d3[2])',
     for (const chunk of ['56,51', '56,52', '56,53', '57,52']) expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBe(82);
   });
 });
+
+describe('bandit pickpocket rule (deep audit quest-routes.d2[1])', () => {
+  it('counts only the Bandit Camp and Pollnivneach bandits', () => {
+    // Wiki 'Thieving' pickpocket table: Bearded Pollnivnian Bandit 45, Bandit (Bandit Camp) 53, Bandit
+    // (Pollnivneach) 55. 'Bandit (Varlamore)', 'Bandit (Shayzien)' and 'Bandit' (Wilderness) never mention it.
+    expect(trainingReqFor('Bandit (Bandit Camp)', 'monster')).toEqual({ skill: 'Thieving', level: 53 });
+    expect(trainingReqFor('Bandit (Pollnivneach)', 'monster')).toEqual({ skill: 'Thieving', level: 45 });
+    for (const name of ['Bandit (Varlamore)', 'Bandit (Shayzien)', 'Bandit']) expect(trainingReqFor(name, 'monster'), name).toBeNull();
+    expect(trainingReqFor('Bandit (The Big Heist Lodge)', 'npc')).toBeNull();
+  });
+
+  it('leaves the Varlamore bandit chunks without a Thieving fact', () => {
+    for (const chunk of ['22,47', '22,51', '23,49', '47,57']) expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBeUndefined();
+    expect(chunkFactLevel('52,46', 'Thieving')).toBe(45);
+    expect(chunkFactLevel('49,46', 'Thieving')).toBe(53);
+    expect(chunkFactLevel('24,56', 'Thieving')).toBe(40);
+  });
+});

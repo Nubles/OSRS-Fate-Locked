@@ -184,7 +184,12 @@ const NPC_RULES: [RegExp, Req][] = [
   [/^cave goblin( \(dorgesh-kaan\))?$/i, { skill: 'Thieving', level: 36 }],
   [/wealthy citizen/i, { skill: 'Thieving', level: 50 }],
   [/fremennik citizen/i, { skill: 'Thieving', level: 45 }],
-  [/desert bandit|^bandit$|^bandit \(/i, { skill: 'Thieving', level: 53 }],
+  // Wiki 'Thieving' pickpocket table: Bandit (Bandit Camp) 53, Bearded Pollnivnian
+  // Bandit 45, Bandit (Pollnivneach) 55 (the chunk data has one name for both, so the
+  // lower). The Wilderness, Varlamore and Shayzien bandits and the Big Heist Lodge's
+  // seated bandits cannot be pickpocketed (deep audit quest-routes.d2[1]).
+  [/desert bandit|^bandit \(bandit camp\)$/i, { skill: 'Thieving', level: 53 }],
+  [/^bandit \(pollnivneach\)$|pollnivnian bandit/i, { skill: 'Thieving', level: 45 }],
   // Menaphite guards cannot be pickpocketed (Wiki: options None); only the thugs can.
   [/menaphite thug/i, { skill: 'Thieving', level: 65 }],
   // Only the canonical pickpocket knights (generic "Knight" = Black/White
