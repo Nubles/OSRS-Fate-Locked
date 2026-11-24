@@ -42,5 +42,34 @@
   ],
   "interiorEntityRemovals": [
     { "interior": "Revenant Caves", "category": "Monsters", "names": ["Ankou", "Black demon", "Black dragon", "Greater demon", "Green dragon", "Hellhound", "Ice giant", "Lesser demon"], "source": "https://oldschool.runescape.wiki/w/Revenant_Caves?oldid=15397220", "note": "The 21 October 2020 overhaul moved the caves' other monsters to the Wilderness Slayer Cave, where the source already lists them." }
+  ],
+  "npcRenames": [
+    { "from": "Melee combat tutor", "to": "Captain Harlan", "chunkId": "12850", "x": 3218, "y": 3238, "source": "https://oldschool.runescape.wiki/w/Captain_Harlan?oldid=15397099", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'The melee combat tutor was renamed to Captain Harlan'. The Ranged combat tutor, merged into him, is in removedEntities." },
+    { "from": "Woodsman tutor", "to": "Wilfred", "chunkId": "12850", "x": 3227, "y": 3246, "source": "https://oldschool.runescape.wiki/w/Wilfred?oldid=15396491", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'The woodsman tutor was renamed to Wilfred'." },
+    { "from": "Smithing apprentice", "to": "Feoras", "chunkId": "12850", "x": 3226, "y": 3254, "source": "https://oldschool.runescape.wiki/w/Feoras?oldid=15392250", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'The Smithing apprentice is renamed to Feoras'. His new shop is the Lumbridge Blacksmith in shop-overrides.json." },
+    { "from": "Crafting tutor", "to": "Cadmus", "chunkId": "12850", "x": 3210, "y": 3215, "source": "https://oldschool.runescape.wiki/w/Cadmus?oldid=15392208", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'renamed from \"Crafting tutor\" to his actual name'." },
+    { "from": "Fishing tutor", "to": "Finlay", "chunkId": "12849", "x": 3244, "y": 3157, "source": "https://oldschool.runescape.wiki/w/Finlay?oldid=15391237", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'The Fishing tutor has been renamed to Finlay.'" },
+    { "from": "Mining tutor", "to": "Monlum", "chunkId": "12849", "x": 3227, "y": 3146, "source": "https://oldschool.runescape.wiki/w/Monlum?oldid=15392174", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'The Mining tutor has been renamed to Monlum.'" },
+    { "from": "Arthur the Clue Hunter", "to": "Arthur", "chunkId": "12598", "fromChunkId": "12850", "x": 3158, "y": 3469, "source": "https://oldschool.runescape.wiki/w/Arthur?oldid=15403573", "note": "3 November 2026 (Quest Month Kick Off, TFA Tweaks & More): 'renamed from \"Arthur the Clue Hunter\" to just \"Arthur\", and he can now be found at the Grand Exchange'." }
+  ],
+  "removedEntities": [
+    { "category": "NPCs", "name": "Ranged combat tutor", "removed": "3 November 2026", "source": "https://oldschool.runescape.wiki/w/Ranged_combat_tutor?oldid=15399998" },
+    { "category": "NPCs", "name": "Banker tutor", "removed": "3 November 2026", "source": "https://oldschool.runescape.wiki/w/Banker_tutor?oldid=15397103" },
+    { "category": "NPCs", "name": "Prayer tutor", "removed": "3 November 2026", "source": "https://oldschool.runescape.wiki/w/Prayer_tutor?oldid=15394355" },
+    { "category": "NPCs", "name": "Cooking tutor", "removed": "3 November 2026", "source": "https://oldschool.runescape.wiki/w/Cooking_tutor?oldid=15394354" },
+    { "category": "NPCs", "name": "Master smithing tutor", "removed": "3 November 2026", "source": "https://oldschool.runescape.wiki/w/Sani?oldid=15392266" },
+    { "category": "Objects", "name": "Pot-boiler", "removed": "18 November 2026", "source": "https://oldschool.runescape.wiki/w/Pot-boiler?oldid=15408868" },
+    { "category": "NPCs", "name": "Arcis", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Arcis?oldid=14768650" },
+    { "category": "NPCs", "name": "Piliar", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Piliar?oldid=15079282" },
+    { "category": "NPCs", "name": "Shayda", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Shayda?oldid=14857329" },
+    { "category": "NPCs", "name": "Armourer (tier 1)", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Armourer_(tier_1)?oldid=14768573" },
+    { "category": "NPCs", "name": "Armourer (tier 2)", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Armourer_(tier_2)?oldid=14768574" },
+    { "category": "NPCs", "name": "Armourer (tier 3)", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Armourer_(tier_3)?oldid=14768575" },
+    { "category": "NPCs", "name": "Armourer (tier 4)", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Armourer_(tier_4)?oldid=14768576" },
+    { "category": "NPCs", "name": "Armourer (tier 5)", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Armourer_(tier_5)?oldid=14768577" },
+    { "category": "Objects", "name": "Dead mushroom ring", "removed": "10 January 2024", "source": "https://oldschool.runescape.wiki/w/Dead_mushroom_ring?oldid=14538407" },
+    { "category": "NPCs", "name": "Dodgy geezer", "removed": "28 April 2021", "source": "https://oldschool.runescape.wiki/w/Dodgy_geezer?oldid=14769468" },
+    { "category": "NPCs", "name": "Ethereal Lady", "removed": "26 June 2024", "source": "https://oldschool.runescape.wiki/w/Ethereal_Lady?oldid=15353426" },
+    { "category": "NPCs", "name": "Ethereal Man", "removed": "26 June 2024", "source": "https://oldschool.runescape.wiki/w/Ethereal_Man?oldid=15353427" }
   ]
 }

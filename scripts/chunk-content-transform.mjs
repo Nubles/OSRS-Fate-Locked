@@ -505,6 +505,50 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
   }
 }
 
+// NPCs the game renamed or moved (npcRenames) and NPCs and objects it removed (removedEntities),
+// each from its Wiki page (data/sources/chunk-content-overrides.json). It runs before shops are
+// placed, so a shop placed by its owner finds the owner's current name.
+function applyReviewedEntityChanges(data, chunks, interiors, taskUnlocks, audit) {
+  const validChunks = new Set((data.walkableChunks ?? []).map(String));
+  for (const rename of contentOverrides.npcRenames ?? []) {
+    const expected = String(Math.floor(rename.x / 64) * 256 + Math.floor(rename.y / 64));
+    if (expected !== rename.chunkId) throw new Error(`Reviewed NPC rename coordinate disagrees: ${rename.from}`);
+    const fromId = rename.fromChunkId ?? rename.chunkId, from = chunks[fromId];
+    if (!from?.p?.includes(rename.from) || !validChunks.has(rename.chunkId)) continue;
+    from.p = from.p.filter(name => name !== rename.from);
+    if (!from.p.length) delete from.p;
+    const to = chunks[rename.chunkId] ??= {};
+    to.p = [...new Set([...(to.p ?? []), rename.to])].sort();
+    const unlocks = taskUnlocks.NPCs?.[rename.from];
+    if (unlocks?.[fromId]) {
+      ((taskUnlocks.NPCs[rename.to] ??= {})[rename.chunkId] ??= unlocks[fromId]);
+      delete unlocks[fromId];
+      if (!Object.keys(unlocks).length) delete taskUnlocks.NPCs[rename.from];
+    }
+    audit.add('overrides', `npc-rename/${rename.from}`, 'normalized', 'reviewed-content-override', [rename.chunkId], false, rename.source);
+  }
+  for (const removal of contentOverrides.removedEntities ?? []) {
+    const field = ENTITY_FIELDS[removal.category];
+    if (!field) throw new Error(`Unknown reviewed removal category: ${removal.category}`);
+    const kind = REQUIREMENT_KINDS[removal.category], touched = [];
+    const drop = (id, entry) => {
+      const before = entry?.[field] ?? [];
+      const kept = before.filter(value => (Array.isArray(value) ? value[0] : value) !== removal.name);
+      if (kept.length === before.length) return;
+      if (kept.length) entry[field] = kept; else delete entry[field];
+      touched.push(id);
+    };
+    for (const [id, entry] of Object.entries(chunks)) drop(id, entry);
+    for (const [id, interior] of Object.entries(interiors)) {
+      drop(id, interior.content);
+      if (interior.requirements?.[kind]?.[removal.name]) delete interior.requirements[kind][removal.name];
+      if (interior.requirements?.[kind] && !Object.keys(interior.requirements[kind]).length) delete interior.requirements[kind];
+    }
+    if (taskUnlocks[removal.category]?.[removal.name]) delete taskUnlocks[removal.category][removal.name];
+    if (touched.length) audit.add('overrides', `removed/${removal.category}/${removal.name}`, 'normalized', 'reviewed-content-override', touched, false, removal.source);
+  }
+}
+
 const REQUIREMENT_KINDS = { Monsters: 'monster', NPCs: 'npc', Objects: 'object', Shops: 'shop', Spawns: 'spawn' };
 
 const ENTITY_FIELDS = { Monsters: 'm', NPCs: 'p', Objects: 'o', Shops: 's', Spawns: 'i' };
@@ -754,6 +798,7 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
   const entrances = buildEntranceIndex(namedLocationRegistry ?? { locations: [] });
+  applyReviewedEntityChanges(data, chunks, interiors, taskUnlocks, audit);
   // A shop the export names by its owner takes its Wiki title (a record's sourceNames).
   const renameShop = (from, to) => {
     if (from in shopItems) { shopItems[to] = [...new Set([...(shopItems[to] ?? []), ...shopItems[from]])]; delete shopItems[from]; }

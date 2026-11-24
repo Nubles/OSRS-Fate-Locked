@@ -162,7 +162,10 @@ supplements, empty-stock shops, and removed content are reviewed in
 `data/sources/shop-overrides.json`. Monsters the source still lists in an
 interior the game has since emptied of them (the Revenant Caves before the 2020
 overhaul) are removed by `interiorEntityRemovals` in
-`data/sources/chunk-content-overrides.json`. The source gates many dungeons only
+`data/sources/chunk-content-overrides.json`. NPCs the game has renamed or moved
+(the Lumbridge tutors of 3 November 2026) are `npcRenames` there, each with the
+Wiki's map coordinate, and NPCs and objects whose Wiki infobox dates a removal
+are `removedEntities`, taken out of every chunk and interior. The source gates many dungeons only
 through `UnlocksArea` challenges, which the transform does not read; each such
 gate is added to `interior-access.json` after a Wiki check (Jormungand's Prison,
 the Myths' Guild basement and others, November 2026). `data/slayerTaskFamilies.json` records exact
