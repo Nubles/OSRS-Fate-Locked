@@ -38,6 +38,8 @@ export interface ChunkPermissionRow {
   status: PermissionStatus;
   detail?: string;
   targetKind?: 'NPC' | 'OBJECT' | 'SHOP' | 'BANK' | 'TELEPORT' | 'ACTIVITY';
+  /** A minigame's ACTIVITIES row: it names a place, not an NPC or object the plugin can point to. Absent on every other row. */
+  minigame?: true;
 }
 
 export interface ChunkPermissionSnapshot {
@@ -280,6 +282,7 @@ export function buildChunkPermissionSnapshot(
         entry,
       ),
       targetKind: 'ACTIVITY',
+      minigame: true,
     });
   }
 

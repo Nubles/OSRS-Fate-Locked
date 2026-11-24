@@ -26,6 +26,7 @@
     { "from": "Access the Farming Guild#Beginner tier", "to": ["Access the Farming Guild", "Farming level 45"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
     { "from": "Access the Farming Guild#Intermediate tier", "to": ["Access the Farming Guild", "Farming level 65"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
     { "from": "Access the Farming Guild#Advanced tier", "to": ["Access the Farming Guild", "Farming level 85"], "source": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002" },
+    { "from": "Unlock demonic brutus", "to": ["Desert Treasure II - The Fallen Empire completed", "Abyssal potato"], "source": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15384017", "note": "Demonic Brutus is fought by feeding Brutus an abyssal potato, which only the Scar gives after Desert Treasure II - The Fallen Empire. The source names its own challenge here; plain Brutus needs only The Ides of Milk (Brutus oldid 15406730)." },
     { "from": "Champions Guild Questpoints", "to": ["32 Quest Points"], "source": "https://oldschool.runescape.wiki/w/Champions%27_Guild?oldid=15364426", "note": "The guild, its shops and champion scrolls need 32 quest points (Champion scroll oldid 15341877)." }
   ],
   "entityRequirements": [

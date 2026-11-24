@@ -393,7 +393,8 @@ family, bank-lock state, and category-first chunk permission snapshots.
 The fields that builds already on the Plugin Hub read, and that the stream
 overlay reads, are frozen: `contracts/golden-bundles/bundle-contract.json`
 lists each with its JSON type, the ones a bundle is refused without, and
-the ones parsed but never read. The export never drops a frozen field that
+the ones parsed but never read or new and not read by any installed build
+yet. The export never drops a frozen field that
 is read, never changes a field's type or meaning, and only adds fields. The
 snapshots go out without the three unread ones (their `chunkKey`, `counts`
 and each row's `key`); the app's own snapshots keep them.
@@ -424,7 +425,7 @@ carry the decisions RuneLite would otherwise work out itself:
 | `chunkEntries` | One status for every land, ocean and interior chunk |
 | `places` | What each chunk that isn't land is: ocean, or an interior with its name, area and entrances |
 | `frontier` | Chunked runs only: the chunks the run may roll next, Sailing included |
-| `banks` | Each bank's status and reason, its chunk, and the chunks its facilities are in |
+| `banks` | Each bank's status and reason, its chunk, the chunks its facilities are in, and `depositOnly: true` where the bank can't be opened, only deposited into (Port Sarim, the dock deposit boxes, Peer the Seer) |
 | `freeAreas` | The areas the run's mode frees; the root `freeAreas` takes the same value |
 | `progress` | The run card's progress, with the land chunks the run owns |
 | `slayerTasks` | Each Slayer task per master and whatever the master, keyed like `slayerChunks` |
@@ -444,6 +445,9 @@ blocked. RuneLite blocks only an id match with one destination and a
 
 Each snapshot also carries its `kind` (land or ocean), its `area`, and an
 `entryReason` whenever its entry isn't `ALLOWED`.
+A minigame's `ACTIVITIES` row also carries `minigame: true`: it names a
+place, not an NPC or object the game shows, while a boss row, with the same
+`ACTIVITY` target kind, has no such field.
 
 `rules.capabilities` names the sections a bundle has (`chunkDetails` for
 the snapshot fields). A reader uses only the sections whose capability it

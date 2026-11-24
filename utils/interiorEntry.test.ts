@@ -261,3 +261,29 @@ describe('ChunkContentService.interiorRecords', () => {
     });
   });
 });
+
+describe("Brutus' Arena", () => {
+  // OSRS Wiki 'Brutus' (oldid 15406730): fought again after The Ides of Milk; Demonic Brutus needs
+  // Desert Treasure II and an abyssal potato ('Demonic Brutus' oldid 15384017). The arena's gate in
+  // the Lumbridge cow field (50,51) asks for The Ides of Milk only (audit plugin-ui.d3[0]).
+  const row = (unlocks: UnlockState, name: string) => buildChunkPermissionSnapshot(service.contentFor(50, 51)!, { cx: 50, cy: 51 },
+    { unlocks, gameModeId: 'vanilla', contentService: service }).categories.COMBAT?.find((entry) => entry.name === name);
+
+  it('decides plain Brutus from The Ides of Milk alone', () => {
+    expect(row(run({ quests: ['The Ides of Milk'] }), 'Brutus')).toMatchObject({ status: 'ALLOWED' });
+    const before = row(run({}), 'Brutus');
+    expect(before?.status).toBe('NOT_READY');
+    expect(before?.detail).not.toMatch(/Desert Treasure|abyssal potato/i);
+  });
+
+  it('keeps Desert Treasure II and the abyssal potato on Demonic Brutus', () => {
+    const demonic = row(run({ quests: ['The Ides of Milk'] }), 'Demonic Brutus');
+    expect(demonic?.status).toBe('NOT_READY');
+    expect(demonic?.detail).toMatch(/Desert Treasure II/);
+    expect(demonic?.detail).not.toMatch(/Unlock demonic brutus/i);
+    // The potato is carried in, which the save cannot tell.
+    const ready = row(run({ quests: ['The Ides of Milk', 'Desert Treasure II'] }), 'Demonic Brutus');
+    expect(ready?.status).toBe('UNKNOWN');
+    expect(ready?.detail).toMatch(/Abyssal potato/);
+  });
+});
