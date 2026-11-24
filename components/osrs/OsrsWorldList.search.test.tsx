@@ -45,6 +45,17 @@ describe('OSRS World list search', () => {
     expect(view.container.querySelector(`[data-owl-area="${area}"]`)).not.toBeNull();
   });
 
+  // ui-osrs-b.d1[1]: names typed without their apostrophe, as the journal searches accept.
+  it.each([
+    ['warriors guild', "Warriors' Guild"],
+    ['seers village ', "Seers' Village"],
+    ['mortton', "Mort'ton"],
+  ])('finds "%s" without its apostrophe', async (search, shown) => {
+    const view = await renderList(search);
+    const rows = [...view.container.querySelectorAll('[data-owl-area]')].map(el => displayAreaName(el.getAttribute('data-owl-area')!));
+    expect(rows.some(name => name.includes(shown))).toBe(true);
+  });
+
   it('still hides regions that match nothing', async () => {
     const view = await renderList('no such place anywhere');
     expect(view.container.querySelectorAll('[data-region-card]').length).toBe(0);

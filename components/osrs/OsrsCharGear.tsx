@@ -8,6 +8,7 @@ import { itemObtainability } from '../../utils/itemObtainability';
 import { WikiLink } from '../WikiLink';
 import { gemSrc, gemColor, itemSpriteSrc, itemSpriteFallback, roman } from './OsrsDashGems';
 import { useTierMarks } from '../../utils/uiStyle';
+import { foldedIncludes } from '../../utils/textFold';
 
 /**
  * Equipment Lab, Gear view: the item picker for the chosen slot ("Choose
@@ -88,8 +89,8 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
 
   const all = status === 'ready' ? gearService.bySlot(slot) : [];
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = (q ? all.filter((i) => i.name.toLowerCase().includes(q)) : all).slice();
+    const q = query.trim();
+    const list = (q ? all.filter((i) => foldedIncludes(i.name, q)) : all).slice();
     return list.sort((a, b) => {
       const ta = gearService.tierOf(a.id);
       const tb = gearService.tierOf(b.id);

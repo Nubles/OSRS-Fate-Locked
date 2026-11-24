@@ -13,6 +13,7 @@ import { ModalFallback } from './LoadingFallback';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { foldedIncludes } from '../utils/textFold';
 
 const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
@@ -188,12 +189,12 @@ export const filterHistory = (history: LogEntry[], filterType: FilterType, searc
     }
 
     // 2. Search Filter
-    if (searchTerm) {
-      const lowerTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(entry => 
-        entry.message.toLowerCase().includes(lowerTerm) || 
-        (entry.details && entry.details.toLowerCase().includes(lowerTerm)) ||
-        (entry.source && entry.source.toLowerCase().includes(lowerTerm))
+    const term = searchTerm.trim();
+    if (term) {
+      filtered = filtered.filter(entry =>
+        foldedIncludes(entry.message, term) ||
+        (entry.details && foldedIncludes(entry.details, term)) ||
+        (entry.source && foldedIncludes(entry.source, term))
       );
     }
 
