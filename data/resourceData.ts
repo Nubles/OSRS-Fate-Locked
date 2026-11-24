@@ -100,7 +100,10 @@ export const RESOURCE_UNLOCK_TABLES: Readonly<Record<string, TableType>> = {
   'Barbarian Assault': TableType.MINIGAMES,
   'Blast Furnace': TableType.MINIGAMES,
   'Fishing Trawler': TableType.MINIGAMES,
+  'Forestry': TableType.MINIGAMES,
+  "Giants' Foundry": TableType.MINIGAMES,
   'Hallowed Sepulchre': TableType.MINIGAMES,
+  'Last Man Standing': TableType.MINIGAMES,
   'Mage Training Arena': TableType.MINIGAMES,
   'Mastering Mixology': TableType.MINIGAMES,
   'Nightmare Zone': TableType.MINIGAMES,
@@ -467,7 +470,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Mithril Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik', 'Wilderness', 'Asgarnia', 'Misthalin', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Mining': 55}, notes: 'Mining Guild / Dwarven Mine / Lumbridge Swamp' },
-    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'] },
+    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 56 }
   ],
   'Daeyalt Essence': [
@@ -544,31 +547,31 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   // Any furnace smelts every bar; the Blast Furnace only halves the coal (accuracy audit S14).
   'Steel Bar': [
-    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 1}, notes: 'Requires 1 Coal at BF, 2 elsewhere' },
+    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], unlockId: 'Blast Furnace', skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 1}, notes: 'Requires 1 Coal at BF, 2 elsewhere' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 30}, inputs: {'Iron Ore': 1, 'Coal': 2} },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 16 }
   ],
   'Gold Bar': [
-    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1}, notes: 'Instant with Goldsmith Gauntlets' },
+    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], unlockId: 'Blast Furnace', skills: {'Smithing': 40}, inputs: {'Gold Ore': 1}, notes: 'Instant with Goldsmith Gauntlets' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 40}, inputs: {'Gold Ore': 1} },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
   ],
   'Mithril Bar': [
-    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 50}, inputs: {'Mithril Ore': 1, 'Coal': 2}, notes: 'Requires 2 Coal at BF' },
+    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], unlockId: 'Blast Furnace', skills: {'Smithing': 50}, inputs: {'Mithril Ore': 1, 'Coal': 2}, notes: 'Requires 2 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 50}, inputs: {'Mithril Ore': 1, 'Coal': 4} },
     { type: 'DROP', name: 'Mithril Dragon', regions: ['Kandarin'], notes: 'Ancient Cavern' },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
   ],
   'Adamantite Bar': [
-    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
+    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], unlockId: 'Blast Furnace', skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 3}, notes: 'Requires 3 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 70}, inputs: {'Adamantite Ore': 1, 'Coal': 6} },
     { type: 'DROP', name: 'Aviansie', regions: ['Asgarnia'], quests: ['Troll Stronghold'], notes: 'God Wars Dungeon main chamber; entry needs 60 Strength or 60 Agility' },
     { type: 'DROP', name: 'Aviansie', regions: ['Wilderness God Wars Dungeon'], notes: 'Entry needs 60 Strength or 60 Agility' },
     { type: 'DROP', name: 'Adamant Dragon', regions: ['Lithkren'], quests: ['Dragon Slayer II'], rarity: 'Always' }
   ],
   'Rune Bar': [
-    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 4}, notes: 'Requires 4 Coal at BF' },
+    { type: 'SKILL', name: 'Blast Furnace', regions: ['Fremennik'], unlockId: 'Blast Furnace', skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 4}, notes: 'Requires 4 Coal at BF' },
     { type: 'SKILL', name: 'Furnace', regions: ['Any'], skills: {'Smithing': 85}, inputs: {'Runite Ore': 1, 'Coal': 8} },
     { type: 'DROP', name: 'Magpie Impling', regions: ['Any'], skills: {'Hunter': 65} },
     { type: 'DROP', name: 'Vorkath', regions: ['Fremennik'], unlockId: 'Vorkath' },
@@ -605,7 +608,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Ice Queen', regions: ['Asgarnia'], notes: 'White Wolf Mountain' }
   ],
   'Smithing Catalyst': [
-    { type: 'MINIGAME', name: 'Giants\' Foundry', regions: ['Kharidian Desert'], notes: 'Reward Shop' }
+    { type: 'MINIGAME', name: 'Giants\' Foundry', regions: ['Kharidian Desert'], unlockId: "Giants' Foundry", notes: 'Reward Shop' }
   ],
   'Imcando Hammer': [
     { type: 'MINIGAME', name: 'Camdozaal', regions: ['Asgarnia'], skills: {'Mining': 14, 'Smithing': 14}, quests: ['Below Ice Mountain'], notes: 'Barronite Deposits' }
@@ -666,13 +669,13 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 35 }
   ],
   'Raw Sea Turtle': [
-    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 79} }
+    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler', skills: {'Fishing': 79} }
   ],
   'Infernal Eel': [
     { type: 'SKILL', name: 'Oily Rod Fishing', regions: ['Karamja'], skills: {'Fishing': 80}, inputs: {'Fishing Bait': 1}, notes: 'Mor Ul Rek (Requires Fire Cape)' }
   ],
   'Raw Manta Ray': [
-    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], skills: {'Fishing': 81} }
+    { type: 'MINIGAME', name: 'Fishing Trawler', regions: ['Kandarin'], unlockId: 'Fishing Trawler', skills: {'Fishing': 81} }
   ],
   'Minnow': [
     { type: 'SKILL', name: 'Net Fishing', regions: ['Kandarin'], skills: {'Fishing': 82}, notes: 'Fishing Guild Platform' }
@@ -759,7 +762,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Chaos Rune': [
     { type: 'SHOP', name: 'Magic Shop', regions: ['Kandarin', 'Wilderness'], notes: 'Wizards Guild / Lundail' },
-    { type: 'MINIGAME', name: 'Barrows Chest', regions: ['Morytania'] },
+    { type: 'MINIGAME', name: 'Barrows Chest', regions: ['Morytania'], unlockId: 'Barrows Brothers' },
     { type: 'DROP', name: 'Greater Demon', regions: ['Kourend & Kebos', 'Wilderness', 'Kandarin'] },
     { type: 'DROP', name: 'Moss Giant', regions: ['Any'], notes: 'Common drop' }
   ],
@@ -929,7 +932,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Uncut Onyx': [
     { type: 'SHOP', name: 'TzHaar-Hur-Lek', regions: ['Karamja'], notes: 'Costs 260k Tokkul' },
-    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'] },
+    { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah' },
     { type: 'DROP', name: 'Tekton', regions: ['Kourend & Kebos'], notes: 'CoX' }
   ],
   'Zenyte Amulet': [
@@ -957,10 +960,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Blessing', regions: ['Any'], skills: {'Prayer': 85}, inputs: {'Spirit Shield': 1, 'Holy Elixir': 1} }
   ],
   'Spirit Shield': [
-    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'] }
+    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast' }
   ],
   'Holy Elixir': [
-    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'] }
+    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast' }
   ],
   'Godsword Blade': [
     { type: 'SKILL', name: 'Smithing', regions: ['Any'], skills: {'Smithing': 80}, inputs: {'Godsword Shard 1': 1, 'Godsword Shard 2': 1, 'Godsword Shard 3': 1} }
@@ -1205,22 +1208,22 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   
   // --- MINIGAME & SKILLING UNIQUES ---
   'Void Knight Top': [
-    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], notes: 'Purchase with points' }
+    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], unlockId: 'Pest Control', notes: 'Purchase with points' }
   ],
   'Void Knight Robe': [
-    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], notes: 'Purchase with points' }
+    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], unlockId: 'Pest Control', notes: 'Purchase with points' }
   ],
   'Void Knight Gloves': [
-    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], notes: 'Purchase with points' }
+    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], unlockId: 'Pest Control', notes: 'Purchase with points' }
   ],
   'Void Knight Helm': [
-    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], notes: 'Purchase with points' }
+    { type: 'MINIGAME', name: 'Pest Control', regions: ['Void Knights\' Outpost'], unlockId: 'Pest Control', notes: 'Purchase with points' }
   ],
   'Fighter Torso': [
-    { type: 'MINIGAME', name: 'Barbarian Assault', regions: ['Kandarin'], notes: 'Purchase with points' }
+    { type: 'MINIGAME', name: 'Barbarian Assault', regions: ['Kandarin'], unlockId: 'Barbarian Assault', notes: 'Purchase with points' }
   ],
   'Rune Pouch': [
-    { type: 'MINIGAME', name: 'LMS Shop', regions: ['Wilderness'], notes: 'Purchase with points' },
+    { type: 'MINIGAME', name: 'LMS Shop', regions: ['Wilderness'], unlockId: 'Last Man Standing', notes: 'Purchase with points' },
     { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Purchase with Slayer Points' }
   ],
   'Looting Bag': [
@@ -1228,11 +1231,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Purchase with Slayer Points' }
   ],
   'Herb Sack': [
-    { type: 'MINIGAME', name: 'Tithe Farm', regions: ['Kourend & Kebos'], notes: 'Purchase with points' },
+    { type: 'MINIGAME', name: 'Tithe Farm', regions: ['Kourend & Kebos'], unlockId: 'Tithe Farm', notes: 'Purchase with points' },
     { type: 'MERCHANT', name: 'Slayer Master', regions: ['Any'], notes: 'Purchase with Slayer Points' }
   ],
   'Seed Box': [
-    { type: 'MINIGAME', name: 'Tithe Farm', regions: ['Kourend & Kebos'], notes: 'Purchase with points' }
+    { type: 'MINIGAME', name: 'Tithe Farm', regions: ['Kourend & Kebos'], unlockId: 'Tithe Farm', notes: 'Purchase with points' }
   ],
   'Gem Bag': [
     { type: 'MINIGAME', name: 'Motherlode Mine', regions: ['Asgarnia'], notes: 'Purchase with Nuggets' }
@@ -1247,7 +1250,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Tempoross', regions: ['Kharidian Desert'], unlockId: 'Tempoross' }
   ],
   'Log Basket': [
-    { type: 'MINIGAME', name: 'Forestry Shop', regions: ['Any'], notes: 'Buy with Anima-Infused Bark' }
+    { type: 'MINIGAME', name: 'Forestry Shop', regions: ['Any'], unlockId: 'Forestry', notes: 'Buy with Anima-Infused Bark' }
   ],
   'Bottomless Compost Bucket': [
     { type: 'DROP', name: 'Hespori', regions: ['Kourend & Kebos'], unlockId: 'Hespori' }
