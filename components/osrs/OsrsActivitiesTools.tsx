@@ -5,8 +5,8 @@ import { chunkContentService } from '../../services/ChunkContentService';
 import { useChunkContent } from '../../hooks/useChunkContent';
 import { slayerReachability, type SlayerStatus, type SlayerTaskRow } from '../../utils/slayerReach';
 import { slayerLocate } from '../../utils/slayerDecisions';
-import { chunkUnlocked, chunkForPlace, showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
-import { shortcutReachability, type ShortcutStatus } from '../../utils/shortcutReach';
+import { showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
+import { runShortcutReach, type ShortcutStatus } from '../../utils/shortcutReach';
 import { shopsByCategory } from '../../utils/merchantShops';
 import { useShopAccess } from '../../hooks/useShopAccess';
 import { itemSrc, skillIconSrc } from './OsrsDashGems';
@@ -103,23 +103,7 @@ const ShortcutsTool: React.FC = () => {
   const [filter, setFilter] = useState<'all' | ShortcutStatus>('all');
   const reach = useMemo(() => {
     if (!ready) return null;
-    const shortcuts = chunkContentService.shortcuts();
-    const locate = (s: typeof shortcuts[number]) => {
-      for (const obj of s.objects) {
-        const hit = chunkContentService.entityLocations(obj, ['object']);
-        if (hit && hit.locations.length) {
-          const un = hit.locations.find((l) => chunkUnlocked(l.cx, l.cy, unlocks, gameModeId));
-          const l = un ?? hit.locations[0];
-          return { cx: l.cx, cy: l.cy, unlocked: !!un };
-        }
-      }
-      for (const name of s.chunks) {
-        const c = chunkForPlace(name);
-        if (c) return { cx: c.cx, cy: c.cy, unlocked: chunkUnlocked(c.cx, c.cy, unlocks, gameModeId) };
-      }
-      return null;
-    };
-    return shortcutReachability(shortcuts, unlocks, locate);
+    return runShortcutReach(chunkContentService, unlocks, gameModeId);
   }, [ready, unlocks, gameModeId]);
   const icon = skillIconSrc('agility');
   if (!reach) return <Shell icon={icon} title="Agility Shortcuts"><div className="oact-tool-empty">{error ? <>Could not load the shortcuts. <button type="button" className="oact-link" onClick={retry}>Retry shortcuts</button></> : 'Loading shortcuts...'}</div></Shell>;

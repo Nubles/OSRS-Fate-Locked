@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
       kind: 'object',
       locations: [{ cx: 1, cy: 1 }],
     })),
+    interiorEntranceChunks: vi.fn(() => []),
   },
   game: {
     unlocks: {

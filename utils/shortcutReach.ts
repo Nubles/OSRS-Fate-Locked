@@ -8,8 +8,9 @@
  */
 
 import { UnlockState } from '../types';
-import { Shortcut } from '../services/ChunkContentService';
+import type { EntityKind, Shortcut } from '../services/ChunkContentService';
 import { tierForLevel } from './skillTiers';
+import { chunkForPlace, chunkUnlocked } from './chunkLocations';
 
 export type ShortcutStatus = 'ready' | 'level' | 'quest' | 'area-locked' | 'no-location';
 
@@ -64,6 +65,62 @@ export const SHORTCUT_QUESTS: Readonly<Record<string, readonly string[]>> = {
 
 /** Resolve a shortcut to a representative chunk via its trigger object(s). */
 export type LocateFn = (s: Shortcut) => { cx: number; cy: number; unlocked: boolean } | null;
+
+type Coord = { cx: number; cy: number };
+
+/** What the shortcut helpers read from the chunk content (chunkContentService). */
+export interface ShortcutContent {
+  shortcuts(): Shortcut[];
+  entityLocations(name: string, kinds?: EntityKind[]): { locations: readonly Coord[] } | null;
+  interiorEntranceChunks(keyOrName: string): Coord[];
+}
+
+/** A chunk id as the tables write it: cx * 256 + cy, sometimes with a "-N" suffix. */
+const CHUNK_ID = /^(\d+)(?:-\d+)?$/;
+
+/**
+ * Every chunk a shortcut may be at: where its object is, or else each entry of
+ * its chunk list, read as a chunk id, then as an interior (the chunks it is
+ * entered from), then as a place name. Entries none of these know (the
+ * picker's "[+]" markers) are skipped.
+ */
+export function shortcutPlaces(s: Shortcut, content: ShortcutContent): Coord[] {
+  for (const obj of s.objects) {
+    const hit = content.entityLocations(obj, ['object']);
+    if (hit && hit.locations.length) return hit.locations.map(({ cx, cy }) => ({ cx, cy }));
+  }
+  const places: Coord[] = [];
+  const seen = new Set<string>();
+  for (const entry of s.chunks) {
+    const id = CHUNK_ID.exec(entry);
+    let found: Coord[] = id ? [{ cx: Math.floor(Number(id[1]) / 256), cy: Number(id[1]) % 256 }] : content.interiorEntranceChunks(entry);
+    if (!found.length) {
+      const place = chunkForPlace(entry);
+      found = place ? [place] : [];
+    }
+    for (const coord of found) {
+      const key = `${coord.cx},${coord.cy}`;
+      if (!seen.has(key)) { seen.add(key); places.push(coord); }
+    }
+  }
+  return places;
+}
+
+/**
+ * The panels' locate: of a shortcut's places, an owned one first, else the
+ * first. Both Agility Shortcuts panels and the RuneLite rows judge with it.
+ */
+export function shortcutLocator(content: ShortcutContent, unlocks: UnlockState, gameModeId: string | undefined): LocateFn {
+  return (s) => {
+    const options = shortcutPlaces(s, content).map(({ cx, cy }) => ({ cx, cy, unlocked: chunkUnlocked(cx, cy, unlocks, gameModeId) }));
+    return options.find(o => o.unlocked) ?? options[0] ?? null;
+  };
+}
+
+/** Every shortcut of the chunk content, judged for this run. */
+export function runShortcutReach(content: ShortcutContent, unlocks: UnlockState, gameModeId: string | undefined): ShortcutReach {
+  return shortcutReachability(content.shortcuts(), unlocks, shortcutLocator(content, unlocks, gameModeId));
+}
 
 export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState, locate: LocateFn): ShortcutReach {
   // The tables list a multi-skill shortcut once per skill: judge it once, on all of them.

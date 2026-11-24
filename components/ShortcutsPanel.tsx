@@ -4,8 +4,8 @@ import { Footprints, MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { chunkContentService } from '../services/ChunkContentService';
 import { useChunkContent } from '../hooks/useChunkContent';
-import { chunkUnlocked, chunkForPlace, showChunkOnMap } from '../utils/chunkLocations';
-import { shortcutReachability, ShortcutStatus } from '../utils/shortcutReach';
+import { showChunkOnMap } from '../utils/chunkLocations';
+import { runShortcutReach, ShortcutStatus } from '../utils/shortcutReach';
 
 const STATUS_META: Record<ShortcutStatus, { label: string; cls: string }> = {
   'ready':       { label: 'ready',       cls: 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200' },
@@ -35,23 +35,7 @@ export const ShortcutsPanel: React.FC = () => {
 
   const reach = useMemo(() => {
     if (!ready) return null;
-    const shortcuts = chunkContentService.shortcuts();
-    const locate = (s: typeof shortcuts[number]) => {
-      for (const obj of s.objects) {
-        const hit = chunkContentService.entityLocations(obj, ['object']);
-        if (hit && hit.locations.length) {
-          const un = hit.locations.find(l => chunkUnlocked(l.cx, l.cy, unlocks, gameModeId));
-          const l = un ?? hit.locations[0];
-          return { cx: l.cx, cy: l.cy, unlocked: !!un };
-        }
-      }
-      for (const name of s.chunks) {
-        const c = chunkForPlace(name);
-        if (c) return { cx: c.cx, cy: c.cy, unlocked: chunkUnlocked(c.cx, c.cy, unlocks, gameModeId) };
-      }
-      return null;
-    };
-    return shortcutReachability(shortcuts, unlocks, locate);
+    return runShortcutReach(chunkContentService, unlocks, gameModeId);
   }, [ready, unlocks, gameModeId]);
 
   if (!reach && error) return <div role="alert" className="mb-4 text-xs text-amber-300">Could not load the Agility shortcuts. <button type="button" onClick={retry} className="underline">Retry shortcuts</button></div>;
