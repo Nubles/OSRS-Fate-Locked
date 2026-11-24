@@ -2,7 +2,10 @@
  * Relay requests for shared progress (docs/shared-progress.md). The record
  * itself, with its id and write token, is in utils/progressShareRecord.ts.
  */
-import type { ProgressShareRecord } from './progressShareRecord';
+import {
+  newProgressShareRecord, readProgressShare, writeProgressShare, type ProgressShareRecord,
+} from './progressShareRecord';
+import { showToast } from './toast';
 
 export {
   PROGRESS_SHARE_EVENT,
@@ -76,6 +79,32 @@ export async function deleteProgress(
   } catch {
     return false;
   }
+}
+
+/** Ids this page made to replace a refused one. */
+const replacementIds = new Set<string>();
+
+/**
+ * The relay refused this browser's own id (403): another write token holds
+ * it, so this browser can never publish there again. Move the run to a new id
+ * and token, keeping its settings, and tell the player, since the old Log link
+ * and Discord link point at the old id. Returns the record to use from now on:
+ * the new one, or the one a caller in this page already moved to; null when
+ * there is nothing to move, or when the refused id is itself one this page
+ * made, so a relay that refuses everything can't make it mint ids over and over.
+ */
+export function replaceRefusedShare(storageKey: string, refused: ProgressShareRecord): ProgressShareRecord | null {
+  const current = readProgressShare(storageKey);
+  if (!current) return null;
+  if (current.id !== refused.id) return current;
+  if (replacementIds.has(refused.id)) return null;
+  const next: ProgressShareRecord = {
+    ...newProgressShareRecord(), enabled: current.enabled, ...(current.publicLog ? { publicLog: true } : {}),
+  };
+  replacementIds.add(next.id);
+  writeProgressShare(storageKey, next);
+  showToast('Your Adventurer\'s Log link changed and Discord needs linking again.');
+  return next;
 }
 
 /** "ABCD-EFGH": a link code as the player reads it. */

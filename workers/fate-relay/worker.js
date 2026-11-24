@@ -21,6 +21,7 @@ import {
   LINK_CODE_TTL_SECONDS,
   MAX_PROGRESS_BYTES,
   PROGRESS_MIN_INTERVAL_MS,
+  PROGRESS_OWNER_TTL_SECONDS,
   PROGRESS_TTL_SECONDS,
   PROGRESS_UNCHANGED_REFRESH_MS,
   newLinkCode,
@@ -194,21 +195,30 @@ async function tokenHash(token) {
 
 /**
  * Who may write `key`. A separate owner record holds a SHA-256 hash of the
- * write token (never the token) for 90 days after the last refresh, so a code
- * stays claimed after its 30-day data record expires; publishes refresh it
- * at most once a week. Records written before
- * owner records existed are adopted on their owner's next write. `claim` marks
- * a write that takes a code nobody holds.
+ * write token (never the token) for a while after the last refresh (90 days
+ * for a code, PROGRESS_OWNER_TTL_SECONDS for shared progress), so a key stays
+ * claimed after its data record expires or is deleted; writes refresh it at
+ * most once a week. Without an owner record the data record decides: a
+ * profile holds its token, a progress summary the token's hash (`writeHash`)
+ * in its metadata. Records written before owner records existed are adopted
+ * on their owner's next write. `claim` marks a write that takes a key nobody
+ * holds; `held` says the owner record exists. `claimedAt`, for shared
+ * progress, is when the id was last claimed afresh (see currentLink).
  */
 async function authorizeWrite(env, key, existing, presented) {
   const owner = await env.RELAY.get(`own:${key}`);
   if (owner) {
-    const [hash, refreshedAt] = owner.split(':');
+    const [hash, refreshedAt, claimedAt] = owner.split(':');
     if (typeof presented !== 'string' || await tokenHash(presented) !== hash) return null;
-    return { token: presented, refresh: !(Date.now() - Number(refreshedAt) < OWNER_REFRESH_MS), claim: false };
+    return { token: presented, refresh: !(Date.now() - Number(refreshedAt) < OWNER_REFRESH_MS), claim: false,
+      held: true, claimedAt: Number(claimedAt) || undefined };
   }
   if (existing?.token && existing.token !== presented) return null;
-  return { token: existing?.token || presented || crypto.randomUUID(), refresh: true, claim: !existing };
+  if (existing?.writeHash && (typeof presented !== 'string' || await tokenHash(presented) !== existing.writeHash)) {
+    return null;
+  }
+  return { token: existing?.token || presented || crypto.randomUUID(), refresh: true, claim: !existing,
+    held: false, claimedAt: existing?.claimedAt };
 }
 
 /**
@@ -216,11 +226,12 @@ async function authorizeWrite(env, key, existing, presented) {
  * (OWNER_REFRESH_MS) to spare KV writes. Best-effort: if it fails, the data record still holds the token
  * and the next write adopts it.
  */
-async function recordOwner(env, key, owner) {
+async function recordOwner(env, key, owner, ttl = OWNER_TTL_SECONDS) {
   if (!owner.refresh) return;
   try {
-    await env.RELAY.put(`own:${key}`, `${await tokenHash(owner.token)}:${Date.now()}`,
-      { expirationTtl: OWNER_TTL_SECONDS });
+    const claimed = owner.claimedAt ? `:${owner.claimedAt}` : '';
+    await env.RELAY.put(`own:${key}`, `${await tokenHash(owner.token)}:${Date.now()}${claimed}`,
+      { expirationTtl: ttl });
   } catch {
     /* adopted from the data record on the next write */
   }
@@ -344,10 +355,11 @@ async function publicProgressRoute(request, env, headers, id, ctx) {
 
 /**
  * Shared progress, written by the player's browser. The first publish claims the id with
- * its write token (kept as a SHA-256 hash in the record's metadata); later publishes, the
- * delete and link codes need the same token. A run is readable without the bot's secret
- * only when its player made it a public Adventurer's Log; otherwise the bot reads a run
- * only through a Discord link the player made with a code.
+ * its write token (kept as a SHA-256 hash in the record's metadata and in an owner record,
+ * own:p:<id>, that outlives the summary); later publishes, the delete and link codes need
+ * the same token, also after Stop sharing or after the summary expired. A run is readable
+ * without the bot's secret only when its player made it a public Adventurer's Log;
+ * otherwise the bot reads a run only through a Discord link the player made with a code.
  */
 async function progressRoute(request, env, headers, id, linkCode, ctx) {
   if (request.method === 'GET' && !linkCode) return publicProgressRoute(request, env, headers, id, ctx);
@@ -373,12 +385,18 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   const key = `p:${id}`;
   const writeHash = await tokenHash(token);
   const existing = await env.RELAY.getWithMetadata(key);
-  if (existing.metadata && existing.metadata.writeHash !== writeHash) {
-    return new Response('forbidden', { status: 403, headers });
-  }
+  const owner = await authorizeWrite(env, key, existing.metadata, token);
+  if (!owner) return new Response('forbidden', { status: 403, headers });
 
   if (request.method === 'DELETE') {
-    await env.RELAY.delete(key);
+    // Stop sharing deletes the summary but keeps the owner record, refreshed
+    // now, so the id stays the owner's (as a code's Disconnect tombstone
+    // does) and their Discord link stays theirs. An id nobody holds has
+    // nothing to delete.
+    if (!owner.claim) {
+      if (existing.value !== null) await env.RELAY.delete(key);
+      await recordOwner(env, key, { ...owner, refresh: true }, PROGRESS_OWNER_TTL_SECONDS);
+    }
     return json({ deleted: true }, headers);
   }
 
@@ -389,13 +407,17 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
     if (!await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
     const code = newLinkCode();
     await env.RELAY.put(`lc:${code}`, id, { expirationTtl: LINK_CODE_TTL_SECONDS });
+    // The owner record outlives the code, so the run can't change owner before it is used.
+    await recordOwner(env, key, owner, PROGRESS_OWNER_TTL_SECONDS);
     return json({ code, expiresAt: Date.now() + LINK_CODE_TTL_SECONDS * 1000 }, headers);
   }
 
   // The summary the relay already holds (a reload, or a change the summary
   // doesn't show): no KV write, and nothing new for the bot. It is stored
-  // again once a month, so a run shared but unchanged doesn't expire.
+  // again once a month, so a run shared but unchanged doesn't expire. The
+  // one write: a run stored before owner records gets one on this publish.
   if (unchangedProgress(existing, snapshot, Date.now())) {
+    if (!owner.held) await recordOwner(env, key, owner, PROGRESS_OWNER_TTL_SECONDS);
     return json({ updatedAt: existing.metadata.updatedAt, unchanged: true }, headers);
   }
 
@@ -406,6 +428,12 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   }
   if (!existing.metadata && !await withinLimit(env, 'claim', request)) return tooManyRequests(headers);
   const updatedAt = Date.now();
+  if (owner.claim) {
+    // A new owner never inherits the old owner's Discord member: links still
+    // pointing at the id go first, and older ones fail currentLink.
+    owner.claimedAt = updatedAt;
+    await forgetLinksToRun(env, id);
+  }
   let previous = null;
   try {
     previous = existing.value === null ? null : JSON.parse(existing.value);
@@ -416,10 +444,28 @@ async function progressRoute(request, env, headers, id, linkCode, ctx) {
   const feed = feedForPublish(existing.metadata, previous, snapshot, updatedAt);
   await env.RELAY.put(key, JSON.stringify(snapshot), {
     expirationTtl: PROGRESS_TTL_SECONDS,
-    metadata: { writeHash, updatedAt, ...feed.meta },
+    metadata: { writeHash, updatedAt, ...(owner.claimedAt ? { claimedAt: owner.claimedAt } : {}), ...feed.meta },
   });
-  await inBackground(ctx, notifyDiscordBot(env, id, feed.newUnlocks, snapshot, updatedAt));
+  await recordOwner(env, key, owner, PROGRESS_OWNER_TTL_SECONDS);
+  await inBackground(ctx, notifyDiscordBot(env, id, feed.newUnlocks, snapshot, updatedAt, owner.claimedAt));
   return json({ updatedAt }, headers);
+}
+
+/**
+ * Whether a Discord link belongs to its run's current owner: it was made
+ * after the run's id was last claimed afresh (`claimedAt`, in the run's
+ * owner record and summary). A run stored before claims were recorded keeps
+ * its links; a link stored before links recorded their time is older than
+ * any recorded claim.
+ */
+const currentLink = (linkMetadata, claimedAt) => !claimedAt || (linkMetadata?.linkedAt ?? 0) >= claimedAt;
+
+/** Before a new owner claims a run's id: drop the Discord link its reverse index names. */
+async function forgetLinksToRun(env, runId) {
+  const discordId = await env.RELAY.get(`ld:${runId}`);
+  if (discordId === null) return;
+  if (await env.RELAY.get(`l:${discordId}`) === runId) await env.RELAY.delete(`l:${discordId}`);
+  await env.RELAY.delete(`ld:${runId}`);
 }
 
 /**
@@ -452,14 +498,16 @@ const DISCORD_EVENTS_TIMEOUT_MS = 5000;
  * (DISCORD_EVENTS_URL) with the bot's secret, carrying the unlocks feedForPublish
  * let through. A failure never fails the publish.
  */
-async function notifyDiscordBot(env, runId, newUnlocks, snapshot, updatedAt) {
+async function notifyDiscordBot(env, runId, newUnlocks, snapshot, updatedAt, claimedAt) {
   const url = env.DISCORD_EVENTS_URL;
   const secret = env.PROGRESS_BOT_SECRET;
   if (typeof url !== 'string' || !url.startsWith('https://')) return;
   if (typeof secret !== 'string' || secret.length < 32) return;
   try {
     const discordId = await env.RELAY.get(`ld:${runId}`);
-    if (discordId === null || await env.RELAY.get(`l:${discordId}`) !== runId) return;
+    if (discordId === null) return;
+    const link = await env.RELAY.getWithMetadata(`l:${discordId}`);
+    if (link.value !== runId || !currentLink(link.metadata, claimedAt)) return;
     await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' },
@@ -517,26 +565,31 @@ async function fromDiscordBot(request, env) {
   return typeof presented === 'string' && await tokenHash(presented) === await tokenHash(secret);
 }
 
-/** The run a Discord user linked, as the bot shows it. */
-async function linkedProgress(env, runId) {
-  const { value, metadata } = await env.RELAY.getWithMetadata(`p:${runId}`, { type: 'json' });
-  return value === null ? { linked: true, snapshot: null } : { linked: true, snapshot: value, updatedAt: metadata?.updatedAt ?? null };
-}
+/** The run a Discord user linked, as the bot shows it, from the read of its summary. */
+const linkedProgress = ({ value, metadata }) =>
+  value === null ? { linked: true, snapshot: null } : { linked: true, snapshot: value, updatedAt: metadata?.updatedAt ?? null };
 
 /**
  * Discord links, for the bot only: POST claims a link code for a Discord user, GET reads
  * that user's shared progress, DELETE forgets the link. A link outlives the player turning
- * sharing off; the bot then reports that the run isn't shared.
+ * sharing off; the bot then reports that the run isn't shared. A link to a run that has
+ * changed owner since (currentLink) is forgotten when the bot reads it.
  */
 async function discordLinkRoute(request, env, headers, discordId) {
   if (!await fromDiscordBot(request, env)) return new Response('forbidden', { status: 403, headers });
   const key = `l:${discordId}`;
   if (request.method === 'GET') {
-    const runId = await env.RELAY.get(key);
+    const link = await env.RELAY.getWithMetadata(key);
+    const runId = link.value;
     if (runId === null) return json({ linked: false }, headers, 404);
+    const run = await env.RELAY.getWithMetadata(`p:${runId}`, { type: 'json' });
+    if (!currentLink(link.metadata, run.metadata?.claimedAt)) {
+      await forgetLink(env, discordId);
+      return json({ linked: false }, headers, 404);
+    }
     // Links made before the reverse index existed gain it the first time the bot reads them.
     if (await env.RELAY.get(`ld:${runId}`) === null) await env.RELAY.put(`ld:${runId}`, discordId);
-    return json(await linkedProgress(env, runId), headers);
+    return json(linkedProgress(run), headers);
   }
   if (request.method === 'DELETE') {
     await forgetLink(env, discordId);
@@ -555,10 +608,11 @@ async function discordLinkRoute(request, env, headers, discordId) {
   if (runId === null) return json({ error: 'unknown code' }, headers, 404);
   await env.RELAY.delete(`lc:${code}`);
   await forgetLink(env, discordId);
-  await env.RELAY.put(key, runId);
+  // When it was made, for currentLink.
+  await env.RELAY.put(key, runId, { metadata: { linkedAt: Date.now() } });
   // The reverse index lets a publish find who to tell; the newest link to a run wins.
   await env.RELAY.put(`ld:${runId}`, discordId);
-  return json(await linkedProgress(env, runId), headers);
+  return json(linkedProgress(await env.RELAY.getWithMetadata(`p:${runId}`, { type: 'json' })), headers);
 }
 
 /** Drop a Discord user's link, and the run's pointer back to them when it is theirs. */

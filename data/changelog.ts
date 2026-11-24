@@ -37,6 +37,17 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-23-shared-progress-link',
+    title: 'Shared progress keeps its link',
+    date: '2026-11-23',
+    sections: {
+      fixed: [
+        'Your shared run’s link and its Discord link stay yours after you stop sharing.',
+        'If the relay refuses your run’s link, the tracker now moves the run to a new link and tells you.',
+      ],
+    },
+  },
+  {
     id: '2026-11-22-accuracy-pass',
     title: 'Big accuracy pass and two new quests',
     date: '2026-11-22',
