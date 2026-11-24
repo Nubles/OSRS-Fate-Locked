@@ -782,7 +782,6 @@ const GameLayout = () => {
   const isOsrs = useIsOsrsUi();
   const {
     recentlyCreatedId,
-    profiles,
     activeProfileId,
     activeProfileName,
     storageKeyForActiveProfile,
@@ -1243,7 +1242,6 @@ const GameLayout = () => {
           replacing={relaySync.enabled}
           connected={relaySync.code === runelitePairCode}
           pairedProfileId={relaySync.pairedProfileId}
-          profiles={profiles}
           profileName={activeProfileName}
           linkedAccount={linkedAccount ?? null}
           phase={runelitePairPhase}

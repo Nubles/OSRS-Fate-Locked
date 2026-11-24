@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Link2, Loader2, XCircle } from 'lucide-rea
 import { RUNELITE_PAIRING_SUCCESS_COPY, runelitePairCodeHint } from '../utils/runelitePairing';
 import { canDismissRunelitePairing, type RunelitePairingPhase } from './runelitePairingPhase';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { useProfiles } from '../context/ProfileContext';
 
 export { canDismissRunelitePairing, type RunelitePairingPhase };
 
@@ -13,7 +14,6 @@ export interface RunelitePairingDialogProps {
   connected?: boolean;
   /** The profile this browser's pairing is for, when it has one. */
   pairedProfileId?: string;
-  profiles?: ReadonlyArray<{ id: string; name: string }>;
   profileName: string;
   linkedAccount: string | null;
   phase: RunelitePairingPhase;
@@ -30,7 +30,6 @@ export const RunelitePairingDialog: React.FC<
   replacing,
   connected = false,
   pairedProfileId,
-  profiles = [],
   profileName,
   linkedAccount,
   phase,
@@ -40,6 +39,7 @@ export const RunelitePairingDialog: React.FC<
   onClose,
 }) => {
   const canDismiss = canDismissRunelitePairing(phase);
+  const { profiles } = useProfiles();
   // `replacing` means the pairing is this profile's. A pairing for another
   // profile is replaced too, so name that profile when it is known.
   const otherProfile = !replacing && !connected && pairedProfileId !== undefined;

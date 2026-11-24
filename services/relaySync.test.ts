@@ -568,10 +568,9 @@ describe('current RuneLite connection source boundary', () => {
 });
 
 describe('pairing dialog wiring in App', () => {
-  it('passes the profile the pairing is for and the profile list to the dialog', () => {
+  it('passes the profile the pairing is for to the dialog', () => {
     const app = readFileSync('App.tsx', 'utf8');
     const dialog = app.slice(app.indexOf('<RunelitePairingDialog'), app.indexOf('onConfirm=', app.indexOf('<RunelitePairingDialog')));
     expect(dialog).toContain('pairedProfileId={relaySync.pairedProfileId}');
-    expect(dialog).toContain('profiles={profiles}');
   });
 });
