@@ -966,7 +966,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         {categoryButtons(WIDE_TAB_ICONS)}
         <div className="okf-blurb">
           <span>{subTab === 'BOSSING' && reserves ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && reserves ? VANILLA_MINIGAME_BLURB : BLURBS[subTab]}</span>
-          <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
+          <span className="hint"><b>Gem = odds band.</b> Higher tier, better odds.</span>
           {otherBtn}
         </div>
         {bossSearch}

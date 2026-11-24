@@ -107,6 +107,12 @@ describe('OSRS Farm Keys readiness and wording (deep audit ui-osrs-a)', () => {
     expect(within(card).queryByText(/Not ready/)).toBeNull();
   });
 
+  it('describes a gem as a band of chances, not one chance', async () => {
+    await start('ACTIVITIES', { minigames: ['Barbarian Assault'] });
+    const hint = document.querySelector('.okf-blurb .hint') as HTMLElement;
+    expect(hint.textContent).toBe('Gem = odds band. Higher tier, better odds.');
+  });
+
 });
 
 describe('OSRS Farm Keys cards on a narrow screen', () => {
