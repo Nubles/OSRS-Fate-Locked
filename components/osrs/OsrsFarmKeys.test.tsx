@@ -113,6 +113,18 @@ describe('OSRS Farm Keys readiness and wording (deep audit ui-osrs-a)', () => {
     expect(hint.textContent).toBe('Gem = odds band. Higher tier, better odds.');
   });
 
+  it('names where each Slayer master stands (OSRS Wiki infobox locations)', async () => {
+    await start('SLAYER', {});
+    const places: Record<string, string> = {
+      Turael: 'Burthorpe', Spria: 'Draynor', Mazchna: 'Canifis', Vannaka: 'Edgeville', Chaeldar: 'Zanaris',
+      Konar: 'Mount Karuulm', Nieve: 'Gnome Stronghold', Krystilia: 'Edgeville', Duradel: 'Shilo Village',
+    };
+    for (const [name, place] of Object.entries(places)) {
+      const card = cardFor(name);
+      expect(card, name).toBeTruthy();
+      expect(card.getAttribute('data-examine'), name).toMatch(new RegExp(`^${place} \\(`));
+    }
+  });
 });
 
 describe('OSRS Farm Keys cards on a narrow screen', () => {
