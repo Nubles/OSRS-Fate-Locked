@@ -79,3 +79,8 @@ build job, which uploads the artifact only after install, type checking,
 deterministic content verification, and build succeed. The deploy job depends
 on every test group and that gated build job, so nothing goes live unless all of
 them pass.
+
+A cancelled Deploy run was superseded by a newer push to main, not failed: do
+not re-run it. Re-running it would publish its older commit, so the deploy job
+now stops any run whose commit is no longer the head of main. To redeploy, re-run
+the newest Deploy run.

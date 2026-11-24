@@ -535,6 +535,47 @@ describe('Pages deployment workflow contract', () => {
     expect(deployJob).toMatch(/^\s{8}id:\s*deployment\s*$/m);
     expect(activeUses(deployJob)).toEqual([DEPLOY_PAGES]);
   });
+
+  // A re-run of a cancelled (superseded) Deploy run used to publish its older
+  // commit over the newer live site. The deploy job must check that its commit
+  // is still main's head before actions/deploy-pages runs.
+  it('refuses to publish a commit that is no longer the head of main', async () => {
+    const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
+    const deployJob = yamlBlock(yamlBlock(workflow, 'jobs'), 'deploy', 2);
+    const guardAt = deployJob.indexOf('- name: Stop if main has moved on');
+    const deployAt = deployJob.indexOf(`uses: ${DEPLOY_PAGES}`);
+
+    expect(guardAt, 'guard step missing from the deploy job').toBeGreaterThan(-1);
+    expect(guardAt, 'guard step must come before the Pages deploy').toBeLessThan(deployAt);
+
+    const guard = deployJob.slice(guardAt, deployAt);
+    // No token is needed: the deploy job's own permissions have no contents
+    // scope, so the guard reads main anonymously with git.
+    expect(guard).toContain('shell: bash');
+    expect(guard).toContain('git ls-remote --exit-code "$repo" refs/heads/main');
+    expect(guard).not.toMatch(/gh api|GH_TOKEN|github\.token/);
+    expect(guard).toContain('[ "$head" = "$GITHUB_SHA" ]');
+    // A failed lookup and a moved main give different messages.
+    const errors = guard.match(/::error::[^"]*/g) ?? [];
+    expect(errors).toHaveLength(2);
+    expect(errors.some((message) => /Could not read the head of main/.test(message))).toBe(true);
+    expect(errors.some((message) => /main has moved on/.test(message))).toBe(true);
+
+    // Pushes that change only paths-ignore files start no Deploy run, so the
+    // guard must let the run before them deploy. Its list must match.
+    const ignored = yamlBlock(workflow, 'on')
+      .split(/\r?\n/)
+      .map((line) => line.match(/^\s{6}- '([^']+)'\s*$/)?.[1])
+      .filter((path): path is string => Boolean(path));
+    const guardIgnored = guard
+      .slice(guard.indexOf('IGNORED_PATHS: |'), guard.indexOf('run: |'))
+      .split(/\r?\n/)
+      .slice(1)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    expect(ignored.length).toBeGreaterThan(0);
+    expect(guardIgnored).toEqual(ignored);
+  });
 });
 
 describe('local release command contract', () => {
@@ -583,6 +624,7 @@ describe('release documentation contract', () => {
     );
     expect(checklist).toMatch(/Pages workflow[\s\S]*pushes to main[\s\S]*no manual dispatch/i);
     expect(checklist).toMatch(/write permissions[\s\S]*deploy job/i);
+    expect(checklist).toMatch(/cancelled Deploy run[\s\S]*superseded[\s\S]*do\s+not\s+re-run\s+it/i);
   });
 
   it('links the roadmap release section to the detailed checklist', async () => {
