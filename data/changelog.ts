@@ -43,11 +43,11 @@ export const CHANGELOG_RELEASES = [
     sections: {
       fixed: [
         'A Key roll is now refused with a message while your progress can’t save or another tab’s newer progress is waiting, so a roll can’t be lost.',
-        'Slayer tasks now ask for what their places need: 60 Strength or Agility for God Wars tasks, the quest for quest dungeons, and only bosses a master would give.',
-        'The Resource Engine drops routes that never give the item, puts monsters, patches and rocks in their real areas, and asks for the boss, minigame or quest.',
-        'Strategy Guide cards and goals for boss, minigame and guild rewards now ask for that Key, and many now list the right levels, areas and quests.',
-        'More than a dozen quests gained a missing need, like the Gloves slot for Ghosts Ahoy, 45 Mining for Enakhra’s Lament and 31 Prayer for Animal Magnetism.',
-        'Skill guides, diary tasks, guilds, storage unlocks and the shop directory were checked against the Wiki, and Chunked reads patches at their real levels.',
+        'Slayer tasks, quests, skill guides, Strategy Guide cards and the Resource Engine now ask for what the game asks: the right levels, quests, areas and Keys.',
+        'A dozen quest-locked places, like Tolna’s rift, now wait for their quest, and the Keldagrim, Mor Ul Rek and Zanaris banks ask for their own area.',
+        'Plan a route now opens a plan for every quest, diary tier and region, and pinned guide goals show the Keys and chunks they still need.',
+        'Agility shortcuts wait for their quest, diary and a way in, and Chunked no longer counts scenery you can’t chop, mine, fish or steal from.',
+        'The damage calculator knows blowpipe darts, six more prayers, monster flat armour and the Fractured Archive bosses.',
       ],
     },
   },
