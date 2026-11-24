@@ -8,6 +8,7 @@ import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
+import { historyFilterMatches, type HistoryFilter as HistoryFilterType } from '../utils/historyFilter';
 import { ModalFallback } from './LoadingFallback';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
@@ -15,7 +16,7 @@ import { useIsOsrsUi } from '../utils/uiStyle';
 
 const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
-type FilterType = 'ALL' | 'ROLLS' | 'UNLOCKS' | 'RITUALS' | 'PROGRESS';
+type FilterType = HistoryFilterType;
 type SortOrder = 'ASC' | 'DESC';
 
 // The virtual list's own scroller. Its rows hold no controls, so the scroller takes keyboard
@@ -175,17 +176,7 @@ export const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries
 export type HistoryFilter = FilterType;
 export type HistorySort = SortOrder;
 
-/** Which history entries a filter keeps; shared by the classic and OSRS timelines. */
-export const historyFilterMatches = (entry: LogEntry, filterType: FilterType): boolean => {
-  // A lost Chunked Breakthrough is stored as LEVEL_UP (so the audit's Key
-  // balances skip it) but is a fate roll: it files under Rolls, not Level.
-  const lostBreakthrough = entry.type === 'LEVEL_UP' && typeof entry.meta?.breakthrough === 'string';
-  if (filterType === 'ROLLS') return isRollEntry(entry) || lostBreakthrough;
-  if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
-  if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-  if (filterType === 'PROGRESS') return !lostBreakthrough && (entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT' || entry.type === 'FATE');
-  return true;
-};
+export { historyFilterMatches };
 
 /** The timeline after the category filter, the search and the sort. */
 export const filterHistory = (history: LogEntry[], filterType: FilterType, searchTerm: string, sortOrder: SortOrder): LogEntry[] => {
