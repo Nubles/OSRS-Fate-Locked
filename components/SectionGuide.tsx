@@ -263,7 +263,9 @@ export const SectionGuide: React.FC<Props> = ({ id, className, suspendModals = f
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  useEscapeKey(() => setOpen(false), open && !suspendModals);
+  // Escape closes only this popover, not the window it sits in, and focus
+  // goes back to the "?" button.
+  useEscapeKey(() => { setOpen(false); btnRef.current?.focus(); }, open && !suspendModals, true);
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;

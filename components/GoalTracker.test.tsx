@@ -38,6 +38,18 @@ describe('GoalTracker', () => {
     expect(goalNeedsResourceEngine('Huasca')).toBe(true);
   });
 
+  it('reads a quest pinned by its name in an older save as that quest', async () => {
+    const names = ['Desert Treasure II - The Fallen Empire', 'RFD: Start (The Cook)',
+      'Forgettable Tale of a Drunken Dwarf', 'The Ribbiting Tale of a Lily Pad Labour Dispute'];
+    for (const name of names) expect(goalNeedsResourceEngine(name), name).toBe(false);
+    game.unlocks = await freshUnlocks();
+    game.pinnedGoals = ['Desert Treasure II - The Fallen Empire'];
+    render(<GoalTracker />);
+    expect(await screen.findByText('Desert Treasure II - The Fallen Empire')).toBeTruthy();
+    expect(screen.getByTitle('Unpin')).toBeTruthy();
+    expect(engine.loaded).not.toHaveBeenCalled();
+  });
+
   it('shows quest goals without loading the Resource Engine', async () => {
     game.unlocks = await freshUnlocks();
     game.pinnedGoals = ['Demon Slayer'];

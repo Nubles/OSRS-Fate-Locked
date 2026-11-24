@@ -145,8 +145,13 @@ export const CommandPalette: React.FC = () => {
         e.preventDefault();
         setOpen((wasOpen) => {
           if (!wasOpen) {
+            // Focus goes back where it was (inside an open window, say);
+            // the header button only when nothing had focus.
+            const active = document.activeElement;
             returnFocusTargetRef.current =
-              document.querySelector<HTMLElement>('[data-tour="palette"]');
+              active instanceof HTMLElement && active !== document.body
+                ? active
+                : document.querySelector<HTMLElement>('[data-tour="palette"]');
           }
           return !wasOpen;
         });

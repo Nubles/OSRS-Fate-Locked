@@ -4,12 +4,14 @@ import { X, Search, Lock, Unlock, ExternalLink } from 'lucide-react';
 import { Map, MapPin, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, ScrollText, Swords, Box, Trophy } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { paletteShortcut } from '../utils/paletteShortcut';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
+import { oracleWikiUrl } from '../utils/questWikiUrl';
 import { 
   SKILLS_LIST, REGIONS_LIST, BOSSES_LIST, MINIGAMES_LIST, FARMING_PATCH_LIST, 
   MOBILITY_LIST, ARCANA_LIST, POH_LIST, EQUIPMENT_SLOTS, MERCHANTS_LIST, SLOT_CONFIG,
-  STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, MISTHALIN_AREAS, wikiUrlFor
+  STORAGE_LIST, GUILDS_LIST, SLAYER_UNLOCKS_LIST, MISTHALIN_AREAS
 } from '../constants';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -56,8 +58,78 @@ type SearchItem = {
   mapPlace?: string;
 };
 
-// Helper to generate Wiki URLs
-const getWikiUrl = wikiUrlFor;
+/** Every Oracle row that is not a world entity, in the order the Oracle lists them. */
+export function buildOracleSearchIndex(): SearchItem[] {
+  const items: SearchItem[] = [];
+
+  const addGroup = (list: string[], type: string, category: TableType, icon: any, req: string) => {
+    list.forEach(name => items.push({ name, type, category, icon, reqText: req }));
+  };
+
+  // Core Unlocks
+  addGroup(SKILLS_LIST, 'Skill', TableType.SKILLS, BookOpen, 'Requires Key in Skills Table');
+  REGIONS_LIST.forEach((name) => items.push({
+    name,
+    displayName: displayAreaName(name),
+    type: 'Region',
+    category: TableType.REGIONS,
+    icon: Map,
+    mapPlace: name,
+    reqText: 'Requires Key in Regions Table',
+  }));
+  Object.entries(AREA_ALIAS_POLICIES).forEach(([alias, policy]) => items.push({
+    name: alias,
+    type: 'Region',
+    category: TableType.REGIONS,
+    icon: Map,
+    reqText: `Canonical area: ${policy.canonical}`,
+    mapPlace: alias,
+  }));
+  addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting region (free unless the mode restricts it)');
+  addGroup(BOSSES_LIST, 'Boss', TableType.BOSSES, Skull, 'Requires Key in Bosses Table');
+  addGroup(MINIGAMES_LIST, 'Minigame', TableType.MINIGAMES, Gamepad2, 'Requires Key in Minigames Table');
+  addGroup(FARMING_PATCH_LIST, 'Farming Patch', TableType.FARMING_LAYERS, Sprout, 'Requires Key in Farming Table');
+  addGroup(MOBILITY_LIST, 'Mobility', TableType.MOBILITY, Footprints, 'Requires Key in Mobility Table');
+  addGroup(ARCANA_LIST, COMBAT_POWERS_LABEL, TableType.ARCANA, Zap, 'Requires a Key in the Combat Powers table');
+  addGroup(POH_LIST, 'Housing', TableType.POH, Home, 'Requires Key in Housing Table');
+  addGroup(MERCHANTS_LIST, 'Merchant', TableType.MERCHANTS, Store, 'Requires Key in Merchants Table');
+  addGroup(STORAGE_LIST, 'Storage', TableType.STORAGE, Package, 'Requires Key in Storage Table');
+  addGroup(GUILDS_LIST, 'Guild', TableType.GUILDS, Flag, 'Requires Key in Guilds Table');
+  addGroup(SLAYER_UNLOCKS_LIST, 'Slayer Unlock', TableType.SLAYER_UNLOCKS, Skull, 'Requires Key in Slayer Table');
+  addGroup(EQUIPMENT_SLOTS, 'Equipment Slot', TableType.EQUIPMENT, Shield, 'Requires Key in Equipment Table');
+
+  // Quests
+  Object.values(QUEST_DATA).forEach(q => {
+      items.push({ name: q.name, type: 'Quest', category: TableType.QUESTS, icon: ScrollText, reqText: 'Quest Journal', id: q.id });
+  });
+
+  // Diaries
+  Object.values(DIARY_DATA).forEach(d => {
+      items.push({ name: d.id, type: 'Diary', category: TableType.DIARIES, icon: BookOpen, reqText: 'Diary Journal', id: d.id });
+  });
+
+  // Combat Achievements
+  Object.values(CA_DATA).forEach(ca => {
+      items.push({ name: `${ca.id} Tier`, type: 'Combat Achievement', category: TableType.COMBAT_ACHIEVEMENTS, icon: Swords, reqText: 'CA Journal', id: ca.id });
+  });
+
+  // Collection Log (Flattened)
+  Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
+      Object.entries(tabData.pages).forEach(([pageName, pageData]) => {
+          pageData.items.forEach(item => {
+              items.push({
+                  name: item.name,
+                  type: 'Collection Log',
+                  category: 'COLLECTION_LOG_ITEM',
+                  icon: Box,
+                  reqText: `Page: ${pageName}`,
+                  id: item.id
+              });
+          });
+      });
+  });
+  return items;
+}
 
 // The diagnostics runner resets the active run and only restores it after its
 // final step, so closing it, reloading or any failed step leaves the player's
@@ -102,78 +174,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
   };
 
   // Aggregate Data
-  const searchIndex = useMemo<SearchItem[]>(() => {
-    const items: SearchItem[] = [];
-
-    const addGroup = (list: string[], type: string, category: TableType, icon: any, req: string) => {
-      list.forEach(name => items.push({ name, type, category, icon, reqText: req }));
-    };
-
-    // Core Unlocks
-    addGroup(SKILLS_LIST, 'Skill', TableType.SKILLS, BookOpen, 'Requires Key in Skills Table');
-    REGIONS_LIST.forEach((name) => items.push({
-      name,
-      displayName: displayAreaName(name),
-      type: 'Region',
-      category: TableType.REGIONS,
-      icon: Map,
-      mapPlace: name,
-      reqText: 'Requires Key in Regions Table',
-    }));
-    Object.entries(AREA_ALIAS_POLICIES).forEach(([alias, policy]) => items.push({
-      name: alias,
-      type: 'Region',
-      category: TableType.REGIONS,
-      icon: Map,
-      reqText: `Canonical area: ${policy.canonical}`,
-      mapPlace: alias,
-    }));
-    addGroup(MISTHALIN_AREAS, 'Region', TableType.REGIONS, Map, 'Starting region (free unless the mode restricts it)');
-    addGroup(BOSSES_LIST, 'Boss', TableType.BOSSES, Skull, 'Requires Key in Bosses Table');
-    addGroup(MINIGAMES_LIST, 'Minigame', TableType.MINIGAMES, Gamepad2, 'Requires Key in Minigames Table');
-    addGroup(FARMING_PATCH_LIST, 'Farming Patch', TableType.FARMING_LAYERS, Sprout, 'Requires Key in Farming Table');
-    addGroup(MOBILITY_LIST, 'Mobility', TableType.MOBILITY, Footprints, 'Requires Key in Mobility Table');
-    addGroup(ARCANA_LIST, COMBAT_POWERS_LABEL, TableType.ARCANA, Zap, 'Requires a Key in the Combat Powers table');
-    addGroup(POH_LIST, 'Housing', TableType.POH, Home, 'Requires Key in Housing Table');
-    addGroup(MERCHANTS_LIST, 'Merchant', TableType.MERCHANTS, Store, 'Requires Key in Merchants Table');
-    addGroup(STORAGE_LIST, 'Storage', TableType.STORAGE, Package, 'Requires Key in Storage Table');
-    addGroup(GUILDS_LIST, 'Guild', TableType.GUILDS, Flag, 'Requires Key in Guilds Table');
-    addGroup(SLAYER_UNLOCKS_LIST, 'Slayer Unlock', TableType.SLAYER_UNLOCKS, Skull, 'Requires Key in Slayer Table');
-    addGroup(EQUIPMENT_SLOTS, 'Equipment Slot', TableType.EQUIPMENT, Shield, 'Requires Key in Equipment Table');
-
-    // Quests
-    Object.values(QUEST_DATA).forEach(q => {
-        items.push({ name: q.name, type: 'Quest', category: TableType.QUESTS, icon: ScrollText, reqText: 'Quest Journal', id: q.id });
-    });
-
-    // Diaries
-    Object.values(DIARY_DATA).forEach(d => {
-        items.push({ name: d.id, type: 'Diary', category: TableType.DIARIES, icon: BookOpen, reqText: 'Diary Journal', id: d.id });
-    });
-
-    // Combat Achievements
-    Object.values(CA_DATA).forEach(ca => {
-        items.push({ name: `${ca.id} Tier`, type: 'Combat Achievement', category: TableType.COMBAT_ACHIEVEMENTS, icon: Swords, reqText: 'CA Journal', id: ca.id });
-    });
-
-    // Collection Log (Flattened)
-    Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
-        Object.entries(tabData.pages).forEach(([pageName, pageData]) => {
-            pageData.items.forEach(item => {
-                items.push({
-                    name: item.name,
-                    type: 'Collection Log',
-                    category: 'COLLECTION_LOG_ITEM',
-                    icon: Box,
-                    reqText: `Page: ${pageName}`,
-                    id: item.id
-                });
-            });
-        });
-    });
-
-    return items;
-  }, []);
+  const searchIndex = useMemo(buildOracleSearchIndex, []);
 
   // Filter + rank results. Without ranking, an alphabetical slice of "rune"
   // would surface "Ancient Mace" before "Rune Platebody" purely on title
@@ -395,7 +396,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
                     <div className="flex items-center gap-2">
                         <h3 className={`font-bold text-sm truncate ${isUnlocked ? 'text-white' : 'text-gray-400'}`}>{item.displayName ?? item.name}</h3>
                         <a 
-                            href={getWikiUrl(item.name)} 
+                            href={oracleWikiUrl(item)} 
                             target="_blank" 
                             rel="noopener noreferrer" 
                             className="text-gray-600 hover:text-osrs-gold transition-colors p-0.5 rounded hover:bg-white/5 shrink-0"
@@ -443,7 +444,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
            <span>Global Search</span>
            <div className="flex gap-4">
               <span className="flex items-center gap-1"><kbd className="bg-[#333] px-1 rounded text-gray-400">Esc</kbd> to close</span>
-              <span className="flex items-center gap-1"><kbd className="bg-[#333] px-1 rounded text-gray-400">Ctrl+K</kbd> to open</span>
+              <span className="flex items-center gap-1"><kbd className="bg-[#333] px-1 rounded text-gray-400">{paletteShortcut()}</kbd> command palette</span>
            </div>
         </div>
 

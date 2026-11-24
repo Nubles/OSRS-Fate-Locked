@@ -550,12 +550,76 @@ export const NO_WIKI_PAGE = new Set<string>([
   'Axe Shops', 'Platebody Shops', 'Bars & Inns', 'Cooking Shops', 'Shield Shops', 'Scimitar Shops',
   'Helmet Shops', 'Platelegs Shops', 'Plateskirt Shops', 'Chainbody Shops', 'Mace Shops',
   'Staff Shops', 'Crossbow Shops', 'Hunter Shops', 'Candle Shops', 'Fur Traders',
-  'Kebab Sellers', 'Silk Shops',
+  'Kebab Sellers', 'Silk Shops', 'Ore Merchants', 'Claw Shops', 'Warhammer Shops', 'Halberd Shops',
+  'Pet Shops',
+  // Storage
+  'Spice Pouch',
 ]);
+
+// Link targets for table and collection log names that are not Wiki titles
+// themselves. Links only: kept apart from WIKI_OVERRIDES, which also picks
+// the images WikiService loads.
+const WIKI_LINK_PAGES: Readonly<Record<string, string>> = {
+  // Farming patch groups
+  'Wood Tree': 'Tree_patch',
+  'Hardwood Tree': 'Hardwood_tree_patch',
+  'Coral Nursery': 'Coral_nursery',
+  // Merchant groups with a Wiki article or list of their own
+  'Silver Shops': 'Silver_shops',
+  'Spice Shops': 'Spice_shops',
+  'Vegetable Shops': 'Vegetable_shops',
+  'Wine Traders': 'Wine_traders',
+  'Sawmill Operators': 'Sawmill_operator',
+  'Real Estate Agents': 'Estate_agent',
+  'Taxidermists': 'Taxidermist',
+  'Decanters': 'Decanting',
+  'Lost Property': 'Lost_Property_shop',
+  'Weapon Shops': 'Weapon_shop',
+  'Reward Shops': 'Reward_Shop',
+  // Storage
+  'Beginner STASH': 'STASH',
+  'Easy STASH': 'STASH',
+  'Medium STASH': 'STASH',
+  'Hard STASH': 'STASH',
+  'Elite STASH': 'STASH',
+  'Master STASH': 'STASH',
+  'Tool Leprechauns': 'Tool_Leprechaun',
+  'Meat Pouch': 'Meat_pouch',
+  'Essence Pouches': 'Essence_pouch',
+  'Bottomless Bucket': 'Bottomless_compost_bucket',
+  // Slayer reward unlocks
+  'Ring Bling': 'Slayer_Rewards',
+  'Like a Boss': 'Slayer_Rewards',
+  'Gargoyle Smasher': 'Slayer_Rewards',
+  'Slug Salter': 'Slayer_Rewards',
+  'Reptile Freezer': 'Slayer_Rewards',
+  "'Shroom Sprayer": 'Slayer_Rewards',
+  'Duly Noted': 'Slayer_Rewards',
+  'Seeing Red': 'Slayer_Rewards',
+  'Watch the Birdie': 'Slayer_Rewards',
+  'Hot Stuff': 'Slayer_Rewards',
+  'Reptile Got Ripped': 'Slayer_Rewards',
+  // Collection log entries named with a variant the Wiki has no page for
+  'Ikkle Hydra (serpentine)': 'Ikkle_Hydra',
+  'Muphin (ranged)': 'Muphin',
+  "Deadman's chest (cosmetic)": "Deadman's_chest",
+  "Deadman's legs (cosmetic)": "Deadman's_legs",
+  "Deadman's cape (cosmetic)": "Deadman's_cape",
+  'Golden Armadyl special attack (item)': 'Golden_Armadyl_special_attack',
+  'Golden Bandos special attack (item)': 'Golden_Bandos_special_attack',
+  'Golden Saradomin special attack (item)': 'Golden_Saradomin_special_attack',
+  'Golden Zamorak special attack (item)': 'Golden_Zamorak_special_attack',
+  'Bones to peaches (item)': 'Bones_to_Peaches',
+  'Prescription goggles (unfocused)': 'Prescription_goggles',
+  'Alchemist labcoat (apron off)': 'Alchemist_labcoat',
+  'Alchemist pants (apron off)': 'Alchemist_pants',
+  "Alchemist's amulet (uncharged)": "Alchemist's_amulet",
+};
 
 /** Wiki link for any content name — a direct article, or a search fallback. */
 export const wikiUrlFor = (name: string): string => {
   if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
+  if (WIKI_LINK_PAGES[name]) return `https://oldschool.runescape.wiki/w/${encodeURIComponent(WIKI_LINK_PAGES[name])}`;
   if (NO_WIKI_PAGE.has(name)) return `https://oldschool.runescape.wiki/w/Special:Search?search=${encodeURIComponent(name)}`;
   return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
 };

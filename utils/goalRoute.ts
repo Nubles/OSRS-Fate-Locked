@@ -18,6 +18,7 @@ import { enforcedQuestAreas } from './questGeographyDisplay';
 import { getActivityReq } from '../data/activityRequirements';
 import { WARRIORS_GUILD_ENTRY_LABEL, meetsWarriorsGuildEntry } from './activityReadiness';
 import { analyzeRequirement } from './strategyRequirement';
+import { resolvePinnedGoal } from './pinnedGoal';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -165,7 +166,9 @@ export function expandQuestChain(seeds: string[]): string[] {
   return order;
 }
 
-export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute | null {
+export function buildGoalRoute(pinnedId: string, gameState: GameState): GoalRoute | null {
+  // An older save may hold a quest pinned by its name; it routes as that quest.
+  const goalId = resolvePinnedGoal(pinnedId);
   const unlocks = gameState.unlocks;
   const gameModeId = gameState.gameModeId;
   const diary = DIARY_DATA[goalId];
