@@ -244,7 +244,10 @@ describe('pickpocket targets the Wiki confirms (deep audit chunk-sample.d3[2])',
       // Wiki 'Vyre': "Vyres that can be pickpocketed include" these Darkmeyer citizens (options Talk-to, Pickpocket).
       ['Vampyressa van Von', 'npc', 82], ['Nakasa Jovkai', 'npc', 82], ['Vormar Vakan', 'npc', 82],
     ];
-    for (const [name, kind, level] of keep) expect(trainingReqFor(name, kind), name).toEqual({ skill: 'Thieving', level });
+    // The vyres stand inside Darkmeyer, which Sins of the Father opens.
+    for (const [name, kind, level] of keep) {
+      expect(trainingReqFor(name, kind), name).toEqual({ skill: 'Thieving', level, ...(level === 82 ? { quest: 'Sins of the Father' } : {}) });
+    }
   });
 
   it('gives the chunks only the Thieving content they hold', () => {

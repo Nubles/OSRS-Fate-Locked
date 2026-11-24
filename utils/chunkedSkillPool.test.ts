@@ -4,7 +4,8 @@ import { initialState } from '../context/GameContext';
 // @ts-expect-error Node types are intentionally excluded from the browser app.
 import { readFileSync } from 'node:fs';
 import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
-import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
+import { CHUNK_FACT_QUESTS, CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
+import { exploreThingBlocker, exploreThings } from './chunkExplore';
 import chunkDoc from '../public/chunk-content.json';
 import { chunkContentBlocker, chunkEntryQuests, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingLevels, chunkedTrainingTiers, chunkFactLevel, chunkPatchBlocker } from './chunkedSkillPool';
 import { ENTRY_QUEST_CHUNKS, PATCH_LOCKS, SHOP_LOCKS } from './chunkSkillNodesBuild';
@@ -490,5 +491,48 @@ describe('Chunked places the game opens only through a quest (deep audit chunk-s
       expect(land.has(chunk), chunk).toBe(true);
       for (const quest of quests) expect(QUEST_DATA[quest], quest).toBeDefined();
     }
+  });
+});
+
+describe('Darkmeyer vyres wait for Sins of the Father in the chunks only partly inside the city (deep audit chunk-sample.d3[2])', () => {
+  // [chunk, the quests its entry needs, content outside the walls that must count as before]
+  const mixed: [string, string[], string][] = [
+    ['56,51', ['Priest in Peril', 'Darkness of Hallowvale'], 'Mining'], // south-west Darkmeyer and North Meiyerditch
+    ['56,53', ['Priest in Peril'], 'Woodcutting'], // north Darkmeyer
+    ['57,52', ['Priest in Peril'], 'Woodcutting'], // east Darkmeyer and the swamp Slepe opens onto
+  ];
+  const thieving = (chunk: string) => exploreThings(chunk).find(thing => thing.fact === 'Thieving')!;
+  const thief = (chunk: string, quests: string[]) => atCap({ Thieving: 9 }, { chunks: [chunk], quests, levels: { Thieving: 82 } });
+
+  it.each(mixed)('%s: Thieving 82 counts only once Sins of the Father is done', (chunk, entry, outside) => {
+    expect(chunkEntryQuests(chunk)).toEqual(entry);
+    expect(chunkFactLevel(chunk, 'Thieving')).toBe(82); // what the chunk holds still shows the vyres
+    expect(built.factQuests[chunk]).toEqual({ Thieving: 'Sins of the Father' });
+    expect(CHUNK_FACT_QUESTS[chunk]).toEqual({ Thieving: 'Sins of the Father' });
+    expect(chunkContentBlocker(chunk, 'Thieving', { quests: entry })).toBe('Needs Sins of the Father done.');
+    expect(chunkContentBlocker(chunk, 'Thieving', { quests: [...entry, 'Sins of the Father'] })).toBeNull();
+    expect(exploreThingBlocker(thieving(chunk), thief(chunk, entry))).toBe('Needs Sins of the Father done.');
+    expect(exploreThingBlocker(thieving(chunk), thief(chunk, [...entry, 'Sins of the Father']))).toBeNull();
+    // Content outside the walls needs only the chunk's entry, as before.
+    expect(chunkContentBlocker(chunk, outside, { quests: entry })).toBeNull();
+    expect(chunkContentBlocker(chunk, 'Cooking', { quests: entry })).toBeNull();
+    expect(chunkContentBlocker(chunk, outside, { quests: entry.slice(0, -1) })).toBe(`Needs ${entry[entry.length - 1]} to get in.`);
+  });
+
+  it('leaves 56,52 to its entry quest, with no second gate', () => {
+    expect(built.factQuests['56,52']).toBeUndefined();
+    expect(CHUNK_FACT_QUESTS['56,52']).toBeUndefined();
+    expect(chunkContentBlocker('56,52', 'Thieving', { quests: ['Priest in Peril'] })).toBe('Needs Sins of the Father to get in.');
+    expect(chunkContentBlocker('56,52', 'Thieving', { quests: ['Priest in Peril', 'Sins of the Father'] })).toBeNull();
+    // Only the three mixed chunks carry a fact gate today.
+    expect(Object.keys(CHUNK_FACT_QUESTS).sort()).toEqual(['56,51', '56,53', '57,52']);
+  });
+
+  it('fails the build when a gated fact also comes from a source outside the gate', () => {
+    const id = String(56 * 256 + 51);
+    const doc = (p: string[]) => ({ chunks: { [id]: { p } } }) as unknown as Parameters<typeof buildChunkSkillNodes>[0];
+    expect(buildChunkSkillNodes(doc(['Nakasa Jovkai'])).factQuests).toEqual({ '56,51': { Thieving: 'Sins of the Father' } });
+    expect(() => buildChunkSkillNodes(doc(['Nakasa Jovkai', 'Man']))).toThrow(/56,51.*Thieving.*Sins of the Father/);
+    expect(() => buildChunkSkillNodes(doc(['Man', 'Nakasa Jovkai']))).toThrow(/56,51.*Thieving.*Sins of the Father/);
   });
 });

@@ -29,3 +29,6 @@ export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, 
 
 // Chunk -> service -> the quest, guild or levels its only shop there needs before it trades.
 export const CHUNK_SERVICE_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly guild?: string; readonly skills?: Readonly<Record<string, number>> }>>>> = {"24,47":{"traps":{"guild":"Hunter Guild","skills":{"Hunter":46}}},"54,51":{"planks":{"quest":"Shades of Mort'ton"}}};
+
+// Chunk -> fact -> the quest its only source there needs beyond the chunk's entry.
+export const CHUNK_FACT_QUESTS: Readonly<Record<string, Readonly<Record<string, string>>>> = {"56,51":{"Thieving":"Sins of the Father"},"56,53":{"Thieving":"Sins of the Father"},"57,52":{"Thieving":"Sins of the Father"}};
