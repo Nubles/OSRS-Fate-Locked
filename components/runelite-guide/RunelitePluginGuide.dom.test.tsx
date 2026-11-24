@@ -105,6 +105,10 @@ describe('RunelitePluginGuide navigation and focus', () => {
     expect(strictMode.className).toContain('border-amber-400');
     expect(host.querySelector('a[href="#runelite-guide-start"]')?.getAttribute('aria-current')).toBeNull();
     expect(host.querySelector<HTMLSelectElement>('[data-runelite-guide-nav="mobile"]')?.value).toBe('strict-mode');
+    // Focus moves into the chosen chapter, so Tab and a screen reader carry on from there.
+    const strictChapter = host.querySelector<HTMLElement>('#runelite-guide-strict-mode');
+    expect(document.activeElement).toBe(strictChapter);
+    expect(strictChapter?.getAttribute('tabindex')).toBe('-1');
 
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -127,6 +131,7 @@ describe('RunelitePluginGuide navigation and focus', () => {
     });
     expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: 'smooth', block: 'start' });
     expect(host.querySelector('a[href="#runelite-guide-here"]')?.getAttribute('aria-current')).toBe('location');
+    expect(document.activeElement).toBe(host.querySelector('#runelite-guide-here'));
 
     const settings = host.querySelector<HTMLButtonElement>('[data-guide-quick-link="settings"]');
     if (!settings) throw new Error('Missing the introduction’s links');
@@ -135,6 +140,7 @@ describe('RunelitePluginGuide navigation and focus', () => {
     });
     expect(host.querySelector('a[href="#runelite-guide-settings"]')?.getAttribute('aria-current')).toBe('location');
     expect(menu.value).toBe('settings');
+    expect(document.activeElement).toBe(host.querySelector('#runelite-guide-settings'));
     expect(scrollIntoView).toHaveBeenCalledTimes(2);
   });
 

@@ -116,7 +116,8 @@ const Chapter: React.FC<{ readonly chapter: GuideChapter }> = ({ chapter }) => (
     id={`runelite-guide-${chapter.id}`}
     data-guide-chapter={chapter.id}
     aria-labelledby={`runelite-guide-${chapter.id}-title`}
-    className="scroll-mt-6 border-t border-white/10 pt-10"
+    tabIndex={-1}
+    className="scroll-mt-6 border-t border-white/10 pt-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
   >
     <header data-guide-chapter-header={chapter.id} className="flex items-start gap-4">
       <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-white/10 bg-[#1e1e1e]">
@@ -186,6 +187,8 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
     const reducedMotion = typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     node.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+    // Move focus into the chapter too, so Tab and a screen reader carry on from where the reader jumped.
+    node.focus({ preventScroll: true });
     setActiveChapter(chapterId);
   };
 
