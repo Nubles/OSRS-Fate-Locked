@@ -45,7 +45,7 @@ export const SAILING_PORT_CHUNKS: readonly string[] = [
   '43,46', // Cairn Isle
   '43,50', // Brimhaven
   '43,53', // Catherby
-  '46,49', // Port Sarim
+  '46,49', // Musa Point
   '47,46', // The Pandemonium
   '47,49', // Port Sarim
   '49,37', // The Summer Shore
