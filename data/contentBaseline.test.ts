@@ -335,7 +335,9 @@ describe('deterministic current content baseline', () => {
       // Up from 28,087: the reviewed A Ruff Situation step override (the Outlaw Camp is in 48,54)
       // and the North Rantz Peninsula spelling correction.
       // Up from 28,108: the eight shortcut corrections, each one ledger event.
-      auditEvents: 28143, // +25: the 7 reviewed NPC renames and 18 removals (chunk-sample.d2[2])
+      // Up from 28,118 (+25): the 7 reviewed NPC renames and 18 removals (chunk-sample.d2[2]).
+      // Up from 28,143: the reviewed Demonic Brutus requirement rewrite (plugin-ui.d3[0]).
+      auditEvents: 28144,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1958);
