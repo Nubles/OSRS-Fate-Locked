@@ -48,6 +48,68 @@ export const calculateProphecyScore = (req: ContentRequirement, analysis: any) =
     return score;
 };
 
+/** Every entry the guide lists that is not yet done, keyed as it is pinned. */
+export const buildGuideContent = (unlocks: any, gameModeId?: string): Record<string, ContentRequirement> => {
+    const database: Record<string, ContentRequirement> = {};
+    Object.values(QUEST_DATA).forEach(q => {
+        if (unlocks.quests.includes(q.name)) return;
+        database[q.name] = {
+            id: q.name,
+            category: TableType.QUESTS,
+            regions: enforcedQuestAreas(q),
+            skills: q.skills,
+            quests: q.prereqs,
+            description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`
+        };
+    });
+    Object.values(DIARY_DATA).forEach(d => {
+        if (unlocks.diaries.includes(d.id)) return;
+        const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+        // One game skill is a skill chip. A combat level, Combat Achievements or a
+        // choice or sum of skills ('Strength or Agility 60') is a check like the others.
+        const skills: Record<string, number> = {};
+        const checks: string[] = [];
+        for (const blocker of eligibility.blockers) {
+            if (blocker.kind === 'skill' && blocker.requirement?.type === 'single') skills[blocker.requirement.skill] = blocker.requirement.level;
+            else if (blocker.kind === 'skill' || blocker.kind === 'combat') checks.push(blocker.label);
+        }
+        database[d.id] = {
+            id: d.id,
+            category: TableType.DIARIES,
+            manualRequirements: [...eligibility.manualChecks, ...checks],
+            regions: eligibility.blockers
+                .filter(blocker => blocker.kind === 'region')
+                .map(blocker => blocker.label),
+            skills,
+            quests: eligibility.blockers
+                .filter(blocker => blocker.kind === 'quest')
+                .map(blocker => blocker.label),
+            alternatives: eligibility.blockers
+                .filter(blocker => blocker.kind === 'alternative')
+                .map(blocker => ({
+                    label: blocker.label,
+                    routes: blocker.routes.map(route => ({
+                        label: route.label,
+                        blockers: route.blockers.map(routeBlocker => ({
+                            kind: routeBlocker.kind,
+                            label: routeBlocker.label,
+                        })),
+                    })),
+                })),
+            description: `Region: ${d.region} | Difficulty: ${d.difficulty.replace('Diary (', '').replace(')', '')}`
+        };
+    });
+    Object.entries(STRATEGY_DATABASE).forEach(([key, val]) => {
+        if (val.category === TableType.QUESTS && unlocks.quests.includes(val.id)) return;
+        if (val.category === TableType.QUESTS) {
+            if (database[key]) database[key].description = val.description ?? database[key].description;
+            return;
+        }
+        database[key] = { ...val };
+    });
+    return database;
+};
+
 export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const dialogRef = useRef<HTMLDivElement>(null);
     useFocusTrap(dialogRef);
@@ -56,64 +118,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
-    const allContent = useMemo<Record<string, ContentRequirement>>(() => {
-        const database: Record<string, ContentRequirement> = {};
-        Object.values(QUEST_DATA).forEach(q => {
-            if (unlocks.quests.includes(q.name)) return;
-            database[q.name] = {
-                id: q.name,
-                category: TableType.QUESTS,
-                regions: enforcedQuestAreas(q),
-                skills: q.skills,
-                quests: q.prereqs,
-                description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`
-            };
-        });
-        Object.values(DIARY_DATA).forEach(d => {
-            if (unlocks.diaries.includes(d.id)) return;
-            const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
-            const skills = Object.fromEntries(eligibility.blockers
-                .filter(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
-                .map(blocker => {
-                    const parsed = blocker.label.match(/^(.*) (\d+)$/);
-                    return parsed ? [parsed[1], Number(parsed[2])] : [blocker.label, 1];
-                }));
-            database[d.id] = {
-                id: d.id,
-                category: TableType.DIARIES,
-                manualRequirements: eligibility.manualChecks,
-                regions: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'region')
-                    .map(blocker => blocker.label),
-                skills,
-                quests: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'quest')
-                    .map(blocker => blocker.label),
-                alternatives: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'alternative')
-                    .map(blocker => ({
-                        label: blocker.label,
-                        routes: blocker.routes.map(route => ({
-                            label: route.label,
-                            blockers: route.blockers.map(routeBlocker => ({
-                                kind: routeBlocker.kind,
-                                label: routeBlocker.label,
-                            })),
-                        })),
-                    })),
-                description: `Region: ${d.region} | Difficulty: ${d.difficulty.replace('Diary (', '').replace(')', '')}`
-            };
-        });
-        Object.entries(STRATEGY_DATABASE).forEach(([key, val]) => {
-            if (val.category === TableType.QUESTS && unlocks.quests.includes(val.id)) return;
-            if (val.category === TableType.QUESTS) {
-                if (database[key]) database[key].description = val.description ?? database[key].description;
-                return;
-            }
-            database[key] = { ...val };
-        });
-        return database;
-    }, [unlocks, gameModeId]);
+    const allContent = useMemo(() => buildGuideContent(unlocks, gameModeId), [unlocks, gameModeId]);
 
     const contentAnalysis = useMemo(() => {
         return Object.entries(allContent)
