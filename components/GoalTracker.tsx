@@ -112,7 +112,7 @@ export const GoalTracker: React.FC = () => {
             <div key={id} className={`relative bg-[#1a1a1a] border rounded-lg p-3 group transition-all ${isComplete ? 'border-green-500/30 bg-green-900/5' : 'border-white/10 hover:border-white/20'}`}>
               
               <div className="flex justify-between items-start mb-2">
-                <h4 className={`font-bold text-sm leading-tight pr-4 ${isComplete ? 'text-green-400' : 'text-gray-200'}`}>{id}</h4>
+                <h4 className={`font-bold text-sm leading-tight pr-4 ${isComplete ? 'text-green-400' : 'text-gray-200'}`}>{QUEST_DATA[resolvePinnedGoal(id)]?.name ?? id}</h4>
                 <div className="absolute top-2 right-2 flex items-center gap-1">
                   <button
                     onClick={() => setRouteFor(r => (r === id ? null : id))}

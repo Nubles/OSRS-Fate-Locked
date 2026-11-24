@@ -50,6 +50,15 @@ describe('GoalTracker', () => {
     expect(engine.loaded).not.toHaveBeenCalled();
   });
 
+  it('heads a quest goal with the quest\'s name where its id is shorter', async () => {
+    game.unlocks = await freshUnlocks();
+    game.pinnedGoals = ['Forgettable Tale...', 'Demon Slayer'];
+    render(<GoalTracker />);
+    expect(await screen.findByRole('heading', { name: 'Forgettable Tale of a Drunken Dwarf' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Forgettable Tale...' })).toBeNull();
+    expect(screen.getByRole('heading', { name: 'Demon Slayer' })).toBeTruthy();
+  });
+
   it('shows quest goals without loading the Resource Engine', async () => {
     game.unlocks = await freshUnlocks();
     game.pinnedGoals = ['Demon Slayer'];

@@ -56,7 +56,7 @@ const guideTitle = (key: string): string => QUEST_DATA[key]?.name ?? key;
 export const buildGuideContent = (unlocks: any, gameModeId?: string): Record<string, ContentRequirement> => {
     const database: Record<string, ContentRequirement> = {};
     Object.values(QUEST_DATA).forEach(q => {
-        // Keyed by id, as the Quest Log completes and pins it; the card shows its name.
+        // Keyed by id, as the Quest Log completes it; the card shows its name.
         if (unlocks.quests.includes(q.id)) return;
         database[q.id] = {
             id: q.id,
