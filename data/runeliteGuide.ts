@@ -550,8 +550,8 @@ export const RUNELITE_GUIDE_PRESETS: readonly GuidePreset[] = [
     title: 'Clear screen',
     summary: 'The world map and the sidebar tell you everything; the game view stays clear.',
     adjustments: [
-      `Set ${label('hudMode')} to Off and ${label('lockedAreaAlert')} to Chat.`,
-      `Turn off ${label('shadeNearbyLocked')} and ${label('announceAreaChanges')}.`,
+      `Set ${label('hudMode')} to Off, ${label('chunkBorders')} to Off and ${label('lockedAreaAlert')} to Chat.`,
+      `Turn off ${label('shadeNearbyLocked')}, ${label('outlineLocked')} and ${label('announceAreaChanges')}.`,
     ],
   },
   {
@@ -665,7 +665,7 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
     symptom: 'Load newest backup file doesn’t find your file.',
     likelyCause: 'The file isn’t in the backup folder, or isn’t named fate-locked-bundle-*.json.',
     fix: [
-      'Put it in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows.',
+      'Put it in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, or ~/.runelite/fate-locked/ on macOS and Linux.',
       'Name it fate-locked-bundle-*.json; the newest such file is the one read.',
     ],
   },
@@ -914,7 +914,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
         items: [
           'Walking, clicks on NPCs, objects and banks, and putting on or taking off gear.',
           'An option that picks its place after the click, such as a jewellery Rub.',
-          'Spirit trees, and fairy rings, charters and boats unless Block networks and boats is on. These get the (Locked) tag instead.',
+          `Spirit trees, and fairy rings, charters and boats unless ${label('blockNetworks')} is on. An option to one locked place gets the (Locked) tag instead. One that picks its place after the click, such as a spirit tree’s Travel or a charter’s Charter, gets no tag.`,
           'Anything when the rules are stale, for another character, or don’t decide the trip. Strict Mode fails open rather than guessing.',
         ],
       },
@@ -1011,7 +1011,7 @@ export const RUNELITE_GUIDE_CHAPTERS: readonly GuideChapter[] = [
           },
           {
             title: 'From a file',
-            body: 'Save your rules from the tracker as fate-locked-bundle-*.json in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, then select Load newest backup file.',
+            body: 'Save your rules from the tracker as fate-locked-bundle-*.json in %USERPROFILE%\\.runelite\\fate-locked\\ on Windows, or ~/.runelite/fate-locked/ on macOS and Linux, then select Load newest backup file.',
           },
         ],
       },

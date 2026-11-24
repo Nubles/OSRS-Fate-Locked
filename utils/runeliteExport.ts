@@ -165,22 +165,36 @@ export async function buildBundlePayload(
   return { json, compressed, fingerprint: await relayFingerprint(payload) };
 }
 
+/** Clipboard and file export for RuneLite. It never rejects: every outcome,
+ *  failures included, ends in a toast that says what the player has. */
 export async function exportRuneliteBundle(unlocks: UnlockState, run: RuneliteRunInput): Promise<void> {
-  // Clipboard gets the compressed (gzip+base64 "FLGZ:") form, about 205 KB
-  // instead of about 1.3 MB of JSON; the file download stays plain JSON.
-  const { json, compressed: clip } = await buildBundlePayload(unlocks, run);
-  navigator.clipboard?.writeText(clip).catch(() => { /* non-secure origin / no focus */ });
-  // …and a file download kept as PLAIN, readable JSON (openable/inspectable).
-  // The plugin reads it only once moved into .runelite/fate-locked; it never
-  // looks in Downloads.
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `fate-locked-bundle-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('RuneLite bundle copied + downloaded');
+  try {
+    // Clipboard gets the compressed (gzip+base64 "FLGZ:") form, about 205 KB
+    // instead of about 1.3 MB of JSON; the file download stays plain JSON.
+    const { json, compressed: clip } = await buildBundlePayload(unlocks, run);
+    // Started before the download, as before. A browser can refuse the write
+    // (no focus, a click too long ago, no clipboard at all); a missing
+    // navigator.clipboard throws inside the async body and counts as refused.
+    const copied = (async () => navigator.clipboard.writeText(clip))().then(() => true, () => false);
+    // …and a file download kept as PLAIN, readable JSON (openable/inspectable).
+    // The plugin reads it only once moved into .runelite/fate-locked; it never
+    // looks in Downloads.
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fate-locked-bundle-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(await copied
+      ? 'RuneLite bundle copied + downloaded'
+      : 'RuneLite bundle downloaded, but the browser wouldn\'t copy it. '
+        + 'Move the file into your .runelite/fate-locked folder, then select Load newest backup file in the plugin.');
+  } catch (error) {
+    showToast(error instanceof RunChangedError
+      ? 'The run changed while its RuneLite bundle was being built. Export it again.'
+      : 'Couldn\'t export for RuneLite. Reload the page and try again.');
+  }
 }

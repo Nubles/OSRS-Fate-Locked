@@ -49,7 +49,7 @@ export const RuneLiteOnboarding: React.FC = () => {
       return false;
     }
   });
-  const [overlayCopied, setOverlayCopied] = useState(false);
+  const [overlayCopied, setOverlayCopied] = useState<'Copied!' | 'Copy failed' | null>(null);
 
   const deliveryStatus: DeliveryStatus = !relaySync.enabled
     ? 'off'
@@ -76,9 +76,15 @@ export const RuneLiteOnboarding: React.FC = () => {
       relaySync.code,
       relaySync.base(),
     );
-    navigator.clipboard?.writeText(url).catch(() => {});
-    setOverlayCopied(true);
-    window.setTimeout(() => setOverlayCopied(false), 1500);
+    // Copied! only once the browser took it: it can refuse the write, and a
+    // missing navigator.clipboard throws inside the async body.
+    void (async () => navigator.clipboard.writeText(url))().then(
+      () => 'Copied!' as const,
+      () => 'Copy failed' as const,
+    ).then(label => {
+      setOverlayCopied(label);
+      window.setTimeout(() => setOverlayCopied(null), 1500);
+    });
   };
 
   if (hidden) {
@@ -214,7 +220,7 @@ export const RuneLiteOnboarding: React.FC = () => {
             className="rounded bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-gray-300 hover:bg-white/15"
             title="OBS browser-source URL for the browser-authored profile"
           >
-            {overlayCopied ? 'Copied!' : 'Copy stream overlay URL'}
+            {overlayCopied ?? 'Copy stream overlay URL'}
           </button>
           <button
             onClick={() => { void relaySync.disconnect(); }}
