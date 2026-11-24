@@ -67,3 +67,33 @@ describe('boss and minigame loot needs the boss or minigame', () => {
     expect(route('Spirit Shield', 'Corporeal Beast', gs).isAvailable).toBe(true);
   });
 });
+
+describe('every shop row has a merchant category', () => {
+  it('no hand-written shop or merchant row is left with no category', () => {
+    const gs = state('vanilla');
+    const unresolved: string[] = [];
+    for (const item of Object.keys(RESOURCE_MAP)) {
+      for (const row of calculateSupplyChain(item, gs)!.sources) {
+        if (row.status.missing.includes('Shop category needs review') && CURATED_RESOURCE_SOURCES.includes(row.source)) {
+          unresolved.push(`${item} <- ${row.source.name}`);
+        }
+      }
+    }
+    expect(unresolved).toEqual([]);
+  });
+
+  it('amylase crystals and stamina potions can be had from Grace', () => {
+    const gs = state('vanilla', { regions: ['Asgarnia'], merchants: [] });
+    expect(route('Amylase Crystal', 'Grace', gs).missing).toEqual(['Merchant: Reward Shops']);
+    gs.unlocks.merchants = ['Reward Shops'];
+    expect(route('Amylase Crystal', 'Grace', gs).isAvailable).toBe(true);
+  });
+
+  it("Bert's daily sand needs The Hand in the Sand, not a Crafting level of its own", () => {
+    const gs = state('vanilla', { regions: ['Kandarin'] });
+    expect(route('Bucket of Sand', 'The Hand in the Sand', gs).missing).toEqual(['Quest: The Hand in the Sand']);
+    gs.unlocks.quests = ['The Hand in the Sand'];
+    gs.unlocks.levels = { ...gs.unlocks.levels, Crafting: 49 };
+    expect(route('Bucket of Sand', 'The Hand in the Sand', gs).isAvailable).toBe(true);
+  });
+});

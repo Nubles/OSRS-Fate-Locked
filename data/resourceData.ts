@@ -282,7 +282,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Use Vial on Fountain', regions: ['Any'], notes: 'Requires a Vial' }
   ],
   'Amylase Crystal': [
-    { type: 'MERCHANT', name: 'Grace', regions: ['Asgarnia'], notes: 'Burthorpe (10 Marks of Grace)', outputYield: 100 }
+    { type: 'MERCHANT', name: 'Grace', regions: ['Asgarnia'], merchantCategory: 'Reward Shops', notes: 'Burthorpe (10 Marks of Grace)', outputYield: 100 }
   ],
   'Chocolate Dust': [
     { type: 'SHOP', name: 'Food Shop', regions: ['Kandarin'], notes: 'Buy Chocolate Bar (Grand Tree/Catherby) and grind' },
@@ -349,7 +349,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- CRAFTING & PROCESSING ---
   'Bucket of Sand': [
     { type: 'SKILL', name: 'Sandstone Grinder', regions: ['Kharidian Desert'], skills: {'Mining': 35}, notes: 'Quarry (Fastest)', outputYield: 50 },
-    { type: 'MERCHANT', name: 'Bert (Daily)', regions: ['Kandarin'], skills: {'Crafting': 50}, quests: ['The Hand in the Sand'], notes: '84/day free', outputYield: 84 },
+    { type: 'QUEST', name: 'The Hand in the Sand', regions: ['Kandarin'], quests: ['The Hand in the Sand'], notes: 'Bert (Yanille): 84 a day, free', outputYield: 84 },
     { type: 'SHOP', name: 'Charter Ships', regions: ['Kandarin', 'Karamja', 'Asgarnia'], notes: 'Restocks slowly' }
   ],
   'Soda Ash': [
@@ -438,7 +438,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Coal': [
     { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'], notes: 'Passive Gathering', outputYield: 400 },
-    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace' },
+    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace', merchantCategory: 'Ore Merchants' },
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Fremennik', 'Kourend & Kebos', 'Karamja', 'Wilderness', 'Morytania'], skills: {'Mining': 30}, notes: 'Motherlode Mine / Guild' },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', outputYield: 200 }
   ],
@@ -454,7 +454,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Mining Rocks', regions: ['The Onyx Crest'], skills: { 'Mining': 40, 'Sailing': 47 }, notes: 'The Onyx Crest' }
   ],
   'Gold Ore': [
-    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace', notes: 'Ordan (Best source)' },
+    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace', merchantCategory: 'Ore Merchants', notes: 'Ordan (Best source)' },
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Asgarnia', 'Karamja', 'Kharidian Desert', 'Fremennik'], skills: { 'Mining': 40 }, notes: 'Crafting Guild / Brimhaven / Arzinian / TzHaar' },
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Tirannwn'], skills: { 'Mining': 40 }, quests: ['Song of the Elves'], notes: 'Mynydd / Trahaearn mine' },
     { type: 'DROP', name: 'Gargoyle', regions: ['Morytania'], skills: {'Slayer': 75} }
@@ -470,7 +470,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Mithril Ore': [
     { type: 'SKILL', name: 'Mining Rocks', regions: ['Karamja', 'Fremennik', 'Wilderness', 'Asgarnia', 'Misthalin', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Kourend & Kebos', 'Tirannwn', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Mining': 55}, notes: 'Mining Guild / Dwarven Mine / Lumbridge Swamp' },
-    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace' },
+    { type: 'SHOP', name: 'Blast Furnace Shop', regions: ['Fremennik'], unlockId: 'Blast Furnace', merchantCategory: 'Ore Merchants' },
     { type: 'MINIGAME', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', outputYield: 56 }
   ],
   'Daeyalt Essence': [
@@ -805,7 +805,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Barrows Chest', regions: ['Morytania'], unlockId: 'Barrows Brothers' }
   ],
   'Astral Rune': [
-    { type: 'SHOP', name: 'Baba Yaga', regions: ['Fremennik'], quests: ['Lunar Diplomacy'] },
+    { type: 'SHOP', name: 'Baba Yaga', regions: ['Fremennik'], merchantCategory: 'Magic Shops', quests: ['Lunar Diplomacy'] },
     { type: 'SKILL', name: 'Runecraft Altar', regions: ['Fremennik'], skills: {'Runecraft': 40}, quests: ['Lunar Diplomacy'], notes: 'Lunar Isle' }
   ],
 
@@ -931,7 +931,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Wall of flame (Ape Atoll)', regions: ['Islands & Others'], skills: {'Crafting': 70}, inputs: {'Zenyte Shard': 1, 'Onyx': 1}, quests: ['Monkey Madness II'], manualRequirements: ['Wear a zombie monkey greegree at the wall of flame beneath the Temple of Marimbo'], notes: 'Fuse the shard with a cut onyx; cutting the resulting uncut zenyte separately requires 89 Crafting' }
   ],
   'Uncut Onyx': [
-    { type: 'SHOP', name: 'TzHaar-Hur-Lek', regions: ['Karamja'], notes: 'Costs 260k Tokkul' },
+    { type: 'SHOP', name: 'TzHaar-Hur-Lek', regions: ['Karamja'], merchantCategory: 'Gem Shops', notes: 'Costs 260k Tokkul' },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah' },
     { type: 'DROP', name: 'Tekton', regions: ['Kourend & Kebos'], notes: 'CoX' }
   ],
@@ -1297,7 +1297,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Barrelchest Anchor': [
     { type: 'QUEST', name: 'The Great Brain Robbery', regions: ['Morytania'], notes: 'Quest Reward' },
-    { type: 'MERCHANT', name: 'Perdu', regions: ['Any'], notes: 'Reclaim' }
+    { type: 'MERCHANT', name: 'Perdu', regions: ['Any'], merchantCategory: 'Lost Property', notes: 'Reclaim' }
   ],
   'Keris Partisan': [
     { type: 'QUEST', name: 'Beneath Cursed Sands', regions: ['Kharidian Desert'], notes: 'Quest Reward' }
