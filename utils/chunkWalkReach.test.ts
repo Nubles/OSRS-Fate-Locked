@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import content from '../public/chunk-content.json';
-import { PORTS_BEYOND_CHUNK_CONTENT, SAILING_PORT_CHUNKS } from '../data/seaAccess';
+import { MOORING_POINTS_INLAND, PORTS_BEYOND_CHUNK_CONTENT, SAILING_PORT_CHUNKS } from '../data/seaAccess';
 import type { UnlockState } from '../types';
 import { ALL_CHUNK_KEYS, CHUNKED_START, chunkKey, chunkedWalk, getChunkFrontier } from './chunkAdjacency';
 import { chunkReachability } from './chunkReach';
@@ -171,7 +171,8 @@ describe('sea data', () => {
     const withPortMaster = Object.entries(chunks)
       .filter(([, chunk]) => (chunk.p ?? []).includes('Port master'))
       .map(([id]) => keyOf(id)).sort();
-    expect([...SAILING_PORT_CHUNKS].sort()).toEqual([...withPortMaster, ...PORTS_BEYOND_CHUNK_CONTENT].sort());
+    expect([...SAILING_PORT_CHUNKS].sort())
+      .toEqual([...withPortMaster, ...PORTS_BEYOND_CHUNK_CONTENT, ...MOORING_POINTS_INLAND].sort());
     // A wiki-only port is dropped from that list once the chunk content has its Port master.
     expect(PORTS_BEYOND_CHUNK_CONTENT.filter(key => withPortMaster.includes(key))).toEqual([]);
     // Hosidius, Piscatoris, Ardougne and Entrana, from the Port master page (oldid 15369854).
@@ -180,6 +181,19 @@ describe('sea data', () => {
     const idOf = (key: string) => { const [cx, cy] = key.split(',').map(Number); return String(cx * 256 + cy); };
     // Each touches no open sea, so only this list makes it a place to sail from and land on.
     for (const key of PORTS_BEYOND_CHUNK_CONTENT) expect(SEA_LANDING_IDS.has(idOf(key)), key).toBe(true);
+  });
+
+  it('lands at the Rimmington and Witchaven mooring points, which touch no open sea (travel-b.d1[2])', () => {
+    // The Mooring point page (oldid 15398388) pins Rimmington at 2906,3225 and Witchaven at 2747,3305.
+    expect([...MOORING_POINTS_INLAND].sort()).toEqual(['42,51', '45,50']);
+    const idOf = (key: string) => { const [cx, cy] = key.split(',').map(Number); return String(cx * 256 + cy); };
+    for (const key of ['45,50', '42,51']) {
+      expect(SAILING_PORT_CHUNKS, key).toContain(key);
+      expect(SEA_LANDING_IDS.has(idOf(key)), key).toBe(true);
+    }
+    // Each is a mooring point the chunk content gives no Port master.
+    const chunks = (content as unknown as { chunks: Record<string, { p?: string[] }> }).chunks;
+    for (const key of MOORING_POINTS_INLAND) expect(chunks[idOf(key)]?.p ?? [], key).not.toContain('Port master');
   });
 
   it('lands on every port, the ones that touch no open sea included', () => {
