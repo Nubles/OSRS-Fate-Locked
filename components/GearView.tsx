@@ -14,6 +14,7 @@ import { itemObtainability } from '../utils/itemObtainability';
 import { MapPin } from './OsrsIcon';
 import { WikiLink } from './WikiLink';
 import { UnlockState } from '../types';
+import { foldedIncludes } from '../utils/textFold';
 
 const emptySlotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -193,8 +194,8 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
 
   const all = status === 'ready' ? gearService.bySlot(slot) : [];
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = (q ? all.filter((i) => i.name.toLowerCase().includes(q)) : all).slice();
+    const q = query.trim();
+    const list = (q ? all.filter((i) => foldedIncludes(i.name, q)) : all).slice();
     // Surface what you can actually equip: equippable first (strongest first),
     // then locked items ordered by how close they are to your unlocked tier.
     return list.sort((a, b) => {

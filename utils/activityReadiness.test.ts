@@ -282,6 +282,22 @@ describe('evaluateActivityReadiness', () => {
       ...trials, quests: ['Pandemonium'],
     }, 'vanilla')).toEqual({ status: 'READY' });
   });
+
+  it('needs Temple of the Eye for the two Guardians of the Rift rewards (own.d1[11])', () => {
+    // OSRS Wiki, November 2026: the ring of the elements costs abyssal pearls at Temple Supplies
+    // ('Ring of the elements' rev 15321585), and the colossal pouch needs the abyssal needle from the
+    // Rewards Guardian or Temple Supplies ('Abyssal needle' rev 15398526); pearls come only from
+    // Guardians of the Rift, which needs Temple of the Eye ('Guardians of the Rift' rev 15412895).
+    const levels = unlocked({ skills: { Runecraft: 3, Crafting: 6 }, levels: { Runecraft: 27, Crafting: 56 } });
+    for (const reward of ['Ring of the Elements', 'Colossal Pouch']) {
+      expect(getActivityReq(reward)?.quests, reward).toEqual(getActivityReq('Guardians of the Rift')?.quests);
+      expect(evaluateActivityReadiness(true, getActivityReq(reward), levels, 'vanilla'), reward).toEqual({
+        status: 'NOT_READY', blockers: [{ kind: 'quest', label: 'Temple of the Eye' }],
+      });
+      expect(evaluateActivityReadiness(true, getActivityReq(reward), { ...levels, quests: ['Temple of the Eye'] }, 'vanilla'), reward)
+        .toEqual({ status: 'READY' });
+    }
+  });
 });
 
 describe('evaluateActivityReadiness with routes', () => {

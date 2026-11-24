@@ -89,4 +89,26 @@ describe('reviewed shop placements (chunk audit, November 2026)', () => {
     expect(shopsIn('11828').filter(name => name.startsWith('Sir Tiffy Cashien'))).toEqual([]);
     expect(Object.keys(items).filter(name => name.startsWith('Sir Tiffy Cashien'))).toEqual([]);
   });
+
+  it('names three misspelt or outdated shops by their Wiki titles', () => {
+    // OSRS Wiki infobox names: "Worm Tongue's Wares" rev 15318850, "Huito's Herbal Supplies" rev 15322178,
+    // "Arhein's General Goods" rev 15318491. The export spells them as the old names below.
+    const shops = full.taskUnlocks.Shops as Record<string, Record<string, string[]>>;
+    const items = full.shopItems as Record<string, string[]>;
+    const interior = (full.interiors as Record<string, { content: { s?: string[] } }>)['5780'].content.s ?? [];
+    const renames: [string, string, string[], string][] = [
+      ["Worm Tounge's Wares", "Worm Tongue's Wares", shopsIn('6445'), 'Colossal wyrm teleport scroll'],
+      ["Huita's Herbal Supplies", "Huito's Herbal Supplies", interior, 'Eye of newt'],
+      ['Arhein Store', "Arhein's General Goods", shopsIn('11061'), 'Bronze pickaxe'],
+    ];
+    for (const [old, title, placed, item] of renames) {
+      expect(placed).toContain(title);
+      expect(placed).not.toContain(old);
+      expect(items[title]).toContain(item);
+      expect(items[old]).toBeUndefined();
+      expect(shops[old]).toBeUndefined();
+    }
+    expect(shops["Worm Tongue's Wares"]['6445']).toEqual(["Access Worm Tongue's Wares"]);
+    expect(JSON.stringify(full)).not.toMatch(/Worm Tounge|Huita's|Arhein Store/);
+  });
 });

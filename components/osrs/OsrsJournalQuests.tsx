@@ -325,7 +325,7 @@ const QuestDetail: React.FC<{
         {checks.map(line => <LineView key={line.key} line={line} />)}
         {all.length === 0 && <div className="ojr-gap">There are no requirements to start this quest.</div>}
         {!isCompleted && rate !== undefined && (
-          <div className="ojr-gap ojr-red">Completing it rolls once for a Key at {rate}% base chance.</div>
+          <div className="ojr-gap ojr-red">Completing it rolls once for a Key at {rate}%.</div>
         )}
       </div>
 

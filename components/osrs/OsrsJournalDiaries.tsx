@@ -10,6 +10,7 @@ import {
   evaluateDiaryTaskEligibility, evaluateDiaryTierEligibility, type EligibilityBlocker,
 } from '../../utils/journalStatus';
 import { Legend, SkillIcon, WikiTable, plural, type WikiRow } from './OsrsJournalParts';
+import { foldedIncludes } from '../../utils/textFold';
 
 /**
  * Achievement Diaries in the OSRS layout: one line per area with the four
@@ -229,9 +230,9 @@ const DiaryDetail: React.FC<{
   // The chance the roll is made against, the run's boosts included.
   const chanceOf = useSourceKeyChance();
   const rate = chanceOf(diary.difficulty);
-  const term = searchTerm.toLowerCase();
-  const shown = term && !diary.id.toLowerCase().includes(term)
-    ? tasks.filter(task => task.description.toLowerCase().includes(term))
+  const term = searchTerm.trim();
+  const shown = term && !foldedIncludes(diary.id, term)
+    ? tasks.filter(task => foldedIncludes(task.description, term))
     : tasks;
 
   const rows: WikiRow[] = [
@@ -324,7 +325,7 @@ const DiaryDetail: React.FC<{
           );
         })}
         {!isCompleted && rate !== undefined && tasks.length > 0 && (
-          <div className="ojr-gap ojr-red">Each task rolls once for a Key at {rate}% base chance.</div>
+          <div className="ojr-gap ojr-red">Each task rolls once for a Key at {rate}%.</div>
         )}
       </div>
 
