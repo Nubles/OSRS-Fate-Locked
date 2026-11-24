@@ -4,13 +4,14 @@ import { REGIONS_LIST, GUILDS_LIST } from '../data/items';
 import { getActivityReq, MINIGAME_REQUIREMENT_OVERRIDES, type ActivityReq } from '../data/activityRequirements';
 
 /**
- * The area each guild not named for an area stands in (its entrance chunk on
- * the map; the Wiki puts the Heroes' Guild in Burthorpe). A guild named for an
- * area needs that area; those in free Misthalin need nothing more.
+ * The area each guild not named for an area stands in: the area the map files
+ * its entrance chunk under (the Heroes' Guild's chunk is Taverley's, though the
+ * Wiki places it by Burthorpe). A guild named for an area needs that area; those
+ * in free Misthalin need nothing more.
  */
 const GUILD_AREAS: Record<string, string[]> = {
   'Mining Guild': ['Falador'],
-  "Heroes' Guild": ['Taverley', 'Burthorpe'],
+  "Heroes' Guild": ['Taverley'],
   'Hunter Guild': ["Hunter's Guild"],
   "Myths' Guild": ['Corsair Cove'],
   'Ranging Guild': ['Hemenster'],

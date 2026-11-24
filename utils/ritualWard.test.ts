@@ -121,8 +121,10 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
       const withArea = maxed({ regions: [...initialState.unlocks.regions, area] });
       expect(wardUsable(TableType.GUILDS, guild, withArea, 'vanilla'), `${guild} with ${area}`).toBe(true);
     }
-    // The Wiki puts the Heroes' Guild in Burthorpe; the map files its entrance under Taverley.
+    // The Wiki puts the Heroes' Guild by Burthorpe, but the map files its entrance chunk
+    // under Taverley, so Burthorpe alone leaves its land locked and the Ward off it.
     const burthorpe = maxed({ regions: [...initialState.unlocks.regions, 'Burthorpe'] });
-    expect(wardUsable(TableType.GUILDS, "Heroes' Guild", burthorpe, 'vanilla')).toBe(true);
+    expect(chunkUnlocked(45, 54, burthorpe, 'vanilla')).toBe(false);
+    expect(wardUsable(TableType.GUILDS, "Heroes' Guild", burthorpe, 'vanilla')).toBe(false);
   });
 });
