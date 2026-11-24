@@ -237,7 +237,10 @@ export class CollectionLogSyncService {
       if (!saved) return null;
       const { timestamp, data } = JSON.parse(saved);
       if (Date.now() - timestamp > CACHE_TTL || !data || !Array.isArray(data.additions) || !Array.isArray(data.newSources)) return null;
-      return data as SyncResult;
+      // A release may have bundled cached entries since: keep only what is still missing.
+      const pages = new Map(Object.values(COLLECTION_LOG_DATA).flatMap(t => Object.values(t.pages)).map(p => [norm(p.name), p.items.map(i => norm(i.name))]));
+      const bundled = (page: string) => pages.get(norm(page)) ?? pages.get(Object.keys(PAGE_ALIAS).find(k => PAGE_ALIAS[k] === page) ?? '');
+      return { additions: data.additions.filter((a: Addition) => !bundled(a.page)?.includes(norm(a.name))), newSources: data.newSources.filter((s: NewSource) => !bundled(s.name)) };
     } catch { return null; }
   }
 

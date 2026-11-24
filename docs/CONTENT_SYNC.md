@@ -34,7 +34,7 @@ player's progress.
 |---|---|
 | **Read-only catalogue** | New items and pages become notices until reviewed build-time sync. |
 | **Fail-safe** | A network or parse error leaves the bundled catalogue usable. |
-| **Lazy + cached** | Notices are fetched on first open and cached for seven days. |
+| **Lazy + cached** | Notices are fetched on first open and cached for seven days. A cached notice is checked against the bundled catalogue on every load, so a release that adds its entries clears it at once. |
 | **Stable save identities** | The reviewed catalogue owns IDs; upstream order never assigns runtime save IDs. |
 | **Legacy evidence preserved** | Old v1-v3 cache mappings are retained to flag ambiguous saved identities for review. |
 
