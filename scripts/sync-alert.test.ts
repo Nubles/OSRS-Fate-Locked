@@ -295,7 +295,7 @@ describe('reading the weekly check', () => {
     ] });
     const dropped = [
       'Collection log, no longer on the Wiki: [Vorkath] Draconic visage',
-      'Collection log, no longer on the Wiki: [page Old Page] no wiki match — left as-is',
+      'Collection log, page no longer on the Wiki: Old Page',
     ];
     expect(parseReport(report).collectionLog).toEqual(dropped);
     const found = currentItems({ status: statusWith([]), report, syncOutcome: 'success' });
@@ -362,6 +362,8 @@ describe('reading the weekly check', () => {
     expect(collectionLog).toContain("console.log('  RENAME ' + r)");
     expect(collectionLog).toContain("console.log('  ADD    ' + a)");
     expect(collectionLog).toContain("console.log('  KEEP   ' + k)");
+    // The alert names a kept page by reading this wording.
+    expect(collectionLog).toContain('log.kept.push(`[page ${name}] no wiki match — left as-is`)');
     expect(collectionLog).toContain('console.log(`  MOVE   ${page.name} -> ${destination.name}: ${name} (#${item.id})`)');
     expect(collectionLog).toContain('console.log(`  ? "${p}" — merge the kept item into the added one (keep the OLD id) and add a CLOG_ID_MIGRATIONS entry`)');
     expect(collectionLog).toContain('console.log(`  + "${p}" (${wikiPages[p].length} items)`)');

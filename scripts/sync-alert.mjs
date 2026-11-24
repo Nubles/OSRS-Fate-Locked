@@ -188,7 +188,13 @@ export function parseReport(report) {
     if (!match) continue;
     // Slot ids and item counts shift from week to week; the name is what matters.
     const what = match[2].replace(/\s*\((?:#\d+|\d+ items?)\)\s*$/, '');
-    collectionLog.push(tidy(`Collection log, ${CLOG_KINDS[match[1]]}: ${what}`));
+    // A whole page the Wiki no longer has is printed as "[page <name>] no wiki
+    // match", a dash and "left as-is": the issue names the page and leaves the
+    // rest out.
+    const page = match[1] === 'KEEP' ? what.match(/^\[page (.+)\] no wiki match \u2014 left as-is$/s) : null;
+    collectionLog.push(tidy(page
+      ? `Collection log, page no longer on the Wiki: ${page[1]}`
+      : `Collection log, ${CLOG_KINDS[match[1]]}: ${what}`));
   }
   const freshness = section(report, '## Freshness check', REPORT_HEADINGS) ?? [];
   // The check prints its quest counts right after it has written the status
