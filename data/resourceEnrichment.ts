@@ -42,7 +42,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Fever Spider', regions: ['Morytania'], rarity: '2/36' },
     { type: 'DROP', name: 'Dagannoth Rex', regions: ['Fremennik'], rarity: '7/128' },
     { type: 'DROP', name: 'Jelly', regions: ['Wilderness'], rarity: '3/64' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '6/140.98' }
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/140.98' }
   ],
   'Adamant Battleaxe': [
     { type: 'SHOP', name: 'Brian\'s Battleaxe Bazaar', regions: ['Asgarnia'] },
@@ -65,7 +65,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Wayne\'s Chains! - Chainmail Specialist', regions: ['Asgarnia'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Fremennik'] },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Asgarnia'], rarity: '7/128' },
-    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], rarity: '4/143.91' },
+    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '4/143.91' },
     { type: 'DROP', name: 'Lesser Demon', regions: ['Wilderness', 'Kourend & Kebos', 'Karamja', 'Misthalin'], rarity: '1/39' },
     { type: 'DROP', name: 'Mutated Bloodveld', regions: ['Kourend & Kebos', 'Morytania', 'Tirannwn'], rarity: '3/128' },
     { type: 'DROP', name: 'Insatiable Mutated Bloodveld', regions: ['Kourend & Kebos', 'Morytania', 'Tirannwn'], rarity: '3/128' },
@@ -79,7 +79,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Reinforced Chest', regions: ['Any'], rarity: '3/60' },
     { type: 'DROP', name: 'Black Demon', regions: ['Wilderness'], rarity: '3/74' },
     { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '4/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '4/134.35' },
     { type: 'CLUE', name: 'Reward Casket (medium)', regions: ['Any'], rarity: '10/341' }
   ],
   'Adamant Dart Tip': [
@@ -139,7 +139,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Hammerhead Shark', regions: ['Any'], rarity: '6/100' },
     { type: 'DROP', name: 'Bull Shark', regions: ['Any'], rarity: '6/100' },
     { type: 'DROP', name: 'Tiger Shark', regions: ['Any'], rarity: '6/100' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '6/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/140.98' },
     { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Morytania'], rarity: '9/256' }
   ],
@@ -151,7 +151,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Temple Spider', regions: ['Kourend & Kebos'], rarity: '4/100' },
     { type: 'DROP', name: 'Dark Warrior', regions: ['Wilderness', 'Kourend & Kebos'], rarity: '3/128' },
     { type: 'DROP', name: 'Brutal Green Dragon', regions: ['Kandarin'], rarity: '3/128' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '2/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '2/140.98' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Morytania'], rarity: '3/256' }
   ],
   'Adamant Pickaxe': [
@@ -190,7 +190,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Store', regions: ['Fremennik'] },
     { type: 'SHOP', name: 'Aneirin\'s Armour', regions: ['Tirannwn'] },
     { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
-    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], rarity: '3/143.91' },
+    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '3/143.91' },
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Morytania'], rarity: '1/128' },
     { type: 'DROP', name: 'Ornate Lockbox', regions: ['Asgarnia'], rarity: '3/2,450' },
     { type: 'DROP', name: 'Elaborate Lockbox', regions: ['Asgarnia'], rarity: '1/2,625' },
@@ -215,7 +215,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Zombie (Shayzien Crypts)', regions: ['Kourend & Kebos'], rarity: '2/120' },
     { type: 'DROP', name: 'Skeleton (Lucien\'s Camp)', regions: ['Any'], rarity: '2/120' },
     { type: 'DROP', name: 'Moss Giant (Iorwerth Dungeon)', regions: ['Tirannwn'], rarity: '2/128' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '2/140.98' }
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '2/140.98' }
   ],
   'Adamant Sq Shield': [
     { type: 'SHOP', name: 'Armour Store', regions: ['Fremennik'] },
@@ -226,7 +226,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Shadow Wyrm', regions: ['Kourend & Kebos'], rarity: '2/76' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Wilderness', 'Kourend & Kebos', 'Kandarin', 'Asgarnia'], rarity: '1/62' },
     { type: 'DROP', name: 'Crystal Chest', regions: ['Asgarnia'], rarity: '2/128' },
-    { type: 'DROP', name: 'Silver Chest (red)', regions: ['Morytania'], rarity: '2/152.39' }
+    { type: 'DROP', name: 'Silver Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '2/152.39' }
   ],
   'Adamant Warhammer': [
     { type: 'SHOP', name: 'Skulgrimen\'s Battle Gear', regions: ['Fremennik'] },
@@ -235,7 +235,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Mutated Terrorbird', regions: ['Kandarin'], rarity: '2/64' },
     { type: 'DROP', name: 'Warped Terrorbird', regions: ['Kandarin'], rarity: '2/64' },
     { type: 'DROP', name: 'Frost Dragon', regions: ['Any'], rarity: '4/130' },
-    { type: 'DROP', name: 'Silver Chest (red)', regions: ['Morytania'], rarity: '3/152.39' },
+    { type: 'DROP', name: 'Silver Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '3/152.39' },
     { type: 'DROP', name: 'Waterfiend', regions: ['Kandarin', 'Tirannwn'], rarity: '2/128' },
     { type: 'DROP', name: 'Mountain Troll', regions: ['Asgarnia', 'Fremennik', 'Kourend & Kebos'], rarity: '1/128' }
   ],
@@ -302,7 +302,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Amulet of Defence': [
     { type: 'SHOP', name: 'Davon\'s Amulet Store', regions: ['Karamja'] },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '7/98.56' },
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '7/98.56' },
     { type: 'DROP', name: 'Undead Druid', regions: ['Kourend & Kebos'], rarity: '5/100' }
   ],
   'Amulet of Glory': [
@@ -313,11 +313,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Undead Druid', regions: ['Kourend & Kebos'], rarity: '5/100' },
     { type: 'CLUE', name: 'Reward Casket (easy)', regions: ['Any'], rarity: '99/3,960' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '2/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '2/140.98' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Morytania'], rarity: '3/256' },
     { type: 'DROP', name: 'Liam', regions: ['Morytania'], rarity: '3/256' }
   ],
   'Amulet of Power': [
+    { type: 'SHOP', name: 'Davon\'s Amulet Store', regions: ['Karamja'] },
     { type: 'DROP', name: 'Martial Salvage', regions: ['Any'], rarity: '200/2,440' },
     { type: 'DROP', name: 'Crystal Impling Jar', regions: ['Tirannwn'], rarity: '1/18' },
     { type: 'DROP', name: 'Crystal Impling', regions: ['Tirannwn'], rarity: '1/18' },
@@ -330,7 +331,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Giant Mole', regions: ['Asgarnia'], unlockId: 'Giant Mole', rarity: '7/131' },
     { type: 'DROP', name: 'Undead Druid', regions: ['Kourend & Kebos'], rarity: '5/100' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '6/134.35' }
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/134.35' }
   ],
   'Amylase Crystal': [
     { type: 'DROP', name: 'Amylase Pack', regions: ['Asgarnia', 'Varlamore', 'Karamja'], rarity: 'Always' }
@@ -359,6 +360,10 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Anglerfish': [
     { type: 'DROP', name: 'The Leviathan', regions: ['Misthalin'], unlockId: 'The Leviathan', rarity: '8/100' },
     { type: 'DROP', name: 'Brutal Black Dragon', regions: ['Kourend & Kebos'], rarity: '8/128' }
+  ],
+  'Araxyte Venom Sac': [
+    { type: 'DROP', name: 'Araxyte', regions: ['Morytania'], rarity: 'Always' },
+    { type: 'DROP', name: 'Dreadborn Araxyte', regions: ['Morytania'], rarity: 'Always' }
   ],
   'Arrow Shaft': [
     { type: 'SHOP', name: 'Dargaud\'s Bow and Arrows', regions: ['Kandarin'] },
@@ -932,12 +937,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Night Beast', regions: ['Tirannwn'], rarity: '1/512' }
   ],
   'Dark Fishing Bait': [
-    { type: 'DROP', name: 'Zombie (Wilderness)', regions: ['Wilderness'], rarity: '42/128' },
     { type: 'DROP', name: 'Dark Warrior', regions: ['Wilderness', 'Kourend & Kebos'], rarity: '2/128' },
     { type: 'DROP', name: 'Mammoth', regions: ['Wilderness'], rarity: '2/128' },
     { type: 'DROP', name: 'Elder Chaos Druid', regions: ['Wilderness'], rarity: '2/129' },
     { type: 'DROP', name: 'Bandit', regions: ['Wilderness'], rarity: '2/143' },
-    { type: 'DROP', name: 'Artio', regions: ['Wilderness'], unlockId: 'Artio', rarity: '1/128' }
+    { type: 'DROP', name: 'Artio', regions: ['Wilderness'], unlockId: 'Artio', rarity: '1/128' },
+    { type: 'DROP', name: 'Calvar\'ion', regions: ['Wilderness'], unlockId: 'Calvar\'ion', rarity: '1/128' }
   ],
   'Death Rune': [
     { type: 'SHOP', name: 'Aubury\'s Rune Shop', regions: ['Misthalin'] },
@@ -998,7 +1003,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Conara\'s Jewels', regions: ['Varlamore'] },
     { type: 'DROP', name: 'Albatross', regions: ['Any'], rarity: '5/50' },
     { type: 'DROP', name: 'Large Salvage', regions: ['Any'], rarity: '200/2,218' },
-    { type: 'DROP', name: 'Silver Chest (red)', regions: ['Morytania'], rarity: '6/152.39' },
+    { type: 'DROP', name: 'Silver Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/152.39' },
     { type: 'DROP', name: 'Casket (Reward Pool)', regions: ['Kharidian Desert'], unlockId: 'Tempoross', rarity: '9/230' },
     { type: 'DROP', name: 'Elite Black Knight', regions: ['Asgarnia'], rarity: '3/122' },
     { type: 'DROP', name: 'Plundered Salvage', regions: ['Any'], rarity: '25/1,036' }
@@ -1070,7 +1075,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Dragonstone Ring': [
     { type: 'CLUE', name: 'Reward Casket (elite)', regions: ['Any'], rarity: '1/32.3' },
-    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], rarity: '3/143.91' },
+    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '3/143.91' },
     { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '1/107' },
     { type: 'DROP', name: 'Elite Black Knight', regions: ['Asgarnia'], rarity: '1/122' },
     { type: 'DROP', name: 'Kraken', regions: ['Kandarin'], unlockId: 'Kraken', rarity: '1/128' }
@@ -1251,6 +1256,15 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Mogre (sea)', regions: ['Any'], rarity: '4/128' },
     { type: 'DROP', name: 'Large Salvage', regions: ['Any'], rarity: '50/2,218' },
     { type: 'DROP', name: 'Veiled Kraken', regions: ['Any'], rarity: '5/272' }
+  ],
+  'Goat Horn': [
+    { type: 'SHOP', name: 'Supplies\'s Supplies', regions: ['The Open Seas'] },
+    { type: 'DROP', name: 'Billy Goat', regions: ['Kharidian Desert'], rarity: 'Always' },
+    { type: 'DROP', name: 'Wyrmscraig Goat', regions: ['Any'], rarity: '3/4' },
+    { type: 'DROP', name: 'Corporeal Beast', regions: ['Wilderness'], unlockId: 'Corporeal Beast', rarity: '17/512' },
+    { type: 'DROP', name: 'Thermonuclear Smoke Devil', regions: ['Kandarin'], unlockId: 'Thermonuclear Smoke Devil', rarity: '2/107' },
+    { type: 'DROP', name: 'Locust Rider', regions: ['Kharidian Desert'], rarity: '2/128' },
+    { type: 'DROP', name: 'Scarab Mage', regions: ['Kharidian Desert'], rarity: '2/128' }
   ],
   'Godsword Shard 1': [
     { type: 'DROP', name: 'Balfrug Kreeyath', regions: ['Asgarnia'], rarity: '1/1,524' },
@@ -1925,7 +1939,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Mahogany Plank': [
     { type: 'DROP', name: 'The Mimic', regions: ['Kourend & Kebos'], rarity: 'Always' },
     { type: 'DROP', name: 'Lost Mahogany Crate', regions: ['Any'], rarity: '1/8' },
-    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], rarity: '15/144' },
+    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], unlockId: 'Mahogany Homes', rarity: '15/144' },
     { type: 'DROP', name: 'Gangster', regions: ['Kourend & Kebos'], rarity: '20/256' },
     { type: 'DROP', name: 'Gang Boss', regions: ['Kourend & Kebos'], rarity: '20/256' },
     { type: 'DROP', name: 'Skotizo', regions: ['Kourend & Kebos'], unlockId: 'Skotizo', rarity: '7/100' }
@@ -2011,7 +2025,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Lost Teak Crate', regions: ['Any'], rarity: '1/8' },
     { type: 'DROP', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', rarity: '3/36' },
     { type: 'DROP', name: 'Mystery Box', regions: ['Asgarnia'], rarity: '1/15' },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '5/98.56' },
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/98.56' },
     { type: 'DROP', name: 'Skeleton (Shayzien Crypts)', regions: ['Kourend & Kebos'], rarity: '6/120' }
   ],
   'Mithril Battleaxe': [
@@ -2043,7 +2057,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Varrock Swordshop', regions: ['Misthalin'] },
     { type: 'SHOP', name: 'Blades By Urbi', regions: ['Kharidian Desert'] },
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Asgarnia'] },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '5/98.56' },
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/98.56' },
     { type: 'DROP', name: 'Tarnished Chest', regions: ['Any'], rarity: '3/60' },
     { type: 'DROP', name: 'Moonlight Cockatrice', regions: ['Varlamore'], rarity: '3/128' },
     { type: 'DROP', name: 'Zombie Pirate (Harmony Island)', regions: ['Morytania'], rarity: '2/128' },
@@ -2061,7 +2075,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Mutated Bloodveld', regions: ['Kourend & Kebos', 'Morytania', 'Tirannwn'], rarity: '8/128' },
     { type: 'DROP', name: 'Insatiable Mutated Bloodveld', regions: ['Kourend & Kebos', 'Morytania', 'Tirannwn'], rarity: '8/128' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '6/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/140.98' },
     { type: 'DROP', name: 'Brutal Blue Dragon', regions: ['Kourend & Kebos', 'Varlamore'], rarity: '5/128' }
   ],
   'Mithril Kiteshield': [
@@ -2096,7 +2110,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Martial Salvage', regions: ['Any'], rarity: '300/2,440' },
     { type: 'DROP', name: 'Spiritual Ranger', regions: ['Asgarnia'], rarity: '15/128' },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Asgarnia'], rarity: '15/128' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '6/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/140.98' },
     { type: 'DROP', name: 'Rusty Sword', regions: ['Misthalin', 'Karamja', 'Asgarnia', 'Fremennik', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Tirannwn', 'Wilderness', 'Kourend & Kebos'], rarity: '4/100' }
   ],
   'Mithril Mace': [
@@ -2104,7 +2118,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Flynn\'s Mace Market', regions: ['Asgarnia'] },
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Asgarnia', 'Wilderness'], rarity: '7/127' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '7/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '7/134.35' },
     { type: 'DROP', name: 'Ferocious Barbarian Spirit', regions: ['Kandarin'], rarity: '5/128' },
     { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
     { type: 'DROP', name: 'Giant Skeleton (Tarn\'s Lair)', regions: ['Morytania'], rarity: '2/128' },
@@ -2114,7 +2128,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Helmet Shop', regions: ['Misthalin'] },
     { type: 'SHOP', name: 'Armour Shop', regions: ['Fremennik'] },
     { type: 'SHOP', name: 'Quality Armour Shop', regions: ['Fremennik'] },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '3/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '3/134.35' },
     { type: 'DROP', name: 'Moss Giant (Iorwerth Dungeon)', regions: ['Tirannwn'], rarity: '2/128' },
     { type: 'DROP', name: 'Wall Beast', regions: ['Misthalin'], rarity: '1/128' },
     { type: 'DROP', name: 'Skeleton Brute', regions: ['Kandarin'], rarity: '1/128' },
@@ -2179,7 +2193,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Store', regions: ['Fremennik'] },
     { type: 'DROP', name: 'Agility Dispenser', regions: ['Wilderness'], rarity: '1/9' },
     { type: 'DROP', name: 'Reward Chest (The Gauntlet)', regions: ['Tirannwn'], unlockId: 'The Gauntlet', rarity: '1/27' },
-    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], rarity: '5/143.91' },
+    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/143.91' },
     { type: 'DROP', name: 'Broken Armour', regions: ['Misthalin'], rarity: '4/200' },
     { type: 'DROP', name: 'Smoke Devil', regions: ['Kandarin'], rarity: '2/128' },
     { type: 'DROP', name: 'Nuclear Smoke Devil', regions: ['Kandarin'], rarity: '2/128' }
@@ -2201,7 +2215,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Quality Weapons Shop', regions: ['Fremennik'] },
     { type: 'DROP', name: 'Kalphite Guardian', regions: ['Kharidian Desert'], rarity: '4/128' },
     { type: 'DROP', name: 'Moonlight Cockatrice', regions: ['Varlamore'], rarity: '3/128' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '3/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '3/134.35' },
     { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Kandarin', 'Karamja', 'Kourend & Kebos', 'Misthalin', 'Tirannwn', 'Varlamore', 'Wilderness', 'The Open Seas', 'Islands & Others'], rarity: '2/128' },
     { type: 'DROP', name: 'Bryophyta', regions: ['Misthalin'], unlockId: 'Bryophyta', rarity: '2/128' },
     { type: 'DROP', name: 'Rusty Sword', regions: ['Kandarin'], rarity: '1/100' }
@@ -2211,7 +2225,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Armour Shop', regions: ['Fremennik'] },
     { type: 'SHOP', name: 'Armour Store', regions: ['Fremennik'] },
     { type: 'DROP', name: 'Moss Giant (Iorwerth Dungeon)', regions: ['Tirannwn'], rarity: '5/128' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '4/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '4/140.98' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Morytania'], rarity: '7/256' },
     { type: 'DROP', name: 'Liam', regions: ['Morytania'], rarity: '7/256' },
     { type: 'DROP', name: 'Miala', regions: ['Morytania'], rarity: '7/256' },
@@ -2306,7 +2320,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Gang Boss', regions: ['Kourend & Kebos'], rarity: '40/256' },
     { type: 'DROP', name: 'Maniacal Monkey Archer', regions: ['Kandarin'], rarity: '3/20' },
     { type: 'DROP', name: 'Maniacal Monkey', regions: ['Kandarin'], rarity: '3/20' },
-    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], rarity: '15/144' }
+    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], unlockId: 'Mahogany Homes', rarity: '15/144' }
   ],
   'Occult Necklace': [
     { type: 'DROP', name: 'Nuclear Smoke Devil', regions: ['Kandarin'], rarity: '1/512' }
@@ -2611,7 +2625,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Fishing Spot (The Stranglewood)', regions: ['Varlamore'], rarity: '1/5,000' }
   ],
   'Redwood Logs': [
-    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], rarity: '2.4/143.91' }
+    { type: 'DROP', name: 'Gold Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '2.4/143.91' }
   ],
   'Ring Mould': [
     { type: 'SHOP', name: 'Dommik\'s Crafting Store', regions: ['Kharidian Desert'] },
@@ -2692,7 +2706,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tarnished Ring', regions: ['Any'], rarity: '7/10' },
     { type: 'DROP', name: 'Frigatebird', regions: ['Any'], rarity: '5/50' },
     { type: 'DROP', name: 'Bird Nest (ring)', regions: ['Misthalin', 'Karamja', 'Asgarnia', 'Fremennik', 'Kandarin', 'Kharidian Desert', 'Morytania', 'Tirannwn', 'Wilderness', 'Kourend & Kebos'], rarity: '9/100' },
-    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], rarity: '7/140.98' },
+    { type: 'DROP', name: 'Black Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '7/140.98' },
     { type: 'DROP', name: 'Casket (Reward Pool)', regions: ['Kharidian Desert'], unlockId: 'Tempoross', rarity: '9/230' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Morytania'], rarity: '9/256' }
   ],
@@ -2751,7 +2765,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Scurrius', regions: ['Misthalin'], unlockId: 'Scurrius', rarity: '6/100' },
     { type: 'DROP', name: 'Ninja Impling', regions: ['Any'], rarity: '1/19' },
     { type: 'DROP', name: 'Ninja Impling Jar', regions: ['Any'], rarity: '1/19' },
-    { type: 'DROP', name: 'Yama', regions: ['Kourend & Kebos'], rarity: '5/95.11' }
+    { type: 'DROP', name: 'Yama', regions: ['Kourend & Kebos'], unlockId: 'Yama', rarity: '5/95.11' }
   ],
   'Rune Claws': [
     { type: 'DROP', name: 'Shellbane Gryphon', regions: ['The Open Seas'], unlockId: 'Shellbane Gryphon', rarity: '10/128' },
@@ -2843,7 +2857,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Rune Dragon', regions: ['Misthalin', 'Fremennik'], rarity: '7/127' },
     { type: 'DROP', name: 'The Hueycoatl', regions: ['Varlamore'], unlockId: 'The Hueycoatl', rarity: '3/68' },
     { type: 'DROP', name: 'Zombie Pirate\'s Locker', regions: ['Wilderness'], rarity: '6/173' },
-    { type: 'DROP', name: 'Amoxliatl', regions: ['Varlamore'], rarity: '2/58' },
+    { type: 'DROP', name: 'Amoxliatl', regions: ['Varlamore'], unlockId: 'Amoxliatl', rarity: '2/58' },
     { type: 'DROP', name: 'Steel Dragon', regions: ['Karamja'], rarity: '4/128' }
   ],
   'Rune Med Helm': [
@@ -2868,7 +2882,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Artio', regions: ['Wilderness'], unlockId: 'Artio', rarity: '12/128' },
     { type: 'DROP', name: 'Calvar\'ion', regions: ['Wilderness'], unlockId: 'Calvar\'ion', rarity: '12/128' },
     { type: 'DROP', name: 'Spindel', regions: ['Wilderness'], unlockId: 'Spindel', rarity: '12/128' },
-    { type: 'DROP', name: 'Doom of Mokhaiotl', regions: ['Varlamore'], rarity: '5/104' },
+    { type: 'DROP', name: 'Doom of Mokhaiotl', regions: ['Varlamore'], unlockId: 'Doom of Mokhaiotl', rarity: '5/104' },
     { type: 'DROP', name: 'General Graardor', regions: ['Asgarnia'], unlockId: 'General Graardor', rarity: '6/127' },
     { type: 'DROP', name: 'Grotesque Guardians', regions: ['Morytania'], unlockId: 'Grotesque Guardians', rarity: '6/142' }
   ],
@@ -2961,7 +2975,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Chest (Ancient Vault)', regions: ['Kharidian Desert', 'Asgarnia'], rarity: '1/5' },
     { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '2,340/16,000' },
     { type: 'DROP', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', rarity: '2/36' },
-    { type: 'DROP', name: 'Doom of Mokhaiotl', regions: ['Varlamore'], rarity: '5/104' },
+    { type: 'DROP', name: 'Doom of Mokhaiotl', regions: ['Varlamore'], unlockId: 'Doom of Mokhaiotl', rarity: '5/104' },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', rarity: '11/249' }
   ],
   'Sacred Eel': [
@@ -3024,7 +3038,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Tarnished Ring', regions: ['Any'], rarity: '1/10' },
     { type: 'DROP', name: 'Plundered Salvage', regions: ['Any'], rarity: '100/1,036' },
     { type: 'DROP', name: 'Tern', regions: ['Any'], rarity: '4/50' },
-    { type: 'DROP', name: 'Bronze Chest (purple)', regions: ['Morytania'], rarity: '4/98.67' }
+    { type: 'DROP', name: 'Bronze Chest (purple)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '4/98.67' }
   ],
   'Seed Box': [
     { type: 'SHOP', name: 'Farmer Gricoller\'s Rewards', regions: ['Kourend & Kebos'], notes: 'Bought with Tithe' }
@@ -3177,12 +3191,12 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Elaborate Lockbox', regions: ['Asgarnia'], rarity: '4/50' },
     { type: 'DROP', name: 'Tree Spirit', regions: ['Any'], rarity: '10/128' },
     { type: 'DROP', name: 'Dagannoth (Waterbirth Island)', regions: ['Fremennik'], rarity: '10/128' },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '6/98.56' }
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/98.56' }
   ],
   'Steel Bar': [
     { type: 'DROP', name: 'Steel Dragon', regions: ['Karamja'], rarity: 'Always' },
     { type: 'DROP', name: 'Marlo\'s Crate', regions: ['Misthalin'], rarity: 'Always' },
-    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], rarity: '20/144' },
+    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], unlockId: 'Mahogany Homes', rarity: '20/144' },
     { type: 'DROP', name: 'Zalcano', regions: ['Tirannwn'], unlockId: 'Zalcano', rarity: '3/36' },
     { type: 'DROP', name: 'Mystery Box', regions: ['Asgarnia'], rarity: '1/15' },
     { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Kandarin', 'Karamja', 'Kourend & Kebos', 'Misthalin', 'Tirannwn', 'Varlamore', 'Wilderness', 'The Open Seas', 'Islands & Others'], rarity: '6/128' }
@@ -3194,9 +3208,18 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Jelly', regions: ['Fremennik'], rarity: '11/128' },
     { type: 'DROP', name: 'Vitreous Jelly', regions: ['Fremennik', 'Wilderness'], rarity: '11/128' },
     { type: 'DROP', name: 'Abyssal Demon', regions: ['Wilderness', 'Morytania'], rarity: '3/68' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '5/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/134.35' },
     { type: 'DROP', name: 'Green Dragon', regions: ['Kandarin', 'Wilderness'], rarity: '3/128' },
     { type: 'DROP', name: 'Greater Demon', regions: ['Asgarnia', 'Kandarin', 'Karamja', 'Kourend & Kebos', 'Misthalin', 'Morytania', 'Wilderness'], rarity: '3/128' }
+  ],
+  'Steel Cannonball': [
+    { type: 'SHOP', name: 'Port Roberts Cannonball Stall', regions: ['The Open Seas'] },
+    { type: 'DROP', name: 'Cannonball Stall', regions: ['Any'], rarity: '56/256' },
+    { type: 'DROP', name: 'Rewards Chest (Fortis Colosseum)', regions: ['Varlamore'], unlockId: 'Fortis Colosseum', rarity: '1/7' },
+    { type: 'DROP', name: 'Mature Custodian Stalker', regions: ['Varlamore'], rarity: '15/107' },
+    { type: 'DROP', name: 'Juvenile Custodian Stalker', regions: ['Varlamore'], rarity: '20/160' },
+    { type: 'DROP', name: 'Strange Creature (Shadows of Custodia)', regions: ['Varlamore'], rarity: '20/160' },
+    { type: 'DROP', name: 'Elder Custodian Stalker', regions: ['Varlamore'], rarity: '15/124' }
   ],
   'Steel Chainbody': [
     { type: 'SHOP', name: 'Horvik\'s Armour Shop', regions: ['Misthalin'] },
@@ -3205,7 +3228,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Asgarnia', 'Wilderness'], rarity: '18/127' },
     { type: 'DROP', name: 'Cyclops', regions: ['Asgarnia'], rarity: '7/100' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '5/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/134.35' },
     { type: 'DROP', name: 'Cyclops (God Wars Dungeon)', regions: ['Asgarnia'], rarity: '2/100' },
     { type: 'DROP', name: 'Cyclops (Catacombs of Kourend)', regions: ['Kourend & Kebos'], rarity: '2/100' }
   ],
@@ -3241,7 +3264,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Dagannoth Rex', regions: ['Fremennik'], rarity: '17/128' },
     { type: 'DROP', name: 'Skeleton (Tarn\'s Lair)', regions: ['Morytania', 'Kharidian Desert'], rarity: '2/128' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '2/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '2/134.35' },
     { type: 'DROP', name: 'Moss Giant', regions: ['Fremennik', 'Kandarin', 'Karamja', 'Kourend & Kebos', 'Misthalin', 'Tirannwn', 'Varlamore', 'Wilderness', 'The Open Seas', 'Islands & Others'], rarity: '1/128' },
     { type: 'DROP', name: 'Skeleton Brute', regions: ['Kandarin'], rarity: '1/128' }
   ],
@@ -3276,7 +3299,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Ork', regions: ['Asgarnia', 'Wilderness'], rarity: '5/128' },
     { type: 'DROP', name: 'Skeleton (Tarn\'s Lair)', regions: ['Morytania', 'Kharidian Desert'], rarity: '5/128' },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '3/98.56' },
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '3/98.56' },
     { type: 'DROP', name: 'Cyclops', regions: ['Asgarnia'], rarity: '2/100' },
     { type: 'DROP', name: 'Cyclops (God Wars Dungeon)', regions: ['Asgarnia'], rarity: '2/100' },
     { type: 'DROP', name: 'Cyclops (Catacombs of Kourend)', regions: ['Kourend & Kebos'], rarity: '2/100' }
@@ -3287,7 +3310,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Warrior Guild Armoury', regions: ['Asgarnia'] },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Wall Beast', regions: ['Misthalin'], rarity: '7/128' },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '5/98.56' },
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/98.56' },
     { type: 'DROP', name: 'Skeleton Fremennik', regions: ['Fremennik'], rarity: '6/128' },
     { type: 'DROP', name: 'Giant Skeleton (Shadow Dungeon)', regions: ['Kandarin'], rarity: '6/128' },
     { type: 'DROP', name: 'Ork', regions: ['Asgarnia', 'Wilderness'], rarity: '5/128' }
@@ -3362,7 +3385,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Briget\'s Weapons', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Rusty Sword', regions: ['Kandarin'], rarity: '6/100' },
     { type: 'DROP', name: 'Spiritual Warrior', regions: ['Asgarnia', 'Wilderness'], rarity: '7/127' },
-    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], rarity: '4/98.56' },
+    { type: 'DROP', name: 'Bronze Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '4/98.56' },
     { type: 'DROP', name: 'Ice Giant', regions: ['Asgarnia', 'Kourend & Kebos', 'Varlamore', 'Wilderness', 'Kandarin'], rarity: '4/128' },
     { type: 'DROP', name: 'Skeleton Fremennik', regions: ['Fremennik'], rarity: '4/128' },
     { type: 'DROP', name: 'Giant Skeleton (Shadow Dungeon)', regions: ['Kandarin'], rarity: '4/128' }
@@ -3386,7 +3409,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Vigr\'s Warhammers', regions: ['Fremennik'] },
     { type: 'SHOP', name: 'Mount Karuulm Weapon Shop', regions: ['Kourend & Kebos'] },
     { type: 'DROP', name: 'Guard (Burthorpe)', regions: ['Asgarnia'], rarity: '8/128' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '6/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '6/134.35' },
     { type: 'DROP', name: 'Zombie (Tarn\'s Lair)', regions: ['Morytania'], rarity: '5/128' },
     { type: 'DROP', name: 'Mountain Troll', regions: ['Asgarnia', 'Fremennik', 'Kourend & Kebos'], rarity: '3/128' },
     { type: 'DROP', name: 'Troll General', regions: ['Asgarnia'], rarity: '3/128' },
@@ -3410,7 +3433,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'SHOP', name: 'Aaron\'s Archery Appendages', regions: ['Kandarin'] },
     { type: 'DROP', name: 'Adventurer Jon', regions: ['Any'], rarity: 'Always' },
     { type: 'DROP', name: 'Archer (Burthorpe)', regions: ['Asgarnia'], rarity: '8/128' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '5/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '5/134.35' },
     { type: 'CLUE', name: 'Reward Casket (easy)', regions: ['Any'], rarity: '11/396' },
     { type: 'DROP', name: 'Young Impling', regions: ['Any'], rarity: '1/100' },
     { type: 'DROP', name: 'Young Impling Jar', regions: ['Any'], rarity: '1/100' }
@@ -3463,7 +3486,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Hunters\' Loot Sack (master)', regions: ['Varlamore'] }
   ],
   'Teak Plank': [
-    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], rarity: '20/144' },
+    { type: 'DROP', name: 'Supply Crate (Mahogany Homes)', regions: ['Asgarnia'], unlockId: 'Mahogany Homes', rarity: '20/144' },
     { type: 'DROP', name: 'Lost Teak Crate', regions: ['Any'], rarity: '1/8' },
     { type: 'DROP', name: 'Gangster', regions: ['Kourend & Kebos'], rarity: '30/256' },
     { type: 'DROP', name: 'Gang Boss', regions: ['Kourend & Kebos'], rarity: '30/256' },
@@ -3574,7 +3597,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Uncut Jade': [
     { type: 'SHOP', name: 'Gabooty\'s Tai Bwo Wannai Cooperative', regions: ['Karamja'], notes: 'Bought with Trading sticks' },
-    { type: 'DROP', name: 'Gemstone Crab', regions: ['Varlamore'], rarity: '9/32' },
+    { type: 'DROP', name: 'Gemstone Crab', regions: ['Varlamore'], unlockId: 'Gemstone Crab', rarity: '9/32' },
     { type: 'DROP', name: 'Hazelmere', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'King Bolren', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'G.L.O. Caranock', regions: ['Kandarin', 'Karamja'], rarity: '10/128' },
@@ -3593,7 +3616,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   ],
   'Uncut Opal': [
     { type: 'SHOP', name: 'Gabooty\'s Tai Bwo Wannai Cooperative', regions: ['Karamja'], notes: 'Bought with Trading sticks' },
-    { type: 'DROP', name: 'Gemstone Crab', regions: ['Varlamore'], rarity: '9/32' },
+    { type: 'DROP', name: 'Gemstone Crab', regions: ['Varlamore'], unlockId: 'Gemstone Crab', rarity: '9/32' },
     { type: 'DROP', name: 'Hazelmere', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'King Bolren', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'G.L.O. Caranock', regions: ['Kandarin', 'Karamja'], rarity: '10/128' },
@@ -3603,7 +3626,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Uncut Red Topaz': [
     { type: 'SHOP', name: 'Gabooty\'s Tai Bwo Wannai Cooperative', regions: ['Karamja'], notes: 'Bought with Trading sticks' },
     { type: 'DROP', name: 'Chest (Civitas Illa Fortis)', regions: ['Varlamore'], rarity: 'Always' },
-    { type: 'DROP', name: 'Gemstone Crab', regions: ['Varlamore'], rarity: '6/32' },
+    { type: 'DROP', name: 'Gemstone Crab', regions: ['Varlamore'], unlockId: 'Gemstone Crab', rarity: '6/32' },
     { type: 'DROP', name: 'Wise Old Man Tasks', regions: ['Misthalin'], rarity: '2/25' },
     { type: 'DROP', name: 'Hazelmere', regions: ['Kandarin'], rarity: '10/128' },
     { type: 'DROP', name: 'King Bolren', regions: ['Kandarin'], rarity: '10/128' },
@@ -3710,7 +3733,7 @@ export const ENRICHED_SOURCES: Record<string, ResourceSource[]> = {
   'Willow Logs': [
     { type: 'DROP', name: 'Ent', regions: ['Kourend & Kebos', 'Wilderness'] },
     { type: 'DROP', name: 'Extra Supply Crate', regions: ['Kourend & Kebos'], unlockId: 'Wintertodt' },
-    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], rarity: '10/134.35' },
+    { type: 'DROP', name: 'Steel Chest (red)', regions: ['Morytania'], unlockId: 'Shades of Mort\'ton', rarity: '10/134.35' },
     { type: 'DROP', name: 'Vampyre Juvinate', regions: ['Morytania'], rarity: '16/256' },
     { type: 'DROP', name: 'Liam', regions: ['Morytania'], rarity: '16/256' },
     { type: 'DROP', name: 'Miala', regions: ['Morytania'], rarity: '16/256' }

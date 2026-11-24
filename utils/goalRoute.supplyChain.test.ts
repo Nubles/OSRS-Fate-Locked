@@ -106,7 +106,9 @@ describe('Supply Chain typed unlock blockers', () => {
     // left the list; Theatre of Blood, General Graardor and The Fractured Archive joined it.
     // 69 since the 24 Nov boss and minigame gates: Pest Control, Giants' Foundry, Last Man Standing
     // and Forestry rows now name their minigame.
-    expect(untypedUnlockIds).toHaveLength(69);
+    // 75 since the generated rows of Amoxliatl, Doom of Mokhaiotl, Gemstone Crab, Yama, Mahogany Homes
+    // and Shades of Mort'ton name their activity.
+    expect(untypedUnlockIds).toHaveLength(75);
     expect(untypedUnlockIds.filter(id => !RESOURCE_UNLOCK_TABLES[id])).toEqual([]);
   });
 

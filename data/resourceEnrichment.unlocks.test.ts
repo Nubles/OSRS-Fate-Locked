@@ -43,6 +43,15 @@ describe('generated Wiki rows', () => {
     expect(all.some((s) => /^(bronze|steel|black|silver|gold) chest \(/i.test(s.name))).toBe(true);
   });
 
+  it('gates the rows of the newer bosses and of two more minigames on their unlock', () => {
+    // RESOURCE_UNLOCK_TABLES types these six; without an entry the generator
+    // leaves an activity's rows open to a run that never unlocked it.
+    for (const id of ['Amoxliatl', 'Doom of Mokhaiotl', 'Gemstone Crab', 'Yama', 'Mahogany Homes', "Shades of Mort'ton"]) {
+      expect(resourceUnlockDependency({ unlockId: id }), id).not.toBeNull();
+      expect(all.some((s) => s.type === 'DROP' && s.unlockId === id), id).toBe(true);
+    }
+  });
+
   it('only Treasure Trail caskets are clue rows, and no one-time quest casket is listed', () => {
     for (const s of all.filter((x) => x.type === 'CLUE')) expect(s.name).toMatch(/^(Reward Casket|Clue Scroll)/);
     expect(all.some((s) => /pirate's treasure/i.test(s.name))).toBe(false);
