@@ -114,5 +114,10 @@ owner records for shared progress yet.
 The tracker side (a run refused its own id moves to a new id once, with a
 message) works against both the old and the new relay.
 
+The same deploy raises the largest RuneLite profile the relay takes from
+256 KiB to 384 KiB (`MAX_REQUEST_BYTES`). A Chunked run's profile is about
+240 KiB today, so nothing is refused before the deploy either; the room is
+for the game's content growing. RuneLite already reads replies up to 1 MiB.
+
 Rolling back: `npx wrangler@latest rollback`. The old relay ignores owner
 records and link metadata, so records stay readable by both.

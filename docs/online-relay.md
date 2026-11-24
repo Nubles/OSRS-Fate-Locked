@@ -211,7 +211,7 @@ send, and checks that before it reads or writes KV (the free plan allows
 
 | Route | Accepted id | Body |
 |---|---|---|
-| `/r/<code>` | 32 lower-case hex digits: RuneLite's `PairingSupport.newCode`, a UUID without dashes | `{ token?, payload }` or `{ token, gone: true }`, at most 256 KiB; `payload` is `FLGZ:` + base64 gzip, or a JSON object; `token` is at most 128 of `A-Z a-z 0-9 _ -` |
+| `/r/<code>` | 32 lower-case hex digits: RuneLite's `PairingSupport.newCode`, a UUID without dashes | `{ token?, payload }` or `{ token, gone: true }`, at most 384 KiB; `payload` is `FLGZ:` + base64 gzip, or a JSON object; `token` is at most 128 of `A-Z a-z 0-9 _ -` |
 | `/b/<id>` | 32 bytes in base64url (43 symbols, the last one of the 16 that 32 bytes can end on) | `FLBK1.<16-symbol IV>.<ciphertext>`, base64url, at most the longest sync code encrypted (about 2.67 MiB) |
 | `/p/<id>` | 16 bytes in base64url (22 symbols, ending in `A`, `Q`, `g` or `w`) | the progress summary, at most 8 KiB |
 | `/l/<discordId>` | a Discord snowflake, 17 to 20 digits | the bot's `{ code }` |
@@ -445,11 +445,12 @@ An export built while the app's free-area baseline belongs to another run
 (a profile switch mid-build) is refused, and the switch's own publish
 sends the new run.
 
-The `FLGZ:` relay request for every golden run is tested against 240 KiB,
-16 KiB under the relay's 256 KiB limit. On 22 November 2026 the golden runs'
-requests measured about 224-237 KiB (Vanilla 224-228, Custom and Xtreme
-228-230, Chunked about 237), so the Chunked runs have only about 3 KiB left
-under the test budget and about 19 KiB under the relay limit. The travel
+The `FLGZ:` relay request for every golden run is tested against 368 KiB,
+16 KiB under the relay's 384 KiB limit (`MAX_REQUEST_BYTES`; 256 KiB until
+November 2026, and a relay deployed before that still refuses more). On 22
+November 2026 the golden runs' requests measured about 224-237 KiB (Vanilla
+224-228, Custom and Xtreme 228-230, Chunked about 237), up from 193-197 KiB
+on 2 October. RuneLite reads a reply of up to 1 MiB. The travel
 section is tested against 16 KiB. RuneLite continues to load v1-v3 bundles using legacy map
 behavior; a malformed v4 or unsupported future version is rejected without
 replacing the last valid snapshot.

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import worker from './worker.js';
-import { MAX_BACKUP_BYTES } from './protocol.js';
+import { MAX_BACKUP_BYTES, MAX_REQUEST_BYTES } from './protocol.js';
 import { resetErrorDedupe } from './errors.js';
 
 class MemoryKv {
@@ -117,10 +117,18 @@ describe('Fate relay profile requests', () => {
     expect((await post(`/r/${CODE}`, { token: 'has spaces', gone: true })).status).toBe(400);
   });
 
+  it('takes a profile of 300 KiB', async () => {
+    // A Chunked run's rules are about 240 KiB compressed, and they grow with the game's content.
+    const body = { payload: flgz('x'.repeat(225 * 1024)) };
+    expect(JSON.stringify(body).length).toBeGreaterThan(300 * 1024);
+    expect(JSON.stringify(body).length).toBeLessThan(MAX_REQUEST_BYTES);
+    expect((await post(`/r/${CODE}`, body)).status).toBe(200);
+  });
+
   it('refuses a request that is too large', async () => {
     expect((await post(`/r/${CODE}`, {
       payload: flgz('v1'),
-      padding: 'x'.repeat(256 * 1024),
+      padding: 'x'.repeat(MAX_REQUEST_BYTES),
     })).status).toBe(413);
   });
 

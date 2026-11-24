@@ -410,7 +410,7 @@ share test files instead of code:
   `stage2SameAnswers` only a reader of the Stage 2 sections shrugs off).
   `scripts/goldenBundles.test.ts` fails when the files no longer match the
   app, when a bundle's own fields disagree with the answers it pins, or
-  when a run's relay request passes 240 KiB.
+  when a run's relay request comes within 16 KiB of the relay's limit.
 - **Bundle contract** (`contracts/golden-bundles/bundle-contract.json`):
   the fields Plugin Hub builds and the stream overlay read, with their
   types, which are frozen. Every golden run is checked against it.
