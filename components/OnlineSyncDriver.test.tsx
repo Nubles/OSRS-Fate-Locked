@@ -127,9 +127,12 @@ describe('OnlineSyncDriver', () => {
       expect(relaySync.adoptCode(codeB)).toBe(true);
     });
     await advance(0);
-    expect(fetchMock.mock.calls[1]?.[0]).toBe(
-      `https://relay.test/r/${codeB}`,
-    );
+    // The replaced code is marked gone, then the new one is published.
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, JSON.parse(init.body).gone === true])).toEqual([
+      [`https://relay.test/r/${codeA}`, false],
+      [`https://relay.test/r/${codeA}`, true],
+      [`https://relay.test/r/${codeB}`, false],
+    ]);
   });
 
   it('sends the run again when a profile switch overlapped its build', async () => {
@@ -380,7 +383,10 @@ describe('OnlineSyncDriver', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
       await act(async () => { relaySync.adoptCode('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'); });
       await advance(0);
-      expect(fetchMock).toHaveBeenCalledTimes(3);
+      // The replaced code's gone mark, then the publish to the new one.
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+      expect(sentPayloads()).toEqual(['bundle-A', 'bundle-A', undefined, 'bundle-A']);
+      expect(fetchMock.mock.calls[3][0]).toBe('https://relay.test/r/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
     });
 
     it('is sent when the run went back to an earlier revision (a restored save)', async () => {
