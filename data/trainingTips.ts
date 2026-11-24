@@ -76,7 +76,7 @@ export const TRAINING_TIPS: Record<string, TrainingTip[]> = {
     { from: 15, to: 30, method: 'Oak logs' },
     { from: 30, to: 45, method: 'Willow logs' },
     { from: 45, to: 50, method: 'Maple logs' },
-    { from: 50, to: 99, method: 'Wintertodt', note: 'Requires 50 Firemaking; rewards supply crates' },
+    { from: 50, to: 99, method: 'Wintertodt', note: 'Requires 50 Firemaking; rewards come from the reward cart' },
   ],
   Fishing: [
     { from: 1,  to: 20, method: 'Shrimp (net fishing)' },
@@ -239,30 +239,27 @@ export function getWikiTrainingUrl(skill: string): string {
 }
 
 /**
- * Approximate cumulative XP at key levels (official OSRS values).
- * Used to display "~123K XP to go" in the popover.
+ * Cumulative XP needed for each level 1 to 99, from the game's own formula
+ * (the OSRS Wiki "Experience" page): the XP for level L is
+ * floor(sum over l = 1..L-1 of floor(l + 300 * 2^(l / 7)) / 4).
+ * Index 0 is unused, so XP_TABLE[L] is the XP at the start of level L.
+ * Used to show "~123K XP to go" in the popover.
  */
-const XP_AT_LEVEL: Record<number, number> = {
-  1: 0, 5: 388, 10: 1_154, 15: 2_411, 20: 4_470,
-  25: 7_842, 30: 13_363, 35: 22_406, 40: 37_224, 45: 61_512,
-  50: 101_333, 55: 166_636, 60: 273_742, 65: 449_428, 70: 737_627,
-  75: 1_210_421, 80: 1_986_068, 85: 3_258_594, 90: 5_346_332,
-  95: 8_771_558, 99: 13_034_431,
-};
-
-/** Linear interpolation using the sparse XP table — accurate enough for UX. */
-export function xpAtLevel(level: number): number {
-  if (level <= 1) return 0;
-  if (level >= 99) return XP_AT_LEVEL[99];
-  const keys = Object.keys(XP_AT_LEVEL).map(Number).sort((a, b) => a - b);
-  let lo = 1, hi = 99;
-  for (const k of keys) {
-    if (k <= level) lo = k;
-    else { hi = k; break; }
+const XP_TABLE: number[] = (() => {
+  const table = [0, 0];
+  let points = 0;
+  for (let l = 1; l < 99; l++) {
+    points += Math.floor(l + 300 * 2 ** (l / 7));
+    table.push(Math.floor(points / 4));
   }
-  if (lo === hi) return XP_AT_LEVEL[lo] ?? 0;
-  const t = (level - lo) / (hi - lo);
-  return Math.round((XP_AT_LEVEL[lo] ?? 0) + t * ((XP_AT_LEVEL[hi] ?? 0) - (XP_AT_LEVEL[lo] ?? 0)));
+  return table;
+})();
+
+/** The exact XP at the start of a level, clamped to 1..99. */
+export function xpAtLevel(level: number): number {
+  if (!(level > 1)) return 0;
+  if (level >= 99) return XP_TABLE[99];
+  return XP_TABLE[Math.floor(level)];
 }
 
 export function formatXP(xp: number): string {
