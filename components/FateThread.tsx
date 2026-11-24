@@ -9,6 +9,7 @@ import { Sparkles } from './OsrsIcon';
 
 import { COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
+import { BANK_BY_ID } from '../data/banks';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 interface Props { onClose: () => void; }
@@ -24,6 +25,9 @@ interface FNode {
   order: number;            // chronological index (for the weave)
 }
 interface FHub { key: string; label: string; color: string; x: number; y: number; count: number; }
+
+/** Tables utils/rarity leaves grey; each gets its own colour here so the legend reads apart. */
+const THREAD_COLOR: Record<string, string> = { [TableType.BANKS]: '#a8a29e', [TableType.SLAYER_UNLOCKS]: '#e879f9' };
 
 /**
  * The Fate Thread — a living tapestry of the run. Every fate-locked unlock is a
@@ -64,9 +68,11 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
       [TableType.FARMING_LAYERS, 'Farming', unlocks.farming],
       [TableType.SKILLS, 'Skills', skillNames],
       [TableType.EQUIPMENT, 'Gear', gearNames],
+      [TableType.BANKS, 'Banks', unlocks.banks ?? []],
+      [TableType.SLAYER_UNLOCKS, 'Slayer', unlocks.slayerUnlocks ?? []],
     ];
     const cats = defs
-      .map(([key, label, names]) => ({ key, label, color: categoryColor(key), names: (names || []) }))
+      .map(([key, label, names]) => ({ key, label, color: THREAD_COLOR[key] ?? categoryColor(key), names: (names || []) }))
       .filter(c => c.names.length > 0);
 
     const N = cats.length;
@@ -89,7 +95,9 @@ export const FateThread: React.FC<Props> = ({ onClose }) => {
         const a = theta + ((col(j, perRow) - (rowCount - 1) / 2) / Math.max(rowCount, 1)) * 1.05 * (R_HUB / r);
         const x = r * Math.cos(a), y = r * Math.sin(a);
         maxR = Math.max(maxR, r);
-        nodes.push({ name, cat: cat.key, label: cat.label, color: cat.color, time: timeOf[name], x, y, hubX: hx, hubY: hy, order: 0 });
+        // Banks are saved by chunk id ("12850"); show the place name.
+        const shown = cat.key === TableType.BANKS ? (BANK_BY_ID[name]?.name ?? name) : name;
+        nodes.push({ name: shown, cat: cat.key, label: cat.label, color: cat.color, time: timeOf[name], x, y, hubX: hx, hubY: hy, order: 0 });
       });
     });
     // chronological order for the weave (unknown times sort first, as "seeded")

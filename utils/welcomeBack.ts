@@ -1,5 +1,5 @@
 import type { LogEntry } from '../types';
-import { isRollEntry } from './logEntry';
+import { isRollEntry, ownsChaosAward } from './logEntry';
 
 /** Away this long since the run's last entry and the welcome-back note shows. */
 export const WELCOME_BACK_AFTER_MS = 12 * 60 * 60 * 1000;
@@ -40,7 +40,7 @@ export const lastSession = (history: readonly LogEntry[], now: number): LastSess
       out.keys += 'standardKeysAwarded' in meta ? num(meta.standardKeysAwarded) : e.type === 'ROLL_SUCCESS' || e.type === 'PITY' ? 1 : 0;
       out.fate += num(meta.fatePointsEarned);
     }
-    out.chaosKeys += num(meta.chaosKeysAwarded);
+    if (ownsChaosAward(e)) out.chaosKeys += num(meta.chaosKeysAwarded);
     if (e.type === 'UNLOCK') out.unlocks.push(e.message.startsWith('Unlocked ') ? e.message.slice('Unlocked '.length) : String(meta.item ?? e.message));
   }
   return out;

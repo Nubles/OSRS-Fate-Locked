@@ -14,3 +14,11 @@ export const ROLL_ENTRY_TYPES: ReadonlySet<LogEntry['type']> = new Set([
 ]);
 
 export const isRollEntry = (h: LogEntry): boolean => ROLL_ENTRY_TYPES.has(h.type);
+
+/**
+ * Whether an entry's meta.chaosKeysAwarded is its own award. A level-up's Key
+ * roll carries a copy of its LEVEL_UP entry's meta, award included; only a level
+ * RuneLite detected (no LEVEL_UP entry) puts the award on the roll itself.
+ */
+export const ownsChaosAward = (h: LogEntry): boolean =>
+  !isRollEntry(h) || h.meta?.detectorId === 'skill-level-v1';

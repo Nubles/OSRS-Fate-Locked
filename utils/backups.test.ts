@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
+  CHECKPOINT_LABELS,
   getBackupData,
   listBackups,
   listCombinedBackups,
@@ -207,7 +208,7 @@ describe('backup ring', () => {
 
     expect(list).toHaveLength(2);
     expect(list[0]).toMatchObject({
-      reason: 'interval',
+      reason: 'Interval checkpoint',
       summary: '11 keys · 1 regions · 1 events',
       id: 'checkpoint:test:9',
       checksum: newChecksum,
@@ -345,5 +346,17 @@ describe('the ring leaves the browser room for the save itself', () => {
       get length(): number { throw new DOMException('blocked', 'SecurityError'); },
     };
     expect(reclaimBackupSpace(KEY)).toBe(false);
+  });
+
+  it('titles journal-only checkpoints the way their ring copies read', async () => {
+    const reasons = ['interval', 'session-start', 'pre-replacement', 'legacy-import'] as const;
+    const checkpoints: RecoveryCheckpoint[] = await Promise.all(reasons.map(async (reason, i) => {
+      const data = save({ keys: 10 + i });
+      return { profileId: 'test', persistenceRevision: i + 1, runId: 'run-test', runRevision: i, capturedAt: 1000 + i, checksum: await checksumSave(data), data, reason };
+    }));
+    const repository = { listCheckpoints: async () => checkpoints } as unknown as RecoveryRepository;
+    const list = await listCombinedBackups(KEY, { profileId: 'test', repository });
+    expect(list.map(b => b.reason)).toEqual(['Legacy import', 'Before replacement', 'Session start', 'Interval checkpoint']);
+    expect(Object.values(CHECKPOINT_LABELS)).not.toContain('interval');
   });
 });

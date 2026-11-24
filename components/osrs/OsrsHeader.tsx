@@ -5,7 +5,7 @@ import { useFeatureGates } from '../../hooks/useFeatureGates';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { getGameMode, resolveModeRules } from '../../config/gameModes';
 import { DISCORD_INVITE_URL } from '../../constants';
-import { RESET_CONFIRM_MESSAGE } from '../../utils/backups';
+import { confirmReset } from '../../utils/resetConfirm';
 import { FATE_EXPORT_HINT } from '../../utils/fateSaveFile';
 import { setUiStyle, useUiStyle } from '../../utils/uiStyle';
 import { setSkillOddsHover, useSkillOddsHover } from '../../utils/skillOddsPref';
@@ -254,7 +254,7 @@ export const OsrsHeader: React.FC<OsrsHeaderProps> = ({
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => setShowSyncCode(true))}>Sync code (move device)</button>
                   <button type="button" className="osrs-menu-item" onClick={closeThen(() => setShowDiscord(true))}>Discord notifications</button>
                   <div className="osrs-menu-sep" />
-                  <button type="button" className="osrs-menu-item is-danger" onClick={closeThen(() => { if (window.confirm(RESET_CONFIRM_MESSAGE)) void resetGame(); })}>Reset all progress</button>
+                  <button type="button" className="osrs-menu-item is-danger" onClick={closeThen(() => { void confirmReset(resetGame); })}>Reset all progress</button>
                 </div>
               </div>
             </>
