@@ -170,6 +170,41 @@ export function shortcutPlaces(s: Shortcut, content: ShortcutContent): Coord[] {
   return places;
 }
 
+/** No chunk content to hand: shortcuts are placed by their chunk ids and place names alone. */
+const NO_CONTENT: ShortcutContent = {
+  shortcuts: () => [], entityLocations: () => null, interiorEntranceChunks: () => [], chunkEntryRequirements: () => [],
+};
+
+const byChunkCache = new WeakMap<readonly Shortcut[], WeakMap<ShortcutContent, Map<string, Shortcut[]>>>();
+
+/**
+ * The shortcuts at each chunk ("cx,cy"), every table row of a shortcut
+ * together, placed where the panels place it (shortcutPlaces of its main row).
+ * The RuneLite chunk details read it; cached per shortcut list and content.
+ */
+export function shortcutsByChunk(shortcuts: readonly Shortcut[], content: ShortcutContent = NO_CONTENT): Map<string, Shortcut[]> {
+  let perContent = byChunkCache.get(shortcuts);
+  const cached = perContent?.get(content);
+  if (cached) return cached;
+  const groups = new Map<string, Shortcut[]>();
+  for (const s of shortcuts) {
+    const group = groups.get(s.name);
+    if (group) group.push(s);
+    else groups.set(s.name, [s]);
+  }
+  const byChunk = new Map<string, Shortcut[]>();
+  for (const group of groups.values()) {
+    const main = group.find(s => s.skill === 'Agility') ?? group[0];
+    for (const { cx, cy } of shortcutPlaces(main, content)) {
+      const key = `${cx},${cy}`;
+      byChunk.set(key, [...(byChunk.get(key) ?? []), ...group]);
+    }
+  }
+  if (!perContent) byChunkCache.set(shortcuts, perContent = new WeakMap());
+  perContent.set(content, byChunk);
+  return byChunk;
+}
+
 /**
  * An owned chunk no route reaches: in Chunked the chunk itself, elsewhere its
  * area, as the Quest Log and Diary Journal judge it. False without routes

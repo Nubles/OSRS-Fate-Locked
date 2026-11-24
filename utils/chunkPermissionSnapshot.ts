@@ -16,6 +16,7 @@ import {
   evaluateQuestEligibility, meetsSkillRequirement, questRequirementOptionLabel, type EligibilityBlocker,
 } from './journalStatus';
 import { farmingPatchFor } from './farmingPatches';
+import { shortcutReachability, shortcutsByChunk, type ShortcutContent } from './shortcutReach';
 import { isBankReachable } from './reachability';
 import { canonicalBossId, resolveQuest } from './contentIdentity';
 import { evaluateEntityAccess, evaluateBankRequirements, type EntityAccessSource, type EntityAccessResult } from './entityAccess';
@@ -60,6 +61,8 @@ export interface ChunkPermissionContext {
   customMode?: GameModeRules;
   reachableChunks?: Set<string>;
   shortcuts?: Shortcut[];
+  /** Where shortcuts' objects and interiors are (the chunk content); without it they are placed by chunk id and place name. */
+  shortcutContent?: ShortcutContent;
   /** @deprecated Ignored. Quest status is always computed canonically. */
   questStatuses?: Record<string, PermissionStatus>;
 }
@@ -250,17 +253,17 @@ export function buildChunkPermissionSnapshot(
     });
   }
 
-  for (const shortcut of context.shortcuts ?? []) {
-    if (!shortcut.chunks.includes(numericId)) continue;
-    const level = context.unlocks.levels[shortcut.skill] ?? 1;
-    const status: PermissionStatus = meetsSkillRequirement(context.unlocks, shortcut.skill, shortcut.level)
-      ? 'ALLOWED'
-      : 'NOT_READY';
+  // One row per shortcut, placed and judged as the Shortcuts panels do: every
+  // level, its quests and diary tiers. The chunk's entry covers ownership and routes.
+  const here = shortcutsByChunk(context.shortcuts ?? [], context.shortcutContent).get(chunkKey) ?? [];
+  for (const row of shortcutReachability(here, context.unlocks, () => ({ ...coord, unlocked: true })).rows) {
+    const levels = row.requirements.map(({ skill, level }) => `${skill} ${context.unlocks.levels[skill] ?? 1}/${level}`).join(', ');
+    const needs = [row.quest, row.diary].filter(Boolean).map(need => `Needs ${need}`);
     add('TRAVEL', {
-      key: `travel:${shortcut.name.toLowerCase()}`,
-      name: shortcut.name,
-      status: withEntry(status, entry),
-      detail: `${shortcut.skill} ${level}/${shortcut.level}`,
+      key: `travel:${row.name.toLowerCase()}`,
+      name: row.name,
+      status: withEntry(row.status === 'ready' ? 'ALLOWED' : 'NOT_READY', entry),
+      detail: [levels, ...needs].join('; '),
       targetKind: 'TELEPORT',
     });
   }

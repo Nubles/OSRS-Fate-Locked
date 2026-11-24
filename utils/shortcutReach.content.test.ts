@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chunkContentService } from '../services/ChunkContentService';
 import { createFreshState } from '../context/GameContext';
-import { runShortcutReach, shortcutLocator, shortcutPlaces, shortcutReachability } from './shortcutReach';
+import { runShortcutReach, shortcutLocator, shortcutPlaces, shortcutReachability, shortcutsByChunk } from './shortcutReach';
+import { buildChunkPermissionSnapshot, type ChunkPermissionRow } from './chunkPermissionSnapshot';
 import { computeAreaRoutes } from './areaRoutes';
 import { REGION_CHUNKS } from '../data/regionChunks';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
@@ -116,4 +117,48 @@ describe('shortcuts in a chunk whose entry needs a quest (reach-map.d3[0])', () 
       for (const [name] of cases) expect(rowOf(after, name).status, name).toBe('ready');
     });
   }
+});
+
+describe("RuneLite chunk details' shortcut rows (reach-map.d1[2])", () => {
+  const allAreas = [...Object.keys(REGION_CHUNKS), ...Object.keys(SUB_AREA_CHUNKS)];
+  const travelAt = (cx: number, cy: number, unlocks: UnlockState): ChunkPermissionRow[] => {
+    const content = chunkContentService.contentFor(cx, cy);
+    expect(content, `${cx},${cy}`).toBeTruthy();
+    return buildChunkPermissionSnapshot(content!, { cx, cy }, {
+      unlocks, gameModeId: 'vanilla', shortcuts: chunkContentService.shortcuts(), shortcutContent: chunkContentService,
+    }).categories.TRAVEL ?? [];
+  };
+
+  it('hold a quest-gated shortcut until its quest is done', () => {
+    const name = 'Access the Shilo Village rocks shortcut';
+    const [loc] = shortcutPlaces(chunkContentService.shortcuts().find(s => s.name === name)!, chunkContentService);
+    const before = travelAt(loc.cx, loc.cy, skilled({ regions: allAreas })).find(row => row.name === name);
+    expect(before).toMatchObject({ status: 'NOT_READY', targetKind: 'TELEPORT' });
+    expect(before?.detail).toContain('Needs Shilo Village');
+    const after = travelAt(loc.cx, loc.cy, skilled({ regions: allAreas, quests: ['Shilo Village'] })).find(row => row.name === name);
+    expect(after?.status).toBe('ALLOWED');
+  });
+
+  it('give every shortcut the panels can place a row, with the panels\' verdict', () => {
+    const run = skilled({ regions: allAreas });
+    const panel = runShortcutReach(chunkContentService, run, 'vanilla', null);
+    const verdict = new Map<string, string>();
+    for (const [key, group] of shortcutsByChunk(chunkContentService.shortcuts(), chunkContentService)) {
+      const [cx, cy] = key.split(',').map(Number);
+      if (!chunkContentService.contentFor(cx, cy)) continue;
+      const rows = travelAt(cx, cy, run);
+      expect(rows.length, key).toBe(new Set(group.map(s => s.name)).size);
+      for (const row of rows) verdict.set(`${row.name}@${key}`, row.status);
+    }
+    const placed = panel.rows.filter(row => row.loc);
+    // Before: 15 of the 205 shortcuts had a row (an exact match on the bare chunk id).
+    expect(new Set([...verdict.keys()].map(key => key.split('@')[0])).size).toBe(placed.length);
+    expect(placed.length).toBeGreaterThan(150);
+    for (const row of placed) {
+      if (row.loc?.entryQuests?.length) continue;
+      const status = verdict.get(`${row.name}@${row.loc!.cx},${row.loc!.cy}`);
+      if (status === undefined) continue;
+      expect(status, row.name).toBe(row.status === 'ready' ? 'ALLOWED' : 'NOT_READY');
+    }
+  });
 });
