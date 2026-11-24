@@ -109,6 +109,51 @@ describe('ammo that applies to an attack', () => {
     expect(rangedStr(weapon("Hunters' sunlight crossbow", 'Crossbow'), ammo('Kebbit bolts', 28))).toBe(0);
   });
 
+  it('caps gem-tipped bolts at their base bolt and keeps the Crossbows page\'s single-ammo crossbows', () => {
+    // "Opal bolts are bronze bolts tipped with opal bolt tips", "Jade bolts are
+    // blurite bolts", Pearl: iron, Red topaz: steel, Sapphire and Emerald:
+    // mithril, Ruby and Diamond: adamant, Dragonstone and Onyx: runite.
+    expect(rangedStr(weapon('Bronze crossbow', 'Crossbow'), ammo('Opal bolts (e)', 14))).toBe(14);
+    expect(rangedStr(weapon('Crossbow', 'Crossbow'), ammo('Opal bolts', 14))).toBe(14);
+    expect(rangedStr(weapon('Phoenix crossbow', 'Crossbow'), ammo('Opal bolts (e)', 14))).toBe(14);
+    expect(rangedStr(weapon('Blurite crossbow', 'Crossbow'), ammo('Jade bolts (e)', 30))).toBe(30);
+    expect(rangedStr(weapon('Bronze crossbow', 'Crossbow'), ammo('Jade bolts (e)', 30))).toBe(0);
+    expect(rangedStr(weapon('Iron crossbow', 'Crossbow'), ammo('Pearl bolts (e)', 48))).toBe(48);
+    expect(rangedStr(weapon('Iron crossbow', 'Crossbow'), ammo('Onyx bolts (e)', 120))).toBe(0);
+    expect(rangedStr(weapon('Iron crossbow', 'Crossbow'), ammo('Ruby bolts (e)', 103))).toBe(0);
+    expect(rangedStr(weapon('Steel crossbow', 'Crossbow'), ammo('Topaz bolts (e)', 66))).toBe(66);
+    expect(rangedStr(weapon('Steel crossbow', 'Crossbow'), ammo('Sapphire bolts (e)', 83))).toBe(0);
+    expect(rangedStr(weapon('Adamant crossbow', 'Crossbow'), ammo('Diamond bolts (e)', 105))).toBe(105);
+    expect(rangedStr(weapon('Adamant crossbow', 'Crossbow'), ammo('Dragonstone bolts (e)', 117))).toBe(0);
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Onyx bolts (e)', 120))).toBe(120);
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Opal dragon bolts (e)', 122))).toBe(0);
+    expect(rangedStr(weapon('Armadyl crossbow', 'Crossbow'), ammo('Opal dragon bolts (e)', 122))).toBe(122);
+    // Crossbows page ammo column: Karil's "Bolt racks"; Hunters' sunlight
+    // "Sunlight antler bolts, Moonlight antler bolts"; Dorgeshuun "Up to iron
+    // bolts (except silver)", "cannot fire tipped bolts except for barbed
+    // bolts", and bone bolts.
+    expect(rangedStr(weapon("Karil's crossbow", 'Crossbow'), ammo('Adamant bolts', 100))).toBe(0);
+    expect(rangedStr(weapon("Karil's crossbow", 'Crossbow'), ammo('Bolt rack', 55))).toBe(55);
+    expect(rangedStr(weapon("Hunters' sunlight crossbow", 'Crossbow'), ammo('Adamant bolts', 100))).toBe(0);
+    expect(rangedStr(weapon("Hunters' sunlight crossbow", 'Crossbow'), ammo('Moonlight antler bolts', 107))).toBe(107);
+    expect(rangedStr(weapon('Adamant crossbow', 'Crossbow'), ammo('Sunlight antler bolts', 87))).toBe(0);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Steel bolts', 64))).toBe(0);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Silver bolts', 36))).toBe(0);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Opal bolts', 14))).toBe(0);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Iron bolts', 46))).toBe(46);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Blurite bolts', 28))).toBe(28);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Barbed bolts', 12))).toBe(12);
+    // Castle wars bolts "can only be used by crossbows that can fire dragon
+    // bolts"; Castle wars arrows "only useable with bows that can fire dragon arrows".
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Castle wars bolts', 122))).toBe(0);
+    expect(rangedStr(weapon('Dragon crossbow', 'Crossbow'), ammo('Castle wars bolts', 122))).toBe(122);
+    expect(rangedStr(weapon('Magic shortbow', 'Bow'), ammo('Castle wars arrow', 60))).toBe(0);
+    expect(rangedStr(weapon('Dark bow', 'Bow'), ammo('Castle wars arrow', 60))).toBe(60);
+    // Bow page: Yew comp bow "Up to rune arrows".
+    expect(rangedStr(weapon('Yew comp bow', 'Bow'), ammo('Rune arrow', 49))).toBe(49);
+    expect(rangedStr(weapon('Yew comp bow', 'Bow'), ammo('Amethyst arrow', 55))).toBe(0);
+  });
+
   it('keeps the ammo slot\'s other bonuses and the raw stats-screen total', () => {
     const items = [weapon('Dragon dart', 'Thrown', 35), ammo('Dragon arrow', 60)];
     expect(attackBonuses(items).prayer).toBe(1);

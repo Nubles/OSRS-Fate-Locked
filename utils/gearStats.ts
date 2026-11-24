@@ -74,10 +74,12 @@ const BOLT = /\bbolts?\b|\bbolt rack\b/i;
 const OGRE_AMMO = /^ogre arrow|\bbrutal\b/i;
 
 // Ammunition strength ladders: a weapon fires every rung up to its own cap.
-// Ammo with no rung (ice arrows, gem-tipped bolts and so on) is not capped,
-// except by a weapon whose Wiki page says it fires only the listed kinds.
+// Ammo with no rung (ice arrows and so on) is not capped, except by a weapon
+// whose Wiki page says it fires only the listed kinds.
 const ARROW_RUNG = ['bronze', 'iron', 'steel', 'mithril', 'adamant', 'rune', 'amethyst', 'dragon'];
 const arrowRung = (name: string): number | undefined => {
+  // Castle wars arrows are "only useable with bows that can fire dragon arrows".
+  if (/^castle wars arrow/i.test(name)) return 8;
   const m = /^(?:seeking )?(bronze|iron|steel|mithril|adamant|rune|amethyst|dragon)\b/i.exec(name);
   return m ? ARROW_RUNG.indexOf(m[1].toLowerCase()) + 1 : undefined;
 };
@@ -85,16 +87,25 @@ const arrowRung = (name: string): number | undefined => {
 // dragon crossbow) only from dragon-bolt crossbows; Broad and Amethyst broad
 // bolts only from the rune crossbow and up; Blurite bolts from a blurite
 // crossbow or better; Silver bolts from an iron crossbow or better; Barbed
-// bolts from any standard crossbow; Emerald bolts need a level 36 crossbow.
+// bolts from any standard crossbow; Castle wars bolts only from crossbows that
+// fire dragon bolts. Gem-tipped bolts sit on their base bolt's rung ("Opal
+// bolts are bronze bolts tipped with opal bolt tips"; jade: blurite, pearl:
+// iron, red topaz: steel, sapphire and emerald: mithril, ruby and diamond:
+// adamant, dragonstone and onyx: runite).
+const GEM_BOLT_RUNG: Record<string, number> = {
+  opal: 1, jade: 1.5, pearl: 2, topaz: 3, 'red topaz': 3, sapphire: 4, emerald: 4,
+  ruby: 5, diamond: 5, dragonstone: 6, onyx: 6,
+};
 const boltRung = (name: string): number | undefined => {
-  if (/dragon bolts/i.test(name)) return 7;
+  if (/dragon bolts|^castle wars bolts/i.test(name)) return 7;
   if (/broad bolts/i.test(name)) return 6;
+  const gem = /^(opal|jade|pearl|red topaz|topaz|sapphire|emerald|ruby|diamond|dragonstone|onyx) bolts/i.exec(name);
+  if (gem) return GEM_BOLT_RUNG[gem[1].toLowerCase()];
   const m = /^(bronze|iron|steel|mithril|adamant|runite) bolts/i.exec(name);
   if (m) return ['bronze', 'iron', 'steel', 'mithril', 'adamant', 'runite'].indexOf(m[1].toLowerCase()) + 1;
   if (/^barbed bolts/i.test(name)) return 1;
   if (/^blurite bolts/i.test(name)) return 1.5;
   if (/^silver bolts/i.test(name)) return 2;
-  if (/^emerald bolts/i.test(name)) return 4;
   return undefined;
 };
 
@@ -108,7 +119,7 @@ const BOW_CAP: [RegExp, number, boolean?][] = [
   [/^(oak shortbow|oak longbow|signed oak bow)\b/i, 3],
   [/^willow (shortbow|longbow|comp bow)\b/i, 4],
   [/^maple (shortbow|longbow)\b/i, 5],
-  [/^yew (shortbow|longbow)\b/i, 6],
+  [/^yew (shortbow|longbow|comp bow)\b/i, 6],
   [/^(dark bow|twisted bow|venator bow|echo venator bow|scorching bow|3rd age bow|nature's recurve)\b/i, 8],
 ];
 const CROSSBOW_CAP: [RegExp, number, boolean?][] = [
@@ -148,11 +159,20 @@ const crossbowFires = (crossbow: string, ammo: string): boolean => {
   // "can only be used with the Dorgeshuun crossbow" (Bone bolts); the hunters'
   // crossbow "can only use kebbit bolts and long kebbit bolts", and the
   // sunlight one "cannot be used to fire kebbit or long kebbit bolts".
-  if (/bolt rack/i.test(ammo)) return /^karil's crossbow/i.test(crossbow);
+  // The Crossbows page's ammo column gives Karil's crossbow "Bolt racks" only
+  // and the hunters' sunlight crossbow only sunlight and moonlight antler
+  // bolts, which are "ammunition for the hunters' sunlight crossbow".
+  const rack = /bolt rack/i.test(ammo);
+  if (/^karil's crossbow/i.test(crossbow) || rack) return rack && /^karil's crossbow/i.test(crossbow);
+  const antler = /antler bolts/i.test(ammo);
+  if (/^hunters' sunlight crossbow/i.test(crossbow) || antler) return antler && /^hunters' sunlight crossbow/i.test(crossbow);
   if (/^bone bolts/i.test(ammo)) return /^dorgeshuun crossbow/i.test(crossbow);
   const kebbit = /kebbit bolts/i.test(ammo);
   if (/^hunters' crossbow/i.test(crossbow)) return kebbit;
   if (kebbit) return false;
+  // Dorgeshuun: "Up to iron bolts (except silver)", and it "cannot fire tipped
+  // bolts except for barbed bolts".
+  if (/^dorgeshuun crossbow/i.test(crossbow)) return /^(bronze|blurite|iron|barbed) bolts/i.test(ammo);
   // Runite, broad and dragon bolts each list every crossbow that fires them,
   // so a crossbow not in the table stops below them.
   return withinCap(CROSSBOW_CAP, crossbow, boltRung(ammo), 5);
