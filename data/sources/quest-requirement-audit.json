@@ -7669,7 +7669,7 @@
       "id": "The Enchanted Key",
       "kind": "miniquest",
       "status": "unresolved",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Enchanted_Key&oldid=15237155",
         "revision": 15237155,
@@ -7677,7 +7677,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Observatory\",\"Tree Gnome Stronghold\",\"East Ardougne\",\"Arandar\",\"Port Sarim\",\"Falador\",\"Lumbridge\",\"Varrock\",\"Al Kharid\"],\"skills\":{},\"prereqs\":[\"Making History\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Tree Gnome Stronghold\",\"East Ardougne\",\"Arandar\",\"Port Sarim\",\"Falador\",\"Lumbridge\",\"Varrock\",\"Al Kharid\"],\"skills\":{},\"prereqs\":[\"Making History\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "37,52",
@@ -7736,7 +7736,8 @@
         ],
         "travel": [
           "The Wiki fixes eleven treasure sites across Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, and the Kharidian Desert.",
-          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock, Al Kharid."
+          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock, Al Kharid.",
+          "Place review 2026-11-24 (Wiki rev 15336907 ==Treasure locations==, mapped through data/subAreaChunks.ts): the 11 sites are in 42,56 Rellekka, 40,50 East Ardougne, 37,52 Arandar, 38,53 Tree Gnome Stronghold, 47,53 and 46,51 Falador, 47,49 Port Sarim, 49,49 Lumbridge, 51,50 Al Kharid, and 51,52 and 49,54 Varrock; the silver merchant who replaces the key is in 41,51 East Ardougne. The page never names the Observatory (37,49 and 38,49), so it was dropped from the regions, leaving Rellekka, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock and Al Kharid."
         ],
         "instances": [],
         "partialCompletion": []

@@ -443,4 +443,14 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
       quests: ['Fight Arena', 'Curse of the Empty Lord'],
     })).toEqual([]);
   });
+
+  it('does not ask The Enchanted Key for the Observatory', () => {
+    // Wiki The Enchanted Key (rev 15336907) ==Treasure locations==, 11 sites: 2716,3606 Rellekka;
+    // 2621,3239 East Ardougne; 2417,3382 Arandar; 2448,3443 Tree Gnome Stronghold; 3033,3437 and
+    // 2972,3304 Falador; 3016,3166 Port Sarim; 3161,3176 Lumbridge; 3291,3220 Al Kharid; 3299,3349 and
+    // 3160,3490 Varrock. The page never names the Observatory.
+    expect(QUEST_DATA['The Enchanted Key'].regions).toEqual([
+      'Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid',
+    ]);
+  });
 });

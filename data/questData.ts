@@ -2891,7 +2891,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The Enchanted Key': {
     kind: 'miniquest', accessPolicy: 'regions',
     id: 'The Enchanted Key', name: 'The Enchanted Key',
-    regions: ['Rellekka', 'Observatory', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid'],
+    // The areas of the Wiki's 11 treasure sites (rev 15336907); none is at the Observatory.
+    regions: ['Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid'],
     skills: {}, prereqs: ['Making History'], points: 0,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
