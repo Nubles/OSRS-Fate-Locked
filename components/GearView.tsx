@@ -39,7 +39,7 @@ const topBonus = (b: GearBonuses): string => {
 interface GearViewProps { suspendModals?: boolean }
 
 export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => {
-  const { unlocks, loadout, setLoadoutSlot } = useGame();
+  const { unlocks, gameModeId, loadout, setLoadoutSlot } = useGame();
   const equipped = loadout || {};
   const [status, setStatus] = useState<Status>(gearService.ready ? 'ready' : 'loading');
   const [selected, setSelected] = useState<string | null>(null);
@@ -154,6 +154,7 @@ export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => 
           currentItemId={equipped[selected]}
           unlockedTier={unlocks.equipment[selected] || 0}
           unlocks={unlocks}
+          gameModeId={gameModeId}
           onClose={() => setSelected(null)}
           onEquip={equip}
           onRemove={() => { setLoadoutSlot(selected, null); setSelected(null); }}
@@ -171,13 +172,14 @@ interface PickerProps {
   currentItemId?: number;
   unlockedTier: number;
   unlocks: UnlockState;
+  gameModeId: string | undefined;
   onClose: () => void;
   onEquip: (item: GearItem) => void;
   onRemove: () => void;
   onRetry: () => void;
 }
 
-const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, onClose, onEquip, onRemove, onRetry }) => {
+const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, gameModeId, onClose, onEquip, onRemove, onRetry }) => {
   useEscapeKey(onClose, true);
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
@@ -274,7 +276,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
                 const tierLabel = `${estimated ? 'Est. ' : ''}T${tier}`;
                 const locked = tier > unlockedTier;
                 const isCurrent = item.id === currentItemId;
-                const obt = contentReady ? itemObtainability(item.name, unlocks) : 'unknown';
+                const obt = contentReady ? itemObtainability(item.name, unlocks, gameModeId) : 'unknown';
                 return (
                   <button
                     key={item.id}
