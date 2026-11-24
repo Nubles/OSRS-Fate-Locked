@@ -146,6 +146,13 @@
         "11066"
       ]
     },
+    "Dorgesh-Kaan-Keldagrim Train Platforms": {
+      "requirements": [
+        "Another Slice of H.A.M. Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Dorgesh-Kaan%E2%80%93Keldagrim_train_system?oldid=15211839",
+      "note": "Completion of Another Slice of H.A.M. is required to use the train. It is the only link on the route from Keldagrim to the north of Dorgesh-Kaan, so that route carries the quest too (areas.d1[1])."
+    },
     "Mor Ul Rek#Outer Area": {
       "anchors": [
         "11313"

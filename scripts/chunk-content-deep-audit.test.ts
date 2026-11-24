@@ -95,3 +95,25 @@ describe('Entrana Dungeon (slayer.d1[1])', () => {
     for (const [id, interior] of records) expect(interior.entrances.map(entrance => entrance.chunkId), id).toEqual(['11316']);
   });
 });
+
+describe('Dorgesh-Kaan through the Keldagrim train (areas.d1[1])', () => {
+  // Wiki "Dorgesh-Kaan–Keldagrim train system" oldid 15211839: "Completion of Another Slice of H.A.M. is required to use the train."
+  const TRAIN = 'Another Slice of H.A.M. Complete the quest';
+
+  it('asks for Another Slice of H.A.M. at the train platforms and on every route through them', () => {
+    const platforms = interiorsNamed('Dorgesh-Kaan-Keldagrim Train Platforms');
+    expect(platforms.length).toBeGreaterThan(0);
+    for (const [id, interior] of platforms) {
+      expect(interior.entrances.length, id).toBeGreaterThan(0);
+      for (const entrance of interior.entrances) expect(entrance.requirements, `${id} via ${entrance.chunkId}`).toContain(TRAIN);
+    }
+    const viaTrain = Object.entries(full.interiors).flatMap(([id, interior]) => interior.entrances
+      .filter(entrance => (entrance as { via?: string[] }).via?.includes('9814')).map(entrance => [id, entrance] as const));
+    expect(viaTrain.map(([id]) => id)).toContain('10834');
+    for (const [id, entrance] of viaTrain) expect(entrance.requirements, `${id} via ${entrance.chunkId}`).toContain(TRAIN);
+  });
+
+  it('leaves Keldagrim itself on The Giant Dwarf alone', () => {
+    expect(full.interiors['11679'].entrances.map(entrance => entrance.requirements)).toEqual([['Started The Giant Dwarf']]);
+  });
+});
