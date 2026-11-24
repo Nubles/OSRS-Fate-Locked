@@ -162,3 +162,61 @@ describe("RuneLite chunk details' shortcut rows (reach-map.d1[2])", () => {
     }
   });
 });
+
+// data/sources/shortcut-corrections.json, applied by scripts/chunk-content-transform.mjs (buildShortcuts).
+describe('reviewed shortcut corrections (reach-map.d1[3], d2[1], d2[2])', () => {
+  const rows = (name: string) => chunkContentService.shortcuts().filter(s => s.name === name);
+  const at = (name: string) => shortcutPlaces(rows(name)[0], chunkContentService);
+
+  it('lists the Cairn Isle rock slide at Agility 15 and the mausoleum bridge with its 59 Construction', () => {
+    expect(rows('Access the Cairn Isle rock slide climb shortcut').map(s => [s.skill, s.level])).toEqual([['Agility', 15]]);
+    const bridge = 'Access the mausoleum bridge jump shortcut';
+    expect(rows(bridge).map(s => [s.skill, s.level])).toEqual([['Agility', 69], ['Construction', 59]]);
+    const builder = skilled({ levels: { ...skilled().levels, Construction: 58 } });
+    const row = rowOf(shortcutReachability(rows(bridge), builder, () => ({ cx: 54, cy: 55, unlocked: true })), bridge);
+    expect(row.status).toBe('level');
+    expect(row.missing).toEqual([{ skill: 'Construction', level: 59 }]);
+  });
+
+  it('adds the four shortcuts the source lacks, each at a place the panels can find', () => {
+    const catacombs = chunkContentService.interiorEntranceChunks('Catacombs of Kourend');
+    expect(catacombs.length).toBeGreaterThan(0);
+    const added: [string, number, { cx: number; cy: number }[]][] = [
+      ['Access the Catacombs of Kourend southern crack shortcut', 17, catacombs],
+      ['Access the Catacombs of Kourend northern crack shortcut', 34, catacombs],
+      // Rock (wrecked ghost ship) at 3601,3556; Stepping stones (Karamja) at 2926,2950.
+      ['Access the wrecked ghost ship rocks shortcut', 25, [{ cx: 56, cy: 55 }]],
+      ['Access the stepping stones by the waterfall east of Shilo Village shortcut', 30, [{ cx: 45, cy: 46 }]],
+    ];
+    for (const [name, level, places] of added) {
+      expect(rows(name).map(s => [s.skill, s.level]), name).toEqual([['Agility', level]]);
+      expect(at(name), name).toEqual(places);
+    }
+  });
+
+  it('spells Burgh de Rott and Giants\' Plateau as the Wiki does, still placed where they were', () => {
+    const names = chunkContentService.shortcuts().map(s => s.name);
+    expect(names).not.toContain('Access the Burg de Rot fence shortcut');
+    expect(names).not.toContain("Access the Giant's Plateau rock scramble shortcut");
+    expect(rows('Access the Burgh de Rott fence shortcut').map(s => s.level)).toEqual([25]);
+    expect(at('Access the Burgh de Rott fence shortcut')).toEqual([{ cx: 54, cy: 50 }]);
+    expect(rows("Access the Giants' Plateau rock scramble shortcut").map(s => s.level)).toEqual([54]);
+    expect(at("Access the Giants' Plateau rock scramble shortcut")).toEqual([{ cx: 53, cy: 49 }]);
+  });
+
+  it('records every correction in the transform ledger', () => {
+    const ledger = JSON.parse(readFileSync(resolve('data/sources/chunk-content-transform-audit.json'), 'utf8'));
+    const keys = ledger.events.filter((e: { category: string; sourceKey: string }) => e.category === 'overrides' && e.sourceKey.startsWith('shortcut'))
+      .map((e: { sourceKey: string }) => e.sourceKey).sort();
+    expect(keys).toEqual([
+      'shortcut-add/Agility/Access the Catacombs of Kourend northern crack shortcut',
+      'shortcut-add/Agility/Access the Catacombs of Kourend southern crack shortcut',
+      'shortcut-add/Agility/Access the stepping stones by the waterfall east of Shilo Village shortcut',
+      'shortcut-add/Agility/Access the wrecked ghost ship rocks shortcut',
+      'shortcut-add/Construction/Access the mausoleum bridge jump shortcut',
+      'shortcut-level/Agility/Access the Cairn Isle rock slide climb shortcut',
+      'shortcut-name/Agility/Access the Burg de Rot fence shortcut',
+      "shortcut-name/Agility/Access the Giant's Plateau rock scramble shortcut",
+    ]);
+  });
+});
