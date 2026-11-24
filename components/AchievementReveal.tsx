@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Trophy } from './OsrsIcon';
 import type { Achievement } from '../utils/achievements';
-import { rewardLabel } from '../utils/achievementRewards';
+import { fateDue, rewardLabel } from '../utils/achievementRewards';
 import { ACHIEVEMENT_ICON } from './achievementIcons';
 import { usePortalHost } from '../hooks/usePortalHost';
 
@@ -23,9 +23,11 @@ interface Props {
   onView: () => void;
   /** The run's mode, for which Key boosts apply. */
   gameModeId?: string;
+  /** The run's id, for the Fate this run pays an achievement with no set Fate. */
+  runId?: string;
 }
 
-export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView, gameModeId }) => {
+export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView, gameModeId, runId }) => {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -81,6 +83,8 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView, ga
         <div className="px-3 py-2 space-y-1.5">
           {data.slice(0, MAX_LIST).map((a) => {
             const Icon = ACHIEVEMENT_ICON[a.icon] ?? Trophy;
+            // What this run pays, as the Achievements window shows it.
+            const reward = rewardLabel({ ...a, fate: fateDue(a, runId) }, gameModeId);
             return (
               <div key={a.id} className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-md bg-amber-500/15 border border-amber-500/40 text-amber-300 flex items-center justify-center shrink-0">
@@ -89,7 +93,7 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView, ga
                 <div className="min-w-0">
                   <p className="text-[11px] font-bold text-amber-200 truncate">{a.title}</p>
                   <p className="text-[9px] text-gray-500 truncate">{a.description}</p>
-                  {rewardLabel(a, gameModeId) && <p className="text-[9px] text-cyan-300 truncate">{rewardLabel(a, gameModeId)}</p>}
+                  {reward && <p className="text-[9px] text-cyan-300 truncate">{reward}</p>}
                 </div>
               </div>
             );
