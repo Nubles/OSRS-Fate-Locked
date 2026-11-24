@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   effectiveLevel, maxHitFromStr, maxHitMagic, attackRoll, defenceRoll,
-  hitChance, potionBoost, computeDps, POTIONS, DpsInput, formatTimeToKill,
+  hitChance, potionBoost, computeDps, POTIONS, PRAYERS, DpsInput, formatTimeToKill,
 } from './dps';
 
 describe('formatTimeToKill', () => {
@@ -232,5 +232,31 @@ describe('dps formulas', () => {
     expect(computeDps(atlatl({ levels: { attack: 1, strength: 70, ranged: 99, magic: 1 } })).maxHit).toBe(13);
     // Any other ranged weapon still uses Ranged and ranged strength.
     expect(computeDps(atlatl({ weaponName: 'Magic shortbow' })).maxHit).toBe(11);
+  });
+
+  it('offers the 15% melee pair, Hawk Eye, Deadeye, Mystic Lore and Mystic Vigour', () => {
+    const run = (over: Partial<DpsInput>) => computeDps({ ...baseInput(), ...over });
+    // 99 Strength, Aggressive, Ultimate Strength: floor(99 * 1.15) + 3 + 8 = 124.
+    const ultimate = run({ prayerId: 'ultimate' });
+    expect(ultimate.effStr).toBe(124);
+    expect(ultimate.effAtk).toBe(113 + 8);
+    const ranged = (prayerId: string) => run({ style: 'ranged', attackType: 'ranged', stanceId: 'rapid', prayerId,
+      gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
+    expect(ranged('hawk').effAtk).toBe(108 + 8);
+    expect(ranged('hawk').effStr).toBe(108 + 8);
+    expect(ranged('deadeye').effAtk).toBe(116 + 8);
+    expect(ranged('deadeye').effStr).toBe(116 + 8);
+    const magic = (prayerId: string) => run({ style: 'magic', attackType: 'magic', stanceId: 'standard', prayerId, baseSpellMax: 40,
+      gear: { accuracy: 70, meleeStr: 0, rangedStr: 0, magicDmgPct: 0, speedTicks: 5 } });
+    expect(magic('lore').effAtk).toBe(108 + 9);
+    expect(magic('lore').maxHit).toBe(40);     // floor(40 * 1.01)
+    expect(magic('vigour').effAtk).toBe(116 + 9);
+    expect(magic('vigour').maxHit).toBe(41);   // floor(40 * 1.03)
+  });
+
+  it('lists each style\'s prayers in Prayer-level order', () => {
+    expect(PRAYERS.melee.map(p => p.id)).toEqual(['none', 'clarity', 'ultimate', 'chivalry', 'piety']);
+    expect(PRAYERS.ranged.map(p => p.id)).toEqual(['none', 'hawk', 'eagle', 'deadeye', 'rigour']);
+    expect(PRAYERS.magic.map(p => p.id)).toEqual(['none', 'lore', 'mystic', 'vigour', 'augury']);
   });
 });

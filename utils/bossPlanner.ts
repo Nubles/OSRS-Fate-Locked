@@ -155,8 +155,9 @@ const monDefFor = (m: MonsterLite, t: AttackType, rangedType: RangedDamageType):
  * need only their Prayer level, which the skill's tier caps.
  */
 const BOOST_PRAYERS: Record<PlannedStyle, ReadonlyArray<{ id: string; arcana?: string; prayerLevel?: number }>> = {
-  melee: [{ id: 'piety', arcana: 'Piety' }, { id: 'chivalry', arcana: 'Chivalry' }, { id: 'clarity', prayerLevel: 16 }],
-  ranged: [{ id: 'rigour', arcana: 'Rigour' }, { id: 'eagle', prayerLevel: 44 }],
+  // The 15% melee pair needs Incredible Reflexes (34) as well as Ultimate Strength (31).
+  melee: [{ id: 'piety', arcana: 'Piety' }, { id: 'chivalry', arcana: 'Chivalry' }, { id: 'ultimate', prayerLevel: 34 }, { id: 'clarity', prayerLevel: 16 }],
+  ranged: [{ id: 'rigour', arcana: 'Rigour' }, { id: 'eagle', prayerLevel: 44 }, { id: 'hawk', prayerLevel: 26 }],
 };
 
 /** The best offensive prayer per style the player can use ('none' if none). */

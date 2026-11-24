@@ -179,18 +179,20 @@ describe('boost prayers', () => {
   });
 
   it('falls back to the standard prayers the tier-capped Prayer level reaches', () => {
-    expect(bestBoostPrayers(skilled(43, 1))).toEqual({ melee: 'clarity', ranged: 'none' });
-    expect(bestBoostPrayers(skilled(44, 1))).toEqual({ melee: 'clarity', ranged: 'eagle' });
+    expect(bestBoostPrayers(skilled(25, 1))).toEqual({ melee: 'clarity', ranged: 'none' });
+    expect(bestBoostPrayers(skilled(33, 1))).toEqual({ melee: 'clarity', ranged: 'hawk' });
+    expect(bestBoostPrayers(skilled(43, 1))).toEqual({ melee: 'ultimate', ranged: 'hawk' });
+    expect(bestBoostPrayers(skilled(44, 1))).toEqual({ melee: 'ultimate', ranged: 'eagle' });
     // Piety's levels without its Arcana unlock are not Piety.
-    expect(bestBoostPrayers(skilled(99, 99, { quests: ["King's Ransom"] }))).toEqual({ melee: 'clarity', ranged: 'eagle' });
+    expect(bestBoostPrayers(skilled(99, 99, { quests: ["King's Ransom"] }))).toEqual({ melee: 'ultimate', ranged: 'eagle' });
   });
 
   it('uses Piety, Chivalry and Rigour only with their unlock and every level and quest gate', () => {
     const knight = { arcana: ['Piety', 'Chivalry'], quests: ["King's Ransom"] };
     expect(bestBoostPrayers(skilled(70, 70, knight)).melee).toBe('piety');
     expect(bestBoostPrayers(skilled(69, 70, knight)).melee).toBe('chivalry');
-    expect(bestBoostPrayers(skilled(70, 64, knight)).melee).toBe('clarity');
-    expect(bestBoostPrayers(skilled(70, 70, { ...knight, quests: [] })).melee).toBe('clarity');
+    expect(bestBoostPrayers(skilled(70, 64, knight)).melee).toBe('ultimate');
+    expect(bestBoostPrayers(skilled(70, 70, { ...knight, quests: [] })).melee).toBe('ultimate');
     // Prayer 70 capped at 60 by tier 6 reaches Chivalry, not Piety.
     expect(bestBoostPrayers(skilled(70, 70, { ...knight, skills: { Prayer: 6, Defence: 7 } })).melee).toBe('chivalry');
     expect(bestBoostPrayers(skilled(74, 70, { arcana: ['Rigour'] })).ranged).toBe('rigour');

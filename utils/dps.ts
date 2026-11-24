@@ -52,21 +52,32 @@ export const STANCES: Record<Style, Stance[]> = {
 // ── Prayers (multiplicative on the relevant level) ───────────────────────────
 export interface Prayer { id: string; label: string; atkMult: number; strMult: number; magicDamagePct?: number }
 
+// In Prayer-level order. Wiki prayer infoboxes: Ultimate Strength (31)
+// "Increases your strength by 15%", Incredible Reflexes (34) "Increases your
+// attack by 15%", Hawk Eye (26) "Increases your Ranging by 10%", Deadeye (62)
+// "Increases your ranged attack by 18%, your damage by 18%", Mystic Lore (27)
+// "magical attack ... by 10%, also increases your magic strength by 1%",
+// Mystic Vigour (63) "magical attack ... by 18%, your magic strength by 3%".
 export const PRAYERS: Record<Style, Prayer[]> = {
   melee: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
     { id: 'clarity', label: 'Improved Reflexes / Superhuman Strength', atkMult: 1.1, strMult: 1.1 },
+    { id: 'ultimate', label: 'Incredible Reflexes / Ultimate Strength', atkMult: 1.15, strMult: 1.15 },
     { id: 'chivalry', label: 'Chivalry', atkMult: 1.15, strMult: 1.18 },
     { id: 'piety', label: 'Piety', atkMult: 1.2, strMult: 1.23 },
   ],
   ranged: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
+    { id: 'hawk', label: 'Hawk Eye', atkMult: 1.1, strMult: 1.1 },
     { id: 'eagle', label: 'Eagle Eye', atkMult: 1.15, strMult: 1.15 },
+    { id: 'deadeye', label: 'Deadeye', atkMult: 1.18, strMult: 1.18 },
     { id: 'rigour', label: 'Rigour', atkMult: 1.2, strMult: 1.23 },
   ],
   magic: [
     { id: 'none', label: 'No prayer', atkMult: 1, strMult: 1 },
+    { id: 'lore', label: 'Mystic Lore', atkMult: 1.1, strMult: 1, magicDamagePct: 1 },
     { id: 'mystic', label: 'Mystic Might', atkMult: 1.15, strMult: 1, magicDamagePct: 2 },
+    { id: 'vigour', label: 'Mystic Vigour', atkMult: 1.18, strMult: 1, magicDamagePct: 3 },
     { id: 'augury', label: 'Augury', atkMult: 1.25, strMult: 1, magicDamagePct: 4 },
   ],
 };
