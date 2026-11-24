@@ -48,7 +48,10 @@ describe('Dark Beasts (Wiki: Dark beast, Mourner Tunnels)', () => {
   it('the curated Dark Bow drop row matches the Strategy Guide entry', () => {
     const rows = (RESOURCE_MAP['Dark Bow'] ?? []).filter(r => r.name === 'Dark Beast' && !r.requirementsUnverified);
     expect(rows).toHaveLength(1);
-    expect(rows[0].regions).toEqual(S['Dark Beasts'].regions);
+    // A resource row's regions are alternatives, so it lists both dungeons; the Strategy Guide's are
+    // all required, so its entry lists only the Mourner Tunnels side.
+    expect(rows[0].regions).toEqual(['Kandarin', 'Tirannwn']);
+    expect(rows[0].regions).toEqual(expect.arrayContaining(S['Dark Beasts'].regions));
     expect(rows[0].quests).toEqual(S['Dark Beasts'].quests);
     expect(rows[0].skills).toEqual(S['Dark Beasts'].skills);
   });
