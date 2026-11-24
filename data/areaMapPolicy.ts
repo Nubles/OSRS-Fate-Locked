@@ -67,8 +67,8 @@ export const AREA_REFERENCES = {
   },
   'Motherlode Mine': {
     kind: 'entrance',
-    chunks: [{ cx: 47, cy: 52 }],
-    reason: 'Falador access route into the Dwarven Mine and Motherlode Mine.',
+    chunks: [{ cx: 47, cy: 52 }, { cx: 47, cy: 53 }],
+    reason: 'Falador and Ice Mountain camp routes into the Dwarven Mine and its north entrance; Motherlode Mine Wiki revision 15383536, Dwarven Mine Wiki revision 15376949.',
   },
   'Mor Ul Rek (TzHaar City)': {
     kind: 'entrance',

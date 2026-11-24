@@ -6,6 +6,7 @@ import { ChunkContentService } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { chunkForPlace } from './chunkLocations';
 import { evaluateEntityAccess } from './entityAccess';
+import { isAreaReachable } from './reachability';
 import { interiorEntry, type InteriorContext, type InteriorRecord } from './interiorEntry';
 
 const service = new ChunkContentService();
@@ -80,6 +81,19 @@ describe('interiorEntry', () => {
     expect(interiorEntry(chaos, chunked(run({ chunks: ['51,54'], quests: ['What Lies Below'] })))).toBe('ALLOWED');
     // The Wilderness ruins (47,56) need no quest.
     expect(interiorEntry(chaos, chunked(run({ chunks: ['47,56'], quests: [] })))).toBe('ALLOWED');
+  });
+
+  it('opens the Motherlode Mine from the Ice Mountain camp (47,53) as well as Falador (47,52)', () => {
+    // OSRS Wiki 'Motherlode Mine' revision 15383536: the Dwarven Mine camp in Ice Mountain's foothills leads
+    // to the north entrance; 'Dwarven Mine' revision 15376949 puts that camp entrance in 47,53.
+    const mine = records.get('58,88')!;
+    expect(mine.name).toBe('Motherlode Mine');
+    const chunked = (unlocks: UnlockState): InteriorContext => ({ ...context(unlocks), gameModeId: 'chunked' });
+    const iceMountain = run({ chunks: ['47,53'], regions: [], quests: [] });
+    expect(isAreaReachable('Motherlode Mine', iceMountain, 'chunked')).toBe(true);
+    expect(interiorEntry(mine, chunked(iceMountain))).toBe('ALLOWED');
+    expect(interiorEntry(mine, chunked(run({ chunks: ['47,52'], regions: [], quests: [] })))).toBe('ALLOWED');
+    expect(interiorEntry(mine, chunked(run({ chunks: ['46,53'], regions: [], quests: [] })))).toBe('LOCKED');
   });
 
   it("holds an interior to its entrance chunk's own requirements", () => {
