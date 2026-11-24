@@ -255,8 +255,11 @@ describe('getActivityAccess in Chunked', () => {
     expect(getActivityAccess('Impetuous Impulses', chunked(['50,52']), 'chunked').eligible).toBe(true);
   });
 
-  it("opens Mahogany Homes at Amy's office, where every first contract is taken, and not at a client's house (Wiki: Mahogany Homes)", () => {
-    expect(getActivityAccess('Mahogany Homes', chunked(['46,52']), 'chunked').eligible).toBe(true);
+  it("opens Mahogany Homes at each contractor's office, and not at a client's house (Wiki: Mahogany Homes, area-access.d2[0])", () => {
+    // Amy (Falador), Marlo (Varrock), Ellie (East Ardougne), Angelo (Hosidius), from the Wiki's map pins.
+    for (const office of ['46,52', '50,54', '41,51', '27,56']) {
+      expect(getActivityAccess('Mahogany Homes', chunked([office]), 'chunked').eligible, office).toBe(true);
+    }
     for (const house of ['40,51', '47,52', '50,52']) {
       expect(getActivityAccess('Mahogany Homes', chunked([house]), 'chunked').eligible, house).toBe(false);
     }

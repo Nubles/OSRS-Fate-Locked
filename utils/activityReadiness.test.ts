@@ -339,3 +339,20 @@ describe('ways in that carry their own requirement, read by the readiness badge 
       .toEqual(['Burgh de Rott (54, 50) or Paterdomus (53, 54) with Darkness of Hallowvale']);
   });
 });
+
+describe('Mahogany Homes: the first contract comes from Amy (area-access.d2[0])', () => {
+  const AMY_FIRST = 'Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)';
+
+  it('opens at any contractor in Chunked and asks the player to confirm the first contract', () => {
+    for (const office of ['46,52', '50,54', '41,51', '27,56']) {
+      expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: [office] }), 'chunked'), office)
+        .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
+    }
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: ['47,52'] }), 'chunked').status).toBe('NOT_READY');
+  });
+
+  it('carries the same line in Vanilla', () => {
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked(), 'vanilla'))
+      .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
+  });
+});

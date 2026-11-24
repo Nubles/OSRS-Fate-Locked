@@ -283,7 +283,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Burthorpe Games Room': { requiredAreas: ['Burthorpe'] },
   // Mage Training Arena: 7 Magic to take part (one spell); 33 for all four rooms.
   'Mage Training Arena': { skills: { Magic: 7 }, requiredAreas: ['Mage Training Arena'] },
-  'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).' },
+  // Wiki: Mahogany Homes (oldid 15392909): Amy gives only the first contract; after it Marlo, Ellie and Angelo give them too.
+  'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).', manualRequirements: ['Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)'] },
   'Forestry': { note: 'Woodcutting (Forestry events).' },
   'Tears of Guthix': { quests: ['Tears of Guthix'] },
   'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },

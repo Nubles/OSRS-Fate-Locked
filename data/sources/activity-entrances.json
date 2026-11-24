@@ -94,7 +94,7 @@
     "Guardians of the Rift": [{ "interior": "Temple of the Eye" }],
     "Impetuous Impulses": [{ "overlay": "Puro-Puro Entrances", "reason": "The rotating crop circles need no quest. The Zanaris portal (from the Lumbridge Swamp shed, 50,49) is left out: it needs Lost City and a Dramen or lunar staff (Wiki: Impetuous Impulses), which this table cannot check." }],
     "Mage Training Arena": [{ "chunkName": "Mage Training Arena" }],
-    "Mahogany Homes": [{ "npc": "Amy", "reason": "Amy in Falador (46,52) gives every first contract (Wiki: Mahogany Homes). The client houses do not count: nobody there gives contracts." }, { "npc": "Angelo", "reason": "Angelo in Hosidius (27,56) gives contracts after the first; kept as before. Whether Marlo (50,54) and Ellie (41,51) should count too, or only Amy, is still to be chosen." }],
+    "Mahogany Homes": [{ "npc": "Amy", "reason": "Amy in Falador (46,52) gives every first contract (Wiki: Mahogany Homes, oldid 15392909). The client houses do not count: nobody there gives contracts." }, { "npc": "Marlo", "reason": "Marlo in Varrock (50,54) gives contracts after the first; the first must come from Amy, a line the player confirms (data/activityRequirements.ts)." }, { "npc": "Ellie", "reason": "Ellie in East Ardougne (41,51) gives contracts after the first; the first must come from Amy, a line the player confirms (data/activityRequirements.ts)." }, { "npc": "Angelo", "reason": "Angelo in Hosidius (27,56) gives contracts after the first; the first must come from Amy, a line the player confirms (data/activityRequirements.ts)." }],
     "Mastering Mixology": [{ "interior": "Alchemical Society" }],
     "Mess": [{ "chunkName": "Mess" }],
     "Pyramid Plunder": [{ "interior": "Pyramid Plunder" }],

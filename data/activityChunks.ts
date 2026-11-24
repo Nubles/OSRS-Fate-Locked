@@ -66,7 +66,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Mage Arena": ["48,61"],
   "Mage Training Arena": ["52,51"],
   "Maggot King": ["56,52"],
-  "Mahogany Homes": ["27,56", "46,52"],
+  "Mahogany Homes": ["27,56", "41,51", "46,52", "50,54"],
   "Mastering Mixology": ["21,45"],
   "Mess": ["25,56"],
   "Mining Guild": ["47,52"],

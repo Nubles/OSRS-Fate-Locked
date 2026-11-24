@@ -81,8 +81,8 @@ describe('data/activityChunks.ts', () => {
     // The crop circles only: the Zanaris shed (50,49) needs Lost City.
     expect(ACTIVITY_CHUNKS['Impetuous Impulses']).toHaveLength(21);
     expect(ACTIVITY_CHUNKS['Impetuous Impulses']).not.toContain('50,49');
-    // Amy's office and Angelo's, not the client houses.
-    expect(ACTIVITY_CHUNKS['Mahogany Homes']).toEqual(['27,56', '46,52']);
+    // The four contractors' offices (Angelo, Ellie, Amy, Marlo), not the client houses.
+    expect(ACTIVITY_CHUNKS['Mahogany Homes']).toEqual(['27,56', '41,51', '46,52', '50,54']);
   });
 
   it('fails on an anchor that matches nothing', () => {
