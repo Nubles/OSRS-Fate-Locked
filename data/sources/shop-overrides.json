@@ -772,6 +772,45 @@
         "url": "https://oldschool.runescape.wiki/w/Razmire_Builders_Merchants?oldid=15318751",
         "revision": 15318751
       }
+    },
+    {
+      "name": "Worm Tongue's Wares",
+      "status": "stocked",
+      "sourceNames": [
+        "Worm Tounge's Wares"
+      ],
+      "requirements": [
+        "Access Worm Tongue's Wares"
+      ],
+      "replaces": [
+        "Access Worm Tounge's Wares"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Worm_Tongue's_Wares?oldid=15318850",
+        "revision": 15318850
+      }
+    },
+    {
+      "name": "Huito's Herbal Supplies",
+      "status": "stocked",
+      "sourceNames": [
+        "Huita's Herbal Supplies"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Huito's_Herbal_Supplies?oldid=15322178",
+        "revision": 15322178
+      }
+    },
+    {
+      "name": "Arhein's General Goods",
+      "status": "stocked",
+      "sourceNames": [
+        "Arhein Store"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Arhein's_General_Goods?oldid=15318491",
+        "revision": 15318491
+      }
     }
   ]
 }
