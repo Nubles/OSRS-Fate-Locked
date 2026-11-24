@@ -1,5 +1,6 @@
 import { LogEntry } from '../types';
 import { formatKeyPercent, formatKeyRollValue } from './keyRoll';
+import { tableDisplayName } from './tableDisplay';
 
 // Narrator voice — short, slightly dramatic, never cringe. Each returns a
 // single sentence to display under the event card during playback.
@@ -15,17 +16,28 @@ export const narrate = (e: LogEntry): string => {
       } vs ${
         e.threshold === undefined ? '?' : formatKeyPercent(e.threshold)
       }.`;
-    case 'PITY':
-      return `Fate, grown heavy at 50, tips the scales. A key regardless.`;
+    case 'PITY': {
+      // The threshold the run had when this Key came (legacy Casual 30,
+      // Region Rush 45, Custom 10 to 100). Older entries do not record it.
+      const at = e.meta?.pityThreshold;
+      const heavy = Number.isInteger(at) && at > 0 ? `grown heavy at ${at}` : 'grown heavy';
+      return `Fate, ${heavy}, tips the scales. A key regardless.`;
+    }
     case 'ROLL_FAIL':
       return `${e.source ?? 'It'} turns up empty. Another grain of fate settles.`;
     case 'UNLOCK': {
-      const item = e.meta?.item ?? 'something new';
-      const category = e.meta?.category ?? '';
-      return `${item} is unlocked${category ? ` — a new ${category.toLowerCase()} bows open` : ''}.`;
+      const item = e.meta?.item ?? 'Something new';
+      const category = typeof e.meta?.category === 'string' ? e.meta.category : '';
+      // The table's Spend Keys name, which may be singular, plural or a mass noun.
+      return `${item} is unlocked${category ? ` under ${tableDisplayName(category)}` : ''}.`;
     }
-    case 'ALTAR':
-      return `The altar flares: ${e.message.toLowerCase()}.`;
+    case 'ALTAR': {
+      // Ritual names, places and Keys keep their capitals; a message that
+      // already ends in a mark ('Void Gambit lost.') gets no second one.
+      const said = (e.message ?? '').trim();
+      if (!said) return 'The altar flares.';
+      return `The altar flares: ${said}${/[.!?]$/.test(said) ? '' : '.'}`;
+    }
     case 'LEVEL_UP':
       return /Chaos Key Drop/.test(e.message)
         ? `A crack of Chaos — the world rewards persistence.`
