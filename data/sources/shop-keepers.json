@@ -1,0 +1,3651 @@
+{
+ "about": "Where contracts/golden-bundles/shop-keepers.json comes from: for each shop name, the OSRS Wiki page read, its revision and the raw owner fields of its Infobox Shop. Written by node scripts/gen-shop-keepers.mjs --refresh.",
+ "reviewedAt": "2026-11-24",
+ "shops": {
+  "Aaron's Archery Appendages": {
+   "page": "Aaron's Archery Appendages.",
+   "revision": 15359514,
+   "timestamp": "2026-10-01T11:39:38Z",
+   "owner": [
+    "[[Armour salesman]]"
+   ]
+  },
+  "Aemad's Adventuring Supplies": {
+   "page": "Aemad's Adventuring Supplies.",
+   "revision": 15355997,
+   "timestamp": "2026-09-25T18:55:33Z",
+   "owner": [
+    "[[Aemad]]"
+   ]
+  },
+  "Agelus' Farm Shop": {
+   "page": "Agelus' Farm Shop",
+   "revision": 14991807,
+   "timestamp": "2025-09-25T17:49:05Z",
+   "owner": [
+    "[[Agelus]]"
+   ]
+  },
+  "Agility Arena Store": {
+   "page": "Agility Arena Store",
+   "revision": 15318453,
+   "timestamp": "2026-08-25T01:20:40Z",
+   "owner": [
+    "[[Pirate Jackie the Fruit]]"
+   ]
+  },
+  "Agmundi Quality Clothes": {
+   "page": "Agmundi Quality Clothes",
+   "revision": 14991704,
+   "timestamp": "2025-09-25T17:44:37Z",
+   "owner": [
+    "[[Agmundi]]"
+   ]
+  },
+  "Ak-Haranu's Exotic Shop": {
+   "page": "Ak-Haranu's Exotic Shop.",
+   "revision": 15318456,
+   "timestamp": "2026-08-25T01:23:57Z",
+   "owner": [
+    "[[Ak-Haranu]]"
+   ]
+  },
+  "Al-Kharid General Store": {
+   "page": "Al Kharid General Store",
+   "revision": 15318457,
+   "timestamp": "2026-08-25T01:24:23Z",
+   "owner": [
+    "[[Shop keeper (Al Kharid)|Shop keeper]]"
+   ]
+  },
+  "Aldarin General Store": {
+   "page": "Aldarin General Store",
+   "revision": 15352995,
+   "timestamp": "2026-09-22T05:38:18Z",
+   "owner": [
+    "[[Shopkeeper (Aldarin)|Shopkeeper]]"
+   ]
+  },
+  "Aleck's Hunter Emporium": {
+   "page": "Aleck's Hunter Emporium.",
+   "revision": 15399188,
+   "timestamp": "2026-11-11T15:03:58Z",
+   "owner": [
+    "[[Aleck]]"
+   ]
+  },
+  "Ali's Discount Wares": {
+   "page": "Ali's Discount Wares.",
+   "revision": 15355193,
+   "timestamp": "2026-09-24T06:12:03Z",
+   "owner": [
+    "[[Ali Morrisane]]"
+   ]
+  },
+  "Alice's Farming shop": {
+   "page": "Alice's Farming shop.",
+   "revision": 14991824,
+   "timestamp": "2025-09-25T17:49:25Z",
+   "owner": [
+    "[[Alice]]"
+   ]
+  },
+  "Allanna's Farming Shop": {
+   "page": "Allanna's Farming Shop",
+   "revision": 14991811,
+   "timestamp": "2025-09-25T17:49:10Z",
+   "owner": [
+    "[[Allanna]]"
+   ]
+  },
+  "Alry the Angler's Angling Accessories": {
+   "page": "Alry the Angler's Angling Accessories",
+   "revision": 15321057,
+   "timestamp": "2026-08-26T15:58:17Z",
+   "owner": [
+    "[[Alry the Angler]]"
+   ]
+  },
+  "Amelia's Seed Shop": {
+   "page": "Amelia's Seed Shop",
+   "revision": 14991809,
+   "timestamp": "2025-09-25T17:49:08Z",
+   "owner": [
+    "[[Amelia (Farming Guild)|Amelia]]"
+   ]
+  },
+  "Amlodd's Magical Supplies": {
+   "page": "Amlodd's Magical Supplies",
+   "revision": 15318473,
+   "timestamp": "2026-08-25T01:31:49Z",
+   "owner": [
+    "[[Efa]]"
+   ]
+  },
+  "Aneirin's Armour": {
+   "page": "Aneirin's Armour",
+   "revision": 14991688,
+   "timestamp": "2025-09-25T17:44:17Z",
+   "owner": [
+    "[[Aneirin]]"
+   ]
+  },
+  "Apothecary's Potions": {
+   "page": "Apothecary's Potions",
+   "revision": 15365664,
+   "timestamp": "2026-10-05T16:57:11Z",
+   "owner": [
+    "[[Apothecary]]"
+   ]
+  },
+  "Arcuani's Archery Supplies": {
+   "page": "Arcuani's Archery Supplies",
+   "revision": 15403402,
+   "timestamp": "2026-11-15T21:46:16Z",
+   "owner": [
+    "[[Arcuani]]"
+   ]
+  },
+  "Ardougne Baker's Stall": {
+   "page": "Ardougne Baker's Stall.",
+   "revision": 14999774,
+   "timestamp": "2025-10-06T17:16:11Z",
+   "owner": [
+    "[[Baker]]"
+   ]
+  },
+  "Ardougne Fur Stall": {
+   "page": "Ardougne Fur Stall.",
+   "revision": 15318479,
+   "timestamp": "2026-08-25T01:33:07Z",
+   "owner": [
+    "[[Fur trader (East Ardougne)|Fur Trader]]"
+   ]
+  },
+  "Ardougne Gem Stall": {
+   "page": "Ardougne Gem Stall.",
+   "revision": 15318487,
+   "timestamp": "2026-08-25T01:42:10Z",
+   "owner": [
+    "[[Gem merchant]]"
+   ]
+  },
+  "Ardougne Silver Stall": {
+   "page": "Ardougne Silver Stall.",
+   "revision": 15318488,
+   "timestamp": "2026-08-25T01:42:11Z",
+   "owner": [
+    "[[Silver merchant]]"
+   ]
+  },
+  "Ardougne Spice Stall": {
+   "page": "Ardougne Spice Stall.",
+   "revision": 15318489,
+   "timestamp": "2026-08-25T01:42:11Z",
+   "owner": [
+    "[[Spice seller]]"
+   ]
+  },
+  "Arhein's General Goods": {
+   "page": "Arhein's General Goods",
+   "revision": 15318491,
+   "timestamp": "2026-08-25T01:42:13Z",
+   "owner": [
+    "[[Arhein]]"
+   ]
+  },
+  "Armour Shop (Jatizso)": {
+   "page": "Armour Shop",
+   "revision": 15390179,
+   "timestamp": "2026-11-02T21:09:21Z",
+   "owner": [
+    "[[Raum Urda-Stein]]"
+   ]
+  },
+  "Armour store": {
+   "page": "Armour store.",
+   "revision": 14991683,
+   "timestamp": "2025-09-25T17:44:11Z",
+   "owner": [
+    "[[Jorzik]]"
+   ]
+  },
+  "Armoury": {
+   "page": "Armoury",
+   "revision": 15098130,
+   "timestamp": "2025-12-31T16:11:42Z",
+   "owner": [
+    "[[Shop keeper (Combat Training Camp)]]"
+   ]
+  },
+  "Arnold's Eclectic Supplies": {
+   "page": "Arnold's Eclectic Supplies.",
+   "revision": 15318492,
+   "timestamp": "2026-08-25T01:42:13Z",
+   "owner": [
+    "[[Arnold Lydspor]]"
+   ]
+  },
+  "Artima's Crafting Supplies": {
+   "page": "Artima's Crafting Supplies",
+   "revision": 14991737,
+   "timestamp": "2025-09-25T17:45:16Z",
+   "owner": [
+    "[[Artima]]"
+   ]
+  },
+  "Atlazora's Rest": {
+   "page": "Atlazora's Rest",
+   "revision": 15233062,
+   "timestamp": "2026-06-13T13:06:34Z",
+   "owner": [
+    "[[Bartender (Atlazora's Rest)|Bartender]]"
+   ]
+  },
+  "Auburnvale General Store": {
+   "page": "Auburnvale General Store",
+   "revision": 15106016,
+   "timestamp": "2026-01-15T23:35:48Z",
+   "owner": [
+    "[[Shopkeeper (Auburnvale)|Shopkeeper]]"
+   ]
+  },
+  "Aubury's Rune Shop": {
+   "page": "Aubury's Rune Shop.",
+   "revision": 15324371,
+   "timestamp": "2026-08-29T09:45:24Z",
+   "owner": [
+    "[[Aubury]]"
+   ]
+  },
+  "Aurel's Supplies": {
+   "page": "Aurel's Supplies",
+   "revision": 15318496,
+   "timestamp": "2026-08-25T01:42:16Z",
+   "owner": [
+    "[[Aurel]]"
+   ]
+  },
+  "Authentic Throwing Weapons": {
+   "page": "Authentic Throwing Weapons.",
+   "revision": 15318497,
+   "timestamp": "2026-08-25T01:42:17Z",
+   "owner": [
+    "[[Tribal Weapon Salesman]]"
+   ]
+  },
+  "Ava's Odds and Ends": {
+   "page": "Ava's Odds and Ends",
+   "revision": 15318499,
+   "timestamp": "2026-08-25T01:42:18Z",
+   "owner": [
+    "[[Ava]]"
+   ]
+  },
+  "Baba Yaga's Magic Shop": {
+   "page": "Baba Yaga's Magic Shop.",
+   "revision": 15345894,
+   "timestamp": "2026-09-16T14:47:26Z",
+   "owner": [
+    "[[Baba Yaga]]"
+   ]
+  },
+  "Bandit Bargains": {
+   "page": "Bandit Bargains",
+   "revision": 15318502,
+   "timestamp": "2026-08-25T01:42:20Z",
+   "owner": [
+    "[[Bandit shopkeeper]]"
+   ]
+  },
+  "Bandit Duty Free": {
+   "page": "Bandit Duty Free",
+   "revision": 15318503,
+   "timestamp": "2026-08-25T01:42:21Z",
+   "owner": [
+    "[[Noterazzo]]"
+   ]
+  },
+  "Barbarian Assault Reward Shop": {
+   "page": "Barbarian Assault Reward Shop",
+   "revision": 15298666,
+   "timestamp": "2026-08-14T01:12:48Z",
+   "owner": [
+    "[[Commander Connad]]"
+   ]
+  },
+  "Barkers' Haberdashery": {
+   "page": "Barkers' Haberdashery",
+   "revision": 15304772,
+   "timestamp": "2026-08-18T05:56:56Z",
+   "owner": [
+    "[[Barker]]"
+   ]
+  },
+  "Battle Runes#Post-miniquest": {
+   "page": "Battle Runes",
+   "revision": 15318507,
+   "timestamp": "2026-08-25T01:42:23Z",
+   "owner": [
+    "[[Mage of Zamorak]]"
+   ]
+  },
+  "Battle Runes#Pre-miniquest": {
+   "page": "Battle Runes",
+   "revision": 15318507,
+   "timestamp": "2026-08-25T01:42:23Z",
+   "owner": [
+    "[[Mage of Zamorak]]"
+   ]
+  },
+  "Bedabin Village Bartering": {
+   "page": "Bedabin Village Bartering",
+   "revision": 15318508,
+   "timestamp": "2026-08-25T01:42:24Z",
+   "owner": [
+    "[[Bedabin Nomad]]"
+   ]
+  },
+  "Betty's Magic Emporium": {
+   "page": "Betty's Magic Emporium",
+   "revision": 15271103,
+   "timestamp": "2026-07-21T03:58:59Z",
+   "owner": [
+    "[[Betty]]"
+   ]
+  },
+  "Blades by Urbi": {
+   "page": "Blades by Urbi.",
+   "revision": 15318511,
+   "timestamp": "2026-08-25T01:42:26Z",
+   "owner": [
+    "[[Urbi]]"
+   ]
+  },
+  "Blair's Armour": {
+   "page": "Blair's Armour",
+   "revision": 14991698,
+   "timestamp": "2025-09-25T17:44:30Z",
+   "owner": [
+    "[[Blair]]"
+   ]
+  },
+  "Blue Moon Inn": {
+   "page": "Blue Moon Inn",
+   "revision": 15351534,
+   "timestamp": "2026-09-20T01:40:51Z",
+   "owner": [
+    "[[Bartender (Blue Moon Inn)|Bartender]]"
+   ]
+  },
+  "Blurberry Bar": {
+   "page": "Blurberry Bar",
+   "revision": 15141890,
+   "timestamp": "2026-03-03T16:21:57Z",
+   "owner": [
+    "[[Barman (Blurberry Bar)|Barman]]"
+   ]
+  },
+  "Bob's Brilliant Axes": {
+   "page": "Bob's Brilliant Axes.",
+   "revision": 15391549,
+   "timestamp": "2026-11-03T13:51:00Z",
+   "owner": [
+    "[[Bob]]"
+   ]
+  },
+  "Bolkoy's Village Shop": {
+   "page": "Bolkoy's Village Shop",
+   "revision": 15318513,
+   "timestamp": "2026-08-25T01:42:27Z",
+   "owner": [
+    "[[Bolkoy]]"
+   ]
+  },
+  "Bounty Hunter Store": {
+   "page": "Bounty Hunter Store",
+   "revision": 15327851,
+   "timestamp": "2026-09-01T23:11:55Z",
+   "owner": [
+    "[[Emblem Trader]]"
+   ]
+  },
+  "Branwen's Farming Shop": {
+   "page": "Branwen's Farming Shop",
+   "revision": 14991690,
+   "timestamp": "2025-09-25T17:44:19Z",
+   "owner": [
+    "[[Branwen]]"
+   ]
+  },
+  "Brian's Archery Supplies": {
+   "page": "Brian's Archery Supplies.",
+   "revision": 14991825,
+   "timestamp": "2025-09-25T17:49:26Z",
+   "owner": [
+    "[[Brian (Rimmington)|Brian]]"
+   ]
+  },
+  "Brian's Battleaxe Bazaar": {
+   "page": "Brian's Battleaxe Bazaar.",
+   "revision": 15315046,
+   "timestamp": "2026-08-21T03:46:08Z",
+   "owner": [
+    "[[Brian]]"
+   ]
+  },
+  "Briget's Weapons": {
+   "page": "Briget's Weapons",
+   "revision": 15391329,
+   "timestamp": "2026-11-03T13:23:23Z",
+   "owner": [
+    "[[Briget]]"
+   ]
+  },
+  "Burthorpe Supplies": {
+   "page": "Burthorpe Supplies",
+   "revision": 15318517,
+   "timestamp": "2026-08-25T01:42:30Z",
+   "owner": [
+    "[[Wistan]]"
+   ]
+  },
+  "Cam Torum Blacksmith": {
+   "page": "Cam Torum Blacksmith",
+   "revision": 15391326,
+   "timestamp": "2026-11-03T13:23:19Z",
+   "owner": [
+    "[[Blacksmith (Cam Torum)|Blacksmith]]"
+   ]
+  },
+  "Cam Torum General Store": {
+   "page": "Cam Torum General Store",
+   "revision": 15318519,
+   "timestamp": "2026-08-25T01:42:32Z",
+   "owner": [
+    "[[Shopkeeper (Cam Torum)|Shopkeeeper]]"
+   ]
+  },
+  "Candle Shop": {
+   "page": "Candle Shop",
+   "revision": 14991851,
+   "timestamp": "2025-09-25T17:49:57Z",
+   "owner": [
+    "[[Candle maker]]"
+   ]
+  },
+  "Carefree Crafting Stall": {
+   "page": "Carefree Crafting Stall",
+   "revision": 14991709,
+   "timestamp": "2025-09-25T17:44:43Z",
+   "owner": [
+    "[[Nolar]]"
+   ]
+  },
+  "Cassie's Shield Shop": {
+   "page": "Cassie's Shield Shop.",
+   "revision": 15326159,
+   "timestamp": "2026-08-31T12:25:09Z",
+   "owner": [
+    "[[Cassie]]"
+   ]
+  },
+  "Castle Wars Ticket Exchange": {
+   "page": "Castle Wars Ticket Exchange",
+   "revision": 15318525,
+   "timestamp": "2026-08-25T01:42:35Z",
+   "owner": [
+    "[[Lanthus]]"
+   ]
+  },
+  "Cobado's Groceries": {
+   "page": "Cobado's Groceries",
+   "revision": 14991724,
+   "timestamp": "2025-09-25T17:45:01Z",
+   "owner": [
+    "[[Cobado]]"
+   ]
+  },
+  "Conara's Jewels": {
+   "page": "Conara's Jewels",
+   "revision": 15318529,
+   "timestamp": "2026-08-25T01:42:38Z",
+   "owner": [
+    "[[Conara]]"
+   ]
+  },
+  "Construction supplies": {
+   "page": "Construction supplies",
+   "revision": 15271554,
+   "timestamp": "2026-07-21T23:59:27Z",
+   "owner": [
+    "[[Sawmill operator]]",
+    "[[Sawmill operator]]",
+    "[[Sawmill Operator (Prifddinas)|Sawmill Operator]]",
+    "[[Sawmill Operator (Auburnvale)|Sawmill Operator]]"
+   ]
+  },
+  "Contraband yak produce": {
+   "page": "Contraband yak produce.",
+   "revision": 15318530,
+   "timestamp": "2026-08-25T01:42:39Z",
+   "owner": [
+    "[[Vanligga Gastfrihet]]"
+   ]
+  },
+  "Crossbow Shop (Dwarven Mine)": {
+   "page": "Crossbow Shop (Dwarven Mine)",
+   "revision": 14991810,
+   "timestamp": "2025-09-25T17:49:09Z",
+   "owner": [
+    "[[Hura]]"
+   ]
+  },
+  "Crossbow Shop (Keldagrim)": {
+   "page": "Crossbow Shop (Keldagrim)",
+   "revision": 14991699,
+   "timestamp": "2025-09-25T17:44:31Z",
+   "owner": [
+    "[[Hirko]]"
+   ]
+  },
+  "Crossbow Shop (White Wolf Mountain)": {
+   "page": "Crossbow Shop (White Wolf Mountain)",
+   "revision": 14991830,
+   "timestamp": "2025-09-25T17:49:31Z",
+   "owner": [
+    "[[Holoy]]"
+   ]
+  },
+  "Culinaromancer's Chest": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#0 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#1 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#2 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#3 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#4 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#5 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#6 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#7 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#8 Subquests": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#Food": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Culinaromancer's Chest#Full": {
+   "page": "Culinaromancer's Chest",
+   "revision": 15365439,
+   "timestamp": "2026-10-05T16:02:56Z",
+   "owner": [
+    "None"
+   ]
+  },
+  "Daga's Scimitar Smithy": {
+   "page": "Daga's Scimitar Smithy",
+   "revision": 15318533,
+   "timestamp": "2026-08-25T01:42:41Z",
+   "owner": [
+    "[[Daga]]"
+   ]
+  },
+  "Dal's General Ogre Supplies": {
+   "page": "Dal's General Ogre Supplies",
+   "revision": 15318534,
+   "timestamp": "2026-08-25T01:42:42Z",
+   "owner": [
+    "[[Dal]]"
+   ]
+  },
+  "Dancing Donkey Inn": {
+   "page": "Dancing Donkey Inn",
+   "revision": 15375622,
+   "timestamp": "2026-10-19T03:28:40Z",
+   "owner": [
+    "[[Bartender (Dancing Donkey Inn)|Bartender]]"
+   ]
+  },
+  "Dargaud's Bow and Arrows": {
+   "page": "Dargaud's Bow and Arrows.",
+   "revision": 15414234,
+   "timestamp": "2026-11-24T12:01:32Z",
+   "owner": [
+    "[[Bow and Arrow salesman]]"
+   ]
+  },
+  "Darkmeyer General Store": {
+   "page": "Darkmeyer General Store",
+   "revision": 15323158,
+   "timestamp": "2026-08-28T14:43:18Z",
+   "owner": [
+    "[[Drasdan Ranor]]"
+   ]
+  },
+  "Darkmeyer Lantern Shop": {
+   "page": "Darkmeyer Lantern Shop",
+   "revision": 15323160,
+   "timestamp": "2026-08-28T14:43:41Z",
+   "owner": [
+    "[[Grinka Krast]]"
+   ]
+  },
+  "Darkmeyer Meat Shop": {
+   "page": "Darkmeyer Meat Shop",
+   "revision": 15341001,
+   "timestamp": "2026-09-11T19:44:35Z",
+   "owner": [
+    "[[Lenyig Karna]]"
+   ]
+  },
+  "Darkmeyer Seamstress": {
+   "page": "Darkmeyer Seamstress",
+   "revision": 15323161,
+   "timestamp": "2026-08-28T14:43:58Z",
+   "owner": [
+    "[[Varrian Sobak]]"
+   ]
+  },
+  "Darren's Wilderness Cape Shop": {
+   "page": "Darren's Wilderness Cape Shop.",
+   "revision": 15318537,
+   "timestamp": "2026-08-25T01:42:44Z",
+   "owner": [
+    "[[Darren]]"
+   ]
+  },
+  "Daryl's Ranging Surplus": {
+   "page": "Daryl's Ranging Surplus",
+   "revision": 15305165,
+   "timestamp": "2026-08-18T12:50:09Z",
+   "owner": [
+    "[[Daryl]]"
+   ]
+  },
+  "Davon's Amulet Store": {
+   "page": "Davon's Amulet Store.",
+   "revision": 15318538,
+   "timestamp": "2026-08-25T01:42:45Z",
+   "owner": [
+    "[[Davon]]"
+   ]
+  },
+  "Dead Man's Chest": {
+   "page": "Dead Man's Chest",
+   "revision": 15335363,
+   "timestamp": "2026-09-08T15:16:59Z",
+   "owner": [
+    "[[Bartender (Dead Man's Chest)|Bartender]]"
+   ]
+  },
+  "Deepfin Inn": {
+   "page": "Deepfin Inn",
+   "revision": 15333560,
+   "timestamp": "2026-09-07T23:29:22Z",
+   "owner": [
+    "[[Brikka]]"
+   ]
+  },
+  "Deepfin Point Ore Exchange": {
+   "page": "Deepfin Point Ore Exchange",
+   "revision": 15209787,
+   "timestamp": "2026-05-12T05:22:51Z",
+   "owner": [
+    "[[Korgan]]"
+   ]
+  },
+  "Diango's Toy Store": {
+   "page": "Diango's Toy Store",
+   "revision": 15398911,
+   "timestamp": "2026-11-11T13:12:08Z",
+   "owner": [
+    "[[Diango]]"
+   ]
+  },
+  "Dodgy Mike's Second Hand Clothing": {
+   "page": "Dodgy Mike's Second Hand Clothing.",
+   "revision": 15297840,
+   "timestamp": "2026-08-13T21:37:53Z",
+   "owner": [
+    "[[Mike]]"
+   ]
+  },
+  "Dom Onion's Reward Shop": {
+   "page": "Dom Onion's Reward Shop",
+   "revision": 15366281,
+   "timestamp": "2026-10-05T22:25:27Z",
+   "owner": [
+    "[[Dominic Onion]]"
+   ]
+  },
+  "Dommik's Crafting Store": {
+   "page": "Dommik's Crafting Store.",
+   "revision": 14991788,
+   "timestamp": "2025-09-25T17:48:41Z",
+   "owner": [
+    "[[Dommik]]"
+   ]
+  },
+  "Dorgesh-Kaan General Supplies": {
+   "page": "Dorgesh-Kaan General Supplies",
+   "revision": 15318543,
+   "timestamp": "2026-08-25T01:42:49Z",
+   "owner": [
+    "[[Lurgon]]"
+   ]
+  },
+  "Dragon Inn": {
+   "page": "Dragon Inn",
+   "revision": 15315051,
+   "timestamp": "2026-08-21T03:49:27Z",
+   "owner": [
+    "[[Bartender (Dragon Inn)|Bartender]]"
+   ]
+  },
+  "Draynor Seed Market": {
+   "page": "Draynor Seed Market",
+   "revision": 15365049,
+   "timestamp": "2026-10-05T00:53:39Z",
+   "owner": [
+    "[[Olivia]]"
+   ]
+  },
+  "Drogo's Mining Emporium": {
+   "page": "Drogo's Mining Emporium.",
+   "revision": 15324310,
+   "timestamp": "2026-08-29T04:48:54Z",
+   "owner": [
+    "[[Drogo dwarf]]"
+   ]
+  },
+  "Durrik's Goods": {
+   "page": "Durrik's Goods",
+   "revision": 15372124,
+   "timestamp": "2026-10-13T19:47:38Z",
+   "owner": [
+    "[[Durrik]]"
+   ]
+  },
+  "Dusuri's Star Shop": {
+   "page": "Dusuri's Star Shop",
+   "revision": 15318549,
+   "timestamp": "2026-08-25T01:42:52Z",
+   "owner": [
+    "[[Dusuri]]"
+   ]
+  },
+  "Dwarven shopping store": {
+   "page": "Dwarven shopping store",
+   "revision": 15318550,
+   "timestamp": "2026-08-25T01:42:53Z",
+   "owner": [
+    "[[Dwarf (Dwarven shopping store)|Dwarf]]"
+   ]
+  },
+  "Dyes to Die For": {
+   "page": "Dyes to Die For",
+   "revision": 15137255,
+   "timestamp": "2026-02-27T13:01:33Z",
+   "owner": [
+    "[[Xochitl]]"
+   ]
+  },
+  "Edgeville General Store": {
+   "page": "Edgeville General Store",
+   "revision": 15318552,
+   "timestamp": "2026-08-25T01:42:54Z",
+   "owner": [
+    "[[Shop keeper (Edgeville)|Shop keeper]]"
+   ]
+  },
+  "Edmond's Wilderness Cape Shop": {
+   "page": "Edmond's Wilderness Cape Shop.",
+   "revision": 15318553,
+   "timestamp": "2026-08-25T01:42:55Z",
+   "owner": [
+    "[[Edmond (merchant)|Edmond]]"
+   ]
+  },
+  "Edward's Wilderness Cape Shop": {
+   "page": "Edward's Wilderness Cape Shop.",
+   "revision": 15318554,
+   "timestamp": "2026-08-25T01:42:56Z",
+   "owner": [
+    "[[Edward]]"
+   ]
+  },
+  "Efaritay's Supplies": {
+   "page": "Efaritay's Supplies",
+   "revision": 15318555,
+   "timestamp": "2026-08-25T01:42:56Z",
+   "owner": [
+    "[[Efaritay Hallow]]"
+   ]
+  },
+  "Elder Blunn's Spear and Shield Stall": {
+   "page": "Elder Blunn's Spear and Shield Stall",
+   "revision": 15209770,
+   "timestamp": "2026-05-12T05:22:20Z",
+   "owner": [
+    "[[Elder Blunn]]"
+   ]
+  },
+  "Elder Coco's Crafting Stall": {
+   "page": "Elder Coco's Crafting Stall",
+   "revision": 15329465,
+   "timestamp": "2026-09-03T14:34:06Z",
+   "owner": [
+    "[[Elder Coco]]"
+   ]
+  },
+  "Elder Krill's Fishing Stall": {
+   "page": "Elder Krill's Fishing Stall",
+   "revision": 15139665,
+   "timestamp": "2026-03-01T12:28:53Z",
+   "owner": [
+    "[[Elder Krill]]"
+   ]
+  },
+  "Elder Raley's Herblore Stall": {
+   "page": "Elder Raley's Herblore Stall",
+   "revision": 15376421,
+   "timestamp": "2026-10-19T23:01:27Z",
+   "owner": [
+    "[[Mag]]"
+   ]
+  },
+  "Elder Reggle's Farming Shop": {
+   "page": "Elder Reggle's Farming Shop",
+   "revision": 15209773,
+   "timestamp": "2026-05-12T05:22:21Z",
+   "owner": [
+    "[[Elder Reggle]]"
+   ]
+  },
+  "Elder Strom's Hunting Stall": {
+   "page": "Elder Strom's Hunting Stall",
+   "revision": 15399196,
+   "timestamp": "2026-11-11T15:05:35Z",
+   "owner": [
+    "[[Elder Strom]]"
+   ]
+  },
+  "Elgan's Exceptional Staffs!": {
+   "page": "Elgan's Exceptional Staffs!",
+   "revision": 15318558,
+   "timestamp": "2026-08-25T01:42:58Z",
+   "owner": [
+    "[[Elgan]]"
+   ]
+  },
+  "Emelio's Kebab Shop": {
+   "page": "Emelio's Kebab Shop",
+   "revision": 15318562,
+   "timestamp": "2026-08-25T01:43:01Z",
+   "owner": [
+    "[[Emelio]]"
+   ]
+  },
+  "Etceteria Fish": {
+   "page": "Etceteria Fish",
+   "revision": 14991849,
+   "timestamp": "2025-09-25T17:49:54Z",
+   "owner": [
+    "[[Fishmonger]]"
+   ]
+  },
+  "Fairy Fixit's Fairy Enchantment": {
+   "page": "Fairy Fixit's Fairy Enchantment",
+   "revision": 15318565,
+   "timestamp": "2026-08-25T01:43:03Z",
+   "owner": [
+    "[[Fairy Fixit]]"
+   ]
+  },
+  "Falador General Store": {
+   "page": "Falador General Store",
+   "revision": 15318566,
+   "timestamp": "2026-08-25T01:43:04Z",
+   "owner": [
+    "[[Shop keeper (Falador)|Shop keeper]]"
+   ]
+  },
+  "Falador Party Room": {
+   "page": "Falador Party Room",
+   "revision": 15366084,
+   "timestamp": "2026-10-05T20:55:27Z",
+   "owner": [
+    "[[Lucy]], [[Megan]]"
+   ]
+  },
+  "Fancy Clothes Store": {
+   "page": "Fancy Clothes Store",
+   "revision": 15288735,
+   "timestamp": "2026-08-06T03:52:54Z",
+   "owner": [
+    "[[Asyff]]"
+   ]
+  },
+  "Farmer Gricoller's Rewards": {
+   "page": "Farmer Gricoller's Rewards",
+   "revision": 15337362,
+   "timestamp": "2026-09-09T13:52:09Z",
+   "owner": [
+    "[[Farmer Gricoller]]"
+   ]
+  },
+  "Farming Supplies": {
+   "page": "Farming Supplies",
+   "revision": 14992969,
+   "timestamp": "2025-09-25T18:14:03Z",
+   "owner": [
+    "No"
+   ]
+  },
+  "Faustus' Fruit and Veg": {
+   "page": "Faustus' Fruit and Veg",
+   "revision": 15213756,
+   "timestamp": "2026-05-20T16:23:06Z",
+   "owner": [
+    "[[Faustus]]"
+   ]
+  },
+  "Fernahei's Fishing Hut": {
+   "page": "Fernahei's Fishing Hut.",
+   "revision": 15029888,
+   "timestamp": "2025-11-15T22:27:13Z",
+   "owner": [
+    "[[Fernahei]]"
+   ]
+  },
+  "Fight Arena Bar": {
+   "page": "Fight Arena Bar",
+   "revision": 15315052,
+   "timestamp": "2026-08-21T03:49:36Z",
+   "owner": [
+    "[[Khazard barman]]"
+   ]
+  },
+  "Filamina's Wares": {
+   "page": "Filamina's Wares",
+   "revision": 15318569,
+   "timestamp": "2026-08-25T01:43:06Z",
+   "owner": [
+    "[[Filamina]]"
+   ]
+  },
+  "Fine Fashions": {
+   "page": "Fine Fashions",
+   "revision": 14991756,
+   "timestamp": "2025-09-25T17:45:38Z",
+   "owner": [
+    "[[Rometti]]"
+   ]
+  },
+  "Fishing Guild Shop": {
+   "page": "Fishing Guild Shop.",
+   "revision": 15326163,
+   "timestamp": "2026-08-31T12:33:05Z",
+   "owner": [
+    "[[Roachey]]"
+   ]
+  },
+  "Flakes 'n' Flotsam": {
+   "page": "Flakes 'n' Flotsam",
+   "revision": 15318570,
+   "timestamp": "2026-08-25T01:43:06Z",
+   "owner": [
+    "[[Spirit Angler (Reward pool)]]"
+   ]
+  },
+  "Floria's Fashion": {
+   "page": "Floria's Fashion",
+   "revision": 14991739,
+   "timestamp": "2025-09-25T17:45:18Z",
+   "owner": [
+    "[[Floria]]"
+   ]
+  },
+  "Flosi's Fishmongers": {
+   "page": "Flosi's Fishmongers",
+   "revision": 14991837,
+   "timestamp": "2025-09-25T17:49:38Z",
+   "owner": [
+    "[[Flosi Dalksson]]"
+   ]
+  },
+  "Flying Horse Inn": {
+   "page": "Flying Horse Inn",
+   "revision": 14991976,
+   "timestamp": "2025-09-25T17:52:19Z",
+   "owner": [
+    "[[Bartender (Flying Horse Inn)|Bartender]]"
+   ]
+  },
+  "Flynn's Mace Market": {
+   "page": "Flynn's Mace Market.",
+   "revision": 15318572,
+   "timestamp": "2026-08-25T01:43:08Z",
+   "owner": [
+    "[[Flynn]]"
+   ]
+  },
+  "Food Store": {
+   "page": "Food Store",
+   "revision": 15106249,
+   "timestamp": "2026-01-16T07:29:03Z",
+   "owner": [
+    "[[Wydin]]"
+   ]
+  },
+  "Forester's Arms": {
+   "page": "Forester's Arms",
+   "revision": 15367179,
+   "timestamp": "2026-10-06T21:18:04Z",
+   "owner": [
+    "[[Bartender (Forester's Arms)|Bartender]]"
+   ]
+  },
+  "Forestry Shop": {
+   "page": "Forestry Shop",
+   "revision": 15374369,
+   "timestamp": "2026-10-17T03:22:12Z",
+   "owner": [
+    "[[Friendly Forester]]"
+   ]
+  },
+  "Fortis Baker's Stall": {
+   "page": "Fortis Baker's Stall",
+   "revision": 15318573,
+   "timestamp": "2026-08-25T01:43:08Z",
+   "owner": [
+    "[[Baker (Civitas illa Fortis)|Baker]]"
+   ]
+  },
+  "Fortis Blacksmith": {
+   "page": "Fortis Blacksmith",
+   "revision": 15318574,
+   "timestamp": "2026-08-25T01:43:09Z",
+   "owner": [
+    "[[Blacksmith]]"
+   ]
+  },
+  "Fortis Fur Stall": {
+   "page": "Fortis Fur Stall",
+   "revision": 15318575,
+   "timestamp": "2026-08-25T01:43:10Z",
+   "owner": [
+    "[[Fur Merchant]]"
+   ]
+  },
+  "Fortis Gem Stall": {
+   "page": "Fortis Gem Stall",
+   "revision": 15318576,
+   "timestamp": "2026-08-25T01:43:11Z",
+   "owner": [
+    "[[Gem Merchant (Civitas illa Fortis)|Gem Merchant]]"
+   ]
+  },
+  "Fortis General Store": {
+   "page": "Fortis General Store",
+   "revision": 15372928,
+   "timestamp": "2026-10-15T11:45:25Z",
+   "owner": [
+    "[[Shopkeeper (Civitas illa Fortis)|Shopkeeper]]"
+   ]
+  },
+  "Fortis Silk Stall": {
+   "page": "Fortis Silk Stall",
+   "revision": 15318578,
+   "timestamp": "2026-08-25T01:43:12Z",
+   "owner": [
+    "[[Silk Merchant (Civitas illa Fortis)|Silk Merchant]]"
+   ]
+  },
+  "Fortis Spice Stall": {
+   "page": "Fortis Spice Stall",
+   "revision": 15318579,
+   "timestamp": "2026-08-25T01:43:13Z",
+   "owner": [
+    "[[Spice Merchant]]"
+   ]
+  },
+  "Fossil Island General Store": {
+   "page": "Fossil Island General Store",
+   "revision": 15318581,
+   "timestamp": "2026-08-25T01:43:14Z",
+   "owner": [
+    "[[Shop keeper (Fossil Island)|Shop keeper]]"
+   ]
+  },
+  "Frankie's Fishing Emporium": {
+   "page": "Frankie's Fishing Emporium",
+   "revision": 14991697,
+   "timestamp": "2025-09-25T17:44:28Z",
+   "owner": [
+    "[[Frankie]]"
+   ]
+  },
+  "Fremennik Fish Monger": {
+   "page": "Fremennik Fish Monger",
+   "revision": 14991775,
+   "timestamp": "2025-09-25T17:48:03Z",
+   "owner": [
+    "[[Fish monger]]"
+   ]
+  },
+  "Fremennik Fur Trader": {
+   "page": "Fremennik Fur Trader",
+   "revision": 15318584,
+   "timestamp": "2026-08-25T01:43:16Z",
+   "owner": [
+    "[[Fur trader (Rellekka)|Fur trader]]"
+   ]
+  },
+  "Frenita's Cookery Shop": {
+   "page": "Frenita's Cookery Shop.",
+   "revision": 14991808,
+   "timestamp": "2025-09-25T17:49:07Z",
+   "owner": [
+    "[[Frenita]]"
+   ]
+  },
+  "Frincos' Fabulous Herb Store": {
+   "page": "Frincos' Fabulous Herb Store.",
+   "revision": 15209755,
+   "timestamp": "2026-05-12T05:20:16Z",
+   "owner": [
+    "[[Frincos]]"
+   ]
+  },
+  "Funch's Fine Groceries": {
+   "page": "Funch's Fine Groceries",
+   "revision": 15302612,
+   "timestamp": "2026-08-16T05:23:56Z",
+   "owner": [
+    "[[Heckel Funch]]"
+   ]
+  },
+  "Gabooty's Tai Bwo Wannai Cooperative": {
+   "page": "Gabooty's Tai Bwo Wannai Cooperative.",
+   "revision": 15318587,
+   "timestamp": "2026-08-25T01:43:17Z",
+   "owner": [
+    "[[Gabooty]]"
+   ]
+  },
+  "Gabooty's Tai Bwo Wannai Drinky Store": {
+   "page": "Gabooty's Tai Bwo Wannai Drinky Store.",
+   "revision": 15318588,
+   "timestamp": "2026-08-25T01:43:18Z",
+   "owner": [
+    "[[Gabooty]]"
+   ]
+  },
+  "Gaius' Two Handed Shop": {
+   "page": "Gaius' Two Handed Shop.",
+   "revision": 15318590,
+   "timestamp": "2026-08-25T01:43:19Z",
+   "owner": [
+    "[[Gaius]]"
+   ]
+  },
+  "Garden Centre": {
+   "page": "Garden Centre",
+   "revision": 15318591,
+   "timestamp": "2026-08-25T01:43:20Z",
+   "owner": [
+    "[[Garden supplier]]"
+   ]
+  },
+  "Garlic Cocktail Supply": {
+   "page": "Garlic Cocktail Supply",
+   "revision": 15332285,
+   "timestamp": "2026-09-06T08:02:25Z",
+   "owner": [
+    "[[Werewolf (Darkmeyer)#Lord Myrmel's home|Werewolf]]"
+   ]
+  },
+  "Gem Trader": {
+   "page": "Gem Trader.",
+   "revision": 15318595,
+   "timestamp": "2026-08-25T01:43:23Z",
+   "owner": [
+    "[[Gem trader]]"
+   ]
+  },
+  "General Store (Canifis)": {
+   "page": "General Store (Canifis)",
+   "revision": 15318597,
+   "timestamp": "2026-08-25T01:43:24Z",
+   "owner": [
+    "[[Fidelio]]"
+   ]
+  },
+  "Gerrant's Fishy Business": {
+   "page": "Gerrant's Fishy Business.",
+   "revision": 15326162,
+   "timestamp": "2026-08-31T12:30:09Z",
+   "owner": [
+    "[[Gerrant]]"
+   ]
+  },
+  "Gianne's Restaurant": {
+   "page": "Gianne's Restaurant",
+   "revision": 14991772,
+   "timestamp": "2025-09-25T17:47:59Z",
+   "owner": [
+    "[[Gnome Waiter]]"
+   ]
+  },
+  "Giants' Foundry Reward Shop": {
+   "page": "Giants' Foundry Reward Shop",
+   "revision": 15337300,
+   "timestamp": "2026-09-09T13:18:43Z",
+   "owner": [
+    "[[Kovac]]"
+   ]
+  },
+  "Grace's Graceful Clothing": {
+   "page": "Grace's Graceful Clothing",
+   "revision": 15310506,
+   "timestamp": "2026-08-19T23:03:25Z",
+   "owner": [
+    "[[Grace]]"
+   ]
+  },
+  "Grand Tree Groceries": {
+   "page": "Grand Tree Groceries",
+   "revision": 15302629,
+   "timestamp": "2026-08-16T05:28:10Z",
+   "owner": [
+    "[[Hudo]]"
+   ]
+  },
+  "Green Gemstone Gems": {
+   "page": "Green Gemstone Gems",
+   "revision": 15318602,
+   "timestamp": "2026-08-25T01:43:27Z",
+   "owner": [
+    "[[Hervi]]"
+   ]
+  },
+  "Greengrocer of Miscellania": {
+   "page": "Greengrocer of Miscellania",
+   "revision": 15318603,
+   "timestamp": "2026-08-25T01:43:27Z",
+   "owner": [
+    "[[Greengrocer]]"
+   ]
+  },
+  "Grud's Herblore Stall": {
+   "page": "Grud's Herblore Stall.",
+   "revision": 15318604,
+   "timestamp": "2026-08-25T01:43:28Z",
+   "owner": [
+    "[[Ogre merchant]]"
+   ]
+  },
+  "Grum's Gold Exchange": {
+   "page": "Grum's Gold Exchange.",
+   "revision": 15318605,
+   "timestamp": "2026-08-25T01:43:29Z",
+   "owner": [
+    "[[Grum]]"
+   ]
+  },
+  "Guinevere's Dyes": {
+   "page": "Guinevere's Dyes",
+   "revision": 14991691,
+   "timestamp": "2025-09-25T17:44:20Z",
+   "owner": [
+    "[[Guinevere]]"
+   ]
+  },
+  "Gulluck and Sons": {
+   "page": "Gulluck and Sons",
+   "revision": 14991767,
+   "timestamp": "2025-09-25T17:47:52Z",
+   "owner": [
+    "[[Gulluck]]"
+   ]
+  },
+  "Gunslik's Assorted Items": {
+   "page": "Gunslik's Assorted Items",
+   "revision": 15364365,
+   "timestamp": "2026-10-04T12:12:09Z",
+   "owner": [
+    "[[Gunslik]]"
+   ]
+  },
+  "Gwyn's Mining Emporium": {
+   "page": "Gwyn's Mining Emporium",
+   "revision": 15318608,
+   "timestamp": "2026-08-25T01:43:31Z",
+   "owner": [
+    "[[Gwyn]]"
+   ]
+  },
+  "Hair of the Dog": {
+   "page": "Hair of the Dog",
+   "revision": 15356764,
+   "timestamp": "2026-09-27T03:19:04Z",
+   "owner": [
+    "[[Roavar]]"
+   ]
+  },
+  "Hamab's Crafting Emporium": {
+   "page": "Hamab's Crafting Emporium",
+   "revision": 14991777,
+   "timestamp": "2025-09-25T17:48:05Z",
+   "owner": [
+    "[[Hamab]]"
+   ]
+  },
+  "Happy Heroes' H'emporium": {
+   "page": "Happy Heroes' H'emporium.",
+   "revision": 15102342,
+   "timestamp": "2026-01-09T10:03:33Z",
+   "owner": [
+    "[[Helemos]]"
+   ]
+  },
+  "Harpoon Joe's House of 'Rum'": {
+   "page": "Harpoon Joe's House of 'Rum'.",
+   "revision": 15295194,
+   "timestamp": "2026-08-12T23:17:28Z",
+   "owner": [
+    "[[Joe]]"
+   ]
+  },
+  "Harry's Fishing Shop": {
+   "page": "Harry's Fishing Shop.",
+   "revision": 15239514,
+   "timestamp": "2026-06-25T21:18:15Z",
+   "owner": [
+    "[[Harry]]"
+   ]
+  },
+  "Hefin Inn": {
+   "page": "Hefin Inn",
+   "revision": 15391895,
+   "timestamp": "2026-11-03T15:01:35Z",
+   "owner": [
+    "[[Eira]]"
+   ]
+  },
+  "Helmet Shop": {
+   "page": "Helmet Shop.",
+   "revision": 15318611,
+   "timestamp": "2026-08-25T01:43:33Z",
+   "owner": [
+    "[[Peksa]]"
+   ]
+  },
+  "Henderson's Catch of the Day": {
+   "page": "Henderson's Catch of the Day",
+   "revision": 15209761,
+   "timestamp": "2026-05-12T05:20:21Z",
+   "owner": [
+    "[[Henderson]]"
+   ]
+  },
+  "Hendor's Awesome Ores": {
+   "page": "Hendor's Awesome Ores",
+   "revision": 15318612,
+   "timestamp": "2026-08-25T01:43:33Z",
+   "owner": [
+    "[[Hendor]]"
+   ]
+  },
+  "Herquin's Gems": {
+   "page": "Herquin's Gems.",
+   "revision": 15318613,
+   "timestamp": "2026-08-25T01:43:34Z",
+   "owner": [
+    "[[Herquin]]"
+   ]
+  },
+  "Hickton's Archery Emporium": {
+   "page": "Hickton's Archery Emporium.",
+   "revision": 15305231,
+   "timestamp": "2026-08-18T13:54:56Z",
+   "owner": [
+    "[[Hickton]]"
+   ]
+  },
+  "Honest Jimmy's House of Stuff": {
+   "page": "Honest Jimmy's House of Stuff",
+   "revision": 15369633,
+   "timestamp": "2026-10-09T17:59:25Z",
+   "owner": [
+    "[[Honest Jimmy]]"
+   ]
+  },
+  "Horvik's Armour Shop": {
+   "page": "Horvik's Armour Shop.",
+   "revision": 15278796,
+   "timestamp": "2026-07-28T21:37:35Z",
+   "owner": [
+    "[[Horvik]]"
+   ]
+  },
+  "Huito's Herbal Supplies": {
+   "page": "Huito's Herbal Supplies",
+   "revision": 15322178,
+   "timestamp": "2026-08-27T18:07:07Z",
+   "owner": [
+    "[[Huito]]"
+   ]
+  },
+  "Ian's Wilderness Cape Shop": {
+   "page": "Ian's Wilderness Cape Shop.",
+   "revision": 15318620,
+   "timestamp": "2026-08-25T01:43:39Z",
+   "owner": [
+    "[[Ian]]"
+   ]
+  },
+  "Ifaba's General Store": {
+   "page": "Ifaba's General Store",
+   "revision": 15318621,
+   "timestamp": "2026-08-25T01:43:40Z",
+   "owner": [
+    "[[Ifaba]]"
+   ]
+  },
+  "Imia's Supplies": {
+   "page": "Imia's Supplies",
+   "revision": 15399191,
+   "timestamp": "2026-11-11T15:04:43Z",
+   "owner": [
+    "[[Imia]]"
+   ]
+  },
+  "Initiate Temple Knight Armoury": {
+   "page": "Initiate Temple Knight Armoury",
+   "revision": 15318625,
+   "timestamp": "2026-08-25T01:43:42Z",
+   "owner": [
+    "[[Sir Tiffy Cashien]]"
+   ]
+  },
+  "Iorwerth's Arms": {
+   "page": "Iorwerth's Arms",
+   "revision": 15318626,
+   "timestamp": "2026-08-25T01:43:43Z",
+   "owner": [
+    "[[Celyn]]"
+   ]
+  },
+  "Irksol (shop)": {
+   "page": "Irksol (shop)",
+   "revision": 15318627,
+   "timestamp": "2026-08-25T01:43:44Z",
+   "owner": [
+    "[[Irksol]]"
+   ]
+  },
+  "Ishmael's Fish He Sells": {
+   "page": "Ishmael's Fish He Sells",
+   "revision": 14991820,
+   "timestamp": "2025-09-25T17:49:20Z",
+   "owner": [
+    "[[Ishmael]]"
+   ]
+  },
+  "Island Fishmonger": {
+   "page": "Island Fishmonger",
+   "revision": 14991847,
+   "timestamp": "2025-09-25T17:49:51Z",
+   "owner": [
+    "[[Fishmonger]]"
+   ]
+  },
+  "Island Greengrocer": {
+   "page": "Island Greengrocer",
+   "revision": 15318628,
+   "timestamp": "2026-08-25T01:43:44Z",
+   "owner": [
+    "[[Greengrocer]]"
+   ]
+  },
+  "Ivan's Supplies": {
+   "page": "Ivan's Supplies",
+   "revision": 15318630,
+   "timestamp": "2026-08-25T01:43:46Z",
+   "owner": [
+    "[[Ivan Strom]]"
+   ]
+  },
+  "Iwan's Maces": {
+   "page": "Iwan's Maces",
+   "revision": 15318631,
+   "timestamp": "2026-08-25T01:43:46Z",
+   "owner": [
+    "[[Iwan]]"
+   ]
+  },
+  "Jamila's Craft Stall": {
+   "page": "Jamila's Craft Stall.",
+   "revision": 14991817,
+   "timestamp": "2025-09-25T17:49:16Z",
+   "owner": [
+    "[[Jamila]]"
+   ]
+  },
+  "Jatix's Herblore Shop": {
+   "page": "Jatix's Herblore Shop.",
+   "revision": 15318632,
+   "timestamp": "2026-08-25T01:43:47Z",
+   "owner": [
+    "[[Jatix]]"
+   ]
+  },
+  "Jennifer's General Supplies": {
+   "page": "Jennifer's General Supplies",
+   "revision": 15362766,
+   "timestamp": "2026-10-03T15:27:27Z",
+   "owner": [
+    "[[Jennifer (Shayzien)|Jennifer]]"
+   ]
+  },
+  "Jiminua's Jungle Store": {
+   "page": "Jiminua's Jungle Store.",
+   "revision": 15325390,
+   "timestamp": "2026-08-30T11:53:45Z",
+   "owner": [
+    "[[Jiminua]]"
+   ]
+  },
+  "Jolly Boar Inn": {
+   "page": "Jolly Boar Inn",
+   "revision": 15375629,
+   "timestamp": "2026-10-19T03:37:58Z",
+   "owner": [
+    "[[Bartender (Jolly Boar Inn)|Bartender]]"
+   ]
+  },
+  "Jukat (shop)": {
+   "page": "Jukat (shop)",
+   "revision": 15318635,
+   "timestamp": "2026-08-25T01:43:49Z",
+   "owner": [
+    "[[Jukat]]"
+   ]
+  },
+  "Justine's stuff for the Last Shopper Standing": {
+   "page": "Justine's stuff for the Last Shopper Standing",
+   "revision": 15367074,
+   "timestamp": "2026-10-06T19:28:41Z",
+   "owner": [
+    "[[Justine]]"
+   ]
+  },
+  "Karamja General Store": {
+   "page": "Karamja General Store",
+   "revision": 15318638,
+   "timestamp": "2026-08-25T01:43:51Z",
+   "owner": [
+    "[[Shop keeper (Musa Point)|Shop keeper]]"
+   ]
+  },
+  "Karamja Wines, Spirits, and Beers": {
+   "page": "Karamja Wines, Spirits, and Beers.",
+   "revision": 15086037,
+   "timestamp": "2025-12-14T03:11:34Z",
+   "owner": [
+    "[[Zembo]]"
+   ]
+  },
+  "Kastori Farming Supplies": {
+   "page": "Kastori Farming Supplies",
+   "revision": 14991797,
+   "timestamp": "2025-09-25T17:48:51Z",
+   "owner": [
+    "[[Ameyalli]]"
+   ]
+  },
+  "Kastori General Store": {
+   "page": "Kastori General Store",
+   "revision": 14991792,
+   "timestamp": "2025-09-25T17:48:45Z",
+   "owner": [
+    "[[Shopkeeper (Kastori)|Shopkeeper]]"
+   ]
+  },
+  "Keepa Kettilon's store": {
+   "page": "Keepa Kettilon's store",
+   "revision": 15109174,
+   "timestamp": "2026-01-19T08:01:22Z",
+   "owner": [
+    "[[Keepa Kettilon]]"
+   ]
+  },
+  "Keldagrim Stonemason": {
+   "page": "Keldagrim Stonemason",
+   "revision": 15318641,
+   "timestamp": "2026-08-25T01:43:52Z",
+   "owner": [
+    "[[Stonemason]]"
+   ]
+  },
+  "Keldagrim's Best Bread": {
+   "page": "Keldagrim's Best Bread",
+   "revision": 14991863,
+   "timestamp": "2025-09-25T17:50:12Z",
+   "owner": [
+    "[[Randivor]]"
+   ]
+  },
+  "Kenelme's Wares": {
+   "page": "Kenelme's Wares",
+   "revision": 14991701,
+   "timestamp": "2025-09-25T17:44:33Z",
+   "owner": [
+    "[[Kenelme]]"
+   ]
+  },
+  "Khazard General Store": {
+   "page": "Khazard General Store",
+   "revision": 15318642,
+   "timestamp": "2026-08-25T01:43:53Z",
+   "owner": [
+    "[[Shop keeper (Port Khazard)|Shop keeper]]"
+   ]
+  },
+  "King Narnode's Royal Seed Pods": {
+   "page": "King Narnode's Royal Seed Pods",
+   "revision": 15318643,
+   "timestamp": "2026-08-25T01:43:54Z",
+   "owner": [
+    "[[King Narnode Shareen]]"
+   ]
+  },
+  "King's Axe Inn": {
+   "page": "King's Axe Inn",
+   "revision": 15323284,
+   "timestamp": "2026-08-28T17:06:16Z",
+   "owner": [
+    "[[Barman (King's Axe Inn)|Barman]]"
+   ]
+  },
+  "Kjut's Kebabs": {
+   "page": "Kjut's Kebabs",
+   "revision": 15318644,
+   "timestamp": "2026-08-25T01:43:54Z",
+   "owner": [
+    "[[Kjut]]"
+   ]
+  },
+  "Kourend Castle Baker's Stall": {
+   "page": "Kourend Castle Baker's Stall.",
+   "revision": 14991864,
+   "timestamp": "2025-09-25T17:50:13Z",
+   "owner": [
+    "[[Baker]]"
+   ]
+  },
+  "Kourend Castle Gem Stall": {
+   "page": "Kourend Castle Gem Stall.",
+   "revision": 15318646,
+   "timestamp": "2026-08-25T01:43:56Z",
+   "owner": [
+    "[[Gem merchant (Kourend Castle)|Gem merchant]]"
+   ]
+  },
+  "Larry's Wilderness Cape Shop": {
+   "page": "Larry's Wilderness Cape Shop.",
+   "revision": 15318652,
+   "timestamp": "2026-08-25T01:43:59Z",
+   "owner": [
+    "[[Larry (merchant)|Larry]]"
+   ]
+  },
+  "Laughing Miner Pub": {
+   "page": "Laughing Miner Pub",
+   "revision": 15273759,
+   "timestamp": "2026-07-24T04:21:45Z",
+   "owner": [
+    "[[Barmaid]]"
+   ]
+  },
+  "Leagues Reward Shop": {
+   "page": "Leagues Reward Shop",
+   "revision": 15411784,
+   "timestamp": "2026-11-22T05:50:26Z",
+   "owner": [
+    "[[Leagues Tutor]]"
+   ]
+  },
+  "Leenz's General Supplies": {
+   "page": "Leenz's General Supplies",
+   "revision": 15318657,
+   "timestamp": "2026-08-25T01:44:03Z",
+   "owner": [
+    "[[Leenz]]"
+   ]
+  },
+  "Legends Guild General Store": {
+   "page": "Legends Guild General Store.",
+   "revision": 15318658,
+   "timestamp": "2026-08-25T01:44:03Z",
+   "owner": [
+    "[[Fionella]]"
+   ]
+  },
+  "Legends Guild Shop of Useful Items": {
+   "page": "Legends Guild Shop of Useful Items.",
+   "revision": 15365766,
+   "timestamp": "2026-10-05T17:27:12Z",
+   "owner": [
+    "[[Siegfried Erkle]]"
+   ]
+  },
+  "Leon's Prototype Crossbow": {
+   "page": "Leon's Prototype Crossbow.",
+   "revision": 15318660,
+   "timestamp": "2026-08-25T01:44:05Z",
+   "owner": [
+    "[[Leon]]"
+   ]
+  },
+  "Leprechaun Larry's Farming Supplies": {
+   "page": "Leprechaun Larry's Farming Supplies.",
+   "revision": 14991844,
+   "timestamp": "2025-09-25T17:49:47Z",
+   "owner": [
+    "[[Tool Leprechaun (Larry)|Leprechaun Larry]]"
+   ]
+  },
+  "Little Munty's Little Shop": {
+   "page": "Little Munty's Little Shop",
+   "revision": 15318662,
+   "timestamp": "2026-08-25T01:44:06Z",
+   "owner": [
+    "[[Munty]]"
+   ]
+  },
+  "Little Shop of Horace": {
+   "page": "Little Shop of Horace",
+   "revision": 15318663,
+   "timestamp": "2026-08-25T01:44:07Z",
+   "owner": [
+    "[[Horace]]"
+   ]
+  },
+  "Lletya Archery Shop": {
+   "page": "Lletya Archery Shop",
+   "revision": 14991841,
+   "timestamp": "2025-09-25T17:49:43Z",
+   "owner": [
+    "[[Dalldav]]"
+   ]
+  },
+  "Lletya Food Store": {
+   "page": "Lletya Food Store",
+   "revision": 15318664,
+   "timestamp": "2026-08-25T01:44:07Z",
+   "owner": [
+    "[[Gethin]]"
+   ]
+  },
+  "Lletya General Store": {
+   "page": "Lletya General Store",
+   "revision": 15318665,
+   "timestamp": "2026-08-25T01:44:08Z",
+   "owner": [
+    "[[Eudav]]"
+   ]
+  },
+  "Lletya Seamstress": {
+   "page": "Lletya Seamstress",
+   "revision": 14991826,
+   "timestamp": "2025-09-25T17:49:27Z",
+   "owner": [
+    "[[Oronwen]]"
+   ]
+  },
+  "Lliann's Wares": {
+   "page": "Lliann's Wares",
+   "revision": 15294630,
+   "timestamp": "2026-08-12T21:20:22Z",
+   "owner": [
+    "[[Lliann]]"
+   ]
+  },
+  "Logava Gricoller's Cooking Supplies": {
+   "page": "Logava Gricoller's Cooking Supplies",
+   "revision": 15318666,
+   "timestamp": "2026-08-25T01:44:09Z",
+   "owner": [
+    "[[Logava]]"
+   ]
+  },
+  "Lost Property shop": {
+   "page": "Lost Property shop",
+   "revision": 15349467,
+   "timestamp": "2026-09-17T20:25:15Z",
+   "owner": [
+    "[[Perdu]]",
+    "[[Perdu]]",
+    "[[Perdu]]",
+    "[[Perdu]]",
+    "[[Perdu]]",
+    "[[Chris]]",
+    "[[Perdu]]"
+   ]
+  },
+  "Louie's Armoured Legs Bazaar": {
+   "page": "Louie's Armoured Legs Bazaar.",
+   "revision": 15318668,
+   "timestamp": "2026-08-25T01:44:10Z",
+   "owner": [
+    "[[Louie Legs]]"
+   ]
+  },
+  "Lovecraft's Tackle": {
+   "page": "Lovecraft's Tackle",
+   "revision": 14991832,
+   "timestamp": "2025-09-25T17:49:33Z",
+   "owner": [
+    "[[Ezekial Lovecraft]]"
+   ]
+  },
+  "Lowe's Archery Emporium": {
+   "page": "Lowe's Archery Emporium",
+   "revision": 15305239,
+   "timestamp": "2026-08-18T14:01:00Z",
+   "owner": [
+    "[[Lowe]]"
+   ]
+  },
+  "Lumbridge General Store": {
+   "page": "Lumbridge General Store",
+   "revision": 15394536,
+   "timestamp": "2026-11-05T10:38:34Z",
+   "owner": [
+    "[[Shop keeper (Lumbridge)|Shop keeper]], [[Shop assistant (Lumbridge)|Shop assistant]]"
+   ]
+  },
+  "Lunami's Axe Shop": {
+   "page": "Lunami's Axe Shop",
+   "revision": 15211381,
+   "timestamp": "2026-05-16T04:59:38Z",
+   "owner": [
+    "[[Lunami]]"
+   ]
+  },
+  "Lundail's Arena-side Rune Shop": {
+   "page": "Lundail's Arena-side Rune Shop.",
+   "revision": 15318671,
+   "timestamp": "2026-08-25T01:44:12Z",
+   "owner": [
+    "[[Lundail]]"
+   ]
+  },
+  "Mage Arena Staffs": {
+   "page": "Mage Arena Staffs.",
+   "revision": 15318675,
+   "timestamp": "2026-08-25T01:44:14Z",
+   "owner": [
+    "[[Chamber guardian]]"
+   ]
+  },
+  "Magic Guild Store (Mystic Robes)": {
+   "page": "Magic Guild Store (Mystic Robes)",
+   "revision": 15318676,
+   "timestamp": "2026-08-25T01:44:15Z",
+   "owner": [
+    "[[Wizard Sinina]]"
+   ]
+  },
+  "Magic Guild Store (Runes and Staves)": {
+   "page": "Magic Guild Store (Runes and Staves)",
+   "revision": 15351901,
+   "timestamp": "2026-09-20T03:52:46Z",
+   "owner": [
+    "[[Wizard Akutha]]"
+   ]
+  },
+  "Mahogany Homes Reward Shop": {
+   "page": "Mahogany Homes Reward Shop",
+   "revision": 15318678,
+   "timestamp": "2026-08-25T01:44:16Z",
+   "owner": [
+    "[[Amy]]"
+   ]
+  },
+  "Mairin's Market": {
+   "page": "Mairin's Market",
+   "revision": 15364248,
+   "timestamp": "2026-10-04T11:18:06Z",
+   "owner": [
+    "[[Mairin]]"
+   ]
+  },
+  "Martin Thwait's Lost and Found": {
+   "page": "Martin Thwait's Lost and Found.",
+   "revision": 15318685,
+   "timestamp": "2026-08-25T01:44:21Z",
+   "owner": [
+    "[[Martin Thwait]]"
+   ]
+  },
+  "Miltog's Lamps": {
+   "page": "Miltog's Lamps",
+   "revision": 14991854,
+   "timestamp": "2025-09-25T17:50:01Z",
+   "owner": [
+    "[[Miltog]]"
+   ]
+  },
+  "Mining Guild Mineral Exchange": {
+   "page": "Mining Guild Mineral Exchange",
+   "revision": 15318692,
+   "timestamp": "2026-08-25T01:44:24Z",
+   "owner": [
+    "[[Belona]]"
+   ]
+  },
+  "Miscellanian Clothes Shop": {
+   "page": "Miscellanian Clothes Shop",
+   "revision": 15330567,
+   "timestamp": "2026-09-04T04:30:14Z",
+   "owner": [
+    "[[Halla]]"
+   ]
+  },
+  "Miscellanian Food Shop": {
+   "page": "Miscellanian Food Shop",
+   "revision": 15330569,
+   "timestamp": "2026-09-04T04:30:43Z",
+   "owner": [
+    "[[Osvald]]"
+   ]
+  },
+  "Miscellanian General Store": {
+   "page": "Miscellanian General Store",
+   "revision": 15330570,
+   "timestamp": "2026-09-04T04:31:04Z",
+   "owner": [
+    "[[Finn]]"
+   ]
+  },
+  "Mistrock Mining Supplies": {
+   "page": "Mistrock Mining Supplies",
+   "revision": 15158445,
+   "timestamp": "2026-03-26T22:56:00Z",
+   "owner": [
+    "[[Necto]]"
+   ]
+  },
+  "Mixology Rewards": {
+   "page": "Mixology Rewards",
+   "revision": 15318693,
+   "timestamp": "2026-08-25T01:44:25Z",
+   "owner": [
+    "[[Supervisor Lalo]]"
+   ]
+  },
+  "Moon Clan Fine Clothes": {
+   "page": "Moon Clan Fine Clothes.",
+   "revision": 14991819,
+   "timestamp": "2025-09-25T17:49:18Z",
+   "owner": [
+    "[[Rimae Sirsalis]]"
+   ]
+  },
+  "Moon Clan General Store": {
+   "page": "Moon Clan General Store.",
+   "revision": 14991829,
+   "timestamp": "2025-09-25T17:49:30Z",
+   "owner": [
+    "[[Melana Moonlander]]"
+   ]
+  },
+  "Moonrise Wines": {
+   "page": "Moonrise Wines",
+   "revision": 15265547,
+   "timestamp": "2026-07-16T20:01:18Z",
+   "owner": [
+    "[[Antonius]]"
+   ]
+  },
+  "Mount Karuulm Weapon Shop": {
+   "page": "Mount Karuulm Weapon Shop",
+   "revision": 14991813,
+   "timestamp": "2025-09-25T17:49:12Z",
+   "owner": [
+    "[[Leke quo Keran]]"
+   ]
+  },
+  "Multicannon parts for sale": {
+   "page": "Multicannon parts for sale",
+   "revision": 15318694,
+   "timestamp": "2026-08-25T01:44:26Z",
+   "owner": [
+    "[[Nulodion]]"
+   ]
+  },
+  "Myreque's Rest": {
+   "page": "Myreque's Rest",
+   "revision": 15318695,
+   "timestamp": "2026-08-25T01:44:27Z",
+   "owner": [
+    "[[Veliaf Hurtz]]"
+   ]
+  },
+  "Mysterious Hallowed Goods": {
+   "page": "Mysterious Hallowed Goods",
+   "revision": 15318696,
+   "timestamp": "2026-08-25T01:44:27Z",
+   "owner": [
+    "[[Mysterious Stranger (Hallowed Sepulchre)|Mysterious Stranger]]"
+   ]
+  },
+  "Mysterious Stranger (shop)": {
+   "page": "Mysterious Stranger (shop)",
+   "revision": 15392345,
+   "timestamp": "2026-11-03T17:36:03Z",
+   "owner": [
+    "[[Mysterious Stranger]]"
+   ]
+  },
+  "Mythical Cape Store": {
+   "page": "Mythical Cape Store",
+   "revision": 15166105,
+   "timestamp": "2026-04-06T01:40:56Z",
+   "owner": [
+    "[[Jack]]"
+   ]
+  },
+  "Myths' Guild Armoury": {
+   "page": "Myths' Guild Armoury",
+   "revision": 15318698,
+   "timestamp": "2026-08-25T01:44:28Z",
+   "owner": [
+    "[[Erdan]]"
+   ]
+  },
+  "Myths' Guild Herbalist": {
+   "page": "Myths' Guild Herbalist",
+   "revision": 15318699,
+   "timestamp": "2026-08-25T01:44:29Z",
+   "owner": [
+    "[[Primula]]"
+   ]
+  },
+  "Myths' Guild Weaponry": {
+   "page": "Myths' Guild Weaponry",
+   "revision": 15166104,
+   "timestamp": "2026-04-06T01:40:30Z",
+   "owner": [
+    "[[Diana]]"
+   ]
+  },
+  "Nardah General Store": {
+   "page": "Nardah General Store.",
+   "revision": 15318700,
+   "timestamp": "2026-08-25T01:44:30Z",
+   "owner": [
+    "[[Kazemde]]"
+   ]
+  },
+  "Nardah Hunter Shop": {
+   "page": "Nardah Hunter Shop.",
+   "revision": 15399179,
+   "timestamp": "2026-11-11T15:01:28Z",
+   "owner": [
+    "[[Artimeus]]"
+   ]
+  },
+  "Nardok's Bone Weapons": {
+   "page": "Nardok's Bone Weapons",
+   "revision": 15318703,
+   "timestamp": "2026-08-25T01:44:31Z",
+   "owner": [
+    "[[Nardok]]"
+   ]
+  },
+  "Nathifa's Bake Stall": {
+   "page": "Nathifa's Bake Stall.",
+   "revision": 14991833,
+   "timestamp": "2025-09-25T17:49:34Z",
+   "owner": [
+    "[[Nathifa]]"
+   ]
+  },
+  "Ned's Handmade Rope (100% Wool - not yak, honest!)": {
+   "page": "Ned's Handmade Rope (100% Wool)",
+   "revision": 15318704,
+   "timestamp": "2026-08-25T01:44:32Z",
+   "owner": [
+    "[[Ned]]"
+   ]
+  },
+  "Neil's Wilderness Cape Shop": {
+   "page": "Neil's Wilderness Cape Shop.",
+   "revision": 15318705,
+   "timestamp": "2026-08-25T01:44:33Z",
+   "owner": [
+    "[[Neil]]"
+   ]
+  },
+  "Neitiznot supplies": {
+   "page": "Neitiznot supplies.",
+   "revision": 14991840,
+   "timestamp": "2025-09-25T17:49:42Z",
+   "owner": [
+    "[[Jofridr Mordstatter]]"
+   ]
+  },
+  "Nemus Retreat (pub)": {
+   "page": "Nemus Retreat (pub)",
+   "revision": 15139896,
+   "timestamp": "2026-03-01T15:06:12Z",
+   "owner": [
+    "[[Bartender (Nemus Retreat)|Bartender]]"
+   ]
+  },
+  "Nurmof's Pickaxe Shop": {
+   "page": "Nurmof's Pickaxe Shop.",
+   "revision": 15318709,
+   "timestamp": "2026-08-25T01:44:35Z",
+   "owner": [
+    "[[Nurmof]]"
+   ]
+  },
+  "Obli's General Store": {
+   "page": "Obli's General Store.",
+   "revision": 15318710,
+   "timestamp": "2026-08-25T01:44:36Z",
+   "owner": [
+    "[[Obli]]"
+   ]
+  },
+  "Old Man Ral's Supplies": {
+   "page": "Old Man Ral's Supplies",
+   "revision": 15318712,
+   "timestamp": "2026-08-25T01:44:37Z",
+   "owner": [
+    "[[Old Man Ral]]"
+   ]
+  },
+  "Oobapohk's Javelin Store": {
+   "page": "Oobapohk's Javelin Store",
+   "revision": 14991780,
+   "timestamp": "2025-09-25T17:48:31Z",
+   "owner": [
+    "[[Oobapohk]]"
+   ]
+  },
+  "Ore seller": {
+   "page": "Ore seller.",
+   "revision": 15395373,
+   "timestamp": "2026-11-06T11:16:20Z",
+   "owner": [
+    "[[Ordan]]"
+   ]
+  },
+  "Ore store": {
+   "page": "Ore store",
+   "revision": 15318715,
+   "timestamp": "2026-08-25T01:44:39Z",
+   "owner": [
+    "[[Hring Hring]]"
+   ]
+  },
+  "Outer Fortis General Store": {
+   "page": "Outer Fortis General Store",
+   "revision": 15372929,
+   "timestamp": "2026-10-15T11:45:56Z",
+   "owner": [
+    "[[Shopkeeper (Outer Fortis)]]"
+   ]
+  },
+  "Oziach (shop)": {
+   "page": "Oziach (shop)",
+   "revision": 15318720,
+   "timestamp": "2026-08-25T01:44:42Z",
+   "owner": [
+    "[[Oziach]]"
+   ]
+  },
+  "Paramaya Inn": {
+   "page": "Paramaya Inn",
+   "revision": 15413398,
+   "timestamp": "2026-11-23T13:34:08Z",
+   "owner": [
+    "[[Kaleb Paramaya]]"
+   ]
+  },
+  "Pellem's Fur Store": {
+   "page": "Pellem's Fur Store",
+   "revision": 15241786,
+   "timestamp": "2026-06-28T21:27:09Z",
+   "owner": [
+    "[[Pellem]]"
+   ]
+  },
+  "Pelters' Veg Stall": {
+   "page": "Pelters' Veg Stall",
+   "revision": 15359590,
+   "timestamp": "2026-10-01T12:42:14Z",
+   "owner": [
+    "[[Tramp (pillory)|Tramp]]",
+    "[[Tramp (pillory)|Tramp]]",
+    "[[Tramp (pillory)|Tramp]]",
+    "[[Tramp (pillory)|Tramp]]",
+    "[[Fadli]]"
+   ]
+  },
+  "Perry's Chop-chop Shop": {
+   "page": "Perry's Chop-chop Shop",
+   "revision": 15011773,
+   "timestamp": "2025-10-30T02:22:50Z",
+   "owner": [
+    "[[Perry]]"
+   ]
+  },
+  "Petrified Pete's Ore Shop": {
+   "page": "Petrified Pete's Ore Shop",
+   "revision": 15364261,
+   "timestamp": "2026-10-04T11:24:00Z",
+   "owner": [
+    "[[Petrified Pete]]"
+   ]
+  },
+  "Picaria's Fishing Shop": {
+   "page": "Picaria's Fishing Shop",
+   "revision": 14991752,
+   "timestamp": "2025-09-25T17:45:33Z",
+   "owner": [
+    "[[Picaria]]"
+   ]
+  },
+  "Pickaxe-Is-Mine": {
+   "page": "Pickaxe-Is-Mine",
+   "revision": 15374881,
+   "timestamp": "2026-10-18T03:22:18Z",
+   "owner": [
+    "[[Tati]] and [[Sune]]"
+   ]
+  },
+  "Pie Shop": {
+   "page": "Pie Shop",
+   "revision": 14991853,
+   "timestamp": "2025-09-25T17:50:00Z",
+   "owner": [
+    "[[Romily Weaklax]]"
+   ]
+  },
+  "Pollnivneach general store": {
+   "page": "Pollnivneach general store.",
+   "revision": 15351865,
+   "timestamp": "2026-09-20T03:41:31Z",
+   "owner": [
+    "[[Market seller]]"
+   ]
+  },
+  "Port Phasmatys General Store": {
+   "page": "Port Phasmatys General Store",
+   "revision": 15318725,
+   "timestamp": "2026-08-25T01:44:45Z",
+   "owner": [
+    "[[Ghost shopkeeper]]"
+   ]
+  },
+  "Port Roberts Cannonball Stall": {
+   "page": "Port Roberts Cannonball Stall",
+   "revision": 15318726,
+   "timestamp": "2026-08-25T01:44:46Z",
+   "owner": [
+    "[[Iron Bill]]"
+   ]
+  },
+  "Port Roberts Fish Stall": {
+   "page": "Port Roberts Fish Stall",
+   "revision": 15209777,
+   "timestamp": "2026-05-12T05:22:23Z",
+   "owner": [
+    "[[Gregory]]"
+   ]
+  },
+  "Port Roberts Fur Stall": {
+   "page": "Port Roberts Fur Stall",
+   "revision": 15318727,
+   "timestamp": "2026-08-25T01:44:47Z",
+   "owner": [
+    "[[Perdie]]"
+   ]
+  },
+  "Port Roberts Gem Stall": {
+   "page": "Port Roberts Gem Stall",
+   "revision": 15318728,
+   "timestamp": "2026-08-25T01:44:48Z",
+   "owner": [
+    "[[Eleanor]]"
+   ]
+  },
+  "Port Roberts General Store": {
+   "page": "Port Roberts General Store",
+   "revision": 15209786,
+   "timestamp": "2026-05-12T05:22:50Z",
+   "owner": [
+    "[[Shopkeeper (Port Roberts)]]"
+   ]
+  },
+  "Port Roberts Ore Stall": {
+   "page": "Port Roberts Ore Stall",
+   "revision": 15209776,
+   "timestamp": "2026-05-12T05:22:23Z",
+   "owner": [
+    "[[Delf]]"
+   ]
+  },
+  "Port Roberts Silk Stall": {
+   "page": "Port Roberts Silk Stall",
+   "revision": 15318730,
+   "timestamp": "2026-08-25T01:44:48Z",
+   "owner": [
+    "[[Doria]]"
+   ]
+  },
+  "Port Roberts Silver Stall": {
+   "page": "Port Roberts Silver Stall",
+   "revision": 15322856,
+   "timestamp": "2026-08-28T10:42:45Z",
+   "owner": [
+    "[[Amos]]"
+   ]
+  },
+  "Port Roberts Spice Stall": {
+   "page": "Port Roberts Spice Stall",
+   "revision": 15318732,
+   "timestamp": "2026-08-25T01:44:50Z",
+   "owner": [
+    "[[Samir]]"
+   ]
+  },
+  "Port Roberts Veg Stall": {
+   "page": "Port Roberts Veg Stall",
+   "revision": 15318733,
+   "timestamp": "2026-08-25T01:44:50Z",
+   "owner": [
+    "[[Marla (Port Roberts)|Marla]]"
+   ]
+  },
+  "Prifddinas Foodstuffs": {
+   "page": "Prifddinas Foodstuffs",
+   "revision": 14991684,
+   "timestamp": "2025-09-25T17:44:12Z",
+   "owner": [
+    "[[Derwen (elf)|Derwen]]"
+   ]
+  },
+  "Prifddinas Gem Stall": {
+   "page": "Prifddinas Gem Stall",
+   "revision": 15318736,
+   "timestamp": "2026-08-25T01:44:51Z",
+   "owner": [
+    "[[Glenda]]"
+   ]
+  },
+  "Prifddinas General Store": {
+   "page": "Prifddinas General Store",
+   "revision": 15318737,
+   "timestamp": "2026-08-25T01:44:52Z",
+   "owner": [
+    "[[Gwallter]]"
+   ]
+  },
+  "Prifddinas Herbal Supplies": {
+   "page": "Prifddinas Herbal Supplies",
+   "revision": 15318738,
+   "timestamp": "2026-08-25T01:44:53Z",
+   "owner": [
+    "[[Llio]]"
+   ]
+  },
+  "Prifddinas Silver Stall": {
+   "page": "Prifddinas Silver Stall",
+   "revision": 15318739,
+   "timestamp": "2026-08-25T01:44:54Z",
+   "owner": [
+    "[[Osian]]"
+   ]
+  },
+  "Prifddinas Spice Stall": {
+   "page": "Prifddinas Spice Stall",
+   "revision": 15318740,
+   "timestamp": "2026-08-25T01:44:54Z",
+   "owner": [
+    "[[Caerwyn]]"
+   ]
+  },
+  "Prifddinas' Seamstress": {
+   "page": "Prifddinas' Seamstress",
+   "revision": 15129029,
+   "timestamp": "2026-02-17T21:44:40Z",
+   "owner": [
+    "[[Nia]]"
+   ]
+  },
+  "Proselyte Temple Knight Armoury": {
+   "page": "Proselyte Temple Knight Armoury",
+   "revision": 15318742,
+   "timestamp": "2026-08-25T01:44:56Z",
+   "owner": [
+    "[[Sir Tiffy Cashien]]"
+   ]
+  },
+  "Prospector Percy's Nugget Shop": {
+   "page": "Prospector Percy's Nugget Shop",
+   "revision": 15318743,
+   "timestamp": "2026-08-25T01:44:56Z",
+   "owner": [
+    "[[Prospector Percy]]"
+   ]
+  },
+  "PvP Arena Rewards": {
+   "page": "PvP Arena Rewards",
+   "revision": 15393104,
+   "timestamp": "2026-11-04T01:22:38Z",
+   "owner": [
+    "[[Mubariz]]"
+   ]
+  },
+  "Quality Armour Shop": {
+   "page": "Quality Armour Shop",
+   "revision": 15121838,
+   "timestamp": "2026-02-06T04:40:37Z",
+   "owner": [
+    "[[Saro]]"
+   ]
+  },
+  "Quality Weapons Shop": {
+   "page": "Quality Weapons Shop",
+   "revision": 15392122,
+   "timestamp": "2026-11-03T15:39:22Z",
+   "owner": [
+    "[[Santiri]]"
+   ]
+  },
+  "Quartermaster's Stores": {
+   "page": "Quartermaster's Stores",
+   "revision": 15318745,
+   "timestamp": "2026-08-25T01:44:58Z",
+   "owner": [
+    "[[Quartermaster]]"
+   ]
+  },
+  "Quetzacalli Gorge General Store": {
+   "page": "Quetzacalli Gorge General Store",
+   "revision": 14991790,
+   "timestamp": "2025-09-25T17:48:43Z",
+   "owner": [
+    "[[Shopkeeper (Quetzacalli Gorge)|Shopkeeper]]"
+   ]
+  },
+  "Raetul and Co's Cloth Store": {
+   "page": "Raetul and Co's Cloth Store.",
+   "revision": 15139398,
+   "timestamp": "2026-03-01T06:41:40Z",
+   "owner": [
+    "[[Raetul]]"
+   ]
+  },
+  "Ramarno's Shard Exchange": {
+   "page": "Ramarno's Shard Exchange",
+   "revision": 15385764,
+   "timestamp": "2026-10-29T19:05:46Z",
+   "owner": [
+    "[[Ramarno]]"
+   ]
+  },
+  "Ranael's Super Skirt Store": {
+   "page": "Ranael's Super Skirt Store.",
+   "revision": 15318746,
+   "timestamp": "2026-08-25T01:44:58Z",
+   "owner": [
+    "[[Ranael]]"
+   ]
+  },
+  "Ranging Guild Ticket Exchange": {
+   "page": "Ranging Guild Ticket Exchange",
+   "revision": 15318747,
+   "timestamp": "2026-08-25T01:44:59Z",
+   "owner": [
+    "[[Ticket Merchant]]"
+   ]
+  },
+  "Rasolo the Wandering Merchant": {
+   "page": "Rasolo the Wandering Merchant",
+   "revision": 15318750,
+   "timestamp": "2026-08-25T01:45:01Z",
+   "owner": [
+    "[[Rasolo]]"
+   ]
+  },
+  "Rat & Bat": {
+   "page": "Rat & Bat",
+   "revision": 15315762,
+   "timestamp": "2026-08-21T16:33:47Z",
+   "owner": [
+    "[[Carl]] <br/> [[Roy]] (After [[Sins of the Father]])"
+   ]
+  },
+  "Ratpit bar (Keldagrim)": {
+   "page": "Ratpit bar (Keldagrim)",
+   "revision": 14991985,
+   "timestamp": "2025-09-25T17:52:29Z",
+   "owner": [
+    "[[Rauborn]]"
+   ]
+  },
+  "Ratpit bar (Port Sarim)": {
+   "page": "Ratpit bar (Port Sarim)",
+   "revision": 14992448,
+   "timestamp": "2025-09-25T18:00:23Z",
+   "owner": [
+    "[[Barman (Ratpit bar)|Barman]]"
+   ]
+  },
+  "Ratpit bar (Varrock)": {
+   "page": "Ratpit bar (Varrock)",
+   "revision": 14992008,
+   "timestamp": "2025-09-25T17:52:52Z",
+   "owner": [
+    "[[Barman (Ratpit bar)|Barman]]"
+   ]
+  },
+  "Razmire Builders Merchants": {
+   "page": "Razmire Builders Merchants.",
+   "revision": 15318751,
+   "timestamp": "2026-08-25T01:45:01Z",
+   "owner": [
+    "[[Razmire Keelgan]]"
+   ]
+  },
+  "Razmire General Store": {
+   "page": "Razmire General Store.",
+   "revision": 15364312,
+   "timestamp": "2026-10-04T11:49:53Z",
+   "owner": [
+    "[[Razmire Keelgan]]"
+   ]
+  },
+  "Regath's Wares": {
+   "page": "Regath's Wares",
+   "revision": 15318753,
+   "timestamp": "2026-08-25T01:45:03Z",
+   "owner": [
+    "[[Regath]]"
+   ]
+  },
+  "Reldak's Leather Armour": {
+   "page": "Reldak's Leather Armour",
+   "revision": 15318754,
+   "timestamp": "2026-08-25T01:45:03Z",
+   "owner": [
+    "[[Reldak]]"
+   ]
+  },
+  "Rellekka Longhall Bar": {
+   "page": "Rellekka Longhall Bar",
+   "revision": 14991696,
+   "timestamp": "2025-09-25T17:44:27Z",
+   "owner": [
+    "[[Thora the Barkeep]]"
+   ]
+  },
+  "Richard's Farming shop": {
+   "page": "Richard's Farming shop.",
+   "revision": 14991835,
+   "timestamp": "2025-09-25T17:49:36Z",
+   "owner": [
+    "[[Richard (Ardougne)|Richard]]"
+   ]
+  },
+  "Richard's Wilderness Cape Shop": {
+   "page": "Richard's Wilderness Cape Shop.",
+   "revision": 15318757,
+   "timestamp": "2026-08-25T01:45:05Z",
+   "owner": [
+    "[[Richard (merchant)|Richard]]"
+   ]
+  },
+  "Rimmington General Store": {
+   "page": "Rimmington General Store",
+   "revision": 15318759,
+   "timestamp": "2026-08-25T01:45:06Z",
+   "owner": [
+    "[[Shop keeper (Rimmington)]]"
+   ]
+  },
+  "Rising Sun Inn": {
+   "page": "Rising Sun Inn",
+   "revision": 14997364,
+   "timestamp": "2025-10-01T03:21:40Z",
+   "owner": [
+    "[[Kaylee]], [[Emily]], [[Tina]]"
+   ]
+  },
+  "Rok's Chocs Box": {
+   "page": "Rok's Chocs Box.",
+   "revision": 15318761,
+   "timestamp": "2026-08-25T01:45:08Z",
+   "owner": [
+    "[[Rokuh]]"
+   ]
+  },
+  "Rommik's Crafty Supplies": {
+   "page": "Rommik's Crafty Supplies.",
+   "revision": 14991816,
+   "timestamp": "2025-09-25T17:49:15Z",
+   "owner": [
+    "[[Rommik]]"
+   ]
+  },
+  "Rufus' Meat Emporium": {
+   "page": "Rufus' Meat Emporium",
+   "revision": 14991702,
+   "timestamp": "2025-09-25T17:44:34Z",
+   "owner": [
+    "[[Rufus]]"
+   ]
+  },
+  "Rusty Anchor Inn": {
+   "page": "Rusty Anchor Inn",
+   "revision": 15233074,
+   "timestamp": "2026-06-13T13:08:35Z",
+   "owner": [
+    "[[Bartender (Rusty Anchor Inn)]]"
+   ]
+  },
+  "Salius' Armour Shop": {
+   "page": "Salius' Armour Shop",
+   "revision": 14991783,
+   "timestamp": "2025-09-25T17:48:35Z",
+   "owner": [
+    "[[Salius]]"
+   ]
+  },
+  "Salvager Overlook General Store": {
+   "page": "Salvager Overlook General Store",
+   "revision": 14991782,
+   "timestamp": "2025-09-25T17:48:33Z",
+   "owner": [
+    "[[Shopkeeper (Salvager Overlook)]]"
+   ]
+  },
+  "Sam's Wilderness Cape Shop": {
+   "page": "Sam's Wilderness Cape Shop.",
+   "revision": 15318764,
+   "timestamp": "2026-08-25T01:45:09Z",
+   "owner": [
+    "[[Sam (merchant)]]"
+   ]
+  },
+  "Sarah's Farming shop": {
+   "page": "Sarah's Farming shop.",
+   "revision": 15194675,
+   "timestamp": "2026-04-22T13:56:03Z",
+   "owner": [
+    "[[Sarah]]"
+   ]
+  },
+  "Scavvo's Rune Store": {
+   "page": "Scavvo's Rune Store.",
+   "revision": 15392011,
+   "timestamp": "2026-11-03T15:25:44Z",
+   "owner": [
+    "[[Scavvo]]"
+   ]
+  },
+  "Seb's Shipyard Supplies": {
+   "page": "Seb's Shipyard Supplies",
+   "revision": 15318765,
+   "timestamp": "2026-08-25T01:45:10Z",
+   "owner": [
+    "[[Shipwright Seb]]"
+   ]
+  },
+  "Sebamo's Sublime Staffs": {
+   "page": "Sebamo's Sublime Staffs",
+   "revision": 14991793,
+   "timestamp": "2025-09-25T17:48:46Z",
+   "owner": [
+    "[[Sebamo]]"
+   ]
+  },
+  "Seddu's Adventurer's Store": {
+   "page": "Seddu's Adventurer's Store.",
+   "revision": 15252926,
+   "timestamp": "2026-07-04T22:01:59Z",
+   "owner": [
+    "[[Seddu]]"
+   ]
+  },
+  "Shantay Pass Shop": {
+   "page": "Shantay Pass Shop",
+   "revision": 15318770,
+   "timestamp": "2026-08-25T01:45:12Z",
+   "owner": [
+    "[[Shantay]]",
+    "[[Shantay Guard (Ruins of Unkah)|Shantay Guard]]"
+   ]
+  },
+  "Shayzien Styles": {
+   "page": "Shayzien Styles",
+   "revision": 15398369,
+   "timestamp": "2026-11-10T17:27:30Z",
+   "owner": [
+    "[[Robyn]]"
+   ]
+  },
+  "Shields of Mistrock": {
+   "page": "Shields of Mistrock",
+   "revision": 15318772,
+   "timestamp": "2026-08-25T01:45:14Z",
+   "owner": [
+    "[[Ichta]]"
+   ]
+  },
+  "Shop of Distaste": {
+   "page": "Shop of Distaste",
+   "revision": 15318773,
+   "timestamp": "2026-08-25T01:45:14Z",
+   "owner": [
+    "[[Fadli]]"
+   ]
+  },
+  "Sian's Ranged Weaponry": {
+   "page": "Sian's Ranged Weaponry",
+   "revision": 14991692,
+   "timestamp": "2025-09-25T17:44:21Z",
+   "owner": [
+    "[[Sian]]"
+   ]
+  },
+  "Sigmund the Merchant (shop)": {
+   "page": "Sigmund the Merchant (shop)",
+   "revision": 15318774,
+   "timestamp": "2026-08-25T01:45:15Z",
+   "owner": [
+    "[[Sigmund the Merchant]]"
+   ]
+  },
+  "Silver Cog Silver Stall": {
+   "page": "Silver Cog Silver Stall",
+   "revision": 15318777,
+   "timestamp": "2026-08-25T01:45:17Z",
+   "owner": [
+    "[[Gulldamar]]"
+   ]
+  },
+  "Simon's Wilderness Cape Shop": {
+   "page": "Simon's Wilderness Cape Shop.",
+   "revision": 15318778,
+   "timestamp": "2026-08-25T01:45:18Z",
+   "owner": [
+    "[[Simon]]"
+   ]
+  },
+  "Skulgrimen's Battle Gear": {
+   "page": "Skulgrimen's Battle Gear",
+   "revision": 15318781,
+   "timestamp": "2026-08-25T01:45:19Z",
+   "owner": [
+    "[[Skulgrimen]]"
+   ]
+  },
+  "Slayer Equipment (shop)": {
+   "page": "Slayer Equipment (shop)",
+   "revision": 15364486,
+   "timestamp": "2026-10-04T14:16:14Z",
+   "owner": [
+    "[[Turael]]/[[Aya]]",
+    "[[Spria]]",
+    "[[Krystilia]]",
+    "[[Mazchna]]/[[Achtryn]]",
+    "[[Vannaka]]",
+    "[[Chaeldar]]",
+    "[[Konar quo Maten]]",
+    "[[Nieve]]/[[Steve]]",
+    "[[Duradel]]/[[Kuradal]]",
+    "[[Mortimer]]"
+   ]
+  },
+  "Smithing Smith's Shop": {
+   "page": "Smithing Smith's Shop.",
+   "revision": 15318786,
+   "timestamp": "2026-08-25T01:45:23Z",
+   "owner": [
+    "[[Smith]]"
+   ]
+  },
+  "Solihib's Food Stall": {
+   "page": "Solihib's Food Stall",
+   "revision": 15105252,
+   "timestamp": "2026-01-14T15:22:34Z",
+   "owner": [
+    "[[Solihib]]"
+   ]
+  },
+  "Soul Wars Reward Shop": {
+   "page": "Soul Wars Reward Shop",
+   "revision": 15337354,
+   "timestamp": "2026-09-09T13:47:58Z",
+   "owner": [
+    "[[Nomad]]"
+   ]
+  },
+  "Spike's Spikes": {
+   "page": "Spike's Spikes",
+   "revision": 15318789,
+   "timestamp": "2026-08-25T01:45:25Z",
+   "owner": [
+    "[[Spike]]"
+   ]
+  },
+  "Stick Your Ore Inn": {
+   "page": "Stick Your Ore Inn",
+   "revision": 15264872,
+   "timestamp": "2026-07-16T03:31:08Z",
+   "owner": [
+    "[[Bartender (Stick Your Ore Inn)|Bartender]]"
+   ]
+  },
+  "Stonecutter Supplies": {
+   "page": "Stonecutter Supplies",
+   "revision": 15318792,
+   "timestamp": "2026-08-25T01:45:27Z",
+   "owner": [
+    "[[Metla]]"
+   ]
+  },
+  "Sulisal's Superb Fishing Store": {
+   "page": "Sulisal's Superb Fishing Store",
+   "revision": 14991795,
+   "timestamp": "2025-09-25T17:48:48Z",
+   "owner": [
+    "[[Sulisal]]"
+   ]
+  },
+  "Sunlight's Sanctum": {
+   "page": "Sunlight's Sanctum",
+   "revision": 15403726,
+   "timestamp": "2026-11-16T08:57:52Z",
+   "owner": [
+    "[[Bartender (Sunlight's Sanctum)|Bartender]]"
+   ]
+  },
+  "Sunset Coast General Store": {
+   "page": "Sunset Coast General Store",
+   "revision": 15318793,
+   "timestamp": "2026-08-25T01:45:27Z",
+   "owner": [
+    "[[Shopkeeper (Sunset Coast)|Shopkeeper]]"
+   ]
+  },
+  "Supplies's Supplies": {
+   "page": "Supplies's Supplies",
+   "revision": 15318794,
+   "timestamp": "2026-08-25T01:45:28Z",
+   "owner": [
+    "[[Mr Supplies Jnr]]"
+   ]
+  },
+  "Tal Teklan General Store": {
+   "page": "Tal Teklan General Store",
+   "revision": 15318796,
+   "timestamp": "2026-08-25T01:45:29Z",
+   "owner": [
+    "[[Shopkeeper (Tal Teklan)|Shopkeeper]]"
+   ]
+  },
+  "Tal Teklan Rune Shop": {
+   "page": "Tal Teklan Rune Shop",
+   "revision": 15413461,
+   "timestamp": "2026-11-23T15:24:58Z",
+   "owner": [
+    "[[Teicuh]]"
+   ]
+  },
+  "Tamayu's Spear Stall": {
+   "page": "Tamayu's Spear Stall",
+   "revision": 15318797,
+   "timestamp": "2026-08-25T01:45:30Z",
+   "owner": [
+    "[[Tamayu]]"
+   ]
+  },
+  "Temple Supplies": {
+   "page": "Temple Supplies",
+   "revision": 15318800,
+   "timestamp": "2026-08-25T01:45:32Z",
+   "owner": [
+    "[[Apprentice Felix]]"
+   ]
+  },
+  "The Asp & Snake Bar": {
+   "page": "The Asp & Snake Bar.",
+   "revision": 15322177,
+   "timestamp": "2026-08-27T18:06:46Z",
+   "owner": [
+    "[[Ali the Barman]]"
+   ]
+  },
+  "The Auburn Pub": {
+   "page": "Auburn Pub",
+   "revision": 15333559,
+   "timestamp": "2026-09-07T23:28:56Z",
+   "owner": [
+    "[[Bartender (Auburn Pub)|Bartender]]"
+   ]
+  },
+  "The Big Heist Lodge": {
+   "page": "The Big Heist Lodge",
+   "revision": 14991727,
+   "timestamp": "2025-09-25T17:45:04Z",
+   "owner": [
+    "[[Bartender (The Big Heist Lodge)|Bartender]]"
+   ]
+  },
+  "The Burrow": {
+   "page": "The Burrow",
+   "revision": 15318802,
+   "timestamp": "2026-08-25T01:45:33Z",
+   "owner": [
+    "[[Huntmaster Gilman (Novice)|Huntmaster Gilman]]"
+   ]
+  },
+  "The Cloak and Stagger": {
+   "page": "The Cloak and Stagger",
+   "revision": 15233066,
+   "timestamp": "2026-06-13T13:07:17Z",
+   "owner": [
+    "[[Oswald]]"
+   ]
+  },
+  "The Crypt": {
+   "page": "The Crypt",
+   "revision": 15233068,
+   "timestamp": "2026-06-13T13:07:33Z",
+   "owner": [
+    "[[Despoina Callidra]]"
+   ]
+  },
+  "The Deeper Lode": {
+   "page": "The Deeper Lode",
+   "revision": 15137702,
+   "timestamp": "2026-02-27T17:46:27Z",
+   "owner": [
+    "[[Fuggy]]"
+   ]
+  },
+  "The Esoterican Arms": {
+   "page": "The Esoterican Arms",
+   "revision": 15330566,
+   "timestamp": "2026-09-04T04:29:49Z",
+   "owner": [
+    "[[Runa]]"
+   ]
+  },
+  "The Flaming Arrow": {
+   "page": "The Flaming Arrow",
+   "revision": 15376155,
+   "timestamp": "2026-10-19T18:08:20Z",
+   "owner": [
+    "[[Bartender (The Flaming Arrow)|Bartender]]"
+   ]
+  },
+  "The Golden Field": {
+   "page": "The Golden Field",
+   "revision": 15168244,
+   "timestamp": "2026-04-07T05:01:05Z",
+   "owner": [
+    "[[Richard (Hosidius)|Richard]], [[Golova]]"
+   ]
+  },
+  "The Green Ghost": {
+   "page": "The Green Ghost",
+   "revision": 15375534,
+   "timestamp": "2026-10-19T02:41:53Z",
+   "owner": [
+    "[[Metarialus]]"
+   ]
+  },
+  "The King's Inn": {
+   "page": "The King's Inn",
+   "revision": 15376185,
+   "timestamp": "2026-10-19T18:31:23Z",
+   "owner": [
+    "[[King (Tal Teklan)|King]]"
+   ]
+  },
+  "The Legless Faun": {
+   "page": "The Legless Faun",
+   "revision": 15233070,
+   "timestamp": "2026-06-13T13:07:56Z",
+   "owner": [
+    "[[Bast]]"
+   ]
+  },
+  "The Lighthouse Store": {
+   "page": "The Lighthouse Store",
+   "revision": 15318804,
+   "timestamp": "2026-08-25T01:45:34Z",
+   "owner": [
+    "[[Jossik]]"
+   ]
+  },
+  "The Lost Pickaxe": {
+   "page": "The Lost Pickaxe",
+   "revision": 15376186,
+   "timestamp": "2026-10-19T18:32:41Z",
+   "owner": [
+    "[[Bartender (The Lost Pickaxe)|Bartender]]"
+   ]
+  },
+  "The Old Nite": {
+   "page": "The Old Nite",
+   "revision": 15397337,
+   "timestamp": "2026-11-09T06:37:27Z",
+   "owner": [
+    "[[Camarst]]"
+   ]
+  },
+  "The Other Inn": {
+   "page": "The Other Inn.",
+   "revision": 15295192,
+   "timestamp": "2026-08-12T23:17:05Z",
+   "owner": [
+    "[[Mama]]"
+   ]
+  },
+  "The Pandemonium (pub)": {
+   "page": "The Pandemonium (pub)",
+   "revision": 15376199,
+   "timestamp": "2026-10-19T19:08:21Z",
+   "owner": [
+    "[['Squawking' Steve Beanie]]"
+   ]
+  },
+  "The Rolling Tide": {
+   "page": "The Rolling Tide",
+   "revision": 15376200,
+   "timestamp": "2026-10-19T19:08:57Z",
+   "owner": [
+    "[[Bartender (Port Roberts)]]"
+   ]
+  },
+  "The Runic Emporium": {
+   "page": "The Runic Emporium",
+   "revision": 15318805,
+   "timestamp": "2026-08-25T01:45:35Z",
+   "owner": [
+    "[[Nahta]]"
+   ]
+  },
+  "The Sheared Ram": {
+   "page": "The Sheared Ram",
+   "revision": 15392233,
+   "timestamp": "2026-11-03T16:25:20Z",
+   "owner": [
+    "[[Bartender (Sheared Ram)|Bartender]]"
+   ]
+  },
+  "The Shrimp and Parrot": {
+   "page": "The Shrimp and Parrot",
+   "revision": 14991789,
+   "timestamp": "2025-09-25T17:48:42Z",
+   "owner": [
+    "[[Alfonse the waiter]]/[[Charlie the cook]]"
+   ]
+  },
+  "The Spice Is Right": {
+   "page": "The Spice Is Right.",
+   "revision": 15374887,
+   "timestamp": "2026-10-18T03:34:31Z",
+   "owner": [
+    "[[Embalmer]]"
+   ]
+  },
+  "The Toad and Chicken": {
+   "page": "The Toad and Chicken",
+   "revision": 15296989,
+   "timestamp": "2026-08-13T12:09:48Z",
+   "owner": [
+    "[[Tostig]]",
+    "[[Sam (barmaid)|Sam]], [[Rachael]]"
+   ]
+  },
+  "The Toad and Chicken (Games Room)": {
+   "page": "The Toad and Chicken",
+   "revision": 15296989,
+   "timestamp": "2026-08-13T12:09:48Z",
+   "owner": [
+    "[[Tostig]]",
+    "[[Sam (barmaid)|Sam]], [[Rachael]]"
+   ]
+  },
+  "The Windbreaker": {
+   "page": "The Windbreaker",
+   "revision": 15376202,
+   "timestamp": "2026-10-19T19:09:26Z",
+   "owner": [
+    "[[Bartender (The Windbreaker)]]"
+   ]
+  },
+  "Thessalia's Fine Clothes": {
+   "page": "Thessalia's Fine Clothes.",
+   "revision": 15397134,
+   "timestamp": "2026-11-09T01:38:17Z",
+   "owner": [
+    "[[Thessalia]]"
+   ]
+  },
+  "Thirus Urkar's Fine Dynamite Store": {
+   "page": "Thirus Urkar's Fine Dynamite Store",
+   "revision": 15318809,
+   "timestamp": "2026-08-25T01:45:37Z",
+   "owner": [
+    "[[Thirus]]"
+   ]
+  },
+  "Thurid's Brain Buckets": {
+   "page": "Thurid's Brain Buckets",
+   "revision": 15318811,
+   "timestamp": "2026-08-25T01:45:39Z",
+   "owner": [
+    "[[Thurid]]"
+   ]
+  },
+  "Thyria's Wares": {
+   "page": "Thyria's Wares",
+   "revision": 15318812,
+   "timestamp": "2026-08-25T01:45:39Z",
+   "owner": [
+    "[[Thyria]]"
+   ]
+  },
+  "Tiadeche's Karambwan Stall": {
+   "page": "Tiadeche's Karambwan Stall",
+   "revision": 15361881,
+   "timestamp": "2026-10-03T12:27:45Z",
+   "owner": [
+    "[[Tiadeche]]"
+   ]
+  },
+  "Tizoro's Pickaxes": {
+   "page": "Tizoro's Pickaxes",
+   "revision": 15318815,
+   "timestamp": "2026-08-25T01:45:41Z",
+   "owner": [
+    "[[Tizoro]]"
+   ]
+  },
+  "Toci's Gem Store": {
+   "page": "Toci's Gem Store",
+   "revision": 15114085,
+   "timestamp": "2026-01-27T17:58:39Z",
+   "owner": [
+    "[[Toci]]"
+   ]
+  },
+  "Tony's Pizza Bases": {
+   "page": "Tony's Pizza Bases",
+   "revision": 14991862,
+   "timestamp": "2025-09-25T17:50:11Z",
+   "owner": [
+    "[[Fat Tony]]"
+   ]
+  },
+  "Toothy's Pickaxes": {
+   "page": "Toothy's Pickaxes",
+   "revision": 15318816,
+   "timestamp": "2026-08-25T01:45:42Z",
+   "owner": [
+    "[[Toothy]]"
+   ]
+  },
+  "Trader Stan's Trading Post": {
+   "page": "Trader Stan's Trading Post",
+   "revision": 15361626,
+   "timestamp": "2026-10-03T11:49:49Z",
+   "owner": [
+    "[[Trader Stan]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]",
+    "[[Trader Crewmember]]"
+   ]
+  },
+  "Trader Sven's Black-market Goods": {
+   "page": "Trader Sven's Black-market Goods.",
+   "revision": 15318819,
+   "timestamp": "2026-08-25T01:45:43Z",
+   "owner": [
+    "[[Trader Sven]]"
+   ]
+  },
+  "Tutab's Magical Market": {
+   "page": "Tutab's Magical Market",
+   "revision": 15318824,
+   "timestamp": "2026-08-25T01:45:46Z",
+   "owner": [
+    "[[Tutab]]"
+   ]
+  },
+  "Two Feet Charley's Fish Shop": {
+   "page": "Two Feet Charley's Fish Shop.",
+   "revision": 15297842,
+   "timestamp": "2026-08-13T21:38:20Z",
+   "owner": [
+    "[[Charley]]"
+   ]
+  },
+  "Tynan's Fishing Supplies": {
+   "page": "Tynan's Fishing Supplies",
+   "revision": 14991735,
+   "timestamp": "2025-09-25T17:45:14Z",
+   "owner": [
+    "[[Tynan]]"
+   ]
+  },
+  "TzHaar-Hur-Lek's Ore and Gem Store": {
+   "page": "TzHaar-Hur-Lek's Ore and Gem Store",
+   "revision": 15361629,
+   "timestamp": "2026-10-03T11:50:11Z",
+   "owner": [
+    "[[TzHaar-Hur-Lek]]"
+   ]
+  },
+  "TzHaar-Hur-Rin's Ore and Gem Store": {
+   "page": "TzHaar-Hur-Rin's Ore and Gem Store",
+   "revision": 15318828,
+   "timestamp": "2026-08-25T01:45:49Z",
+   "owner": [
+    "[[TzHaar-Hur-Rin]]"
+   ]
+  },
+  "TzHaar-Hur-Tel's Equipment Store": {
+   "page": "TzHaar-Hur-Tel's Equipment Store",
+   "revision": 15318829,
+   "timestamp": "2026-08-25T01:45:50Z",
+   "owner": [
+    "[[TzHaar-Hur-Tel]]"
+   ]
+  },
+  "TzHaar-Hur-Zal's Equipment Store": {
+   "page": "TzHaar-Hur-Zal's Equipment Store",
+   "revision": 15318830,
+   "timestamp": "2026-08-25T01:45:51Z",
+   "owner": [
+    "[[TzHaar-Hur-Zal]]"
+   ]
+  },
+  "TzHaar-Mej-Roh's Rune Store": {
+   "page": "TzHaar-Mej-Roh's Rune Store",
+   "revision": 15364315,
+   "timestamp": "2026-10-04T11:51:23Z",
+   "owner": [
+    "[[TzHaar-Mej-Roh]]"
+   ]
+  },
+  "Valaine's Shop of Champions": {
+   "page": "Valaine's Shop of Champions.",
+   "revision": 15318833,
+   "timestamp": "2026-08-25T01:45:53Z",
+   "owner": [
+    "[[Valaine]]"
+   ]
+  },
+  "Vale Research Exchange": {
+   "page": "Vale Research Exchange",
+   "revision": 15370442,
+   "timestamp": "2026-10-11T06:52:51Z",
+   "owner": [
+    "[[Ranulph]]"
+   ]
+  },
+  "Vanessa's Farming shop": {
+   "page": "Vanessa's Farming shop.",
+   "revision": 14991814,
+   "timestamp": "2025-09-25T17:49:13Z",
+   "owner": [
+    "[[Vanessa]]"
+   ]
+  },
+  "Vannah's Farming Stall": {
+   "page": "Vannah's Farming Stall",
+   "revision": 14991720,
+   "timestamp": "2025-09-25T17:44:55Z",
+   "owner": [
+    "[[Vannah]]"
+   ]
+  },
+  "Varrock General Store": {
+   "page": "Varrock General Store",
+   "revision": 15374374,
+   "timestamp": "2026-10-17T03:57:24Z",
+   "owner": [
+    "[[Shop keeper (Varrock)|Shop keeper]]"
+   ]
+  },
+  "Varrock Swordshop": {
+   "page": "Varrock Swordshop",
+   "revision": 15393727,
+   "timestamp": "2026-11-04T10:53:58Z",
+   "owner": [
+    "[[Shop keeper (Varrock Swordshop)|Shop keeper]]"
+   ]
+  },
+  "Vermundi's Clothes Stall": {
+   "page": "Vermundi's Clothes Stall",
+   "revision": 14991857,
+   "timestamp": "2025-09-25T17:50:06Z",
+   "owner": [
+    "[[Vermundi]]"
+   ]
+  },
+  "Vigr's Warhammers": {
+   "page": "Vigr's Warhammers",
+   "revision": 15001839,
+   "timestamp": "2025-10-11T05:43:07Z",
+   "owner": [
+    "[[Vigr]]"
+   ]
+  },
+  "Void Knight Archery Store": {
+   "page": "Void Knight Archery Store",
+   "revision": 14991762,
+   "timestamp": "2025-09-25T17:45:47Z",
+   "owner": [
+    "[[Squire (Void Knights ranged shop)|Squire]]"
+   ]
+  },
+  "Void Knight General Store": {
+   "page": "Void Knight General Store",
+   "revision": 15318839,
+   "timestamp": "2026-08-25T01:45:57Z",
+   "owner": [
+    "[[Squire (Void Knights general store)|Squire]]"
+   ]
+  },
+  "Void Knight Magic Store": {
+   "page": "Void Knight Magic Store",
+   "revision": 15318841,
+   "timestamp": "2026-08-25T01:45:57Z",
+   "owner": [
+    "[[Squire (Void Knights magic shop)|Squire]]"
+   ]
+  },
+  "Warrens Fish Monger": {
+   "page": "Warrens Fish Monger",
+   "revision": 14991728,
+   "timestamp": "2025-09-25T17:45:05Z",
+   "owner": [
+    "[[Fish monger (The Warrens)|Fish monger]]"
+   ]
+  },
+  "Warrens General Store": {
+   "page": "Warrens General Store",
+   "revision": 14991732,
+   "timestamp": "2025-09-25T17:45:09Z",
+   "owner": [
+    "[[Shop keeper (The Warrens)|Shop keeper]]"
+   ]
+  },
+  "Warrior Guild Armoury": {
+   "page": "Warrior Guild Armoury",
+   "revision": 15391322,
+   "timestamp": "2026-11-03T13:23:12Z",
+   "owner": [
+    "[[Anton]]"
+   ]
+  },
+  "Warrior Guild Food Shop": {
+   "page": "Warrior Guild Food Shop",
+   "revision": 14991798,
+   "timestamp": "2025-09-25T17:48:52Z",
+   "owner": [
+    "[[Lidio]]"
+   ]
+  },
+  "Warrior Guild Potion Shop": {
+   "page": "Warrior Guild Potion Shop",
+   "revision": 15318843,
+   "timestamp": "2026-08-25T01:45:59Z",
+   "owner": [
+    "[[Lilly]]"
+   ]
+  },
+  "Wayne's Chains! - Chainmail specialist": {
+   "page": "Wayne's Chains! - Chainmail specialist.",
+   "revision": 14991753,
+   "timestamp": "2025-09-25T17:45:35Z",
+   "owner": [
+    "[[Wayne]]"
+   ]
+  },
+  "Weapons galore": {
+   "page": "Weapons galore",
+   "revision": 14991842,
+   "timestamp": "2025-09-25T17:49:44Z",
+   "owner": [
+    "[[Skuli Myrka]]"
+   ]
+  },
+  "West Ardougne General Store": {
+   "page": "West Ardougne General Store",
+   "revision": 15363155,
+   "timestamp": "2026-10-03T18:02:20Z",
+   "owner": [
+    "[[Chadwell]]"
+   ]
+  },
+  "Where Wyrmscraig's Wear Wares Were": {
+   "page": "Where Wyrmscraig's Wear Wares Were",
+   "revision": 15318846,
+   "timestamp": "2026-08-25T01:46:01Z",
+   "owner": [
+    "[[Declan]]"
+   ]
+  },
+  "White Knight Armoury": {
+   "page": "White Knight Armoury",
+   "revision": 15391817,
+   "timestamp": "2026-11-03T14:48:40Z",
+   "owner": [
+    "[[Sir Vyvin]]"
+   ]
+  },
+  "William's Wilderness Cape Shop": {
+   "page": "William's Wilderness Cape Shop.",
+   "revision": 15318847,
+   "timestamp": "2026-08-25T01:46:01Z",
+   "owner": [
+    "[[William]]"
+   ]
+  },
+  "Wine Shop": {
+   "page": "Wine Shop.",
+   "revision": 15262136,
+   "timestamp": "2026-07-13T00:51:42Z",
+   "owner": [
+    "[[Fortunato]]"
+   ]
+  },
+  "Worm Tongue's Wares": {
+   "page": "Worm Tongue's Wares",
+   "revision": 15318850,
+   "timestamp": "2026-08-25T01:46:04Z",
+   "owner": [
+    "[[Worm Tongue]]"
+   ]
+  },
+  "Yarnio's Baked Goods": {
+   "page": "Yarnio's Baked Goods",
+   "revision": 15144158,
+   "timestamp": "2026-03-07T20:50:33Z",
+   "owner": [
+    "[[Yarnio]]"
+   ]
+  },
+  "Yarsul's Prodigious Pickaxes": {
+   "page": "Yarsul's Prodigious Pickaxes",
+   "revision": 15318854,
+   "timestamp": "2026-08-25T01:46:06Z",
+   "owner": [
+    "[[Yarsul]]"
+   ]
+  },
+  "Ye olde Tea Shoppe": {
+   "page": "Ye olde Tea Shoppe.",
+   "revision": 15318855,
+   "timestamp": "2026-08-25T01:46:07Z",
+   "owner": [
+    "[[Tea seller]]"
+   ]
+  },
+  "Yrsa's Accoutrements": {
+   "page": "Yrsa's Accoutrements",
+   "revision": 14991773,
+   "timestamp": "2025-09-25T17:48:00Z",
+   "owner": [
+    "[[Yrsa]]"
+   ]
+  },
+  "Zaff's Superior Staffs!": {
+   "page": "Zaff's Superior Staffs!",
+   "revision": 15410880,
+   "timestamp": "2026-11-21T07:48:41Z",
+   "owner": [
+    "[[Zaff]]"
+   ]
+  },
+  "Zanaris General Store": {
+   "page": "Zanaris General Store",
+   "revision": 15318858,
+   "timestamp": "2026-08-25T01:46:09Z",
+   "owner": [
+    "[[Fairy shop keeper]]"
+   ]
+  },
+  "Zeke's Superior Scimitars": {
+   "page": "Zeke's Superior Scimitars.",
+   "revision": 15318860,
+   "timestamp": "2026-08-25T01:46:10Z",
+   "owner": [
+    "[[Zeke]]"
+   ]
+  },
+  "Zenesha's Plate Mail Body Shop": {
+   "page": "Zenesha's Plate Mail Body Shop.",
+   "revision": 15318861,
+   "timestamp": "2026-08-25T01:46:11Z",
+   "owner": [
+    "[[Zenesha]]"
+   ]
+  },
+  "~ Uglug's stuffsies ~": {
+   "page": "~ Uglug's stuffsies ~",
+   "revision": 15318451,
+   "timestamp": "2026-08-25T01:18:08Z",
+   "owner": [
+    "[[Uglug Nar]]"
+   ]
+  }
+ }
+}

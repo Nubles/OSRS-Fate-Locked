@@ -5,6 +5,7 @@ import {
   buildChunkPermissionSnapshot,
   type ChunkPermissionContext,
 } from './chunkPermissionSnapshot';
+import { wireChunks } from './runeliteBundle';
 
 const content = (overrides: Partial<ChunkContent> = {}): ChunkContent => ({
   name: 'Lumbridge',
@@ -236,5 +237,19 @@ describe('buildChunkPermissionSnapshot', () => {
           `${row.name} ${row.detail ?? ''}`.includes(phrase))).toBe(false);
       }
     }
+  });
+  // plugin-ui.d3[3]: no NPC or object carries a minigame's name, so the plugin must tell a minigame
+  // row from a boss row (both ACTIVITY) to keep from offering an arrow it can never show.
+  it('marks a minigame row, and only a minigame row, as a minigame for the plugin', () => {
+    const fixture = content({ name: 'Pest Control', monsters: [{ name: 'Zulrah', count: 1, slayer: null }] });
+    const snapshot = buildChunkPermissionSnapshot(fixture, { cx: 50, cy: 50 }, context());
+    const rows = snapshot.categories.ACTIVITIES ?? [];
+    expect(rows.find((row) => row.name === 'Pest Control')).toMatchObject({ targetKind: 'ACTIVITY', minigame: true });
+    expect(rows.find((row) => row.name === 'Zulrah')).toMatchObject({ targetKind: 'ACTIVITY' });
+    expect(rows.find((row) => row.name === 'Zulrah')).not.toHaveProperty('minigame');
+    const wired = wireChunks({ '50,50': snapshot })['50,50'].categories.ACTIVITIES ?? [];
+    expect(wired.find((row) => row.name === 'Pest Control')).toEqual(expect.objectContaining({ minigame: true }));
+    const plain = buildChunkPermissionSnapshot(content({ name: 'Lumbridge', shops: ['Bob\'s Brilliant Axes'] }), { cx: 50, cy: 50 }, context());
+    expect(Object.values(plain.categories).flat().filter((row) => row && 'minigame' in row)).toEqual([]);
   });
 });

@@ -64,6 +64,17 @@ describe('mandatory equipment route', () => {
   });
 });
 
+describe('older quest pins', () => {
+  it('routes a quest pinned by its name as the quest itself', () => {
+    const byName = buildGoalRoute('Desert Treasure II - The Fallen Empire', stateWith())!;
+    const byId = buildGoalRoute('Desert Treasure II', stateWith())!;
+    expect(byName).not.toBeNull();
+    expect(byName.kind).toBe('quest');
+    expect(byName.quests).toEqual(byId.quests);
+    expect(buildGoalRoute('RFD: Start (The Cook)', stateWith())?.kind).toBe('quest');
+  });
+});
+
 describe('expandQuestChain', () => {
   it('orders prerequisites before dependents, transitively', () => {
     const chain = expandQuestChain(["Legends' Quest"]);

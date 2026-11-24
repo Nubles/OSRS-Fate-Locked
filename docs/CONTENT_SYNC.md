@@ -159,7 +159,17 @@ their original IDs, entrance routes, and access requirements. Reviewed overrides
 live in `data/sources/interior-access.json`; incomplete entrance evidence stays
 unmapped rather than becoming an unconditional surface location. Merchant stock
 supplements, empty-stock shops, and removed content are reviewed in
-`data/sources/shop-overrides.json`. Monsters the source still lists in an
+`data/sources/shop-overrides.json`. Who runs each shop, for the RuneLite
+plugin, is `contracts/golden-bundles/shop-keepers.json`: one list per shop name
+the chunk data has, of the names the game shows on the NPCs or objects the
+player trades with there, from the Infobox Shop owner field of each shop's Wiki
+page. `npm run keepers:sync` is the networked refresh: it reads each page into
+`data/sources/shop-keepers.json` (page title, revision and raw owner field) and
+rebuilds the contract file. A shop whose page names no keeper needs a reviewed
+`NO_KEEPER` entry in `scripts/gen-shop-keepers.mjs`, and a new shop needs a
+refresh. `npm run keepers:verify` (part of `content:verify`) checks offline that
+both files are current; `npm run goldens:write` then lists the file in the
+golden manifest. No module of the app imports it. Monsters the source still lists in an
 interior the game has since emptied of them (the Revenant Caves before the 2020
 overhaul) are removed by `interiorEntityRemovals` in
 `data/sources/chunk-content-overrides.json`. NPCs the game has renamed or moved

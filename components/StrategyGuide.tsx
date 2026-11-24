@@ -12,6 +12,7 @@ import { WikiIcon } from './WikiIcon';
 import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 import { analyzeRequirement, alternativeRequirementText } from '../utils/strategyRequirement';
+import { resolvePinnedGoal } from '../utils/pinnedGoal';
 import './osrs/osrs-windows-a.css';
 import './osrs/osrs-windows-c.css';
 
@@ -48,6 +49,72 @@ export const calculateProphecyScore = (req: ContentRequirement, analysis: any) =
     return score;
 };
 
+/** The name a card shows: a quest's name, any other entry's id. */
+const guideTitle = (key: string): string => QUEST_DATA[key]?.name ?? key;
+
+/** Every entry the guide lists that is not yet done, keyed as it is pinned. */
+export const buildGuideContent = (unlocks: any, gameModeId?: string): Record<string, ContentRequirement> => {
+    const database: Record<string, ContentRequirement> = {};
+    Object.values(QUEST_DATA).forEach(q => {
+        // Keyed by id, as the Quest Log completes it; the card shows its name.
+        if (unlocks.quests.includes(q.id)) return;
+        database[q.id] = {
+            id: q.id,
+            category: TableType.QUESTS,
+            regions: enforcedQuestAreas(q),
+            skills: q.skills,
+            quests: q.prereqs,
+            description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`
+        };
+    });
+    Object.values(DIARY_DATA).forEach(d => {
+        if (unlocks.diaries.includes(d.id)) return;
+        const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
+        // One game skill is a skill chip. A combat level, Combat Achievements or a
+        // choice or sum of skills ('Strength or Agility 60') is a check like the others.
+        const skills: Record<string, number> = {};
+        const checks: string[] = [];
+        for (const blocker of eligibility.blockers) {
+            if (blocker.kind === 'skill' && blocker.requirement?.type === 'single') skills[blocker.requirement.skill] = blocker.requirement.level;
+            else if (blocker.kind === 'skill' || blocker.kind === 'combat') checks.push(blocker.label);
+        }
+        database[d.id] = {
+            id: d.id,
+            category: TableType.DIARIES,
+            manualRequirements: [...eligibility.manualChecks, ...checks],
+            regions: eligibility.blockers
+                .filter(blocker => blocker.kind === 'region')
+                .map(blocker => blocker.label),
+            skills,
+            quests: eligibility.blockers
+                .filter(blocker => blocker.kind === 'quest')
+                .map(blocker => blocker.label),
+            alternatives: eligibility.blockers
+                .filter(blocker => blocker.kind === 'alternative')
+                .map(blocker => ({
+                    label: blocker.label,
+                    routes: blocker.routes.map(route => ({
+                        label: route.label,
+                        blockers: route.blockers.map(routeBlocker => ({
+                            kind: routeBlocker.kind,
+                            label: routeBlocker.label,
+                        })),
+                    })),
+                })),
+            description: `Region: ${d.region} | Difficulty: ${d.difficulty.replace('Diary (', '').replace(')', '')}`
+        };
+    });
+    Object.entries(STRATEGY_DATABASE).forEach(([key, val]) => {
+        if (val.category === TableType.QUESTS && unlocks.quests.includes(val.id)) return;
+        if (val.category === TableType.QUESTS) {
+            if (database[key]) database[key].description = val.description ?? database[key].description;
+            return;
+        }
+        database[key] = { ...val };
+    });
+    return database;
+};
+
 export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const dialogRef = useRef<HTMLDivElement>(null);
     useFocusTrap(dialogRef);
@@ -56,71 +123,16 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
-    const allContent = useMemo<Record<string, ContentRequirement>>(() => {
-        const database: Record<string, ContentRequirement> = {};
-        Object.values(QUEST_DATA).forEach(q => {
-            if (unlocks.quests.includes(q.name)) return;
-            database[q.name] = {
-                id: q.name,
-                category: TableType.QUESTS,
-                regions: enforcedQuestAreas(q),
-                skills: q.skills,
-                quests: q.prereqs,
-                description: `Series: ${q.series || 'None'} | Difficulty: ${q.difficulty.replace('Quest (', '').replace(')', '')}`
-            };
-        });
-        Object.values(DIARY_DATA).forEach(d => {
-            if (unlocks.diaries.includes(d.id)) return;
-            const eligibility = evaluateDiaryTierEligibility(d, unlocks, gameModeId);
-            const skills = Object.fromEntries(eligibility.blockers
-                .filter(blocker => blocker.kind === 'skill' || blocker.kind === 'combat')
-                .map(blocker => {
-                    const parsed = blocker.label.match(/^(.*) (\d+)$/);
-                    return parsed ? [parsed[1], Number(parsed[2])] : [blocker.label, 1];
-                }));
-            database[d.id] = {
-                id: d.id,
-                category: TableType.DIARIES,
-                manualRequirements: eligibility.manualChecks,
-                regions: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'region')
-                    .map(blocker => blocker.label),
-                skills,
-                quests: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'quest')
-                    .map(blocker => blocker.label),
-                alternatives: eligibility.blockers
-                    .filter(blocker => blocker.kind === 'alternative')
-                    .map(blocker => ({
-                        label: blocker.label,
-                        routes: blocker.routes.map(route => ({
-                            label: route.label,
-                            blockers: route.blockers.map(routeBlocker => ({
-                                kind: routeBlocker.kind,
-                                label: routeBlocker.label,
-                            })),
-                        })),
-                    })),
-                description: `Region: ${d.region} | Difficulty: ${d.difficulty.replace('Diary (', '').replace(')', '')}`
-            };
-        });
-        Object.entries(STRATEGY_DATABASE).forEach(([key, val]) => {
-            if (val.category === TableType.QUESTS && unlocks.quests.includes(val.id)) return;
-            if (val.category === TableType.QUESTS) {
-                if (database[key]) database[key].description = val.description ?? database[key].description;
-                return;
-            }
-            database[key] = { ...val };
-        });
-        return database;
-    }, [unlocks, gameModeId]);
+    const allContent = useMemo(() => buildGuideContent(unlocks, gameModeId), [unlocks, gameModeId]);
+    /** The stored pin for an entry: its id, or the name an older guide pinned a quest by. */
+    const pinFor = (key: string): string | undefined => pinnedGoals.find(goal => resolvePinnedGoal(goal) === key);
 
     const contentAnalysis = useMemo(() => {
         return Object.entries(allContent)
             .map(([key, req]) => {
                 const typedReq = req as ContentRequirement;
                 const analysis = analyzeRequirement(typedReq, unlocks, gameModeId);
-                return { ...typedReq, uniqueId: key, analysis };
+                return { ...typedReq, uniqueId: key, title: guideTitle(key), analysis };
             });
     }, [allContent, unlocks, gameModeId]);
 
@@ -153,6 +165,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         if (!term || term.trim() === '') return filtered;
         const lowerTerm = term.toLowerCase().trim();
         return filtered.filter(item => {
+            if (item.title.toLowerCase().includes(lowerTerm)) return true;
             if (item.uniqueId.toLowerCase().includes(lowerTerm)) return true;
             if (item.id.toLowerCase().includes(lowerTerm)) return true;
             if (item.regions.some(r => r.toLowerCase().includes(lowerTerm))) return true;
@@ -254,7 +267,8 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {filteredPlayable.map(content => {
-                                        const isPinned = pinnedGoals.includes(content.uniqueId);
+                                        const pin = pinFor(content.uniqueId);
+                                        const isPinned = !!pin;
                                         return (
                                             <div key={content.uniqueId} className="bg-[#1a1a1a] border border-emerald-500/30 p-4 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.05)] hover:bg-[#202020] transition-colors group relative flex flex-col h-full">
                                                 <div className="flex justify-between items-start mb-2">
@@ -262,13 +276,13 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                         {content.category}
                                                     </span>
                                                     <div className="flex items-center gap-2">
-                                                        <button onClick={() => togglePin(content.uniqueId)} className={`p-1 rounded transition-colors ${isPinned ? 'text-blue-400 bg-blue-900/20' : 'text-gray-600 hover:text-gray-300'}`} title={isPinned ? "Unpin Goal" : "Pin as Goal"}>
+                                                        <button onClick={() => togglePin(pin ?? content.uniqueId)} className={`p-1 rounded transition-colors ${isPinned ? 'text-blue-400 bg-blue-900/20' : 'text-gray-600 hover:text-gray-300'}`} title={isPinned ? "Unpin Goal" : "Pin as Goal"}>
                                                             <Pin size={14} fill={isPinned ? "currentColor" : "none"} />
                                                         </button>
                                                         <CheckCircle size={16} className="text-emerald-500" />
                                                     </div>
                                                 </div>
-                                                <h3 className="text-gray-100 font-bold text-base mb-1 leading-tight">{content.uniqueId}</h3>
+                                                <h3 className="text-gray-100 font-bold text-base mb-1 leading-tight">{content.title}</h3>
                                                 {content.id !== content.uniqueId && <p className="text-[10px] text-gray-600 mb-1 font-mono uppercase tracking-wider">{content.id}</p>}
                                                 <p className="text-xs text-gray-500 leading-relaxed line-clamp-3 mb-3 flex-1" title={content.description}>{content.description}</p>
                                                 <div className="pt-3 border-t border-white/5 flex gap-2 flex-wrap">
@@ -294,7 +308,8 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                 ) : (
                                     filteredPlanner.map(content => {
                                         const { missingRegions, missingSkills, missingQuests, missingAlternatives, isCategoryUnlocked, completionPercent } = content.analysis;
-                                        const isPinned = pinnedGoals.includes(content.uniqueId);
+                                        const pin = pinFor(content.uniqueId);
+                                        const isPinned = !!pin;
                                         const progressColor = completionPercent > 75 ? 'bg-green-500' : completionPercent > 40 ? 'bg-yellow-500' : 'bg-red-500';
                                         
                                         return (
@@ -303,10 +318,10 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                                 <div className="lg:w-1/3 shrink-0 flex flex-col">
                                                     <div className="flex justify-between items-start mb-2">
                                                         <div className="flex flex-col gap-1">
-                                                             <h3 className="text-gray-200 font-bold text-lg leading-tight">{content.uniqueId}</h3>
+                                                             <h3 className="text-gray-200 font-bold text-lg leading-tight">{content.title}</h3>
                                                              {content.id !== content.uniqueId && <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">{content.id}</span>}
                                                         </div>
-                                                        <button onClick={() => togglePin(content.uniqueId)} className={`p-1.5 rounded transition-colors ${isPinned ? 'text-blue-400 bg-blue-900/20' : 'text-gray-600 hover:text-gray-300'}`} title={isPinned ? "Unpin Goal" : "Pin as Goal"}>
+                                                        <button onClick={() => togglePin(pin ?? content.uniqueId)} className={`p-1.5 rounded transition-colors ${isPinned ? 'text-blue-400 bg-blue-900/20' : 'text-gray-600 hover:text-gray-300'}`} title={isPinned ? "Unpin Goal" : "Pin as Goal"}>
                                                             <Pin size={16} fill={isPinned ? "currentColor" : "none"} />
                                                         </button>
                                                     </div>
@@ -374,7 +389,8 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             <div className="space-y-3">
                                 {prophecyList.map((content, idx) => {
                                     const { completionPercent } = content.analysis;
-                                    const isPinned = pinnedGoals.includes(content.uniqueId);
+                                    const pin = pinFor(content.uniqueId);
+                                    const isPinned = !!pin;
                                     
                                     return (
                                         <div key={content.uniqueId} className="bg-[#1a1a1a] border border-white/5 rounded-lg p-4 flex items-center gap-4 hover:bg-[#202020] transition-colors group">
@@ -384,7 +400,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                             
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <h4 className="font-bold text-white text-base truncate">{content.uniqueId}</h4>
+                                                    <h4 className="font-bold text-white text-base truncate">{content.title}</h4>
                                                     <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-500 uppercase tracking-wide border border-white/5">{content.category}</span>
                                                 </div>
                                                 <div className="flex items-center gap-4 text-xs text-gray-500 font-mono">
@@ -394,7 +410,7 @@ export const StrategyGuide: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                             </div>
 
                                             <button 
-                                                onClick={() => togglePin(content.uniqueId)}
+                                                onClick={() => togglePin(pin ?? content.uniqueId)}
                                                 className={`p-2 rounded-full transition-all ${isPinned ? 'bg-blue-600 text-white shadow-lg scale-110' : 'bg-black/40 text-gray-600 hover:text-white hover:bg-white/10'}`}
                                                 title="Pin Goal"
                                             >

@@ -133,6 +133,8 @@ export class RelaySyncService {
       && (pairedProfile === undefined || pairedProfile === this.activeProfileId);
   }
   get code() { return this.enabled && this.session ? this.session.code : null; }
+  /** The profile this browser's pairing is for, whichever profile this tab shows. */
+  get pairedProfileId() { return this.session?.profileId; }
 
   /**
    * Record the profile this tab shows. App's GameProviderBridge calls this

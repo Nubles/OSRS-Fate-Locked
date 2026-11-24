@@ -1241,6 +1241,7 @@ const GameLayout = () => {
           code={runelitePairCode}
           replacing={relaySync.enabled}
           connected={relaySync.code === runelitePairCode}
+          pairedProfileId={relaySync.pairedProfileId}
           profileName={activeProfileName}
           linkedAccount={linkedAccount ?? null}
           phase={runelitePairPhase}
