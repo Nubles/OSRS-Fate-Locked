@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createFreshState } from '../context/GameContext';
 import { QUEST_DATA } from './questData';
-import { REGION_GROUPS, SKILLS_LIST } from './items';
+import { FARMING_PATCH_LIST, REGION_GROUPS, SKILLS_LIST } from './items';
 import { RESOURCE_MAP, type ResourceSource } from './resourceData';
 import { calculateSupplyChain } from '../utils/supplyChain';
 
@@ -20,6 +20,8 @@ const state = (regions: string[], opts: { quests?: string[]; merchants?: string[
   base.unlocks.merchants = opts.merchants ?? [];
   base.unlocks.skills = Object.fromEntries(SKILLS_LIST.map(s => [s, 10]));
   base.unlocks.levels = Object.fromEntries(SKILLS_LIST.map(s => [s, 99]));
+  // Every patch type rolled: these tests are about areas, not patch unlocks.
+  base.unlocks.farming = [...FARMING_PATCH_LIST];
   return base;
 };
 const curated = (item: string): ResourceSource[] =>

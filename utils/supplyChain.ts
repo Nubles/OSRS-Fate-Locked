@@ -251,7 +251,9 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
     }
     // A Slayer reward is bought with points; it has no access requirements
     // of its own to confirm (the source's Slayer skill gate covers earning them).
-    if (ok && dependency?.table !== TableType.SLAYER_UNLOCKS) {
+    // A farming patch unlock asks nothing of its own either: each patch source
+    // carries its own areas and quests (owner call U6).
+    if (ok && dependency?.table !== TableType.SLAYER_UNLOCKS && dependency?.table !== TableType.FARMING_LAYERS) {
       const readiness = evaluateActivityReadiness(true, getActivityReq(u), ctx.gameState.unlocks, ctx.gameState.gameModeId);
       const checks = readiness.status === 'NOT_READY' ? readiness.blockers.map(b => b.label)
         : readiness.status === 'NEEDS_CONFIRMATION' ? readiness.checks : [];

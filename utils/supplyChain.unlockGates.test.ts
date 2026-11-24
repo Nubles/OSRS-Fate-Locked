@@ -97,3 +97,32 @@ describe('every shop row has a merchant category', () => {
     expect(route('Bucket of Sand', 'The Hand in the Sand', gs).isAvailable).toBe(true);
   });
 });
+
+describe('patch crops need the farming patch', () => {
+  it('a herb patch route needs the Herb patch unlock', () => {
+    const gs = state('vanilla', { regions: ['Asgarnia', 'Falador'], farming: [] });
+    expect(route('Guam Leaf', 'Herb Patch', gs).missing).toContain('Unlock: Herb');
+    gs.unlocks.farming = ['Herb'];
+    expect(route('Guam Leaf', 'Herb Patch', gs).missing).toEqual([]);
+    expect(route('Guam Leaf', 'Herb Patch', gs).isAvailable).toBe(true);
+  });
+
+  it('Chunked rolls patches too, so the herb patch route needs the Herb patch there as well', () => {
+    const gs = state('chunked', { farming: [] });
+    expect(route('Guam Leaf', 'Herb Patch', gs).missing).toContain('Unlock: Herb');
+    gs.unlocks.farming = ['Herb'];
+    expect(route('Guam Leaf', 'Herb Patch', gs).isAvailable).toBe(true);
+  });
+
+  it('every hand-written patch row names its patch', () => {
+    const PATCH: Record<string, string> = {
+      'Herb Patch': 'Herb', 'Allotment Patch': 'Allotment', 'Flower Patch': 'Flower', 'Bush Patch': 'Bush',
+      'Hardwood Patch': 'Hardwood Tree', 'Seaweed Patch': 'Seaweed', 'Palm Tree Patch': 'Fruit Tree', 'Cactus Patch': 'Cactus',
+    };
+    const wrong = CURATED_RESOURCE_SOURCES.filter(s => / Patch$/.test(s.name))
+      .filter(s => s.unlockId !== PATCH[s.name] || resourceUnlockDependency(s)?.id !== PATCH[s.name])
+      .map(s => `${s.name}: ${s.unlockId}`);
+    expect(wrong).toEqual([]);
+    expect(Object.values(PATCH).filter(id => !FARMING_PATCH_LIST.includes(id))).toEqual([]);
+  });
+});

@@ -134,53 +134,53 @@ export const RESOURCE_ENTITY_SKILLS: Readonly<Record<string, Record<string, numb
 export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   // --- HERBS ---
   'Ranarr Weed': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 32 }, notes: 'Requires Seeds', outputYield: 8 }, 
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 32 }, notes: 'Requires Seeds', outputYield: 8 }, 
     { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Wilderness', 'Morytania'], notes: 'Edgeville Dungeon / Yanille / Wildy' },
     { type: 'DROP', name: 'Aberrant Spectre', regions: ['Morytania', 'Kandarin', 'Kourend & Kebos'], skills: { 'Slayer': 60 }, notes: 'Slayer Tower / Catacombs' },
     { type: 'DROP', name: 'Flesh Crawler', regions: ['Misthalin'], notes: 'Stronghold of Security' },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Requires Sinister Key' }
   ],
   'Snapdragon': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 62 }, notes: 'Requires Seeds', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 62 }, notes: 'Requires Seeds', outputYield: 8 },
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Boss Drop' },
     { type: 'DROP', name: 'Hydra', regions: ['Kourend & Kebos'], skills: {'Slayer': 95}, notes: 'Karuulm Dungeon' }
   ],
   'Torstol': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Weiss', 'Harmony Island', 'Civitas illa Fortis'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 85 }, notes: 'Requires Seeds', outputYield: 8 },
     { type: 'MINIGAME', name: 'Sinister Chest', regions: ['Kandarin'], skills: {'Agility': 40}, notes: 'Guaranteed Drop' }
   ],
   'Irit Leaf': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 44}, notes: 'Seed required', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 44}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] },
     { type: 'DROP', name: 'Moss Giant', regions: ['Any'], notes: 'Common drop' }
   ],
   'Kwuarm': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 56}, notes: 'Seed required', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 56}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Aberrant Spectre', regions: ['Morytania', 'Kandarin'] },
     { type: 'DROP', name: 'Wyrm', regions: ['Kourend & Kebos'], skills: {'Slayer': 62} }
   ],
   'Cadantine': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 67}, notes: 'Seed required', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 67}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Greater Nechryael', regions: ['Kourend & Kebos', 'Wilderness'], skills: {'Slayer': 80} }
   ],
   'Dwarf Weed': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 79}, notes: 'Seed required', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 79}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
     { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' }
   ],
   'Toadflax': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 }
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 38}, notes: 'Seed required', outputYield: 8 }
   ],
   'Avantoe': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 50}, notes: 'Seed required', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 50}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] },
     { type: 'DROP', name: 'Turoth', regions: ['Fremennik'], skills: {'Slayer': 55} }
   ],
   'Lantadyme': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 73}, notes: 'Seed required', outputYield: 8 }
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 73}, notes: 'Seed required', outputYield: 8 }
   ],
   'Harralander': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: {'Farming': 26}, notes: 'Seed required', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 26}, notes: 'Seed required', outputYield: 8 },
     { type: 'DROP', name: 'Chaos Druid', regions: ['Misthalin', 'Kandarin', 'Morytania'] }
   ],
 
@@ -238,7 +238,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- SECONDARIES ---
   'Snape Grass': [
-    { type: 'SKILL', name: 'Allotment Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Harmony Island', 'Civitas illa Fortis'], skills: { 'Farming': 61 }, notes: 'High yield', outputYield: 25 },
+    { type: 'SKILL', name: 'Allotment Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Harmony Island', 'Civitas illa Fortis'], unlockId: 'Allotment', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 61 }, notes: 'High yield', outputYield: 25 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Fremennik'], notes: 'Waterbirth Island' },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kourend & Kebos'], notes: 'Hosidius Shore' }
   ],
@@ -261,11 +261,11 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' }
   ],
   'Limpwurt Root': [
-    { type: 'SKILL', name: 'Flower Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Civitas illa Fortis', 'Varlamore'], skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
+    { type: 'SKILL', name: 'Flower Patch', regions: ['Falador', 'Catherby', 'East Ardougne', 'Port Phasmatys', 'Hosidius', 'Farming Guild', 'Prifddinas', 'Civitas illa Fortis', 'Varlamore'], unlockId: 'Flower', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 26}, notes: 'Reliable yield', outputYield: 3 },
     { type: 'DROP', name: 'Hill Giant', regions: ['Misthalin', 'Asgarnia', 'Kandarin', 'Wilderness', 'Kharidian Desert', 'Kourend & Kebos', 'Varlamore'], notes: 'Common drop' }
   ],
   'White Berries': [
-    { type: 'SKILL', name: 'Bush Patch', regions: ['Misthalin', 'Rimmington', 'East Ardougne', 'Miscellania & Etceteria', 'Farming Guild'], skills: {'Farming': 59}, notes: 'Requires Seeds', outputYield: 4 },
+    { type: 'SKILL', name: 'Bush Patch', regions: ['Misthalin', 'Rimmington', 'East Ardougne', 'Miscellania & Etceteria', 'Farming Guild'], unlockId: 'Bush', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 59}, notes: 'Requires Seeds', outputYield: 4 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Wilderness'], notes: 'Lava Dragon Isle' },
     { type: 'DROP', name: 'Kurask', regions: ['Fremennik'], skills: {'Slayer': 70} },
     { type: 'DROP', name: 'Kurask', regions: ['Tirannwn'], skills: {'Slayer': 70}, quests: ['Song of the Elves'], notes: 'Iorwerth Dungeon' }
@@ -305,7 +305,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Teak Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Karamja', 'Islands & Others', 'Feldip Hills', 'Kharidian Desert', 'Morytania', 'Tirannwn', 'Varlamore', 'The Open Seas'], skills: {'Woodcutting': 35}, notes: 'Hardwood Groves' },
-    { type: 'SKILL', name: 'Hardwood Patch', regions: ['Islands & Others'], skills: {'Farming': 35}, outputYield: 20 }
+    { type: 'SKILL', name: 'Hardwood Patch', regions: ['Islands & Others'], unlockId: 'Hardwood Tree', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 35}, outputYield: 20 }
   ],
   'Maple Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Kandarin', 'Kourend & Kebos', 'Fremennik', 'Tirannwn', 'Varlamore', 'Islands & Others', 'The Open Seas'], skills: {'Woodcutting': 45}, notes: 'Seers / Woodcutting Guild' },
@@ -313,7 +313,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Mahogany Logs': [
     { type: 'SKILL', name: 'Woodcutting', regions: ['Karamja', 'Islands & Others', 'Kourend & Kebos'], skills: {'Woodcutting': 50} },
-    { type: 'SKILL', name: 'Hardwood Patch', regions: ['Islands & Others'], skills: {'Farming': 55}, outputYield: 20 },
+    { type: 'SKILL', name: 'Hardwood Patch', regions: ['Islands & Others'], unlockId: 'Hardwood Tree', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 55}, outputYield: 20 },
     { type: 'MINIGAME', name: 'Kingdom of Miscellania', regions: ['Fremennik'], quests: ['Throne of Miscellania'] }
   ],
   'Yew Logs': [
@@ -357,7 +357,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'DROP', name: 'Killerwatt', regions: ['Misthalin'], skills: {'Slayer': 37}, quests: ['Ernest the Chicken'], notes: 'Draynor Manor (Portal)' }
   ],
   'Giant Seaweed': [
-    { type: 'SKILL', name: 'Seaweed Patch', regions: ['Islands & Others'], skills: {'Farming': 23}, quests: ['Bone Voyage'], notes: 'Fossil Island Underwater', outputYield: 30 }
+    { type: 'SKILL', name: 'Seaweed Patch', regions: ['Islands & Others'], unlockId: 'Seaweed', unlockTable: TableType.FARMING_LAYERS, skills: {'Farming': 23}, quests: ['Bone Voyage'], notes: 'Fossil Island Underwater', outputYield: 30 }
   ],
   'Flax': [
     { type: 'DROP', name: 'Zulrah', regions: ['Tirannwn'], unlockId: 'Zulrah', notes: 'Massive quantities', outputYield: 1000 },
@@ -2465,15 +2465,15 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
 
   // --- LOW-LEVEL HERBS ---
   'Guam Leaf': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 9 }, notes: 'Clean a Grimy guam leaf', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 9 }, notes: 'Clean a Grimy guam leaf', outputYield: 8 },
     { type: 'DROP', name: 'Common Monster', regions: ['Any'], notes: 'Low-level humanoids' }
   ],
   'Marrentill': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 14 }, notes: 'Clean a Grimy marrentill', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 14 }, notes: 'Clean a Grimy marrentill', outputYield: 8 },
     { type: 'DROP', name: 'Common Monster', regions: ['Any'] }
   ],
   'Tarromin': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { 'Farming': 19 }, notes: 'Clean a Grimy tarromin', outputYield: 8 },
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 19 }, notes: 'Clean a Grimy tarromin', outputYield: 8 },
     { type: 'DROP', name: 'Common Monster', regions: ['Any'] }
   ],
 
@@ -2507,10 +2507,10 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Coconut': [
     { type: 'SHOP', name: "Cobado's Groceries", regions: ['Varlamore'], notes: 'Civitas illa Fortis' },
-    { type: 'SKILL', name: 'Palm Tree Patch', regions: ['Any'], skills: { 'Farming': 68 }, outputYield: 6 }
+    { type: 'SKILL', name: 'Palm Tree Patch', regions: ['Any'], unlockId: 'Fruit Tree', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 68 }, outputYield: 6 }
   ],
   'Potato Cactus': [
-    { type: 'SKILL', name: 'Cactus Patch', regions: ['Kharidian Desert', 'Farming Guild'], skills: { 'Farming': 64 }, outputYield: 3 },
+    { type: 'SKILL', name: 'Cactus Patch', regions: ['Kharidian Desert', 'Farming Guild'], unlockId: 'Cactus', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 64 }, outputYield: 3 },
     { type: 'DROP', name: 'Kalphite Queen', regions: ['Kharidian Desert'], unlockId: 'Kalphite Queen' }
   ],
   'Magic Roots': [
@@ -2520,7 +2520,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Farming', regions: ['Any'], skills: { 'Farming': 60 }, notes: 'Dig up a Yew tree stump after harvest' }
   ],
   'Jangerberries': [
-    { type: 'SKILL', name: 'Bush Patch', regions: ['Any'], skills: { 'Farming': 48 }, outputYield: 4 },
+    { type: 'SKILL', name: 'Bush Patch', regions: ['Any'], unlockId: 'Bush', unlockTable: TableType.FARMING_LAYERS, skills: { 'Farming': 48 }, outputYield: 4 },
     { type: 'SPAWN', name: 'Ground Spawn', regions: ['Kandarin'], notes: "Island north of Gu'Tanoth" }
   ],
   "Toad's Legs": [
@@ -2841,7 +2841,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'MINIGAME', name: 'Mastering Mixology', regions: ['Varlamore'], unlockId: 'Mastering Mixology', notes: 'Buy from the reward shop with minigame points' }
   ],
   'Huasca': [
-    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], skills: { Farming: 65, Herblore: 58 }, manualRequirements: ['Have a huasca seed and an accessible herb patch'], notes: 'Grow huasca from seeds and clean the harvested herb; not a Mastering Mixology reward' }
+    { type: 'SKILL', name: 'Herb Patch', regions: ['Any'], unlockId: 'Herb', unlockTable: TableType.FARMING_LAYERS, skills: { Farming: 65, Herblore: 58 }, manualRequirements: ['Have a huasca seed and an accessible herb patch'], notes: 'Grow huasca from seeds and clean the harvested herb; not a Mastering Mixology reward' }
   ],
   'Goading Potion': [
     { type: 'SKILL', name: 'Herblore', outputDoses: 3, regions: ['Any'], skills: { 'Herblore': 54 }, inputs: { 'Harralander': 1, 'Vial of Water': 1, 'Aldarium': 1 } }
