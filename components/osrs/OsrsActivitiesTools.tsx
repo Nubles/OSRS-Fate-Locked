@@ -95,7 +95,7 @@ const SlayerTool: React.FC = () => {
 };
 
 const SHORTCUT_FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
-  { key: 'all', label: 'All' }, { key: 'ready', label: 'Ready' }, { key: 'level', label: 'Need level' }, { key: 'quest', label: 'Need quest' }, { key: 'area-locked', label: 'Area locked' }, { key: 'no-route', label: 'No route' },
+  { key: 'all', label: 'All' }, { key: 'ready', label: 'Ready' }, { key: 'level', label: 'Need level' }, { key: 'quest', label: 'Need quest' }, { key: 'diary', label: 'Need diary' }, { key: 'area-locked', label: 'Area locked' }, { key: 'no-route', label: 'No route' },
 ];
 
 const ShortcutsTool: React.FC = () => {
@@ -111,7 +111,7 @@ const ShortcutsTool: React.FC = () => {
   if (!reach) return <Shell icon={icon} title="Agility Shortcuts"><div className="oact-tool-empty">{error ? <>Could not load the shortcuts. <button type="button" className="oact-link" onClick={retry}>Retry shortcuts</button></> : 'Loading shortcuts...'}</div></Shell>;
   if (reach.total === 0) return null;
   const rows = filter === 'all' ? reach.rows : reach.rows.filter((r) => r.status === filter);
-  const TAG: Record<ShortcutStatus, [string, string]> = { 'ready': ['ready', '#00ff00'], 'area-locked': ['area locked', '#ffff00'], 'no-route': ['no route', '#ff981f'], 'level': ['', '#c77dff'], 'quest': ['', '#00ffff'], 'no-location': ['-', '#8a7c66'] };
+  const TAG: Record<ShortcutStatus, [string, string]> = { 'ready': ['ready', '#00ff00'], 'area-locked': ['area locked', '#ffff00'], 'no-route': ['no route', '#ff981f'], 'level': ['', '#c77dff'], 'quest': ['', '#00ffff'], 'diary': ['', '#00ffff'], 'no-location': ['-', '#8a7c66'] };
   return (
     <Shell icon={icon} title="Agility Shortcuts" right={<><span style={{ color: '#00ff00' }}>{reach.ready}</span> / {reach.total} usable now</>}>
       <div className="oact-tool-filters" role="group" aria-label="Shortcut filter" style={{ flexWrap: 'wrap' }}>
@@ -125,7 +125,7 @@ const ShortcutsTool: React.FC = () => {
             <span style={{ width: 30, flexShrink: 0, fontFamily: 'RSSmall, sans-serif', color: '#ffff00' }}>L{r.level}</span>
             <span className="oact-trow-name" style={{ color: '#ffffff', fontFamily: 'RS, sans-serif' }}>{r.name}</span>
             {r.loc && <Pin cx={r.loc.cx} cy={r.loc.cy} name={r.name} />}
-            <span className="oact-trow-tag" style={{ color: TAG[r.status][1] }}>{r.status === 'level' ? r.missing.map(need => `${need.skill} ${need.level}`).join(', ') : r.status === 'quest' ? r.quest : TAG[r.status][0]}</span>
+            <span className="oact-trow-tag" style={{ color: TAG[r.status][1] }}>{r.status === 'level' ? r.missing.map(need => `${need.skill} ${need.level}`).join(', ') : r.status === 'quest' ? r.quest : r.status === 'diary' ? r.diary : TAG[r.status][0]}</span>
           </div>
         ))}
         {rows.length === 0 && <div className="oact-tool-empty">No shortcuts in this filter.</div>}

@@ -4,7 +4,7 @@
  * Each shortcut (from the picker's challenge tables) has a skill level and the
  * object you interact with; a multi-skill shortcut (a mith grapple) has one
  * table row per skill. A shortcut is usable when you have every level (under
- * the tier cap model), any quest it needs, and the object sits in an unlocked
+ * the tier cap model), any quest or diary it needs, and the object sits in an unlocked
  * chunk a route reaches.
  */
 
@@ -15,8 +15,9 @@ import { chunkForPlace, chunkUnlocked, placeOf } from './chunkLocations';
 import { canonicalAreaName } from '../data/areaMapPolicy';
 import type { AreaRoutes } from './areaRoutes';
 import { unfinishedEntryQuests } from './chunkEntry';
+import { hasDiaryTier } from './travelDecisions';
 
-export type ShortcutStatus = 'ready' | 'level' | 'quest' | 'area-locked' | 'no-route' | 'no-location';
+export type ShortcutStatus = 'ready' | 'level' | 'quest' | 'diary' | 'area-locked' | 'no-route' | 'no-location';
 
 export interface ShortcutNeed {
   skill: string;
@@ -34,6 +35,8 @@ export interface ShortcutRow {
   missing: ShortcutNeed[];
   /** The quest(s) still to finish, joined with "and", for status 'quest'. */
   quest: string | null;
+  /** The Achievement Diary tier(s) still to finish, for status 'diary' ("Falador Hard diary"). */
+  diary: string | null;
   status: ShortcutStatus;
   loc: ShortcutLoc | null;
 }
@@ -57,8 +60,10 @@ export interface ShortcutReach {
 
 /**
  * Shortcuts that also need a finished quest (OSRS Wiki "Shortcuts", checked
- * 22 November 2026), keyed by the shortcut's name in the picker's tables.
- * Partial-completion and diary requirements are not listed here.
+ * 22 November 2026, and each shortcut's own page, checked 24 November 2026),
+ * keyed by the shortcut's name in the picker's tables. Partial-completion
+ * requirements are not listed here; a quest that opens the shortcut's chunk
+ * comes from the chunk content as well (ShortcutLoc.entryQuests).
  */
 export const SHORTCUT_QUESTS: Readonly<Record<string, readonly string[]>> = {
   'Access the Corsair Cove Dungeon shortcut': ['Dragon Slayer I'],
@@ -76,7 +81,50 @@ export const SHORTCUT_QUESTS: Readonly<Record<string, readonly string[]>> = {
   'Access the (mith grapple) scale the Observatory cliff shortcut': ['Observatory Quest'],
   'Access the Darkmeyer north-eastern wall shortcut': ['Sins of the Father'],
   'Access the Gnome Stronghold shortcut': ['The Grand Tree', 'Tree Gnome Village'],
+  // Ornate railing.
+  'Access the Temple on the Salve to Morytania shortcut': ['Priest in Peril'],
+  // Rocks (Tirannwn): all three need Regicide.
+  'Access the Arandar easy cliffside scramble shortcut': ['Regicide'],
+  'Access the Arandar medium cliffside scramble shortcut': ['Regicide'],
+  'Access the Arandar advanced cliffside scramble shortcut': ['Regicide'],
+  // Bush, Pillar and Rockslide (Vampyrium).
+  'Access the Vampyrium forest crawl shortcut': ['The Blood Moon Rises'],
+  'Access the Vampyrium pillar jumping shortcut': ['The Blood Moon Rises'],
+  'Access the Vampyrium rock slides shortcut': ['The Blood Moon Rises'],
+  // Rocks (Darkmeyer), on Castle Drakan's northern walls.
+  'Access the Castle Drakan wall rock climb shortcut': ['Sins of the Father'],
+  // Cave (Stalker Den).
+  'Access the cave to the Stalker Den shortcut': ['Shadows of Custodia'],
+  // Crevice (Heroes' Guild); it needs the Falador hard diary too.
+  "Access the Heroes' Guild tunnel shortcut": ["Heroes' Quest"],
 };
+
+/**
+ * Shortcuts that also need an Achievement Diary tier (each shortcut's OSRS
+ * Wiki page, checked 24 November 2026), as DIARY_DATA names them. A higher
+ * tier of the same diary counts (hasDiaryTier).
+ */
+export const SHORTCUT_DIARIES: Readonly<Record<string, readonly string[]>> = {
+  // Tight-gap (Goblin Village).
+  'Access the scale Goblin Village wall shortcut': ['Falador Easy'],
+  // Crevice (Deep Wilderness Dungeon).
+  'Access the Deep Wilderness Dungeon narrow shortcut': ['Wilderness Medium'],
+  // Dark tunnel (Motherlode Mine): the medium reward, which needs the easy tier first.
+  'Access the Motherlode Mine eastern wall shortcut': ['Falador Medium'],
+  // Crevice (Heroes' Guild).
+  "Access the Heroes' Guild tunnel shortcut": ['Falador Hard'],
+  // Crevice (Kalphite Lair).
+  'Access the Kalphite Lair wall shortcut': ['Desert Elite'],
+};
+
+/** The quests and diary tiers a shortcut still needs, its chunk's entry quests included. */
+export function shortcutGates(name: string, unlocks: UnlockState, entryQuests: readonly string[] = []): { quests: string[]; diaries: string[] } {
+  const done = new Set(unlocks.quests ?? []);
+  return {
+    quests: [...new Set([...(SHORTCUT_QUESTS[name] ?? []), ...entryQuests])].filter(q => !done.has(q)),
+    diaries: (SHORTCUT_DIARIES[name] ?? []).filter(d => !hasDiaryTier(unlocks.diaries ?? [], d)),
+  };
+}
 
 /** Resolve a shortcut to a representative chunk via its trigger object(s). */
 export type LocateFn = (s: Shortcut) => ShortcutLoc | null;
@@ -180,7 +228,6 @@ export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState
     if (group) group.push(s);
     else groups.set(s.name, [s]);
   }
-  const done = new Set(unlocks.quests ?? []);
   const rows: ShortcutRow[] = [...groups.values()].map(group => {
     const main = group.find(s => s.skill === 'Agility') ?? group[0];
     const requirements = group.map(s => ({ skill: s.skill, level: s.level }));
@@ -191,18 +238,20 @@ export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState
     });
     const loc = locate(main);
     // The shortcut's own quests, then any its chunk's entry needs.
-    const unfinished = [...new Set([...(SHORTCUT_QUESTS[main.name] ?? []), ...(loc?.entryQuests ?? [])])].filter(q => !done.has(q));
-    const quest = unfinished.length > 0 ? unfinished.join(' and ') : null;
+    const gates = shortcutGates(main.name, unlocks, loc?.entryQuests);
+    const quest = gates.quests.length > 0 ? gates.quests.join(' and ') : null;
+    const diary = gates.diaries.length > 0 ? `${gates.diaries.join(' and ')} diary` : null;
 
     let status: ShortcutStatus;
     if (!loc) status = 'no-location';
     else if (missing.length > 0) status = 'level';
     else if (quest) status = 'quest';
+    else if (diary) status = 'diary';
     else if (!loc.unlocked) status = 'area-locked';
     else if (loc.stranded) status = 'no-route';
     else status = 'ready';
 
-    return { name: main.name, skill: main.skill, level: main.level, requirements, missing, quest, status, loc };
+    return { name: main.name, skill: main.skill, level: main.level, requirements, missing, quest, diary, status, loc };
   });
 
   rows.sort((a, b) =>

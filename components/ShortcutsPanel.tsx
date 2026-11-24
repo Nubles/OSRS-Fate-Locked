@@ -14,6 +14,7 @@ const STATUS_META: Record<ShortcutStatus, { label: string; cls: string }> = {
   'no-route':    { label: 'no route',    cls: 'bg-orange-900/25 border-orange-500/40 text-orange-200' },
   'level':       { label: 'level',       cls: 'bg-fuchsia-900/25 border-fuchsia-500/40 text-fuchsia-200' },
   'quest':       { label: 'quest',       cls: 'bg-sky-900/25 border-sky-500/40 text-sky-200' },
+  'diary':       { label: 'diary',       cls: 'bg-teal-900/25 border-teal-500/40 text-teal-200' },
   'no-location': { label: '—',           cls: 'bg-white/5 border-white/10 text-gray-500' },
 };
 
@@ -22,6 +23,7 @@ const FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
   { key: 'ready', label: 'Ready' },
   { key: 'level', label: 'Need level' },
   { key: 'quest', label: 'Need quest' },
+  { key: 'diary', label: 'Need diary' },
   { key: 'area-locked', label: 'Area locked' },
   { key: 'no-route', label: 'No route' },
 ];
@@ -29,6 +31,7 @@ const FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
 /**
  * Agility/travel shortcut reachability — every shortcut with its level and
  * real chunk location, flagged by whether you have the level, the quests and
+ * diaries, and
  * an area a route reaches.
  */
 export const ShortcutsPanel: React.FC = () => {
@@ -80,7 +83,7 @@ export const ShortcutsPanel: React.FC = () => {
                   )}
                   {r.status === 'level'
                     ? r.missing.map(need => <span key={need.skill} className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{need.skill} {need.level}</span>)
-                    : <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{r.status === 'quest' ? r.quest : meta.label}</span>}
+                    : <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{r.status === 'quest' ? r.quest : r.status === 'diary' ? r.diary : meta.label}</span>}
                 </div>
               );
             })}
