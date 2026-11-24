@@ -1022,18 +1022,24 @@
           "label": "Entrance to Shellbane Gryphon Cave",
           "wikiPage": "Shellbane_Gryphon_Cave",
           "requirements": [
-            "The Curse of Arrav or elite clue access"
+            "Troubled Tortugans Complete the quest",
+            "Shellbane Gryphon Cave: a gryphon Slayer task or the elite clue to kill the shellbane gryphon needs confirmation"
           ]
         }
       ],
       "sources": [
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon_Cave?oldid=15212238",
-          "revision": "15212238"
+          "url": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon_Cave?oldid=15388273",
+          "revision": "15388273"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Shellbane_gryphon?oldid=15387213",
+          "revision": "15387213"
         }
       ],
-      "note": "The cave entrance is explicitly pinned at 3176,2477 in canonical chunk 12582."
+      "note": "The cave entrance is explicitly pinned at 3176,2477 in canonical chunk 12582. Elder Nama lets players in only with an appropriate Slayer task or an elite clue to kill the shellbane gryphon (cave page); the boss needs 51 Slayer and Troubled Tortugans to kill (boss page)."
     },
     {
       "name": "Slayer Tower Basement",

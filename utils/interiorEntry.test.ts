@@ -189,6 +189,16 @@ describe("a blocked route's status", () => {
     expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye', 'Desert Treasure II'] })))).toBe('ALLOWED');
   });
 
+  it('holds the Shellbane Gryphon Cave to Troubled Tortugans, and asks about the task or clue', () => {
+    const cave = throughLumbridge('49,138', 'Shellbane Gryphon Cave');
+    expect(cave.entrances.map((entrance) => entrance.requirements)).toEqual([[
+      'Troubled Tortugans Complete the quest',
+      'Shellbane Gryphon Cave: a gryphon Slayer task or the elite clue to kill the shellbane gryphon needs confirmation',
+    ]]);
+    expect(interiorEntry(cave, context(run({ quests: ['The Curse of Arrav'] })))).toBe('NOT_READY');
+    expect(interiorEntry(cave, context(run({ quests: ['Troubled Tortugans'] })))).toBe('UNKNOWN');
+  });
+
   it('keeps a route with only requirements the save cannot answer unknown', () => {
     const cave: InteriorRecord = { key: '1,1', name: 'Test Cave', entrances: [{
       chunkId: idOf(chunkForPlace('Lumbridge')!), requirements: ['Test Cave: a task needs confirmation', 'Started Ratcatchers'],
