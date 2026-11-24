@@ -445,6 +445,9 @@ blocked. RuneLite blocks only an id match with one destination and a
 
 Each snapshot also carries its `kind` (land or ocean), its `area`, and an
 `entryReason` whenever its entry isn't `ALLOWED`.
+A minigame's `ACTIVITIES` row also carries `minigame: true`: it names a
+place, not an NPC or object the game shows, while a boss row, with the same
+`ACTIVITY` target kind, has no such field.
 
 `rules.capabilities` names the sections a bundle has (`chunkDetails` for
 the snapshot fields). A reader uses only the sections whose capability it
