@@ -153,6 +153,11 @@
     { "id": "8249", "accessOptions": [{ "skills": ["Construction 70"], "manual": ["Confirm you have built the bank chest here"] }], "note": "Buccaneers' Haven bank chest is built at its bank chest space with 70 Construction.", "wiki": ["https://oldschool.runescape.wiki/w/Bank_chest_(amenity)"] },
     { "id": "10275", "accessOptions": [{ "quests": ["Fallen From Grace"], "skills": ["Construction 48"], "manual": ["Confirm you have built the bank chest from the chest pieces"] }], "note": "Wyrmscraig bank chest is built once from chest pieces with 48 Construction; its sunstone crystal needs Fallen From Grace.", "wiki": ["https://oldschool.runescape.wiki/w/Chest_pieces_(Wyrmscraig)", "https://oldschool.runescape.wiki/w/List_of_banks"] }
   ],
+  "areas": [
+    { "id": "11066", "area": "Keldagrim", "reason": "The Keldagrim bank and the Blast Furnace chest stand inside Keldagrim; the chunk is only the city's entrance, which the map files under Mountain Camp.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "11313", "area": "Mor Ul Rek (TzHaar City)", "reason": "The banks stand inside Mor Ul Rek; the chunk is the volcano entrance, which the map files under Musa Point.", "wiki": ["https://oldschool.runescape.wiki/w/Mor_Ul_Rek", "https://oldschool.runescape.wiki/w/List_of_banks"] },
+    { "id": "12849", "area": "Zanaris", "reason": "The bank stands inside Zanaris; the chunk is the Lumbridge Swamp shed that leads there.", "wiki": ["https://oldschool.runescape.wiki/w/List_of_banks"] }
+  ],
   "merges": [
     { "id": "10810", "into": "11066", "reason": "Rellekka Peninsula holds no bank: its chunk is the way into Keldagrim, whose bank and Blast Furnace chest are 11066.", "wiki": ["https://oldschool.runescape.wiki/w/Keldagrim"] },
     { "id": "12085", "into": "12084", "reason": "Asgarnian Road holds no bank: its chunk only leads into the Dwarven Mine, whose Motherlode Mine bank chest is listed under East Falador (12084).", "wiki": ["https://oldschool.runescape.wiki/w/Motherlode_Mine"] },

@@ -3,7 +3,8 @@
 // 1 virtual registry entry. Each is its own unlock in bank-locked modes.
 // Physical entries are keyed by canonical chunk id "cx*256+cy".
 
-export interface BankDef { id: string; name: string }
+/** area: the area the bank stands in, where its chunk is only the entrance to a place filed under another. */
+export interface BankDef { id: string; name: string; area?: string }
 
 export const BANKS: BankDef[] = [
   { id: '13618', name: "Tarn's Lair bank" },
@@ -58,8 +59,8 @@ export const BANKS: BankDef[] = [
   { id: '14908', name: "House on the Hill" },
   { id: '6191', name: "Hunter Guild" },
   { id: '9531', name: "Jatizso" },
-  { id: '11313', name: "Mor Ul Rek (TzHaar City) banks" },
-  { id: '11066', name: "Keldagrim bank and Blast Furnace chest" },
+  { id: '11313', name: "Mor Ul Rek (TzHaar City) banks", area: "Mor Ul Rek (TzHaar City)" },
+  { id: '11066', name: "Keldagrim bank and Blast Furnace chest", area: "Keldagrim" },
   { id: '6457', name: "Kourend Castle" },
   { id: '5941', name: "Land's End" },
   { id: '10804', name: "Legends' Guild" },
@@ -128,7 +129,7 @@ export const BANKS: BankDef[] = [
   { id: '6198', name: "West Woodcutting Guild" },
   { id: '6461', name: "Wintertodt Camp" },
   { id: '10275', name: "Wyrmscraig bank chest" },
-  { id: '12849', name: "Zanaris bank" },
+  { id: '12849', name: "Zanaris bank", area: "Zanaris" },
   { id: '8751', name: "Zul-Andra deposit chest" },
   { id: 'woodcutting-leprechaun', name: "Woodcutting Leprechaun (Forestry)" },
 ];

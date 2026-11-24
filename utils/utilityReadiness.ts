@@ -23,7 +23,9 @@ const GUILD_AREAS: Record<string, string[]> = {
 export function getUtilityActivityReq(id: string, table: TableType, mode?: string): ActivityReq | undefined {
   if (table === TableType.BANKS) {
     const name = BANK_BY_ID[id]?.name ?? id;
-    const area = REGIONS_LIST.find(area => area === name || name.toLowerCase() === `${area} bank`.toLowerCase());
+    // The area the registry places the bank in (the Keldagrim bank's chunk is Mountain Camp's), else one it is named for.
+    const area = BANK_BY_ID[id]?.area
+      ?? REGIONS_LIST.find(area => area === name || name.toLowerCase() === `${area} bank`.toLowerCase());
     return { ...(area ? { requiredAreas: [area] } : {}), unverified: true,
       manualRequirements: [mode === 'chunked'
         ? `Reach the bank's chunk (${id}) and meet its entry requirements`

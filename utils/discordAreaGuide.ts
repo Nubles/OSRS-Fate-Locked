@@ -25,7 +25,7 @@ export interface DiscordAreaEntry {
   activities: string[];
   /** Quests that need the area open. */
   quests: string[];
-  /** Banks standing in the area's chunks. */
+  /** Banks standing in the area's chunks, or placed in the area by the bank registry. */
   banks: string[];
   /** Ways in besides walking, as the Journal names them. */
   routes: string[];
@@ -44,6 +44,11 @@ export function buildDiscordAreaGuide(): DiscordAreaGuide {
     for (const area of areas) regionOf.set(area, region);
   }
   const bosses = new Set(BOSSES_LIST);
+  // A bank the registry places in an area stands there, not in the area of its entrance chunk.
+  const banksIn = (name: string, chunks: { cx: number; cy: number }[]): string[] => [
+    ...chunks.map(chunk => BANK_BY_ID[bankId(chunk.cx, chunk.cy)]).filter(bank => bank && (bank.area ?? name) === name),
+    ...Object.values(BANK_BY_ID).filter(bank => bank.area === name),
+  ].map(bank => bank!.name);
 
   const areas = [...regionOf.entries()].map(([name, region]): DiscordAreaEntry => {
     const chunks = SUB_AREA_CHUNKS[name] ?? [];
@@ -62,7 +67,7 @@ export function buildDiscordAreaGuide(): DiscordAreaGuide {
       bosses: sorted(gated.filter(activity => bosses.has(activity))),
       activities: sorted(gated.filter(activity => !bosses.has(activity))),
       quests: sorted(quests),
-      banks: sorted(chunks.map(chunk => BANK_BY_ID[bankId(chunk.cx, chunk.cy)]?.name).filter((bank): bank is string => Boolean(bank))),
+      banks: sorted(banksIn(name, chunks)),
       routes: [...new Set((AREA_ENTRY_ROUTES[name] ?? []).map(route => route.label))],
     };
   });

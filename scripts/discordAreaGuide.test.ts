@@ -19,6 +19,18 @@ describe('the Discord area guide', () => {
     expect(area("Void Knights' Outpost")?.routes).toContain("Squire's boat from Port Sarim");
   });
 
+  // Audit areas d1 0: banks came from chunk ownership only, so the three banks that sit on
+  // their place's entrance chunk were listed under the surface area outside.
+  it('lists each bank under the area it stands in, not the area of its entrance chunk', () => {
+    const area = (name: string) => guide.areas.find(entry => entry.name === name);
+    expect(area('Keldagrim')?.banks).toContain('Keldagrim bank and Blast Furnace chest');
+    expect(area('Mor Ul Rek (TzHaar City)')?.banks).toContain('Mor Ul Rek (TzHaar City) banks');
+    expect(area('Zanaris')?.banks).toContain('Zanaris bank');
+    expect(area('Mountain Camp')?.banks).not.toContain('Keldagrim bank and Blast Furnace chest');
+    expect(area('Musa Point')?.banks).not.toContain('Mor Ul Rek (TzHaar City) banks');
+    expect(area('Lumbridge')?.banks).not.toContain('Zanaris bank');
+  });
+
   it(WRITE ? 'writes public/discord-area-guide.json' : 'matches public/discord-area-guide.json (npm run discord:areas)', () => {
     const text = `${JSON.stringify(guide)}\n`;
     if (WRITE) writeFileSync(FILE, text);
