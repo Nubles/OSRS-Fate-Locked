@@ -431,4 +431,16 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
     expect(questRequirementOptionMet(quest.oneOf![0],
       route(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(true);
   });
+
+  it("does not ask The General's Shadow for the Tree Gnome Stronghold or Falador", () => {
+    // Wiki The General's Shadow (rev 15404136) scout table: Gnomish scout at 2461,3374 "Entrance to the
+    // Tree Gnome Stronghold" (38,52, East Ardougne); Falador Scout at 3072,3344 "Just between the east
+    // wall of Falador and the Draynor Manor western fence" (48,52, Draynor Village).
+    expect(QUEST_DATA["The General's Shadow"].regions)
+      .toEqual(['Rellekka', "Seers' Village", 'Shilo Village', 'Draynor Village', 'Shantay Pass']);
+    expect(regionBlockers("The General's Shadow", {
+      regions: ['Rellekka', "Seers' Village", 'Shilo Village', 'Draynor Village', 'Shantay Pass', 'East Ardougne', 'Fishing Guild'],
+      quests: ['Fight Arena', 'Curse of the Empty Lord'],
+    })).toEqual([]);
+  });
 });

@@ -2936,7 +2936,9 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'The General\'s Shadow': {
     kind: 'miniquest', accessPolicy: 'regions-and-locations',
     id: 'The General\'s Shadow', name: 'The General\'s Shadow',
-    regions: ['Rellekka', 'Seers\' Village', 'Tree Gnome Stronghold', 'Shilo Village', 'Falador', 'Draynor Village', 'Shantay Pass'],
+    // The Gnomish scout (38,52) and the Falador scout (48,52) stand outside the Tree Gnome Stronghold and
+    // Falador, in East Ardougne and Draynor Village, so neither of those two areas is asked for.
+    regions: ['Rellekka', 'Seers\' Village', 'Shilo Village', 'Draynor Village', 'Shantay Pass'],
     // Bouncer's ghost is in the Goblin Cave, whose mouth is between the Fishing Guild (40,53) and Hemenster (41,53).
     oneOf: [{ regions: ['Fishing Guild'] }, { regions: ['Hemenster'] }],
     locations: [
