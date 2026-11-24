@@ -143,7 +143,8 @@ audited counts), not loosening the test.
   flag follow-ups you deliberately did not do and why.
 - Commits: imperative subject, body explains the why and the contract
   (which test pins it), `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
-  trailer. Small commits for the plugin (CI is the only compile check).
+  trailer. Small commits for the plugin, each after a local
+  `gradle clean check --no-daemon` as above.
 - Link commits/PRs as URLs, file references as `path:line`.
 - When the user asks for an audit ("ensure X is accurate"), the deliverable
   is: what was already correct (verified how), what drifted (fixed how), and
