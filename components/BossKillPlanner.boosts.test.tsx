@@ -51,8 +51,9 @@ describe('Boss Planner boosts', () => {
     game.unlocks = player({});
     render(<BossKillPlanner onClose={() => {}} />);
     const text = await detailText();
-    expect(text).toContain('Max hit23');
-    expect(text).toContain('Prayer: Improved Reflexes / Superhuman Strength · Potion: Super combat');
+    // Strength 70 + Super combat 15, the 15% pair: floor(85 * 1.15) + 1 + 8 = 106 with the whip's +82.
+    expect(text).toContain('Max hit24');
+    expect(text).toContain('Prayer: Incredible Reflexes / Ultimate Strength · Potion: Super combat');
   });
 
   it('assumes Piety once it is unlocked and its gates are met', async () => {

@@ -74,7 +74,7 @@ export const OsrsGearPicker: React.FC<PickerProps> = ({ slot, status, onClose, o
 );
 
 const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => void }> = ({ slot, status, onRetry }) => {
-  const { unlocks, loadout, setLoadoutSlot } = useGame();
+  const { unlocks, gameModeId, loadout, setLoadoutSlot } = useGame();
   const equip = useEquip();
   const currentItemId = (loadout || {})[slot];
   const unlockedTier = unlocks.equipment[slot] || 0;
@@ -136,7 +136,7 @@ const PickerBody: React.FC<{ slot: string; status: GearStatus; onRetry: () => vo
           const tierLabel = `${estimated ? 'Est. ' : ''}${gems ? `T${tier}` : (tier > 0 ? roman(tier) : '0')}`;
           const locked = tier > unlockedTier;
           const isCurrent = item.id === currentItemId;
-          const obt = contentReady ? itemObtainability(item.name, unlocks) : 'unknown';
+          const obt = contentReady ? itemObtainability(item.name, unlocks, gameModeId) : 'unknown';
           const sub = `${topBonus(item.bonuses)}${item.twoHanded ? ' · 2H' : ''}`;
           return (
             <button

@@ -1,14 +1,14 @@
 /** Release-pinned OSRS Wiki DPS-calculator targets; refresh as a reviewed data change. */
 export const MONSTER_CATALOGUE = {
-  asset: 'monster-catalogue.c9f6dafdb70c20751d171fbc4f5b5d1701117c47.json',
-  sourceBlob: 'c9f6dafdb70c20751d171fbc4f5b5d1701117c47',
+  asset: 'monster-catalogue.5eb1ea8c755d41a4ccfbf284feee30472e416463.json',
+  sourceBlob: '5eb1ea8c755d41a4ccfbf284feee30472e416463',
   sourceUrl: 'https://github.com/weirdgloop/osrs-dps-calc/blob/main/cdn/json/monsters.json',
-  sha256: 'ec38284c4651cf76a568b5e95cd11cc942e2077d901d20041f770e56460dbca2',
-  capturedAt: '2026-09-22',
-  verifiedAt: '2026-09-24',
-  rowCount: 2860,
+  sha256: '40b6bae96c49227fcb4ae07cc97fa62d704cdd3b160f61e335b91e8ba0485c34',
+  capturedAt: '2026-11-24',
+  verifiedAt: '2026-11-24',
+  rowCount: 2927,
   // Increment if normalized fields, units, or selection semantics change.
-  normalizationVersion: 3,
+  normalizationVersion: 5,
 } as const;
 
 export const MONSTER_CACHE_SOURCE = `${MONSTER_CATALOGUE.sha256}:${MONSTER_CATALOGUE.normalizationVersion}`;

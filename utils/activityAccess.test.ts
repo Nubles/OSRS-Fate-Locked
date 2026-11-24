@@ -247,8 +247,13 @@ describe('getActivityAccess in Chunked', () => {
 describe('Chunked places behind an entry quest (content audit fix 1)', () => {
   const chunked = (chunks: string[], quests: string[] = []) => makeUnlocks({ chunks, quests });
 
-  it('reads the four entry quests from the chunk content', () => {
-    expect(Object.keys(CHUNK_ENTRY_QUESTS).sort()).toEqual(['Bone Voyage', 'Cabin Fever', 'Children of the Sun', 'Priest in Peril']);
+  it('reads the entry quests from the chunk content and the reviewed quest-locked places', () => {
+    // The chunk content's four, then ENTRY_QUEST_CHUNKS in utils/chunkSkillNodesBuild.ts (deep audit chunk-sample d1[0], d2[0], d3[0]).
+    expect(Object.keys(CHUNK_ENTRY_QUESTS).sort()).toEqual([
+      'Bone Voyage', 'Cabin Fever', 'Children of the Sun', 'Darkness of Hallowvale', 'Desert Treasure II', 'Dragon Slayer I',
+      'Lunar Diplomacy', 'Making Friends with My Arm', "Mourning's End Part I", 'Priest in Peril', 'Regicide', 'Shilo Village',
+      'Sins of the Father', 'The Fremennik Isles', 'The Fremennik Trials',
+    ]);
     expect(chunkEntryQuests('55,51')).toEqual(['Priest in Peril']);
     expect(chunkEntryQuests('59,59')).toEqual(['Bone Voyage']);
     expect(chunkEntryQuests('50,50')).toEqual([]);
@@ -315,8 +320,10 @@ describe('Chunked banks and Farm places', () => {
     expect(farmPlaceReachable(brutus, makeUnlocks({ chunks: ['50,51'] }), 'chunked')).toBe(true);
     expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Turael, start, 'chunked')).toBe(false);
     expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Aya, makeUnlocks({ chunks: ['45,55'] }), 'chunked')).toBe(true);
-    // A Boss Task card shows with any master who gives boss tasks.
-    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS['Boss Task'], makeUnlocks({ chunks: ['44,46'] }), 'chunked')).toBe(true);
+    // A Boss Task card shows with any master who gives boss tasks. Duradel is inside Shilo Village,
+    // which the game opens only after the Shilo Village quest (deep audit chunk-sample d2[0]).
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS['Boss Task'], makeUnlocks({ chunks: ['44,46'], quests: ['Shilo Village'] }), 'chunked')).toBe(true);
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS['Boss Task'], makeUnlocks({ chunks: ['44,46'] }), 'chunked')).toBe(false);
     expect(farmPlaceReachable(undefined, start, 'chunked')).toBe(false);
     // Every other mode keeps the full Farm list.
     expect(farmPlaceReachable(brutus, start, 'vanilla')).toBe(true);

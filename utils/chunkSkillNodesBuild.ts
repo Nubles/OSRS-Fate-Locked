@@ -23,8 +23,9 @@
  *                          an essence mine teleport (Runecraft), an estate
  *                          agent, a sawmill or a plank shop (Construction), a
  *                          Hunter shop's traps (Hunter)
- *   CHUNK_ENTRY_QUESTS     the quest a chunk's entry needs (questSections),
- *                          so its content counts only once that quest is done
+ *   CHUNK_ENTRY_QUESTS     the quests a chunk's entry needs (questSections and
+ *                          ENTRY_QUEST_CHUNKS), so its content counts only
+ *                          once those quests are done
  *   CHUNK_GUILD_GATES      chunks whose skill content sits inside a guild, so
  *                          it counts only with that guild unlocked
  *   CHUNK_PATCH_LOCKS      patches the game locks behind a quest or a diary
@@ -124,6 +125,24 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
   '44,52': { altar: 'Law', level: 54 },
   '38,44': { altar: 'Wrath', level: 95 },
 };
+/**
+ * Rows of a named interior that the name-only rules would misread there. The
+ * Abandoned Mine's records also hold plain "Ore vein" rows, and the Wiki gives
+ * "Ore vein" only for the Motherlode Mine, so they stay uncounted (the mine's
+ * named veins still count). The second Braindeath Island record names its
+ * Rum Deal spots plain "Fishing spot" (the first says "Fishing spot
+ * (Braindeath Island)", which the resource rules drop); the island has no
+ * other fishing. The Rogues' Den's 10-coin chest is in the maze's chest room
+ * (OSRS Wiki 'Chest (10 coins)' puts it at 3053,5037, in the maze region, not
+ * the lobby), and the Wiki ('Rogues' Den') says entering the maze "requires
+ * level 50 in both Thieving and Agility", so it does not lower the chunk's
+ * Thieving floor.
+ */
+const INTERIOR_NOT_TRAINING: Readonly<Record<string, RegExp>> = {
+  'Abandoned Mine': /^ore vein$/i,
+  'Braindeath Island': /^fishing spot$/i,
+  "Rogues' Den": /^chest \(10 coins\)$/i,
+};
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;
 
 /**
@@ -168,6 +187,58 @@ export const PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, PatchL
   '59,44': { Herb: { diary: 'Morytania Elite' } }, // Harmony Island (its allotment is open)
   '26,46': { 'Hardwood Tree': { quest: 'The Ribbiting Tale' } }, // Locus Oasis
   '48,37': { Calquat: { quest: 'Troubled Tortugans' } }, // The Summer Shore: partial completion in the game
+};
+
+/**
+ * Places the game opens only through a quest, beyond the chunk content's own
+ * questSections (OSRS Wiki, each place's own page, 24 Nov 2026). A chunk here
+ * counts only once the run has done every quest listed, merged with its
+ * questSections (Morytania's Priest in Peril). The tracker records a quest
+ * only as done, so a place the game opens partway through a quest (Jatizso,
+ * Neitiznot, Tirannwn, Lletya, Weiss, Darkmeyer, Meiyerditch, the
+ * Stranglewood) waits for the whole quest. Every way into each place needs
+ * its quest, Sailing moorings included. Edge chunks that also hold land open
+ * without the quest stay out: 36,58 (the Piscatoris Fishing Colony's north
+ * shore), 18,53 (the Kebos coast by the Stranglewood rowboat), 37,52 (east of
+ * the Arandar gate), 37,51 (Arandar Mountain above the Kandarin side), 34,48
+ * and 35,48 (the Poison Waste, whose fairy ring DLR needs no quest), 35,47
+ * (the sea south of Zul-Andra), 57,52 (East Darkmeyer runs into the swamp
+ * that Slepe opens onto) and 44,62 (Weiss's shore, salvaged from a boat).
+ */
+export const ENTRY_QUEST_CHUNKS: Readonly<Record<string, readonly string[]>> = {
+  // Neitiznot, Jatizso and the ice troll isles north of them: the Gunnars ferries open
+  // once The Fremennik Isles is started, mooring needs it done.
+  '36,59': ['The Fremennik Isles'], '37,59': ['The Fremennik Isles'],
+  '36,60': ['The Fremennik Isles'], '37,60': ['The Fremennik Isles'],
+  // Lunar Isle: "accessible to members who have progressed far enough into Lunar Diplomacy".
+  '32,60': ['Lunar Diplomacy'], '32,61': ['Lunar Diplomacy'], '33,60': ['Lunar Diplomacy'], '33,61': ['Lunar Diplomacy'],
+  // Miscellania and Etceteria: the Rellekka boat and fairy ring CIP need The Fremennik Trials;
+  // the ring of wealth (Throne of Miscellania) and the mooring (Royal Trouble) come after it.
+  '39,59': ['The Fremennik Trials'], '39,60': ['The Fremennik Trials'], '40,60': ['The Fremennik Trials'], '41,60': ['The Fremennik Trials'],
+  // Crandor: by boat during Dragon Slayer I, then only through the Crandor and Karamja Dungeon.
+  '44,50': ['Dragon Slayer I'], '44,51': ['Dragon Slayer I'],
+  // Corsair Cove Resource Area: past Haris or the dungeon gate once Dragon Slayer I is done.
+  '38,45': ['Dragon Slayer I'],
+  // Shilo Village: "accessible after completing the Shilo Village quest".
+  '44,46': ['Shilo Village'],
+  // Weiss and its salt mine: "All methods of accessing Weiss require at least partial
+  // completion of the quest Making Friends with My Arm".
+  '44,61': ['Making Friends with My Arm'],
+  // Tirannwn west of Arandar (Isafdar, the Tyras and Iorwerth camps, Port Tyras, Zul-Andra):
+  // the Underground Pass once Regicide is started, every other way once it is done.
+  '33,47': ['Regicide'], '33,48': ['Regicide'], '33,49': ['Regicide'], '33,50': ['Regicide'],
+  '34,47': ['Regicide'], '34,49': ['Regicide'], '34,50': ['Regicide'],
+  '35,49': ['Regicide'], '35,50': ['Regicide'], '36,50': ['Regicide'], '36,51': ['Regicide'],
+  // Lletya: inside Tirannwn, entered once Mourning's End Part I is started.
+  '36,49': ['Regicide', "Mourning's End Part I"],
+  // Meiyerditch: "must begin the Darkness of Hallowvale quest before they may travel to Meiyerditch".
+  '56,49': ['Darkness of Hallowvale'], '56,50': ['Darkness of Hallowvale'], '56,51': ['Darkness of Hallowvale'],
+  // Darkmeyer: "can be entered with partial completion of the quest Sins of the Father".
+  '56,52': ['Sins of the Father'],
+  // The Stranglewood: the Kebos rowboat "is only available after starting Desert Treasure II",
+  // and the ring of shadows is its reward.
+  '17,51': ['Desert Treasure II'], '17,52': ['Desert Treasure II'], '17,53': ['Desert Treasure II'],
+  '18,51': ['Desert Treasure II'], '18,52': ['Desert Treasure II'],
 };
 
 /**
@@ -303,6 +374,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
         let req = trainingReqFor(name, kind);
         // A rune altar's own "Altar" is where runes are made, not a Prayer altar.
         if (req?.station && req.skill === 'Prayer' && interior && RUNE_ALTAR_INTERIOR.test(interior)) req = null;
+        if (req && interior && INTERIOR_NOT_TRAINING[interior]?.test(name)) req = null;
         if (req && kind === 'object' && /^mysterious ruins$/i.test(name)) {
           const ruins = RUNE_ALTAR_RUINS[chunk];
           req = ruins ? { skill: 'Runecraft', level: ruins.level } : null;
@@ -327,8 +399,8 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     if (hasShops) oreShops[chunk] = chunkOreShops;
     for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
     if (Object.keys(offerLocks).length > 0) serviceLocks[chunk] = Object.fromEntries(Object.entries(offerLocks).map(([service, lock]) => [service, { ...lock }]));
-    const quests = doc.questSections?.[id];
-    if (quests?.length) entryQuests[chunk] = [...quests];
+    const quests = [...new Set([...(doc.questSections?.[id] ?? []), ...(ENTRY_QUEST_CHUNKS[chunk] ?? [])])];
+    if (quests.length) entryQuests[chunk] = quests;
     const gatedSkills = Object.keys(guild?.skills ?? {}).filter(skill => facts[skill] !== undefined);
     if (guild && gatedSkills.length > 0) guildGates[chunk] = [gatedSkills, guild.guild];
   }
