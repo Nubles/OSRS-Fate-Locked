@@ -38,6 +38,7 @@ describe('Oracle "Open OSRS Wiki" links', () => {
     expect(oracleWikiUrl(row('Slayer Unlock', 'Ring Bling'))).toBe(`${WIKI}Slayer_Rewards`);
     expect(oracleWikiUrl(row('Storage', 'Beginner STASH'))).toBe(`${WIKI}STASH`);
     expect(oracleWikiUrl(row('Collection Log', 'Ikkle Hydra (serpentine)'))).toBe(`${WIKI}Ikkle_Hydra`);
+    expect(oracleWikiUrl(row('Collection Log', 'Golden Armadyl special attack (item)'))).toBe(`${WIKI}Golden_Armadyl_special_attack`);
     expect(oracleWikiUrl(row('Merchant', 'Claw Shops'))).toBe(`${WIKI}Special:Search?search=Claw%20Shops`);
   });
 
