@@ -29,7 +29,7 @@ export const dataQualityNotes = (coverage: AnalyticsCoverage): string[] => [
     coverage.invalidTimestamps > 0 ? `${plural(coverage.invalidTimestamps, 'roll')} ${coverage.invalidTimestamps === 1 ? 'has' : 'have'} no valid date.` : null,
     coverage.unknownSources > 0 ? `${plural(coverage.unknownSources, 'roll')} ${coverage.unknownSources === 1 ? 'comes' : 'come'} from an unknown source.` : null,
     coverage.veracHitThroughs > 0 ? `${plural(coverage.veracHitThroughs, 'win')} came from Verac hitting through a miss and ${coverage.veracHitThroughs === 1 ? 'is' : 'are'} not judged.` : null,
-    coverage.inconsistentEntries > 0 ? `${plural(coverage.inconsistentEntries, 'entry', 'entries')} disagree with ${coverage.inconsistentEntries === 1 ? 'itself' : 'themselves'}.` : null,
+    coverage.inconsistentEntries > 0 ? `${plural(coverage.inconsistentEntries, 'entry', 'entries')} ${coverage.inconsistentEntries === 1 ? 'disagrees with itself' : 'disagree with themselves'}.` : null,
   ].filter((note): note is string => note !== null);
 
 /** One badge for data quality, with the full count table behind it. */
