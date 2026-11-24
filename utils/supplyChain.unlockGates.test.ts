@@ -147,3 +147,12 @@ describe('quest rewards need the quest', () => {
     expect(odd).toEqual([]);
   });
 });
+
+describe('Chunked: the gnome pickpocket route', () => {
+  it('counts in the Tree Gnome Stronghold, not in the Mourner Headquarters', () => {
+    const stronghold = state('chunked', { chunks: ['38,53'] });
+    expect(route("Toad's Legs", 'Gnome', stronghold).missing).not.toContain('Not in your chunks: Gnome');
+    const hq = state('chunked', { chunks: ['39,51'] });
+    expect(route("Toad's Legs", 'Gnome', hq).missing).toContain('Not in your chunks: Gnome');
+  });
+});
