@@ -181,16 +181,45 @@ export const weaponFiresAmmo = (weapon: GearItem | undefined, ammo: GearItem): b
   }
 };
 
+// Darts are Weapon-slot items, so a blowpipe's loaded darts are picked
+// separately. Wiki: the toxic blowpipe "uses unpoisoned darts as ammunition"
+// and its bonuses "stack with the Ranged Strength of its ammunition"; the
+// rosewood blowpipe "is able to shoot up to rune darts"; the camphor and
+// ironwood blowpipes are "able to shoot up to adamant darts".
+const DART_RUNG = ['bronze', 'iron', 'steel', 'black', 'mithril', 'adamant', 'rune', 'amethyst', 'dragon'];
+const BLOWPIPE_DART_CAP: [RegExp, number][] = [[/^rosewood blowpipe\b/i, 7], [/^(camphor|ironwood) blowpipe\b/i, 6]];
+const dartRung = (name: string): number | undefined => {
+  const m = /^(\w+) dart$/i.exec(name);
+  const rung = m ? DART_RUNG.indexOf(m[1].toLowerCase()) + 1 : 0;
+  return rung || undefined;
+};
+
+export const isBlowpipe = (weapon: GearItem | undefined): boolean => !!weapon && /\bblowpipe\b/i.test(weapon.name);
+
+/** The darts this blowpipe can be loaded with, one row per kind, weakest first. */
+export const blowpipeDarts = (weapon: GearItem | undefined, candidates: GearItem[]): GearItem[] => {
+  if (!weapon || !isBlowpipe(weapon)) return [];
+  const cap = BLOWPIPE_DART_CAP.find(([re]) => re.test(weapon.name))?.[1] ?? DART_RUNG.length;
+  const byRung = new Map<number, GearItem>();
+  for (const item of candidates) {
+    const rung = dartRung(item.name);
+    if (rung && rung <= cap && !byRung.has(rung)) byRung.set(rung, item);
+  }
+  return [...byRung.entries()].sort(([a], [b]) => a - b).map(([, item]) => item);
+};
+
 /**
  * Bonuses that apply to an attack. The in-game stats screen (and sumBonuses)
  * still includes the ammo slot, but its ranged strength only adds damage when
- * the weapon fires that ammunition.
+ * the weapon fires that ammunition. A blowpipe adds the ranged strength of the
+ * darts loaded in it, when it can take them.
  */
-export const attackBonuses = (items: GearItem[]): GearBonuses => {
+export const attackBonuses = (items: GearItem[], blowpipeDart?: GearItem): GearBonuses => {
   const total = sumBonuses(items);
   const weapon = items.find(item => item.slot === 'Weapon');
   const ammo = items.find(item => item.slot === 'Ammo');
   if (ammo && !weaponFiresAmmo(weapon, ammo)) total.rangedStr -= ammo.bonuses.rangedStr || 0;
+  if (blowpipeDart && blowpipeDarts(weapon, [blowpipeDart]).length) total.rangedStr += blowpipeDart.bonuses.rangedStr || 0;
   return total;
 };
 

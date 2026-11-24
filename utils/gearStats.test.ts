@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { attackBonuses, sumBonuses, hasNoBonuses, ZERO_BONUSES, GearItem, GearBonuses } from './gearStats';
+import { attackBonuses, blowpipeDarts, sumBonuses, hasNoBonuses, ZERO_BONUSES, GearItem, GearBonuses } from './gearStats';
 
 const bonuses = (over: Partial<GearBonuses>): GearBonuses => ({ ...ZERO_BONUSES, ...over });
 const item = (id: number, over: Partial<GearBonuses>): GearItem => ({
@@ -113,5 +113,39 @@ describe('ammo that applies to an attack', () => {
     const items = [weapon('Dragon dart', 'Thrown', 35), ammo('Dragon arrow', 60)];
     expect(attackBonuses(items).prayer).toBe(1);
     expect(sumBonuses(items).rangedStr).toBe(95);
+  });
+});
+
+describe('darts loaded in a blowpipe', () => {
+  const weapon = (name: string, rangedStr: number): GearItem => ({
+    id: 1, name, slot: 'Weapon', imageFile: 'x.png', speed: 2, twoHanded: true, category: 'Thrown',
+    bonuses: bonuses({ ranged: 30, rangedStr }),
+  });
+  const dart = (id: number, name: string, rangedStr: number): GearItem => ({
+    id, name, slot: 'Weapon', imageFile: 'x.png', speed: 3, twoHanded: false, category: 'Thrown',
+    bonuses: bonuses({ ranged: 18, rangedStr }),
+  });
+  const DARTS = [dart(11, 'Dragon dart', 35), dart(12, 'Rune dart', 26), dart(13, 'Amethyst dart', 28),
+    dart(14, 'Adamant dart', 17), dart(15, 'Dragon dart', 35), dart(16, 'Atlatl dart', 0), dart(17, 'Black dart', 6)];
+
+  it('adds the dart\'s ranged strength to the blowpipe\'s', () => {
+    // Wiki Toxic blowpipe: "using dragon darts on the charged blowpipe will increase its Ranged strength to +55".
+    const pipe = weapon('Toxic blowpipe', 20);
+    expect(attackBonuses([pipe], DARTS[0]).rangedStr).toBe(55);
+    expect(attackBonuses([pipe], DARTS[0]).ranged).toBe(30); // only the strength stacks
+    expect(attackBonuses([pipe]).rangedStr).toBe(20);
+  });
+
+  it('offers each dart kind once, weakest first, up to what the blowpipe takes', () => {
+    expect(blowpipeDarts(weapon('Toxic blowpipe', 20), DARTS).map(d => d.name))
+      .toEqual(['Black dart', 'Adamant dart', 'Rune dart', 'Amethyst dart', 'Dragon dart']);
+    expect(blowpipeDarts(weapon('Rosewood blowpipe', 6), DARTS).map(d => d.name)).toEqual(['Black dart', 'Adamant dart', 'Rune dart']);
+    expect(blowpipeDarts(weapon('Ironwood blowpipe', 4), DARTS).map(d => d.name)).toEqual(['Black dart', 'Adamant dart']);
+    expect(blowpipeDarts(weapon('Magic shortbow', 0), DARTS)).toEqual([]);
+  });
+
+  it('ignores a dart the weapon cannot take', () => {
+    expect(attackBonuses([weapon('Camphor blowpipe', 2)], DARTS[0]).rangedStr).toBe(2);
+    expect(attackBonuses([weapon('Dragon dart', 35)], DARTS[0]).rangedStr).toBe(35);
   });
 });

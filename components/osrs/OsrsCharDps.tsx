@@ -3,7 +3,7 @@ import { useGame } from '../../context/GameContext';
 import { EQUIPMENT_SLOTS } from '../../constants';
 import { gearService } from '../../services/GearService';
 import { monsterKey, monsterService } from '../../services/MonsterService';
-import { attackBonuses, GearItem, ZERO_BONUSES } from '../../utils/gearStats';
+import { attackBonuses, blowpipeDarts, isBlowpipe, GearItem, ZERO_BONUSES } from '../../utils/gearStats';
 import { computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput, type Stance } from '../../utils/dps';
 import { WikiLink } from '../WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../../utils/rangedDamage';
@@ -76,6 +76,8 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
   const [stanceId, setStanceId] = useState('aggressive');
   const [prayerId, setPrayerId] = useState('none');
   const [potionId, setPotionId] = useState('none');
+  // The darts loaded in a blowpipe (darts are Weapon-slot items, so not in the loadout).
+  const [dartId, setDartId] = useState<number | null>(null);
   const [baseSpellMax, setBaseSpellMax] = useState(24);
   const [levels, setLevels] = useState({ attack: 99, strength: 99, ranged: 99, magic: 99 });
   const [targetKey, setTargetKey] = useState<string | null>(null);
@@ -96,11 +98,13 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
 
   const gear = useMemo(() => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
-    const b = items.length ? attackBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
+    const darts = blowpipeDarts(weapon, isBlowpipe(weapon) ? gearService.bySlot('Weapon') : []);
+    const dart = darts.find((d) => d.id === dartId);
+    const b = items.length ? attackBonuses(items, dart) : { ...ZERO_BONUSES };
     const accuracy = attackType === 'stab' ? b.stab : attackType === 'slash' ? b.slash : attackType === 'crush' ? b.crush : attackType === 'ranged' ? b.ranged : b.magic;
-    return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length };
-  }, [loadout, attackType, status]);
+    return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length, darts, dartId: dart?.id ?? null };
+  }, [loadout, attackType, status, dartId]);
 
   const combatOptions = useMemo(() => dpsCombatOptions(gear.category), [gear.category]);
   const styleOptions = combatOptions.filter(option => option.style === style);
@@ -216,6 +220,14 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
                 <select className="osrs-dash-sel" value={rangedOverride} onChange={e => setRangedOverride(e.target.value as RangedDamageType | 'auto')}>
                   <option value="auto">{gear.rangedDamageType ? `Weapon: ${gear.rangedDamageType}` : 'Standard assumed — select your type'}</option>
                   <option value="light">Light</option><option value="standard">Standard</option><option value="heavy">Heavy</option>
+                </select>
+              </label>
+            )}
+            {gear.darts.length > 0 && (
+              <label className="osrs-dash-field"><span className="osrs-dash-lbl">Darts loaded</span>
+                <select className="osrs-dash-sel" value={gear.dartId ?? ''} onChange={(e) => setDartId(e.target.value ? +e.target.value : null)}>
+                  <option value="">None</option>
+                  {gear.darts.map((d) => <option key={d.id} value={d.id}>{d.name} (+{d.bonuses.rangedStr})</option>)}
                 </select>
               </label>
             )}
