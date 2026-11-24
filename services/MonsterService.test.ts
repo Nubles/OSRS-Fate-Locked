@@ -180,6 +180,57 @@ describe('MonsterService versions', () => {
   });
 });
 
+describe('MonsterService Defence levels', () => {
+  it('gives every planned boss row a real Defence level, Vardorvis included', async () => {
+    mockStorage();
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    mockData(rows);
+    const service = await freshService();
+    await service.init();
+    const { BOSSES_LIST } = await import('../data/items');
+    const { BOSS_ALIASES, BOSS_COMBAT_LIMITS } = await import('../utils/bossPlanner');
+
+    // Wiki "Vardorvis" (rev 15385991): def1 = 215-145, def2 = 268-181, def3 = 180-130,
+    // "Scales linearly with Vardorvis' remaining HP." The upstream rows say 0; the
+    // start-of-fight Defence is used.
+    expect(Object.fromEntries(service.versionsOf('Vardorvis').map(m => [m.version, m.defLevel])))
+      .toEqual({ 'Post-quest': 215, Awakened: 268, Quest: 180 });
+
+    const undefended = (BOSSES_LIST as readonly string[])
+      // The Gemstone Crab has no Defence on the Wiki and no kill to plan.
+      .filter(boss => !BOSS_COMBAT_LIMITS[boss]?.endless && !BOSS_COMBAT_LIMITS[boss]?.noCombat)
+      .flatMap(boss => service.versionsOf(BOSS_ALIASES[boss] ?? boss))
+      .filter(m => m.defLevel <= 0)
+      .map(m => `${m.name}|${m.version}`);
+    expect(undefended).toEqual([]);
+  });
+
+  it('rebuilds a version 3 cache, which kept Vardorvis at Defence 0', async () => {
+    const storage = mockStorage();
+    const vardorvis = { ...TARGET, id: 12223, name: 'Vardorvis', version: 'Post-quest', skills: { hp: 700, def: 0, magic: 215 } };
+    const fetchMock = mockData([TARGET, vardorvis]);
+    await (await freshService()).init();
+    const cached = JSON.parse(storage.get(CACHE_KEY)!);
+    expect(cached.data.find((row: { id: number }) => row.id === 12223).defLevel).toBe(215);
+    cached.source = `${MONSTER_CATALOGUE.sha256}:3`;
+    cached.data.find((row: { id: number }) => row.id === 12223).defLevel = 0;
+    storage.set(CACHE_KEY, JSON.stringify(cached));
+
+    const service = await freshService();
+    await service.init();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(service.byId(12223)?.defLevel).toBe(215);
+  });
+
+  it('keeps an upstream Defence level that is not 0', async () => {
+    mockStorage();
+    mockData([{ ...TARGET, id: 12223, name: 'Vardorvis', version: 'Post-quest', skills: { hp: 700, def: 190, magic: 215 } }]);
+    const service = await freshService();
+    await service.init();
+    expect(service.byId(12223)?.defLevel).toBe(190);
+  });
+});
+
 describe('parseMaxHit', () => {
   it.each([
     ['60 (melee)', 60],

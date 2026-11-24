@@ -21,7 +21,16 @@ ignored, and text with no number (N/A, Varies, "? (melee)") is unknown
 (null), which the boss planner shows as an unknown danger rather than Low.
 That rule is normalization version 3. Version 2 read text with no number as
 0, and version 1 took the first number, so markup-first text such as
-Tormented Demons read as 0. This does not certify every statistic or add
+Tormented Demons read as 0.
+
+Version 4 adds a small reviewed Defence override (`DEFENCE_OVERRIDES` in
+`services/MonsterService.ts`) for rows whose upstream Defence is 0 while the
+Wiki gives a real one. Only Vardorvis needs it: upstream lists all three of
+his fights at Defence 0, and the Wiki gives 215 to 145 (Post-quest), 268 to
+181 (Awakened) and 180 to 130 (Quest), falling as his HP drops. The service
+uses the start-of-fight value and applies the override only while upstream
+still says 0, so a corrected capture wins. A test checks that no planned boss
+row is left at Defence 0. This does not certify every statistic or add
 encounter mechanics.
 
 Normalized caches must match the source SHA-256 and normalization version and

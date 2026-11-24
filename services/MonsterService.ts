@@ -23,6 +23,20 @@ export const parseMaxHit = (raw: unknown): number | null => {
   return hits.length ? Math.max(...hits) : null;
 };
 
+/**
+ * Reviewed Defence levels for rows whose upstream Defence is 0 while the Wiki
+ * gives a real one, keyed by `name|version`. Applied only while upstream still
+ * says 0, so a corrected capture wins.
+ * Wiki "Vardorvis" (rev 15385991): def1 = 215-145, def2 = 268-181,
+ * def3 = 180-130, "Scales linearly with Vardorvis' remaining HP." The
+ * start-of-fight Defence is used, the cautious end of each range.
+ */
+export const DEFENCE_OVERRIDES: Readonly<Record<string, number>> = {
+  'Vardorvis|Post-quest': 215,
+  'Vardorvis|Awakened': 268,
+  'Vardorvis|Quest': 180,
+};
+
 export interface MonsterStats {
   id: number;
   name: string;
@@ -154,7 +168,7 @@ class MonsterService {
         level: r.level ?? 0,
         hp,
         maxHit: parseMaxHit(r.max_hit),
-        defLevel: r.skills?.def ?? 1,
+        defLevel: (r.skills?.def === 0 ? DEFENCE_OVERRIDES[key] : undefined) ?? r.skills?.def ?? 1,
         magicLevel: r.skills?.magic ?? 1,
         def: {
           stab: r.defensive?.stab ?? 0,
