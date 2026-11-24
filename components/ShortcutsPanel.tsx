@@ -4,12 +4,14 @@ import { Footprints, MapPin } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { chunkContentService } from '../services/ChunkContentService';
 import { useChunkContent } from '../hooks/useChunkContent';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { showChunkOnMap } from '../utils/chunkLocations';
 import { runShortcutReach, ShortcutStatus } from '../utils/shortcutReach';
 
 const STATUS_META: Record<ShortcutStatus, { label: string; cls: string }> = {
   'ready':       { label: 'ready',       cls: 'bg-emerald-900/30 border-emerald-500/40 text-emerald-200' },
   'area-locked': { label: 'area locked', cls: 'bg-amber-900/25 border-amber-500/40 text-amber-200' },
+  'no-route':    { label: 'no route',    cls: 'bg-orange-900/25 border-orange-500/40 text-orange-200' },
   'level':       { label: 'level',       cls: 'bg-fuchsia-900/25 border-fuchsia-500/40 text-fuchsia-200' },
   'quest':       { label: 'quest',       cls: 'bg-sky-900/25 border-sky-500/40 text-sky-200' },
   'no-location': { label: '—',           cls: 'bg-white/5 border-white/10 text-gray-500' },
@@ -21,22 +23,25 @@ const FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
   { key: 'level', label: 'Need level' },
   { key: 'quest', label: 'Need quest' },
   { key: 'area-locked', label: 'Area locked' },
+  { key: 'no-route', label: 'No route' },
 ];
 
 /**
  * Agility/travel shortcut reachability — every shortcut with its level and
- * real chunk location, flagged by whether you have the level and the area.
+ * real chunk location, flagged by whether you have the level, the quests and
+ * an area a route reaches.
  */
 export const ShortcutsPanel: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
   const { ready, error, retry } = useChunkContent();
+  const routes = useAreaRoutes(unlocks, gameModeId);
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | ShortcutStatus>('all');
 
   const reach = useMemo(() => {
     if (!ready) return null;
-    return runShortcutReach(chunkContentService, unlocks, gameModeId);
-  }, [ready, unlocks, gameModeId]);
+    return runShortcutReach(chunkContentService, unlocks, gameModeId, routes);
+  }, [ready, unlocks, gameModeId, routes]);
 
   if (!reach && error) return <div role="alert" className="mb-4 text-xs text-amber-300">Could not load the Agility shortcuts. <button type="button" onClick={retry} className="underline">Retry shortcuts</button></div>;
   if (!reach || reach.total === 0) return null;
@@ -52,7 +57,7 @@ export const ShortcutsPanel: React.FC = () => {
       </button>
       {open && (
         <>
-          <div className="flex gap-1 px-3 py-1.5 border-b border-white/5">
+          <div className="flex flex-wrap gap-1 px-3 py-1.5 border-b border-white/5">
             {FILTERS.map(f => (
               <button
                 key={f.key}

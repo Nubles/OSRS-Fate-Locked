@@ -48,6 +48,8 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../services/ChunkContentService', () => ({ chunkContentService: mocks.service }));
 vi.mock('../context/GameContext', () => ({ useGame: () => mocks.game }));
+// Routes still loading: owning the place is enough.
+vi.mock('../hooks/useAreaRoutes', () => ({ useAreaRoutes: () => null }));
 
 import { ShortcutsPanel } from './ShortcutsPanel';
 

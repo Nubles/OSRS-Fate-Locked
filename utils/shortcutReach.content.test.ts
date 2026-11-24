@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chunkContentService } from '../services/ChunkContentService';
 import { createFreshState } from '../context/GameContext';
-import { shortcutLocator, shortcutPlaces, shortcutReachability } from './shortcutReach';
+import { runShortcutReach, shortcutLocator, shortcutPlaces, shortcutReachability } from './shortcutReach';
+import { computeAreaRoutes } from './areaRoutes';
 import type { UnlockState } from '../types';
 
 // The shortcut panels over the real chunk content (public/chunk-content.json).
@@ -68,5 +69,29 @@ describe('shortcut placement (reach-map.d1[1])', () => {
     const elsewhere = skilled({ chunks: ['50,50'] });
     const away = shortcutReachability(chunkContentService.shortcuts(), elsewhere, shortcutLocator(chunkContentService, elsewhere, 'chunked', null));
     expect(rowOf(away, 'Access the Grand Exchange Agility shortcut').status).toBe('area-locked');
+  });
+});
+
+describe('shortcuts no route reaches (reach-map.d2[0])', () => {
+  const boots = 'Access the climbing boots rocks shortcut';
+
+  it('does not call a shortcut ready in an owned Vanilla area no route reaches', () => {
+    const run = skilled({ regions: ['Burthorpe'] });
+    const routes = computeAreaRoutes(chunkContentService.connectGraph(), run, 'vanilla');
+    expect(routes.strandedAreas.has('Burthorpe')).toBe(true);
+    const reach = runShortcutReach(chunkContentService, run, 'vanilla', routes);
+    expect(rowOf(reach, boots).status).toBe('no-route');
+    expect(reach.rows.filter(r => r.status === 'ready').map(r => r.name)).not.toContain(boots);
+    // While the routes load, owning the area is enough, as before.
+    expect(rowOf(runShortcutReach(chunkContentService, run, 'vanilla', null), boots).status).toBe('ready');
+  });
+
+  it('does not call a shortcut ready in an owned chunk no route reaches in Chunked', () => {
+    const run = skilled({ chunks: ['49,54'] });
+    const routes = computeAreaRoutes(chunkContentService.connectGraph(), run, 'chunked');
+    expect(routes.strandedChunks.has('49,54')).toBe(true);
+    const ge = 'Access the Grand Exchange Agility shortcut';
+    expect(rowOf(runShortcutReach(chunkContentService, run, 'chunked', routes), ge).status).toBe('no-route');
+    expect(rowOf(runShortcutReach(chunkContentService, run, 'chunked', null), ge).status).toBe('ready');
   });
 });

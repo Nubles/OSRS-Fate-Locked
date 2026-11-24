@@ -4,15 +4,18 @@
  * Each shortcut (from the picker's challenge tables) has a skill level and the
  * object you interact with; a multi-skill shortcut (a mith grapple) has one
  * table row per skill. A shortcut is usable when you have every level (under
- * the tier cap model), any quest it needs, and the object sits in an unlocked chunk.
+ * the tier cap model), any quest it needs, and the object sits in an unlocked
+ * chunk a route reaches.
  */
 
 import { UnlockState } from '../types';
 import type { EntityKind, Shortcut } from '../services/ChunkContentService';
 import { tierForLevel } from './skillTiers';
-import { chunkForPlace, chunkUnlocked } from './chunkLocations';
+import { chunkForPlace, chunkUnlocked, placeOf } from './chunkLocations';
+import { canonicalAreaName } from '../data/areaMapPolicy';
+import type { AreaRoutes } from './areaRoutes';
 
-export type ShortcutStatus = 'ready' | 'level' | 'quest' | 'area-locked' | 'no-location';
+export type ShortcutStatus = 'ready' | 'level' | 'quest' | 'area-locked' | 'no-route' | 'no-location';
 
 export interface ShortcutNeed {
   skill: string;
@@ -31,7 +34,16 @@ export interface ShortcutRow {
   /** The quest(s) still to finish, joined with "and", for status 'quest'. */
   quest: string | null;
   status: ShortcutStatus;
-  loc: { cx: number; cy: number; unlocked: boolean } | null;
+  loc: ShortcutLoc | null;
+}
+
+/** Where a shortcut is judged: a chunk, whether the run owns it, and whether a route reaches it. */
+export interface ShortcutLoc {
+  cx: number;
+  cy: number;
+  unlocked: boolean;
+  /** Owned, but no route from the run's start reaches it (utils/areaRoutes.ts). */
+  stranded?: boolean;
 }
 
 export interface ShortcutReach {
@@ -64,7 +76,7 @@ export const SHORTCUT_QUESTS: Readonly<Record<string, readonly string[]>> = {
 };
 
 /** Resolve a shortcut to a representative chunk via its trigger object(s). */
-export type LocateFn = (s: Shortcut) => { cx: number; cy: number; unlocked: boolean } | null;
+export type LocateFn = (s: Shortcut) => ShortcutLoc | null;
 
 type Coord = { cx: number; cy: number };
 
@@ -107,19 +119,49 @@ export function shortcutPlaces(s: Shortcut, content: ShortcutContent): Coord[] {
 }
 
 /**
- * The panels' locate: of a shortcut's places, an owned one first, else the
- * first. Both Agility Shortcuts panels and the RuneLite rows judge with it.
+ * An owned chunk no route reaches: in Chunked the chunk itself, elsewhere its
+ * area, as the Quest Log and Diary Journal judge it. False without routes
+ * (still loading), so owning the place is enough until they arrive.
  */
-export function shortcutLocator(content: ShortcutContent, unlocks: UnlockState, gameModeId: string | undefined): LocateFn {
+const strandedAt = (cx: number, cy: number, gameModeId: string | undefined, routes: AreaRoutes | null | undefined): boolean => {
+  if (!routes) return false;
+  if (gameModeId === 'chunked') return routes.strandedChunks.has(`${cx},${cy}`);
+  const place = placeOf(cx, cy);
+  const area = place.subArea ?? place.region;
+  return !!area && routes.strandedAreas.has(canonicalAreaName(area));
+};
+
+/**
+ * The panels' locate: of a shortcut's places, the best for the run (owned,
+ * then reached by a route), else the first. Both Agility Shortcuts panels
+ * judge with it. `routes` comes from useAreaRoutes; null while it loads.
+ */
+export function shortcutLocator(
+  content: ShortcutContent,
+  unlocks: UnlockState,
+  gameModeId: string | undefined,
+  routes: AreaRoutes | null | undefined,
+): LocateFn {
+  const rank = (loc: ShortcutLoc) => (loc.unlocked ? 2 : 0) + (loc.stranded ? 0 : 1);
   return (s) => {
-    const options = shortcutPlaces(s, content).map(({ cx, cy }) => ({ cx, cy, unlocked: chunkUnlocked(cx, cy, unlocks, gameModeId) }));
-    return options.find(o => o.unlocked) ?? options[0] ?? null;
+    let best: ShortcutLoc | null = null;
+    for (const { cx, cy } of shortcutPlaces(s, content)) {
+      const unlocked = chunkUnlocked(cx, cy, unlocks, gameModeId);
+      const loc: ShortcutLoc = { cx, cy, unlocked, stranded: unlocked && strandedAt(cx, cy, gameModeId, routes) };
+      if (!best || rank(loc) > rank(best)) best = loc;
+    }
+    return best;
   };
 }
 
 /** Every shortcut of the chunk content, judged for this run. */
-export function runShortcutReach(content: ShortcutContent, unlocks: UnlockState, gameModeId: string | undefined): ShortcutReach {
-  return shortcutReachability(content.shortcuts(), unlocks, shortcutLocator(content, unlocks, gameModeId));
+export function runShortcutReach(
+  content: ShortcutContent,
+  unlocks: UnlockState,
+  gameModeId: string | undefined,
+  routes: AreaRoutes | null | undefined,
+): ShortcutReach {
+  return shortcutReachability(content.shortcuts(), unlocks, shortcutLocator(content, unlocks, gameModeId, routes));
 }
 
 export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState, locate: LocateFn): ShortcutReach {
@@ -148,6 +190,7 @@ export function shortcutReachability(shortcuts: Shortcut[], unlocks: UnlockState
     else if (missing.length > 0) status = 'level';
     else if (quest) status = 'quest';
     else if (!loc.unlocked) status = 'area-locked';
+    else if (loc.stranded) status = 'no-route';
     else status = 'ready';
 
     return { name: main.name, skill: main.skill, level: main.level, requirements, missing, quest, status, loc };
