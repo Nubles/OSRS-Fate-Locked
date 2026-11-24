@@ -65,6 +65,50 @@ describe('ammo that applies to an attack', () => {
     expect(rangedStr(weapon('Heavy ballista', 'Crossbow', 15), ammo('Runite bolts', 115))).toBe(15);
   });
 
+  it('ignores ammunition above what the bow or crossbow can fire (each weapon\'s Wiki page)', () => {
+    // "can use arrows up to steel" (Oak shortbow); "up to iron" (Shortbow).
+    expect(rangedStr(weapon('Oak shortbow', 'Bow'), ammo('Rune arrow', 49))).toBe(0);
+    expect(rangedStr(weapon('Oak shortbow', 'Bow'), ammo('Steel arrow', 16))).toBe(16);
+    expect(rangedStr(weapon('Shortbow', 'Bow'), ammo('Steel arrow', 16))).toBe(0);
+    expect(rangedStr(weapon('Willow comp bow', 'Bow'), ammo('Mithril fire arrow', 22))).toBe(22);
+    expect(rangedStr(weapon('Maple longbow', 'Bow'), ammo('Seeking rune arrow', 49))).toBe(0);
+    expect(rangedStr(weapon('Yew shortbow', 'Bow'), ammo('Rune arrow', 49))).toBe(49);
+    expect(rangedStr(weapon('Yew shortbow', 'Bow'), ammo('Amethyst arrow', 55))).toBe(0);
+    expect(rangedStr(weapon('Magic shortbow', 'Bow'), ammo('Amethyst arrow', 55))).toBe(55);
+    expect(rangedStr(weapon('Rain bow', 'Bow'), ammo('Ice arrows', 16))).toBe(0); // "can only fire bronze and iron arrows"
+    // Dragon arrows: only the bows whose page says so.
+    expect(rangedStr(weapon('Magic shortbow', 'Bow'), ammo('Dragon arrow', 60))).toBe(0);
+    expect(rangedStr(weapon('Twisted bow', 'Bow', 20), ammo('Dragon arrow', 60))).toBe(80);
+    expect(rangedStr(weapon("Nature's recurve", 'Bow'), ammo('Dragon arrow', 60))).toBe(60);
+    // Ogre and brutal arrows only from ogre bows; ogre bows only those.
+    expect(rangedStr(weapon('Ogre bow', 'Bow'), ammo('Rune brutal', 60))).toBe(0);
+    expect(rangedStr(weapon('Ogre bow', 'Bow'), ammo('Mithril brutal', 34))).toBe(34);
+    expect(rangedStr(weapon('Magic longbow', 'Bow'), ammo('Rune brutal', 60))).toBe(0);
+    expect(rangedStr(weapon('Comp ogre bow', 'Bow'), ammo('Rune arrow', 49))).toBe(0);
+    // The Gauntlet's bow: no items can be brought in.
+    expect(rangedStr(weapon('Corrupted bow (perfected)', 'Bow'), ammo('Rune arrow', 49))).toBe(0);
+    // Crossbows: "can only fire bronze bolts", "up to and including runite bolts".
+    expect(rangedStr(weapon('Bronze crossbow', 'Crossbow'), ammo('Runite bolts', 115))).toBe(0);
+    expect(rangedStr(weapon('Phoenix crossbow', 'Crossbow'), ammo('Barbed bolts', 12))).toBe(12);
+    expect(rangedStr(weapon('Blurite crossbow', 'Crossbow'), ammo('Blurite bolts', 28))).toBe(28);
+    expect(rangedStr(weapon('Blurite crossbow', 'Crossbow'), ammo('Iron bolts', 46))).toBe(0);
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Dragon bolts', 122))).toBe(0);
+    expect(rangedStr(weapon('Rune crossbow (or)', 'Crossbow'), ammo('Runite bolts', 115))).toBe(115);
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Ruby dragon bolts (e)', 122))).toBe(0);
+    expect(rangedStr(weapon('Adamant crossbow', 'Crossbow'), ammo('Broad bolts', 100))).toBe(0);
+    expect(rangedStr(weapon('Dragon crossbow', 'Crossbow'), ammo('Dragon bolts', 122))).toBe(122);
+    expect(rangedStr(weapon("King's barrage", 'Crossbow'), ammo('Dragon bolts', 122))).toBe(122);
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Bolt rack', 55))).toBe(0);
+    expect(rangedStr(weapon('Rune crossbow', 'Crossbow'), ammo('Bone bolts', 49))).toBe(0);
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Bone bolts', 49))).toBe(49);
+    // "can only be fired from a dragon crossbow, Armadyl crossbow, dragon hunter crossbow, or Zaryte crossbow".
+    expect(rangedStr(weapon('Dorgeshuun crossbow', 'Crossbow'), ammo('Dragon bolts', 122))).toBe(0);
+    expect(rangedStr(weapon("Karil's crossbow", 'Crossbow'), ammo('Runite bolts', 115))).toBe(0);
+    expect(rangedStr(weapon("Hunters' crossbow", 'Crossbow'), ammo('Runite bolts', 115))).toBe(0);
+    expect(rangedStr(weapon("Hunters' crossbow", 'Crossbow'), ammo('Long kebbit bolts', 38))).toBe(38);
+    expect(rangedStr(weapon("Hunters' sunlight crossbow", 'Crossbow'), ammo('Kebbit bolts', 28))).toBe(0);
+  });
+
   it('keeps the ammo slot\'s other bonuses and the raw stats-screen total', () => {
     const items = [weapon('Dragon dart', 'Thrown', 35), ammo('Dragon arrow', 60)];
     expect(attackBonuses(items).prayer).toBe(1);
