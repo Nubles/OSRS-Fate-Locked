@@ -163,6 +163,10 @@ const NPC_RULES: [RegExp, Req][] = [
   // Only the canonical pickpocket knights (generic "Knight" = Black/White
   // Knights, not pickpocketable).
   [/knight of ardougne|knight of varlamore/i, { skill: 'Thieving', level: 55 }],
+  // Wiki 'Watchman' (the Yanille Watchtower guards): "pickpocketed at level 65 Thieving".
+  [/^watchman$/i, { skill: 'Thieving', level: 65 }],
+  // Wiki 'Pirate (Thieving)': "pickpocketed at level 60 Thieving" (the sea islands' pirates).
+  [/^pirate \(thieving\)$/i, { skill: 'Thieving', level: 60 }],
   [/^paladin/i, { skill: 'Thieving', level: 70 }],
   [/tzhaar-hur/i, { skill: 'Thieving', level: 90 }],
   [/vyre(lord|lady|watch)|vyrewatch/i, { skill: 'Thieving', level: 82 }],

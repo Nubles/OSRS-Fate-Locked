@@ -120,7 +120,18 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/fishing spot/i, { skill: 'Fishing', level: 1 }],
 
   // ── Thieving (named market stalls + thievable chests; levels are the OSRS
-  //    stall requirements. Bank/quest chests are excluded below) ────────────
+  //    stall and chest requirements. Only the named thievable chests match,
+  //    so bank, quest and reward chests stay out) ─────────────────────────
+  // Each chest's own Wiki page, fetched 24 Nov 2026.
+  [/^chest \(rogues' castle\)$/i, { skill: 'Thieving', level: 84 }],
+  [/^chest \(dorgesh-kaan rich\)$/i, { skill: 'Thieving', level: 78 }],
+  [/^chest \(ardougne castle\)$/i, { skill: 'Thieving', level: 72 }],
+  [/^chest \(dorgesh-kaan average\)$/i, { skill: 'Thieving', level: 52 }],
+  [/^chest \(steel arrowtips\)$/i, { skill: 'Thieving', level: 47 }],
+  [/^chest \(50 coins\)$/i, { skill: 'Thieving', level: 43 }],
+  [/^chest \(aldarin villas\)$/i, { skill: 'Thieving', level: 36 }],
+  [/^chest \((nature runes|isle of souls dungeon)\)$/i, { skill: 'Thieving', level: 28 }],
+  [/^chest \(10 coins\)$/i, { skill: 'Thieving', level: 13 }],
   [/cannonball stall/i, { skill: 'Thieving', level: 87 }],
   [/\bore stall/i, { skill: 'Thieving', level: 82 }],
   [/gem stall/i, { skill: 'Thieving', level: 75 }],

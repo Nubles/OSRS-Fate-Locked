@@ -176,3 +176,28 @@ describe('Chunked object rules: fishing spots (deep audit chunk-sample.d3[1])', 
     for (const chunk of ['53,51', '53,53', '54,53']) expect(chunkFactLevel(chunk, 'Fishing'), chunk).toBe(28);
   });
 });
+
+describe('Chunked Thieving: chests, sea pirates and Yanille watchmen (deep audit quest-routes.d2[0])', () => {
+  it('reads the thievable chests, Pirate (Thieving) and the Watchman at their Wiki levels', () => {
+    // OSRS Wiki, fetched 24 Nov 2026, each chest's own page: 'Chest (10 coins)' |level = 13; '(nature runes)' 28;
+    // '(50 coins)' 43; '(steel arrowtips)' 47; '(Aldarin Villas)' 36; '(Ardougne Castle)' 72; '(Rogues' Castle)'
+    // "They require 84 Thieving"; '(Dorgesh-Kaan Average)' 52; '(Dorgesh-Kaan Rich)' 78; '(Isle of Souls Dungeon)' 28.
+    const chests: [string, number][] = [['Chest (10 coins)', 13], ['Chest (nature runes)', 28], ['Chest (50 coins)', 43],
+      ['Chest (steel arrowtips)', 47], ['Chest (Aldarin Villas)', 36], ['Chest (Ardougne Castle)', 72],
+      ["Chest (Rogues' Castle)", 84], ['Chest (Dorgesh-Kaan Average)', 52], ['Chest (Dorgesh-Kaan Rich)', 78],
+      ['Chest (Isle of Souls Dungeon)', 28]];
+    for (const [name, level] of chests) expect(trainingReqFor(name, 'object'), name).toEqual({ skill: 'Thieving', level });
+    for (const name of ["Chest (Rogues' Castle, inside)", 'Chest (Tombs of Amascut)', 'Chest', 'Closed chest', 'Bank chest']) {
+      expect(trainingReqFor(name, 'object'), name).toBeNull();
+    }
+    // 'Pirate (Thieving)': "pickpocketed at level 60 Thieving"; 'Watchman': "pickpocketed at level 65 Thieving".
+    expect(trainingReqFor('Pirate (Thieving)', 'monster')).toEqual({ skill: 'Thieving', level: 60 });
+    expect(trainingReqFor('Watchman', 'monster')).toEqual({ skill: 'Thieving', level: 65 });
+    expect(trainingReqFor('Pirate', 'monster')).toBeNull();
+  });
+
+  it('gives the chest and pirate chunks their Thieving fact', () => {
+    const cases: [string, number][] = [['47,61', 13], ['49,61', 13], ['36,45', 28], ['18,43', 60], ['32,57', 60], ['46,35', 60], ['39,48', 65]];
+    for (const [chunk, level] of cases) expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBe(level);
+  });
+});
