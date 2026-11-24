@@ -276,6 +276,11 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
             diaries, Combat Achievements and your last few unlocks) so <span className="text-gray-200">/progress</span> in the Fate Locked
             Discord can show it. Your save never leaves this device.
           </p>
+          <p className="text-[12px] text-gray-400 mb-2">
+            Once you <span className="text-gray-200">/link</span>, each new unlock posts in #live-unlocks with your Discord server name,
+            and the tracker&apos;s Clan chat shows those posts to everyone who opens the tracker.
+            {' '}<span className="text-gray-200">/unlink</span> stops new posts but does not remove ones already posted.
+          </p>
           {link.kind === 'code' && secondsLeft > 0 ? (
             <div className="bg-black/40 border border-indigo-500/40 rounded-lg p-3 mb-2 text-center">
               <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">In the Discord, type</div>

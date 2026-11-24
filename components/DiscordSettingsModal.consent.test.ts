@@ -14,4 +14,14 @@ describe('Discord sharing and Adventurer\'s Log consent', () => {
     expect(doc).toContain('its linked OSRS account name');
     expect(doc).toContain('account name included, through `GET /p/<id>`');
   });
+
+  it('says before linking that unlocks post in #live-unlocks and the Clan chat, and what /unlink leaves', () => {
+    // feed.ts titles each post with the member's server name; clan.ts reads the
+    // channel back for the relay's public GET /clan, which the Clan tab shows.
+    expect(modal).toContain('Once you <span className="text-gray-200">/link</span>, each new unlock posts in #live-unlocks with your Discord server name,');
+    expect(modal).toContain('and the tracker&apos;s Clan chat shows those posts to everyone who opens the tracker.');
+    expect(modal).toContain('<span className="text-gray-200">/unlink</span> stops new posts but does not remove ones already posted.');
+    const linkNote = modal.slice(modal.indexOf('Once you <span'), modal.indexOf('ones already posted.'));
+    expect(linkNote).not.toMatch(/\u2014|&mdash;/);
+  });
 });
