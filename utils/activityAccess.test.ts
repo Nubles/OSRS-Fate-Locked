@@ -224,6 +224,24 @@ describe('getActivityAccess in Chunked', () => {
     expect(getActivityAccess('Tormented Demons', makeUnlocks({ regions: ['Lumbridge'] }), 'vanilla').eligible).toBe(true);
     expect(getActivityAccess('Mimic', makeUnlocks(), 'vanilla').eligible).toBe(true);
   });
+
+  it('boards the Fishing Trawler only at the Port Khazard dock, not the shore a sunk trawler leaves you on (Wiki: Fishing Trawler)', () => {
+    expect(getActivityAccess('Fishing Trawler', chunked(['41,50']), 'chunked').eligible).toBe(false);
+    expect(getActivityAccess('Fishing Trawler', chunked(['41,49']), 'chunked').eligible).toBe(true);
+  });
+
+  it('does not count the Zanaris shed for Impetuous Impulses, since that portal needs Lost City (Wiki: Impetuous Impulses)', () => {
+    expect(getActivityAccess('Impetuous Impulses', chunked(['50,49']), 'chunked').eligible).toBe(false);
+    // A rotating crop circle needs no quest.
+    expect(getActivityAccess('Impetuous Impulses', chunked(['50,52']), 'chunked').eligible).toBe(true);
+  });
+
+  it("opens Mahogany Homes at Amy's office, where every first contract is taken, and not at a client's house (Wiki: Mahogany Homes)", () => {
+    expect(getActivityAccess('Mahogany Homes', chunked(['46,52']), 'chunked').eligible).toBe(true);
+    for (const house of ['40,51', '47,52', '50,52']) {
+      expect(getActivityAccess('Mahogany Homes', chunked([house]), 'chunked').eligible, house).toBe(false);
+    }
+  });
 });
 
 describe('Chunked places behind an entry quest (content audit fix 1)', () => {
