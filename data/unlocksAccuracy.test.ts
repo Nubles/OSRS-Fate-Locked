@@ -479,7 +479,7 @@ describe("U1: a reward shop needs Reward Shops and its activity's unlock", () =>
   const NO_ACTIVITY_UNLOCK: Readonly<Record<string, string>> = {
     'Leagues Reward Shop': 'Leagues',
     "Prospector Percy's Nugget Shop": 'the Motherlode Mine',
-    "Worm Tounge's Wares": 'the Colossal Wyrm Agility Course',
+    "Worm Tongue's Wares": 'the Colossal Wyrm Agility Course',
     "Mairin's Market": 'Underwater Agility and Thieving',
     "Alry the Angler's Angling Accessories": 'aerial fishing',
     "Ramarno's Shard Exchange": 'the Ruins of Camdozaal',

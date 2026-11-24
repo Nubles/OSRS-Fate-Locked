@@ -5,6 +5,7 @@
  */
 
 import { MONSTER_CATALOGUE, MONSTER_CACHE_SOURCE } from '../data/monsterCatalogue';
+import { foldText, foldedMatcher } from '../utils/textFold';
 
 const CACHE_KEY = 'fate_osrs_monsters_v3';
 
@@ -225,16 +226,26 @@ class MonsterService {
     } catch { /* quota — keep in memory */ }
   }
 
-  /** Name search, ranked: prefix matches first, then substring. */
+  /** Each catalogue name folded once, for the search typed key by key; refolded when the list is replaced. */
+  private folded: { list: MonsterStats[]; keys: string[] } | null = null;
+  private foldedNames(): string[] {
+    if (this.folded?.list !== this.list) this.folded = { list: this.list, keys: this.list.map(m => foldText(m.name).text) };
+    return this.folded.keys;
+  }
+
+  /** Name search, ranked: prefix matches first, then substring, ignoring apostrophes ("kril"). */
   search(q: string, limit = 60): MonsterStats[] {
-    const query = q.trim().toLowerCase();
+    const query = q.trim();
     if (!query) return this.list.slice(0, limit);
+    const match = foldedMatcher(query);
+    const keys = this.foldedNames();
     const starts: MonsterStats[] = [];
     const contains: MonsterStats[] = [];
-    for (const m of this.list) {
-      const n = m.name.toLowerCase();
-      if (n.startsWith(query)) starts.push(m);
-      else if (n.includes(query)) contains.push(m);
+    for (let i = 0; i < this.list.length; i++) {
+      const m = this.list[i];
+      const rank = match.rank(m.name, keys[i]);
+      if (rank >= 2) starts.push(m);
+      else if (rank === 1) contains.push(m);
       if (starts.length >= limit) break;
     }
     return [...starts, ...contains].slice(0, limit);

@@ -11,7 +11,8 @@ import { foldedIncludes } from './OsrsJournalSearch';
 import { WikiIcon } from '../WikiIcon';
 import { UTILITY_ITEM_IDS } from '../../constants';
 import { failureFateForSource } from '../../config/economy';
-import { DropSource } from '../../types';
+import { DropSource, type LogEntry } from '../../types';
+import { boostActivityOf } from '../../utils/achievementBoosts';
 import { itemSrc } from './OsrsDashGems';
 import { useScrollMore } from '../../utils/scrollFade';
 import { EntityModel } from '../EntityModel';
@@ -166,7 +167,7 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
   const hoveredCount = hovered ? (identityReview.blockedIds.has(hovered.id) ? 0 : unlocks.collectionLog[hovered.id] || 0) : 0;
 
   // The Key rolls new log entries made, newest first, straight from the history.
-  const rolls = useMemo(() => history.filter(e => e.source?.startsWith('Col. Log:')).slice(-40).reverse(), [history]);
+  const rolls = useMemo(() => collectionLogRolls(history), [history]);
 
   const reachPanel = (
     <div className="osrs-win" style={{ padding: 4, display: 'flex', flexDirection: 'column', gap: 4, flex: '0 1 auto', minHeight: 120 }}>
@@ -353,5 +354,13 @@ const OsrsCollection: React.FC<{ searchTerm?: string }> = ({ searchTerm = '' }) 
     </div>
   );
 };
+
+/**
+ * The Key rolls new log entries made, newest first, at most 40. A slot logged
+ * by hand rolls as "Col. Log: <item>"; one RuneLite logs rolls as "Collection
+ * Log". Both count, with the same test the achievement boosts use.
+ */
+export const collectionLogRolls = (history: readonly LogEntry[]): LogEntry[] =>
+  history.filter(e => !!e.source && boostActivityOf(e.source) === 'collection').slice(-40).reverse();
 
 export default OsrsCollection;

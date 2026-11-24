@@ -14,6 +14,7 @@ import { NoteTrigger } from '../NoteTrigger';
 import { TableType } from '../../types';
 import { hopeKey } from '../../utils/hopeKey';
 import { itemSrc } from './OsrsDashGems';
+import { foldedIncludes } from '../../utils/textFold';
 import './osrs-world.css';
 
 /**
@@ -80,7 +81,7 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
   const misthalinName = misthalinListName(resolveModeRules(gameModeId, customMode).startArea);
   const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
   const adv = useAdvisor();
-  const q = searchQuery.toLowerCase();
+  const q = searchQuery.trim();
   const canOmni = gameModeId !== 'chunked' && specialKeys > 0;
 
   // Every region with its areas, filtered the classic way (search, Actionable).
@@ -88,19 +89,19 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
     const all: [string, string[]][] = [[MISTHALIN, MISTHALIN_AREAS], ...Object.entries(REGION_GROUPS)];
     return all.map(([group, areas]) => {
       const got = areas.filter((a) => isAreaReachable(a, unlocks, gameModeId)).length;
-      const matchesGroup = group.toLowerCase().includes(q);
+      const matchesGroup = foldedIncludes(group, q);
       const shown = areas.filter((a) => {
         const free = isAreaReachable(a, unlocks, gameModeId);
         // Match every name the row shows (the area and its aliases, e.g. Heroes' Guild).
-        if (searchQuery && !matchesGroup && !displayAreaName(a).toLowerCase().includes(q)) return false;
+        if (q && !matchesGroup && !foldedIncludes(displayAreaName(a), q)) return false;
         if (showOnlyActionable && !free && !canOmni) return false;
         return true;
       });
-      const hidden = (searchQuery && !matchesGroup && shown.length === 0)
+      const hidden = (q && !matchesGroup && shown.length === 0)
         || (group !== MISTHALIN && showOnlyActionable && got === 0 && !canOmni);
       return { group, areas, got, shown, hidden };
     }).filter((g) => !g.hidden);
-  }, [unlocks, gameModeId, q, searchQuery, showOnlyActionable, canOmni]);
+  }, [unlocks, gameModeId, q, showOnlyActionable, canOmni]);
 
   const [selGroup, setSelGroup] = useState<string>(MISTHALIN);
   const [flashArea, setFlashArea] = useState<string | null>(null);

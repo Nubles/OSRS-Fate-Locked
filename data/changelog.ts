@@ -56,12 +56,27 @@ export const CHANGELOG_RELEASES = [
     date: '2026-11-24',
     sections: {
       fixed: [
-        'A Key roll is now refused with a message while your progress can’t save or another tab’s newer progress is waiting, so a roll can’t be lost.',
+        'Rolls that spend a Key, Breakthroughs and Fate’s Mercy are now refused with a message while your progress can’t save or another tab’s newer progress is waiting.',
         'Slayer tasks, quests, skill guides, Strategy Guide cards and the Resource Engine now ask for what the game asks: the right levels, quests, areas and Keys.',
         'Quest-locked places like Tolna’s rift, Agility shortcuts and three banks wait for their own requirements, and Chunked skips scenery you can’t use.',
         'Plan a route now opens a plan for every quest, diary tier and region, and pinned guide goals show the Keys and chunks they still need.',
         'The damage calculator, Farm Keys cards, the Spend Keys outlook, achievement pop-ups, share text and the RuneLite guide now show the right figures and steps.',
         'Forestry, Mahogany Homes, Canoes and four more now read Not ready until the skill they need is unlocked and high enough.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-24-search-film-and-osrs-layout',
+    title: 'Search, Run Film and OSRS layout fixes',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'The diary, World list, gear, History, damage calculator and map Highlight searches now find names typed without an apostrophe, like ‘karils coif’.',
+        'The OSRS layout’s doll shows your worn items, its Collection Log lists rolls of items RuneLite logged, and boosted Key chances aren’t called base chances.',
+        'Three shops now show their in-game names, like Worm Tongue’s Wares, and in Vanilla the World map’s Unlocked count includes your free start areas.',
+        'Ring of the Elements and Colossal Pouch now show Temple of the Eye as a requirement, like Guardians of the Rift.',
+        'The Run Film now opens only land you unlocked, shows the tiers a Ritual of Sacrifice took, and opens Areas logged under old names like Ranging Guild.',
+        'On Safari, iPhone and iPad, the Run Film and the share card now grey out locked land and locked icons.',
       ],
     },
   },
