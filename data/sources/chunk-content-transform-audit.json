@@ -179849,6 +179849,83 @@
     },
     {
       "category": "overrides",
+      "sourceKey": "npc-rename/Arthur the Clue Hunter",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12598"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Arthur?oldid=15403573"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Crafting tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Cadmus?oldid=15392208"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Fishing tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12849"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Finlay?oldid=15391237"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Melee combat tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Captain_Harlan?oldid=15397099"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Mining tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12849"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Monlum?oldid=15392174"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Smithing apprentice",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Feoras?oldid=15392250"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Woodsman tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Wilfred?oldid=15396491"
+    },
+    {
+      "category": "overrides",
       "sourceKey": "npc/Chase",
       "terminal": false,
       "disposition": "normalized",
@@ -180016,6 +180093,207 @@
         "12959"
       ],
       "detail": "https://oldschool.runescape.wiki/w/Revenant_Caves?oldid=15397220"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Arcis",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6457",
+        "6458"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Arcis?oldid=14768650"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 1)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5690"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_1)?oldid=14768573"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 2)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5691"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_2)?oldid=14768574"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 3)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5691"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_3)?oldid=14768575"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 4)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5690"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_4)?oldid=14768576"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 5)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5946"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_5)?oldid=14768577"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Banker tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Banker_tutor?oldid=15397103"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Cooking tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12849"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Cooking_tutor?oldid=15394354"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Dodgy geezer",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12082"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Dodgy_geezer?oldid=14769468"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Ethereal Lady",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6991"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ethereal_Lady?oldid=15353426"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Ethereal Man",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6991"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ethereal_Man?oldid=15353427"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Master smithing tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12597"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Sani?oldid=15392266"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Piliar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6457",
+        "7226"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Piliar?oldid=15079282"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Prayer tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Prayer_tutor?oldid=15394355"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Ranged combat tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ranged_combat_tutor?oldid=15399998"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Shayda",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5943",
+        "6457"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Shayda?oldid=14857329"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/Objects/Dead mushroom ring",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6460"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Dead_mushroom_ring?oldid=14538407"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/Objects/Pot-boiler",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "13366"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Pot-boiler?oldid=15408868"
     },
     {
       "category": "overrides",

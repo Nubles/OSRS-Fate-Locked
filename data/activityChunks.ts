@@ -66,7 +66,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Mage Arena": ["48,61"],
   "Mage Training Arena": ["52,51"],
   "Maggot King": ["56,52"],
-  "Mahogany Homes": ["27,56", "46,52"],
+  "Mahogany Homes": ["27,56", "41,51", "46,52", "50,54"],
   "Mastering Mixology": ["21,45"],
   "Mess": ["25,56"],
   "Mining Guild": ["47,52"],
@@ -160,4 +160,19 @@ export const FARM_SLAYER_CARD_CHUNKS: Readonly<Record<string, readonly string[]>
   "Steve": ["38,53"],
   "Turael": ["45,55"],
   "Vannaka": ["48,54"],
+};
+
+/**
+ * Ways in that carry their own requirement, by the name in the tables above:
+ * owning the chunk counts only once every requirement string is met
+ * (utils/activityAccess.ts enterableChunk); label is what players read.
+ * Not in the tables above.
+ */
+export const GATED_ENTRANCE_CHUNKS: Readonly<Record<string, readonly { chunk: string; needs: readonly string[]; label: string }[]>> = {
+  "Obor": [{ chunk: "50,54", needs: ["Agility level 51"], label: "Agility level 51" }],
+  "Tears of Guthix": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Temple Trekking": [{ chunk: "53,54", needs: ["Darkness of Hallowvale completed"], label: "Darkness of Hallowvale" }],
+  "The Fractured Archive": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Tormented Demons": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Vannaka": [{ chunk: "50,54", needs: ["Agility level 51"], label: "Agility level 51" }],
 };

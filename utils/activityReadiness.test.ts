@@ -177,7 +177,8 @@ describe('evaluateActivityReadiness', () => {
       templeTrekking,
       unlocked({
         regions: ['Paterdomus'],
-        quests: ['In Aid of the Myreque'],
+        // The Paterdomus side counts only after Darkness of Hallowvale (area-access.d1[2]).
+        quests: ['In Aid of the Myreque', 'Darkness of Hallowvale'],
       }),
       'vanilla',
     )).toEqual({ status: 'READY' });
@@ -302,5 +303,56 @@ describe('evaluateActivityReadiness with routes', () => {
     expect(withRoute.status).not.toBe('NOT_READY');
     expect(evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla')).toEqual(withRoute);
     expect(bossAreaBlocker('Zulrah', unlocks, 'vanilla', reached)).toBeUndefined();
+  });
+});
+
+describe('ways in that carry their own requirement, read by the readiness badge (area-access.d3[0], d3[1], d1[2])', () => {
+  const areaBlockers = (name: string, over: Partial<UnlockState>, mode: string) => {
+    const readiness = evaluateActivityReadiness(true, getActivityReq(name), unlocked(over), mode);
+    return readiness.status === 'NOT_READY' ? readiness.blockers.filter(blocker => blocker.kind === 'area').map(blocker => blocker.label) : [];
+  };
+
+  it('counts the Lumbridge castle cellar way to Juna once The Lost Tribe is done', () => {
+    for (const name of ['Tears of Guthix', 'The Fractured Archive', 'Tormented Demons']) {
+      expect(areaBlockers(name, { chunks: ['50,50'], quests: ['The Lost Tribe', 'While Guthix Sleeps', 'Tears of Guthix'] }, 'chunked'), name).toEqual([]);
+      expect(areaBlockers(name, { chunks: ['50,50'] }, 'chunked'), name)
+        .toEqual(['Lumbridge (49, 49) or Lumbridge (50, 50) with The Lost Tribe started']);
+      expect(areaBlockers(name, { chunks: ['49,49'] }, 'chunked'), name).toEqual([]);
+    }
+    expect(evaluateActivityReadiness(true, getActivityReq('The Fractured Archive'), unlocked({ chunks: ['50,50'], quests: ['The Lost Tribe', 'While Guthix Sleeps'] }), 'chunked').status).not.toBe('NOT_READY');
+  });
+
+  it('counts the 51 Agility pipe from the Varrock Sewers for Obor', () => {
+    const agility = (level: number) => ({ chunks: ['50,54'], skills: { Agility: 6 }, levels: { Agility: level } });
+    expect(areaBlockers('Obor', agility(51), 'chunked')).toEqual([]);
+    expect(areaBlockers('Obor', agility(50), 'chunked')).toEqual(['Edgeville (48, 54) or Varrock (50, 54) with Agility level 51']);
+  });
+
+  it('counts Temple Trekking from the Paterdomus only after Darkness of Hallowvale, in both modes', () => {
+    const myreque = ['Priest in Peril', 'In Aid of the Myreque'];
+    expect(evaluateActivityReadiness(true, getActivityReq('Temple Trekking'), unlocked({ regions: ['Paterdomus'], quests: myreque }), 'vanilla'))
+      .toEqual({ status: 'NOT_READY', blockers: [{ kind: 'area', label: 'Burgh de Rott, or Paterdomus after Darkness of Hallowvale' }] });
+    expect(evaluateActivityReadiness(true, getActivityReq('Temple Trekking'), unlocked({ regions: ['Paterdomus'], quests: [...myreque, 'Darkness of Hallowvale'] }), 'vanilla').status).toBe('READY');
+    expect(evaluateActivityReadiness(true, getActivityReq('Temple Trekking'), unlocked({ regions: ['Burgh de Rott'], quests: myreque }), 'vanilla').status).toBe('READY');
+    expect(areaBlockers('Temple Trekking', { chunks: ['53,54'], quests: [...myreque, 'Darkness of Hallowvale'] }, 'chunked')).toEqual([]);
+    expect(areaBlockers('Temple Trekking', { chunks: ['53,54'], quests: myreque }, 'chunked'))
+      .toEqual(['Burgh de Rott (54, 50) or Paterdomus (53, 54) with Darkness of Hallowvale']);
+  });
+});
+
+describe('Mahogany Homes: the first contract comes from Amy (area-access.d2[0])', () => {
+  const AMY_FIRST = 'Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)';
+
+  it('opens at any contractor in Chunked and asks the player to confirm the first contract', () => {
+    for (const office of ['46,52', '50,54', '41,51', '27,56']) {
+      expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: [office] }), 'chunked'), office)
+        .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
+    }
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: ['47,52'] }), 'chunked').status).toBe('NOT_READY');
+  });
+
+  it('carries the same line in Vanilla', () => {
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked(), 'vanilla'))
+      .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
   });
 });

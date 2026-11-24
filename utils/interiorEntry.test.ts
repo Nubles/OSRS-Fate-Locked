@@ -4,6 +4,8 @@ import { initialState } from '../context/GameContext';
 import { interiorArea } from '../data/interiorAreas';
 import { ChunkContentService } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
+import { chunkEntries } from './chunkEntries';
+import { buildChunkPermissionSnapshot } from './chunkPermissionSnapshot';
 import { chunkForPlace } from './chunkLocations';
 import { evaluateEntityAccess } from './entityAccess';
 import { isAreaReachable } from './reachability';
@@ -166,6 +168,69 @@ describe('interiorEntry', () => {
     const keldagrim: InteriorRecord = { key: '1,1', name: 'Keldagrim', entrances: [] };
     expect(interiorEntry(keldagrim, context(run({})))).toBe('LOCKED');
     expect(interiorEntry(keldagrim, context(run({ regions: ['Keldagrim'] })))).toBe('UNKNOWN');
+  });
+});
+
+/**
+ * A route that is plainly blocked (a quest not held) reads NOT_READY even when it
+ * also has a requirement the save can't answer; UNKNOWN only when every blocker
+ * is one of those (status-precedence). The real routes are moved to an owned
+ * Lumbridge entrance so only the route's own requirements decide.
+ */
+describe("a blocked route's status", () => {
+  const throughLumbridge = (key: string, name: string): InteriorRecord => {
+    const record = records.get(key)!;
+    expect(record.name).toBe(name);
+    return { ...record, entrances: record.entrances.map((entrance) => ({ ...entrance, chunkId: idOf(chunkForPlace('Lumbridge')!) })) };
+  };
+
+  it('keeps The Scar not ready without Temple of the Eye, unknown with it, open with Desert Treasure II too', () => {
+    const scar = throughLumbridge('31,100', 'The Scar');
+    expect(interiorEntry(scar, context(run({})))).toBe('NOT_READY');
+    expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye'] })))).toBe('UNKNOWN');
+    expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye', 'Desert Treasure II'] })))).toBe('ALLOWED');
+  });
+
+  it('holds the Shellbane Gryphon Cave to Troubled Tortugans, and asks about the task or clue', () => {
+    const cave = throughLumbridge('49,138', 'Shellbane Gryphon Cave');
+    expect(cave.entrances.map((entrance) => entrance.requirements)).toEqual([[
+      'Troubled Tortugans Complete the quest',
+      'Shellbane Gryphon Cave: a gryphon Slayer task or the elite clue to kill the shellbane gryphon needs confirmation',
+    ]]);
+    expect(interiorEntry(cave, context(run({ quests: ['The Curse of Arrav'] })))).toBe('NOT_READY');
+    expect(interiorEntry(cave, context(run({ quests: ['Troubled Tortugans'] })))).toBe('UNKNOWN');
+  });
+
+  it('lets a run into the Slayer lairs the Wiki says need no task to enter, and keeps their monsters gated', () => {
+    // Kraken Cove, the Smoke Devil Dungeon and Cerberus' Lair may be entered without a task; the
+    // Slayer level and task are for killing what is inside, which the monsters carry themselves.
+    const base = run({});
+    const slayer60 = run({ skills: { ...base.skills, Slayer: 1 }, levels: { ...base.levels, Slayer: 60 } });
+    const lairs: [string, string][] = [['35,156', 'Kraken Cove'], ['36,147', 'Smoke Devil Dungeon'], ['20,19', "Cerberus' Lair"]];
+    for (const [key, name] of lairs) {
+      const lair = throughLumbridge(key, name);
+      expect(lair.entrances.map((entrance) => entrance.requirements)).toEqual([[]]);
+      expect(interiorEntry(lair, context(slayer60))).toBe('ALLOWED');
+    }
+    // What the plugin is sent (rules.chunkEntries), with the entrance chunks owned in Chunked.
+    const owned = { ...slayer60, chunks: ['35,56', '37,47', '45,53'] };
+    const reachable = new Set(['35,56', '37,47', '45,53'].map((key) => { const [cx, cy] = key.split(',').map(Number); return idOf({ cx, cy }); }));
+    const entries = chunkEntries(service, owned, 'chunked', reachable);
+    for (const key of ['35,156', '36,147', '37,147', '20,19']) expect(entries[key]).toBe('ALLOWED');
+    // The entrance chunk's snapshot carries the lair's monsters. Waterfiends need Slayer 1 but a task in the
+    // cove: a question, never "not ready". Cave kraken and smoke devils keep their 87 and 93 Slayer.
+    const combat = (cx: number, cy: number, name: string) => buildChunkPermissionSnapshot(service.contentFor(cx, cy)!, { cx, cy },
+      { unlocks: owned, gameModeId: 'chunked', contentService: service, reachableChunks: reachable }).categories.COMBAT?.find((row) => row.name === name)?.status;
+    expect(combat(35, 56, 'Waterfiend')).toBe('UNKNOWN');
+    expect(combat(37, 47, 'Smoke devil')).toBe('NOT_READY');
+    expect(combat(35, 56, 'Cave kraken')).toBe('NOT_READY');
+  });
+
+  it('keeps a route with only requirements the save cannot answer unknown', () => {
+    const cave: InteriorRecord = { key: '1,1', name: 'Test Cave', entrances: [{
+      chunkId: idOf(chunkForPlace('Lumbridge')!), requirements: ['Test Cave: a task needs confirmation', 'Started Ratcatchers'],
+    }] };
+    expect(interiorEntry(cave, context(run({})))).toBe('UNKNOWN');
   });
 });
 

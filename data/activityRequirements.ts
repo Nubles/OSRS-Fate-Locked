@@ -8,8 +8,8 @@
 //
 // Hard gates use structured fields; notes are descriptive only.
 
-import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
-import { ACTIVITY_CHUNKS } from './activityChunks';
+import { ACTIVITY_ACCESS_AREAS, ACTIVITY_AREA_QUESTS } from './activityAccess';
+import { ACTIVITY_CHUNKS, GATED_ENTRANCE_CHUNKS } from './activityChunks';
 import type { QuestProgressRequirement } from './questProgress';
 
 export interface ActivityReq {
@@ -21,6 +21,8 @@ export interface ActivityReq {
   requiredAreas?: string[];
   /** Chunked mode only: the entrance chunks ("cx,cy"), one of which must be owned. Replaces requiredAreas there. */
   requiredChunks?: string[];
+  /** The place's name when a way in carries its own requirement (Chunked gated ways, Vanilla ACTIVITY_AREA_QUESTS). */
+  entrance?: string;
   /** Minimum real OSRS combat level. */
   combatLevel?: number;
   /** Minimum real OSRS total level. */
@@ -281,7 +283,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Burthorpe Games Room': { requiredAreas: ['Burthorpe'] },
   // Mage Training Arena: 7 Magic to take part (one spell); 33 for all four rooms.
   'Mage Training Arena': { skills: { Magic: 7 }, requiredAreas: ['Mage Training Arena'] },
-  'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).' },
+  // Wiki: Mahogany Homes (oldid 15392909): Amy gives only the first contract; after it Marlo, Ellie and Angelo give them too.
+  'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).', manualRequirements: ['Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)'] },
   'Forestry': { note: 'Woodcutting (Forestry events).' },
   'Tears of Guthix': { quests: ['Tears of Guthix'] },
   'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },
@@ -387,11 +390,13 @@ export const MINIGAME_REQUIREMENT_OVERRIDES: Record<string, ActivityReq> = {
 export const getActivityReq = (item: string): ActivityReq | undefined => {
   const requirement = ACTIVITY_REQUIREMENTS[item];
   const requiredAreas = ACTIVITY_ACCESS_AREAS[item];
-  const requiredChunks = Object.prototype.hasOwnProperty.call(ACTIVITY_CHUNKS, item) ? ACTIVITY_CHUNKS[item] : undefined;
+  const own = (table: object) => Object.prototype.hasOwnProperty.call(table, item);
+  const requiredChunks = own(ACTIVITY_CHUNKS) ? ACTIVITY_CHUNKS[item] : undefined;
   if (!requirement && !requiredAreas) return undefined;
   return {
     ...requirement,
     ...(requiredAreas ? { requiredAreas: [...requiredAreas] } : {}),
     ...(requiredChunks ? { requiredChunks: [...requiredChunks] } : {}),
+    ...(own(GATED_ENTRANCE_CHUNKS) || own(ACTIVITY_AREA_QUESTS) ? { entrance: item } : {}),
   };
 };

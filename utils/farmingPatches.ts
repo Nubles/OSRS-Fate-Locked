@@ -18,7 +18,7 @@ const PATCH_RULES: [RegExp, string][] = [
   [/seaweed patch/i, 'Seaweed'],
   [/hespori/i, 'Hespori Patch'],
   [/anima patch/i, 'Anima'],
-  [/grape ?vine|vine patch/i, 'Vinery'],
+  [/vine patch/i, 'Vinery'],
   [/coral nursery|coral patch/i, 'Coral Nursery'],
   [/allotment/i, 'Allotment'],
 ];
