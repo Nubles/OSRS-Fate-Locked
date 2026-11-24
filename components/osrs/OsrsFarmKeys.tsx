@@ -794,6 +794,11 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
       const rate = effectiveRate(DropSource.ACTIVITY_MINIGAME, baseRate, minigameContext);
       const rates = stage.rates.map((r) => `${r}%`).join(', then ');
       const noFate = !stage.capped && !minigameMissPaysFate(baseRate);
+      // The boss cards' readiness: a minigame whose area is not owned or routed says so.
+      const readiness = evaluateActivityReadiness(true, getUtilityActivityReq(name, TableType.MINIGAMES, gameModeId), unlocks, gameModeId, areaRoutes);
+      const notReady = !stage.capped && readiness.status === 'NOT_READY'
+        ? `Not ready: needs ${readiness.blockers.map((b) => b.label).join(', ')}`
+        : undefined;
       return {
         id: name,
         name,
@@ -811,10 +816,11 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
           : `Stash ${stage.cap} Key${stage.cap === 1 ? '' : 's'}: ${rates} · ${stage.awarded} paid`,
         stash: { cap: stage.cap, awarded: stage.awarded },
         disabled: stage.capped,
+        notReady,
         btn: stage.capped ? 'Spent' : 'Roll',
         title: stage.capped
           ? `${name}: This minigame no longer rolls for Keys or Fate. Its Collection Log items and pet still roll.`
-          : `${name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% for the next Key`,
+          : `${name}: ${gemFor(rate).label} (${gemFor(rate).name}), ${rate}% for the next Key${notReady ? `. ${notReady}.` : ''}`,
         examine: stage.capped
           ? `Minigame. All ${stage.cap} Key${stage.cap === 1 ? '' : 's'} paid: games no longer roll for Keys or Fate.`
           : `Minigame. Stash of ${stage.cap} Key${stage.cap === 1 ? '' : 's'} at ${rates}. ${rate}% chance of a Key per game now.`,
@@ -960,7 +966,7 @@ export const OsrsFarmKeys: React.FC<{ wide?: boolean }> = ({ wide = false }) => 
         {categoryButtons(WIDE_TAB_ICONS)}
         <div className="okf-blurb">
           <span>{subTab === 'BOSSING' && reserves ? VANILLA_BOSS_BLURB : subTab === 'ACTIVITIES' && reserves ? VANILLA_MINIGAME_BLURB : BLURBS[subTab]}</span>
-          <span className="hint"><b>Gem = odds tier.</b> Same gem, same chance, on every tab.</span>
+          <span className="hint"><b>Gem = odds band.</b> Higher gem tier, better odds.</span>
           {otherBtn}
         </div>
         {bossSearch}

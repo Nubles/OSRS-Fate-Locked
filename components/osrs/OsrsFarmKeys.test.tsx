@@ -69,6 +69,64 @@ describe('OSRS Farm Keys in Vanilla', () => {
   });
 });
 
+describe('OSRS Farm Keys readiness and wording (deep audit ui-osrs-a)', () => {
+  afterEach(() => { cleanup(); });
+
+  const start = async (tab: 'ACTIVITIES' | 'BOSSING' | 'SLAYER', unlocks: Record<string, unknown>) => {
+    const { initialState } = await vi.importActual<typeof import('../../context/GameContext')>('../../context/GameContext');
+    game.current = {
+      ...initialState,
+      gameModeId: 'vanilla',
+      unlocks: { ...initialState.unlocks, regions: ['Lumbridge'], ...unlocks },
+      history: [],
+      rollForKey,
+      claimPet: vi.fn(),
+    };
+    const { setFarmTab } = await import('./OsrsKeysState');
+    setFarmTab(tab);
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    render(<OsrsFarmKeys wide />);
+  };
+
+  it('says Not ready on a minigame card whose area is not owned, as the boss cards do', async () => {
+    await start('ACTIVITIES', { minigames: ['Barbarian Assault'] });
+    const card = cardFor('Barbarian Assault');
+    expect(within(card).getByText('Not ready: needs Barbarian Outpost')).toBeTruthy();
+    expect(within(card).queryByText('Ready to roll')).toBeNull();
+    expect(card.getAttribute('title')).toMatch(/Not ready: needs Barbarian Outpost\.$/);
+  });
+
+  it('keeps the stash text on a minigame card whose stash is empty, even when not ready', async () => {
+    await start('ACTIVITIES', { minigames: ['Barbarian Assault'] });
+    cleanup();
+    game.current = { ...game.current, minigameStandardKeysAwarded: { 'Barbarian Assault': vanillaMinigameKeyStage('Barbarian Assault', 0).cap } };
+    const { OsrsFarmKeys } = await import('./OsrsFarmKeys');
+    render(<OsrsFarmKeys wide />);
+    const card = cardFor('Barbarian Assault');
+    expect(within(card).getByText('Stash empty: games no longer roll')).toBeTruthy();
+    expect(within(card).queryByText(/Not ready/)).toBeNull();
+  });
+
+  it('describes a gem as a band of chances, not one chance', async () => {
+    await start('ACTIVITIES', { minigames: ['Barbarian Assault'] });
+    const hint = document.querySelector('.okf-blurb .hint') as HTMLElement;
+    expect(hint.textContent).toBe('Gem = odds band. Higher gem tier, better odds.');
+  });
+
+  it('names where each Slayer master stands (OSRS Wiki infobox locations)', async () => {
+    await start('SLAYER', {});
+    const places: Record<string, string> = {
+      Turael: 'Burthorpe', Spria: 'Draynor', Mazchna: 'Canifis', Vannaka: 'Edgeville', Chaeldar: 'Zanaris',
+      Konar: 'Mount Karuulm', Nieve: 'Gnome Stronghold', Krystilia: 'Edgeville', Duradel: 'Shilo Village',
+    };
+    for (const [name, place] of Object.entries(places)) {
+      const card = cardFor(name);
+      expect(card, name).toBeTruthy();
+      expect(card.getAttribute('data-examine'), name).toMatch(new RegExp(`^${place} \\(`));
+    }
+  });
+});
+
 describe('OSRS Farm Keys cards on a narrow screen', () => {
   afterEach(() => { cleanup(); });
 
