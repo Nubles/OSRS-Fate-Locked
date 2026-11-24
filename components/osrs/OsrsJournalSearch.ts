@@ -13,6 +13,12 @@
  * row can highlight them.
  */
 
+import { foldText, folded, foldedIncludes, type Folded } from '../../utils/textFold';
+
+// The folding lives in utils/textFold.ts so the lazy services can share it;
+// re-exported here so the panels that import it from this module keep working.
+export { foldText, foldedIncludes };
+
 export type Range = [start: number, end: number];
 
 export interface JournalQuery {
@@ -23,54 +29,12 @@ export interface JournalQuery {
   words: string[];
 }
 
-interface Folded {
-  text: string;
-  /** For each character of `text`, the index of the source character it came from. */
-  map: number[];
-}
-
-const WORD_CHAR = /[\p{L}\p{N}]/u;
-/** Characters that join a word rather than split it: "Cook's", "H.A.M.", "Mr. Mordaut". */
-const DROPPED = /['‘’`.´"“”]/u;
-
-/** Lower-case letters and digits; dropped joiners; every other run of characters becomes one space. */
-export const foldText = (src: string): Folded => {
-  let text = '';
-  const map: number[] = [];
-  for (let i = 0; i < src.length; i++) {
-    const ch = src[i];
-    if (WORD_CHAR.test(ch)) {
-      // Strip accents so "Pollnivneach" and "Pollnívneach" read the same.
-      const lower = ch.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      for (const c of lower) { text += c; map.push(i); }
-    } else if (DROPPED.test(ch)) {
-      continue;
-    } else if (text.length > 0 && text[text.length - 1] !== ' ') {
-      text += ' ';
-      map.push(i);
-    }
-  }
-  if (text.endsWith(' ')) { text = text.slice(0, -1); map.pop(); }
-  return { text, map };
-};
-
 /** The query for a typed term, or null when there is nothing to search for. */
 export const compileJournalQuery = (term: string): JournalQuery | null => {
   const raw = term.trim();
   const norm = foldText(raw).text;
   if (!norm) return null;
   return { raw, norm, words: norm.split(' ') };
-};
-
-const foldCache = new Map<string, Folded>();
-const folded = (s: string): Folded => {
-  let f = foldCache.get(s);
-  if (!f) {
-    f = foldText(s);
-    if (foldCache.size > 5000) foldCache.clear();
-    foldCache.set(s, f);
-  }
-  return f;
 };
 
 /** Source range for folded positions [a, b). */
@@ -214,13 +178,3 @@ export const caTaskMatches = (
   query: JournalQuery | null,
   t: { name?: string; description: string; monster: string; tierId: string },
 ): boolean => journalMatches(query, caTaskSearchFields(t));
-
-/**
- * A plain "contains" for the other journal panels' searches (Quests,
- * Collection Log), folded as this search folds: case, accents and joiners
- * are ignored, so "cooks assistant" finds "Cook's Assistant".
- */
-export const foldedIncludes = (text: string, term: string): boolean => {
-  const needle = foldText(term).text;
-  return needle.length === 0 ? text.toLowerCase().includes(term.trim().toLowerCase()) : folded(text).text.includes(needle);
-};

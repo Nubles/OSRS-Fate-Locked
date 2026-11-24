@@ -18,10 +18,10 @@
  */
 import { DropSource, type UnlockState } from '../types';
 import { SLAYER_MASTER_REQUIREMENTS } from '../data/slayerMasterRequirements';
-import { BOSS_TASK_BOSSES, BOSS_TASK_SLAYER_LEVELS, BOSS_TASK_UNLOCK } from '../data/slayerBossTasks';
+import { BOSS_TASK_BOSSES, BOSS_TASK_REQUIREMENTS, BOSS_TASK_SLAYER_LEVELS, BOSS_TASK_UNLOCK } from '../data/slayerBossTasks';
 import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { isAreaReachable } from './reachability';
-import { chunkPlaceLabel, farmPlaceReachable, slayerMasterChunks } from './activityAccess';
+import { chunkPlaceLabel, farmPlaceReachable, gatedEntranceLabels, slayerMasterChunks } from './activityAccess';
 import { tierForLevel } from './skillTiers';
 
 type GateUnlocks = Pick<UnlockState, 'skills' | 'regions' | 'quests' | 'bosses' | 'slayerUnlocks'> & Partial<Pick<UnlockState, 'chunks'>>;
@@ -51,6 +51,7 @@ export const BOSS_TASK_NEEDS_UNLOCK = `Needs ${BOSS_TASK_UNLOCK} (a Slayer rewar
 export const BOSS_TASK_NEEDS_MASTER = 'Needs Konar, Nieve, Duradel or Krystilia';
 export const BOSS_TASK_NEEDS_BOSS = 'Unlock a boss a Slayer master can assign you';
 export const BOSS_TASK_NEEDS_TIER = 'Your bosses need a higher Slayer tier';
+export const BOSS_TASK_NEEDS_REQUIREMENTS = 'Your bosses need a quest or level before a master assigns them';
 export const BOSS_TASK_ALL_SPENT = 'Every boss you can be assigned has paid out its stash';
 /** The Roll Inbox can't tell which boss a task was, so it sends the player to the card that asks. */
 export const BOSS_TASK_ROLL_ON_CARD = 'Roll a boss task on the Boss Task card in Farm Keys: pick the boss, and it rolls from that boss’s Key stash.';
@@ -72,8 +73,8 @@ export const slayerMasterBlock = (master: string, unlocks: GateUnlocks, gameMode
   const requirements = SLAYER_MASTER_REQUIREMENTS[master];
   if (gameModeId === 'chunked') {
     const chunks = slayerMasterChunks(master);
-    if (chunks.length > 0 && !farmPlaceReachable(chunks, unlocks as UnlockState, gameModeId)) {
-      return `Needs ${chunks.map(chunkPlaceLabel).join(' or ')}`;
+    if (chunks.length > 0 && !farmPlaceReachable(chunks, unlocks as UnlockState, gameModeId, master)) {
+      return `Needs ${[...chunks.map(chunkPlaceLabel), ...gatedEntranceLabels(master)].join(' or ')}`;
     }
   } else {
     const area = requirements?.areas?.find(name => !isAreaReachable(name, unlocks as UnlockState, gameModeId));
@@ -128,7 +129,16 @@ export const bossTaskChoices = (
   const cap = slayerTierCap(unlocks);
   const inTier = unlocked.filter(boss => (BOSS_TASK_SLAYER_LEVELS[boss] ?? 0) <= cap);
   if (inTier.length === 0) return none(BOSS_TASK_NEEDS_TIER);
-  const bosses = inTier
+  // The Boss Slayer table's quests and levels, each level capped by its Skill tier as Slayer's is.
+  const levelCap = (skill: string) => { const tier = Math.max(0, unlocks.skills?.[skill] ?? 0); return tier >= 10 ? 99 : tier * 10; };
+  const assignableNow = inTier.filter(boss => {
+    const req = BOSS_TASK_REQUIREMENTS[boss];
+    return !req || ((req.quests ?? []).every(quest => (unlocks.quests ?? []).includes(quest))
+      && Object.entries(req.skills ?? {}).every(([skill, level]) => levelCap(skill) >= level)
+      && (!req.anySkill || Object.entries(req.anySkill).some(([skill, level]) => levelCap(skill) >= level)));
+  });
+  if (assignableNow.length === 0) return none(BOSS_TASK_NEEDS_REQUIREMENTS);
+  const bosses = assignableNow
     .filter(boss => !vanillaBossKeyStage(boss, bossKeysAwarded?.[boss] ?? 0).capped)
     .sort((left, right) => left.localeCompare(right));
   return bosses.length === 0 ? none(BOSS_TASK_ALL_SPENT) : { bosses, block: null };

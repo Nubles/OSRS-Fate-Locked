@@ -3,6 +3,7 @@ import { useGame } from '../../context/GameContext';
 import { useProfiles } from '../../context/ProfileContext';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { lazyWithRetry } from '../../utils/lazyRetry';
+import { historyFilterMatches } from '../../utils/historyFilter';
 import { isRollEntry } from '../../utils/logEntry';
 import { TableType, type LogEntry } from '../../types';
 import { ModalFallback } from '../LoadingFallback';
@@ -17,18 +18,18 @@ import './osrs-shell.css';
 const TimelapseModal = lazyWithRetry(() => import('../TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
 /**
- * The History panel's filters, as OSRS chat tabs ("Game" is its level-up
- * filter), and Clan: other players' unlocks from the Fate Locked Discord
+ * The History panel's filters (the same historyFilterMatches), as OSRS chat
+ * tabs ("Game" is its Level filter), and Clan: other players' unlocks from the Fate Locked Discord
  * (utils/clanFeed.ts), shown while Settings > Clan broadcasts is on.
  */
 type ChatTab = 'All' | 'Game' | 'Rolls' | 'Unlocks' | 'Rituals' | 'Clan';
 const TABS: ChatTab[] = ['All', 'Game', 'Rolls', 'Unlocks', 'Rituals'];
 const MATCH: Record<ChatTab, (entry: LogEntry) => boolean> = {
   All: () => true,
-  Game: entry => entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'FATE',
-  Rolls: isRollEntry,
-  Unlocks: entry => entry.type === 'UNLOCK',
-  Rituals: entry => entry.type === 'ALTAR',
+  Game: entry => historyFilterMatches(entry, 'PROGRESS'),
+  Rolls: entry => historyFilterMatches(entry, 'ROLLS'),
+  Unlocks: entry => historyFilterMatches(entry, 'UNLOCKS'),
+  Rituals: entry => historyFilterMatches(entry, 'RITUALS'),
   Clan: () => false,
 };
 

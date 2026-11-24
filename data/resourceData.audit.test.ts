@@ -47,12 +47,52 @@ describe('reviewed drop sources', () => {
     expect(wiki?.regions).not.toEqual(['Any']);
   });
 
+  it('places every curated adamant and rune dragon row in Lithkren', () => {
+    // Both dragons live only in the Lithkren Vault (Dragon Slayer II).
+    const rows = Object.values(RESOURCE_MAP).flat()
+      .filter(s => !s.requirementsUnverified && (s.name === 'Rune Dragon' || s.name === 'Adamant Dragon'));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.regions).toEqual(['Lithkren']);
+      expect(row.quests).toEqual(['Dragon Slayer II']);
+    }
+    const wiki = (RESOURCE_MAP['Adamant Javelin Tips'] ?? []).find(s => s.name === 'Adamant Dragon');
+    expect(wiki?.regions).toEqual(['Lithkren']);
+  });
+
+  // outputYield is the Wiki drop quantity; a range uses its low end.
+  it.each([
+    ['Flax', 'Zulrah', 1000],
+    ['Raw Shark', 'Zulrah', 35],
+    ['Pure Essence', 'Twisted Banshee', 65],
+    ['Mithril Ore', 'Zalcano', 56],
+    ['Adamantite Ore', 'Zalcano', 51],
+    ['Runite Ore', 'Zalcano', 3],
+    ['Steel Bar', 'Zalcano', 16],
+    ['Manta Ray', 'Zulrah', 35],
+    ['Manta Ray', 'Vorkath', 35],
+    ['Dragonstone', 'Vorkath', 2],
+    ['Antidote++', 'Zulrah', 10],
+  ] as const)('%s from %s yields %d per drop', (item, monster, qty) => {
+    expect(curated(item).find(s => s.name === monster)?.outputYield).toBe(qty);
+  });
+
+  it('counts the Zulrah Antidote++ drop in 4-dose bottles', () => {
+    expect(curated('Antidote++').find(s => s.name === 'Zulrah')?.outputDoses).toBe(4);
+  });
+
   it.each([
     ["Executioner's Axe Head", 'Vardorvis', '1/1088'],
     ['Eye of the Duke', 'Duke Sucellus', '1/720'],
-    ['Leviathan Lure', 'The Leviathan', '1/768'],
+    ["Leviathan's Lure", 'The Leviathan', '1/768'],
     ["Siren's Staff", 'The Whisperer', '1/512'],
     ['Dragon Harpoon', 'Wyrm', '1/10000 (1/2000 on task)'],
+    // Imps always drop fiendish ashes; regular ashes are 6/128.
+    ['Ashes', 'Imp', '6/128'],
+    // Unsired 1/100 x 62/128 per piece: 1/206 per kill (1/198 with the pet).
+    ['Bludgeon Axon', 'Abyssal Sire', '1/206'],
+    ['Bludgeon Claw', 'Abyssal Sire', '1/206'],
+    ['Bludgeon Spine', 'Abyssal Sire', '1/206'],
   ] as const)('%s from %s is %s', (item, monster, rarity) => {
     const row = curated(item).find(s => s.name === monster);
     expect(row?.rarity).toBe(rarity);
@@ -149,6 +189,11 @@ describe('curated sources the game does have', () => {
     ['Steel Arrow', 'Giant Frog', 'DROP'],
     ['Chocolate Dust', 'Grand Tree Groceries', 'SHOP'],
     ['Adamantite Bar', 'Adamant Dragon', 'DROP'],
+    ['Cadantine', 'Greater Nechryael', 'DROP'],
+    ['Manta Ray', 'Zulrah', 'DROP'],
+    ['Manta Ray', 'Vorkath', 'DROP'],
+    ['Dragonstone', 'Vorkath', 'DROP'],
+    ['Antidote++', 'Zulrah', 'DROP'],
   ] as const)('keeps a %s template row for %s', (item, name, type) => {
     expect(has(item, name, type)).toBe(true);
   });
@@ -207,6 +252,20 @@ describe('curated drops the monster does not have', () => {
     ["Soul Rune", "Vorkath"],
     ["Rune Crossbow", "Deranged Archaeologist"],
     ["Rune Crossbow", "Iron Dragon"],
+    // Deep pass, 23 Nov 2026.
+    ["Toadflax", "Cave Horror"], // herb table stops at dwarf weed, no toadflax
+    ["Cadantine", "Nechryael"], // greater nechryael and the nechryarch only
+    ["Limpwurt Root", "Kurask"], // kurask drop limpwurt seeds now
+    ["Blue Dragon Scale", "Blue Dragon"], // brutal blue dragons and Zaros rangers
+    ["Runite Ore", "Wyrm"],
+    ["Crushed Nest", "Callisto"], // removed 22 November 2018
+    ["Ranging Potion", "Tarn Razorlor"], // Tarn has no drop table
+    ["Uncut Dragonstone", "Zulrah"], // the rare drop table gives a cut dragonstone
+    ["Uncut Dragonstone", "Vorkath"],
+    ["Uncut Dragonstone", "Rune Dragon"],
+    ["Raw Manta Ray", "Vorkath"], // both drop cooked manta rays
+    ["Raw Manta Ray", "Zulrah"],
+    ["Anti-venom", "Zulrah"], // Zulrah drops antidote++
   ] as const)('%s is not a drop from %s', (item, monster) => {
     expect(has(item, monster, 'DROP')).toBe(false);
   });
@@ -239,6 +298,8 @@ describe('curated shops that do not sell the item', () => {
     ['Soul Rune', 'Mage Arena Shop'],
     ['Rune Scimitar', "Daga's Scimitar Smithy"],
     ['Amulet of Power', 'Quartermaster'],
+    // Davon has no stock of his own, so ironmen can only sell there.
+    ['Amulet of Power', "Davon's Amulet Store"],
   ] as const)('%s is not sold by %s', (item, shop) => {
     expect(has(item, shop, 'SHOP')).toBe(false);
   });
@@ -246,9 +307,12 @@ describe('curated shops that do not sell the item', () => {
   it.each([
     ['Limestone', 'Razmire Builders Merchants', ['Morytania']],
     ['Rune Pickaxe', "Gwyn's Mining Emporium", ['Tirannwn']],
-    ['Amulet of Power', "Davon's Amulet Store", ['Karamja']],
   ] as const)('%s is sold by %s', (item, shop, regions) => {
     expect(curated(item).find(s => s.type === 'SHOP' && s.name === shop)?.regions).toEqual(regions);
+  });
+
+  it("gates Razmire Builders Merchants on Shades of Mort'ton", () => {
+    expect(curated('Limestone').find(s => s.name === 'Razmire Builders Merchants')?.quests).toEqual(["Shades of Mort'ton"]);
   });
 
   it('keeps Mage Arena Shop nature runes', () => {
@@ -262,6 +326,8 @@ describe('curated activity and spawn sources that do not give the item', () => {
     ['Gold Bar', 'Zalcano', 'MINIGAME'],
     ['Raw Shark', 'Temple Trekking', 'MINIGAME'],
     ['Giant Seaweed', 'Ground Spawn', 'SPAWN'],
+    ['Rune Pickaxe', 'Zalcano', 'MINIGAME'], // Zalcano's loot has no pickaxe
+    ['Dragonstone', 'Crystal Chest', 'MINIGAME'], // the chest gives an uncut one
   ] as const)('%s does not come from %s', (item, name, type) => {
     expect(has(item, name, type)).toBe(false);
   });

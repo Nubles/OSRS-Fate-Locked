@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState } from '../context/GameContext';
+import { MERCY_QUIET_MS } from '../utils/chunkedFate';
 
 const game = vi.hoisted(() => ({ current: {} as Record<string, unknown> }));
 vi.mock('../context/GameContext', async importOriginal => ({
@@ -15,7 +16,7 @@ vi.mock('../services/ChunkContentService', () => ({ chunkContentService: { get r
 const quests = vi.hoisted(() => ({ rows: [] as { id: string; bucket: string }[] }));
 vi.mock('./QuestDoabilityPanel', () => ({ chunkedQuestRows: () => quests.rows }));
 
-afterEach(() => { cleanup(); quests.rows = []; content.ready = true; content.error = null; content.init.mockClear(); });
+afterEach(() => { cleanup(); vi.useRealTimers(); quests.rows = []; content.ready = true; content.error = null; content.init.mockClear(); });
 
 const dry = (over: Record<string, unknown> = {}) => {
   const fresh = createFreshState();
@@ -110,6 +111,35 @@ describe('Chunked fate panel', () => {
     expect(screen.queryByRole('button', { name: 'Call on Fate' })).toBeNull();
   });
 
+  it('moves the quiet-spell countdown on and opens Mercy when it ends, with the panel left open (chunked-fate.d3[3])', async () => {
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    vi.useFakeTimers();
+    const t0 = Date.parse('2026-11-20T12:00:00Z');
+    vi.setSystemTime(t0);
+    const fresh = createFreshState();
+    dry({ chunkedBreakthroughs: { Hitpoints: 2, Woodcutting: 3 }, chunkedProgressAt: t0 - MERCY_QUIET_MS + 5 * 60_000,
+      unlocks: { ...fresh.unlocks, skills: { Hitpoints: 1, Woodcutting: 2 }, levels: { ...fresh.unlocks.levels, Woodcutting: 15 } } });
+    render(<ChunkedFatePanel />);
+    expect(screen.getByText(/nothing new comes for 5 minutes, it opens anyway\./)).toBeTruthy();
+    await act(async () => { vi.advanceTimersByTime(60_000); });
+    expect(screen.getByText(/nothing new comes for 4 minutes, it opens anyway\./)).toBeTruthy();
+    await act(async () => { vi.advanceTimersByTime(4 * 60_000); });
+    expect(screen.queryByText(/it opens anyway/)).toBeNull();
+    expect((screen.getByRole('button', { name: 'Call on Fate' }) as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByText(/nothing new has come for 3 days/)).toBeTruthy();
+    // The clock stops once nothing on the panel counts down.
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('keeps no clock while the line that shows has no countdown', async () => {
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    vi.useFakeTimers();
+    dry({ chunkedProgressAt: Date.now() });
+    render(<ChunkedFatePanel />);
+    expect(screen.getByText("Fate's Mercy waits until you roll the Breakthrough for Attack.")).toBeTruthy();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('shows nothing while the run still has Keys and nothing is capped', async () => {
     const fresh = createFreshState();
     dry({ keys: 2, unlocks: { ...fresh.unlocks, skills: {}, levels: { ...fresh.unlocks.levels, Hitpoints: 10 } } });
@@ -154,6 +184,17 @@ describe('Chunked fate panel', () => {
     const fought = screen.getByRole('button', { name: 'Fought something' }) as HTMLButtonElement;
     expect(fought.disabled).toBe(true);
     expect(fought.title).toBe('Needs a combat style (melee, Magic, or Ranged with a Weapon slot).');
+  });
+
+  it('says a Fortunate omen stops at the 95% cap like every other Fortunate text (chunked-fate.d1[3])', async () => {
+    dry({ keys: 1, rituals: { fortunateRollsLeft: 3 } });
+    const { ChunkedFatePanel } = await import('./ChunkedFatePanel');
+    const first = render(<ChunkedFatePanel />);
+    expect(screen.getByText('Fortunate: your next 3 Key rolls are 5% better, up to 95%.')).toBeTruthy();
+    first.unmount();
+    dry({ keys: 1, rituals: { fortunateRollsLeft: 1 } });
+    render(<ChunkedFatePanel osrs />);
+    expect(screen.getByText('Fortunate: your next Key roll is 5% better, up to 95%.')).toBeTruthy();
   });
 
   it('draws the same rolls in the OSRS layout, one chunk when compact', async () => {

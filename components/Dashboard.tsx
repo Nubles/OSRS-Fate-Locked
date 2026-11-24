@@ -60,7 +60,7 @@ import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
 import { useAchievementCatalog, useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
-import { getGameMode } from '../config/gameModes';
+import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
@@ -479,6 +479,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const [showRival, setShowRival] = useState(false);
   const [showBossPlanner, setShowBossPlanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const sq = searchQuery.trim();
   const [showOnlyActionable, setShowOnlyActionable] = useState(false);
   const [levelingSkill, setLevelingSkill] = useState<string | null>(null);
   const [pendingSpecial, setPendingSpecial] = useState<{table: TableType, item: string, image?: string} | null>(null);
@@ -676,7 +677,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                     const levelChance = levelUpKeyChance(game, skill);
                     const showInfo = canLevel && !skillOddsHover;
 
-                    if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+                    if (sq && !skill.toLowerCase().includes(sq.toLowerCase())) return null;
 
                     return (
                         <div
@@ -831,7 +832,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {items.map(item => {
             const label = nameMap?.[item] ?? item;
-            if (searchQuery && !`${item} ${label}`.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+            if (sq && !`${item} ${label}`.toLowerCase().includes(sq.toLowerCase())) return null;
             const isUnlocked = unlocked.includes(item);
             const canUnlock = !isUnlocked && specialKeys > 0 && isOmniDirectUnlockAvailable(type, item, unlocks, gameModeId);
             const sub = detailsMap ? detailsMap[item] : undefined;
@@ -922,7 +923,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                           <>
                             <div className="flex items-center gap-2 mb-2 relative z-10">
                                 <Compass className="w-5 h-5 text-emerald-400" />
-                                <span className="font-bold text-sm text-emerald-200">{misthalinListName(gameModeId)}</span>
+                                <span className="font-bold text-sm text-emerald-200">{misthalinListName(resolveModeRules(gameModeId, customMode).startArea)}</span>
                                 <span className={`ml-auto text-xs font-mono flex items-center gap-1 ${allFree ? 'text-emerald-400' : 'text-amber-400'}`}>
                                     <Unlock size={10} /> {allFree ? 'Unlocked' : `${freeCount}/${MISTHALIN_AREAS.length}`}
                                 </span>
@@ -959,9 +960,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                           const unlockedCount = areas.filter(a => isAreaReachable(a, unlocks, gameModeId)).length;
 
                           // Search filter support for grouped regions
-                          const matchesGroup = group.toLowerCase().includes(searchQuery.toLowerCase());
-                          const matchesArea = areas.some(a => a.toLowerCase().includes(searchQuery.toLowerCase()));
-                          if (searchQuery && !matchesGroup && !matchesArea) return null;
+                          const matchesGroup = group.toLowerCase().includes(sq.toLowerCase());
+                          const matchesArea = areas.some(a => a.toLowerCase().includes(sq.toLowerCase()));
+                          if (sq && !matchesGroup && !matchesArea) return null;
 
                           // Actionable filter: Hide group if all regions locked and no keys
                           // But regions are grouped. Individual sub-regions are unlockable.
@@ -986,7 +987,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                                           const canUnlock = !isUnlocked && gameModeId !== 'chunked' && specialKeys > 0;
                                           
                                           // If searching, highlight matching specific areas, or show all if group matches
-                                          if (searchQuery && !matchesGroup && !area.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+                                          if (sq && !matchesGroup && !area.toLowerCase().includes(sq.toLowerCase())) return null;
 
                                           // Filter logic inside group
                                           if (showOnlyActionable && !isUnlocked && !canUnlock) return null;
@@ -1071,13 +1072,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
       }
 
       // Search mode: span every category so a search isn't trapped in one tab.
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
+      if (sq) {
+        const q = sq.toLowerCase();
         const matching = categories.filter(c => c.list.some(i => `${i} ${c.nameMap?.[i] ?? i}`.toLowerCase().includes(q)));
         return (
           <div className="space-y-6 lg:h-full lg:overflow-y-auto lg:pr-2 custom-scrollbar pb-4 lg:pb-10">
             {matching.length === 0 && (
-              <div className="text-center text-gray-600 text-sm py-10">No activities match "{searchQuery}".</div>
+              <div className="text-center text-gray-600 text-sm py-10">No activities match "{sq}".</div>
             )}
             {matching.map(c => (
               <div key={c.id}>
@@ -1173,7 +1174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
           <div className="lg:flex-1 lg:overflow-hidden p-2 relative">
               <Suspense fallback={<PaneFallback />}>
                   {journalSubTab === 'QUESTS' && <QuestLog searchTerm={searchQuery} suspendModals={suspendModals} />}
-                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={searchQuery} suspendModals={suspendModals} />}
+                  {journalSubTab === 'DIARIES' && <DiaryLog searchTerm={sq} suspendModals={suspendModals} />}
                   {journalSubTab === 'CA' && <CALog searchTerm={searchQuery} />}
                   {journalSubTab === 'DOABLE' && <QuestDoabilityPanel searchTerm={searchQuery} />}
               </Suspense>
@@ -1520,6 +1521,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         onDismiss={dismissAchievementReveal}
         onView={() => setShowAchievements(true)}
         gameModeId={gameModeId}
+        runId={game.runId}
       />
     )}
 

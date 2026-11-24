@@ -101,7 +101,12 @@ describe('reviewed content repairs', () => {
     const upper = service.entityRequirementOptions('Iron dragon', 'monster', 42, 49, '10899');
     expect(upper.flat()).toContainEqual({ raw: 'Current Slayer assignment: Iron dragon', origin: 'ENTITY' });
     const state = { ...account(), chunks: ['42,49', '39,58'], quests: ['Underground Pass', 'Regicide'] };
-    expect(evaluateEntityAccess('Iron dragon', 'monster', { cx: 42, cy: 49, sourceId: '10899' }, state, 'chunked', service).status)
+    const ironDragon = (unlocks: typeof state) =>
+      evaluateEntityAccess('Iron dragon', 'monster', { cx: 42, cy: 49, sourceId: '10899' }, unlocks, 'chunked', service).status;
+    // Brimhaven Dungeon's vines need 10 Woodcutting: plainly unmet, so not ready whatever else is unknown
+    // (status-precedence). With the level, the task restriction keeps it a question.
+    expect(ironDragon(state)).toBe('NOT_READY');
+    expect(ironDragon({ ...state, skills: { ...state.skills, Woodcutting: 1 }, levels: { ...state.levels, Woodcutting: 10 } }))
       .toBe('UNKNOWN');
     expect(evaluateEntityAccess('Wallasalki', 'monster', { cx: 39, cy: 58, sourceId: '7492' }, state, 'chunked', service).status)
       .toBe('UNKNOWN');

@@ -9,7 +9,8 @@
  * content counts only when the player can use it:
  * - a chunk whose entry needs a quest (Canifis, Priest in Peril) counts once
  *   that quest is done; a guild's fishing spots, patches or trees count once
- *   that guild is unlocked;
+ *   that guild is unlocked; a patch the game locks behind a quest or a diary
+ *   (the Troll Stronghold roof's herb patch) counts once that is done;
  * - Farming counts the patch types the run has unlocked, at each type's tier;
  *   Herblore needs a usable herb patch;
  * - skills trained by using something on a station need the input too:
@@ -27,7 +28,7 @@
  * a real player can't train, which held Fate's Mercy shut for good. With a
  * run, these count too:
  * - levels, not just tiers: content counts once the player's level reaches
- *   it (Draynor rooftop needs Agility 10, the Water altar Runecraft 5), from
+ *   it (Al Kharid rooftop needs Agility 20, the Water altar Runecraft 5), from
  *   the exact levels the generator keeps (chunkFacts);
  * - Ranged needs the Weapon slot at tier 1 to hold a bow or darts, and only
  *   then counts as a combat style; fighting (and so Hitpoints, Prayer's
@@ -37,13 +38,21 @@
  * - Construction needs a house from an estate agent and planks (a sawmill
  *   and logs, or a plank shop), each of an unlocked merchant type;
  * - Hunter needs traps from a Hunter shop of an unlocked merchant type;
- * - an ore shop is Smithing's input only with its merchant type unlocked.
+ * - an ore shop is Smithing's input only with its merchant type unlocked;
+ * - a shop the game locks (CHUNK_SERVICE_LOCKS) counts only with its quest,
+ *   guild and levels;
+ * - a fact whose only source in the chunk the game keeps behind a quest the
+ *   chunk's entry does not ask for (CHUNK_FACT_QUESTS: the Darkmeyer vyres in
+ *   56,51, 56,53 and 57,52, which also hold land outside the walls) counts
+ *   only once that quest is done. The game lets a player in partway through
+ *   Sins of the Father; the tracker records a quest only as done, so the gate
+ *   waits for the whole quest, as ENTRY_QUEST_CHUNKS does.
  * Magic needs no runes here: they come from drops and the tutorial too.
  */
 import type { UnlockState } from '../types';
 import {
-  CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_TYPES, CHUNK_SKILL_FACTS,
-  CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
+  CHUNK_ENTRY_QUESTS, CHUNK_FACT_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_LOCKS, CHUNK_PATCH_TYPES, CHUNK_SERVICE_LOCKS,
+  CHUNK_SKILL_FACTS, CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
 } from '../data/chunkSkillNodes';
 import { CHUNKED_START_KEY } from './chunkAdjacency';
 import { SKILL_QUEST_GATES } from './journalStatus';
@@ -52,11 +61,11 @@ import { tierBand, tierForLevel } from './skillTiers';
 const COMBAT_SKILLS = ['Attack', 'Strength', 'Defence', 'Hitpoints', 'Ranged', 'Magic', 'Prayer'];
 const MELEE_AND_MAGIC = ['Attack', 'Strength', 'Defence', 'Magic'];
 /** Skills whose content is another skill's input (logs, ore, fish, herbs). */
-const INPUT_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Farming'];
+const INPUT_SKILLS = ['Woodcutting', 'Mining', 'Fishing', 'Farming', 'Hunter'];
 
 /** What of the run decides whether chunk content is usable. */
 export type TrainingRun = Pick<UnlockState, 'skills'>
-  & Partial<Pick<UnlockState, 'levels' | 'equipment' | 'farming' | 'quests' | 'guilds' | 'merchants'>>;
+  & Partial<Pick<UnlockState, 'levels' | 'equipment' | 'farming' | 'quests' | 'guilds' | 'merchants' | 'diaries'>>;
 
 const ENTRY_QUEST_OF = new Map<string, string[]>();
 for (const [quest, columns] of Object.entries(CHUNK_ENTRY_QUESTS)) {
@@ -72,16 +81,28 @@ for (const [quest, columns] of Object.entries(CHUNK_ENTRY_QUESTS)) {
 /** The quests a chunk's entry needs (Canifis: Priest in Peril). */
 export const chunkEntryQuests = (chunk: string): readonly string[] => ENTRY_QUEST_OF.get(chunk) ?? [];
 
-/** The guild a chunk's content for this fact sits inside, or null (the Farming Guild holds its herb patch too). */
+/** Whether a guild gate's skills cover this fact (the Farming Guild holds its herb patch too). */
+const gateCovers = (skills: readonly string[], fact: string): boolean =>
+  skills.includes(fact) || (fact === '@herb' && skills.includes('Farming'));
+
+/** The guild a chunk's content for this fact sits inside, or null. */
 export const chunkGuildFor = (chunk: string, fact: string): string | null => {
   const gate = CHUNK_GUILD_GATES[chunk];
-  return gate && (fact === gate[0] || (gate[0] === 'Farming' && fact === '@herb')) ? gate[1] : null;
+  return gate && gateCovers(gate[0], fact) ? gate[1] : null;
 };
 
 /** A chunk's Farming patch types, each with the tier and the Farming level it needs. */
 export const chunkPatches = (chunk: string): [string, number, number][] =>
   [...(CHUNK_FARMING_PATCHES[chunk] ?? '').matchAll(/([a-z])(\d+)/g)]
     .map(([, letter, level]): [string, number, number] => [CHUNK_PATCH_TYPES[letter.charCodeAt(0) - 97], tierForLevel(Number(level)), Number(level)]);
+
+/** Why the run can't use a chunk's patch of this type (the quest or diary the game locks it behind), or null when it can. */
+export const chunkPatchBlocker = (chunk: string, type: string, run: Partial<Pick<UnlockState, 'quests' | 'diaries'>>): string | null => {
+  const lock = CHUNK_PATCH_LOCKS[chunk]?.[type];
+  if (lock?.quest && !(run.quests ?? []).includes(lock.quest)) return `Needs ${lock.quest} done.`;
+  if (lock?.diary && !(run.diaries ?? []).includes(lock.diary)) return `Needs the ${lock.diary} diary done.`;
+  return null;
+};
 
 const NO_FACTS: ReadonlyMap<string, number> = new Map();
 const FACT_LEVELS = new Map<string, ReadonlyMap<string, number>>();
@@ -127,10 +148,12 @@ const rangedWeapon = (run: TrainingRun): boolean => (run.equipment?.Weapon ?? 0)
 export const chunkedCombatStyleUsable = (run: TrainingRun): boolean =>
   MELEE_AND_MAGIC.some(skill => (run.skills[skill] ?? 0) >= 1) || ((run.skills.Ranged ?? 0) >= 1 && rangedWeapon(run));
 
-/** Why the run can't use a chunk's content for this fact (its entry quest, its guild), or null when it can. */
+/** Why the run can't use a chunk's content for this fact (its entry quest, the fact's own quest, its guild), or null when it can. */
 export const chunkContentBlocker = (chunk: string, fact: string, run: Partial<Pick<UnlockState, 'quests' | 'guilds'>>): string | null => {
   const quests = chunkEntryQuests(chunk).filter(quest => !(run.quests ?? []).includes(quest));
   if (quests.length > 0) return `Needs ${quests.join(' and ')} to get in.`;
+  const quest = CHUNK_FACT_QUESTS[chunk]?.[fact];
+  if (quest && !(run.quests ?? []).includes(quest)) return `Needs ${quest} done.`;
   const guild = chunkGuildFor(chunk, fact);
   if (guild && !(run.guilds ?? []).includes(guild)) return `Needs the ${guild} unlocked.`;
   return null;
@@ -149,7 +172,7 @@ let cachedTiers = new Map<string, number>();
 
 const signatureOf = (chunks: readonly string[], run?: TrainingRun): string => chunks.join(';') + (run ? `|${JSON.stringify([
   INPUT_SKILLS.map(skill => [run.skills[skill] ?? 0, runLevel(run, skill)]),
-  run.farming ?? [], run.quests ?? [], run.guilds ?? [], run.merchants ?? [], chunkedCombatStyleUsable(run), rangedWeapon(run),
+  run.farming ?? [], run.quests ?? [], run.guilds ?? [], run.merchants ?? [], run.diaries ?? [], chunkedCombatStyleUsable(run), rangedWeapon(run),
 ])}` : '');
 
 const training = (chunks: readonly string[], run?: TrainingRun): Training => {
@@ -168,14 +191,16 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     const gate = CHUNK_GUILD_GATES[key];
     const gated = run && gate && !guilds.has(gate[1]) ? gate[0] : null;
     for (const [fact, level] of chunkFacts(key)) {
-      if (fact === gated || (gated === 'Farming' && fact === '@herb')) continue;
+      if (gated && gateCovers(gated, fact)) continue;
+      const quest = run && CHUNK_FACT_QUESTS[key]?.[fact];
+      if (quest && !quests.has(quest)) continue;
       // With a run, Farming comes from the unlocked patch types below.
       if (run && (fact === 'Farming' || fact === '@herb')) continue;
       note(fact, level);
     }
-    if (run && gated !== 'Farming') {
+    if (run && !gated?.includes('Farming')) {
       for (const [type, , level] of chunkPatches(key)) {
-        if (!farming.has(type)) continue;
+        if (!farming.has(type) || chunkPatchBlocker(key, type, run)) continue;
         note('Farming', level);
         if (type === 'Herb') note('@herb', level);
       }
@@ -187,7 +212,12 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     if (gated) continue;
     for (const [service, chunksOffering] of Object.entries(CHUNK_SKILL_SERVICES)) {
       const merchant = chunksOffering[key];
-      if (merchant !== undefined && (!run || merchant === '' || merchants.has(merchant))) services.add(service);
+      if (merchant === undefined || (run && merchant !== '' && !merchants.has(merchant))) continue;
+      // A shop the game locks (Razmire's planks, Imia's traps) needs its quest, guild and levels.
+      const lock = run && CHUNK_SERVICE_LOCKS[key]?.[service];
+      if (lock && ((lock.quest && !quests.has(lock.quest)) || (lock.guild && !guilds.has(lock.guild))
+        || Object.entries(lock.skills ?? {}).some(([skill, level]) => (run.skills[skill] ?? 0) < tierForLevel(level) || runLevel(run, skill) < level))) continue;
+      services.add(service);
     }
   }
   // Without a run, an input only has to exist; with one, its skill's tier and level must reach it.

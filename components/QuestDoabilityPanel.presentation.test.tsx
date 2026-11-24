@@ -38,8 +38,9 @@ describe('quest doability presentation in Vanilla', () => {
     const quest = QUEST_DATA['Desert Treasure I'];
     const unlocks = {
       // Smithing (steel bars) and Woodcutting (magic logs) since the 10 October 2026 item audit.
-      ...account(), skills: { Thieving: 6, Firemaking: 5, Magic: 5, Smithing: 3, Woodcutting: 8 },
-      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Smithing: 30, Woodcutting: 75 },
+      // Crafting (molten glass) since the 23 November 2026 item audit.
+      ...account(), skills: { Thieving: 6, Firemaking: 5, Magic: 5, Smithing: 3, Woodcutting: 8, Crafting: 1 },
+      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Smithing: 30, Woodcutting: 75, Crafting: 1 },
       regions: [...quest.regions], quests: [...quest.prereqs],
       merchants: ['Claw Shops', 'Spice Shops'],
       equipment: { Head: 1, Ring: 1, Gloves: 1, Boots: 1 },

@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { BANK_ACCESS_GATES } from '../data/bankAccess';
 import { QUEST_DATA } from '../data/questData';
-import { SKILLS_LIST } from '../data/items';
+import { GUILDS_LIST, SKILLS_LIST } from '../data/items';
 import { TableType, type UnlockState } from '../types';
 import { bankChunkKey } from './activityAccess';
 import { chunkSubArea } from './chunkAdjacency';
 import { wardUsable } from './ritualWard';
+import { ACTIVITY_CHUNKS } from '../data/activityChunks';
+import { chunkUnlocked, placeOf } from './chunkLocations';
+import { getUtilityActivityReq } from './utilityReadiness';
 
 // Everything but land: every skill and quest, so only the place and the gate decide.
 const maxed = (overrides: Partial<UnlockState> = {}): UnlockState => ({
@@ -95,9 +98,47 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
     expect(wardUsable(TableType.BANKS, '12849', zanaris, 'vanilla')).toBe(true);
   });
 
+  // Audit areas d1 0: the Keldagrim and Mor Ul Rek banks sit on their city's entrance chunk,
+  // which the map files under Mountain Camp and Musa Point, and their names did not match an
+  // area, so the Ward asked only the entrance chunk's area and never the city they stand in.
+  it('asks the city an underground bank stands in, not only the area of its entrance chunk', () => {
+    const withRegions = (...regions: string[]) => maxed({ regions: [...initialState.unlocks.regions, ...regions] });
+    expect(getUtilityActivityReq('11066', TableType.BANKS, 'vanilla')?.requiredAreas).toEqual(['Keldagrim']);
+    expect(getUtilityActivityReq('11313', TableType.BANKS, 'vanilla')?.requiredAreas).toEqual(['Mor Ul Rek (TzHaar City)']);
+    expect(getUtilityActivityReq('12849', TableType.BANKS, 'vanilla')?.requiredAreas).toEqual(['Zanaris']);
+    expect(wardUsable(TableType.BANKS, '11066', withRegions('Mountain Camp'), 'vanilla')).toBe(false);
+    expect(wardUsable(TableType.BANKS, '11066', withRegions('Mountain Camp', 'Keldagrim'), 'vanilla')).toBe(true);
+    expect(wardUsable(TableType.BANKS, '11313', withRegions('Musa Point'), 'vanilla')).toBe(false);
+    expect(wardUsable(TableType.BANKS, '11313', withRegions('Musa Point', 'Mor Ul Rek (TzHaar City)'), 'vanilla')).toBe(true);
+  });
+
   it("asks a guild's own area in Vanilla, as the Activities tab does", () => {
     expect(wardUsable(TableType.GUILDS, 'Crafting Guild', maxed(), 'vanilla')).toBe(false);
     const withArea = maxed({ regions: [...initialState.unlocks.regions, 'Crafting Guild'] });
     expect(wardUsable(TableType.GUILDS, 'Crafting Guild', withArea, 'vanilla')).toBe(true);
+  });
+
+  // Audit minigames-misc d3 0: the area came only from guilds named for an area, so
+  // the Mining, Heroes', Hunter, Myths', Ranging, Servants' and Wizards' Guilds had none.
+  it("asks every guild's own area in Vanilla, wherever its entrance stands", () => {
+    const outside = GUILDS_LIST.filter(guild => (ACTIVITY_CHUNKS[guild] ?? []).some(key => {
+      const [cx, cy] = key.split(',').map(Number);
+      return !chunkUnlocked(cx, cy, initialState.unlocks, 'vanilla');
+    }));
+    expect(outside.length).toBeGreaterThanOrEqual(13);
+    for (const guild of outside) {
+      const [cx, cy] = ACTIVITY_CHUNKS[guild][0].split(',').map(Number);
+      const place = placeOf(cx, cy);
+      const area = place.subArea ?? place.region;
+      expect(getUtilityActivityReq(guild, TableType.GUILDS, 'vanilla')?.requiredAreas, guild).toContain(area);
+      expect(wardUsable(TableType.GUILDS, guild, maxed(), 'vanilla'), `${guild} without ${area}`).toBe(false);
+      const withArea = maxed({ regions: [...initialState.unlocks.regions, area] });
+      expect(wardUsable(TableType.GUILDS, guild, withArea, 'vanilla'), `${guild} with ${area}`).toBe(true);
+    }
+    // The Wiki puts the Heroes' Guild by Burthorpe, but the map files its entrance chunk
+    // under Taverley, so Burthorpe alone leaves its land locked and the Ward off it.
+    const burthorpe = maxed({ regions: [...initialState.unlocks.regions, 'Burthorpe'] });
+    expect(chunkUnlocked(45, 54, burthorpe, 'vanilla')).toBe(false);
+    expect(wardUsable(TableType.GUILDS, "Heroes' Guild", burthorpe, 'vanilla')).toBe(false);
   });
 });

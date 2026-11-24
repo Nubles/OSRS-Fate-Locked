@@ -7,7 +7,7 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
 import { MAP_IMAGE } from '../utils/mapCoords';
-import { buildFilmTimeline, DEFAULT_MAX_STEPS, filmDays, filmFramePlan } from '../utils/runFilm/timeline';
+import { buildFilmTimeline, DEFAULT_MAX_STEPS, filmDays, filmFramePlan, offMapNote } from '../utils/runFilm/timeline';
 import { FilmPainter, GLOW_FRAMES, type FilmFrameExtras, type FilmShape, type FilmSkillView, type FilmSprites } from '../utils/runFilm/painter';
 import { SITE } from './ShareCardCanvas';
 import { gemSmallSrc, skillIconSrc, slotSilhouetteSrc, slotUiSrc } from './osrs/OsrsDashGems';
@@ -395,7 +395,7 @@ export const RunFilmModal: React.FC<{ onClose: () => void }> = ({ onClose }) => 
       {phase.kind === 'failed' && <p role="alert" className="text-sm text-red-400">{phase.message}</p>}
       {timeline.offMap.length > 0 && (
         <p className={`text-xs text-center ${sub}`}>
-          {timeline.offMap.length === 1 ? `${timeline.offMap[0]} is` : `${timeline.offMap.length} Areas are`} underground with no square on the world map, so {timeline.offMap.length === 1 ? 'it shows' : 'they show'} only in the Latest list.
+          {offMapNote(timeline.offMap)}
         </p>
       )}
       <div className="flex flex-wrap justify-center gap-2">

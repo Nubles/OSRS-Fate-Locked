@@ -4,11 +4,11 @@ import { Store } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
 import { MERCHANTS_LIST, MERCHANT_UNLOCK_DETAILS } from '../constants';
 import { chunkContentService } from '../services/ChunkContentService';
-import { shopsByCategory, type CategoryShop } from '../utils/merchantShops';
+import { shopsByCategory } from '../utils/merchantShops';
 import { summarisePlaces, showChunkOnMap } from '../utils/chunkLocations';
 import { WikiLink } from './WikiLink';
 import { useChunkContent } from '../hooks/useChunkContent';
-import { evaluateEntityAccess } from '../utils/entityAccess';
+import { useShopAccess } from '../hooks/useShopAccess';
 
 /**
  * The shop directory under the Merchants grid: every real shop from the chunk
@@ -24,6 +24,7 @@ export const MerchantShopsPanel: React.FC = () => {
 
 
   const grouped = useMemo(() => (ready ? shopsByCategory() : null), [ready]);
+  const accessFor = useShopAccess(ready, unlocks, gameModeId);
 
   if (!grouped) {
     if (error) return <div role="alert" className="mt-6 text-xs text-amber-300">Could not load the shop directory. <button onClick={retry} className="underline">Retry shop directory</button></div>;
@@ -33,7 +34,6 @@ export const MerchantShopsPanel: React.FC = () => {
   }
 
   const categories = MERCHANTS_LIST;
-  const accessFor = (shop: CategoryShop) => shop.locations.map(location => evaluateEntityAccess(shop.name, shop.kind ?? 'shop', location, unlocks, gameModeId));
   const toggle = (c: string) =>
     setOpenCats(prev => {
       const next = new Set(prev);

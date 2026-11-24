@@ -14,6 +14,7 @@ import { itemObtainability } from '../utils/itemObtainability';
 import { MapPin } from './OsrsIcon';
 import { WikiLink } from './WikiLink';
 import { UnlockState } from '../types';
+import { foldedIncludes } from '../utils/textFold';
 
 const emptySlotImg = (slot: string) =>
   `https://oldschool.runescape.wiki/images/${SLOT_CONFIG[slot]?.file ?? 'Globe_icon.png'}`;
@@ -39,7 +40,7 @@ const topBonus = (b: GearBonuses): string => {
 interface GearViewProps { suspendModals?: boolean }
 
 export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => {
-  const { unlocks, loadout, setLoadoutSlot } = useGame();
+  const { unlocks, gameModeId, loadout, setLoadoutSlot } = useGame();
   const equipped = loadout || {};
   const [status, setStatus] = useState<Status>(gearService.ready ? 'ready' : 'loading');
   const [selected, setSelected] = useState<string | null>(null);
@@ -154,6 +155,7 @@ export const GearView: React.FC<GearViewProps> = ({ suspendModals = false }) => 
           currentItemId={equipped[selected]}
           unlockedTier={unlocks.equipment[selected] || 0}
           unlocks={unlocks}
+          gameModeId={gameModeId}
           onClose={() => setSelected(null)}
           onEquip={equip}
           onRemove={() => { setLoadoutSlot(selected, null); setSelected(null); }}
@@ -171,13 +173,14 @@ interface PickerProps {
   currentItemId?: number;
   unlockedTier: number;
   unlocks: UnlockState;
+  gameModeId: string | undefined;
   onClose: () => void;
   onEquip: (item: GearItem) => void;
   onRemove: () => void;
   onRetry: () => void;
 }
 
-const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, onClose, onEquip, onRemove, onRetry }) => {
+const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlockedTier, unlocks, gameModeId, onClose, onEquip, onRemove, onRetry }) => {
   useEscapeKey(onClose, true);
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
@@ -191,8 +194,8 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
 
   const all = status === 'ready' ? gearService.bySlot(slot) : [];
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = (q ? all.filter((i) => i.name.toLowerCase().includes(q)) : all).slice();
+    const q = query.trim();
+    const list = (q ? all.filter((i) => foldedIncludes(i.name, q)) : all).slice();
     // Surface what you can actually equip: equippable first (strongest first),
     // then locked items ordered by how close they are to your unlocked tier.
     return list.sort((a, b) => {
@@ -274,7 +277,7 @@ const GearPicker: React.FC<PickerProps> = ({ slot, status, currentItemId, unlock
                 const tierLabel = `${estimated ? 'Est. ' : ''}T${tier}`;
                 const locked = tier > unlockedTier;
                 const isCurrent = item.id === currentItemId;
-                const obt = contentReady ? itemObtainability(item.name, unlocks) : 'unknown';
+                const obt = contentReady ? itemObtainability(item.name, unlocks, gameModeId) : 'unknown';
                 return (
                   <button
                     key={item.id}

@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { STRATEGY_DATABASE } from './requirements';
+import { STRATEGY_DATABASE, FAIRY_RING_ACCESS } from './requirements';
+import { getActivityReq } from './activityRequirements';
 import { QUEST_DATA } from './questData';
 import { SKILLS_LIST, REGIONS_LIST } from './items';
 import { createFreshState } from '../context/GameContext';
 import { analyzeRequirement } from '../components/StrategyGuide';
 import { calculateGoalProgress } from '../utils/goalLogic';
 import { buildGoalRoute } from '../utils/goalRoute';
+import { AREA_ENTRY_ROUTES } from './areaAccess';
 
 /**
  * Wiki facts for the second half of the Strategy Guide / Goal Tracker table
@@ -73,6 +75,9 @@ describe('requirements part B: regions and sources', () => {
     expect(req.description).toMatch(/Lithkren/);
     expect(req.description).not.toMatch(/Barrows/i);
   });
+  it('ferocious gloves need 95 Slayer: hydra leather drops only from the Alchemical Hydra (Wiki: Hydra leather, Alchemical Hydra)', () => {
+    expect(entry('Ferocious Gloves').skills).toEqual({ Slayer: 95 });
+  });
 });
 
 describe('requirements part B: shop stock, drops and removed systems', () => {
@@ -89,7 +94,8 @@ describe('requirements part B: shop stock, drops and removed systems', () => {
     ['Granite Body', /95,000 coins/, /BA points|drop from/i],
     ['Lovakite Ore', /Lovakite bars/, /Favou?r|Dynamite/i],
     ['Volcanic Sulphur', /Dynamite/, /Favou?r/i],
-    ['Miscellania Dungeon', /Medium Clues/, /Hard/],
+    // Deep pass: the Giant Sea Snake cannot be fought after Royal Trouble; the young drop medium clues (Wiki: Sea Snake Young).
+    ['Miscellania Dungeon', /Sea snake young \(Medium Clues\)/, /Hard|Giant Sea Snake \(/],
     ["Nurmof's Pickaxe Shop", /Rune Pickaxe/, /Adamant/],
     ['Mount Karuulm Weapon Shop', /Warhammers/, /Hastae/],
     ['Zogre Bones', /Prayer/, /Crushed Nest|\?/],
@@ -169,5 +175,193 @@ describe("requirements part B: Champions' Guild 32 Quest Points (Wiki: Champions
     // The Goal Tracker's list names the rule once, not once per source.
     expect(calculateGoalProgress(entry(key), everythingButQuests(), 'vanilla').missing.filter(line => /Quest Points/.test(line)))
       .toEqual(['32 Quest Points']);
+  });
+});
+
+describe('requirements part B, deep pass: started quests and shop stock', () => {
+  // Wiki 'Fairy ring' (rev 15397230): Fairytale I completed, Fairytale II only started
+  // (until the Fairy Godfather grants permission). The rings, and the places reached only by ring.
+  const FAIRY_RING_ENTRIES = [
+    'Enchanted Valley', 'Gorak Plane', 'Abyssal Area (Fairy Ring)',
+    'Fairy Ring DJR (Chasm)', 'Fairy Ring BJS (Zulrah)', 'Fairy Ring DKS (Polar)', 'Fairy Ring CIQ (Yanille)',
+    'Fairy Ring ALP (Lighthouse)', 'Fairy Ring CKS (Canifis)', 'Fairy Ring DKP (Karambwan)', 'Fairy Ring BIP (Poly)',
+    'Fairy Ring CIR (Mount K)', 'Fairy Ring BLP (TzHaar)',
+  ];
+  it('no entry but the quest itself asks for Fairytale II to be completed', () => {
+    const offenders = Object.entries(STRATEGY_DATABASE)
+      .filter(([key, req]) => key !== 'Fairytale II - Cure a Queen' && (req.quests ?? []).includes('Fairytale II - Cure a Queen'))
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+  it('every fairy-ring entry asks for Fairytale I and the started-Fairytale II check, worded as the Fairy Rings rule', () => {
+    expect(getActivityReq('Fairy Rings')?.manualRequirements).toEqual([FAIRY_RING_ACCESS]);
+    const ringKeyed = Object.entries(STRATEGY_DATABASE).filter(([, req]) => req.needsKey?.includes('Fairy Rings')).map(([key]) => key);
+    for (const key of new Set([...FAIRY_RING_ENTRIES, ...ringKeyed])) {
+      const req = entry(key);
+      expect(req.quests, key).toContain('Fairytale I - Growing Pains');
+      expect(req.questProgress, key).toContainEqual({ quest: 'Fairytale II - Cure a Queen', label: FAIRY_RING_ACCESS });
+      expect(req.manualRequirements ?? [], key).not.toContain(FAIRY_RING_ACCESS);
+    }
+    expect(entry('Fairy Ring BJS (Zulrah)').quests).toContain('Regicide');
+  });
+  it('a player with Fairytale I done and Fairytale II started is not blocked on a quest', () => {
+    const u = createFreshState().unlocks;
+    u.quests = ['Fairytale I - Growing Pains'];
+    for (const key of FAIRY_RING_ENTRIES.filter(k => k !== 'Fairy Ring BJS (Zulrah)')) {
+      const result = analyzeRequirement(entry(key), u, 'vanilla');
+      expect(result.missingQuests, key).toEqual([]);
+      expect(result.missingChecks, key).toContain(FAIRY_RING_ACCESS);
+    }
+  });
+  // Completing Fairytale II proves the started check, so the cards can be Ready again.
+  it('a player who has completed Fairytale II has no fairy ring check left', () => {
+    const u = createFreshState().unlocks;
+    u.quests = ['Fairytale I - Growing Pains', 'Fairytale II - Cure a Queen', 'Regicide'];
+    u.regions = [...REGIONS_LIST];
+    u.mobility = ['Fairy Rings'];
+    u.minigames = ['Enchanted Valley', 'Gorak Plane', 'Abyssal Area'];
+    u.skills = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10]));
+    u.levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99]));
+    for (const key of FAIRY_RING_ENTRIES) {
+      const result = analyzeRequirement(entry(key), u, 'vanilla');
+      expect(result.missingChecks, key).toEqual([]);
+      expect(result.isFullyPlayable, key).toBe(true);
+    }
+  });
+  it('Jatizso and Neitiznot shops need The Fremennik Trials and a started Fremennik Isles (Wiki: Jatizso, Neitiznot, Mord Gunnars)', () => {
+    for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
+      expect(entry(key).quests, key).toEqual(['The Fremennik Trials']);
+      expect(entry(key).questProgress, key).toEqual([{ quest: 'The Fremennik Isles', label: 'Confirm you have started The Fremennik Isles' }]);
+      expect(entry(key).manualRequirements, key).toBeUndefined();
+    }
+  });
+  it('the started Fremennik Isles check stays until the quest is completed', () => {
+    const u = createFreshState().unlocks;
+    u.quests = ['The Fremennik Trials'];
+    for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
+      expect(analyzeRequirement(entry(key), u, 'vanilla').missingChecks, key).toContain('Confirm you have started The Fremennik Isles');
+    }
+    u.quests = ['The Fremennik Trials', 'The Fremennik Isles'];
+    for (const key of ['Jatizso Ore Shop', 'Neitiznot Supplies']) {
+      expect(analyzeRequirement(entry(key), u, 'vanilla').missingChecks, key).not.toContain('Confirm you have started The Fremennik Isles');
+    }
+  });
+  it('Dragonfire Shield (Smithing) needs 90 Smithing and Dragon Slayer I started, not completed (Wiki: Dragonfire shield, Anti-dragon shield)', () => {
+    const req = entry('Dragonfire Shield (Smithing)');
+    expect(req.skills).toEqual({ Smithing: 90 });
+    expect(req.quests ?? []).toEqual([]);
+    expect(req.questProgress).toEqual([{ quest: 'Dragon Slayer I', label: expect.stringMatching(/started Dragon Slayer I/) }]);
+    expect(req.manualRequirements).toBeUndefined();
+    expect(req.description).toMatch(/Oziach 1,250,000 coins after Dragon Slayer I/);
+  });
+  it('Dragonfire Shield (Smithing) has no check left once Dragon Slayer I is completed', () => {
+    const u = createFreshState().unlocks;
+    u.regions = [...REGIONS_LIST];
+    u.merchants = ['Dragonfire Shield'];
+    u.skills.Smithing = 10;
+    u.levels = { ...u.levels, Smithing: 90 };
+    const started = analyzeRequirement(entry('Dragonfire Shield (Smithing)'), u, 'vanilla');
+    expect(started.missingChecks.join(' ')).toMatch(/started Dragon Slayer I/);
+    u.quests = ['Dragon Slayer I'];
+    const done = analyzeRequirement(entry('Dragonfire Shield (Smithing)'), u, 'vanilla');
+    expect(done.missingChecks).toEqual([]);
+    expect(done.isFullyPlayable).toBe(true);
+    // The pinned goal follows the card: it turns green once the quest is done.
+    expect(calculateGoalProgress(entry('Dragonfire Shield (Smithing)'), u, 'vanilla').percentage).toBe(100);
+  });
+  const stock: [string, RegExp, RegExp][] = [
+    // [entry, must match, must not match]. Wiki pages: Tony's Pizza Bases, Blair's Armour, Shayzien armour,
+    // Hring Hring, Neitiznot Supplies, Grand Tree Groceries (store lines checked 23 Nov 2026).
+    // Ore store: Mithril ore and Adamantite ore have stock=0, and Ironmen cannot buy overstock (Wiki: Ironman Mode).
+    ['Wilderness Food Shop', /pizza bases/, /Stew/i],
+    ['Shayzien Armourer', /Combat Ring/, /Anti-poison/i],
+    ['Jatizso Ore Shop', /coal/i, /Rune Ore|up to adamantite/i],
+    ['Neitiznot Supplies', /Thread/, /Rope|Yak/i],
+    ['Grand Tree Groceries', /cocktail shaker/, /Gin\/Vodka|Herblore/],
+  ];
+  it.each(stock)('%s description matches the shop stock', (key, yes, no) => {
+    const { description } = entry(key);
+    expect(description).toMatch(yes);
+    expect(description).not.toMatch(no);
+  });
+});
+
+describe('requirements part B, deep pass 2: access the content needs', () => {
+  const allAccess = () => {
+    const u = createFreshState().unlocks;
+    u.regions = [...REGIONS_LIST];
+    u.quests = Object.keys(QUEST_DATA);
+    for (const skill of SKILLS_LIST) u.skills[skill] = 10;
+    u.levels = Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99]));
+    u.merchants = ['Staff Shops', 'Stonemasons'];
+    u.minigames = ['Granite Boots'];
+    u.farming = ['Harmony Island', 'Herb'];
+    u.mobility = ['Jewelry Teleports'];
+    u.diaries = ['Morytania Elite'];
+    return u;
+  };
+  const without = (quest: string) => { const u = allAccess(); u.quests = u.quests.filter((q: string) => q !== quest); return u; };
+
+  it('Granite Boots needs Bone Voyage: the boots drop only from the Fossil Island wyverns (Wiki: Granite boots, Fossil Island)', () => {
+    expect(entry('Granite Boots').quests).toEqual(['Bone Voyage']);
+    expect(analyzeRequirement(entry('Granite Boots'), without('Bone Voyage'), 'vanilla').missingQuests).toEqual(['Bone Voyage']);
+  });
+  it('Mage Arena Staff Shop needs Mage Arena I; the god staves shop opens after the miniquest (Wiki: Mage Arena Staffs.)', () => {
+    expect(entry('Mage Arena Staff Shop').quests).toEqual(['Mage Arena I']);
+    const blocked = analyzeRequirement(entry('Mage Arena Staff Shop'), without('Mage Arena I'), 'vanilla');
+    expect(blocked.isFullyPlayable).toBe(false);
+    expect(blocked.missingQuests).toEqual(['Mage Arena I']);
+    // Lundail's shop in the bank room has no gate.
+    expect(entry("Lundail's Rune Shop").quests ?? []).toEqual([]);
+  });
+  it('Stonemason (Keldagrim) asks for The Giant Dwarf started until it is completed (Wiki: Fremennik Diary, Easy task 5)', () => {
+    expect(entry('Stonemason').quests ?? []).toEqual([]);
+    expect(entry('Stonemason').questProgress).toEqual([{ quest: 'The Giant Dwarf', label: expect.stringMatching(/started The Giant Dwarf/) }]);
+    expect(analyzeRequirement(entry('Stonemason'), without('The Giant Dwarf'), 'vanilla').missingChecks.join(' ')).toMatch(/started The Giant Dwarf/);
+    expect(analyzeRequirement(entry('Stonemason'), allAccess(), 'vanilla').isFullyPlayable).toBe(true);
+  });
+  it('Harmony Island (Herb Patch) needs The Great Brain Robbery started, as the area rule does, and the Elite Morytania Diary (Wiki: Harmony Island)', () => {
+    const req = entry('Harmony Island (Herb Patch)');
+    expect(req.quests ?? []).not.toContain('The Great Brain Robbery');
+    expect(req.diaries).toEqual(['Morytania Elite']);
+    const areaRule = AREA_ENTRY_ROUTES['Harmony Island'][0].questProgress;
+    expect(req.questProgress).toEqual(areaRule);
+    const started = analyzeRequirement(req, without('The Great Brain Robbery'), 'vanilla');
+    expect(started.missingQuests).toEqual([]);
+    expect(started.missingChecks).toEqual([areaRule![0].label]);
+    const done = analyzeRequirement(req, allAccess(), 'vanilla');
+    expect(done.missingChecks).toEqual([]);
+    expect(done.isFullyPlayable).toBe(true);
+  });
+
+  // Wiki 'Lvl-1 Enchant' 7, 'Lvl-2 Enchant' 27, 'Lvl-5 Enchant' 68 (sapphire; emerald and jade; dragonstone).
+  const JEWELLERY: [string, Record<string, number>][] = [
+    ['Games Necklace (Wintertodt)', { Crafting: 22, Magic: 7 }],
+    ['Games Necklace (Barb Assault)', { Crafting: 22, Magic: 7 }],
+    ['Dueling Ring (Ferox)', { Crafting: 27, Magic: 27 }],
+    ['Dueling Ring (Castle Wars)', { Crafting: 27, Magic: 27 }],
+    ['Necklace of Passage', { Crafting: 25, Magic: 27 }],
+    ['Skills Necklace', { Crafting: 72, Magic: 68 }],
+    ['Combat Bracelet', { Crafting: 74, Magic: 68 }],
+    ['Ring of Wealth (Miscellania)', { Crafting: 55, Magic: 68 }],
+  ];
+  it.each(JEWELLERY)('%s asks for the enchant spell as well as the Crafting level', (key, skills) => {
+    expect(entry(key).skills).toEqual(skills);
+  });
+  it('every Jewelry Teleports entry that asks for Crafting also asks for Magic', () => {
+    const offenders = Object.entries(STRATEGY_DATABASE)
+      .filter(([, req]) => req.needsKey?.includes('Jewelry Teleports') && req.skills.Crafting && !req.skills.Magic)
+      .map(([key]) => key);
+    expect(offenders).toEqual([]);
+  });
+  it('the ring of wealth is charged only at the Fountain of Rune; the skills necklace and combat bracelet name their recharge (Wiki: Ring of wealth, Skills necklace, Combat bracelet)', () => {
+    expect(entry('Ring of Wealth (Miscellania)').regions).toContain('Fountain of Rune');
+    expect(entry('Ring of Wealth (Miscellania)').description).toMatch(/Fountain of Rune/);
+    const u = allAccess();
+    u.regions = u.regions.filter((r: string) => r !== 'Fountain of Rune');
+    expect(analyzeRequirement(entry('Ring of Wealth (Miscellania)'), u, 'vanilla').missingRegions).toEqual(['Fountain of Rune']);
+    for (const key of ['Skills Necklace', 'Combat Bracelet']) {
+      expect(entry(key).description, key).toMatch(/Legends' Guild totem.*Myths' Guild fountain.*Recharge Dragonstone/);
+    }
   });
 });

@@ -60,13 +60,13 @@
         },
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Brutus?oldid=15263932",
-          "revision": "15263932"
+          "url": "https://oldschool.runescape.wiki/w/Brutus?oldid=15406730",
+          "revision": "15406730"
         },
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15214877",
-          "revision": "15214877"
+          "url": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15384017",
+          "revision": "15384017"
         },
         {
           "kind": "coordinate",
@@ -75,7 +75,7 @@
           "revision": "2644"
         }
       ],
-      "note": "The quest enters Brutus' instance through the cow field's north-eastern two-tile gate at 3262-3263,3294. One physical gate emits one unlock row anchored at 3263,3294 in chunk 12851; completing The Ides of Milk permanently unlocks repeatable Brutus access, while the Demonic variant additionally needs Desert Treasure II and an abyssal potato.",
+      "note": "The quest enters Brutus' instance through the cow field's north-eastern two-tile gate at 3262-3263,3294. One physical gate emits one unlock row anchored at 3263,3294 in chunk 12851; completing The Ides of Milk permanently unlocks repeatable Brutus access, which is all the gate asks. The Demonic variant additionally needs Desert Treasure II and an abyssal potato; that is Demonic Brutus' own requirement in the arena (requirementRewrites in chunk-content-overrides.json), not the gate's.",
       "mappingKind": "single-entrance",
       "entrances": [
         {
@@ -85,8 +85,7 @@
           "label": "North-eastern Lumbridge cow-field gate to Brutus' Arena",
           "wikiPage": "The_Ides_of_Milk",
           "requirements": [
-            "The Ides of Milk completed for repeatable Brutus access",
-            "Desert Treasure II - The Fallen Empire and an abyssal potato for Demonic Brutus"
+            "The Ides of Milk completed"
           ]
         }
       ]
@@ -105,25 +104,27 @@
           "y": 3398,
           "label": "Taverley route to Cerberus' Lair",
           "wikiPage": "Cerberus'_Lair",
-          "requirements": [
-            "91 Slayer",
-            "Hellhound or Cerberus Slayer task"
-          ]
+          "requirements": []
         }
       ],
       "sources": [
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Cerberus'_Lair?oldid=15221123",
-          "revision": "15221123"
+          "url": "https://oldschool.runescape.wiki/w/Cerberus'_Lair?oldid=15347785",
+          "revision": "15347785"
         },
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Taverley_Dungeon?oldid=15259518",
-          "revision": "15259518"
+          "url": "https://oldschool.runescape.wiki/w/Taverley_Dungeon?oldid=15405402",
+          "revision": "15405402"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Cerberus?oldid=15397004",
+          "revision": "15397004"
         }
       ],
-      "note": "Cerberus' Lair is reached through Taverley Dungeon; the independent overworld route begins at its pinned entrance in chunk 11573."
+      "note": "Cerberus' Lair is reached through Taverley Dungeon; the independent overworld route begins at its pinned entrance in chunk 11573. Entry needs no task since 10 March 2016; the 91 Slayer and the hellhound or Cerberus task are for fighting Cerberus, which the boss carries itself."
     },
     {
       "name": "Chasm of Fire",
@@ -649,20 +650,17 @@
           "y": 3611,
           "label": "Entrance to Kraken Cove",
           "wikiPage": "Kraken_Cove",
-          "requirements": [
-            "87 Slayer",
-            "Cave kraken or Kraken Slayer task"
-          ]
+          "requirements": []
         }
       ],
       "sources": [
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Kraken_Cove?oldid=15275452",
-          "revision": "15275452"
+          "url": "https://oldschool.runescape.wiki/w/Kraken_Cove?oldid=15395547",
+          "revision": "15395547"
         }
       ],
-      "note": "The cove's surface entrance is pinned at 2278,3611 in canonical chunk 9016."
+      "note": "The cove's surface entrance is pinned at 2278,3611 in canonical chunk 9016. Players may enter without a Slayer task; the 87 Slayer and the task are for killing what is inside, which the monsters carry themselves."
     },
     {
       "name": "Lithkren Vault",
@@ -1022,18 +1020,24 @@
           "label": "Entrance to Shellbane Gryphon Cave",
           "wikiPage": "Shellbane_Gryphon_Cave",
           "requirements": [
-            "The Curse of Arrav or elite clue access"
+            "Troubled Tortugans Complete the quest",
+            "Shellbane Gryphon Cave: a gryphon Slayer task or the elite clue to kill the shellbane gryphon needs confirmation"
           ]
         }
       ],
       "sources": [
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon_Cave?oldid=15212238",
-          "revision": "15212238"
+          "url": "https://oldschool.runescape.wiki/w/Shellbane_Gryphon_Cave?oldid=15388273",
+          "revision": "15388273"
+        },
+        {
+          "kind": "wiki",
+          "url": "https://oldschool.runescape.wiki/w/Shellbane_gryphon?oldid=15387213",
+          "revision": "15387213"
         }
       ],
-      "note": "The cave entrance is explicitly pinned at 3176,2477 in canonical chunk 12582."
+      "note": "The cave entrance is explicitly pinned at 3176,2477 in canonical chunk 12582. Elder Nama lets players in only with an appropriate Slayer task or an elite clue to kill the shellbane gryphon (cave page); the boss needs 51 Slayer and Troubled Tortugans to kill (boss page)."
     },
     {
       "name": "Slayer Tower Basement",
@@ -1127,10 +1131,7 @@
           "y": 3061,
           "label": "Entrance to Smoke Devil Dungeon",
           "wikiPage": "Smoke_Devil_Dungeon",
-          "requirements": [
-            "93 Slayer",
-            "Smoke devil Slayer task"
-          ]
+          "requirements": []
         }
       ],
       "sources": [
@@ -1140,7 +1141,7 @@
           "revision": "15252276"
         }
       ],
-      "note": "The task-gated dungeon entrance is mapped at 2412,3061 in canonical chunk 9519."
+      "note": "The dungeon entrance is mapped at 2412,3061 in canonical chunk 9519. Players may enter without a Slayer task; the 93 Slayer and the task are for killing the smoke devils, which carry them themselves."
     },
     {
       "name": "Sourhog Cave",

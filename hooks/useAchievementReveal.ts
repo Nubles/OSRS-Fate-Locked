@@ -64,9 +64,11 @@ export function useAchievementReveal(run: AchievementRun, { claimed, settle, rep
   const idRef = useRef(0);
   const [newly, setNewly] = useState<{ id: number; achievements: Achievement[] } | null>(null);
   const { unlocks, history, gameModeId, customMode, petsClaimed } = run;
+  // Settled ids stay earned (as in the Achievements window), so one lost to a
+  // Sacrifice and earned back is not announced twice. Settling skips them.
   const payouts = useMemo(
-    () => catalog?.achievementPayouts({ unlocks, history, gameModeId, customMode, petsClaimed }) ?? null,
-    [catalog, unlocks, history, gameModeId, customMode, petsClaimed],
+    () => catalog?.achievementPayouts({ unlocks, history, gameModeId, customMode, petsClaimed, claimed }) ?? null,
+    [catalog, unlocks, history, gameModeId, customMode, petsClaimed, claimed],
   );
 
   useEffect(() => {

@@ -21,6 +21,7 @@ import { currentQuestPoints, evaluateQuestEligibility, meetsSkillRequirement } f
 import { getActivityReq } from '../data/activityRequirements';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { effectiveSkillLevel } from './slayerReach';
+import { pendingQuestProgress } from '../data/questProgress';
 
 /** The ids a Key can roll in each table. Any other id in a table needs no Key of its own. */
 const ROOT_UNLOCKS: Partial<Record<TableType, Set<string>>> = {
@@ -59,6 +60,42 @@ const hasRootUnlock = (table: TableType, id: string, unlocks: any): boolean => {
     }
 };
 
+/** The keyed table that rolls this name: the entry's own table first, then any other. */
+const keyedTableOf = (name: string, preferred: TableType): TableType | undefined =>
+    KEYED_TABLES.includes(preferred) && ROOT_UNLOCKS[preferred]?.has(name) ? preferred
+        : KEYED_TABLES.find(table => ROOT_UNLOCKS[table]?.has(name));
+
+export interface RequirementKey {
+    /** The ids that would do: one for the entry's own Key, any one of them for needsKey. */
+    options: { table: TableType; id: string }[];
+    met: boolean;
+}
+
+/**
+ * The Keys a Strategy Guide entry needs, each with the table that rolls it: its
+ * own id's Key (Mining Guild under Guilds; the shop 'Soda Ash (Charter Ships)'
+ * sits under Merchants but is reached with the Mobility unlock Charter Ships)
+ * and the extra Keys it names in needsKey. The goal card and the goal route
+ * both read this, so they ask for the same Keys.
+ */
+export const requirementKeys = (req: ContentRequirement, unlocks: any): { own: RequirementKey | null; extra: RequirementKey | null } => {
+    const noKey = req.category === TableType.QUESTS || req.category === TableType.AGILITY_COURSES || req.category === TableType.DIARIES;
+    // An id another table's Keys roll needs that Key; any other id in a table needs no Key of its own.
+    const ownTable = noKey ? undefined
+        : ROOT_UNLOCKS[req.category]?.has(req.id) ? req.category
+            : KEYED_TABLES.find(table => table !== req.category && ROOT_UNLOCKS[table]?.has(req.id));
+    const own = ownTable && KEYED_TABLES.includes(ownTable)
+        ? { options: [{ table: ownTable, id: req.id }], met: hasRootUnlock(ownTable, req.id, unlocks) } : null;
+    // A Key the entry needs besides its id's own (any one of the names will do).
+    const extraOptions = (req.needsKey ?? []).flatMap(name => {
+        const table = keyedTableOf(name, req.category);
+        return table === undefined ? [] : [{ table, id: name }];
+    });
+    const extra = req.needsKey?.length
+        ? { options: extraOptions, met: extraOptions.some(option => hasRootUnlock(option.table, option.id, unlocks)) } : null;
+    return { own, extra };
+};
+
 export const alternativeRequirementText = (
     alternative: NonNullable<ContentRequirement['alternatives']>[number],
 ): string => 'One of: ' + alternative.routes.map(route => route.label).join(' or ');
@@ -84,7 +121,8 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
     const missingAlternatives = req.alternatives ?? [];
     const activityRequirement = getActivityReq(req.activity ?? req.id);
     const readiness = canonical || req.category === TableType.DIARIES || !activityRequirement ? null : evaluateActivityReadiness(true, activityRequirement, unlocks, gameModeId);
-    const manualChecks = req.manualRequirements ?? [];
+    // A started quest stays a check until the quest is completed, which proves it.
+    const manualChecks = [...(req.manualRequirements ?? []), ...pendingQuestProgress(req.questProgress, unlocks.quests)];
     const chunkChecks = partlyHeld.map(area => `Check it is in your chunks: ${area}`);
     const missingDiaries = (req.diaries ?? []).filter(d => !unlocks.diaries.includes(d));
     // Quest entries take their points from the canonical journal above.
@@ -99,9 +137,10 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         ...((canonical as { manualChecks?: string[] } | null)?.manualChecks ?? []),
         ...(readiness?.status === 'NEEDS_CONFIRMATION' ? readiness.checks : []),
     ];
+    const activityBlockers = readiness?.status === 'NOT_READY' ? readiness.blockers : [];
     const otherBlockers = [
         ...(canonical?.blockers.filter(b => b.kind === 'combat' || b.kind === 'alternative' || b.kind === 'equipment').map(b => b.label) ?? []),
-        ...(readiness?.status === 'NOT_READY' ? readiness.blockers.map(b => b.label) : []),
+        ...activityBlockers.map(b => b.label),
     ];
     const missingChecks = [...new Set([
         ...manualChecks,
@@ -114,15 +153,13 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         ...otherBlockers,
     ])];
 
-    const isCategoryUnlocked = (() => {
-        if (req.category === TableType.QUESTS || req.category === TableType.AGILITY_COURSES || req.category === TableType.DIARIES) return true;
-        if (ROOT_UNLOCKS[req.category]?.has(req.id)) return hasRootUnlock(req.category, req.id, unlocks);
-        // An id that is another table's root needs that Key: the shop
-        // 'Soda Ash (Charter Ships)' sits under Merchants but is reached with
-        // the Mobility unlock Charter Ships.
-        const otherTable = KEYED_TABLES.find(table => table !== req.category && ROOT_UNLOCKS[table]?.has(req.id));
-        return otherTable ? hasRootUnlock(otherTable, req.id, unlocks) : true;
-    })();
+    const keys = requirementKeys(req, unlocks);
+    /** The Keys still to roll, worded for a goal card ("Fairy Rings", "Temple Trekking or Forestry"). */
+    const missingUnlocks = [
+        ...(keys.own && !keys.own.met ? [req.id] : []),
+        ...(keys.extra && !keys.extra.met ? [req.needsKey!.join(' or ')] : []),
+    ];
+    const isCategoryUnlocked = missingUnlocks.length === 0;
 
     const totalReqs = req.regions.length + Object.keys(req.skills).length
         + (req.quests?.length || 0) + (req.alternatives?.length || 0) + (req.diaries?.length || 0) + missingChecks.length + 1;
@@ -143,9 +180,10 @@ export const analyzeRequirement = (req: ContentRequirement, unlocks: any, gameMo
         missingQuests,
         missingAlternatives,
         isCategoryUnlocked,
+        missingUnlocks,
         completionPercent,
         metReqs,
         /** The parts missingChecks is built from, for callers that word them their own way. */
-        parts: { manualChecks, chunkChecks, missingDiaries, questPoints, missingAccessRoute, confirmChecks, otherBlockers },
+        parts: { manualChecks, chunkChecks, missingDiaries, questPoints, missingAccessRoute, confirmChecks, otherBlockers, activityBlockers, keys },
     };
 };

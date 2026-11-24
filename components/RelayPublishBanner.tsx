@@ -7,12 +7,13 @@ import { NOT_SAVING_PUBLISH_MESSAGE } from './OnlineSyncDriver';
 export function relayFailureReason(lastError: string | null): string {
   const error = lastError ?? '';
   const status = Number(/^relay (\d{3})$/.exec(error)?.[1]);
+  // RuneLite shows Re-pair tracker… while its pairing works, and Connect
+  // tracker once it has none (not paired, or the code was disconnected).
+  const repair = " To pair this browser again, press Re-pair tracker… in RuneLite's Connection & backup, or Connect tracker if RuneLite shows that instead.";
   if (status === 403) {
-    return 'The relay refused this connection; another browser may have taken it over. Press Connect tracker in RuneLite to pair this browser again.';
+    return `The relay refused this connection; another browser may have taken it over.${repair}`;
   }
-  if (status === 400) {
-    return 'The relay refused this connection. Press Connect tracker in RuneLite to pair this browser again.';
-  }
+  if (status === 400) return `The relay refused this connection.${repair}`;
   if (status === 413) return 'Your rules were too large for the relay to accept.';
   if (status === 429) return 'The relay is busy right now.';
   if (status >= 500) return 'The relay is having trouble right now.';

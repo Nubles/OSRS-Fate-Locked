@@ -17,6 +17,8 @@ import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { enforcedQuestAreas } from './questGeographyDisplay';
 import { getActivityReq } from '../data/activityRequirements';
 import { WARRIORS_GUILD_ENTRY_LABEL, meetsWarriorsGuildEntry } from './activityReadiness';
+import { analyzeRequirement } from './strategyRequirement';
+import { resolvePinnedGoal } from './pinnedGoal';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -93,6 +95,10 @@ export interface GoalRoute {
   slayerUnlocks?: RouteItem[];
   alternatives: RouteAlternative[];
   manualChecks?: RouteItem[];
+  /** A Strategy Guide entry's own Keys (its guild, shop or minigame; any one of a needsKey list). */
+  keys?: RouteItem[];
+  /** What else the entry's guide card says is not ready (an activity's own quest, level or area). */
+  blockers?: RouteItem[];
   diaries: RouteItem[];
   questPoints?: { need: number; have: number; met: boolean };
   sources: RouteSource[];
@@ -160,7 +166,9 @@ export function expandQuestChain(seeds: string[]): string[] {
   return order;
 }
 
-export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute | null {
+export function buildGoalRoute(pinnedId: string, gameState: GameState): GoalRoute | null {
+  // An older save may hold a quest pinned by its name; it routes as that quest.
+  const goalId = resolvePinnedGoal(pinnedId);
   const unlocks = gameState.unlocks;
   const gameModeId = gameState.gameModeId;
   const diary = DIARY_DATA[goalId];
@@ -490,6 +498,51 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     });
   }
 
+  // The guide card's access route, its Keys, the checks only the player can confirm and what
+  // else the card says is not ready (utils/strategyRequirement.ts), so the route never reads
+  // 100% while the card is not ready.
+  let manualChecks: RouteItem[] | undefined;
+  let keys: RouteItem[] | undefined;
+  let blockers: RouteItem[] | undefined;
+  const keyDependencies: TableDependency[] = [];
+  if (kind === 'strategy') {
+    const { parts } = analyzeRequirement(req, unlocks, gameModeId);
+    if (req.accessRoutes?.length) {
+      alternatives.push({
+        name: 'One of: ' + req.accessRoutes.map(route => route.label).join(' or '),
+        met: !parts.missingAccessRoute,
+        routes: req.accessRoutes.map(route => ({
+          name: route.label,
+          met: (route.diaries ?? []).every(d => unlocks.diaries.includes(d))
+            && Object.entries(route.skills ?? {}).every(([skill, level]) => meetsSkillRequirement(unlocks, skill, level)),
+        })),
+      });
+    }
+    const entryKeys = [parts.keys.own, parts.keys.extra].filter(key => key !== null);
+    if (entryKeys.length) {
+      keys = entryKeys.map(key => ({
+        name: key.options.map(option => option.id).join(' or '),
+        met: key.met,
+        detail: [...new Set(key.options.map(option => option.table))].join(' or '),
+      }));
+    }
+    for (const key of entryKeys) if (!key.met) keyDependencies.push(...key.options);
+    const checks = [...new Set([...parts.manualChecks, ...parts.confirmChecks, ...parts.chunkChecks])];
+    if (checks.length) manualChecks = checks.map(name => ({ name, met: false }));
+    // The Quest Point and Warriors' Guild door rules are already steps above; so are the
+    // quests, levels and areas this route lists itself.
+    const shown = (label: string) => quests.some(q => q.name === label)
+      || regions.some(r => r.name === label)
+      || skills.some(s => {
+        const level = label.startsWith(s.skill + ' ') ? Number(label.slice(s.skill.length + 1)) : NaN;
+        return level <= s.needLevel;
+      });
+    const others = parts.activityBlockers
+      .filter(b => b.kind !== 'questPoints' && b.label !== WARRIORS_GUILD_ENTRY_LABEL && !shown(b.label))
+      .map(b => b.label);
+    if (others.length) blockers = [...new Set(others)].map(name => ({ name, met: false }));
+  }
+
   const haveQp = unlocks.quests.reduce((acc, id) => acc + (QUEST_DATA[id]?.points ?? 0), 0);
   const questPoints = qpNeed > 0 ? { need: qpNeed, have: haveQp, met: haveQp >= qpNeed } : undefined;
 
@@ -518,11 +571,13 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
   dependencies.push(...tableDependenciesForSteps(
     canonicalQuestPlan?.alternativeSteps.flatMap(step => step.routes.flatMap(route => route.blockers)) ?? [],
   ));
+  dependencies.push(...keyDependencies);
   const tables = suggestTables(dependencies, unlocks, gameModeId, gameState.customMode);
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const items: { met: boolean }[] = [
-    ...quests, ...regions, ...skills, ...equipment, ...alternatives, ...diaries,
+    ...quests, ...regions, ...skills, ...equipment, ...alternatives, ...diaries, ...(manualChecks ?? []),
+    ...(keys ?? []), ...(blockers ?? []),
   ];
   if (questPoints) items.push({ met: questPoints.met });
   const total = Math.max(1, items.length);
@@ -530,7 +585,7 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   return {
     goalId, kind, description: req.description,
-    quests, regions, skills, equipment, alternatives, diaries, questPoints,
+    quests, regions, skills, equipment, alternatives, diaries, questPoints, manualChecks, keys, blockers,
     sources: [], tables,
     totalSteps: total, completedSteps: done,
     percentage: Math.round((done / total) * 100),

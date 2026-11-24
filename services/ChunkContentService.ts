@@ -1,4 +1,4 @@
-import { locateSlayerTask } from '../utils/slayerTaskLocations';
+import { locateSlayerTask, gameTaskName } from '../utils/slayerTaskLocations';
 /**
  * ChunkContentService — what's actually in each map chunk.
  *
@@ -18,6 +18,7 @@ import type { InteriorRecord } from '../utils/interiorEntry';
 import { classifyShop } from '../utils/shopClassification';
 import { loadRunRoutes } from '../utils/chunkEntry';
 import { loadWalkSections } from '../utils/walkSections';
+import { foldText, foldedMatcher } from '../utils/textFold';
 
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
@@ -72,6 +73,10 @@ export interface SlayerBossOption {
   monsters: string[];
   /** The Slayer level the master needs before assigning this boss. */
   slayer?: number;
+  /** Quests, levels, and levels any one of which is enough, the master needs too (Boss Slayer table). */
+  quests?: string[];
+  skills?: Record<string, number>;
+  anySkill?: Record<string, number>;
 }
 export type SlayerMasters = Record<string, Record<string, SlayerAssignment>>;
 
@@ -383,6 +388,17 @@ export class ChunkContentService {
       }));
   }
 
+  /**
+   * The chunks an interior is entered from, by its key ("Brimhaven Dungeon#Section 4",
+   * "11674") or, when no key matches, by its name ("Kalphite Lair"). [] when unknown.
+   */
+  interiorEntranceChunks(keyOrName: string): { cx: number; cy: number }[] {
+    const interiors = this.doc?.interiors ?? {};
+    const matches = interiors[keyOrName] ? [interiors[keyOrName]] : Object.values(interiors).filter(entry => entry.name === keyOrName);
+    const ids = [...new Set(matches.flatMap(entry => entry.entrances.map(route => route.chunkId)))].filter(id => /^\d+$/.test(id));
+    return ids.map(id => ({ cx: Math.floor(Number(id) / 256), cy: Number(id) % 256 }));
+  }
+
   entrancesFor(cx: number, cy: number): ChunkEntrance[] {
     return (this.doc?.entrances?.[String(cx * 256 + cy)] ?? [])
       .map(entrance => ({ ...entrance, requirements: [...entrance.requirements] }))
@@ -692,11 +708,15 @@ export class ChunkContentService {
     const out: Record<string, { cx: number; cy: number }[]> = {};
     const entities = this.entitiesOfKind('monster');
     for (const [master, tasks] of Object.entries(this.slayerMasters())) for (const [task, assignment] of Object.entries(tasks)) {
-      const norm = task.toLowerCase().trim().replace(/s$/, '');
       const locations = locateSlayerTask(task, entities, assignment, master).map(hit => hit.location);
       const unique = [...new Map(locations.map(({ cx, cy }) => [`${cx},${cy}`, { cx, cy }])).values()];
-      out[`${master.toLowerCase()}:${norm}`] = unique;
-      out[norm] = [...new Map([...(out[norm] ?? []), ...unique].map(loc => [`${loc.cx},${loc.cy}`, loc])).values()];
+      // Also under the game's name where it differs (Mutated zygomites), as the plugin matches the chat.
+      const alias = gameTaskName(task);
+      for (const name of [task, ...(alias ? [alias] : [])]) {
+        const norm = name.toLowerCase().trim().replace(/s$/, '');
+        out[`${master.toLowerCase()}:${norm}`] = unique;
+        out[norm] = [...new Map([...(out[norm] ?? []), ...unique].map(loc => [`${loc.cx},${loc.cy}`, loc])).values()];
+      }
     }
     return out;
   }
@@ -760,16 +780,30 @@ export class ChunkContentService {
     return this.getItemIdx()?.get(itemName.toLowerCase())?.monsters ?? [];
   }
 
-  /** Ranked item-name search across every drop table — for "where do I get X". */
+  /**
+   * Each name of an index folded once (thousands of names), so a search typed
+   * key by key compares against stored text instead of folding every name
+   * again. Kept per index, so a new document's index folds afresh.
+   */
+  private foldedRowCache = new WeakMap<Map<string, { name: string }>, { row: { name: string }; key: string }[]>();
+  private foldedRows<T extends { name: string }>(idx: Map<string, T>): { row: T; key: string }[] {
+    let rows = this.foldedRowCache.get(idx);
+    if (!rows) {
+      rows = [...idx.values()].map(row => ({ row, key: foldText(row.name).text }));
+      this.foldedRowCache.set(idx, rows);
+    }
+    return rows as { row: T; key: string }[];
+  }
+
+  /** Ranked item-name search across every drop table — for "where do I get X". Ignores apostrophes. */
   searchItems(query: string, limit = 6): { name: string; sources: number }[] {
     const idx = this.getItemIdx();
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!idx || q.length < 2) return [];
+    const match = foldedMatcher(q);
     const scored: { name: string; sources: number; score: number }[] = [];
-    for (const e of idx.values()) {
-      const n = e.name.toLowerCase();
-      let score = 0;
-      if (n === q) score = 3; else if (n.startsWith(q)) score = 2; else if (n.includes(q)) score = 1;
+    for (const { row: e, key } of this.foldedRows(idx)) {
+      const score = match.rank(e.name, key);
       if (score) scored.push({ name: e.name, sources: e.monsters.length, score });
     }
     return scored
@@ -787,18 +821,15 @@ export class ChunkContentService {
       Object.entries(items).find(([k]) => k.toLowerCase() === key.toLowerCase())?.[1] ?? [];
   }
 
-  /** Ranked substring search across every entity in Gielinor. */
+  /** Ranked substring search across every entity in Gielinor. Ignores apostrophes, as searchItems does. */
   searchEntities(query: string, limit = 8): EntityHit[] {
     const index = this.getIndex();
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!index || q.length < 2) return [];
+    const match = foldedMatcher(q);
     const scored: { hit: EntityHit; score: number }[] = [];
-    for (const hit of index.values()) {
-      const n = hit.name.toLowerCase();
-      let score = 0;
-      if (n === q) score = 3;
-      else if (n.startsWith(q)) score = 2;
-      else if (n.includes(q)) score = 1;
+    for (const { row: hit, key } of this.foldedRows(index)) {
+      const score = match.rank(hit.name, key);
       if (score) scored.push({ hit, score });
     }
     return scored

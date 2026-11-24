@@ -61,6 +61,23 @@ const everything = (level = 99, changes: Partial<UnlockState> = {}): UnlockState
   ...changes,
 });
 
+describe("Champions' Guild quest points (minigames-misc.d1[0])", () => {
+  // Wiki "Champions' Guild" oldid 15364426: entry needs 32 quest points.
+  it.each(["Scavvo's Rune Store", "Valaine's Shop of Champions"])('opens %s only with 32 quest points', (name) => {
+    const at = { cx: 49, cy: 52 };
+    expect(evaluateEntityAccess(name, 'shop', at, everything(99, { quests: [] }), 'vanilla', service))
+      .toEqual({ status: 'NOT_READY', reasons: ['32 Quest Points'] });
+    expect(evaluateEntityAccess(name, 'shop', at, everything(), 'vanilla', service))
+      .toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
+  it.each([['Range', 'object'], ['Chicken', 'monster'], ['Evil Chicken', 'monster']] as const)('asks for 32 quest points for the guild\'s %s', (name, kind) => {
+    const at = { cx: 49, cy: 52 };
+    expect(evaluateEntityAccess(name, kind, at, everything(99, { quests: [] }), 'vanilla', service).reasons).toContain('32 Quest Points');
+    expect(evaluateEntityAccess(name, kind, at, everything(), 'vanilla', service).reasons).not.toContain('32 Quest Points');
+  });
+});
+
 describe('S11: members content does not wait on a free-to-play tag', () => {
   it('leaves the Chunk Picker\'s "F2P Only" tag out of every requirement', () => {
     expect(JSON.stringify(content)).not.toContain('F2P Only');
@@ -385,7 +402,7 @@ describe('S16: the level gates agree with the skill table', () => {
   it('opens each stall the table names at its level', () => {
     const checked: string[] = [];
     for (const [level, item] of unlocksOf('Thieving')) {
-      const kinds = item.match(/^(.+) Stalls$/)?.[1];
+      const kinds = item.match(/^(.+) Stalls(?: \([^)]*\))?$/)?.[1];
       if (!kinds) continue;
       for (const kind of kinds.split(' & ')) {
         const stall = kind === 'Vegetable' ? 'veg stall' : `${kind.toLowerCase()} stall`;
@@ -395,7 +412,7 @@ describe('S16: the level gates agree with the skill table', () => {
         }
       }
     }
-    expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall']));
+    expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall', 'Magic Stall']));
   });
 });
 
@@ -462,7 +479,7 @@ describe("U1: a reward shop needs Reward Shops and its activity's unlock", () =>
   const NO_ACTIVITY_UNLOCK: Readonly<Record<string, string>> = {
     'Leagues Reward Shop': 'Leagues',
     "Prospector Percy's Nugget Shop": 'the Motherlode Mine',
-    "Worm Tounge's Wares": 'the Colossal Wyrm Agility Course',
+    "Worm Tongue's Wares": 'the Colossal Wyrm Agility Course',
     "Mairin's Market": 'Underwater Agility and Thieving',
     "Alry the Angler's Angling Accessories": 'aerial fishing',
     "Ramarno's Shard Exchange": 'the Ruins of Camdozaal',
@@ -781,6 +798,44 @@ describe('reviewed shop records', () => {
         for (const replaced of record.replaces ?? []) expect(requirements, record.name).not.toContain(replaced);
       }
     }
+  });
+});
+
+describe('NPCs and objects the game renamed, moved or removed (chunk-sample.d2[2])', () => {
+  type Listed = { p?: string[]; o?: (string | number)[][] };
+  const places = [
+    ...Object.entries(content.chunks as unknown as Record<string, Listed>),
+    ...Object.entries(content.interiors as unknown as Record<string, { content: Listed }>).map(([id, interior]) => [id, interior.content] as const),
+  ];
+  const where = (name: string, field: 'p' | 'o') => places
+    .filter(([, entry]) => (entry[field] ?? []).some(value => (Array.isArray(value) ? value[0] : value) === name)).map(([id]) => id);
+
+  it('lists each renamed or moved NPC under its new name where the Wiki puts it, and the old name nowhere', () => {
+    for (const rename of contentOverrides.npcRenames) {
+      expect(rename.source, rename.from).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(String(Math.floor(rename.x / 64) * 256 + Math.floor(rename.y / 64)), rename.from).toBe(rename.chunkId);
+      expect(where(rename.from, 'p'), rename.from).toEqual([]);
+      expect(where(rename.to, 'p'), rename.to).toContain(rename.chunkId);
+    }
+    // The 3 November 2026 Lumbridge changes, by name.
+    expect(content.chunks['12850'].p).toEqual(expect.arrayContaining(['Cadmus', 'Captain Harlan', 'Feoras', 'Wilfred']));
+    expect(content.chunks['12849'].p).toEqual(expect.arrayContaining(['Finlay', 'Monlum']));
+    expect(content.chunks['12598'].p).toContain('Arthur');
+  });
+
+  it('lists no NPC or object the Wiki dates a removal for', () => {
+    for (const removal of contentOverrides.removedEntities) {
+      expect(removal.source, removal.name).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(where(removal.name, removal.category === 'Objects' ? 'o' : 'p'), removal.name).toEqual([]);
+    }
+    expect(contentOverrides.removedEntities.map(removal => removal.name)).toEqual(expect.arrayContaining([
+      'Banker tutor', 'Prayer tutor', 'Cooking tutor', 'Ranged combat tutor', 'Master smithing tutor', 'Pot-boiler',
+    ]));
+  });
+
+  it('keeps the Meiyerditch washing line and the Yu\'biusk strange box, which the Wiki pages of those names are not about', () => {
+    expect(where('Washing line', 'o')).toEqual(['14386']);
+    expect(where('Strange box', 'o')).toEqual(['11089']);
   });
 });
 

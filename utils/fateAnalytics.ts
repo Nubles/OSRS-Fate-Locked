@@ -28,7 +28,10 @@ export interface AnalyticsCoverage {
   unverifiedRewardEvents: number;
   invalidTimestamps: number;
   unknownSources: number;
+  /** Entries whose recorded roll, chance and result disagree, with nothing to explain it. */
   inconsistentEntries: number;
+  /** Wins that Verac's hit-through made out of a miss. They are honest, but not luck at their recorded odds. */
+  veracHitThroughs: number;
 }
 
 export interface AnalyticsSummary {
@@ -171,6 +174,7 @@ interface NormalizedRoll {
   probability: number | null;
   probabilityQuality: ProbabilityQuality;
   inconsistent: boolean;
+  hitThrough: boolean;
   scoreable: boolean;
   validTimestamp: boolean;
   standardKeys: number | null;
@@ -187,6 +191,19 @@ const isFiniteNumber = (value: unknown): value is number => typeof value === 'nu
 const isValidTimestamp = (value: unknown): value is number => isFiniteNumber(value) && !Number.isNaN(new Date(value).getTime());
 const own = (value: unknown, key: string): boolean => typeof value === 'object' && value !== null && Object.prototype.hasOwnProperty.call(value, key);
 const sourceFor = (entry: LogEntry): string => typeof entry.source === 'string' && entry.source.trim() ? entry.source : UNKNOWN_SOURCE;
+/**
+ * Whether a history entry is a win that Verac's hit-through made out of a miss.
+ * The reducer has written every one the same way since the Barrows rituals came
+ * in: a ROLL_SUCCESS or ROLL_OMNI whose details end "Verac hit through the miss."
+ * (the roll itself is above its threshold). Its recorded odds are the plain
+ * threshold, so it is not a win at those odds. Reads only the type and details,
+ * which every roll entry has always had.
+ */
+export const isVeracHitThrough = (entry: Pick<LogEntry, 'type' | 'details'>): boolean =>
+  (entry.type === 'ROLL_SUCCESS' || entry.type === 'ROLL_OMNI')
+  && typeof entry.details === 'string'
+  && /Verac hit through/i.test(entry.details);
+
 const rewardBearing = (roll: Pick<NormalizedRoll, 'outcome' | 'genuineWin'>): boolean => roll.genuineWin || roll.outcome === 'pity';
 const confirmedStandardKeysFor = (roll: NormalizedRoll): number =>
   roll.verifiedReward && roll.rewardKind !== 'none' ? roll.standardKeys! : 0;
@@ -253,7 +270,8 @@ const normalizedRoll = (entry: LogEntry, historyIndex: number): NormalizedRoll =
     && entry.rollValue <= 100
     && threshold >= 0
     && threshold <= 100;
-  const inconsistent = validComparison && (entry.rollValue <= threshold) !== genuineWin;
+  const hitThrough = isVeracHitThrough(entry);
+  const inconsistent = !hitThrough && validComparison && (entry.rollValue <= threshold) !== genuineWin;
   const rawStandardKeys = meta?.standardKeysAwarded;
   const standardKeys = isFiniteNumber(rawStandardKeys)
     && Number.isInteger(rawStandardKeys)
@@ -283,6 +301,7 @@ const normalizedRoll = (entry: LogEntry, historyIndex: number): NormalizedRoll =
     probability,
     probabilityQuality,
     inconsistent,
+    hitThrough,
     scoreable: false,
     validTimestamp: isValidTimestamp(entry.timestamp),
     standardKeys,
@@ -333,7 +352,7 @@ export interface RollTally {
 export const rollTallyOf = (entry: LogEntry): RollTally => {
   const roll = normalizedRoll(entry, 0);
   const legacyKeys = /\((Doubled|Second Key)\)/.test(entry.message ?? '') ? 2 : 1;
-  const lucky = roll.genuineWin && roll.probability !== null && !roll.inconsistent && roll.validTimestamp;
+  const lucky = roll.genuineWin && roll.probability !== null && !roll.inconsistent && !roll.hitThrough && roll.validTimestamp;
   return {
     win: roll.genuineWin,
     standardKeys: rewardBearing(roll) ? roll.standardKeys ?? legacyKeys : 0,
@@ -371,7 +390,7 @@ export const buildFateAnalytics = (history: LogEntry[], query: FateAnalyticsQuer
 
   const availableSources = [...new Set(ranged.map((roll) => roll.source))].sort((a, b) => a.localeCompare(b));
   const availableCategories = [...new Set(ranged.map((roll) => roll.category))].sort((a, b) => a.localeCompare(b));
-  const exactOnlyAvailable = ranged.some((roll) => roll.probabilityQuality === 'exact' && !roll.inconsistent);
+  const exactOnlyAvailable = ranged.some((roll) => roll.probabilityQuality === 'exact' && !roll.inconsistent && !roll.hitThrough);
   const selected = ranged.filter((roll) => query.scope.kind === 'all'
     || (query.scope.kind === 'source' && roll.source === query.scope.value)
     || (query.scope.kind === 'category' && roll.category === query.scope.value));
@@ -379,6 +398,7 @@ export const buildFateAnalytics = (history: LogEntry[], query: FateAnalyticsQuer
     ...roll,
     scoreable: roll.probability !== null
       && !roll.inconsistent
+      && !roll.hitThrough
       && (query.includeLegacyEstimates || roll.probabilityQuality === 'exact'),
   }));
   const scoreable = rolls.filter((roll) => roll.scoreable);
@@ -440,6 +460,7 @@ export const buildFateAnalytics = (history: LogEntry[], query: FateAnalyticsQuer
 
   const histogramModels = rolls.filter((roll) => roll.probabilityQuality === 'exact'
     && !roll.inconsistent
+    && !roll.hitThrough
     && roll.drawResolution !== null
     && roll.luckApplied !== null);
   const histogram = ROLL_BUCKETS.map(({ range, min, max }, index) => {
@@ -550,6 +571,7 @@ export const buildFateAnalytics = (history: LogEntry[], query: FateAnalyticsQuer
     invalidTimestamps: rolls.filter((roll) => !roll.validTimestamp).length,
     unknownSources: rolls.filter((roll) => roll.source === UNKNOWN_SOURCE).length,
     inconsistentEntries: rolls.filter((roll) => roll.inconsistent).length,
+    veracHitThroughs: rolls.filter((roll) => roll.hitThrough).length,
   };
   const summary: AnalyticsSummary = {
     attempts: rolls.length,

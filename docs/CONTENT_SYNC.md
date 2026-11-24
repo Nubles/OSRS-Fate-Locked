@@ -34,7 +34,7 @@ player's progress.
 |---|---|
 | **Read-only catalogue** | New items and pages become notices until reviewed build-time sync. |
 | **Fail-safe** | A network or parse error leaves the bundled catalogue usable. |
-| **Lazy + cached** | Notices are fetched on first open and cached for seven days. |
+| **Lazy + cached** | Notices are fetched on first open and cached for seven days. A cached notice is checked against the bundled catalogue on every load, so a release that adds its entries clears it at once. |
 | **Stable save identities** | The reviewed catalogue owns IDs; upstream order never assigns runtime save IDs. |
 | **Legacy evidence preserved** | Old v1-v3 cache mappings are retained to flag ambiguous saved identities for review. |
 
@@ -159,8 +159,31 @@ their original IDs, entrance routes, and access requirements. Reviewed overrides
 live in `data/sources/interior-access.json`; incomplete entrance evidence stays
 unmapped rather than becoming an unconditional surface location. Merchant stock
 supplements, empty-stock shops, and removed content are reviewed in
-`data/sources/shop-overrides.json`. `data/slayerTaskFamilies.json` records exact
-task-family membership and its source references. See
+`data/sources/shop-overrides.json`. Who runs each shop, for the RuneLite
+plugin, is `contracts/golden-bundles/shop-keepers.json`: one list per shop name
+the chunk data has, of the names the game shows on the NPCs or objects the
+player trades with there, from the Infobox Shop owner field of each shop's Wiki
+page. `npm run keepers:sync` is the networked refresh: it reads each page into
+`data/sources/shop-keepers.json` (page title, revision and raw owner field) and
+rebuilds the contract file. A shop whose page names no keeper needs a reviewed
+`NO_KEEPER` entry in `scripts/gen-shop-keepers.mjs`, and a new shop needs a
+refresh. `npm run keepers:verify` (part of `content:verify`) checks offline that
+both files are current; `npm run goldens:write` then lists the file in the
+golden manifest. No module of the app imports it. Monsters the source still lists in an
+interior the game has since emptied of them (the Revenant Caves before the 2020
+overhaul) are removed by `interiorEntityRemovals` in
+`data/sources/chunk-content-overrides.json`. NPCs the game has renamed or moved
+(the Lumbridge tutors of 3 November 2026) are `npcRenames` there, each with the
+Wiki's map coordinate, and NPCs and objects whose Wiki infobox dates a removal
+are `removedEntities`, taken out of every chunk and interior. The source gates many dungeons only
+through `UnlocksArea` challenges, which the transform does not read; each such
+gate is added to `interior-access.json` after a Wiki check (Jormungand's Prison,
+the Myths' Guild basement and others, November 2026). `data/slayerTaskFamilies.json` records exact
+task-family membership and its source references. Monsters the Wiki's Slayer
+category counts for a task but that appear only in an event, a raid, a boss
+fight or once in a quest are listed with a reason in
+`data/sources/slayer-family-exclusions.json`, which `utils/slayerAccuracy.test.ts`
+checks. See
 [the repair review](CONTENT_REPAIR_REVIEW.md) for coverage and remaining gaps.
 
 Interior policy schema 2 supports common named rules (including `#Section`

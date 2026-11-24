@@ -1,4 +1,5 @@
 import type { LogEntry } from '../types';
+import { isVeracHitThrough } from './fateAnalytics';
 import { rollCategory } from './fateReport';
 import { isRollEntry } from './logEntry';
 
@@ -21,14 +22,22 @@ export interface SourceEvidence {
   source: string;
   category: string;
   attempts: number;
+  /** Rolls that won: a Key or an Omni-Key. A Pity Key is not one. */
   successes: number;
+  /** Misses that Fate paid with a Pity Key (schema version 2). */
+  pityKeys: number;
+  /**
+   * Successes that Verac's ritual hit through from a miss (schema version 2).
+   * They are in `successes`, but their recorded odds leave out the hit-through.
+   */
+  veracHitThroughs: number;
   expectedSuccesses: number;
   fatePoints: number;
   drought: DroughtSummary;
 }
 
 export interface KeyEconomyEvidenceReport {
-  schemaVersion: 1;
+  schemaVersion: 2;
   reportId: string;
   gameMode: string;
   stage: EvidenceStage;
@@ -37,6 +46,8 @@ export interface KeyEconomyEvidenceReport {
   totals: {
     attempts: number;
     successes: number;
+    pityKeys: number;
+    veracHitThroughs: number;
     expectedSuccesses: number;
     fatePoints: number;
     drought: DroughtSummary;
@@ -49,6 +60,8 @@ interface SourceAccumulator {
   category: string;
   attempts: number;
   successes: number;
+  pityKeys: number;
+  veracHitThroughs: number;
   expectedSuccesses: number;
   fatePoints: number;
   rolls: LogEntry[];
@@ -93,15 +106,30 @@ const fateEarned = (entry: LogEntry): number => {
   return entry.type === 'ROLL_FAIL' || entry.type === 'PITY' ? 1 : 0;
 };
 
+/**
+ * A roll that won: a Key or an Omni-Key. A Pity Key is a miss that Fate paid
+ * for (its entry says result 'SUCCESS', so the type decides), as the Stats
+ * page counts it.
+ */
+const isWin = (entry: LogEntry): boolean => entry.type === 'ROLL_SUCCESS' || entry.type === 'ROLL_OMNI';
+
+/** The chance the roll had of winning: its recorded odds when they are valid, else its threshold. */
+const expectedOf = (entry: LogEntry): number => {
+  const recorded = entry.meta?.successProbability;
+  if (typeof recorded === 'number' && Number.isFinite(recorded) && recorded >= 0 && recorded <= 1) return recorded;
+  return Math.min(entry.threshold!, 100) / 100;
+};
+
+/** Dry streaks: rolls in a row that did not win. A Pity Key does not end one. */
 const droughtSummary = (rolls: readonly LogEntry[]): DroughtSummary => {
   let longestFailures = 0;
   let current = 0;
   for (const roll of rolls) {
-    if (roll.result === 'FAIL') {
+    if (isWin(roll)) {
+      current = 0;
+    } else {
       current += 1;
       longestFailures = Math.max(longestFailures, current);
-    } else {
-      current = 0;
     }
   }
   return { longestFailures, activeFailures: current };
@@ -117,18 +145,22 @@ export function buildKeyEconomyEvidence(
   const rolls = [...scoreableRolls(history)].sort((a, b) => a.timestamp - b.timestamp);
   const bySource = new Map<string, SourceAccumulator>();
   let successes = 0;
+  let pityKeys = 0;
+  let veracHitThroughs = 0;
   let expectedSuccesses = 0;
   let fatePoints = 0;
 
   for (const roll of rolls) {
     const source = roll.source!;
-    const expected = Math.min(roll.threshold!, 100) / 100;
+    const expected = expectedOf(roll);
     const earned = fateEarned(roll);
     const accumulator = bySource.get(source) ?? {
       source,
       category: rollCategory(source),
       attempts: 0,
       successes: 0,
+      pityKeys: 0,
+      veracHitThroughs: 0,
       expectedSuccesses: 0,
       fatePoints: 0,
       rolls: [],
@@ -138,9 +170,16 @@ export function buildKeyEconomyEvidence(
     accumulator.expectedSuccesses += expected;
     accumulator.fatePoints += earned;
     accumulator.rolls.push(roll);
-    if (roll.result === 'SUCCESS') {
+    if (isWin(roll)) {
       accumulator.successes += 1;
       successes += 1;
+      if (isVeracHitThrough(roll)) {
+        accumulator.veracHitThroughs += 1;
+        veracHitThroughs += 1;
+      }
+    } else if (roll.type === 'PITY') {
+      accumulator.pityKeys += 1;
+      pityKeys += 1;
     }
 
     expectedSuccesses += expected;
@@ -156,7 +195,7 @@ export function buildKeyEconomyEvidence(
     .sort((a, b) => a.source.localeCompare(b.source));
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     reportId: input.reportId,
     gameMode: input.gameMode,
     stage: input.stage,
@@ -165,6 +204,8 @@ export function buildKeyEconomyEvidence(
     totals: {
       attempts: rolls.length,
       successes,
+      pityKeys,
+      veracHitThroughs,
       expectedSuccesses,
       fatePoints,
       drought: droughtSummary(rolls),

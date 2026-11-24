@@ -1,10 +1,9 @@
 import type { ActivityReq } from '../data/activityRequirements';
 import type { UnlockState } from '../types';
-import { evaluateDiaryTaskEligibility, meetsSkillRequirement, withSkillGateQuests } from './journalStatus';
+import { evaluateDiaryTaskEligibility, meetsSkillRequirement, meetsWarriorsGuildEntry, withSkillGateQuests } from './journalStatus';
 import type { AreaRoutes } from './areaRoutes';
-import { isAreaReachable } from './reachability';
-import { chunkPlaceLabel, ownsAnyChunk } from './activityAccess';
-import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
+import { chunkPlaceLabel, countedAreas, enterableChunk, gatedEntranceLabels, ownsAnyChunk } from './activityAccess';
+import { actualCombatLevel } from './slayerReach';
 import { QUEST_DATA } from '../data/questData';
 import { pendingQuestProgress } from '../data/questProgress';
 
@@ -24,11 +23,8 @@ export type ActivityReadiness =
 
 export const WARRIORS_GUILD_ENTRY_LABEL = '99 Attack or Strength, or 130 combined';
 
-/** The Warriors' Guild door: 99 Attack or Strength, or 130 combined. Tier-capped,
- *  like the diary's "Enter the Warriors' Guild" task. */
-export const meetsWarriorsGuildEntry = (unlocks: UnlockState): boolean =>
-  meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99)
-  || effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength') >= 130;
+/** The Warriors' Guild door (defined beside the quest route check that also uses it). */
+export { meetsWarriorsGuildEntry };
 
 export function evaluateActivityReadiness(
   isOwned: boolean,
@@ -50,19 +46,21 @@ export function evaluateActivityReadiness(
   const requiredAreas = requirement?.requiredAreas ?? [];
   // Chunked: the exact entrance chunk must be owned, not any chunk of the area.
   const requiredChunks = gameModeId === 'chunked' ? requirement?.requiredChunks ?? [] : [];
+  // A way in with its own requirement counts once that is met (enterableChunk, countedAreas).
+  const entrance = requirement?.entrance;
   if (requiredChunks.length > 0) {
-    if (!ownsAnyChunk(requiredChunks, unlocks)) {
-      blockers.push({ kind: 'area', label: requiredChunks.map(chunkPlaceLabel).join(' or ') });
+    if (!ownsAnyChunk(requiredChunks, unlocks) && !enterableChunk([], unlocks, entrance).open) {
+      blockers.push({ kind: 'area', label: [...requiredChunks.map(chunkPlaceLabel), ...gatedEntranceLabels(entrance)].join(' or ') });
     }
   } else if (requiredAreas.length > 0) {
-    const owned = requiredAreas.filter(area => isAreaReachable(area, unlocks, gameModeId));
+    const { areas: owned, label } = countedAreas(entrance, requiredAreas, unlocks, gameModeId);
     if (owned.length === 0) {
-      blockers.push({ kind: 'area', label: requiredAreas.join(' or ') });
+      blockers.push({ kind: 'area', label });
     } else if (
       areaRoutes && gameModeId !== 'chunked'
       // The Journal's own check (caTaskAccess bossAreaBlocker): an owned area
       // no route reaches, or an island with no way onto it, doesn't count.
-      && !evaluateDiaryTaskEligibility({ id: 'activity-area', anyOfRegions: [...requiredAreas] }, unlocks, gameModeId, areaRoutes).confirmable
+      && !evaluateDiaryTaskEligibility({ id: 'activity-area', anyOfRegions: [...owned] }, unlocks, gameModeId, areaRoutes).confirmable
     ) {
       blockers.push({ kind: 'area', label: `a route to ${owned.join(' or ')}` });
     }

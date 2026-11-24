@@ -5,6 +5,7 @@
  * point to the nearest usable bank.
  */
 import { BANKS, MERGED_BANKS } from '../data/banks';
+import { DEPOSIT_ONLY_BANK_IDS } from '../data/bankDepositOnly';
 import type { ChunkContent } from '../services/ChunkContentService';
 import { chunkEntry } from './chunkEntry';
 import { bankAccess, type ChunkPermissionContext, type PermissionStatus } from './chunkPermissionSnapshot';
@@ -24,6 +25,11 @@ export interface BankDecision {
    * chunk line). A bank with no facility found stays at its chunk.
    */
   physical: string[];
+  /**
+   * True where the bank can't be opened, only deposited into (a deposit box, a deposit chest or
+   * an NPC who sends items to the bank: Port Sarim, the dock deposit boxes). Absent elsewhere.
+   */
+  depositOnly?: true;
 }
 
 export interface BankDecisionSource {
@@ -31,6 +37,8 @@ export interface BankDecisionSource {
   surfaceContentFor(cx: number, cy: number): ChunkContent | null;
   interiorsEnteredFrom(cx: number, cy: number): { sourceId: string; content: ChunkContent }[];
 }
+
+const DEPOSIT_ONLY = new Set(DEPOSIT_ONLY_BANK_IDS);
 
 const keyOf = (id: number) => `${Math.floor(id / 256)},${id % 256}`;
 
@@ -70,6 +78,7 @@ export function bankDecisions(source: BankDecisionSource, context: ChunkPermissi
       ...(access.reasons.length ? { reason: access.reasons.join('; ') } : {}),
       at,
       physical: physical.length ? [...new Set(physical)].sort((a, b) => a - b).map(keyOf) : [at],
+      ...(DEPOSIT_ONLY.has(bank.id) ? { depositOnly: true as const } : {}),
     };
   }
   return decisions;

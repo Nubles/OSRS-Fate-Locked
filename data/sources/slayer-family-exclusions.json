@@ -1,0 +1,64 @@
+{
+  "reviewedAt": "2026-11-23",
+  "note": "Monsters the Wiki's Slayer category counts for a task but that are left out of its family: they appear only in an event, a raid, a boss fight or once in a quest (slayer.d1[2], infobox_monster slayer_category queried 23 November 2026). Kept out of data/slayerTaskFamilies.json so the app does not load it; utils/slayerAccuracy.test.ts reads it.",
+  "source": "https://oldschool.runescape.wiki/api.php?action=bucket&query=bucket('infobox_monster').select('page_name','slayer_category')",
+  "excluded": {
+    "araxytes": {
+      "Acidic Araxyte": "Spawned by Araxxor during the fight in his lair",
+      "Mirrorback Araxyte": "Spawned by Araxxor during the fight in his lair",
+      "Ruptura Araxyte": "Spawned by Araxxor during the fight in his lair"
+    },
+    "birds": {
+      "Evil Chicken": "Random event"
+    },
+    "goblins": {
+      "Wormbrain": "Attacked through the jail bars once for Dragon Slayer I"
+    },
+    "green dragons": {
+      "Elvarg": "Fought once in Dragon Slayer I"
+    },
+    "hellhounds": {
+      "Bouncer": "Fought once in the Fight Arena quest"
+    },
+    "lizardmen": {
+      "Lizardman shaman (Chambers of Xeric)": "Chambers of Xeric raid room"
+    },
+    "shades": {
+      "Asyn shadow (Temple Trekking)": "Temple Trekking event, not a place on the map",
+      "Riyl shadow (Temple Trekking)": "Temple Trekking event, not a place on the map",
+      "Shade (Temple Trekking)": "Temple Trekking event, not a place on the map"
+    },
+    "skeletons": {
+      "Greater Skeleton Hellhound (Calvar'ion)": "Summoned by the boss during the fight",
+      "Greater Skeleton Hellhound (Vet'ion)": "Summoned by the boss during the fight",
+      "Skeletal Mystic": "Chambers of Xeric raid room",
+      "Skeleton Hellhound (Calvar'ion)": "Summoned by the boss during the fight",
+      "Skeleton Hellhound (Vet'ion)": "Summoned by the boss during the fight"
+    },
+    "spiders": {
+      "Acidic Araxyte": "Spawned by Araxxor during the fight in his lair",
+      "Mirrorback Araxyte": "Spawned by Araxxor during the fight in his lair",
+      "Ruptura Araxyte": "Spawned by Araxxor during the fight in his lair"
+    },
+    "tzhaar": {
+      "Jal-Ak": "Inferno wave",
+      "Jal-ImKot": "Inferno wave",
+      "Jal-MejJak": "Inferno wave",
+      "Jal-MejRah": "Inferno wave",
+      "Jal-Nib": "Inferno wave",
+      "Jal-Xil": "Inferno wave",
+      "Jal-Zek": "Inferno wave",
+      "JalTok-Jad": "Inferno wave",
+      "Ket-Zek": "Fight Caves wave",
+      "Tok-Xil": "Fight Caves wave",
+      "Tz-Kek": "Fight Caves wave",
+      "Tz-Kih": "Fight Caves wave",
+      "Yt-HurKot": "Fight Caves and Inferno wave",
+      "Yt-MejKot": "Fight Caves wave"
+    },
+    "zombies": {
+      "Summoned Zombie": "Summoned by the necromancers during a fight",
+      "Zombie (Temple Trekking)": "Temple Trekking event, not a place on the map"
+    }
+  }
+}

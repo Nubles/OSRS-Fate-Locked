@@ -43,12 +43,15 @@ describe('second audit permission regressions', () => {
 
   it('keeps untracked quest milestones unknown, preserves their explanations, and allows completed quests', () => {
     const state = account();
-    state.quests = state.quests.filter(id => id !== 'Dragon Slayer II');
+    // The pyre-ship milestone is pending until Barbarian Training is complete.
+    state.quests = state.quests.filter(id => id !== 'Dragon Slayer II' && id !== 'Barbarian Training');
     const loc = service.entityLocations('Dragon Slayer II', ['quest'])!.locations[0];
     const snapshot = () => buildChunkPermissionSnapshot(service.contentFor(loc.cx, loc.cy)!, loc,
       { unlocks: state, gameModeId: 'vanilla', contentService: service });
     const row = () => snapshot().categories.QUESTS!.find(row => row.name === 'Dragon Slayer II')!;
     expect(row()).toMatchObject({ status: 'UNKNOWN', detail: expect.stringMatching(/pyre/i) });
+    state.quests.push('Barbarian Training');
+    expect(row().status).toBe('ALLOWED');
     state.quests.push('Dragon Slayer II');
     expect(row().status).toBe('ALLOWED');
   });

@@ -30,7 +30,8 @@ import { chunkLabelWithCoords } from '../utils/chunkLabelWithCoords';
 import { tierBand } from '../utils/skillTiers';
 import { CHUNKED_START_KEY, chunkKey as chunkKeyOf, isFrontierChunk } from '../utils/chunkAdjacency';
 import { drawCartographerOffer, liveCartographerOffer } from '../utils/cartographerOffer';
-import { loadWalkSections } from '../utils/walkSections';
+import { loadWalkSections, walkSectionsLoaded } from '../utils/walkSections';
+import { downloadFateSave, FATE_EXPORT_DONE_MESSAGE } from '../utils/fateSaveFile';
 import { UNLOCK_COST, randomUnlockPool, pickRandomUnlock, isRandomUnlockEligible, isValidUnlock } from '../utils/gameEngine';
 import { canonicalAreaName, canonicalizeAreaUnlocks, visibleAreaUnlocks } from '../data/areaMapPolicy';
 import { CURRENT_RNG_VERSION, chaosPicksTableFirst, drawFloat, runDrawFloat, seededContext, usesSemanticContext } from '../utils/seededRng';
@@ -38,6 +39,7 @@ import { levelsToLog, summarizeLevelBatch, type LevelBatchSummary } from '../uti
 import { importWithRetry } from '../utils/lazyRetry';
 import { hashEntry, ensureChain } from '../utils/integrity';
 import {
+  CHECKPOINT_LABELS,
   getBackupDataById,
   listBackups as readBackups,
   pushBackup,
@@ -318,7 +320,8 @@ interface GameContextType extends GameState {
    */
   nextFloat: (purpose: string, index?: number) => number;
   importSave: (data: unknown) => Promise<ImportResult>;
-  resetGame: () => Promise<void>;
+  /** False, with the run untouched, when no backup could be kept; `anyway` resets regardless. */
+  resetGame: (anyway?: boolean) => Promise<boolean>;
   /** Snapshot the current run before something overwrites it. */
   createBackup: (reason: string) => BackupWriteResult | Promise<BackupWriteResult>;
   /** Backups for the active profile, newest first. */
@@ -3238,16 +3241,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     commitAction({ type: 'UNLOCK', payload: { table, item, costType, cost } });
   }, [commitAction]);
 
+  // A roll is made only when its save can be written: the coordinator's own
+  // test, and no save already failing. A roll whose save fails hides the run
+  // (the banners with it) until Retry save lands.
+  const saveStatusRef = useRef(saveStatus);
+  saveStatusRef.current = saveStatus;
+  const rollRefused = useCallback((action: string): boolean => {
+    const owned = authorizeOwnedWrite().ok;
+    if (owned && saveStatusRef.current !== 'failed') return false;
+    showToast(owned
+      ? `Your progress isn't saving right now. Retry the save or export a backup before ${action}.`
+      : `Save ownership is unavailable. Restore save access before ${action}.`);
+    return true;
+  }, [authorizeOwnedWrite]);
+
   const rollUnlock = useCallback((table?: TableType) => {
     const costType = table === undefined ? 'chaosKey' : 'key';
     const draw = (usable?: (candidate: { table: TableType; item: string }) => boolean) => {
       const current = stateRef.current;
       if (current.pendingUnlock) return;
       if ((costType === 'key' ? current.keys : current.chaosKeys) < UNLOCK_COST) return;
-      if (authorizeOwnership().ok === false) {
-        showToast('Save ownership is unavailable. Restore save access before rolling.');
-        return;
-      }
+      if (rollRefused('rolling')) return;
       // Saradomin's Ward: fate still picks, but only from what the run can use right now.
       const warded = current.rituals?.ward === true && wardApplies(costType, table, current.gameModeId);
       if (warded && !usable) return;
@@ -3272,16 +3286,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({
       if (coordinator) void settleCoordinatedFlush();
       else flushCurrentSave();
     };
-    const current = stateRef.current;
-    if (current.rituals?.ward !== true || !wardApplies(costType, table, current.gameModeId)) { draw(); return; }
-    // The Ward's activity checks load with the first warded spend, not with the app.
-    import('../utils/ritualWard').then(({ wardUsable }) => {
-      if (!mountedRef.current) return;
-      draw(c => wardUsable(c.table, c.item, stateRef.current.unlocks, stateRef.current.gameModeId ?? DEFAULT_MODE_ID));
-    }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
-  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+    const roll = () => {
+      const current = stateRef.current;
+      if (current.rituals?.ward !== true || !wardApplies(costType, table, current.gameModeId)) { draw(); return; }
+      // The Ward's activity checks load with the first warded spend, not with the app.
+      import('../utils/ritualWard').then(({ wardUsable }) => {
+        if (!mountedRef.current) return;
+        draw(c => wardUsable(c.table, c.item, stateRef.current.unlocks, stateRef.current.gameModeId ?? DEFAULT_MODE_ID));
+      }, () => showToast("Saradomin's Ward couldn't load. Check your connection and try again; your Key is safe."));
+    };
+    // Chunked: a Chunks (or Chaos) draw takes the walking frontier, never the
+    // bare chunk grid, so it waits for the walking data; a failed load spends nothing.
+    if (stateRef.current.gameModeId !== 'chunked' || (table ?? TableType.CHUNKS) !== TableType.CHUNKS || walkSectionsLoaded()) { roll(); return; }
+    importWithRetry(loadWalkSections).then(() => { if (mountedRef.current) roll(); },
+      () => showToast("The map's walking data couldn't load. Check your connection and try again; your Key is safe."));
+  }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
   const acknowledgeUnlock = useCallback((id: string) => {
-    if (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved')) return;
+    // Once its reveal has shown, the roll is saved: Continue joins whatever else is saving.
+    if (revealedUnlockIdRef.current !== id && (getPendingSave(storageKey) || (coordinator && coordinator.getSnapshot().primary !== 'saved'))) return;
     commitAction({ type: 'ACKNOWLEDGE_UNLOCK', payload: id });
   }, [commitAction, coordinator, storageKey]);
 
@@ -3324,10 +3346,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     const before = stateRef.current;
     const tier = breakthroughTier(before, skill);
     if (tier === null || before.pendingUnlock) return;
-    if (authorizeOwnership().ok === false) {
-      showToast('Save ownership is unavailable. Restore save access before rolling.');
-      return;
-    }
+    if (rollRefused('rolling')) return;
     const next = commitAction({ type: 'CHUNKED_BREAKTHROUGH', payload: { skill, roll: nextFloat('breakthrough'), revealId: generateId() } });
     if (next === before) return;
     // A win plays the unlock reveal once saved, as a Key's unlock does; a loss
@@ -3339,21 +3358,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     } else {
       showToast(`No Breakthrough: ${skill} stays at tier ${tier - 1}. Levels past ${tierCap(tier - 1)} roll nothing until a Key opens its next tier.`);
     }
-  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+  }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
   const callOnFate = useCallback(() => {
     if (mercyBlocker(stateRef.current) !== null) return;
-    if (authorizeOwnership().ok === false) {
-      showToast('Save ownership is unavailable. Restore save access before calling on fate.');
-      return;
-    }
+    if (rollRefused('calling on fate')) return;
     // Mercy stays shut while a quest in the run's chunks is doable. That needs
     // the chunk content, so the provider loads it and lists the quests itself
     // rather than trusting the caller's list; without the content, no call.
     importWithRetry(() => import('../utils/mercyQuests'))
       .then(({ loadDoableChunkedQuests }) => loadDoableChunkedQuests(() => stateRef.current))
       .then((doableQuests) => {
-        if (!mountedRef.current) return;
+        if (!mountedRef.current || rollRefused('calling on fate')) return;
         if (doableQuests === null) {
           showToast("Fate's Mercy couldn't check your chunks for doable quests. Check your connection and try again.");
           return;
@@ -3365,7 +3381,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({
         if (coordinator) void settleCoordinatedFlush();
         else flushCurrentSave();
       }, () => showToast("Fate's Mercy couldn't load. Check your connection and try again."));
-  }, [authorizeOwnership, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
+  }, [rollRefused, commitAction, coordinator, flushCurrentSave, nextFloat, settleCoordinatedFlush, stageCoordinatedSnapshot]);
 
   const rollGilded = useCallback((chunk: string, x?: number, y?: number) => {
     const before = stateRef.current;
@@ -3790,26 +3806,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const createCoordinatedCheckpoint = useCallback(async (
     data: string,
     reason: RecoveryCheckpointReason,
+    compatibilityReason = CHECKPOINT_LABELS[reason],
   ): Promise<BackupWriteResult> => {
-    const compatibilityReason = reason === 'session-start'
-      ? 'Session start'
-      : reason === 'pre-replacement'
-        ? 'Before replacement'
-        : reason === 'legacy-import'
-          ? 'Legacy import'
-          : 'Interval checkpoint';
     if (coordinator === null) return pushOwnedBackup(data, compatibilityReason);
     const expectedGeneration = replacementGenerationRef.current;
     const checkpoint = await coordinator.createCheckpoint(data, reason);
-    // Keep the old eight-entry ring as a best-effort rollback path, while
-    // preserving the journal result as the source of durability truth.
+    // Keep the old eight-entry ring as a rollback path too: a run it holds is
+    // backed up even when the journal could not store it.
     if (checkpoint.stored === true) intervalCheckpointBaselineRef.current = data;
-    if (
+    const ring = (
       mountedRef.current
       && !profileEvictedRef.current
       && replacementGenerationRef.current === expectedGeneration
-    ) pushOwnedBackup(data, compatibilityReason);
-    return checkpoint;
+    ) ? pushOwnedBackup(data, compatibilityReason) : checkpoint;
+    return checkpoint.stored === true ? checkpoint : ring;
   }, [coordinator, pushOwnedBackup]);
 
   // Every import and restore carries the run's restore count, merged with
@@ -3939,36 +3949,30 @@ export const GameProvider: React.FC<GameProviderProps> = ({
     }));
   }, [authorizeOwnedWrite, beginReplacement, coordinator, createCoordinatedCheckpoint, profileId, replaceState, stampReplacement, storageKey, writeCoordinatedReplacement, writeReplacement]);
 
-  const resetGame = useCallback(async (): Promise<void> => {
-    // Auto-snapshot so an accidental reset is recoverable.
+  const resetGame = useCallback(async (anyway = false): Promise<boolean> => {
+    // Back up first so an accidental reset is recoverable. Where no backup
+    // can be kept, leave the run alone unless the player said reset anyway.
     const isCurrent = beginReplacement();
+    const backup = coordinator === null
+      ? pushOwnedBackup(serializeCurrent(), 'Before reset')
+      : await createCoordinatedCheckpoint(serializeCurrent(), 'pre-replacement', 'Before reset');
+    const unbacked = backup.stored === false && backup.reason === 'storage_unavailable';
+    if (!isCurrent()) return true;
+    if (unbacked && !anyway) return false;
     // Remember the run being reset, so importing it again counts as a restore.
     writeRestoreCounts(localStorage, storageKey, rememberRun(readRestoreCounts(localStorage, storageKey), stateRef.current));
-    if (coordinator !== null) {
-      const replacement = createFreshState();
-      const backup = await createCoordinatedCheckpoint(
-        serializeCurrent(),
-        'pre-replacement',
-      );
-      if (!isCurrent()) return;
-      const durability = await writeCoordinatedReplacement(
-        serializeGameState(replacement),
-        'reset',
-        isCurrent,
-      );
-      if (!isCurrent()) return;
-      if (durability.primary === 'saved') replaceState(replacement);
-      if (
-        backup.stored === false
-        && backup.reason === 'storage_unavailable'
-        && durability.primary === 'saved'
-      ) setSaveStatus('saved');
-      return;
+    if (coordinator === null) {
+      setStateReplacements(count => count + 1);
+      commitAction({ type: 'RESET' });
+      return true;
     }
-    if (!isCurrent()) return;
-    pushOwnedBackup(serializeCurrent(), 'Before reset');
-    setStateReplacements(count => count + 1);
-    commitAction({ type: 'RESET' });
+    const replacement = createFreshState();
+    const durability = await writeCoordinatedReplacement(serializeGameState(replacement), 'reset', isCurrent);
+    if (isCurrent() && durability.primary === 'saved') {
+      replaceState(replacement);
+      if (unbacked) setSaveStatus('saved');
+    }
+    return true;
   }, [beginReplacement, commitAction, coordinator, createCoordinatedCheckpoint, pushOwnedBackup, replaceState, serializeCurrent, setSaveStatus, storageKey, writeCoordinatedReplacement]);
   const togglePin = useCallback((id: string) => commitAction({ type: 'TOGGLE_PIN', payload: id }), [commitAction]);
   const toggleHope = useCallback((key: string) => commitAction({ type: 'TOGGLE_HOPE', payload: key }), [commitAction]);
@@ -4212,6 +4216,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({
   const rollSaved = saveStatus === 'saved' && !hasPendingChanges;
   const [revealedUnlockId, setRevealedUnlockId] = useState<string | null>(null);
   if (pendingUnlockId && rollSaved && revealedUnlockId !== pendingUnlockId) setRevealedUnlockId(pendingUnlockId);
+  const revealedUnlockIdRef = useRef(revealedUnlockId);
+  revealedUnlockIdRef.current = revealedUnlockId;
   const rollAwaitingSave = !!pendingUnlockId && !rollSaved && revealedUnlockId !== pendingUnlockId;
   const hideRunForFailedRoll = rollAwaitingSave && saveStatus === 'failed';
 
@@ -4227,6 +4233,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({
           <div className={saveStatus === 'failed' ? 'contents' : 'contents [&>*]:opacity-0 [&>*]:animate-[fade-in-up_0.3s_ease-out_0.5s_forwards]'}>
             <p>{saveStatus === 'failed' ? 'Your roll is waiting to be saved. Retry to reveal the same result.' : 'Saving your roll…'}</p>
             <button type="button" className="px-4 py-2 rounded border border-amber-400 text-amber-300" onClick={() => void retrySave()}>Retry save</button>
+            {saveStatus === 'failed' && <button type="button" className="px-4 py-2 rounded border border-gray-500 text-gray-300" onClick={() => {
+              const result = downloadFateSave(serializeCurrent(), storageKey);
+              showToast(result.ok === false ? result.message : FATE_EXPORT_DONE_MESSAGE);
+            }}>Export backup</button>}
           </div>
         </div>
       ) : state.pendingUnlock ? <PendingUnlockReveal pending={state.pendingUnlock} animationsEnabled={state.animationsEnabled} onAccept={acknowledgeUnlock}

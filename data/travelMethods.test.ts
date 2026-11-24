@@ -612,15 +612,33 @@ describe('travel networks', () => {
     const npcs = (itemRow('network:gnome-glider').match as { npcs: readonly number[] }).npcs;
     // Captain Klemfoodle's (10479-10485) and Captain Shoracks' (7178, then 10486-10491 by last destination).
     for (const id of [10479, 10485, 7178, 10486, 10487, 10488, 10489, 10490, 10491]) expect(npcs, String(id)).toContain(id);
+    // Gnormadium Avlafrim's by last destination (RuneLite's GNORMADIUM_AVLAFRIM_*; 10449 is a cutscene NPC).
+    for (const id of [7516, 7517, 10445, 10446, 10447, 10448, 10450, 10451]) expect(npcs, String(id)).toContain(id);
+    expect(npcs).not.toContain(10449);
+  });
+
+  it('match the spirit trees players grow by their patch ids (travel-b.d1[1])', () => {
+    const tree = itemRow('network:spirit-tree');
+    const objects = (tree.match as { objects: readonly number[] }).objects;
+    // RuneLite's FARMING_SPIRIT_TREE_PATCH_1 to _5. A Travel click on a grown tree carries the patch's
+    // own id: RuneLite notes that every GAME_OBJECT option sends the base id, not the grown tree's 8355.
+    for (const id of [8338, 8382, 8383, 27116, 33733]) expect(objects, String(id)).toContain(id);
+    expect(objects).toEqual(expect.arrayContaining([26259, 26260, 26261, 26262, 26263, 35949, 35950]));
+    expect(Object.keys(tree.options).sort()).toEqual(['Last-destination', 'Travel']);
+    // No object id is matched by two rows.
+    const all = TRAVEL_METHODS.flatMap((method) => 'objects' in method.match ? [...method.match.objects] : []);
+    expect(all.filter((id, i) => all.indexOf(id) !== i)).toEqual([]);
   });
 
   it('dial every fairy ring code to where the wiki marks it', () => {
     const ring = itemRow('network:fairy-ring');
     const codes = Object.keys(ring.codes ?? {});
-    expect(codes).toHaveLength(53);
+    expect(codes).toHaveLength(54);
     expect(codes.filter((code) => !/^[A-D][I-L][P-S]$/.test(code))).toEqual([]);
     expect(ring.codes?.CKS).toEqual({ to: ['53,54'] });
     expect(ring.codes?.BLQ).toEqual({ to: [] });
+    // Grimstone Dungeon (wiki pin 2923,10454), the chunk content's interior 45,163 (travel-b.d1[0]).
+    expect(ring.codes?.DLP).toEqual({ to: ['45,163'] });
     // Configure only opens the dial; the codes decide.
     expect(ring.options).toEqual({ Zanaris: { to: ['37,69'] } });
   });

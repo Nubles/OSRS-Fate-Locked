@@ -94,4 +94,24 @@ describe('bankDecisions', () => {
     const statuses = new Set(Object.values(decisions).map((decision) => decision.status));
     expect(statuses.has('ALLOWED') && statuses.has('LOCKED')).toBe(true);
   });
+  it('marks the places where the bank can only be deposited into, and no other', () => {
+    // Settled against the Wiki in November 2026: 'Bank Deposit Box' (revision 15378951) lists these
+    // deposit boxes, the Zul-Andra chest (Chest (Zul-Andra), 14703191: options Deposit), Peer the Seer
+    // (15403084: Deposit-items) and Rionasta (15310502: Send-parcel). Port Sarim has no bank.
+    const decisions = bankDecisions(service, context(run({})));
+    const depositOnly = Object.entries(decisions).filter(([, decision]) => decision.depositOnly).map(([id]) => id);
+    expect(depositOnly.sort()).toEqual([
+      '10553', '11056', '12082', '12838', '5678', '6711', '6961', '7225', '8499', '8508', '8751', '8757', '9274',
+    ]);
+    for (const decision of Object.values(decisions)) expect([undefined, true]).toContain(decision.depositOnly);
+    // Full banks whose names or chunks also hold a deposit facility: the Ent cavern's bank chest is
+    // entered from the Woodcutting Guild's east deposit box, the Bank boat has a banker.
+    for (const id of ['6454', '8999', '12338']) expect(decisions[id].depositOnly, id).toBeUndefined();
+    for (const name of ['Arceuus bank and deposit box', 'Guardians of the Rift bank and deposit pool',
+      'Prifddinas north bank and Gauntlet deposit box']) {
+      const found = Object.values(decisions).filter((decision) => decision.name === name);
+      expect(found.length, name).toBe(1);
+      expect(found[0].depositOnly, name).toBeUndefined();
+    }
+  });
 });

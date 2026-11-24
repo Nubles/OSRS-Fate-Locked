@@ -1,9 +1,14 @@
 
 const MAPPING_API = 'https://prices.runescape.wiki/api/v1/osrs/mapping';
 const PRICES_API = 'https://prices.runescape.wiki/api/v1/osrs/latest';
-const CACHE_KEY_MAPPING = 'fate_osrs_mapping_v1';
+// v1 held the bare name -> id object with no timestamp and was never refreshed,
+// so items added or renamed after a player's first visit never got a price.
+// v2 is { timestamp, data }. A v1 copy still loads, as a stale fallback.
+const CACHE_KEY_MAPPING_LEGACY = 'fate_osrs_mapping_v1';
+const CACHE_KEY_MAPPING = 'fate_osrs_mapping_v2';
 const CACHE_KEY_PRICES = 'fate_osrs_prices_v1';
 const PRICE_TTL = 1000 * 60 * 60; // 1 Hour
+const MAPPING_TTL = 1000 * 60 * 60 * 24 * 7; // 1 Week
 
 interface PriceMapping {
   id: number;
@@ -52,26 +57,8 @@ class PriceService {
 
   private async performInit() {
     try {
-      // 1. Load Mapping (Persistent, update rarely)
-      const cachedMapping = readCachedObject(CACHE_KEY_MAPPING);
-      if (cachedMapping) {
-        this.nameToId = cachedMapping as Record<string, number>;
-      } else {
-        try {
-          const res = await fetch(MAPPING_API, { headers: { 'User-Agent': 'FateLockedUIM/1.0' } });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data: unknown = await res.json();
-          if (!Array.isArray(data)) throw new Error('Unexpected mapping response');
-          (data as PriceMapping[]).forEach(item => {
-            if (typeof item?.name === 'string' && typeof item.id === 'number') {
-              this.nameToId[item.name.toLowerCase()] = item.id;
-            }
-          });
-          localStorage.setItem(CACHE_KEY_MAPPING, JSON.stringify(this.nameToId));
-        } catch (e) {
-          console.warn('Failed to load price mapping', e);
-        }
-      }
+      // 1. Load Mapping (changes rarely: refresh weekly, keep a stale copy as fallback)
+      await this.loadMapping();
 
       // 2. Load Prices (Volatile, cache for TTL)
       await this.refreshPrices();
@@ -80,6 +67,43 @@ class PriceService {
       // Reset so next call can retry
       this.initializationPromise = null;
       throw e;
+    }
+  }
+
+  private async loadMapping() {
+    const now = Date.now();
+    const cached = readCachedObject(CACHE_KEY_MAPPING);
+    if (cached && typeof cached.timestamp === 'number' && isRecord(cached.data)) {
+      this.nameToId = cached.data as Record<string, number>;
+      if (now - cached.timestamp < MAPPING_TTL) return;
+    } else {
+      // A mapping stored before the timestamp existed: use it, but refresh it.
+      const legacy = readCachedObject(CACHE_KEY_MAPPING_LEGACY);
+      if (legacy) this.nameToId = legacy as Record<string, number>;
+    }
+
+    try {
+      const res = await fetch(MAPPING_API, { headers: { 'User-Agent': 'FateLockedUIM/1.0' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: unknown = await res.json();
+      if (!Array.isArray(data)) throw new Error('Unexpected mapping response');
+      const fresh: Record<string, number> = {};
+      (data as PriceMapping[]).forEach(item => {
+        if (typeof item?.name === 'string' && typeof item.id === 'number') {
+          fresh[item.name.toLowerCase()] = item.id;
+        }
+      });
+      if (Object.keys(fresh).length === 0) throw new Error('Empty mapping response');
+      this.nameToId = fresh;
+      try {
+        localStorage.setItem(CACHE_KEY_MAPPING, JSON.stringify({ timestamp: now, data: fresh }));
+        localStorage.removeItem(CACHE_KEY_MAPPING_LEGACY);
+      } catch {
+        // Storage full or blocked: the fresh mapping still serves this session.
+      }
+    } catch (e) {
+      // Keep whatever stale copy was loaded above; the next visit retries.
+      console.warn('Failed to load price mapping', e);
     }
   }
 

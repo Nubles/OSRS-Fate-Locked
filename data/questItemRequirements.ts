@@ -71,6 +71,11 @@ export const reviewedQuestRequirements = (
 ): ReviewedQuestRequirements | null =>
   Object.hasOwn(REVIEWED_QUESTS, questId) ? REVIEWED_QUESTS[questId] : null;
 
+// The five guides every build ships. Test and preview builds also carry the
+// preview-only packs in reviewedQuestRequirements.
+export const isPublicRuneProofQuest = (questId: string): boolean =>
+  Object.hasOwn(PUBLIC_REVIEWED_QUESTS, questId);
+
 export const isRuneProofQuestSupported = (questId: string): boolean =>
   reviewedQuestRequirements(questId) !== null;
 

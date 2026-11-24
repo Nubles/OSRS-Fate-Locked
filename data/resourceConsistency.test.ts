@@ -3,7 +3,7 @@ import { RESOURCE_MAP, RESOURCE_CATEGORIES, ITEM_CATEGORY } from './resourceData
 import { ACTIVITY_REGIONS } from './activityRegions';
 import {
   BOSSES_LIST, MINIGAMES_LIST, GUILDS_LIST, MOBILITY_LIST, ARCANA_LIST,
-  POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SKILLS_LIST,
+  POH_LIST, MERCHANTS_LIST, STORAGE_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST, SKILLS_LIST,
   REGION_GROUPS, MISTHALIN_AREAS,
 } from './items';
 import { computeFullBreakdown, flattenRawMaterials, flattenMultiBreakdown, findEasiestPath, calculateSupplyChain, getNextAchievableItems, calculateEngineItemProgress } from '../utils/supplyChain';
@@ -54,7 +54,10 @@ describe('boss-drop regions agree with ACTIVITY_REGIONS', () => {
     for (const [item, sources] of Object.entries(RESOURCE_MAP)) {
       for (const s of sources) {
         const expected = s.unlockId ? ACTIVITY_REGIONS[s.unlockId] : undefined;
-        if (expected && !s.regions.includes(expected) && !s.regions.includes('Any')) {
+        // A sub-area of the activity's region agrees with it (Pest Control's
+        // rows name the Void Knights' Outpost, an Asgarnia area).
+        const inRegion = (r: string) => r === expected || (REGION_GROUPS[expected ?? ''] ?? []).includes(r);
+        if (expected && !s.regions.some(inRegion) && !s.regions.includes('Any')) {
           mismatches.push(`${item} / ${s.name}: [${s.regions}] != "${expected}"`);
         }
       }
@@ -102,7 +105,7 @@ describe('every unlockId references a real unlock', () => {
   const valid = new Set<string>([
     ...BOSSES_LIST, ...MINIGAMES_LIST, ...GUILDS_LIST, ...MOBILITY_LIST,
     ...ARCANA_LIST, ...POH_LIST, ...MERCHANTS_LIST, ...STORAGE_LIST,
-    ...FARMING_PATCH_LIST,
+    ...FARMING_PATCH_LIST, ...SLAYER_UNLOCKS_LIST,
   ]);
   it('no source carries an unlockId that no unlock list knows about', () => {
     const bad: string[] = [];

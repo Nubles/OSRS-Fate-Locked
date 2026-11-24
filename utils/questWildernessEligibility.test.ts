@@ -84,7 +84,7 @@ describe('quest Wilderness access', () => {
   });
 
   it.each([
-    ['sequence 1', ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]],
+    ['sequence 1', ['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]],
     ['sequence 2', ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower']],
     ['sequence 3', ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville']],
   ])('allows Curse of the Empty Lord through %s without the full Wilderness', (_name, route) => {

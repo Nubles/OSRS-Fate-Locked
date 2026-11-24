@@ -5,6 +5,7 @@
  */
 
 import { MONSTER_CATALOGUE, MONSTER_CACHE_SOURCE } from '../data/monsterCatalogue';
+import { foldText, foldedMatcher } from '../utils/textFold';
 
 const CACHE_KEY = 'fate_osrs_monsters_v3';
 
@@ -23,6 +24,20 @@ export const parseMaxHit = (raw: unknown): number | null => {
   return hits.length ? Math.max(...hits) : null;
 };
 
+/**
+ * Reviewed Defence levels for rows whose upstream Defence is 0 while the Wiki
+ * gives a real one, keyed by `name|version`. Applied only while upstream still
+ * says 0, so a corrected capture wins.
+ * Wiki "Vardorvis" (rev 15385991): def1 = 215-145, def2 = 268-181,
+ * def3 = 180-130, "Scales linearly with Vardorvis' remaining HP." The
+ * start-of-fight Defence is used, the cautious end of each range.
+ */
+export const DEFENCE_OVERRIDES: Readonly<Record<string, number>> = {
+  'Vardorvis|Post-quest': 215,
+  'Vardorvis|Awakened': 268,
+  'Vardorvis|Quest': 180,
+};
+
 export interface MonsterStats {
   id: number;
   name: string;
@@ -37,6 +52,8 @@ export interface MonsterStats {
   /** Defensive bonuses by attack type. */
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
   rangedDefence?: Record<'light' | 'standard' | 'heavy', number>;
+  /** Flat armour taken off each successful melee or ranged hit (negative adds damage); 0 when absent. */
+  flatArmour?: number;
   size: number;
   attributes: string[];
 }
@@ -59,7 +76,7 @@ interface RawMonster {
   size?: number;
   max_hit?: string | number;
   skills?: { def?: number; hp?: number; magic?: number };
-  defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number; light?: number; standard?: number; heavy?: number };
+  defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number; light?: number; standard?: number; heavy?: number; flat_armour?: number };
   attributes?: string[];
 }
 
@@ -70,6 +87,7 @@ function validMonster(value: unknown): value is MonsterStats {
     && typeof m.version === 'string' && typeof m.imageFile === 'string'
     && [m.level, m.hp, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
     && (m.maxHit === null || Number.isFinite(m.maxHit))
+    && (m.flatArmour === undefined || Number.isFinite(m.flatArmour))
     && m.hp > 0 && m.size >= 0 // Upstream uses zero for unknown size on real targets.
     && !!m.def && ['stab', 'slash', 'crush', 'magic', 'ranged'].every(k => Number.isFinite(m.def[k as keyof MonsterStats['def']]))
     && !!m.rangedDefence && ['light', 'standard', 'heavy'].every(k => Number.isFinite(m.rangedDefence![k as 'light' | 'standard' | 'heavy']))
@@ -154,7 +172,7 @@ class MonsterService {
         level: r.level ?? 0,
         hp,
         maxHit: parseMaxHit(r.max_hit),
-        defLevel: r.skills?.def ?? 1,
+        defLevel: (r.skills?.def === 0 ? DEFENCE_OVERRIDES[key] : undefined) ?? r.skills?.def ?? 1,
         magicLevel: r.skills?.magic ?? 1,
         def: {
           stab: r.defensive?.stab ?? 0,
@@ -168,6 +186,7 @@ class MonsterService {
           standard: r.defensive?.standard ?? r.defensive?.ranged ?? 0,
           heavy: r.defensive?.heavy ?? r.defensive?.ranged ?? 0,
         },
+        flatArmour: Number.isFinite(r.defensive?.flat_armour) ? Math.trunc(r.defensive!.flat_armour!) : 0,
         size: r.size ?? 1,
         attributes: r.attributes ?? [],
       };
@@ -207,16 +226,26 @@ class MonsterService {
     } catch { /* quota — keep in memory */ }
   }
 
-  /** Name search, ranked: prefix matches first, then substring. */
+  /** Each catalogue name folded once, for the search typed key by key; refolded when the list is replaced. */
+  private folded: { list: MonsterStats[]; keys: string[] } | null = null;
+  private foldedNames(): string[] {
+    if (this.folded?.list !== this.list) this.folded = { list: this.list, keys: this.list.map(m => foldText(m.name).text) };
+    return this.folded.keys;
+  }
+
+  /** Name search, ranked: prefix matches first, then substring, ignoring apostrophes ("kril"). */
   search(q: string, limit = 60): MonsterStats[] {
-    const query = q.trim().toLowerCase();
+    const query = q.trim();
     if (!query) return this.list.slice(0, limit);
+    const match = foldedMatcher(query);
+    const keys = this.foldedNames();
     const starts: MonsterStats[] = [];
     const contains: MonsterStats[] = [];
-    for (const m of this.list) {
-      const n = m.name.toLowerCase();
-      if (n.startsWith(query)) starts.push(m);
-      else if (n.includes(query)) contains.push(m);
+    for (let i = 0; i < this.list.length; i++) {
+      const m = this.list[i];
+      const rank = match.rank(m.name, keys[i]);
+      if (rank >= 2) starts.push(m);
+      else if (rank === 1) contains.push(m);
       if (starts.length >= limit) break;
     }
     return [...starts, ...contains].slice(0, limit);

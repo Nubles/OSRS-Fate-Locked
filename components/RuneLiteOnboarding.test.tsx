@@ -57,6 +57,8 @@ describe('RuneLiteOnboarding', () => {
       /In RuneLite, open the Fate Locked panel and click/i,
     )).toBeTruthy();
     expect(screen.getByText('Connect tracker')).toBeTruthy();
+    // A RuneLite that is already paired shows Re-pair tracker… instead.
+    expect(screen.getByText('Re-pair tracker…')).toBeTruthy();
     expect(screen.queryByText(/Enable online sync/i)).toBeNull();
     expect(screen.queryByText(/Online sync code/i)).toBeNull();
     expect(screen.queryByText(/eight-character/i)).toBeNull();
@@ -141,6 +143,25 @@ describe('RuneLiteOnboarding', () => {
       `${window.location.origin}${window.location.pathname}`
       + `#/overlay?code=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa${suffix}`,
     );
+  });
+
+  it.each([
+    ['refuses the write', () => ({
+      writeText: vi.fn(() => Promise.reject(new DOMException('Document is not focused.', 'NotAllowedError'))),
+    })],
+    ['is missing', () => undefined],
+  ])('never says Copied! when the clipboard %s', async (_case, clipboard) => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard(), configurable: true });
+    relay.enabled = true;
+    relay.code = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    relay.status = 'synced';
+    render(<RuneLiteOnboarding />);
+
+    await user.click(screen.getByRole('button', { name: 'Copy stream overlay URL' }));
+
+    expect(await screen.findByRole('button', { name: 'Copy failed' })).toBeTruthy();
+    expect(screen.queryByText('Copied!')).toBeNull();
   });
 
   it('collapses a delivered profile as Profile sent, never Connected', () => {

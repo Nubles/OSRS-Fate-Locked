@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TRAINING_TIPS, getWikiTrainingUrl } from './trainingTips';
+import { TRAINING_TIPS, getWikiTrainingUrl, xpAtLevel } from './trainingTips';
 
 // Minimum OSRS thresholds independently checked against the Wiki revisions in
 // audit/resources/source-index.json on 22 September 2026. Recommendations may
@@ -55,5 +55,35 @@ describe('fact-checked training suggestions', () => {
     expect(getWikiTrainingUrl('Runecraft')).toBe(getWikiTrainingUrl('Runecrafting'));
     expect(getWikiTrainingUrl('Sailing')).toBe('https://oldschool.runescape.wiki/w/Sailing_training');
     expect(TRAINING_TIPS.Sailing.find(tip => /Courier/.test(tip.method))?.note).toBe('Prying Times at 12 and Current Affairs at 22 Sailing');
+  });
+});
+
+describe('Wintertodt rewards', () => {
+  // Wiki "Wintertodt" rev 15413436 (23 November 2026): supply crates were replaced
+  // by the reward cart on 9 October 2024; "Reward Cart" rev 15388221.
+  it('names the reward cart, not the removed supply crates', () => {
+    const note = TRAINING_TIPS.Firemaking.find(tip => tip.method === 'Wintertodt')?.note;
+    expect(note).toBe('Requires 50 Firemaking; rewards come from the reward cart');
+    expect(JSON.stringify(TRAINING_TIPS)).not.toMatch(/supply crate/i);
+  });
+});
+
+describe('XP to go in the training popover', () => {
+  // Cumulative XP from the Wiki "Experience" table, rev 15385377 (29 October 2026).
+  it.each([[1, 0], [2, 83], [13, 1_833], [62, 333_804], [92, 6_517_253], [99, 13_034_431]])(
+    'level %i starts at %i XP', (level, xp) => {
+      expect(xpAtLevel(level)).toBe(xp);
+    });
+
+  it('gives exact gaps for short climbs, not a straight line between anchors', () => {
+    expect(xpAtLevel(92) - xpAtLevel(90)).toBe(1_170_921);
+    expect(xpAtLevel(62) - xpAtLevel(60)).toBe(60_062);
+    expect(xpAtLevel(96) - xpAtLevel(95)).toBe(913_019);
+  });
+
+  it('rises with every level and stops at 99', () => {
+    for (let level = 2; level <= 99; level++) expect(xpAtLevel(level)).toBeGreaterThan(xpAtLevel(level - 1));
+    expect(xpAtLevel(120)).toBe(13_034_431);
+    expect(xpAtLevel(0)).toBe(0);
   });
 });

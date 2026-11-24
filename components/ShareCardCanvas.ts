@@ -3,6 +3,7 @@
  * phone and a PC export the same picture (no html2canvas, no page layout).
  * The numbers come from utils/shareCard.ts; this file only paints them.
  */
+import { browserHasCanvasFilter, greyCopy } from '../utils/canvasGrey';
 import { MAP_IMAGE } from '../utils/mapCoords';
 import { GRID, cellToChunk, mapWindow, type ShareCardStats } from '../utils/shareCard';
 import type { TierMarks } from '../utils/uiStyle';
@@ -111,15 +112,28 @@ const inset = (ctx: Ctx, p: Paint, x: number, y: number, w: number, h: number, f
   }
 };
 
+/** Grey copies of dimmed icons, made once each, for browsers whose canvas has no filter (Safari). */
+const greyIcons = new WeakMap<HTMLImageElement, CanvasImageSource>();
+const greyIcon = (img: HTMLImageElement): CanvasImageSource => {
+  let grey = greyIcons.get(img);
+  if (!grey) { grey = greyCopy(img, 1, 1) ?? img; greyIcons.set(img, grey); }
+  return grey;
+};
+
 const icon = (ctx: Ctx, img: HTMLImageElement | null, cx: number, cy: number, max: number, dim = false) => {
   if (!img || !img.naturalWidth) return false;
   const s = Math.min(max / img.naturalWidth, max / img.naturalHeight, 2);
   const w = Math.round(img.naturalWidth * s);
   const h = Math.round(img.naturalHeight * s);
+  let pic: CanvasImageSource = img;
   ctx.save();
-  if (dim) { ctx.globalAlpha = 0.28; ctx.filter = 'grayscale(1)'; }
+  if (dim) {
+    ctx.globalAlpha = 0.28;
+    if (browserHasCanvasFilter()) ctx.filter = 'grayscale(1)';
+    else pic = greyIcon(img);
+  }
   ctx.imageSmoothingEnabled = s < 1;
-  ctx.drawImage(img, Math.round(cx - w / 2), Math.round(cy - h / 2), w, h);
+  ctx.drawImage(pic, Math.round(cx - w / 2), Math.round(cy - h / 2), w, h);
   ctx.restore();
   return true;
 };
@@ -175,8 +189,13 @@ const drawMap = async (ctx: Ctx, p: Paint, d: ShareCardStats, scale: number, zoo
   if (img) {
     const bright = cropMap(img, win, Math.round(W * scale), Math.round(H * scale));
     ctx.save();
-    ctx.filter = 'grayscale(0.85) brightness(0.32)';
-    ctx.drawImage(bright, X, Y, W, H);
+    if (browserHasCanvasFilter()) {
+      ctx.filter = 'grayscale(0.85) brightness(0.32)';
+      ctx.drawImage(bright, X, Y, W, H);
+    } else {
+      // Safari's canvas has no filter: the same fog, worked out from the pixels.
+      ctx.drawImage(greyCopy(bright, 0.85, 0.32) ?? bright, X, Y, W, H);
+    }
     ctx.restore();
     cells((gx, gy, x, y) => {
       if (!isOwned(gx, gy)) return;

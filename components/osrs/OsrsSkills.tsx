@@ -152,7 +152,8 @@ export const OsrsSkills: React.FC<Props> = ({
             const isMainActionable = canUnlockStart || canLevel;
             const oddsDescriptionId = `skill-roll-odds-${skill.toLowerCase().replace(/\s+/g, '-')}`;
 
-            if (searchQuery && !skill.toLowerCase().includes(searchQuery.toLowerCase())) return null;
+            // The trimmed query, as the No skills match note reads it.
+            if (query && !skill.toLowerCase().includes(query)) return null;
 
             const nextLevel = level + 1;
             const pastCap = canLevel && levelPastTierCap(gameModeId, unlocks, skill, nextLevel);
@@ -166,7 +167,7 @@ export const OsrsSkills: React.FC<Props> = ({
                 : `Each level-up also has a separate ${LEVEL_CHAOS_CHANCE}% chance of a Chaos Key.`}`
               : '';
             const examine = isUnlocked
-              ? `Level ${level}. Tier ${tier}: you can train levels ${methodRange}.${odds ? ` ${odds}` : ''}`
+              ? `Level ${level}. Tier ${tier}: training methods for levels ${methodRange}.${odds ? ` ${odds}` : ''}`
               : `Level ${level}. Locked: no tier unlocked yet.`;
             const action = canUnlockStart ? 'Click to unlock with an Omni-Key.' : canLevel ? 'Click to level up.' : '';
 

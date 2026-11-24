@@ -105,6 +105,20 @@ describe('Chunked quests count only in their own chunks', () => {
     expect(row.bucket).not.toBe('DOABLE');
   });
 
+  it("counts an unlocked boss's drops as an item source (Doric's Quest iron ore from Duke Sucellus)", () => {
+    // One checker, so the second answer must not come from the first one's cached verdict.
+    const checks = createChunkedChecks(chunkContentService);
+    const doric = QUEST_DATA["Doric's Quest"];
+    // Ghorrock Prison, where the Duke is fought, opens with these two quests; the boss unlock is the only difference.
+    const quests = ['Secrets of the North', 'Desert Treasure II'];
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], quests })).map(blocker => blocker.label))
+      .toEqual(['Iron ore (no source in your chunks yet)']);
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], quests, bosses: ['Duke Sucellus'] }))).toEqual([]);
+    // Without the quests the lair stays shut, so the unlocked boss alone gives no source.
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], bosses: ['Duke Sucellus'] })).map(blocker => blocker.label))
+      .toEqual(['Iron ore (no source in your chunks yet)']);
+  });
+
   it('the Journal and the Doable tab agree on grown runs', () => {
     for (let i = 1; i <= 6; i++) {
       const unlocks = maxed(walk(i * 7919, 30));
@@ -223,6 +237,55 @@ describe('Chunked diary tasks with several ways check each way where it is (cont
   });
 });
 
+describe('Chunked diary tasks that need several places need a chunk of each (diary-b.d2[0])', () => {
+  const task = (id: string) => ALL_DIARY_TASKS.find(t => t.id === id)!;
+  const ready = (id: string, chunks: string[], patch: Partial<UnlockState> = {}) => (
+    evaluateDiaryTaskEligibility(task(id), maxed(chunks, patch), 'chunked')
+  );
+  const blockerText = (id: string, chunks: string[]) => JSON.stringify(ready(id, chunks).blockers);
+
+  it("teleporting to all five Kourend cities needs a chunk in each of them", () => {
+    const memoirs: Partial<UnlockState> = {
+      mobility: ["Kharedst's Memoirs"],
+      quests: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'],
+    };
+    const checks = createChunkedChecks(chunkContentService);
+    const t = task('kou_med_3');
+    expect(checks.diaryTask(t.id, t)?.locations).toHaveLength(5);
+    expect(ready('kou_med_3', ['26,56'], memoirs).eligible).toBe(false);
+    expect(ready('kou_med_3', ['23,55', '24,58', '26,56', '26,58'], memoirs).eligible).toBe(false);
+    expect(ready('kou_med_3', ['23,55', '24,58', '26,56', '26,58', '28,58'], memoirs).eligible).toBe(true);
+  });
+
+  it('the Trollheim shortcut needs both ends', () => {
+    const quests: Partial<UnlockState> = { quests: ['Death Plateau', 'Troll Stronghold'] };
+    expect(ready('wild_hard_8', ['45,57'], quests).machineEligible).toBe(false);
+    expect(ready('wild_hard_8', ['46,57'], quests).machineEligible).toBe(false);
+    expect(ready('wild_hard_8', ['45,57', '46,57'], quests).machineEligible).toBe(true);
+  });
+
+  it("the boat to Land's End needs Land's End and one of its ports", () => {
+    expect(ready('kou_easy_6', ['47,50']).eligible).toBe(false);
+    expect(ready('kou_easy_6', ['23,53']).eligible).toBe(false);
+    expect(ready('kou_easy_6', ['23,53', '47,50']).eligible).toBe(true);
+  });
+
+  it("keeps a port the task's chunks miss as a way to go (Veos from Port Piscarilius)", () => {
+    // The task's only port chunk is Port Sarim's; the boat also leaves from Piscarilius.
+    expect(ready('kou_easy_6', ['28,58']).eligible).toBe(false);
+    expect(ready('kou_easy_6', ['23,53', '28,58']).eligible).toBe(true);
+    expect(ready('kou_easy_6', ['23,53', '27,57']).eligible).toBe(true);
+  });
+
+  it('keeps an area with no chunk of the task as an area to own', () => {
+    // var_hard_1's only chunk is the Fancy Dress Seller's; the dashing kebbits are in Piscatoris.
+    expect(ready('var_hard_1', ['51,53']).machineEligible).toBe(false);
+    expect(blockerText('var_hard_1', ['51,53'])).toContain('Piscatoris Fishing Colony');
+    // lum_hard_4's only chunk is Lumbridge's canoe station; the canoe still has to reach Edgeville.
+    expect(blockerText('lum_hard_4', ['50,50'])).toContain('Edgeville');
+  });
+});
+
 describe('Chunked quests buy only from shops in the run\'s chunks (dead-ends item 9)', () => {
   it("Prince Ali Rescue's Clothes Shops counts once a clothes shop is in the run's chunks", () => {
     // Clothes shops, and Tenzing, who sells climbing boots as one.
@@ -319,11 +382,11 @@ describe('Chunked advisors and guides', () => {
     const state = (unlocks: UnlockState, gameModeId = 'chunked') => ({ ...createFreshState(), gameModeId, unlocks }) as never;
     const bosses = ['The Leviathan'];
     const quests = ['Desert Treasure II'];
-    expect(isItemAvailable('Leviathan Lure', state(maxed([], { bosses, quests })))).toBe(false);
-    expect(calculateSupplyChain('Leviathan Lure', state(maxed([], { bosses, quests })))!.sources[0].status.missing)
+    expect(isItemAvailable("Leviathan's Lure", state(maxed([], { bosses, quests })))).toBe(false);
+    expect(calculateSupplyChain("Leviathan's Lure", state(maxed([], { bosses, quests })))!.sources[0].status.missing)
       .toContain('Not in your chunks: The Leviathan');
-    expect(isItemAvailable('Leviathan Lure', state(maxed(['49,50', '48,49'], { bosses, quests })))).toBe(true);
-    expect(isItemAvailable('Leviathan Lure', state(maxed([], { bosses, quests, regions: ['Misthalin'] }), 'vanilla'))).toBe(true);
+    expect(isItemAvailable("Leviathan's Lure", state(maxed(['49,50', '48,49'], { bosses, quests })))).toBe(true);
+    expect(isItemAvailable("Leviathan's Lure", state(maxed([], { bosses, quests, regions: ['Misthalin'] }), 'vanilla'))).toBe(true);
   });
 });
 
@@ -341,5 +404,25 @@ describe("RuneProof's current-only item check", () => {
         expect(now.status === 'CANNOT_COMPLETE_YET').toBe(full.status === 'CANNOT_COMPLETE_YET');
       }
     }
+  });
+});
+
+describe('Chunked diary tasks that name an NPC (deep audit diary-b d2[1])', () => {
+  it('needs Captain Ginea\'s chunk and a gang-meeting chunk for kou_med_8', () => {
+    // OSRS Wiki 'Intelligence Gathering': meetings are found by talking to Captain Ginea in the tent, and
+    // intelligence is turned in to her. chunk-content places her at 23,56 (South Shayzien Encampment); the
+    // export's diaryChunks for MD8 hold only the rotating meeting chunks.
+    const task = ALL_DIARY_TASKS.find(t => t.id === 'kou_med_8')!;
+    const meetings = (full as unknown as { diaryChunks: Record<string, string[]> }).diaryChunks['Kourend & Kebos|MD8'];
+    expect(meetings).not.toContain(String(23 * 256 + 56));
+    expect(meetings).toContain(String(26 * 256 + 55));
+    const ready = (chunks: string[]) =>
+      evaluateDiaryTaskEligibility(task, maxed(chunks, { minigames: ['Intelligence Gathering'] }), 'chunked').eligible;
+    expect(ready(['26,55'])).toBe(false); // a Hosidius meeting chunk alone
+    expect(ready(['23,53'])).toBe(false); // a Land's End meeting chunk alone
+    expect(ready(['23,56'])).toBe(false); // Ginea, but no meeting chunk
+    expect(ready(['23,56', '26,55'])).toBe(true);
+    const placed = createChunkedChecks(chunkContentService).diaryTask(task.id, task)!;
+    expect(placed.locations?.map(location => location.label)).toEqual(['Captain Ginea', 'Shayzien: one of 23 chunks']);
   });
 });

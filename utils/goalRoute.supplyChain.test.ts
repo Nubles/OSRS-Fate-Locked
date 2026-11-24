@@ -104,7 +104,11 @@ describe('Supply Chain typed unlock blockers', () => {
     ];
     // 65 since the 22 Nov 2026 Wiki refresh: Pest Control, Bryophyta, K'ril Tsutsaroth and Commander Zilyana
     // left the list; Theatre of Blood, General Graardor and The Fractured Archive joined it.
-    expect(untypedUnlockIds).toHaveLength(65);
+    // 69 since the 24 Nov boss and minigame gates: Pest Control, Giants' Foundry, Last Man Standing
+    // and Forestry rows now name their minigame.
+    // 75 since the generated rows of Amoxliatl, Doom of Mokhaiotl, Gemstone Crab, Yama, Mahogany Homes
+    // and Shades of Mort'ton name their activity.
+    expect(untypedUnlockIds).toHaveLength(75);
     expect(untypedUnlockIds.filter(id => !RESOURCE_UNLOCK_TABLES[id])).toEqual([]);
   });
 

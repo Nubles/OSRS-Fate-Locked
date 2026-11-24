@@ -1,4 +1,4 @@
-import { WIKI_OVERRIDES } from '../data/assets';
+import { WIKI_OVERRIDES, wikiUrlFor } from '../data/assets';
 import { QUEST_DATA } from '../data/questData';
 
 /**
@@ -39,3 +39,36 @@ export const caMonsterWikiUrl = (monster: string): string => (
     ? 'https://oldschool.runescape.wiki/w/Combat_Achievements'
     : `https://oldschool.runescape.wiki/w/${encodeURIComponent(monster.replace(/ /g, '_'))}`
 );
+
+/** Each diary's Wiki page, by the area word that starts its tier id. */
+const DIARY_WIKI_PAGES: Readonly<Record<string, string>> = {
+  'Ardougne': 'Ardougne_Diary',
+  'Desert': 'Desert_Diary',
+  'Falador': 'Falador_Diary',
+  'Fremennik': 'Fremennik_Diary',
+  'Kandarin': 'Kandarin_Diary',
+  'Karamja': 'Karamja_Diary',
+  'Kourend': 'Kourend_%26_Kebos_Diary',
+  'Lumbridge': 'Lumbridge_%26_Draynor_Diary',
+  'Morytania': 'Morytania_Diary',
+  'Varrock': 'Varrock_Diary',
+  'Western': 'Western_Provinces_Diary',
+  'Wilderness': 'Wilderness_Diary',
+};
+
+/** The Wiki page and tier section for a diary tier id such as 'Western Easy'. */
+export const diaryWikiUrl = (tierId: string): string => {
+  const [region, tier] = tierId.split(' ');
+  return `https://oldschool.runescape.wiki/w/${DIARY_WIKI_PAGES[region] ?? 'Achievement_Diary'}#${tier}`;
+};
+
+/** The Wiki page for a Combat Achievement tier such as 'Easy'. */
+export const caTierWikiUrl = (tier: string): string => `https://oldschool.runescape.wiki/w/Combat_Achievements/${tier}`;
+
+/** The Wiki link for an Oracle result, chosen by the kind of row it is. */
+export const oracleWikiUrl = (row: { type: string; name: string; id?: string | number }): string => {
+  if (row.type === 'Quest') return questWikiUrl(row.name);
+  if (row.type === 'Diary') return diaryWikiUrl(String(row.id ?? row.name));
+  if (row.type === 'Combat Achievement') return caTierWikiUrl(String(row.id ?? row.name));
+  return wikiUrlFor(row.name);
+};

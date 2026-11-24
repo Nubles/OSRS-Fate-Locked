@@ -212,7 +212,9 @@ describe('buildRuneliteRulesManifest - frontier', () => {
     expect(manifest.frontier).toEqual(expect.arrayContaining(['49,47', '50,48', '43,53', '41,57', '28,57']));
     // The wiki-only ports with no open sea beside them: Hosidius, Ardougne and Entrana (Piscatoris is coast already).
     expect(manifest.frontier).toEqual(expect.arrayContaining(['26,54', '41,51', '44,52']));
-    expect(manifest.frontier).toHaveLength(183);
+    // The mooring points with no open sea beside them: Rimmington and Witchaven (travel-b.d1[2]).
+    expect(manifest.frontier).toEqual(expect.arrayContaining(['45,50', '42,51']));
+    expect(manifest.frontier).toHaveLength(185);
     expect(manifest.frontier).not.toContain('48,49');
   });
 

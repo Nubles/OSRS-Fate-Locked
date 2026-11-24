@@ -8,12 +8,17 @@ import { TableType } from '../types';
 import { resetPendingSavesForTest } from '../utils/pendingSaves';
 import { WRITER_LEASE_ARBITRATION_MS } from '../utils/profileWriterLease';
 import { runDrawFloat } from '../utils/seededRng';
+import { loadWalkSections } from '../utils/walkSections';
 
 // Every run draws from its seed or hidden salt (runDrawFloat), never
 // Math.random, so a test that needs a given draw sets it here.
 vi.mock('../utils/seededRng', async importOriginal => {
   const actual = await importOriginal<typeof import('../utils/seededRng')>();
   return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
+vi.mock('../utils/walkSections', async importOriginal => {
+  const actual = await importOriginal<typeof import('../utils/walkSections')>();
+  return { ...actual, loadWalkSections: vi.fn(actual.loadWalkSections) };
 });
 
 let current: ReturnType<typeof useGame>;
@@ -65,7 +70,12 @@ it('does not expose a failed-save result and retries that same transaction', asy
   vi.mocked(runDrawFloat).mockReturnValue(0.1);
   act(() => current.rollUnlock(TableType.EQUIPMENT));
   expect(screen.getByRole('status').textContent).toContain('waiting to be saved');
+  // A way out that keeps the run: the backup holds the roll unrevealed.
+  expect(screen.getByRole('button', { name: 'Export backup' })).toBeTruthy();
   const selected = current.pendingUnlock!;
+  // Not revealed yet, so Continue cannot clear it.
+  act(() => current.acknowledgeUnlock(selected.id));
+  expect(current.pendingUnlock).toEqual(selected);
   expect(screen.getByText(selected.item).parentElement?.style.display).toBe('none');
   expect(screen.queryByRole('button', { name: 'Accept Destiny' })).toBeNull();
   expect(JSON.parse(localStorage.getItem('roll-audit')!).keys).toBe(3);
@@ -151,4 +161,50 @@ it('keeps the run on screen while a roll saves and does not replay the reveal on
   expect(screen.getByRole('button', { name: 'Continue' })).toBe(reveal);
   expect(states.every(s => !s.startsWith('none'))).toBe(true);
   expect(states.filter((s, i) => s.endsWith('reveal') && !states[i - 1]?.endsWith('reveal'))).toHaveLength(1);
+});
+
+it('closes a shown reveal on the first Continue while another change is still saving', async () => {
+  localStorage.setItem('roll-audit', JSON.stringify({ ...createFreshState(), keys: 3 }));
+  mount(); await settle();
+  act(() => current.rollUnlock(TableType.EQUIPMENT));
+  await act(async () => { await vi.advanceTimersByTimeAsync(550); });
+  const id = current.pendingUnlock!.id;
+  // The docked OSRS reveal leaves the run usable: a change, then Continue at once.
+  act(() => current.saveNote('audit', 'Ticked while the reveal was open'));
+  act(() => current.acknowledgeUnlock(id));
+  expect(current.pendingUnlock).toBeUndefined();
+  await act(async () => { await vi.advanceTimersByTimeAsync(550); });
+  const saved = JSON.parse(localStorage.getItem('roll-audit')!);
+  expect(saved.pendingUnlock).toBeUndefined();
+  expect(saved.keys).toBe(2);
+});
+
+it('draws a Chunked Chunks Key from the walking frontier only, and a failed walk load spends nothing', async () => {
+  const actual = await vi.importActual<typeof import('../utils/walkSections')>('../utils/walkSections');
+  const load = vi.mocked(loadWalkSections);
+  const toasts: string[] = [];
+  const onToast = (event: Event) => { toasts.push((event as CustomEvent<{ message: string }>).detail.message); };
+  window.addEventListener('fate:toast', onToast);
+  load.mockRejectedValue(new Error('offline'));
+  const fresh = createFreshState();
+  localStorage.setItem('roll-audit', JSON.stringify({ ...fresh, gameModeId: 'chunked', gameModeLocked: true, keys: 3,
+    unlocks: { ...fresh.unlocks, chunks: ['50,49', '49,49'] } }));
+  mount(); await settle();
+  act(() => current.rollUnlock(TableType.CHUNKS));
+  await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+  expect(current.keys).toBe(3);
+  expect(current.pendingUnlock).toBeUndefined();
+  expect(toasts).toContain("The map's walking data couldn't load. Check your connection and try again; your Key is safe.");
+  // Still loading: nothing is drawn from the bare chunk grid (48,49 across the river, 50,48).
+  let open!: () => void;
+  const gate = new Promise<void>(resolve => { open = resolve; });
+  load.mockImplementation(() => gate.then(() => actual.loadWalkSections()));
+  act(() => current.rollUnlock(TableType.CHUNKS));
+  expect(current.keys).toBe(3);
+  open();
+  await act(async () => { await actual.loadWalkSections(); await vi.advanceTimersByTimeAsync(10); });
+  expect(current.keys).toBe(2);
+  expect(['49,50', '50,51', '51,50']).toContain(current.pendingUnlock?.item);
+  load.mockImplementation(actual.loadWalkSections);
+  window.removeEventListener('fate:toast', onToast);
 });

@@ -16,6 +16,7 @@ import {
   evaluateQuestEligibility, meetsSkillRequirement, questRequirementOptionLabel, type EligibilityBlocker,
 } from './journalStatus';
 import { farmingPatchFor } from './farmingPatches';
+import { shortcutReachability, shortcutsByChunk, type ShortcutContent } from './shortcutReach';
 import { isBankReachable } from './reachability';
 import { canonicalBossId, resolveQuest } from './contentIdentity';
 import { evaluateEntityAccess, evaluateBankRequirements, type EntityAccessSource, type EntityAccessResult } from './entityAccess';
@@ -37,6 +38,8 @@ export interface ChunkPermissionRow {
   status: PermissionStatus;
   detail?: string;
   targetKind?: 'NPC' | 'OBJECT' | 'SHOP' | 'BANK' | 'TELEPORT' | 'ACTIVITY';
+  /** A minigame's ACTIVITIES row: it names a place, not an NPC or object the plugin can point to. Absent on every other row. */
+  minigame?: true;
 }
 
 export interface ChunkPermissionSnapshot {
@@ -60,6 +63,8 @@ export interface ChunkPermissionContext {
   customMode?: GameModeRules;
   reachableChunks?: Set<string>;
   shortcuts?: Shortcut[];
+  /** Where shortcuts' objects and interiors are (the chunk content); without it they are placed by chunk id and place name. */
+  shortcutContent?: ShortcutContent;
   /** @deprecated Ignored. Quest status is always computed canonically. */
   questStatuses?: Record<string, PermissionStatus>;
 }
@@ -130,6 +135,10 @@ export function bankAccess(
   const unlocked = isBankReachable(coord.cx, coord.cy, context.unlocks, context.gameModeId, context.customMode);
   return { status: withEntry(unlocked ? 'ALLOWED' : 'LOCKED', withEntry(access.status, entry)), reasons: access.reasons };
 }
+
+/** A level line as the plugin's SkillLine reads it: "Slayer 5/93 · cap 10". */
+const skillLine = (unlocks: UnlockState, skill: string, needed: number): string =>
+  `${skill} ${unlocks.levels[skill] ?? 1}/${needed} · cap ${Math.min(99, (unlocks.skills[skill] ?? 0) * 10)}`;
 
 function sortRows(rows: ChunkPermissionRow[]): ChunkPermissionRow[] {
   return rows.sort((left, right) =>
@@ -209,16 +218,18 @@ export function buildChunkPermissionSnapshot(
       });
       continue;
     }
-    const status: PermissionStatus =
-      monster.slayer == null || meetsSkillRequirement(context.unlocks, 'Slayer', monster.slayer)
-        ? 'ALLOWED'
-        : 'NOT_READY';
-    add('COMBAT', {
+    const slayerMet = monster.slayer == null || meetsSkillRequirement(context.unlocks, 'Slayer', monster.slayer);
+    const row: ChunkPermissionRow = {
       key: `combat:${monster.name.toLowerCase()}`,
       name: monster.name,
-      status: withEntry(status, entry),
+      status: withEntry(slayerMet ? 'ALLOWED' : 'NOT_READY', entry),
       targetKind: 'NPC',
-    });
+    };
+    add('COMBAT', row);
+    // A row waiting on its Slayer level names it first, as skilling rows do; a locked row says only why it is locked.
+    if (!slayerMet && row.status === 'NOT_READY') {
+      row.detail = [skillLine(context.unlocks, 'Slayer', monster.slayer!), row.detail].filter(Boolean).join('; ');
+    }
   }
 
   for (const [name] of content.objects) {
@@ -235,9 +246,6 @@ export function buildChunkPermissionSnapshot(
     }
     const requirement = resourceReqFor(name);
     if (!requirement) continue;
-    const level = context.unlocks.levels[requirement.skill] ?? 1;
-    const tier = context.unlocks.skills[requirement.skill] ?? 0;
-    const cap = Math.min(99, tier * 10);
     add('SKILLING', {
       key: `skill:${name.toLowerCase()}`,
       name,
@@ -245,22 +253,22 @@ export function buildChunkPermissionSnapshot(
         resourceUsable(requirement, context.unlocks) ? 'ALLOWED' : 'NOT_READY',
         entry,
       ),
-      detail: `${requirement.skill} ${level}/${requirement.level} · cap ${cap}`,
+      detail: skillLine(context.unlocks, requirement.skill, requirement.level),
       targetKind: 'OBJECT',
     });
   }
 
-  for (const shortcut of context.shortcuts ?? []) {
-    if (!shortcut.chunks.includes(numericId)) continue;
-    const level = context.unlocks.levels[shortcut.skill] ?? 1;
-    const status: PermissionStatus = meetsSkillRequirement(context.unlocks, shortcut.skill, shortcut.level)
-      ? 'ALLOWED'
-      : 'NOT_READY';
+  // One row per shortcut, placed and judged as the Shortcuts panels do: every
+  // level, its quests and diary tiers. The chunk's entry covers ownership and routes.
+  const here = shortcutsByChunk(context.shortcuts ?? [], context.shortcutContent).get(chunkKey) ?? [];
+  for (const row of shortcutReachability(here, context.unlocks, () => ({ ...coord, unlocked: true })).rows) {
+    const levels = row.requirements.map(({ skill, level }) => `${skill} ${context.unlocks.levels[skill] ?? 1}/${level}`).join(', ');
+    const needs = [row.quest, row.diary].filter(Boolean).map(need => `Needs ${need}`);
     add('TRAVEL', {
-      key: `travel:${shortcut.name.toLowerCase()}`,
-      name: shortcut.name,
-      status: withEntry(status, entry),
-      detail: `${shortcut.skill} ${level}/${shortcut.level}`,
+      key: `travel:${row.name.toLowerCase()}`,
+      name: row.name,
+      status: withEntry(row.status === 'ready' ? 'ALLOWED' : 'NOT_READY', entry),
+      detail: [levels, ...needs].join('; '),
       targetKind: 'TELEPORT',
     });
   }
@@ -274,6 +282,7 @@ export function buildChunkPermissionSnapshot(
         entry,
       ),
       targetKind: 'ACTIVITY',
+      minigame: true,
     });
   }
 

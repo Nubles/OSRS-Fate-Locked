@@ -46,7 +46,7 @@ describe('MonsterService pinned targets', () => {
     expect(fetchMock).toHaveBeenCalledWith(`${base}${MONSTER_CATALOGUE.asset}`, expect.any(Object));
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/^\//);
     expect(service.ready).toBe(true);
-    expect(service.search('', 10_000)).toHaveLength(2850); // Existing name+version deduplication.
+    expect(service.search('', 10_000)).toHaveLength(2913); // Existing name+version deduplication.
     expect(service.byName('Menaphite Shadow')?.size).toBe(0); // Unknown-size upstream targets remain selectable.
     // Max hits written with markup first used to parse as 0 (Danger: Low).
     expect(service.byName('Tormented Demon')?.maxHit).toBe(45);
@@ -58,6 +58,14 @@ describe('MonsterService pinned targets', () => {
     expect(service.byId(2215)).toMatchObject({ name: 'General Graardor', hp: 255, maxHit: 60, defLevel: 250,
       magicLevel: 80, def: { stab: 90, slash: 90, crush: 90, magic: 298, ranged: 90 },
       rangedDefence: { light: 90, standard: 90, heavy: 90 } });
+    // 24 November 2026 capture. Wiki "Nex" (rev 15395228): dcrush = 35 since 20 October 2026.
+    expect(service.byName('Nex')?.def.crush).toBe(35);
+    // The Fractured Archive (20 October 2026). Wiki "Ocellus" (rev 15410252) and
+    // "Archive Guardian" (rev 15409785).
+    expect(service.versionsOf('Ocellus').map(m => [m.version, m.hp, m.defLevel]))
+      .toEqual([['Phase 1', 2500, 215], ['Phase 2', 1000, 250], ['Phase 3', 5250, 250]]);
+    expect(service.versionsOf('Archive Guardian').map(m => [m.version, m.hp, m.defLevel]))
+      .toEqual([['Flying', 550, 260], ['Grounded', 1100, 260]]);
   });
 
   it('uses matching normalized cache offline even after thirty days, without changing stat semantics', async () => {
@@ -177,6 +185,91 @@ describe('MonsterService versions', () => {
     const all = service.search('', 10_000);
     expect(new Set(all.map(monsterKey)).size).toBe(all.length);
     expect(all.every(monster => service.byKey(monsterKey(monster)) === monster)).toBe(true);
+  });
+});
+
+describe('MonsterService Defence levels', () => {
+  it('gives every planned boss row a real Defence level, Vardorvis included', async () => {
+    mockStorage();
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    mockData(rows);
+    const service = await freshService();
+    await service.init();
+    const { BOSSES_LIST } = await import('../data/items');
+    const { BOSS_ALIASES, BOSS_COMBAT_LIMITS } = await import('../utils/bossPlanner');
+
+    // Wiki "Vardorvis" (rev 15385991): def1 = 215-145, def2 = 268-181, def3 = 180-130,
+    // "Scales linearly with Vardorvis' remaining HP." The upstream rows say 0; the
+    // start-of-fight Defence is used.
+    expect(Object.fromEntries(service.versionsOf('Vardorvis').map(m => [m.version, m.defLevel])))
+      .toEqual({ 'Post-quest': 215, Awakened: 268, Quest: 180 });
+
+    const undefended = (BOSSES_LIST as readonly string[])
+      // The Gemstone Crab has no Defence on the Wiki and no kill to plan.
+      .filter(boss => !BOSS_COMBAT_LIMITS[boss]?.endless && !BOSS_COMBAT_LIMITS[boss]?.noCombat)
+      .flatMap(boss => service.versionsOf(BOSS_ALIASES[boss] ?? boss))
+      .filter(m => m.defLevel <= 0)
+      .map(m => `${m.name}|${m.version}`);
+    expect(undefended).toEqual([]);
+  });
+
+  it('rebuilds a version 3 cache, which kept Vardorvis at Defence 0', async () => {
+    const storage = mockStorage();
+    const vardorvis = { ...TARGET, id: 12223, name: 'Vardorvis', version: 'Post-quest', skills: { hp: 700, def: 0, magic: 215 } };
+    const fetchMock = mockData([TARGET, vardorvis]);
+    await (await freshService()).init();
+    const cached = JSON.parse(storage.get(CACHE_KEY)!);
+    expect(cached.data.find((row: { id: number }) => row.id === 12223).defLevel).toBe(215);
+    cached.source = `${MONSTER_CATALOGUE.sha256}:3`;
+    cached.data.find((row: { id: number }) => row.id === 12223).defLevel = 0;
+    storage.set(CACHE_KEY, JSON.stringify(cached));
+
+    const service = await freshService();
+    await service.init();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(service.byId(12223)?.defLevel).toBe(215);
+  });
+
+  it('keeps an upstream Defence level that is not 0', async () => {
+    mockStorage();
+    mockData([{ ...TARGET, id: 12223, name: 'Vardorvis', version: 'Post-quest', skills: { hp: 700, def: 190, magic: 215 } }]);
+    const service = await freshService();
+    await service.init();
+    expect(service.byId(12223)?.defLevel).toBe(190);
+  });
+});
+
+describe('MonsterService flat armour', () => {
+  it('carries each row\'s flat armour, positive and negative, and reads a missing value as 0', async () => {
+    mockStorage();
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    mockData([...rows, { ...TARGET, id: 999_001, name: 'No flat armour field' }]);
+    const service = await freshService();
+    await service.init();
+    // Wiki "Flat armour" (rev 15382660) NPC table: Veiled kraken 15, Blue Moon -5,
+    // Amoxliatl -2, Dusk (first form) -1.
+    expect(service.byName('Veiled kraken')?.flatArmour).toBe(15);
+    expect(service.byName('Blue Moon')?.flatArmour).toBe(-5);
+    expect(service.versionsOf('Amoxliatl').map(m => m.flatArmour)).toEqual([-2, -2]);
+    expect(service.versionsOf('Dusk').find(m => m.version === 'First form')?.flatArmour).toBe(-1);
+    expect(service.byName('General Graardor')?.flatArmour).toBe(0);
+    expect(service.byName('No flat armour field')?.flatArmour).toBe(0);
+  });
+
+  it('rebuilds a version 4 cache, which had no flat armour', async () => {
+    const storage = mockStorage();
+    const kraken = { ...TARGET, id: 12_000, name: 'Veiled kraken', defensive: { ...TARGET.defensive, flat_armour: 15 } };
+    const fetchMock = mockData([TARGET, kraken]);
+    await (await freshService()).init();
+    const cached = JSON.parse(storage.get(CACHE_KEY)!);
+    cached.source = `${MONSTER_CATALOGUE.sha256}:4`;
+    for (const row of cached.data) delete row.flatArmour;
+    storage.set(CACHE_KEY, JSON.stringify(cached));
+
+    const service = await freshService();
+    await service.init();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(service.byId(12_000)?.flatArmour).toBe(15);
   });
 });
 

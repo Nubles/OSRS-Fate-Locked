@@ -37,7 +37,7 @@ const questIdsWorthAtLeast = (points: number): string[] => {
 };
 
 const unlocksReadyForPryingTimes = (): UnlockState => unlocked({
-  regions: ['The Pandemonium', 'Port Sarim', 'Rimmington'],
+  regions: ['Cam Torum', 'The Pandemonium', 'Port Sarim', 'Rimmington'],
   quests: ['Pandemonium', "The Knight's Sword"],
   skills: { Smithing: 3, Sailing: 2 },
   levels: { Smithing: 30, Sailing: 12 },
@@ -1154,7 +1154,9 @@ describe('skills gated by an unlocking quest', () => {
     const gated = (skill: string) => Object.hasOwn(SKILL_QUEST_GATES, skill);
     const elsewhere = [
       ...Object.values(QUEST_DATA).flatMap(quest => [
-        ...(quest.oneOf ?? []).flatMap(option => Object.keys(option.skills ?? {})),
+        // A quest route that names the unlocking quest itself adds it.
+        ...(quest.oneOf ?? []).flatMap(option => Object.keys(option.skills ?? {})
+          .filter(skill => !option.quests?.includes(SKILL_QUEST_GATES[skill]))),
         ...(quest.skillAlternatives ?? []).map(option => option.skill),
         ...(quest.preparationRequirements ?? []).map(preparation => preparation.skill),
       ].filter(gated).map(skill => `${quest.id}: ${skill}`)),

@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
-  readProgressShare, requestLinkCode, writeProgressShare,
+  deleteProgress, formatLinkCode, lastAcceptedSummary, newProgressShareRecord, publishProgress,
+  readProgressShare, replaceRefusedShare, requestLinkCode, writeProgressShare,
 } from './progressShare';
 import { PROGRESS_ID_RE } from '../workers/fate-relay/protocol.js';
+
+const showToast = vi.hoisted(() => vi.fn());
+vi.mock('./toast', () => ({ showToast }));
 
 const BASE = 'https://relay.test';
 const record = newProgressShareRecord(bytes => bytes.fill(7));
@@ -78,5 +81,47 @@ describe('progress share requests', () => {
     const ok = reply(200, { deleted: true });
     expect(await deleteProgress(BASE, record, ok)).toBe(true);
     expect(ok).toHaveBeenCalledWith(`${BASE}/p/${record.id}`, expect.objectContaining({ method: 'DELETE' }));
+  });
+
+  it('remembers the summary the relay last took, so the driver skips only what the relay has', async () => {
+    const other = newProgressShareRecord(bytes => bytes.fill(9));
+    await publishProgress(BASE, other, { areas: 1, public: true }, reply(200));
+    expect(lastAcceptedSummary(other.id)).toBe('{"areas":1,"public":true}');
+    // Refused or unreachable: the relay still has the earlier summary.
+    await publishProgress(BASE, other, { areas: 1 }, reply(429));
+    await publishProgress(BASE, other, { areas: 1 }, vi.fn(async () => { throw new TypeError('offline'); }));
+    expect(lastAcceptedSummary(other.id)).toBe('{"areas":1,"public":true}');
+    // Stop sharing drops the relay's copy, whether or not the delete got through.
+    await deleteProgress(BASE, other, reply(500));
+    expect(lastAcceptedSummary(other.id)).toBeUndefined();
+  });
+});
+
+describe('moving a run whose id another token holds', () => {
+  beforeEach(() => showToast.mockReset());
+
+  it('gives it a new id and token, keeps its settings, and says the links changed', () => {
+    const refused = { ...newProgressShareRecord(bytes => bytes.fill(1)), publicLog: true };
+    writeProgressShare('FATE_PROFILE_a', refused);
+    const moved = replaceRefusedShare('FATE_PROFILE_a', refused)!;
+    expect(moved.id).toMatch(PROGRESS_ID_RE);
+    expect(moved.id).not.toBe(refused.id);
+    expect(moved.token).not.toBe(refused.token);
+    expect(moved).toMatchObject({ enabled: true, publicLog: true });
+    expect(readProgressShare('FATE_PROFILE_a')).toEqual(moved);
+    expect(showToast.mock.calls).toEqual([['Your Adventurer\'s Log link changed and Discord needs linking again.']]);
+
+    // Asked again for the old id (the other caller in the page): the same new record, nothing new made.
+    expect(replaceRefusedShare('FATE_PROFILE_a', refused)).toEqual(moved);
+    // The new id refused as well: no further id, so a relay that refuses everything can't make it loop.
+    expect(replaceRefusedShare('FATE_PROFILE_a', moved)).toBeNull();
+    expect(readProgressShare('FATE_PROFILE_a')).toEqual(moved);
+    expect(showToast).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing for a run with no record', () => {
+    expect(replaceRefusedShare('FATE_PROFILE_b', record)).toBeNull();
+    expect(readProgressShare('FATE_PROFILE_b')).toBeNull();
+    expect(showToast).not.toHaveBeenCalled();
   });
 });

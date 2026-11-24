@@ -1,4 +1,5 @@
 import type { LogEntry } from '../types';
+import { isVeracHitThrough } from './fateAnalytics';
 import { isRollEntry } from './logEntry';
 
 /**
@@ -10,7 +11,8 @@ import { isRollEntry } from './logEntry';
  * "Found a Key" means the roll paid out: ROLL_SUCCESS, ROLL_OMNI or a PITY Key.
  * A dry streak is a run of rolls in a row that found nothing (a pity Key ends
  * it, since it pays a Key). The luckiest roll is the won roll (not pity) that
- * had the smallest chance of winning.
+ * had the smallest chance of winning. A win Verac hit through missed its odds,
+ * so it is never the luckiest.
  */
 export type KeySourceGroup =
   | 'Slayer'
@@ -104,7 +106,7 @@ export const summarizeKeyHistory = (history: readonly LogEntry[]): KeyHistorySum
       dry += 1;
       longestDry = Math.max(longestDry, dry);
     }
-    if (e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI') {
+    if ((e.type === 'ROLL_SUCCESS' || e.type === 'ROLL_OMNI') && !isVeracHitThrough(e)) {
       const chance = chanceOf(e);
       if (chance !== null && (!luckiest || chance < luckiest.chance)) luckiest = { entry: e, chance };
     }

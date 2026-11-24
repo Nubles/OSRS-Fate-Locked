@@ -27,11 +27,13 @@ export interface MonsterLite {
   magicLevel: number;
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
   rangedDefence?: Record<RangedDamageType, number>;
+  /** Flat armour taken off each successful melee or ranged hit; 0 when absent. */
+  flatArmour?: number;
 }
 
 export interface PlayerCombat {
   levels: { attack: number; strength: number; ranged: number; magic: number; hitpoints: number };
-  gear: { bonuses: GearBonuses; speedTicks: number; category?: string; rangedDamageType?: RangedDamageType };
+  gear: { bonuses: GearBonuses; speedTicks: number; category?: string; rangedDamageType?: RangedDamageType; weaponName?: string };
   /** Potions (super combat/ranging) and the prayers below applied. */
   boostsOn: boolean;
   /** Prayer id per style the player can use (see bestBoostPrayers); none when omitted. */
@@ -153,8 +155,9 @@ const monDefFor = (m: MonsterLite, t: AttackType, rangedType: RangedDamageType):
  * need only their Prayer level, which the skill's tier caps.
  */
 const BOOST_PRAYERS: Record<PlannedStyle, ReadonlyArray<{ id: string; arcana?: string; prayerLevel?: number }>> = {
-  melee: [{ id: 'piety', arcana: 'Piety' }, { id: 'chivalry', arcana: 'Chivalry' }, { id: 'clarity', prayerLevel: 16 }],
-  ranged: [{ id: 'rigour', arcana: 'Rigour' }, { id: 'eagle', prayerLevel: 44 }],
+  // The 15% melee pair needs Incredible Reflexes (34) as well as Ultimate Strength (31).
+  melee: [{ id: 'piety', arcana: 'Piety' }, { id: 'chivalry', arcana: 'Chivalry' }, { id: 'ultimate', prayerLevel: 34 }, { id: 'clarity', prayerLevel: 16 }],
+  ranged: [{ id: 'rigour', arcana: 'Rigour' }, { id: 'eagle', prayerLevel: 44 }, { id: 'hawk', prayerLevel: 26 }],
 };
 
 /** The best offensive prayer per style the player can use ('none' if none). */
@@ -183,6 +186,7 @@ const runCombo = (p: PlayerCombat, m: MonsterLite, { style, attackType, stanceId
     style, attackType, stanceId,
     ...boostsFor(p, style),
     baseSpellMax: 0,
+    weaponName: p.gear.weaponName,
     levels: { attack: p.levels.attack, strength: p.levels.strength, ranged: p.levels.ranged, magic: p.levels.magic },
     gear: {
       accuracy: accuracyFor(p.gear.bonuses, attackType),
@@ -191,7 +195,7 @@ const runCombo = (p: PlayerCombat, m: MonsterLite, { style, attackType, stanceId
       magicDmgPct: p.gear.bonuses.magicStr,
       speedTicks: p.gear.speedTicks,
     },
-    monster: { defLevel: style === 'magic' ? m.magicLevel : m.defLevel, defBonus: monDefFor(m, attackType, p.gear.rangedDamageType ?? 'standard'), hp: m.hp },
+    monster: { defLevel: style === 'magic' ? m.magicLevel : m.defLevel, defBonus: monDefFor(m, attackType, p.gear.rangedDamageType ?? 'standard'), hp: m.hp, flatArmour: m.flatArmour },
   });
 
 // A generic "strong endgame" setup for the gear-gap benchmark.
