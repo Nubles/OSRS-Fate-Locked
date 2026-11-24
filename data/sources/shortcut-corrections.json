@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-24",
+  "note": "Reviewed fixes to the Chunk Picker's Agility shortcut rows and the shortcut objects in chunk object lists, applied by buildShortcuts and mergeBlob in scripts/chunk-content-transform.mjs. Every level, name and place is from the shortcut's own Wiki page. An addition is made only when the source has its anchor row and lacks the row itself.",
+  "sourceRevisions": [
+    { "title": "Rock slide (Cairn Isle)", "revision": 15385418, "url": "https://oldschool.runescape.wiki/w/Rock_slide_(Cairn_Isle)?oldid=15385418" },
+    { "title": "Bridge (Mausoleum)", "revision": 15359087, "url": "https://oldschool.runescape.wiki/w/Bridge_(Mausoleum)?oldid=15359087" },
+    { "title": "Crack (Catacombs of Kourend, south)", "revision": 15091411, "url": "https://oldschool.runescape.wiki/w/Crack_(Catacombs_of_Kourend,_south)?oldid=15091411" },
+    { "title": "Crack (Catacombs of Kourend, north)", "revision": 15091412, "url": "https://oldschool.runescape.wiki/w/Crack_(Catacombs_of_Kourend,_north)?oldid=15091412" },
+    { "title": "Rock (wrecked ghost ship)", "revision": 14924635, "url": "https://oldschool.runescape.wiki/w/Rock_(wrecked_ghost_ship)?oldid=14924635" },
+    { "title": "Stepping stones (Karamja)", "revision": 15232652, "url": "https://oldschool.runescape.wiki/w/Stepping_stones_(Karamja)?oldid=15232652" },
+    { "title": "Low fence", "revision": 15016580, "url": "https://oldschool.runescape.wiki/w/Low_fence?oldid=15016580" },
+    { "title": "Burgh de Rott", "revision": 15321957, "url": "https://oldschool.runescape.wiki/w/Burgh_de_Rott?oldid=15321957" },
+    { "title": "Rocks (Giants' Plateau)", "revision": 15297332, "url": "https://oldschool.runescape.wiki/w/Rocks_(Giants%27_Plateau)?oldid=15297332" },
+    { "title": "Giants' Plateau", "revision": 15356442, "url": "https://oldschool.runescape.wiki/w/Giants%27_Plateau?oldid=15356442" },
+    { "title": "Shortcuts", "revision": 15390021, "url": "https://oldschool.runescape.wiki/w/Shortcuts?oldid=15390021" }
+  ],
+  "renames": [
+    {
+      "skill": "Agility",
+      "from": "Access the Burg de Rot fence shortcut",
+      "to": "Access the Burgh de Rott fence shortcut",
+      "source": "Low fence rev 15016580: |location = [[Burgh de Rott]]; Burgh de Rott rev 15321957"
+    },
+    {
+      "skill": "Agility",
+      "from": "Access the Giant's Plateau rock scramble shortcut",
+      "to": "Access the Giants' Plateau rock scramble shortcut",
+      "source": "Rocks (Giants' Plateau) rev 15297332: |location = [[Giants' Plateau]]; Giants' Plateau rev 15356442."
+    }
+  ],
+  "objectRenames": [
+    {
+      "from": "Rocks (Giant's Plateau)",
+      "to": "Rocks (Giants' Plateau)",
+      "source": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
+    }
+  ],
+  "levels": [
+    {
+      "skill": "Agility",
+      "name": "Access the Cairn Isle rock slide climb shortcut",
+      "level": 15,
+      "source": "Rock slide (Cairn Isle) rev 15385418: 'Level 15 Agility is required to attempt using the shortcut', {{Agility info |level = 15}}"
+    }
+  ],
+  "additions": [
+    {
+      "anchor": "Access the mausoleum bridge jump shortcut",
+      "row": { "name": "Access the mausoleum bridge jump shortcut", "skill": "Construction", "level": 59, "objects": ["Bridge (Mausoleum)"], "chunks": [] },
+      "source": "Bridge (Mausoleum) rev 15359087: 'Repairing this shortcut requires 59 Construction', {{Agility info |skill2name = Construction |skill2lvl = 59}}"
+    },
+    {
+      "anchor": "Access the north-west corner of the Catacombs of Kourend shortcut",
+      "row": { "name": "Access the Catacombs of Kourend southern crack shortcut", "skill": "Agility", "level": 17, "objects": [], "chunks": ["Catacombs of Kourend"] },
+      "source": "Crack (Catacombs of Kourend, south) rev 15091411: 'It requires 17 Agility to use', |location = [[Catacombs of Kourend]], |quest = No"
+    },
+    {
+      "anchor": "Access the north-west corner of the Catacombs of Kourend shortcut",
+      "row": { "name": "Access the Catacombs of Kourend northern crack shortcut", "skill": "Agility", "level": 34, "objects": [], "chunks": ["Catacombs of Kourend"] },
+      "source": "Crack (Catacombs of Kourend, north) rev 15091412: 'It requires 34 Agility to use', |location = [[Catacombs of Kourend]], |quest = No"
+    },
+    {
+      "anchor": "Access the Port Phasmatys Ectopool shortcut",
+      "row": { "name": "Access the wrecked ghost ship rocks shortcut", "skill": "Agility", "level": 25, "objects": [], "chunks": ["14391"] },
+      "source": "Rock (wrecked ghost ship) rev 14924635: 'the player requires at least level 25 Agility', north-west of Port Phasmatys, map x=3601 y=3556 (region 56,55); used during Ghosts Ahoy, so no completion gate"
+    },
+    {
+      "anchor": "Access the Shilo Village stepping stones over the river shortcut",
+      "row": { "name": "Access the stepping stones by the waterfall east of Shilo Village shortcut", "skill": "Agility", "level": 30, "objects": [], "chunks": ["11566"] },
+      "source": "Stepping stones (Karamja) rev 15232652: 'It requires 30 Agility to use the shortcut', east of Shilo Village, map x=2926 y=2950 (region 45,46), |quest = No"
+    }
+  ]
+}

@@ -51,6 +51,59 @@ describe('buildChunkPermissionSnapshot', () => {
     unlocks.skills.Slayer = 2;
     expect(view().categories.COMBAT?.[0].status).toBe('ALLOWED');
   });
+  describe('TRAVEL rows judge shortcuts as the Shortcuts panels do (utils/shortcutReach.ts)', () => {
+    const skilled = () => {
+      const unlocks = structuredClone(initialState.unlocks);
+      for (const skill of ['Agility', 'Ranged', 'Strength']) { unlocks.levels[skill] = 99; unlocks.skills[skill] = 10; }
+      return unlocks;
+    };
+    const travel = (settings: ChunkPermissionContext) =>
+      buildChunkPermissionSnapshot(content(), { cx: 50, cy: 50 }, settings).categories.TRAVEL ?? [];
+    const rocks = { name: 'Access the Shilo Village rocks shortcut', skill: 'Agility', level: 32, chunks: ['12850'], objects: [] };
+
+    it('holds a quest-gated shortcut until its quest is done', () => {
+      const unlocks = skilled();
+      expect(travel(context({ unlocks, shortcuts: [rocks] }))).toEqual([
+        { key: 'travel:access the shilo village rocks shortcut', name: rocks.name, status: 'NOT_READY',
+          detail: 'Agility 99/32; Needs Shilo Village', targetKind: 'TELEPORT' },
+      ]);
+      unlocks.quests = ['Shilo Village'];
+      expect(travel(context({ unlocks, shortcuts: [rocks] }))[0]).toMatchObject({ status: 'ALLOWED', detail: 'Agility 99/32' });
+    });
+
+    it('holds a diary-gated shortcut until its diary tier is done', () => {
+      const unlocks = skilled();
+      const lair = { name: 'Access the Kalphite Lair wall shortcut', skill: 'Agility', level: 86, chunks: ['12850'], objects: [] };
+      expect(travel(context({ unlocks, shortcuts: [lair] }))[0])
+        .toMatchObject({ status: 'NOT_READY', detail: 'Agility 99/86; Needs Desert Elite diary' });
+      unlocks.diaries = ['Desert Elite'];
+      expect(travel(context({ unlocks, shortcuts: [lair] }))[0].status).toBe('ALLOWED');
+    });
+
+    it('finds shortcuts given by a suffixed chunk id or an interior', () => {
+      const unlocks = skilled();
+      const suffixed = { name: 'Suffixed shortcut', skill: 'Agility', level: 5, chunks: ['12850-1'], objects: [] };
+      const inside = { name: 'Interior shortcut', skill: 'Agility', level: 5, chunks: ['some_cave'], objects: [] };
+      const shortcutContent = {
+        shortcuts: () => [], entityLocations: () => null, chunkEntryRequirements: () => [],
+        interiorEntranceChunks: (key: string) => (key === 'some_cave' ? [{ cx: 50, cy: 50 }] : []),
+      };
+      expect(travel(context({ unlocks, shortcuts: [suffixed, inside], shortcutContent })).map(row => row.name))
+        .toEqual(['Interior shortcut', 'Suffixed shortcut']);
+      expect(travel(context({ unlocks, shortcuts: [suffixed], shortcutContent }))[0].status).toBe('ALLOWED');
+    });
+
+    it('gives a multi-skill shortcut one row that needs every level', () => {
+      const unlocks = skilled();
+      unlocks.levels.Strength = 20;
+      const name = 'Access the (mith grapple) test shortcut';
+      const grapple = ['Agility', 'Ranged', 'Strength'].map(skill => ({ name, skill, level: 30, chunks: ['12850'], objects: [] }));
+      expect(travel(context({ unlocks, shortcuts: grapple }))).toEqual([
+        { key: `travel:${name.toLowerCase()}`, name, status: 'NOT_READY',
+          detail: 'Agility 99/30, Ranged 99/30, Strength 20/30', targetKind: 'TELEPORT' },
+      ]);
+    });
+  });
   it("ignores injected permission statuses and uses canonical Witch's Potion access", () => {
     const locked = buildChunkPermissionSnapshot(
       content({ quests: { "Witch's Potion": 'first' } }),

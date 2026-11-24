@@ -3,10 +3,11 @@ import { useGame } from '../../context/GameContext';
 import { MERCHANTS_LIST, MERCHANT_UNLOCK_DETAILS, wikiUrlFor } from '../../constants';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { useChunkContent } from '../../hooks/useChunkContent';
+import { useAreaRoutes } from '../../hooks/useAreaRoutes';
 import { slayerReachability, type SlayerStatus, type SlayerTaskRow } from '../../utils/slayerReach';
 import { slayerLocate } from '../../utils/slayerDecisions';
-import { chunkUnlocked, chunkForPlace, showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
-import { shortcutReachability, type ShortcutStatus } from '../../utils/shortcutReach';
+import { showChunkOnMap, summarisePlaces } from '../../utils/chunkLocations';
+import { runShortcutReach, type ShortcutStatus } from '../../utils/shortcutReach';
 import { shopsByCategory } from '../../utils/merchantShops';
 import { useShopAccess } from '../../hooks/useShopAccess';
 import { itemSrc, skillIconSrc } from './OsrsDashGems';
@@ -94,41 +95,26 @@ const SlayerTool: React.FC = () => {
 };
 
 const SHORTCUT_FILTERS: { key: 'all' | ShortcutStatus; label: string }[] = [
-  { key: 'all', label: 'All' }, { key: 'ready', label: 'Ready' }, { key: 'level', label: 'Need level' }, { key: 'quest', label: 'Need quest' }, { key: 'area-locked', label: 'Area locked' },
+  { key: 'all', label: 'All' }, { key: 'ready', label: 'Ready' }, { key: 'level', label: 'Need level' }, { key: 'quest', label: 'Need quest' }, { key: 'diary', label: 'Need diary' }, { key: 'area-locked', label: 'Area locked' }, { key: 'no-route', label: 'No route' },
 ];
 
 const ShortcutsTool: React.FC = () => {
   const { unlocks, gameModeId } = useGame();
   const { ready, error, retry } = useChunkContent();
+  const routes = useAreaRoutes(unlocks, gameModeId);
   const [filter, setFilter] = useState<'all' | ShortcutStatus>('all');
   const reach = useMemo(() => {
     if (!ready) return null;
-    const shortcuts = chunkContentService.shortcuts();
-    const locate = (s: typeof shortcuts[number]) => {
-      for (const obj of s.objects) {
-        const hit = chunkContentService.entityLocations(obj, ['object']);
-        if (hit && hit.locations.length) {
-          const un = hit.locations.find((l) => chunkUnlocked(l.cx, l.cy, unlocks, gameModeId));
-          const l = un ?? hit.locations[0];
-          return { cx: l.cx, cy: l.cy, unlocked: !!un };
-        }
-      }
-      for (const name of s.chunks) {
-        const c = chunkForPlace(name);
-        if (c) return { cx: c.cx, cy: c.cy, unlocked: chunkUnlocked(c.cx, c.cy, unlocks, gameModeId) };
-      }
-      return null;
-    };
-    return shortcutReachability(shortcuts, unlocks, locate);
-  }, [ready, unlocks, gameModeId]);
+    return runShortcutReach(chunkContentService, unlocks, gameModeId, routes);
+  }, [ready, unlocks, gameModeId, routes]);
   const icon = skillIconSrc('agility');
   if (!reach) return <Shell icon={icon} title="Agility Shortcuts"><div className="oact-tool-empty">{error ? <>Could not load the shortcuts. <button type="button" className="oact-link" onClick={retry}>Retry shortcuts</button></> : 'Loading shortcuts...'}</div></Shell>;
   if (reach.total === 0) return null;
   const rows = filter === 'all' ? reach.rows : reach.rows.filter((r) => r.status === filter);
-  const TAG: Record<ShortcutStatus, [string, string]> = { 'ready': ['ready', '#00ff00'], 'area-locked': ['area locked', '#ffff00'], 'level': ['', '#c77dff'], 'quest': ['', '#00ffff'], 'no-location': ['-', '#8a7c66'] };
+  const TAG: Record<ShortcutStatus, [string, string]> = { 'ready': ['ready', '#00ff00'], 'area-locked': ['area locked', '#ffff00'], 'no-route': ['no route', '#ff981f'], 'level': ['', '#c77dff'], 'quest': ['', '#00ffff'], 'diary': ['', '#00ffff'], 'no-location': ['-', '#8a7c66'] };
   return (
     <Shell icon={icon} title="Agility Shortcuts" right={<><span style={{ color: '#00ff00' }}>{reach.ready}</span> / {reach.total} usable now</>}>
-      <div className="oact-tool-filters" role="group" aria-label="Shortcut filter">
+      <div className="oact-tool-filters" role="group" aria-label="Shortcut filter" style={{ flexWrap: 'wrap' }}>
         {SHORTCUT_FILTERS.map((f) => (
           <button key={f.key} type="button" className={`osrs-btn${filter === f.key ? ' is-on' : ''}`} aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>{f.label}</button>
         ))}
@@ -139,7 +125,7 @@ const ShortcutsTool: React.FC = () => {
             <span style={{ width: 30, flexShrink: 0, fontFamily: 'RSSmall, sans-serif', color: '#ffff00' }}>L{r.level}</span>
             <span className="oact-trow-name" style={{ color: '#ffffff', fontFamily: 'RS, sans-serif' }}>{r.name}</span>
             {r.loc && <Pin cx={r.loc.cx} cy={r.loc.cy} name={r.name} />}
-            <span className="oact-trow-tag" style={{ color: TAG[r.status][1] }}>{r.status === 'level' ? r.missing.map(need => `${need.skill} ${need.level}`).join(', ') : r.status === 'quest' ? r.quest : TAG[r.status][0]}</span>
+            <span className="oact-trow-tag" style={{ color: TAG[r.status][1] }}>{r.status === 'level' ? r.missing.map(need => `${need.skill} ${need.level}`).join(', ') : r.status === 'quest' ? r.quest : r.status === 'diary' ? r.diary : TAG[r.status][0]}</span>
           </div>
         ))}
         {rows.length === 0 && <div className="oact-tool-empty">No shortcuts in this filter.</div>}

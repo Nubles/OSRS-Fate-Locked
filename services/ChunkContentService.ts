@@ -387,6 +387,17 @@ export class ChunkContentService {
       }));
   }
 
+  /**
+   * The chunks an interior is entered from, by its key ("Brimhaven Dungeon#Section 4",
+   * "11674") or, when no key matches, by its name ("Kalphite Lair"). [] when unknown.
+   */
+  interiorEntranceChunks(keyOrName: string): { cx: number; cy: number }[] {
+    const interiors = this.doc?.interiors ?? {};
+    const matches = interiors[keyOrName] ? [interiors[keyOrName]] : Object.values(interiors).filter(entry => entry.name === keyOrName);
+    const ids = [...new Set(matches.flatMap(entry => entry.entrances.map(route => route.chunkId)))].filter(id => /^\d+$/.test(id));
+    return ids.map(id => ({ cx: Math.floor(Number(id) / 256), cy: Number(id) % 256 }));
+  }
+
   entrancesFor(cx: number, cy: number): ChunkEntrance[] {
     return (this.doc?.entrances?.[String(cx * 256 + cy)] ?? [])
       .map(entrance => ({ ...entrance, requirements: [...entrance.requirements] }))

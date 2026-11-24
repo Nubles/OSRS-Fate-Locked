@@ -3,7 +3,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 // @ts-expect-error Node types are intentionally excluded from the browser app.
 import { resolve } from 'node:path';
-import { SHORTCUT_QUESTS, shortcutReachability } from './shortcutReach';
+import { SHORTCUT_DIARIES, SHORTCUT_QUESTS, shortcutReachability } from './shortcutReach';
+import { DIARY_DATA } from '../data/diaryData';
 import { QUEST_DATA } from '../data/questData';
 import { Shortcut } from '../services/ChunkContentService';
 import { UnlockState } from '../types';
@@ -114,5 +115,68 @@ describe('shortcutReachability: every requirement of a shortcut', () => {
     expect(SHORTCUT_QUESTS['Access the (mith grapple) scale the Observatory cliff shortcut']).toEqual(['Observatory Quest']);
     expect(SHORTCUT_QUESTS['Access the Darkmeyer north-eastern wall shortcut']).toEqual(['Sins of the Father']);
     expect(SHORTCUT_QUESTS['Access the Gnome Stronghold shortcut']).toEqual(['The Grand Tree', 'Tree Gnome Village']);
+  });
+});
+
+describe('shortcutReachability: quest and diary gates from each shortcut\'s Wiki page (reach-map.d1[0])', () => {
+  const here = () => ({ cx: 1, cy: 1, unlocked: true });
+  const skilled = { skills: { Agility: 10 }, levels: { Agility: 99 } };
+  // Wiki pages fetched 24 November 2026: Ornate railing; Rocks (Tirannwn); Bush, Pillar and
+  // Rockslide (Vampyrium); Rocks (Darkmeyer); Cave (Stalker Den); Crevice (Heroes' Guild);
+  // Tight-gap (Goblin Village); Crevice (Deep Wilderness Dungeon); Dark tunnel (Motherlode
+  // Mine); Crevice (Kalphite Lair).
+  const GATED: [string, number, string[], string[]][] = [
+    ['Access the Temple on the Salve to Morytania shortcut', 65, ['Priest in Peril'], []],
+    ['Access the Arandar easy cliffside scramble shortcut', 59, ['Regicide'], []],
+    ['Access the Arandar medium cliffside scramble shortcut', 68, ['Regicide'], []],
+    ['Access the Arandar advanced cliffside scramble shortcut', 85, ['Regicide'], []],
+    ['Access the Vampyrium forest crawl shortcut', 64, ['The Blood Moon Rises'], []],
+    ['Access the Vampyrium pillar jumping shortcut', 73, ['The Blood Moon Rises'], []],
+    ['Access the Vampyrium rock slides shortcut', 78, ['The Blood Moon Rises'], []],
+    ['Access the Castle Drakan wall rock climb shortcut', 86, ['Sins of the Father'], []],
+    ['Access the cave to the Stalker Den shortcut', 59, ['Shadows of Custodia'], []],
+    ["Access the Heroes' Guild tunnel shortcut", 67, ["Heroes' Quest"], ['Falador Hard']],
+    ['Access the scale Goblin Village wall shortcut', 14, [], ['Falador Easy']],
+    ['Access the Deep Wilderness Dungeon narrow shortcut', 46, [], ['Wilderness Medium']],
+    ['Access the Motherlode Mine eastern wall shortcut', 54, [], ['Falador Medium']],
+    ['Access the Kalphite Lair wall shortcut', 86, [], ['Desert Elite']],
+  ];
+  const rows: Shortcut[] = GATED.map(([name, level]) => ({ name, skill: 'Agility', level, objects: [], chunks: [] }));
+
+  it('holds each until its quest and diary are done, naming what is left', () => {
+    const none = shortcutReachability(rows, base(skilled), here);
+    expect(none.ready).toBe(0);
+    for (const [name, , quests, diaries] of GATED) {
+      const row = none.rows.find(r => r.name === name)!;
+      if (quests.length) expect(row, name).toMatchObject({ status: 'quest', quest: quests.join(' and ') });
+      else expect(row, name).toMatchObject({ status: 'diary', diary: `${diaries.join(' and ')} diary` });
+    }
+    const questsOnly = shortcutReachability(rows, base({ ...skilled, quests: GATED.flatMap(([, , q]) => q) }), here);
+    expect(questsOnly.rows.find(r => r.name === "Access the Heroes' Guild tunnel shortcut"))
+      .toMatchObject({ status: 'diary', diary: 'Falador Hard diary' });
+    const all = shortcutReachability(rows, base({
+      ...skilled, quests: GATED.flatMap(([, , q]) => q), diaries: GATED.flatMap(([, , , d]) => d),
+    }), here);
+    expect(all.ready).toBe(GATED.length);
+  });
+
+  it('takes a higher tier of the same diary', () => {
+    const goblin = rows.filter(r => r.name === 'Access the scale Goblin Village wall shortcut');
+    expect(shortcutReachability(goblin, base({ ...skilled, diaries: ['Falador Hard'] }), here).rows[0].status).toBe('ready');
+    expect(shortcutReachability(goblin, base({ ...skilled, diaries: ['Desert Easy'] }), here).rows[0].status).toBe('diary');
+  });
+
+  it('keys the tables by real shortcut names, quests and diary tiers', () => {
+    const doc = JSON.parse(readFileSync(resolve('public/chunk-content.json'), 'utf8')) as { shortcuts: Shortcut[] };
+    const names = new Set(doc.shortcuts.map(s => s.name));
+    for (const [name, , quests, diaries] of GATED) {
+      expect(names.has(name), name).toBe(true);
+      expect([...(SHORTCUT_QUESTS[name] ?? [])], name).toEqual(quests);
+      expect([...(SHORTCUT_DIARIES[name] ?? [])], name).toEqual(diaries);
+    }
+    for (const [name, diaries] of Object.entries(SHORTCUT_DIARIES)) {
+      expect(names.has(name), name).toBe(true);
+      for (const diary of diaries) expect(DIARY_DATA[diary]?.id, diary).toBe(diary);
+    }
   });
 });

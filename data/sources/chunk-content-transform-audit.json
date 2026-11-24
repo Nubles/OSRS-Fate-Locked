@@ -2013,7 +2013,7 @@
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Agility/Access the Burg de Rot fence shortcut"
+        "Agility/Access the Burgh de Rott fence shortcut"
       ]
     },
     {
@@ -2387,7 +2387,7 @@
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Agility/Access the Giant's Plateau rock scramble shortcut"
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
       ]
     },
     {
@@ -140393,6 +140393,17 @@
       "sourceKey": "13617",
       "terminal": false,
       "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Rocks (Giants' Plateau)"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13617",
+      "terminal": false,
+      "disposition": "normalized",
       "reason": "section-merged",
       "targetKeys": [
         "13617"
@@ -180115,6 +180126,105 @@
         "4922"
       ],
       "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the Catacombs of Kourend northern crack shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the Catacombs of Kourend northern crack shortcut"
+      ],
+      "detail": "Crack (Catacombs of Kourend, north) rev 15091412: 'It requires 34 Agility to use', |location = [[Catacombs of Kourend]], |quest = No"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the Catacombs of Kourend southern crack shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the Catacombs of Kourend southern crack shortcut"
+      ],
+      "detail": "Crack (Catacombs of Kourend, south) rev 15091411: 'It requires 17 Agility to use', |location = [[Catacombs of Kourend]], |quest = No"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the stepping stones by the waterfall east of Shilo Village shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the stepping stones by the waterfall east of Shilo Village shortcut"
+      ],
+      "detail": "Stepping stones (Karamja) rev 15232652: 'It requires 30 Agility to use the shortcut', east of Shilo Village, map x=2926 y=2950 (region 45,46), |quest = No"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the wrecked ghost ship rocks shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the wrecked ghost ship rocks shortcut"
+      ],
+      "detail": "Rock (wrecked ghost ship) rev 14924635: 'the player requires at least level 25 Agility', north-west of Port Phasmatys, map x=3601 y=3556 (region 56,55); used during Ghosts Ahoy, so no completion gate"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Construction/Access the mausoleum bridge jump shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Construction/Access the mausoleum bridge jump shortcut"
+      ],
+      "detail": "Bridge (Mausoleum) rev 15359087: 'Repairing this shortcut requires 59 Construction', {{Agility info |skill2name = Construction |skill2lvl = 59}}"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-level/Agility/Access the Cairn Isle rock slide climb shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Agility/Access the Cairn Isle rock slide climb shortcut"
+      ],
+      "detail": "Rock slide (Cairn Isle) rev 15385418: 'Level 15 Agility is required to attempt using the shortcut', {{Agility info |level = 15}}"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-name/Agility/Access the Burg de Rot fence shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Burgh de Rott fence shortcut"
+      ],
+      "detail": "Low fence rev 15016580: |location = [[Burgh de Rott]]; Burgh de Rott rev 15321957"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-name/Agility/Access the Giant's Plateau rock scramble shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: |location = [[Giants' Plateau]]; Giants' Plateau rev 15356442."
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-object/Agility/Access the Giants' Plateau rock scramble shortcut/Rocks (Giant's Plateau)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
     },
     {
       "category": "questSections",

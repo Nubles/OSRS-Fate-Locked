@@ -20,6 +20,10 @@ const KNOWN_QUESTS = new Set([
   ...Object.values(QUEST_DATA).map((quest) => quest.name),
 ]);
 
+/** The quests a chunk's entry needs that the run hasn't finished (the same gate runReach applies). */
+export const unfinishedEntryQuests = (entryQuests: readonly string[], unlocks: UnlockState): string[] =>
+  entryQuests.filter((quest) => KNOWN_QUESTS.has(quest) && !unlocks.quests.includes(quest));
+
 export interface ReachSource {
   connectGraph(): ConnectGraph;
   questSections(): Record<string, string[]>;
@@ -99,7 +103,7 @@ export function chunkEntryReason(
     const area = place.subArea ?? place.region;
     return area ? `Unlock ${area}` : 'Not in any area';
   }
-  const unfinished = entryQuests.filter((quest) => KNOWN_QUESTS.has(quest) && !unlocks.quests.includes(quest));
+  const unfinished = unfinishedEntryQuests(entryQuests, unlocks);
   if (unfinished.length) return `Needs ${unfinished.join(' and ')}`;
   // Chunked runs own the sea once they can sail, and reach it from a coast.
   if (chunked && OCEAN_CHUNK_KEYS.has(key)) return 'Not reached from your coast';
