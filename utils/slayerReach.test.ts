@@ -135,6 +135,23 @@ describe('slayerReachability', () => {
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['area-locked', 'area-locked']);
   });
 
+  // own.d1[3]: a plainly unmet quest wins over a line that can only be asked, as places read (routeStatus).
+  it('reads quest-locked when a definite quest blocker sits beside a question', () => {
+    const konar: SlayerMasters = { 'Test Master': {
+      'Blue dragons - Ruins of Tapoyauik': { weight: 0.67, combat: 65, req: ['Dragon Slayer I 1', 'The Heart of Darkness Complete the quest'] },
+      'Dark beasts - Iorwerth Dungeon': { weight: 2.5, combat: 90, slayer: 90, req: ["Mourning's End Part II 2", 'Song of the Elves Complete the quest'] },
+    } };
+    const strong = { Slayer: 99, Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99, Prayer: 99, Ranged: 99, Magic: 99 };
+    const unlocks = (quests: string[]) => base({ skills: { Slayer: 10 }, levels: strong, quests });
+    const without = slayerReachability(konar, unlocks([]), locate);
+    expect(statusOf(without, 'Blue dragons - Ruins of Tapoyauik')).toBe('quest-locked');
+    expect(statusOf(without, 'Dark beasts - Iorwerth Dungeon')).toBe('quest-locked');
+    // With the quest done only the progress line is open: still a question.
+    const done = slayerReachability(konar, unlocks(['The Heart of Darkness', 'Song of the Elves']), locate);
+    expect(statusOf(done, 'Blue dragons - Ruins of Tapoyauik')).toBe('access-unknown');
+    expect(statusOf(done, 'Dark beasts - Iorwerth Dungeon')).toBe('access-unknown');
+  });
+
   it('asks for Mortimer quest progress without demanding full completion', () => {
     const r = mortimerReach(mortimerUnlocks({ quests: [] }));
 
