@@ -1,13 +1,14 @@
 import { UnlockState } from '../types';
 import { usesActivityKeyReserves } from '../config/gameModes';
-import { ACTIVITY_ACCESS_AREAS, CHUNKED_ACTIVITY_RULES, NO_HARD_LOCATION_GATE } from '../data/activityAccess';
-import { ACTIVITY_CHUNKS, SLAYER_MASTER_CHUNKS } from '../data/activityChunks';
+import { ACTIVITY_ACCESS_AREAS, ACTIVITY_AREA_QUESTS, CHUNKED_ACTIVITY_RULES, NO_HARD_LOCATION_GATE } from '../data/activityAccess';
+import { ACTIVITY_CHUNKS, GATED_ENTRANCE_CHUNKS, SLAYER_MASTER_CHUNKS } from '../data/activityChunks';
 import { BANK_BY_ID } from '../data/banks';
 import { CHUNK_ENTRY_QUESTS } from '../data/chunkSkillNodes';
 import { isAreaReachable } from './reachability';
 import { chunkLabel, chunkSubArea, isChunkUnlocked, parseChunkKey } from './chunkAdjacency';
 import { chunkUnlocked } from './chunkLocations';
 import { canNavigateOcean } from './oceanAccess';
+import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accountRequirements';
 
 export interface ActivityAccessResult {
   eligible: boolean;
@@ -51,22 +52,32 @@ for (const [quest, columns] of Object.entries(CHUNK_ENTRY_QUESTS)) {
  */
 export const chunkEntryQuests = (key: string): readonly string[] => ENTRY_QUESTS.get(key) ?? [];
 
+/** Chunked: the ways into a place that carry their own requirement (the 51 Agility pipe to Vannaka). */
+export const gatedEntrances = (name?: string) => (name && hasOwn(GATED_ENTRANCE_CHUNKS, name) ? GATED_ENTRANCE_CHUNKS[name] : []);
+
+/** "Varrock (50, 54) with Agility level 51", one per gated way in. */
+export const gatedEntranceLabels = (name?: string) => gatedEntrances(name).map(way => `${chunkPlaceLabel(way.chunk)} with ${way.label}`);
+
 /**
  * Chunked: whether the run can get into one of these chunks: it owns it and has
- * done every quest its entry needs. `missing` lists the entry quests that hold
- * back the owned ones when none is open.
+ * done every quest its entry needs. `name` adds that place's gated ways in,
+ * which count only when their requirements are met; one the save cannot answer
+ * (a quest only started) stays shut. `missing` lists what holds back the owned
+ * ones when none is open.
  */
 export const enterableChunk = (
   chunks: readonly string[],
   unlocks: Pick<UnlockState, 'chunks' | 'quests'>,
+  name?: string,
 ): { open: boolean; missing: string[] } => {
-  const owned = chunks.filter(key => isChunkUnlocked(key, unlocks.chunks ?? []));
   const done = new Set(unlocks.quests ?? []);
   const missing = new Set<string>();
-  for (const key of owned) {
-    const needed = chunkEntryQuests(key).filter(quest => !done.has(quest));
+  for (const way of [...chunks.map(chunk => ({ chunk, needs: [] as readonly string[], label: '' })), ...gatedEntrances(name)]) {
+    if (!isChunkUnlocked(way.chunk, unlocks.chunks ?? [])) continue;
+    const needed = chunkEntryQuests(way.chunk).filter(quest => !done.has(quest));
+    if (way.needs.length && evaluateRouteGates(compileRawRequirements(way.needs.map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const }))), unlocks as UnlockState).blockers.length) needed.push(way.label);
     if (needed.length === 0) return { open: true, missing: [] };
-    needed.forEach(quest => missing.add(quest));
+    needed.forEach(item => missing.add(item));
   }
   return { open: false, missing: [...missing] };
 };
@@ -112,11 +123,12 @@ export const getChunkedActivityAccess = (activity: string, unlocks: UnlockState)
   if (rule?.kind === 'anywhere' || rule?.kind === 'not-random') return access(true, []);
   if (rule?.kind === 'sailing') return access(canNavigateOcean(unlocks), ['Sailing and Pandemonium']);
   const chunks = activityEntranceChunks(activity);
-  if (chunks.length === 0) return MISSING;
-  const entry = enterableChunk(chunks, unlocks);
+  const gated = gatedEntrances(activity);
+  if (chunks.length === 0 && gated.length === 0) return MISSING;
+  const entry = enterableChunk(chunks, unlocks, activity);
   if (entry.open) return access(true, []);
-  const places = chunks.map(chunkPlaceLabel).join(' or ');
-  if (entry.missing.length === 0) return access(false, chunks.map(chunkPlaceLabel));
+  const places = [...chunks, ...gated.map(way => way.chunk)].map(chunkPlaceLabel).join(' or ');
+  if (entry.missing.length === 0) return access(false, [...chunks.map(chunkPlaceLabel), ...gatedEntranceLabels(activity)]);
   return {
     eligible: false,
     requiredAreas: [`${places}, after ${entry.missing.join(' and ')}`],
@@ -131,14 +143,15 @@ export const slayerMasterChunks = (master: string): readonly string[] =>
 /**
  * Whether the Farm screen offers a place (a Slayer card, Brutus). In Chunked it
  * shows only when one of its own chunks is owned and the quest that chunk's
- * entry needs is done (Mazchna in Canifis after Priest in Peril); every other
- * mode offers all.
+ * entry needs is done (Mazchna in Canifis after Priest in Peril), or a gated
+ * way in under `name` is open; every other mode offers all.
  */
 export const farmPlaceReachable = (
   chunks: readonly string[] | undefined,
   unlocks: UnlockState,
   modeId: string | undefined,
-): boolean => modeId !== 'chunked' || enterableChunk(chunks ?? [], unlocks).open;
+  name?: string,
+): boolean => modeId !== 'chunked' || enterableChunk(chunks ?? [], unlocks, name).open;
 
 /** Resolve the location-only eligibility of an activity for the current mode. */
 export const getActivityAccess = (
@@ -150,7 +163,11 @@ export const getActivityAccess = (
   if (!usesActivityKeyReserves(modeId) || NO_HARD_LOCATION_GATE.has(activity)) return access(true, []);
   if (!hasOwn(ACTIVITY_ACCESS_AREAS, activity)) return MISSING;
   const requiredAreas = ACTIVITY_ACCESS_AREAS[activity];
-  return access(requiredAreas.some((area) => isAreaReachable(area, unlocks, modeId)), requiredAreas);
+  // An area some activities count only after a quest (Paterdomus for Temple Trekking).
+  const gate = hasOwn(ACTIVITY_AREA_QUESTS, activity) ? ACTIVITY_AREA_QUESTS[activity] : undefined;
+  const result = access(requiredAreas.some((area) => isAreaReachable(area, unlocks, modeId)
+    && (gate?.quests[area] ?? []).every((quest) => (unlocks.quests ?? []).includes(quest))), requiredAreas);
+  return result.eligible || !gate ? result : { ...result, explanation: gate.explanation };
 };
 
 /**

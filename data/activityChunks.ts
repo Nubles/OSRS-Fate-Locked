@@ -161,3 +161,18 @@ export const FARM_SLAYER_CARD_CHUNKS: Readonly<Record<string, readonly string[]>
   "Turael": ["45,55"],
   "Vannaka": ["48,54"],
 };
+
+/**
+ * Ways in that carry their own requirement, by the name in the tables above:
+ * owning the chunk counts only once every requirement string is met
+ * (utils/activityAccess.ts enterableChunk); label is what players read.
+ * Not in the tables above.
+ */
+export const GATED_ENTRANCE_CHUNKS: Readonly<Record<string, readonly { chunk: string; needs: readonly string[]; label: string }[]>> = {
+  "Obor": [{ chunk: "50,54", needs: ["Agility level 51"], label: "Agility level 51" }],
+  "Tears of Guthix": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Temple Trekking": [{ chunk: "53,54", needs: ["Darkness of Hallowvale completed"], label: "Darkness of Hallowvale" }],
+  "The Fractured Archive": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Tormented Demons": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Vannaka": [{ chunk: "50,54", needs: ["Agility level 51"], label: "Agility level 51" }],
+};
