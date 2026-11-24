@@ -68,7 +68,7 @@ export const CHANGELOG_RELEASES = [
   },
   {
     id: '2026-11-24-guides-and-shortcuts',
-    title: 'Guides, the Oracle and keyboard fixes',
+    title: 'Guides, the Oracle, the keyboard and Brutus',
     date: '2026-11-24',
     sections: {
       fixed: [
@@ -77,6 +77,7 @@ export const CHANGELOG_RELEASES = [
         'The Strategy Guide now shows a diary’s combat level as a plain requirement, not a locked skill, and no longer pushes those diaries down the Closest list.',
         'The Strategy Guide now drops Desert Treasure II and three more quests once you’ve done them, and goals pinned for them show their card and route again.',
         'In Chunked, unlocking a chunk that opens new quests or diary tiers now shows the New content panel listing them.',
+        'Brutus now shows as ready once The Ides of Milk is done, and Demonic Brutus says it needs Desert Treasure II and an abyssal potato.',
       ],
     },
   },
