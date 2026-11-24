@@ -240,7 +240,9 @@ limit the relay answers `429` with `Retry-After: 60`, before touching KV:
 | `RELAY_ERROR_LIMITER` | `POST /e` | 10 a minute | A page reports each error once (and the relay forwards each message once in 10 minutes anyway). |
 
 Reads are not limited: a connected RuneLite checks once a minute (more often
-only while a pairing waits, for up to 10 minutes, and on Check now) and the
+only while a pairing waits, for up to 10 minutes; after a check that failed or
+brought rules it couldn't use, which is retried after 30 seconds, then 60,
+doubling up to 5 minutes; and on Check now, at most every 10 seconds) and the
 stream overlay every 30 seconds. The Discord bot's `/l/` routes need its secret and
 are not limited. The app already treats a `429` like a relay outage: the
 profile and backups are tried again later, and shared progress a minute
