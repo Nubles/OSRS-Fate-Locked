@@ -453,4 +453,27 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
       'Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid',
     ]);
   });
+
+  it("warns Wanted! about Solus's three random chase stops without gating on them", () => {
+    // Wiki Wanted! (rev 15391809) ===Chasing Solus===: "There are seven locations in total, and each
+    // location is random, except for the Champions' Guild, the Dorgesh-Kaan Mine, and the Rune essence
+    // mine, which are always the third, fifth, and seventh locations". ====Random items==== ("vary from
+    // player to player"): Rellekka, Musa Point, Wizards' Tower, Ardougne Market, Castle Wars, the Grand
+    // Tree, Canifis Slayer Tower, Brimhaven pub, Ali Morrisane in Al Kharid, Lumbridge Swamp Caves,
+    // Goblin Village, Dragon Inn (Yanille), McGrubor's Wood, Diango in Draynor Village, Shrine of Scorpius.
+    const quest = QUEST_DATA['Wanted!'];
+    expect(quest.regions).toEqual(['Falador', 'Taverley', 'Varrock', 'Canifis']);
+    expect(quest.oneOf).toBeUndefined();
+    expect(quest.manualRequirements).toHaveLength(1);
+    const line = quest.manualRequirements![0];
+    for (const place of [
+      'Rellekka', 'Musa Point', "Wizards' Tower", 'Ardougne Market (East Ardougne)', 'Castle Wars',
+      'Grand Tree (Tree Gnome Stronghold)', 'Slayer Tower', 'Brimhaven', 'Al Kharid', 'Lumbridge Swamp Caves',
+      'Goblin Village', 'Yanille', "McGrubor's Wood (Seers' Village)", 'Draynor Village', 'Shrine of Scorpius (Ourania Altar)',
+    ]) expect(line).toContain(place);
+    // A check the player confirms, never a region blocker.
+    const result = evaluateQuestEligibility(quest, unlocks({ regions: ['Falador', 'Taverley', 'Varrock', 'Canifis'] }), 'vanilla');
+    expect(result.blockers.filter(blocker => blocker.kind === 'region')).toEqual([]);
+    expect(result.manualChecks).toContain(line);
+  });
 });

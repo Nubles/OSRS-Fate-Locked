@@ -1375,6 +1375,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Wanted!', name: 'Wanted!',
     regions: ['Falador', 'Taverley', 'Varrock', 'Canifis'],
     skills: { 'Quest Points': 32 }, prereqs: ['Recruitment Drive', 'The Lost Tribe', 'Priest in Peril', 'Enter the Abyss'], points: 1, series: 'Temple Knight',
+    // Wiki ====Random items====: the 2nd, 4th and 6th chase stops are drawn at random per player, so
+    // they are a check the player confirms, not a gate (24 Nov).
+    manualRequirements: [
+      "Access to all three random Solus chase stops, drawn from Rellekka, Musa Point, the Wizards' Tower, Ardougne Market (East Ardougne), Castle Wars, the Grand Tree (Tree Gnome Stronghold), the Slayer Tower, the Brimhaven pub, Ali Morrisane (Al Kharid), the Lumbridge Swamp Caves, Goblin Village, the Dragon Inn (Yanille), McGrubor's Wood (Seers' Village), Diango (Draynor Village) and the Shrine of Scorpius (Ourania Altar)",
+    ],
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
   'Mourning\'s End Part II': {
