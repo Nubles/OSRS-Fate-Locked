@@ -9,6 +9,8 @@ export { canDismissRunelitePairing, type RunelitePairingPhase };
 export interface RunelitePairingDialogProps {
   code: string;
   replacing: boolean;
+  /** The link is for the pairing this browser already holds. */
+  connected?: boolean;
   profileName: string;
   linkedAccount: string | null;
   phase: RunelitePairingPhase;
@@ -23,6 +25,7 @@ export const RunelitePairingDialog: React.FC<
 > = ({
   code,
   replacing,
+  connected = false,
   profileName,
   linkedAccount,
   phase,
@@ -60,7 +63,7 @@ export const RunelitePairingDialog: React.FC<
               Connect RuneLite tracker
             </h2>
             <p className="mt-1 text-[11px] text-gray-500">
-              Only continue if you just pressed Connect tracker in RuneLite.
+              Only continue if you just pressed Connect tracker or Re-pair tracker… in RuneLite.
             </p>
           </div>
         </div>
@@ -92,7 +95,16 @@ export const RunelitePairingDialog: React.FC<
             </div>
           </dl>
 
-          {replacing && phase === 'confirm' && (
+          {connected && phase === 'confirm' && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-cyan-500/30 bg-cyan-950/30 p-3 text-cyan-100">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+              <p className="text-[11px] leading-relaxed">
+                This profile is already connected with this pairing.
+                Connecting again keeps it and sends the profile again.
+              </p>
+            </div>
+          )}
+          {replacing && !connected && phase === 'confirm' && (
             <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-200">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <p className="text-[11px] leading-relaxed">

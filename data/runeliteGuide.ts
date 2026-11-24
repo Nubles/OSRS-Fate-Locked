@@ -573,7 +573,7 @@ export const RUNELITE_GUIDE_TROUBLESHOOTING: readonly GuideTroubleshootingItem[]
     fix: [
       'Select Open page again, and confirm the profile in that page.',
       'Keep RuneLite open until the card says Rules up to date.',
-      'To start over, select Cancel, then Connect tracker.',
+      'To start over, select Cancel, then Connect tracker. While re-pairing, Cancel re-pairing keeps your current pairing.',
     ],
   },
   {

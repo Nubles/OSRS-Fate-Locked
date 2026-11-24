@@ -277,7 +277,7 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
             Discord can show it. Your save never leaves this device.
           </p>
           <p className="text-[12px] text-gray-400 mb-2">
-            Once you <span className="text-gray-200">/link</span>, each new unlock posts in #live-unlocks with your Discord server name,
+            Once you <span className="text-gray-200">/link</span>, new unlocks post in #live-unlocks with your Discord server name,
             and the tracker&apos;s Clan chat shows those posts to everyone who opens the tracker.
             {' '}<span className="text-gray-200">/unlink</span> stops new posts but does not remove ones already posted.
           </p>

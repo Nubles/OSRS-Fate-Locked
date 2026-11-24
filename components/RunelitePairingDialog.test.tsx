@@ -48,10 +48,20 @@ describe('RunelitePairingDialog', () => {
     expect(props.onClose).not.toHaveBeenCalled();
   });
 
+  it('says a link for the pairing it already holds keeps that connection', () => {
+    renderDialog({ replacing: true, connected: true });
+    expect(screen.queryByText(/replace the current RuneLite connection/i)).toBeNull();
+    expect(screen.getByText(
+      'This profile is already connected with this pairing. Connecting again keeps it and sends the profile again.',
+    )).toBeTruthy();
+    expect(screen.getByRole('button', { name: /connect tracker/i })).toBeTruthy();
+  });
+
   it('does not claim that RuneLite sent the link, since any site can open one', () => {
     renderDialog();
     expect(screen.queryByText(/RuneLite requested this connection/i)).toBeNull();
-    expect(screen.getByText(/Only continue if you just pressed Connect tracker in RuneLite/i)).toBeTruthy();
+    // A link comes from Connect tracker, or from Re-pair tracker… while a pairing works.
+    expect(screen.getByText('Only continue if you just pressed Connect tracker or Re-pair tracker… in RuneLite.')).toBeTruthy();
     expect(screen.getByText(/link from anywhere else/i)).toBeTruthy();
   });
 
