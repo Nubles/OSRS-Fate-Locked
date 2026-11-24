@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BANK_IDS } from '../data/banks';
-import { readBankLocationRegistry } from './bank-locations.mjs';
+import { REGIONS_LIST } from '../data/items';
+import { readBankLocationRegistry, validateBankLocationRegistry } from './bank-locations.mjs';
 import {
   buildBankDefinitions, facilityPictureKind, generateBankAccessSource, generateBankPictureSource, generateBankSource,
   orderBanksForRolls, readBankRollOrder,
@@ -91,6 +92,26 @@ describe('bank source generator', () => {
     expect(ids).not.toContain('12085');
     expect(ids).toEqual(expect.arrayContaining(['11066', '12084']));
     expect(source).toContain("  '10810': '11066',\n  '12085': '12084',");
+  });
+
+  // Audit areas d1 0: these three banks sit on their place's entrance chunk, which the map files
+  // under the surface area outside (Mountain Camp, Musa Point, Lumbridge).
+  it('places the banks that stand behind an entrance chunk in the area they stand in', () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const defs = buildBankDefinitions(doc, readBankLocationRegistry());
+    const placed = Object.fromEntries(defs.filter(def => def.area).map(def => [def.id, def.area]));
+    expect(placed).toEqual({ '11066': 'Keldagrim', '11313': 'Mor Ul Rek (TzHaar City)', '12849': 'Zanaris' });
+    for (const area of Object.values(placed)) expect(REGIONS_LIST).toContain(area);
+    expect(defs.map(def => def.id)).toEqual(BANK_IDS);
+  });
+
+  it('refuses a bank area on an id that is not a bank', () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const validBankIds = new Set<string>((doc.banks ?? []).map(String));
+    expect(() => validateBankLocationRegistry(registry, { validBankIds })).not.toThrow();
+    const broken = { ...registry, areas: [{ id: '1', area: 'Keldagrim', reason: 'test', wiki: ['https://oldschool.runescape.wiki/w/Keldagrim'] }] };
+    expect(() => validateBankLocationRegistry(broken, { validBankIds })).toThrow('Bank area 1 is not on a bank');
   });
 
   it('does not add the virtual bank to the public physical chunk list', () => {

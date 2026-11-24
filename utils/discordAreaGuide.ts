@@ -11,7 +11,7 @@ import { AREA_ENTRY_ROUTES } from '../data/areaAccess';
 import { ACTIVITY_ACCESS_AREAS } from '../data/activityAccess';
 import { BANK_BY_ID, bankId } from '../data/banks';
 import { BOSSES_LIST, MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_DATA, type QuestLocationRequirement } from '../data/questData';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 
 export interface DiscordAreaEntry {
@@ -25,7 +25,7 @@ export interface DiscordAreaEntry {
   activities: string[];
   /** Quests that need the area open. */
   quests: string[];
-  /** Banks standing in the area's chunks. */
+  /** Banks standing in the area's chunks, or placed in the area by the bank registry. */
   banks: string[];
   /** Ways in besides walking, as the Journal names them. */
   routes: string[];
@@ -44,16 +44,24 @@ export function buildDiscordAreaGuide(): DiscordAreaGuide {
     for (const area of areas) regionOf.set(area, region);
   }
   const bosses = new Set(BOSSES_LIST);
+  // A bank the registry places in an area stands there, not in the area of its entrance chunk.
+  const banksIn = (name: string, chunks: { cx: number; cy: number }[]): string[] => [
+    ...chunks.map(chunk => BANK_BY_ID[bankId(chunk.cx, chunk.cy)]).filter(bank => bank && (bank.area ?? name) === name),
+    ...Object.values(BANK_BY_ID).filter(bank => bank.area === name),
+  ].map(bank => bank!.name);
 
   const areas = [...regionOf.entries()].map(([name, region]): DiscordAreaEntry => {
     const chunks = SUB_AREA_CHUNKS[name] ?? [];
     const gated = Object.entries(ACTIVITY_ACCESS_AREAS)
       .filter(([, gates]) => gates.includes(name))
       .map(([activity]) => activity);
+    // A quest needs the area when it names it, or when every one of its alternative routes does:
+    // an area that only one route uses (or that an anyOfRegions list offers) is not needed.
+    const names = (regions: string[] = [], locations: QuestLocationRequirement[] = []): boolean =>
+      regions.includes(name) || locations.some(location => location.standardAreas.includes(name));
     const quests = Object.values(QUEST_DATA)
-      .filter(quest => quest.regions.includes(name)
-        || (quest.locations ?? []).some(location => location.standardAreas.includes(name))
-        || (quest.oneOf ?? []).some(option => [...(option.regions ?? []), ...(option.anyOfRegions ?? [])].includes(name)))
+      .filter(quest => names(quest.regions, quest.locations)
+        || (Boolean(quest.oneOf?.length) && quest.oneOf!.every(option => names(option.regions, option.locations))))
       .map(quest => quest.name);
     return {
       name,
@@ -62,7 +70,7 @@ export function buildDiscordAreaGuide(): DiscordAreaGuide {
       bosses: sorted(gated.filter(activity => bosses.has(activity))),
       activities: sorted(gated.filter(activity => !bosses.has(activity))),
       quests: sorted(quests),
-      banks: sorted(chunks.map(chunk => BANK_BY_ID[bankId(chunk.cx, chunk.cy)]?.name).filter((bank): bank is string => Boolean(bank))),
+      banks: sorted(banksIn(name, chunks)),
       routes: [...new Set((AREA_ENTRY_ROUTES[name] ?? []).map(route => route.label))],
     };
   });

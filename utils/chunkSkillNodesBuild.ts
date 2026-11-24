@@ -108,7 +108,8 @@ export const AGILITY_COURSES: readonly { course: string; chunk: string; level: n
  * Each Mysterious ruins by its chunk: the altar it leads to and that altar's
  * Runecraft level (OSRS Wiki). Ruins in a chunk missing here train nothing; a
  * test checks every ruins in the data is listed. The cosmic (Zanaris, Lost
- * City) and death (Mourning's End Part II) ruins sit behind entrances with
+ * City), death (Mourning's End Part II) and blood (the inner Meiyerditch
+ * Laboratories, Sins of the Father) ruins sit behind entrances with
  * requirements, so they never reach a chunk.
  */
 export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: number }>> = {
@@ -121,7 +122,6 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
   '47,56': { altar: 'Chaos', level: 35 },
   '44,47': { altar: 'Nature', level: 44 },
   '44,52': { altar: 'Law', level: 54 },
-  '56,51': { altar: 'Blood', level: 77 }, // Meiyerditch Laboratories' ruins
   '38,44': { altar: 'Wrath', level: 95 },
 };
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;

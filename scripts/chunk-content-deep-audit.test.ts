@@ -95,3 +95,100 @@ describe('Entrana Dungeon (slayer.d1[1])', () => {
     for (const [id, interior] of records) expect(interior.entrances.map(entrance => entrance.chunkId), id).toEqual(['11316']);
   });
 });
+
+describe('Dorgesh-Kaan through the Keldagrim train (areas.d1[1])', () => {
+  // Wiki "Dorgesh-Kaan–Keldagrim train system" oldid 15211839: "Completion of Another Slice of H.A.M. is required to use the train."
+  const TRAIN = 'Another Slice of H.A.M. Complete the quest';
+
+  it('asks for Another Slice of H.A.M. at the train platforms and on every route through them', () => {
+    const platforms = interiorsNamed('Dorgesh-Kaan-Keldagrim Train Platforms');
+    expect(platforms.length).toBeGreaterThan(0);
+    for (const [id, interior] of platforms) {
+      expect(interior.entrances.length, id).toBeGreaterThan(0);
+      for (const entrance of interior.entrances) expect(entrance.requirements, `${id} via ${entrance.chunkId}`).toContain(TRAIN);
+    }
+    const viaTrain = Object.entries(full.interiors).flatMap(([id, interior]) => interior.entrances
+      .filter(entrance => (entrance as { via?: string[] }).via?.includes('9814')).map(entrance => [id, entrance] as const));
+    expect(viaTrain.map(([id]) => id)).toContain('10834');
+    for (const [id, entrance] of viaTrain) expect(entrance.requirements, `${id} via ${entrance.chunkId}`).toContain(TRAIN);
+  });
+
+  it('leaves Keldagrim itself on The Giant Dwarf alone', () => {
+    expect(full.interiors['11679'].entrances.map(entrance => entrance.requirements)).toEqual([['Started The Giant Dwarf']]);
+  });
+});
+
+describe('more quest-locked areas the source marks as area unlocks (areas.d2[0])', () => {
+  // Each gate from the place's own Wiki page, fetched 24 Nov 2026 (oldids in interior-access.json).
+  const GATES: [string, string][] = [
+    ["Yama's Domain", 'A Kingdom Divided Complete the quest'],
+    ['Vampyrium', 'The Blood Moon Rises Complete the quest'],
+    ['Ghorrock Dungeon', 'Secrets of the North Complete the quest'],
+    ['Ghorrock Prison', 'Secrets of the North Complete the quest'],
+    ['Ghorrock Prison', 'Desert Treasure II: reached Ghorrock Prison'],
+    ["Tolna's rift", "A Soul's Bane Complete the quest"],
+    ['Daeyalt essence mine', 'Sins of the Father Complete the quest'],
+    ['The Scar', 'Desert Treasure II: reached the Scar'],
+    ['Scar essence mine', 'Desert Treasure II: reached the Scar'],
+    ['Scar essence mine', 'Mining level 64'],
+  ];
+
+  it.each(GATES)('asks at every entrance of %s for %s', (name, gate) => {
+    const records = interiorsNamed(name);
+    expect(records.length, name).toBeGreaterThan(0);
+    for (const [id, interior] of records) {
+      expect(interior.entrances.length, `${name} ${id}`).toBeGreaterThan(0);
+      for (const entrance of interior.entrances) expect(entrance.requirements, `${name} ${id} via ${entrance.chunkId}`).toContain(gate);
+    }
+  });
+});
+
+describe('the true Blood Altar and the inner Meiyerditch Laboratories (areas.d2[0], area-access.d1[1])', () => {
+  // Wiki "Meiyerditch Laboratories" oldid 15385627: the complete laboratory opens once the Sins of the Father
+  // mutated bloodveld is killed; the altar ruins are in its northern part; the Canifis route is listed after the quest.
+  // Wiki "Blood Altar" oldid 15404832: reached from the trapdoor behind the Hair of the Dog in Canifis.
+  const STAGE = 'Sins of the Father: killed the mutated bloodveld';
+  const entrancesOf = (id: string) => full.interiors[id].entrances;
+
+  it.each(['11338', '14232', '14488'])('asks interior %s for the bloodveld stage from Meiyerditch and for the quest from Canifis', id => {
+    const meiyerditch = entrancesOf(id).filter(entrance => entrance.chunkId === '14387');
+    expect(meiyerditch.length, id).toBeGreaterThan(0);
+    for (const entrance of meiyerditch) expect(entrance.requirements, id).toContain(STAGE);
+    const canifis = entrancesOf(id).filter(entrance => entrance.chunkId === '13878');
+    expect(canifis.length, id).toBeGreaterThan(0);
+    for (const entrance of canifis) expect(entrance.requirements, id).toContain('Sins of the Father Complete the quest');
+    for (const entrance of entrancesOf(id)) expect(entrance.requirements.length, `${id} via ${entrance.chunkId}`).toBeGreaterThan(0);
+  });
+
+  it('keeps the outer laboratory rooms that Darkness of Hallowvale visits open from Meiyerditch', () => {
+    expect(entrancesOf('14487').map(entrance => [entrance.chunkId, entrance.requirements])).toEqual([['14387', []]]);
+  });
+});
+
+describe('walkable ways into the Motherlode Mine and the Rune essence mine (area-access.d2[2])', () => {
+  const routesOf = (name: string) => interiorsNamed(name).flatMap(([, interior]) => interior.entrances);
+
+  it('enters the Motherlode Mine from the Falador and the Ice Mountain sides of the Dwarven Mine', () => {
+    // Wiki "Motherlode Mine" oldid 15383536 (the Ice Mountain camp route); "Dwarven Mine" oldid 15376949 (main entrance pin 3018,3450 = 47,53).
+    expect(interiorsNamed('Motherlode Mine').length).toBeGreaterThan(0);
+    for (const [id, interior] of interiorsNamed('Motherlode Mine')) {
+      expect(interior.entrances.map(entrance => entrance.chunkId).sort(), id).toEqual(['12084', '12085']);
+    }
+  });
+
+  it('reaches the Rune essence mine through Wizard Distentor and Brimstail too', () => {
+    // Wiki "Rune essence mine" oldid 15366104; "Wizard Distentor" oldid 15347803 (2591,3088 = 40,48, 66 Magic);
+    // "Brimstail's cave" oldid 15376470 (cave entrance 2402,3419 = 37,53).
+    const routes = routesOf('Rune essence mine');
+    expect(new Set(routes.map(entrance => entrance.chunkId))).toEqual(new Set(['9525', '10288', '10547', '12337', '12853']));
+    for (const entrance of routes) expect(entrance.requirements, entrance.chunkId).toContain('Rune Mysteries Complete the quest');
+    for (const entrance of routes.filter(route => route.chunkId === '10288')) {
+      expect(entrance.requirements).toEqual(expect.arrayContaining(['Magic level 66', "Access the Wizards' Guild"]));
+    }
+    for (const entrance of routes.filter(route => route.chunkId !== '10288')) expect(entrance.requirements, entrance.chunkId).toEqual(['Rune Mysteries Complete the quest']);
+  });
+
+  it('keeps Keldagrim on its one walking entrance; the mine carts are a travel unlock', () => {
+    for (const [id, interior] of interiorsNamed('Keldagrim')) expect(interior.entrances.map(entrance => entrance.chunkId), id).toEqual(['11066']);
+  });
+});

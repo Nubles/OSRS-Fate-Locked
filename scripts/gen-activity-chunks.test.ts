@@ -76,6 +76,13 @@ describe('data/activityChunks.ts', () => {
     expect(SLAYER_MASTER_CHUNKS.Vannaka).toEqual(['48,54']);
     expect(SLAYER_MASTER_CHUNKS.Krystilia).toEqual(['48,54']);
     expect(SLAYER_MASTER_CHUNKS.Turael).toEqual(['45,55']);
+    // Boarded at the Port Khazard dock; 41,50 is only the shore a sunk trawler leaves you on.
+    expect(ACTIVITY_CHUNKS['Fishing Trawler']).toEqual(['41,49']);
+    // The crop circles only: the Zanaris shed (50,49) needs Lost City.
+    expect(ACTIVITY_CHUNKS['Impetuous Impulses']).toHaveLength(21);
+    expect(ACTIVITY_CHUNKS['Impetuous Impulses']).not.toContain('50,49');
+    // Amy's office and Angelo's, not the client houses.
+    expect(ACTIVITY_CHUNKS['Mahogany Homes']).toEqual(['27,56', '46,52']);
   });
 
   it('fails on an anchor that matches nothing', () => {

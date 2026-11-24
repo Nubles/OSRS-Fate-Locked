@@ -179043,14 +179043,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Deadly red spider",
+        "Bloodveld",
+        "Crawling Hand",
         "Giant rat",
-        "Goblin",
-        "Hobgoblin",
+        "Mutated Bloodveld",
         "Rat",
         "Werewolf"
       ],
-      "detail": "27 source values capped at 6"
+      "detail": "30 source values capped at 6"
     },
     {
       "category": "lite",

@@ -98,6 +98,20 @@ describe("Saradomin's Ward only lands on what the run can use (audit engine-roll
     expect(wardUsable(TableType.BANKS, '12849', zanaris, 'vanilla')).toBe(true);
   });
 
+  // Audit areas d1 0: the Keldagrim and Mor Ul Rek banks sit on their city's entrance chunk,
+  // which the map files under Mountain Camp and Musa Point, and their names did not match an
+  // area, so the Ward asked only the entrance chunk's area and never the city they stand in.
+  it('asks the city an underground bank stands in, not only the area of its entrance chunk', () => {
+    const withRegions = (...regions: string[]) => maxed({ regions: [...initialState.unlocks.regions, ...regions] });
+    expect(getUtilityActivityReq('11066', TableType.BANKS, 'vanilla')?.requiredAreas).toEqual(['Keldagrim']);
+    expect(getUtilityActivityReq('11313', TableType.BANKS, 'vanilla')?.requiredAreas).toEqual(['Mor Ul Rek (TzHaar City)']);
+    expect(getUtilityActivityReq('12849', TableType.BANKS, 'vanilla')?.requiredAreas).toEqual(['Zanaris']);
+    expect(wardUsable(TableType.BANKS, '11066', withRegions('Mountain Camp'), 'vanilla')).toBe(false);
+    expect(wardUsable(TableType.BANKS, '11066', withRegions('Mountain Camp', 'Keldagrim'), 'vanilla')).toBe(true);
+    expect(wardUsable(TableType.BANKS, '11313', withRegions('Musa Point'), 'vanilla')).toBe(false);
+    expect(wardUsable(TableType.BANKS, '11313', withRegions('Musa Point', 'Mor Ul Rek (TzHaar City)'), 'vanilla')).toBe(true);
+  });
+
   it("asks a guild's own area in Vanilla, as the Activities tab does", () => {
     expect(wardUsable(TableType.GUILDS, 'Crafting Guild', maxed(), 'vanilla')).toBe(false);
     const withArea = maxed({ regions: [...initialState.unlocks.regions, 'Crafting Guild'] });
