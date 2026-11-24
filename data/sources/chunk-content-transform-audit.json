@@ -230769,6 +230769,18 @@
     },
     {
       "category": "taskUnlocks",
+      "sourceKey": "Monsters/Demonic Brutus/Brutus' Arena",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Abyssal potato",
+        "Desert Treasure II - The Fallen Empire completed"
+      ],
+      "detail": "Unlock demonic brutus"
+    },
+    {
+      "category": "taskUnlocks",
       "sourceKey": "Monsters/Desert Wolf/13104-1",
       "terminal": false,
       "disposition": "normalized",

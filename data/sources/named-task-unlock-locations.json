@@ -60,13 +60,13 @@
         },
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Brutus?oldid=15263932",
-          "revision": "15263932"
+          "url": "https://oldschool.runescape.wiki/w/Brutus?oldid=15406730",
+          "revision": "15406730"
         },
         {
           "kind": "wiki",
-          "url": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15214877",
-          "revision": "15214877"
+          "url": "https://oldschool.runescape.wiki/w/Demonic_Brutus?oldid=15384017",
+          "revision": "15384017"
         },
         {
           "kind": "coordinate",
@@ -75,7 +75,7 @@
           "revision": "2644"
         }
       ],
-      "note": "The quest enters Brutus' instance through the cow field's north-eastern two-tile gate at 3262-3263,3294. One physical gate emits one unlock row anchored at 3263,3294 in chunk 12851; completing The Ides of Milk permanently unlocks repeatable Brutus access, while the Demonic variant additionally needs Desert Treasure II and an abyssal potato.",
+      "note": "The quest enters Brutus' instance through the cow field's north-eastern two-tile gate at 3262-3263,3294. One physical gate emits one unlock row anchored at 3263,3294 in chunk 12851; completing The Ides of Milk permanently unlocks repeatable Brutus access, which is all the gate asks. The Demonic variant additionally needs Desert Treasure II and an abyssal potato; that is Demonic Brutus' own requirement in the arena (requirementRewrites in chunk-content-overrides.json), not the gate's.",
       "mappingKind": "single-entrance",
       "entrances": [
         {
@@ -85,8 +85,7 @@
           "label": "North-eastern Lumbridge cow-field gate to Brutus' Arena",
           "wikiPage": "The_Ides_of_Milk",
           "requirements": [
-            "The Ides of Milk completed for repeatable Brutus access",
-            "Desert Treasure II - The Fallen Empire and an abyssal potato for Demonic Brutus"
+            "The Ides of Milk completed"
           ]
         }
       ]
