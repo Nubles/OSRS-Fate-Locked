@@ -111,7 +111,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
     const input: DpsInput = {
       style, attackType, stanceId, prayerId, potionId, baseSpellMax,
       levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: selectedOption.speedTicks ?? gear.speedTicks },
-      monster: { defLevel, defBonus, hp: monster.hp },
+      monster: { defLevel, defBonus, hp: monster.hp, flatArmour: monster.flatArmour },
     };
     return computeDps(input);
   }, [monster, style, attackType, stanceId, prayerId, potionId, baseSpellMax, levels, gear, rangedType, selectedOption]);

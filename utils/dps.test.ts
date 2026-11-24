@@ -135,6 +135,46 @@ describe('dps formulas', () => {
     expect(lowStrength.effStr).toBe(73);
   });
 
+  it('takes monster flat armour off successful melee and ranged hits, never below 0', () => {
+    // Wiki "Flat armour" (rev 15382660): subtracted from the final damage roll of
+    // successful melee and ranged attacks; negative values add damage; misses stay 0;
+    // player magic ignores it. The Wiki DPS calculator floors the result at 0.
+    const perHit = (r: { dps: number; hitChance: number; attackInterval: number }) => (r.dps * r.attackInterval) / r.hitChance;
+    const melee = (flatArmour: number, meleeStr = 82) => computeDps({
+      ...baseInput(), gear: { ...baseInput().gear, meleeStr }, monster: { ...baseInput().monster, flatArmour },
+    });
+    const plain = melee(0);
+    expect(computeDps(baseInput()).dps).toBe(plain.dps); // No flat armour: unchanged.
+    const max = plain.maxHit;
+    expect(perHit(plain)).toBeCloseTo(max / 2 + 1 / (max + 1), 10);
+    // Veiled kraken, 15: rolls 0..max, a 0 becomes 1, then 15 comes off each.
+    let sum = 0;
+    for (let d = 0; d <= max; d++) sum += Math.max(0, Math.max(1, d) - 15);
+    const kraken = melee(15);
+    expect(perHit(kraken)).toBeCloseTo(sum / (max + 1), 10);
+    expect(kraken.hitChance).toBe(plain.hitChance); // Accuracy is untouched.
+    // A max hit below the armour deals nothing.
+    const weak = melee(15, -60);
+    expect(weak.maxHit).toBeLessThanOrEqual(15);
+    expect(weak.dps).toBe(0);
+    expect(weak.ttk).toBe(Infinity);
+    // Blue Moon, -5: five more damage on every successful hit.
+    expect(perHit(melee(-5))).toBeCloseTo(max / 2 + 1 / (max + 1) + 5, 10);
+    // Ranged is reduced too.
+    const ranged = (flatArmour: number) => computeDps({
+      ...baseInput(), style: 'ranged', attackType: 'ranged', stanceId: 'accurate',
+      gear: { ...baseInput().gear, rangedStr: 60 }, monster: { ...baseInput().monster, flatArmour },
+    });
+    expect(ranged(4).dps).toBeLessThan(ranged(0).dps);
+    // Player magic ignores both positive and negative flat armour.
+    const magic = (flatArmour: number) => computeDps({
+      ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'standard', baseSpellMax: 30,
+      monster: { ...baseInput().monster, flatArmour },
+    }).dps;
+    expect(magic(15)).toBe(magic(0));
+    expect(magic(-5)).toBe(magic(0));
+  });
+
   it('adds magic prayer damage to equipment damage before rounding the max hit', () => {
     const input: DpsInput = { ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'standard', baseSpellMax: 50 };
     expect(computeDps({ ...input, prayerId: 'mystic' }).maxHit).toBe(51);

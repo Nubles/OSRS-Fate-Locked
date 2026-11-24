@@ -9,6 +9,7 @@
  * Out of scope (v1): special attacks, item passives/scaling (Twisted bow, Salve,
  * Slayer helm, Void, crystal, Dharok's…), on-task multipliers, a per-spell magic
  * DB (a base-max-hit input is used instead), and target protection prayers.
+ * Monster flat armour is modelled (see averageSuccessfulHit).
  */
 
 export type Style = 'melee' | 'ranged' | 'magic';
@@ -154,6 +155,8 @@ export interface DpsInput {
     /** Defensive bonus for the chosen attack type. */
     defBonus: number;
     hp: number;
+    /** Monster flat armour (catalogue `flat_armour`); melee and ranged only. 0 when absent. */
+    flatArmour?: number;
   };
 }
 
@@ -182,6 +185,24 @@ export const formatTimeToKill = (seconds: number): string => {
   return `${Math.floor(whole / 60)}m ${whole % 60}s`;
 };
 
+/**
+ * Average damage of one successful hit with a uniform roll of 0..maxHit.
+ * Wiki, Damage per second step eight: a successful hit that rolls 0 is changed
+ * to a 1, so with no flat armour this is Max/2 + 1/(Max+1).
+ * Wiki "Flat armour" (rev 15382660): the target's flat armour is subtracted from
+ * the attack's final damage roll; negative values add damage; misses still deal
+ * 0. The Wiki page states no floor; the Wiki DPS calculator applies it with
+ * flatAddTransformer(-flatArmour), which never goes below 0 (osrs-dps-calc
+ * src/lib/HitDist.ts), and so does this.
+ */
+export const averageSuccessfulHit = (maxHit: number, flatArmour = 0): number => {
+  if (maxHit <= 0) return 0;
+  if (!flatArmour) return maxHit / 2 + 1 / (maxHit + 1);
+  let total = 0;
+  for (let roll = 0; roll <= maxHit; roll++) total += Math.max(0, Math.max(1, roll) - flatArmour);
+  return total / (maxHit + 1);
+};
+
 export const computeDps = (input: DpsInput): DpsResult => {
   const { style, levels, gear, monster } = input;
   const stance = pick(STANCES[style], input.stanceId);
@@ -206,9 +227,9 @@ export const computeDps = (input: DpsInput): DpsResult => {
 
   const speedTicks = Math.max(1, gear.speedTicks + stance.speedDelta);
   const attackInterval = speedTicks * 0.6;
-  // Wiki, Damage per second step eight: a successful hit that rolls 0 is
-  // changed to a 1, so an average hit is Max/2 + 1/(Max+1).
-  const averageHit = maxHit > 0 ? maxHit / 2 + 1 / (maxHit + 1) : 0;
+  // Player magic ignores flat armour, positive and negative (Wiki "Flat armour").
+  const flatArmour = style === 'magic' ? 0 : Math.trunc(monster.flatArmour ?? 0) || 0;
+  const averageHit = averageSuccessfulHit(maxHit, flatArmour);
   const dps = (chance * averageHit) / attackInterval;
   const ttk = dps > 0 ? monster.hp / dps : Infinity;
 

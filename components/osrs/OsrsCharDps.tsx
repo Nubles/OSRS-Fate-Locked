@@ -124,7 +124,7 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
     const input: DpsInput = {
       style, attackType, stanceId, prayerId, potionId, baseSpellMax,
       levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: selectedOption.speedTicks ?? gear.speedTicks },
-      monster: { defLevel, defBonus, hp: monster.hp },
+      monster: { defLevel, defBonus, hp: monster.hp, flatArmour: monster.flatArmour },
     };
     return computeDps(input);
   }, [monster, style, attackType, stanceId, prayerId, potionId, baseSpellMax, levels, gear, rangedType, selectedOption]);

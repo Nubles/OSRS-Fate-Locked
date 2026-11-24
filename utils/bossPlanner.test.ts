@@ -153,6 +153,15 @@ describe('boost prayers', () => {
     prayers,
   });
 
+  it('takes the boss\'s flat armour off melee hits', () => {
+    // Wiki "Flat armour": subtracted from successful melee and ranged hits.
+    const plain = planBoss(whip7070(), graardor);
+    const armoured = planBoss(whip7070(), { ...graardor, flatArmour: 4 });
+    const weak = planBoss(whip7070(), { ...graardor, flatArmour: -2 });
+    expect(armoured.dps).toBeLessThan(plain.dps);
+    expect(weak.dps).toBeGreaterThan(plain.dps);
+  });
+
   it('assumes no prayer without the Prayer levels or Arcana unlocks', () => {
     expect(bestBoostPrayers(unlocks())).toEqual({ melee: 'none', ranged: 'none' });
     // Raw Prayer 99 is capped at 10 by tier 1.

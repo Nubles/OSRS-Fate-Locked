@@ -231,6 +231,40 @@ describe('MonsterService Defence levels', () => {
   });
 });
 
+describe('MonsterService flat armour', () => {
+  it('carries each row\'s flat armour, positive and negative, and reads a missing value as 0', async () => {
+    mockStorage();
+    const rows = JSON.parse(readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url), 'utf8'));
+    mockData([...rows, { ...TARGET, id: 999_001, name: 'No flat armour field' }]);
+    const service = await freshService();
+    await service.init();
+    // Wiki "Flat armour" (rev 15382660) NPC table: Veiled kraken 15, Blue Moon -5,
+    // Amoxliatl -2, Dusk (first form) -1.
+    expect(service.byName('Veiled kraken')?.flatArmour).toBe(15);
+    expect(service.byName('Blue Moon')?.flatArmour).toBe(-5);
+    expect(service.versionsOf('Amoxliatl').map(m => m.flatArmour)).toEqual([-2, -2]);
+    expect(service.versionsOf('Dusk').find(m => m.version === 'First form')?.flatArmour).toBe(-1);
+    expect(service.byName('General Graardor')?.flatArmour).toBe(0);
+    expect(service.byName('No flat armour field')?.flatArmour).toBe(0);
+  });
+
+  it('rebuilds a version 4 cache, which had no flat armour', async () => {
+    const storage = mockStorage();
+    const kraken = { ...TARGET, id: 12_000, name: 'Veiled kraken', defensive: { ...TARGET.defensive, flat_armour: 15 } };
+    const fetchMock = mockData([TARGET, kraken]);
+    await (await freshService()).init();
+    const cached = JSON.parse(storage.get(CACHE_KEY)!);
+    cached.source = `${MONSTER_CATALOGUE.sha256}:4`;
+    for (const row of cached.data) delete row.flatArmour;
+    storage.set(CACHE_KEY, JSON.stringify(cached));
+
+    const service = await freshService();
+    await service.init();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(service.byId(12_000)?.flatArmour).toBe(15);
+  });
+});
+
 describe('parseMaxHit', () => {
   it.each([
     ['60 (melee)', 60],

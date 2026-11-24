@@ -51,6 +51,8 @@ export interface MonsterStats {
   /** Defensive bonuses by attack type. */
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
   rangedDefence?: Record<'light' | 'standard' | 'heavy', number>;
+  /** Flat armour taken off each successful melee or ranged hit (negative adds damage); 0 when absent. */
+  flatArmour?: number;
   size: number;
   attributes: string[];
 }
@@ -73,7 +75,7 @@ interface RawMonster {
   size?: number;
   max_hit?: string | number;
   skills?: { def?: number; hp?: number; magic?: number };
-  defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number; light?: number; standard?: number; heavy?: number };
+  defensive?: { stab?: number; slash?: number; crush?: number; magic?: number; ranged?: number; light?: number; standard?: number; heavy?: number; flat_armour?: number };
   attributes?: string[];
 }
 
@@ -84,6 +86,7 @@ function validMonster(value: unknown): value is MonsterStats {
     && typeof m.version === 'string' && typeof m.imageFile === 'string'
     && [m.level, m.hp, m.defLevel, m.magicLevel, m.size].every(Number.isFinite)
     && (m.maxHit === null || Number.isFinite(m.maxHit))
+    && (m.flatArmour === undefined || Number.isFinite(m.flatArmour))
     && m.hp > 0 && m.size >= 0 // Upstream uses zero for unknown size on real targets.
     && !!m.def && ['stab', 'slash', 'crush', 'magic', 'ranged'].every(k => Number.isFinite(m.def[k as keyof MonsterStats['def']]))
     && !!m.rangedDefence && ['light', 'standard', 'heavy'].every(k => Number.isFinite(m.rangedDefence![k as 'light' | 'standard' | 'heavy']))
@@ -182,6 +185,7 @@ class MonsterService {
           standard: r.defensive?.standard ?? r.defensive?.ranged ?? 0,
           heavy: r.defensive?.heavy ?? r.defensive?.ranged ?? 0,
         },
+        flatArmour: Number.isFinite(r.defensive?.flat_armour) ? Math.trunc(r.defensive!.flat_armour!) : 0,
         size: r.size ?? 1,
         attributes: r.attributes ?? [],
       };

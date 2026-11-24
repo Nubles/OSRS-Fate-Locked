@@ -27,6 +27,8 @@ export interface MonsterLite {
   magicLevel: number;
   def: { stab: number; slash: number; crush: number; magic: number; ranged: number };
   rangedDefence?: Record<RangedDamageType, number>;
+  /** Flat armour taken off each successful melee or ranged hit; 0 when absent. */
+  flatArmour?: number;
 }
 
 export interface PlayerCombat {
@@ -191,7 +193,7 @@ const runCombo = (p: PlayerCombat, m: MonsterLite, { style, attackType, stanceId
       magicDmgPct: p.gear.bonuses.magicStr,
       speedTicks: p.gear.speedTicks,
     },
-    monster: { defLevel: style === 'magic' ? m.magicLevel : m.defLevel, defBonus: monDefFor(m, attackType, p.gear.rangedDamageType ?? 'standard'), hp: m.hp },
+    monster: { defLevel: style === 'magic' ? m.magicLevel : m.defLevel, defBonus: monDefFor(m, attackType, p.gear.rangedDamageType ?? 'standard'), hp: m.hp, flatArmour: m.flatArmour },
   });
 
 // A generic "strong endgame" setup for the gear-gap benchmark.

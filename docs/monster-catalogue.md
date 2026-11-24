@@ -30,7 +30,14 @@ his fights at Defence 0, and the Wiki gives 215 to 145 (Post-quest), 268 to
 181 (Awakened) and 180 to 130 (Quest), falling as his HP drops. The service
 uses the start-of-fight value and applies the override only while upstream
 still says 0, so a corrected capture wins. A test checks that no planned boss
-row is left at Defence 0. This does not certify every statistic or add
+row is left at Defence 0.
+
+Version 5 carries each row's `flat_armour` as `flatArmour` (0 when absent).
+The DPS engine (`utils/dps.ts`) takes it off every successful melee or ranged
+hit after the 0-to-1 rule, as the Wiki's Flat armour page describes; negative
+values add damage, misses stay 0 and player magic ignores it. The Wiki page
+states no floor; like the Wiki DPS calculator, a hit never goes below 0.
+This does not certify every statistic or add
 encounter mechanics.
 
 Normalized caches must match the source SHA-256 and normalization version and
