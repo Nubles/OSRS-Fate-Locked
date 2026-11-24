@@ -37,6 +37,21 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-24-second-accuracy-pass',
+    title: 'Second accuracy pass',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'A Key roll is now refused with a message while your progress can’t save or another tab’s newer progress is waiting, so a roll can’t be lost.',
+        'Slayer tasks now ask for what their places need: 60 Strength or Agility for God Wars tasks, the quest for quest dungeons, and only bosses a master would give.',
+        'The Resource Engine drops routes that never give the item, puts monsters, patches and rocks in their real areas, and asks for the boss, minigame or quest.',
+        'Strategy Guide cards and goals for boss, minigame and guild rewards now ask for that Key, and many now list the right levels, areas and quests.',
+        'More than a dozen quests gained a missing need, like the Gloves slot for Ghosts Ahoy, 45 Mining for Enakhra’s Lament and 31 Prayer for Animal Magnetism.',
+        'Skill guides, diary tasks, guilds, storage unlocks and the shop directory were checked against the Wiki, and Chunked reads patches at their real levels.',
+      ],
+    },
+  },
+  {
     id: '2026-11-23-shared-progress-link',
     title: 'Shared progress keeps its link',
     date: '2026-11-23',
