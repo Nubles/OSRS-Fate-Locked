@@ -270,21 +270,6 @@ export const CHUNK_CONTENT_DATA_VERSION = 17;
 export const CHUNK_CONTENT_TIMEOUT_MS = 30_000;
 export const CHUNK_CONTENT_TIMEOUT_MESSAGE = 'Chunk content took too long to load.';
 
-/** Source spellings that differ from the Wiki title (the Wiki page is "Myths' Guild"). */
-const INTERIOR_TITLE_FIXES: Record<string, string> = { "Myth's Guild": "Myths' Guild" };
-
-/**
- * The name the chunk panel shows for an interior. The source keys sections as "Name#Section"
- * and names unnamed regions "Interior <region id>"; only the shown list is formatted, so ids,
- * matching and the plugin bundle keep the raw names.
- */
-export function interiorDisplayName(name: string): string {
-  if (/^Interior \d+$/.test(name)) return 'Unnamed interior';
-  const [base, section] = name.split('#', 2);
-  const title = INTERIOR_TITLE_FIXES[base] ?? base;
-  return section ? `${title} (${section})` : title;
-}
-
 export class ChunkContentService {
   private doc: RawDoc | null = null;
   private promise: Promise<boolean> | null = null;
@@ -359,7 +344,7 @@ export class ChunkContentService {
     const interiors = this.interiorLocations().get(id) ?? [];
     if (!interiors.length) return e ? decode(e) : null;
     return { ...aggregateContent([...(e ? [decode(e)] : []), ...interiors.map(({ entry }) => decode(entry.content))]),
-      name: e?.n, interiors: interiors.map(({ sourceId, entry }) => ({ sourceId, name: interiorDisplayName(entry.name) })) };
+      name: e?.n, interiors: interiors.map(({ sourceId, entry }) => ({ sourceId, name: entry.name })) };
   }
 
   private interiorIndex: Map<string, { sourceId: string; entry: NonNullable<RawDoc['interiors']>[string]; requirements: string[] }[]> | null = null;
@@ -418,7 +403,7 @@ export class ChunkContentService {
       if (surface) entries.push(decode(surface));
       for (const { sourceId, entry } of this.interiorLocations().get(id) ?? []) {
         if (seen.has(sourceId)) continue; seen.add(sourceId);
-        entries.push(decode(entry.content)); interiors.push({ sourceId, name: interiorDisplayName(entry.name) });
+        entries.push(decode(entry.content)); interiors.push({ sourceId, name: entry.name });
       }
     }
     return { ...aggregateContent(entries), ...(interiors.length ? { interiors } : {}) };

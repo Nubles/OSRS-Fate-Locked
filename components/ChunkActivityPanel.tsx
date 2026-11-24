@@ -20,6 +20,7 @@ import {
 } from '../utils/journalStatus';
 import { classifyShop } from '../utils/merchantShops';
 import { resourceReqFor, resourceUsable } from '../utils/chunkResources';
+import { interiorDisplayName } from '../utils/interiorDisplayName';
 import { chunkTransportNodes, mobilityFor } from '../utils/chunkMobility';
 import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations';
 import { isChunkUnlocked } from '../utils/chunkAdjacency';
@@ -1018,7 +1019,7 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
           <ChunkInfoBodyState kind="loading" />
         ) : (
           <>
-            {!!content?.interiors?.length && <details className="my-2 text-gray-400"><summary className="cursor-pointer text-cyan-300">Includes nearby interiors ({new Set(content.interiors.map(i => i.name)).size})</summary><p className="mt-1">Interior content is shown at its entrance. Each interior keeps its access requirements.</p><p>{[...new Set(content.interiors.map(i => i.name))].sort().join(', ')}</p></details>}
+            {!!content?.interiors?.length && <details className="my-2 text-gray-400"><summary className="cursor-pointer text-cyan-300">Includes nearby interiors ({new Set(content.interiors.map(i => interiorDisplayName(i.name))).size})</summary><p className="mt-1">Interior content is shown at its entrance. Each interior keeps its access requirements.</p><p>{[...new Set(content.interiors.map(i => interiorDisplayName(i.name)))].sort().join(', ')}</p></details>}
             {!emptyContentState && <ChunkInfoSummary summary={drawerSummary} />}
             {mode === 'chunk' && (
               <ChunkInfoAccessCard previewLocked={!unlocked && !ownership.unmapped} entryRequirements={entryRequirements} entrances={entrances} chunkUnlocked={unlocked} bankState={bankState} bankRequirements={bankAccess?.reasons} />
