@@ -18,6 +18,7 @@ import type { InteriorRecord } from '../utils/interiorEntry';
 import { classifyShop } from '../utils/shopClassification';
 import { loadRunRoutes } from '../utils/chunkEntry';
 import { loadWalkSections } from '../utils/walkSections';
+import { foldedRank } from '../utils/textFold';
 
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
@@ -779,16 +780,14 @@ export class ChunkContentService {
     return this.getItemIdx()?.get(itemName.toLowerCase())?.monsters ?? [];
   }
 
-  /** Ranked item-name search across every drop table — for "where do I get X". */
+  /** Ranked item-name search across every drop table — for "where do I get X". Ignores apostrophes. */
   searchItems(query: string, limit = 6): { name: string; sources: number }[] {
     const idx = this.getItemIdx();
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!idx || q.length < 2) return [];
     const scored: { name: string; sources: number; score: number }[] = [];
     for (const e of idx.values()) {
-      const n = e.name.toLowerCase();
-      let score = 0;
-      if (n === q) score = 3; else if (n.startsWith(q)) score = 2; else if (n.includes(q)) score = 1;
+      const score = foldedRank(e.name, q);
       if (score) scored.push({ name: e.name, sources: e.monsters.length, score });
     }
     return scored
@@ -806,18 +805,14 @@ export class ChunkContentService {
       Object.entries(items).find(([k]) => k.toLowerCase() === key.toLowerCase())?.[1] ?? [];
   }
 
-  /** Ranked substring search across every entity in Gielinor. */
+  /** Ranked substring search across every entity in Gielinor. Ignores apostrophes, as searchItems does. */
   searchEntities(query: string, limit = 8): EntityHit[] {
     const index = this.getIndex();
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!index || q.length < 2) return [];
     const scored: { hit: EntityHit; score: number }[] = [];
     for (const hit of index.values()) {
-      const n = hit.name.toLowerCase();
-      let score = 0;
-      if (n === q) score = 3;
-      else if (n.startsWith(q)) score = 2;
-      else if (n.includes(q)) score = 1;
+      const score = foldedRank(hit.name, q);
       if (score) scored.push({ hit, score });
     }
     return scored

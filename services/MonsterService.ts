@@ -5,6 +5,7 @@
  */
 
 import { MONSTER_CATALOGUE, MONSTER_CACHE_SOURCE } from '../data/monsterCatalogue';
+import { foldedRank } from '../utils/textFold';
 
 const CACHE_KEY = 'fate_osrs_monsters_v3';
 
@@ -225,16 +226,16 @@ class MonsterService {
     } catch { /* quota — keep in memory */ }
   }
 
-  /** Name search, ranked: prefix matches first, then substring. */
+  /** Name search, ranked: prefix matches first, then substring, ignoring apostrophes ("kril"). */
   search(q: string, limit = 60): MonsterStats[] {
-    const query = q.trim().toLowerCase();
+    const query = q.trim();
     if (!query) return this.list.slice(0, limit);
     const starts: MonsterStats[] = [];
     const contains: MonsterStats[] = [];
     for (const m of this.list) {
-      const n = m.name.toLowerCase();
-      if (n.startsWith(query)) starts.push(m);
-      else if (n.includes(query)) contains.push(m);
+      const rank = foldedRank(m.name, query);
+      if (rank >= 2) starts.push(m);
+      else if (rank === 1) contains.push(m);
       if (starts.length >= limit) break;
     }
     return [...starts, ...contains].slice(0, limit);
