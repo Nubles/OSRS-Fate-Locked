@@ -57,6 +57,39 @@ describe('RunelitePairingDialog', () => {
     expect(screen.getByRole('button', { name: /connect tracker/i })).toBeTruthy();
   });
 
+  it('in a tab showing another profile, warns that connecting replaces the pairing and names its profile', () => {
+    renderDialog({
+      replacing: false,
+      connected: false,
+      pairedProfileId: 'p-main',
+      profiles: [{ id: 'p-main', name: 'Main profile' }, { id: 'p-alt', name: 'Alt profile' }],
+      profileName: 'Alt profile',
+    });
+    const warning = screen.getByText(/This browser is connected to RuneLite for/);
+    expect(warning.textContent).toBe(
+      'This browser is connected to RuneLite for the profile Main profile. Connecting here replaces that connection.',
+    );
+    expect(screen.queryByText(/already connected/i)).toBeNull();
+  });
+
+  it('says another profile when the pairing is for a profile this browser no longer lists', () => {
+    renderDialog({ replacing: false, pairedProfileId: 'p-gone', profiles: [{ id: 'p-alt', name: 'Alt profile' }] });
+    expect(screen.getByText(/This browser is connected to RuneLite for/).textContent).toBe(
+      'This browser is connected to RuneLite for another profile. Connecting here replaces that connection.',
+    );
+  });
+
+  it('shows one warning, for this profile, when the pairing is this profile\'s', () => {
+    renderDialog({ replacing: true, pairedProfileId: 'p-main', profiles: [{ id: 'p-main', name: 'Main profile' }] });
+    expect(screen.getByText(/replace the current RuneLite connection/i)).toBeTruthy();
+    expect(screen.queryByText(/This browser is connected to RuneLite for/)).toBeNull();
+  });
+
+  it('shows no warning when the browser holds no pairing', () => {
+    renderDialog({ replacing: false, profiles: [{ id: 'p-main', name: 'Main profile' }] });
+    expect(screen.queryByText(/replace/i)).toBeNull();
+  });
+
   it('does not claim that RuneLite sent the link, since any site can open one', () => {
     renderDialog();
     expect(screen.queryByText(/RuneLite requested this connection/i)).toBeNull();

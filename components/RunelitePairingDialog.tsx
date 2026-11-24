@@ -11,6 +11,9 @@ export interface RunelitePairingDialogProps {
   replacing: boolean;
   /** The link is for the pairing this browser already holds. */
   connected?: boolean;
+  /** The profile this browser's pairing is for, when it has one. */
+  pairedProfileId?: string;
+  profiles?: ReadonlyArray<{ id: string; name: string }>;
   profileName: string;
   linkedAccount: string | null;
   phase: RunelitePairingPhase;
@@ -26,6 +29,8 @@ export const RunelitePairingDialog: React.FC<
   code,
   replacing,
   connected = false,
+  pairedProfileId,
+  profiles = [],
   profileName,
   linkedAccount,
   phase,
@@ -35,6 +40,12 @@ export const RunelitePairingDialog: React.FC<
   onClose,
 }) => {
   const canDismiss = canDismissRunelitePairing(phase);
+  // `replacing` means the pairing is this profile's. A pairing for another
+  // profile is replaced too, so name that profile when it is known.
+  const otherProfile = !replacing && !connected && pairedProfileId !== undefined;
+  const otherProfileName = otherProfile
+    ? profiles.find((profile) => profile.id === pairedProfileId)?.name
+    : undefined;
   const dialogRef = useRef<HTMLDivElement>(null);
   useFocusTrap(dialogRef);
 
@@ -110,6 +121,16 @@ export const RunelitePairingDialog: React.FC<
               <p className="text-[11px] leading-relaxed">
                 This will replace the current RuneLite connection for
                 this profile.
+              </p>
+            </div>
+          )}
+          {otherProfile && phase === 'confirm' && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-950/40 p-3 text-amber-200">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <p className="text-[11px] leading-relaxed">
+                This browser is connected to RuneLite for{' '}
+                {otherProfileName ? <>the profile <b>{otherProfileName}</b></> : 'another profile'}.
+                Connecting here replaces that connection.
               </p>
             </div>
           )}

@@ -486,6 +486,18 @@ describe('RelaySyncService', () => {
       vi.stubGlobal('fetch', fetchMock);
     });
 
+    it('reports the profile its pairing is for in a tab showing another profile', async () => {
+      const main = await openTab('main');
+      const alt = await openTab('alt');
+      expect(alt.pairedProfileId).toBeUndefined();
+      main.adoptCode(CODE, 'main');
+      storageEvent();
+      expect(alt.enabled).toBe(false);
+      expect(alt.code).toBeNull();
+      expect(alt.pairedProfileId).toBe('main');
+      expect(main.pairedProfileId).toBe('main');
+    });
+
     it('publishes only from a tab showing the paired profile', async () => {
       const main = await openTab('main');
       expect(main.adoptCode(CODE, 'main')).toBe(true);
@@ -552,5 +564,14 @@ describe('current RuneLite connection source boundary', () => {
     expect(service).not.toContain('/state');
     expect(service).not.toContain('fetchPluginState');
     expect(onboarding).not.toContain('Plugin connected');
+  });
+});
+
+describe('pairing dialog wiring in App', () => {
+  it('passes the profile the pairing is for and the profile list to the dialog', () => {
+    const app = readFileSync('App.tsx', 'utf8');
+    const dialog = app.slice(app.indexOf('<RunelitePairingDialog'), app.indexOf('onConfirm=', app.indexOf('<RunelitePairingDialog')));
+    expect(dialog).toContain('pairedProfileId={relaySync.pairedProfileId}');
+    expect(dialog).toContain('profiles={profiles}');
   });
 });
