@@ -264,7 +264,7 @@ export const UTILITY_ITEM_IDS: Record<string, number> = {
   'Wintertodt': 20693,
   'Zalcano': 23760,
   'Zulrah': 12921,
-  'Tormented Demons': 29883,
+  'Tormented Demons': 29580, // Tormented synapse
 
   // Minigames (Activities)
   'Shooting Stars': 25539,
