@@ -4,6 +4,7 @@ import { X, Search, Lock, Unlock, ExternalLink } from 'lucide-react';
 import { Map, MapPin, BookOpen, Skull, Gamepad2, Sprout, Footprints, Zap, Home, Store, Package, Flag, Shield, ScrollText, Swords, Box, Trophy } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import { paletteShortcut } from '../utils/paletteShortcut';
 import { useGame } from '../context/GameContext';
 import { SectionGuide } from './SectionGuide';
 import { 
@@ -443,7 +444,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
            <span>Global Search</span>
            <div className="flex gap-4">
               <span className="flex items-center gap-1"><kbd className="bg-[#333] px-1 rounded text-gray-400">Esc</kbd> to close</span>
-              <span className="flex items-center gap-1"><kbd className="bg-[#333] px-1 rounded text-gray-400">Ctrl+K</kbd> to open</span>
+              <span className="flex items-center gap-1"><kbd className="bg-[#333] px-1 rounded text-gray-400">{paletteShortcut()}</kbd> command palette</span>
            </div>
         </div>
 
