@@ -18,6 +18,7 @@ import {
   analyzeQuestPreparation,
   combineQuestRouteStatus,
   clearQuestRouteAnalysisCache,
+  questItemsObtainableNow,
   type QuestRouteAnalysisSnapshot,
   type QuestRouteItemSourceCoverage,
   type QuestRouteStationRequirement,
@@ -28,7 +29,11 @@ import {
   type ItemRef,
   type RawRouteRequirement,
 } from './model';
-import { materializeQuestRouteSnapshot, materializeRuneProofAccount } from './goalPlannerRuneProof';
+import {
+  canonicalRuneProofAccountIdentity,
+  materializeQuestRouteSnapshot,
+  materializeRuneProofAccount,
+} from './goalPlannerRuneProof';
 import { questWalkthroughFor as publicQuestWalkthroughFor } from '../../data/questWalkthroughs.public';
 import * as resolverModule from './resolver';
 import {
@@ -1138,4 +1143,56 @@ describe('quest walkthrough attachment', () => {
     expect(changed.generatedFrom.walkthroughRevision).toBe('changed-walkthrough-revision');
   });
 });
+});
+
+describe('boss-drop sources through the materialized account', () => {
+  beforeEach(() => clearQuestRouteAnalysisCache());
+
+  // Milk only from a boss: the drop counts once the boss is unlocked.
+  const bossMilkSnapshot = (account: UnlockState): QuestRouteAnalysisSnapshot => ({
+    ...fixture({
+      records: [
+        source('Egg'),
+        source('Pot of flour'),
+        source('Bucket of milk', { kind: 'monster', hostName: 'Giant Mole' }),
+      ],
+    }),
+    unlocks: materializeRuneProofAccount(account, 'chunked').unlocks,
+  });
+
+  it('blocks a boss drop until the boss is unlocked', () => {
+    expect(questItemsObtainableNow("Cook's Assistant", bossMilkSnapshot(unlocks()))).toEqual({
+      status: 'CANNOT_COMPLETE_YET',
+      missing: ['Bucket of milk'],
+    });
+    expect(questItemsObtainableNow(
+      "Cook's Assistant",
+      bossMilkSnapshot(unlocks({ bosses: ['Giant Mole'] })),
+    ).missing).toEqual([]);
+    const milk = (account: UnlockState) => analyzeQuestPreparation("Cook's Assistant", bossMilkSnapshot(account))
+      .items.find(entry => entry.requirement.item.key === 'bucket of milk');
+    expect(milk(unlocks())?.state).toBe('ROUTE_BLOCKED');
+    expect(milk(unlocks({ bosses: ['Giant Mole'] }))?.state).toBe('OBTAINABLE_NOW');
+  });
+
+  it('carries boss unlocks into the account identity only when there are some', () => {
+    const plain = materializeRuneProofAccount(unlocks(), 'chunked');
+    const withBoss = materializeRuneProofAccount(unlocks({ bosses: ['Giant Mole'] }), 'chunked');
+    expect(withBoss.unlocks.bosses).toEqual(['Giant Mole']);
+    expect(JSON.stringify(canonicalRuneProofAccountIdentity(withBoss)))
+      .not.toBe(JSON.stringify(canonicalRuneProofAccountIdentity(plain)));
+    expect(canonicalRuneProofAccountIdentity(plain)).not.toHaveProperty('bosses');
+  });
+
+  it('still analyses an older materialized snapshot that has no bosses field', () => {
+    const { bosses: _omitted, ...older } = materializeRuneProofAccount(unlocks(), 'chunked').unlocks;
+    const snapshot = { ...bossMilkSnapshot(unlocks()), unlocks: older };
+    expect(snapshot.unlocks).not.toHaveProperty('bosses');
+    expect(questItemsObtainableNow("Cook's Assistant", snapshot)).toEqual({
+      status: 'CANNOT_COMPLETE_YET',
+      missing: ['Bucket of milk'],
+    });
+    expect(analyzeQuestPreparation("Cook's Assistant", snapshot).items
+      .find(entry => entry.requirement.item.key === 'egg')?.state).toBe('OBTAINABLE_NOW');
+  });
 });

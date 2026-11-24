@@ -272,10 +272,10 @@ describe('Diary tasks behind a quest gate on the map', () => {
     // done, or a charter ship; the furnace is inside the town. Same wording as the range task (mor_easy_2).
     expect(task('mor_med_8').oneOf).toEqual([
       { label: 'Ghosts Ahoy', quests: ['Ghosts Ahoy'] },
-      { label: 'Ecto-tokens or charter ship', manualRequirements: ['Confirm: Ecto-tokens or charter ship'] },
+      { label: 'Ecto-tokens or charter ship', manualRequirements: ['Ecto-tokens or charter ship'] },
     ]);
     expect(task('mor_easy_2').oneOf?.map(route => route.manualRequirements ?? route.quests))
-      .toContainEqual(['Confirm: Ecto-tokens or charter ship']);
+      .toContainEqual(['Ecto-tokens or charter ship']);
   });
 
   it('list the quest that opens every area they need, or a quest that needs it first', () => {

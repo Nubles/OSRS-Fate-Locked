@@ -10,6 +10,9 @@ import { calculateGoalProgress } from './goalLogic';
 import { STRATEGY_DATABASE } from '../data/requirements';
 import { analyzeRequirement } from './strategyRequirement';
 import { createFreshState } from '../context/GameContext';
+import { DIARY_DATA } from '../data/diaryData';
+import { namedAreaChunks } from './reachability';
+import { chunkKey } from './chunkAdjacency';
 import { REGIONS_LIST, SKILLS_LIST, MINIGAMES_LIST, GUILDS_LIST, BOSSES_LIST, MERCHANTS_LIST, STORAGE_LIST } from '../data/items';
 
 /** Minimal game state with the bits the route builder reads. */
@@ -423,5 +426,89 @@ describe('buildGoalRoute — a pinned Strategy Guide entry agrees with its guide
     const route = buildGoalRoute('Wilderness God Wars Dungeon', strong)!;
     expect(route.alternatives).toContainEqual(expect.objectContaining({ name: 'One of: 60 Strength or 60 Agility', met: true }));
     expect(route.percentage).toBe(100);
+  });
+});
+
+describe('buildGoalRoute — a pinned Strategy Guide entry counts its own Key, chunk checks and other blockers', () => {
+  const guideEntries = Object.entries(STRATEGY_DATABASE).filter(([key, req]) => !QUEST_DATA[key]
+    && req.category !== TableType.QUESTS && req.category !== TableType.DIARIES);
+  const base = {
+    ...createFreshState().unlocks,
+    skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+    levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+    quests: Object.keys(QUEST_DATA), diaries: Object.keys(DIARY_DATA),
+  };
+
+  it('never reads 100% while the goal card is not ready (Vanilla, every area, no table Keys)', () => {
+    const unlocks = { ...base, regions: [...REGIONS_LIST] };
+    const state = { unlocks, gameModeId: 'vanilla' } as unknown as GameState;
+    const wrong = guideEntries.filter(([key, req]) => calculateGoalProgress(req, unlocks, 'vanilla').percentage < 100
+      && buildGoalRoute(key, state)!.percentage === 100).map(([key]) => key);
+    expect(wrong).toEqual([]);
+  });
+
+  it("shows the entry's own Key as a step and offers its table", () => {
+    const unlocks = { ...base, regions: [...REGIONS_LIST] };
+    const state = { unlocks, gameModeId: 'vanilla' } as unknown as GameState;
+    const cases: Array<[string, string, TableType]> = [
+      ['Mining Guild (Amethyst)', 'Mining Guild', TableType.GUILDS],
+      ["Champions' Guild (Shop)", "Champions' Guild", TableType.GUILDS],
+      ['Soda Ash (Charter Ships)', 'Charter Ships', TableType.MOBILITY],
+    ];
+    for (const [goal, key, table] of cases) {
+      const route = buildGoalRoute(goal, state)!;
+      expect(calculateGoalProgress(STRATEGY_DATABASE[goal], unlocks, 'vanilla').missing, goal).toContain(`Unlock: ${key}`);
+      expect(route.keys, goal).toContainEqual(expect.objectContaining({ name: key, met: false }));
+      expect(route.tables, goal).toContainEqual(expect.objectContaining({ table, needed: expect.arrayContaining([key]) }));
+      expect(route.percentage, goal).toBeLessThan(100);
+    }
+    const held = { ...state, unlocks: { ...unlocks, guilds: ['Mining Guild'] } } as unknown as GameState;
+    const route = buildGoalRoute('Mining Guild (Amethyst)', held)!;
+    expect(route.keys).toContainEqual(expect.objectContaining({ name: 'Mining Guild', met: true }));
+    expect(route.tables).not.toContainEqual(expect.objectContaining({ table: TableType.GUILDS }));
+  });
+
+  it("lists an activity's own blockers and never reads 100% while the card is not ready (a new account)", () => {
+    const unlocks = { ...createFreshState().unlocks, regions: [...REGIONS_LIST],
+      minigames: [...MINIGAMES_LIST], guilds: [...GUILDS_LIST], bosses: [...BOSSES_LIST], merchants: [...MERCHANTS_LIST], storage: [...STORAGE_LIST] };
+    const state = { unlocks, gameModeId: 'vanilla' } as unknown as GameState;
+    const wrong: string[] = [];
+    let listed = 0;
+    for (const [key, req] of guideEntries) {
+      const route = buildGoalRoute(key, state)!;
+      const { parts } = analyzeRequirement(req, unlocks, 'vanilla');
+      const names = [...(route.blockers ?? []), ...route.quests, ...route.regions].map(item => item.name);
+      for (const blocker of parts.activityBlockers) {
+        if (blocker.kind === 'questPoints' || blocker.kind === 'skill' || blocker.kind === 'combat') continue;
+        if (!names.includes(blocker.label)) wrong.push(`${key}: ${blocker.label}`);
+      }
+      listed += route.blockers?.length ?? 0;
+      if (calculateGoalProgress(req, unlocks, 'vanilla').percentage < 100 && route.percentage === 100) wrong.push(`${key}: route 100%`);
+    }
+    expect(listed).toBeGreaterThan(0);
+    expect(wrong).toEqual([]);
+  });
+
+  it("never reads 100% while the card asks to check an area is in the player's chunks (Chunked)", () => {
+    const wrong: string[] = [];
+    let checked = 0;
+    for (const [key, req] of guideEntries) {
+      const chunks = req.regions.flatMap(region => namedAreaChunks(region).slice(0, 1).map(chunk => chunkKey(chunk)));
+      if (!chunks.length) continue;
+      const id = [req.id];
+      const unlocks = { ...base, regions: [], chunks,
+        bosses: id, minigames: id, guilds: id, mobility: ['Charter Ships', ...id], arcana: id, storage: id, housing: id, merchants: id, farming: id };
+      const card = calculateGoalProgress(req, unlocks, 'chunked');
+      const route = buildGoalRoute(key, { unlocks, gameModeId: 'chunked' } as unknown as GameState)!;
+      if (card.missing.some(line => line.startsWith('Check it is in your chunks'))) {
+        checked++;
+        for (const line of card.missing.filter(m => m.startsWith('Check it is in your chunks'))) {
+          if (!route.manualChecks?.some(check => check.name === line && !check.met)) wrong.push(`${key}: ${line}`);
+        }
+      }
+      if (card.percentage < 100 && route.percentage === 100) wrong.push(`${key}: route 100%`);
+    }
+    expect(checked).toBeGreaterThan(50);
+    expect(wrong).toEqual([]);
   });
 });
