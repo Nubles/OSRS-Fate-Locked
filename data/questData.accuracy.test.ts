@@ -344,12 +344,12 @@ describe('quest places checked on the Wiki (24 Nov 2026)', () => {
   it("asks Rag and Bone Man II for the only areas that hold some of its bones", () => {
     // Wiki Rag and Bone Man II (rev 15413780) ==List== and the monster pages' LocLines:
     // Mogre only at Mudskipper Point (46,48); Undead cow only at Alice's farm (56,55, Port
-    // Phasmatys); Ghoul only in 53,54 (Paterdomus). Bats also stand at the Slayer Tower entrance
-    // and in the Haunted Woods, so those two stay.
+    // Phasmatys); Ghoul only in 53,54 (Paterdomus). The bat wing is 'Near the Odd Old Man (must be
+    // the bats near the limestone quarry)': the Bat page's Silvarea LocLine is 52,54. Nothing else
+    // on the list stands at the Slayer Tower (53,55) or in the Haunted Woods, so both are dropped.
     expect(QUEST_DATA['Rag and Bone Man II'].regions).toEqual([
       'Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka',
-      'Canifis', 'Haunted Woods', "Fenkenstrain's Castle", 'Slayer Tower',
-      'Mudskipper Point', 'Port Phasmatys', 'Paterdomus',
+      'Canifis', "Fenkenstrain's Castle", 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus',
     ]);
   });
 
@@ -363,9 +363,9 @@ describe('quest places checked on the Wiki (24 Nov 2026)', () => {
     const manual = QUEST_DATA['Rag and Bone Man II'].manualRequirements ?? [];
     expect(manual).toEqual(expect.arrayContaining([
       'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
-      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig Cavern',
       "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
-      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison",
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison after The Fremennik Exiles",
       'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
     ]));
     expect(manual.filter(line => line.includes('dagannoth'))).toHaveLength(1);
@@ -373,15 +373,16 @@ describe('quest places checked on the Wiki (24 Nov 2026)', () => {
 
   it('does not call Rag and Bone Man II available without Mudskipper Point and Port Phasmatys', () => {
     const quest = QUEST_DATA['Rag and Bone Man II'];
+    // Neither the Slayer Tower nor the Haunted Woods is open here: the quest must open without them.
     const oldRegions = ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah',
-      'Rellekka', 'Canifis', 'Haunted Woods', "Fenkenstrain's Castle", 'Slayer Tower', 'Port Sarim', 'Musa Point'];
+      'Rellekka', 'Canifis', "Fenkenstrain's Castle", 'Port Sarim', 'Musa Point'];
     const state = { quests: ['Rag and Bone Man I', 'Skippy and the Mogres'], merchants: ['Wine Traders', 'Slayer Equipment'] };
     const locked = evaluateQuestEligibility(quest, unlocks({ ...state, regions: oldRegions }), 'vanilla');
     expect(locked.blockers.filter(blocker => blocker.kind === 'region').map(blocker => blocker.label))
       .toEqual(['Mudskipper Point', 'Port Phasmatys']);
     const open = evaluateQuestEligibility(quest,
       unlocks({ ...state, regions: [...oldRegions, 'Mudskipper Point', 'Port Phasmatys'] }), 'vanilla');
-    expect(open.blockers.filter(blocker => blocker.kind === 'region')).toEqual([]);
+    expect(open.blockers).toEqual([]);
     expect(open.manualChecks).toContainEqual('Reached vultures north of Sophanem, the Agility Pyramid or Menaphos');
   });
 });

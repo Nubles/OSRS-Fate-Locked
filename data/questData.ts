@@ -2076,15 +2076,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Rag and Bone Man II', name: 'Rag and Bone Man II',
     // Mudskipper Point (mogre), Port Phasmatys (undead cow) and Paterdomus (ghoul) are each the
-    // only place for a wish-list bone. Bats also stand at the Slayer Tower and in the Haunted Woods.
+    // only place for a wish-list bone. Bat wings come from the Silvarea bats by the limestone
+    // quarry (52,54), so the Slayer Tower and the Haunted Woods are not needed; Port Phasmatys is
+    // walked to through Fenkenstrain's Castle (55,55).
     // QuestData has one oneOf list, so each either-or bone below is a check the player confirms.
-    regions: ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka', 'Canifis', 'Haunted Woods', 'Fenkenstrain\'s Castle', 'Slayer Tower', 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus'],
+    regions: ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka', 'Canifis', 'Fenkenstrain\'s Castle', 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus'],
     manualRequirements: [
-      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison",
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison after The Fremennik Exiles",
       'Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales',
       'Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route',
       'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
-      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig Cavern',
       "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
       'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
     ],
