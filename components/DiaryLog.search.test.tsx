@@ -27,7 +27,8 @@ vi.mock('./JournalInsights', () => ({ DiaryInsights: () => null }));
 vi.mock('./SkillTrainingPopover', () => ({ SkillTrainingPopover: () => null }));
 
 
-// ui-osrs-b.d1[1]: the diary search ignores apostrophes, as the Quest Log and Collection Log searches do.
+// ui-osrs-b.d1[1] and own.d1[10]: the diary search ignores apostrophes and
+// stray spaces, as the Quest Log and Collection Log searches do.
 const rowIds = (searchTerm: string) =>
   [...renderToStaticMarkup(<DiaryLog searchTerm={searchTerm} suspendModals />).matchAll(/data-diary-task-row="([^"]+)"/g)].map(m => m[1]);
 
@@ -35,5 +36,17 @@ describe('DiaryLog search', () => {
   it('finds a task typed without its apostrophe', () => {
     expect(rowIds('necromancers tower')).toEqual(['ard_med_12']);
     expect(rowIds("necromancer's tower")).toEqual(['ard_med_12']);
+  });
+
+  it('ignores a trailing or leading space', () => {
+    const plain = rowIds('Falador Easy');
+    expect(plain.length).toBeGreaterThan(0);
+    expect(rowIds('Falador Easy ')).toEqual(plain);
+    expect(rowIds(' falador easy')).toEqual(plain);
+    expect(rowIds('necromancers tower ')).toEqual(['ard_med_12']);
+  });
+
+  it('a lone space filters nothing out', () => {
+    expect(rowIds(' ').length).toBe(rowIds('').length);
   });
 });

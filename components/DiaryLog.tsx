@@ -109,7 +109,8 @@ export const useDiaryJournal = (externalSearch = '') => {
   const [localSearch, setLocalSearch] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
-  const searchTerm = externalSearch || localSearch;
+  // Trimmed once, so a stray space (a phone keyboard adds one) hides nothing.
+  const searchTerm = (externalSearch || localSearch).trim();
 
   const focusCard = (id: string) => {
     setExpandedId(id);
