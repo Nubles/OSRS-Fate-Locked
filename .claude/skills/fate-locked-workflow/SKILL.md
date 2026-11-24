@@ -9,7 +9,12 @@ You are working on a two-repo project: the web app (`Nubles/OSRS-Fate-Locked`,
 React/TS/Vite, deployed to GitHub Pages on every push to main) and a RuneLite
 plugin (`Nubles/OSRS-Fate-Locked-Runelite`, Java). Plugin source, Gradle tests,
 CI, releases, and Plugin Hub work occur only in the standalone repository. The
-web app exports rules bundles and processes plugin events through the relay.
+web app publishes its rules profile to RuneLite through the relay's `/r/<code>`
+route, which runs one way only (the plugin uploads nothing); RuneLite's
+detections reach the tracker only by the clipboard ("Copy for tracker" in
+RuneLite, then the Roll Inbox's "Paste from RuneLite"). The same relay Worker
+(`workers/fate-relay/`) also serves online backups, shared progress for the
+Discord bot, the clan feed and error reports.
 
 ## Before anything else
 
@@ -72,8 +77,9 @@ npm run build         # vite build, then checks the eager index-*.js chunk again
 
 Then, if the change is user-visible, drive it in the browser preview from a
 **fresh profile** (`localStorage.clear(); location.reload()`), walk the
-onboarding wizard ("Next" ×4 → "Enter The Void" → "Apply mode"), and check
-the actual DOM/text — screenshots or innerText assertions, not assumptions.
+onboarding wizard ("Next" ×4 → "Start", then "Apply mode" in the game mode
+picker that opens on a run with no history), and check the actual DOM/text —
+screenshots or innerText assertions, not assumptions.
 State persists per-origin, so a stale run from an earlier check can mask
 fresh-profile bugs. When comparing "before" behavior, build the prior commit
 (`git stash -u; git checkout <sha>; npx vite build; git checkout main;
@@ -140,7 +146,8 @@ audited counts), not loosening the test.
   flag follow-ups you deliberately did not do and why.
 - Commits: imperative subject, body explains the why and the contract
   (which test pins it), `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
-  trailer. Small commits for the plugin (CI is the only compile check).
+  trailer. Small commits for the plugin, each after a local
+  `gradle clean check --no-daemon` as above.
 - Link commits/PRs as URLs, file references as `path:line`.
 - When the user asks for an audit ("ensure X is accurate"), the deliverable
   is: what was already correct (verified how), what drifted (fixed how), and

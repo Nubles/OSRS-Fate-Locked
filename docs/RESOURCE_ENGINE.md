@@ -224,7 +224,8 @@ And four reference-integrity guards:
 5. **Inputs resolve** — every recipe `inputs` key resolves to a `RESOURCE_MAP`
    item, `'Coins'`, or the `INTENTIONAL_INPUT_LEAVES` allowlist (see below).
 6. **Unlock IDs resolve** — every `unlockId` matches an entry in one of the
-   nine unlock lists.
+   unlock lists that `every unlockId references a real unlock` spreads into
+   its `valid` set.
 7. **Skill names resolve** — every `skills` key is in `SKILLS_LIST`.
 8. **Region tags resolve** — every `regions` entry is `'Any'`, a continent,
    a continent child, or a Misthalin area.
@@ -268,8 +269,11 @@ quest-only intermediate steps. Update this set when:
   reasons; both are valid `regions` tags.
 - **`ACTIVITY_REGIONS`** (`data/activityRegions.ts`) is the single source of
   truth for "which continent does this boss/minigame live in?". The God Wars
-  Dungeon is `Fremennik` per this file; DT2 bosses are spread across
-  Fremennik/Morytania/Varlamore; the test suite enforces consistency.
+  Dungeon bosses (Nex, General Graardor, Commander Zilyana, Kree'arra,
+  K'ril Tsutsaroth) are `Asgarnia` per this file; the DT2 bosses are spread
+  across `Fremennik` (Duke Sucellus), `Misthalin` (The Leviathan), `Asgarnia`
+  (The Whisperer) and `Varlamore` (Vardorvis); the test suite enforces
+  consistency.
 - A drop source with `unlockId: 'Vorkath'` should have
   `regions: ['Fremennik']` (Vorkath's `ACTIVITY_REGIONS` entry). The
   generator does this automatically when it resolves an unlock.
@@ -299,8 +303,10 @@ quest-only intermediate steps. Update this set when:
   them needs a `Mastering Mixology` minigame unlock tag so the lock analysis
   stays correct.
 - **Sailing items** (`Caviar`, `Yellow Fin`, `Marlin Scales`, `Pillar Coral`,
-  `Haddock Eye`, `Pharmakos Berries`) are likewise on the allowlist. The
-  Sailing skill itself isn't modelled yet.
+  `Haddock Eye`, `Pharmakos Berries`) are likewise on the allowlist: none of
+  them has a `RESOURCE_MAP` entry yet. The Sailing skill itself is modelled
+  (it is in `SKILLS_LIST`, and sources can require it, as the Onyx Crest
+  mining rows do with `'Sailing': 47`).
 - **GE prices** integration was deliberately deferred (one of the original
   PLAN.md features). `services/PriceService.ts` exists.
 - **About a fifth of enriched drops are tagged `'Any'`** (388 of 1,998 at
