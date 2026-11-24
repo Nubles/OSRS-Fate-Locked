@@ -43,9 +43,9 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/willow tree/i, { skill: 'Woodcutting', level: 30 }],
   [/oak tree/i, { skill: 'Woodcutting', level: 15 }],
   [/achey tree/i, { skill: 'Woodcutting', level: 1 }],
-  // Generic trees (incl. evergreen, jungle, banana, palm, tropical, dead) — lvl 1.
-  // Farming "… tree patch" nodes are pulled out upstream before this runs, so a
-  // bare \btree\b here only ever sees real Woodcutting trees.
+  // Generic trees (evergreen, jungle, dead and the like) — lvl 1. Farming
+  // "… tree patch" nodes are pulled out upstream before this runs, and the
+  // named trees nothing is cut from are in NOT_GATHERED below.
   [/\btree\b/i, { skill: 'Woodcutting', level: 1 }],
 
   // ── Mining (only explicitly-named mineable rocks — bare "rocks"/"rock"/
@@ -65,12 +65,25 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/volcanic sulphur/i, { skill: 'Mining', level: 42 }],
   [/gold rocks/i, { skill: 'Mining', level: 40 }],
   [/gem rocks?\b/i, { skill: 'Mining', level: 40 }],
-  [/boulder \(dense essence/i, { skill: 'Mining', level: 38 }],
+  // The dense runestone pillars are mined; the mine's Boulder is a 49 Agility shortcut (Wiki 'Dense runestone').
+  [/dense runestone/i, { skill: 'Mining', level: 38 }],
   [/sandstone rocks/i, { skill: 'Mining', level: 35 }],
   [/coal rocks/i, { skill: 'Mining', level: 30 }],
   [/lead rocks/i, { skill: 'Mining', level: 25 }],
   [/silver rocks/i, { skill: 'Mining', level: 20 }],
   [/iron rocks/i, { skill: 'Mining', level: 15 }],
+  // Asgarnian Ice Dungeon (Wiki 'Blurite rocks': "can be mined by a player with level 10 Mining").
+  [/blurite rocks/i, { skill: 'Mining', level: 10 }],
+  // Infernal shale rocks (78) are left out on purpose: the Wiki says "The rocks can only be accessed after
+  // speaking to Yama and agreeing to sign his contract", a gate the tracker does not record.
+  // Ore veins, each vein's own Wiki page (options Mine, quest No): the Abandoned
+  // Mine's named veins, and the Motherlode Mine's "Ore vein" at 30. Dondakan's
+  // Mineral and Gold veins (Between a Rock...) match none of these.
+  [/^adamantite vein$/i, { skill: 'Mining', level: 70 }],
+  [/^mithril vein$/i, { skill: 'Mining', level: 55 }],
+  [/^(coal|ore) vein$/i, { skill: 'Mining', level: 30 }],
+  [/^iron vein$/i, { skill: 'Mining', level: 15 }],
+  [/^(copper|tin|clay) vein$/i, { skill: 'Mining', level: 1 }],
   [/(copper|tin|clay) rocks|dig site specimen/i, { skill: 'Mining', level: 1 }],
 
   // ── Fishing (by the spot's method / catch; a spot with several catches
@@ -99,10 +112,26 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/fishing spot \(lure, bait\)/i, { skill: 'Fishing', level: 20 }],
   [/fishing spot \(big net, harpoon\)/i, { skill: 'Fishing', level: 16 }],
   [/fishing spot \(karambwanji\)/i, { skill: 'Fishing', level: 5 }],
-  [/fishing spot/i, { skill: 'Fishing', level: 1 }], // small net / bait / swamp / location spots
+  // Slimy eels by bait (Wiki 'Fishing spot (swamp)'); guppies by small net (Wiki 'Fishing spot (Camdozaal)').
+  [/fishing spot \(swamp\)/i, { skill: 'Fishing', level: 28 }],
+  [/fishing spot \(camdozaal\)/i, { skill: 'Fishing', level: 7 }],
+  // Small net / bait and the other named location spots. The quest-only spots
+  // are in NOT_GATHERED below.
+  [/fishing spot/i, { skill: 'Fishing', level: 1 }],
 
   // ── Thieving (named market stalls + thievable chests; levels are the OSRS
-  //    stall requirements. Bank/quest chests are excluded below) ────────────
+  //    stall and chest requirements. Only the named thievable chests match,
+  //    so bank, quest and reward chests stay out) ─────────────────────────
+  // Each chest's own Wiki page, fetched 24 Nov 2026.
+  [/^chest \(rogues' castle\)$/i, { skill: 'Thieving', level: 84 }],
+  [/^chest \(dorgesh-kaan rich\)$/i, { skill: 'Thieving', level: 78 }],
+  [/^chest \(ardougne castle\)$/i, { skill: 'Thieving', level: 72 }],
+  [/^chest \(dorgesh-kaan average\)$/i, { skill: 'Thieving', level: 52 }],
+  [/^chest \(steel arrowtips\)$/i, { skill: 'Thieving', level: 47 }],
+  [/^chest \(50 coins\)$/i, { skill: 'Thieving', level: 43 }],
+  [/^chest \(aldarin villas\)$/i, { skill: 'Thieving', level: 36 }],
+  [/^chest \((nature runes|isle of souls dungeon)\)$/i, { skill: 'Thieving', level: 28 }],
+  [/^chest \(10 coins\)$/i, { skill: 'Thieving', level: 13 }],
   [/cannonball stall/i, { skill: 'Thieving', level: 87 }],
   [/\bore stall/i, { skill: 'Thieving', level: 82 }],
   [/gem stall/i, { skill: 'Thieving', level: 75 }],
@@ -139,9 +168,25 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
 // are not Runecrafting.
 const NOT_A_RESOURCE = /spirit tree|mushtree|rooftop course|\(prayer\)|altar of (guthix|zamorak|saradomin)|exposed altar|chaos altar|\bportal\b/i;
 
+// Named scenery the rules above would read as a tree, rock or stall but that
+// nothing is cut, mined or stolen from (each object's own OSRS Wiki page,
+// fetched 24 Nov 2026): Leafy palm trees are shaken, the Grotto tree searched,
+// Young trees hold Hunter traps and Stymphike trees are baited, the Windswept
+// tree gives logs only during Olaf's Quest (0 xp), "Palm tree" is the Farming
+// tree, the Tropical trees are Agility obstacles, Strong trees and Fallen Tree
+// are shortcuts, the Broken dead tree is investigated, Mac's evergreen gives
+// 0 xp, the Lighthouse "Basalt rock(s)" are stepping stones (the Salt Mine's
+// rocks are "Basalt rock (mining)"), the Antiques Shop Stall is a shop bell,
+// Pollnivneach's "Market stall" is a rooftop obstacle and Sophanem's Craft
+// stall has no steal option. Of the fishing spots, Hemenster's give only quest
+// fish (Fishing Contest, then whitefish in Land of the Goblins), the Ominous
+// spots are for Skippy and the Mogres' explosives, Braindeath Island's are for
+// Rum Deal (0 xp) and "Nothing can be fished" from the Enchanted Valley's.
+const NOT_GATHERED = /^(leafy palm tree|grotto tree|young tree|stymphike tree|windswept tree|palm tree|tropical tree|strong tree|fallen tree|broken dead tree|evergreen tree \(mac\)|basalt rocks?|antiques shop stall|market stall|craft stall|fishing spot \((hemenster|braindeath island|enchanted valley)\)|ominous fishing spot)$/i;
+
 /** The Skill + level needed to gather this object, or null if it's inert. */
 export const resourceReqFor = (objectName: string): ResourceReq | null => {
-  if (NOT_A_RESOURCE.test(objectName)) return null;
+  if (NOT_A_RESOURCE.test(objectName) || NOT_GATHERED.test(objectName)) return null;
   for (const [re, req] of RESOURCE_RULES) if (re.test(objectName)) return req;
   return null;
 };

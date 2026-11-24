@@ -84,6 +84,29 @@ const NOT_TRAINING = /tall tree|tree branch|tree space|\bstump\b|\brocks \(|tree
 // the Al Kharid thieving warrior).
 const NOT_NODE = /butterfly ray|guard dog|guard captain|menaphite guard|\bgnome (archer|mage|troop|driver|guard|banker|coach|trainer|child)|mounted|terrorbird|elder gnome|woman-at-arms|corrupted warrior|tutor|salesman|saleswoman|shopkeeper|barman|bartender|referee|wise old man|odd old man|strange old man|weird old man|mysterious old man|doorman|tracker gnome/i;
 
+// NPCs the Thieving keyword rules match that the Wiki says cannot be
+// pickpocketed (OSRS Wiki, fetched 24 Nov 2026; deep audit chunk-sample.d3[2]).
+// Said outright: Guard (Mistrock) and Guard (Cam Torum) "cannot be pickpocketed
+// or attacked"; Market Guard (Draynor) "cannot be pickpocketed"; Man (The
+// Warrens) "cannot be attacked or pickpocketed"; Man (level 4) and Woman (West
+// Ardougne) "not pickpocketed". Talk-to only (no Pickpocket option): Guard
+// (Sinclair Mansion), Guard (Carnillean), Guard (Fortis Colosseum), Guard
+// Vemmeldo, Man (West Ardougne), Man (Hosidius), Man (Catacombs of Kourend),
+// Farmer (Shayzien), Farmer Brumty/Fromund/Gricoller/Hayfield, Gnome Waiter,
+// Local Gnome, Gnome soldier, Gnome traveller and the Tree Gnome Stronghold
+// scout. Combat or minigame NPCs whose pages name no pickpocketing: Guard
+// (Burthorpe), Guard (dwarf), Guard (Ranging Guild), Guard (Prifddinas), Guard
+// (Desert Mining Camp), Guard Bandit, the Dorgesh-Kaan guards (they attack a
+// player who fails to pickpocket a cave goblin), the gnome ballers, wingers,
+// emissary and terrorchicks.
+const NOT_PICKPOCKETABLE = /^guard \((mistrock|cam torum|sinclair mansion|carnillean|colosseum|fortis colosseum|burthorpe|dwarf|ranging guild|prifddinas|desert mining camp|cave goblin)\)$|^market guard\b|^guard (vemmeldo|bandit)$|^man \((the warrens|level 4|west ardougne|hosidius|catacombs of kourend)\)$|^woman \(west ardougne\)$|^farmer \(shayzien\)$|^farmer (brumty|fromund|gricoller|hayfield)$|^gnome (waiter|soldier|traveller|emissary|baller|winger)$|^local gnome$|^terrorchick gnome$|^scout \(tree gnome stronghold\)$/i;
+
+// Darkmeyer's pickpocketable vyres, as the Wiki 'Vyre' page lists them ("Vyres
+// that can be pickpocketed include"; each page's options are Talk-to,
+// Pickpocket). The Vyrewatch and the Ver Sinhaza vyrelords and vyreladies
+// cannot be pickpocketed.
+const DARKMEYER_VYRE = /^(caninelle draynar|carnivus belamorta|diphylla bechstein|draconis sanguine|lasenna rasputin|mort nightshade|mortina daubenton|pipistrelle draynar|remus kaninus|valentin rasputin|vallessia dracyula|vallessia von pitt|vampyressa van von|vampyrus diaemus|violetta sanguine|vlad bechstein|vlad diaemus|vonnetta varnis|crimsonette van marr|grigor rasputin|vormar vakan|alek constantine|episcula helsing|haemas lamescus|misdrievus shadum|nakasa jovkai|natalidae shadum|noctillion lugosi|valentina diaemus|von van von)$/i;
+
 // Ordered curated NPC/monster rules (Hunter first so e.g. "Snowy knight" — a
 // butterfly — isn't mistaken for a Thieving "knight"). First match wins.
 const NPC_RULES: [RegExp, Req][] = [
@@ -150,33 +173,50 @@ const NPC_RULES: [RegExp, Req][] = [
   [/\bimpling\b/i, { skill: 'Hunter', level: 17 }], // baby implings, and any other
 
   // ── Thieving: pickpocket targets (wiki levels) ──
-  [/master farmer|chief farmer|martin the master/i, { skill: 'Thieving', level: 38 }],
-  [/^farmer\b|farmer \(|fred the farmer|farmer (brumty|fromund|gricoller|hayfield)/i, { skill: 'Thieving', level: 10 }],
+  // Chief Farmer (Dale) and Fred the Farmer are Talk-to only.
+  [/master farmer|martin the master/i, { skill: 'Thieving', level: 38 }],
+  [/^farmer\b|farmer \(/i, { skill: 'Thieving', level: 10 }],
   [/h\.?a\.?m\.? member/i, { skill: 'Thieving', level: 15 }],
-  [/^rogue\b/i, { skill: 'Thieving', level: 32 }],
-  [/cave goblin/i, { skill: 'Thieving', level: 36 }],
+  // Rogue Guards patrol the Rogues' Den maze and are distracted with flash powder.
+  [/^rogue$/i, { skill: 'Thieving', level: 32 }],
+  // Wiki 'Cave goblin': the pickpocketable ones live in Dorgesh-Kaan; the
+  // Lumbridge Swamp Caves goblins, the mine's miners and guards and the children are not.
+  [/^cave goblin( \(dorgesh-kaan\))?$/i, { skill: 'Thieving', level: 36 }],
   [/wealthy citizen/i, { skill: 'Thieving', level: 50 }],
   [/fremennik citizen/i, { skill: 'Thieving', level: 45 }],
-  [/desert bandit|^bandit$|^bandit \(/i, { skill: 'Thieving', level: 53 }],
+  // Wiki 'Thieving' pickpocket table: Bandit (Bandit Camp) 53, Bearded Pollnivnian
+  // Bandit 45, Bandit (Pollnivneach) 55 (the chunk data has one name for both, so the
+  // lower). The Wilderness, Varlamore and Shayzien bandits and the Big Heist Lodge's
+  // seated bandits cannot be pickpocketed (deep audit quest-routes.d2[1]).
+  [/desert bandit|^bandit \(bandit camp\)$/i, { skill: 'Thieving', level: 53 }],
+  [/^bandit \(pollnivneach\)$|pollnivnian bandit/i, { skill: 'Thieving', level: 45 }],
   // Menaphite guards cannot be pickpocketed (Wiki: options None); only the thugs can.
   [/menaphite thug/i, { skill: 'Thieving', level: 65 }],
   // Only the canonical pickpocket knights (generic "Knight" = Black/White
   // Knights, not pickpocketable).
   [/knight of ardougne|knight of varlamore/i, { skill: 'Thieving', level: 55 }],
+  // Wiki 'Watchman' (the Yanille Watchtower guards): "pickpocketed at level 65 Thieving".
+  [/^watchman$/i, { skill: 'Thieving', level: 65 }],
+  // Wiki 'Pirate (Thieving)': "pickpocketed at level 60 Thieving" (the sea islands' pirates).
+  [/^pirate \(thieving\)$/i, { skill: 'Thieving', level: 60 }],
   [/^paladin/i, { skill: 'Thieving', level: 70 }],
-  [/tzhaar-hur/i, { skill: 'Thieving', level: 90 }],
-  [/vyre(lord|lady|watch)|vyrewatch/i, { skill: 'Thieving', level: 82 }],
+  // The TzHaar-Hur-Lek, -Tel, -Zal and -Rin shopkeepers are Talk-to, Trade only.
+  [/^tzhaar-hur$/i, { skill: 'Thieving', level: 90 }],
+  [DARKMEYER_VYRE, { skill: 'Thieving', level: 82 }],
   [/^hero\b/i, { skill: 'Thieving', level: 80 }],
   [/\bgnome\b/i, { skill: 'Thieving', level: 75 }],
   // Only the explicitly thieving-tagged Al Kharid warrior (other "Warrior (…)"
   // are combat NPCs).
   [/warrior \(thieving\)|^warrior \(al kharid\)/i, { skill: 'Thieving', level: 25 }],
-  [/^guard\b|guard \(|town guard|bank guard|jail guard/i, { skill: 'Thieving', level: 40 }],
-  [/^(wo)?man\b|^man \(|poor looking (man|woman)|well-dressed man/i, { skill: 'Thieving', level: 1 }],
+  // Town Guards "cannot be spoken to or battled"; bank and jail guards have no
+  // Pickpocket option or mention (see NOT_PICKPOCKETABLE for the named guards).
+  [/^guard\b|guard \(/i, { skill: 'Thieving', level: 40 }],
+  // Poor looking men and women and the well-dressed man are Talk-to only.
+  [/^(wo)?man\b/i, { skill: 'Thieving', level: 1 }],
 ];
 
 const npcReq = (name: string): Req | null => {
-  if (NOT_NODE.test(name)) return null;
+  if (NOT_NODE.test(name) || NOT_PICKPOCKETABLE.test(name)) return null;
   for (const [re, req] of NPC_RULES) if (re.test(name)) return req;
   return null;
 };
