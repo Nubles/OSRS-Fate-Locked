@@ -18,7 +18,7 @@ import type { InteriorRecord } from '../utils/interiorEntry';
 import { classifyShop } from '../utils/shopClassification';
 import { loadRunRoutes } from '../utils/chunkEntry';
 import { loadWalkSections } from '../utils/walkSections';
-import { foldedRank } from '../utils/textFold';
+import { foldText, foldedMatcher } from '../utils/textFold';
 
 export interface ChunkMonster { name: string; count: number; slayer: number | null }
 export interface ChunkContent {
@@ -780,14 +780,30 @@ export class ChunkContentService {
     return this.getItemIdx()?.get(itemName.toLowerCase())?.monsters ?? [];
   }
 
+  /**
+   * Each name of an index folded once (thousands of names), so a search typed
+   * key by key compares against stored text instead of folding every name
+   * again. Kept per index, so a new document's index folds afresh.
+   */
+  private foldedRowCache = new WeakMap<Map<string, { name: string }>, { row: { name: string }; key: string }[]>();
+  private foldedRows<T extends { name: string }>(idx: Map<string, T>): { row: T; key: string }[] {
+    let rows = this.foldedRowCache.get(idx);
+    if (!rows) {
+      rows = [...idx.values()].map(row => ({ row, key: foldText(row.name).text }));
+      this.foldedRowCache.set(idx, rows);
+    }
+    return rows as { row: T; key: string }[];
+  }
+
   /** Ranked item-name search across every drop table — for "where do I get X". Ignores apostrophes. */
   searchItems(query: string, limit = 6): { name: string; sources: number }[] {
     const idx = this.getItemIdx();
     const q = query.trim();
     if (!idx || q.length < 2) return [];
+    const match = foldedMatcher(q);
     const scored: { name: string; sources: number; score: number }[] = [];
-    for (const e of idx.values()) {
-      const score = foldedRank(e.name, q);
+    for (const { row: e, key } of this.foldedRows(idx)) {
+      const score = match.rank(e.name, key);
       if (score) scored.push({ name: e.name, sources: e.monsters.length, score });
     }
     return scored
@@ -810,9 +826,10 @@ export class ChunkContentService {
     const index = this.getIndex();
     const q = query.trim();
     if (!index || q.length < 2) return [];
+    const match = foldedMatcher(q);
     const scored: { hit: EntityHit; score: number }[] = [];
-    for (const hit of index.values()) {
-      const score = foldedRank(hit.name, q);
+    for (const { row: hit, key } of this.foldedRows(index)) {
+      const score = match.rank(hit.name, key);
       if (score) scored.push({ hit, score });
     }
     return scored
