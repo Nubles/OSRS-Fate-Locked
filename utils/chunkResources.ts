@@ -112,7 +112,12 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/fishing spot \(lure, bait\)/i, { skill: 'Fishing', level: 20 }],
   [/fishing spot \(big net, harpoon\)/i, { skill: 'Fishing', level: 16 }],
   [/fishing spot \(karambwanji\)/i, { skill: 'Fishing', level: 5 }],
-  [/fishing spot/i, { skill: 'Fishing', level: 1 }], // small net / bait / swamp / location spots
+  // Slimy eels by bait (Wiki 'Fishing spot (swamp)'); guppies by small net (Wiki 'Fishing spot (Camdozaal)').
+  [/fishing spot \(swamp\)/i, { skill: 'Fishing', level: 28 }],
+  [/fishing spot \(camdozaal\)/i, { skill: 'Fishing', level: 7 }],
+  // Small net / bait and the other named location spots. The quest-only spots
+  // are in NOT_GATHERED below.
+  [/fishing spot/i, { skill: 'Fishing', level: 1 }],
 
   // ── Thieving (named market stalls + thievable chests; levels are the OSRS
   //    stall requirements. Bank/quest chests are excluded below) ────────────
@@ -162,8 +167,11 @@ const NOT_A_RESOURCE = /spirit tree|mushtree|rooftop course|\(prayer\)|altar of 
 // 0 xp, the Lighthouse "Basalt rock(s)" are stepping stones (the Salt Mine's
 // rocks are "Basalt rock (mining)"), the Antiques Shop Stall is a shop bell,
 // Pollnivneach's "Market stall" is a rooftop obstacle and Sophanem's Craft
-// stall has no steal option.
-const NOT_GATHERED = /^(leafy palm tree|grotto tree|young tree|stymphike tree|windswept tree|palm tree|tropical tree|strong tree|fallen tree|broken dead tree|evergreen tree \(mac\)|basalt rocks?|antiques shop stall|market stall|craft stall)$/i;
+// stall has no steal option. Of the fishing spots, Hemenster's give only quest
+// fish (Fishing Contest, then whitefish in Land of the Goblins), the Ominous
+// spots are for Skippy and the Mogres' explosives, Braindeath Island's are for
+// Rum Deal (0 xp) and "Nothing can be fished" from the Enchanted Valley's.
+const NOT_GATHERED = /^(leafy palm tree|grotto tree|young tree|stymphike tree|windswept tree|palm tree|tropical tree|strong tree|fallen tree|broken dead tree|evergreen tree \(mac\)|basalt rocks?|antiques shop stall|market stall|craft stall|fishing spot \((hemenster|braindeath island|enchanted valley)\)|ominous fishing spot)$/i;
 
 /** The Skill + level needed to gather this object, or null if it's inert. */
 export const resourceReqFor = (objectName: string): ResourceReq | null => {

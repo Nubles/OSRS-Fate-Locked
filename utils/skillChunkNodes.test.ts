@@ -154,3 +154,25 @@ describe('Chunked object rules: ore veins (deep audit chunk-sample.d2[1])', () =
     expect(facts('Motherlode Mine')).toBe(30);
   });
 });
+
+describe('Chunked object rules: fishing spots (deep audit chunk-sample.d3[1])', () => {
+  it('reads the swamp and Camdozaal spots at their level and the quest spots as nothing', () => {
+    // OSRS Wiki, fetched 24 Nov 2026: 'Fishing spot (swamp)' |level = 28; 'Fishing spot (Camdozaal)' small net
+    // |level = 7; 'Fishing spot (Hemenster)' "they can only be used to catch whitefish" (a Land of the Goblins
+    // item); 'Ominous Fishing Spot' "used to disturb Mogres"; 'Fishing spot (Braindeath Island)' "used during the
+    // Rum Deal quest in order to catch Sluglings", |xp = 0; 'Fishing spot (Enchanted Valley)' "Nothing can be
+    // fished from these spots".
+    expect(trainingReqFor('Fishing spot (swamp)', 'object')).toEqual({ skill: 'Fishing', level: 28 });
+    expect(trainingReqFor('Fishing spot (Camdozaal)', 'object')).toEqual({ skill: 'Fishing', level: 7 });
+    for (const name of ['Fishing spot (Hemenster)', 'Ominous Fishing Spot', 'Fishing spot (Braindeath Island)', 'Fishing spot (Enchanted Valley)']) {
+      expect(trainingReqFor(name, 'object'), name).toBeNull();
+    }
+    expect(trainingReqFor('Fishing spot', 'object')).toEqual({ skill: 'Fishing', level: 1 });
+  });
+
+  it('gives Hemenster, Mudskipper Point and Braindeath Island no Fishing and the swamp 28', () => {
+    // 57,55 also counts the second Braindeath Island record, whose spots are named plain "Fishing spot".
+    for (const chunk of ['41,53', '46,48', '57,55']) expect(chunkFactLevel(chunk, 'Fishing'), chunk).toBeUndefined();
+    for (const chunk of ['53,51', '53,53', '54,53']) expect(chunkFactLevel(chunk, 'Fishing'), chunk).toBe(28);
+  });
+});

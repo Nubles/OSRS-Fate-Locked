@@ -129,10 +129,14 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
  * Rows of a named interior that the name-only rules would misread there. The
  * Abandoned Mine's records also hold plain "Ore vein" rows, and the Wiki gives
  * "Ore vein" only for the Motherlode Mine, so they stay uncounted (the mine's
- * named veins still count).
+ * named veins still count). The second Braindeath Island record names its
+ * Rum Deal spots plain "Fishing spot" (the first says "Fishing spot
+ * (Braindeath Island)", which the resource rules drop); the island has no
+ * other fishing.
  */
 const INTERIOR_NOT_TRAINING: Readonly<Record<string, RegExp>> = {
   'Abandoned Mine': /^ore vein$/i,
+  'Braindeath Island': /^fishing spot$/i,
 };
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;
 
