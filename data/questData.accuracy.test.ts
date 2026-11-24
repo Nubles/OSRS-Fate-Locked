@@ -332,3 +332,56 @@ describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
     expect(met).toEqual([]);
   });
 });
+
+describe('quest places checked on the Wiki (24 Nov 2026)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: { Slayer: 40 }, levels: { Slayer: 40 }, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+
+  it("asks Rag and Bone Man II for the only areas that hold some of its bones", () => {
+    // Wiki Rag and Bone Man II (rev 15413780) ==List== and the monster pages' LocLines:
+    // Mogre only at Mudskipper Point (46,48); Undead cow only at Alice's farm (56,55, Port
+    // Phasmatys); Ghoul only in 53,54 (Paterdomus). Bats also stand at the Slayer Tower entrance
+    // and in the Haunted Woods, so those two stay.
+    expect(QUEST_DATA['Rag and Bone Man II'].regions).toEqual([
+      'Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka',
+      'Canifis', 'Haunted Woods', "Fenkenstrain's Castle", 'Slayer Tower',
+      'Mudskipper Point', 'Port Phasmatys', 'Paterdomus',
+    ]);
+  });
+
+  it("names Rag and Bone Man II's either-or bone areas as checks the player confirms", () => {
+    // Vulture: north of Sophanem (51,44), the Agility Pyramid (52,44) or Menaphos (50,44).
+    // Troll: Death Plateau, Troll Stronghold and Trollheim (Burthorpe), the Keldagrim entrance
+    // (43,58, Mountain Camp), south of Mount Quidamortem, Wyrmscraig Cavern. Basilisk: the
+    // Fremennik Slayer Dungeon (2797,3616, Mountain Camp) or Jormungand's Prison. Dagannoth:
+    // Lighthouse, Waterbirth Island, Catacombs of Kourend, Jormungand's Prison. Jogre: Tai Bwo
+    // Wannai (45,47), Shilo Village (45,46), the Ardougne Zoo (40,51) or the God Wars Dungeon.
+    const manual = QUEST_DATA['Rag and Bone Man II'].manualRequirements ?? [];
+    expect(manual).toEqual(expect.arrayContaining([
+      'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig',
+      "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison",
+      'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
+    ]));
+    expect(manual.filter(line => line.includes('dagannoth'))).toHaveLength(1);
+  });
+
+  it('does not call Rag and Bone Man II available without Mudskipper Point and Port Phasmatys', () => {
+    const quest = QUEST_DATA['Rag and Bone Man II'];
+    const oldRegions = ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah',
+      'Rellekka', 'Canifis', 'Haunted Woods', "Fenkenstrain's Castle", 'Slayer Tower', 'Port Sarim', 'Musa Point'];
+    const state = { quests: ['Rag and Bone Man I', 'Skippy and the Mogres'], merchants: ['Wine Traders', 'Slayer Equipment'] };
+    const locked = evaluateQuestEligibility(quest, unlocks({ ...state, regions: oldRegions }), 'vanilla');
+    expect(locked.blockers.filter(blocker => blocker.kind === 'region').map(blocker => blocker.label))
+      .toEqual(['Mudskipper Point', 'Port Phasmatys']);
+    const open = evaluateQuestEligibility(quest,
+      unlocks({ ...state, regions: [...oldRegions, 'Mudskipper Point', 'Port Phasmatys'] }), 'vanilla');
+    expect(open.blockers.filter(blocker => blocker.kind === 'region')).toEqual([]);
+    expect(open.manualChecks).toContainEqual('Reached vultures north of Sophanem, the Agility Pyramid or Menaphos');
+  });
+});

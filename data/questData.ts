@@ -2075,11 +2075,18 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Rag and Bone Man II': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Rag and Bone Man II', name: 'Rag and Bone Man II',
-    regions: ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka', 'Canifis', 'Haunted Woods', 'Fenkenstrain\'s Castle', 'Slayer Tower'],
+    // Mudskipper Point (mogre), Port Phasmatys (undead cow) and Paterdomus (ghoul) are each the
+    // only place for a wish-list bone. Bats also stand at the Slayer Tower and in the Haunted Woods.
+    // QuestData has one oneOf list, so each either-or bone below is a check the player confirms.
+    regions: ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka', 'Canifis', 'Haunted Woods', 'Fenkenstrain\'s Castle', 'Slayer Tower', 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus'],
     manualRequirements: [
-      'Completed Horror from the Deep or started The Fremennik Trials for dagannoth access',
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison",
       'Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales',
       'Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route',
+      'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig',
+      "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
+      'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
     ],
     skills: { 'Slayer': 40 }, prereqs: ['Rag and Bone Man I', 'Skippy and the Mogres'], points: 1, series: 'Rag and Bone Man',
     // The jugs of vinegar are bought from Fortunato's wine shop in Draynor.

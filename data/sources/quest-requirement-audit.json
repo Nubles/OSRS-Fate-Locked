@@ -5552,7 +5552,7 @@
       "id": "Rag and Bone Man II",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-10-09",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_II&oldid=15273866",
         "revision": 15273866,
@@ -5560,7 +5560,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Completed Horror from the Deep or started The Fremennik Trials for dagannoth access\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\"],\"merchants\":[\"Wine Traders\",\"Slayer Equipment\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Silvarea\",\"Draynor Village\",\"Taverley\",\"Tree Gnome Stronghold\",\"Feldip Hills\",\"Nardah\",\"Rellekka\",\"Canifis\",\"Haunted Woods\",\"Fenkenstrain's Castle\",\"Slayer Tower\",\"Mudskipper Point\",\"Port Phasmatys\",\"Paterdomus\"],\"skills\":{\"Slayer\":40},\"prereqs\":[\"Rag and Bone Man I\",\"Skippy and the Mogres\"],\"manualRequirements\":[\"Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison\",\"Reached an experiment after starting Creature of Fenkenstrain or completing Grim Tales\",\"Reached a listed fire giant source after partially completing Waterfall Quest or by an alternative route\",\"Reached vultures north of Sophanem, the Agility Pyramid or Menaphos\",\"Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig\",\"Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles\",\"Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)\"],\"merchants\":[\"Wine Traders\",\"Slayer Equipment\"],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "48,50",
@@ -5576,11 +5576,12 @@
         ],
         "travel": [
           "The pinned route explicitly requires monster access across Misthalin, Asgarnia, Kandarin, the desert, Fremennik, and Morytania.",
-          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Kharidian Desert, Fremennik, Morytania with the exact tracked access set: Silvarea, Draynor Village, Taverley, Tree Gnome Stronghold, Feldip Hills, Nardah, Rellekka, Canifis, Haunted Woods, Fenkenstrain's Castle, Slayer Tower."
+          "The catalogue-wide parent-region audit replaced Misthalin, Asgarnia, Kandarin, Kharidian Desert, Fremennik, Morytania with the exact tracked access set: Silvarea, Draynor Village, Taverley, Tree Gnome Stronghold, Feldip Hills, Nardah, Rellekka, Canifis, Haunted Woods, Fenkenstrain's Castle, Slayer Tower.",
+          "Place review 2026-11-24 (Wiki rev 15413780 ==List== and the monster pages' LocLines, mapped through data/subAreaChunks.ts): the mogre stands only at Mudskipper Point (46,48), the undead cow only at Alice's farm (56,55, Port Phasmatys) and the ghoul only in 53,54 (Paterdomus), so those three areas are now required. Bats also stand at the Slayer Tower entrance (53,55) and in the Haunted Woods (55,54 and 56,54), so both stay. The vulture (Sophanem, Agility Pyramid or Menaphos), troll (Burthorpe, Mountain Camp, Mount Quidamortem or Wyrmscraig), basilisk (Mountain Camp or Jormungand's Prison), dagannoth (Lighthouse, Waterbirth Island, Catacombs of Kourend or Jormungand's Prison) and jogre (Tai Bwo Wannai, Shilo Village, East Ardougne's zoo or the God Wars Dungeon) groups are independent either-or choices that one oneOf list cannot hold, so each is a manual check."
         ],
         "instances": [],
         "partialCompletion": [
-          "Skippy and the Mogres is machine-enforced; the Horror/Fremennik, experiment, and fire-giant alternative access states remain explicit manual checks."
+          "Skippy and the Mogres is machine-enforced; the dagannoth (Horror from the Deep or The Fremennik Trials), experiment, fire-giant, vulture, troll, basilisk and jogre alternative access states remain explicit manual checks."
         ]
       }
     },
