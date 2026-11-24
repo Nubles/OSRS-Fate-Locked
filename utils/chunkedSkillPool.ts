@@ -40,12 +40,18 @@
  * - Hunter needs traps from a Hunter shop of an unlocked merchant type;
  * - an ore shop is Smithing's input only with its merchant type unlocked;
  * - a shop the game locks (CHUNK_SERVICE_LOCKS) counts only with its quest,
- *   guild and levels.
+ *   guild and levels;
+ * - a fact whose only source in the chunk the game keeps behind a quest the
+ *   chunk's entry does not ask for (CHUNK_FACT_QUESTS: the Darkmeyer vyres in
+ *   56,51, 56,53 and 57,52, which also hold land outside the walls) counts
+ *   only once that quest is done. The game lets a player in partway through
+ *   Sins of the Father; the tracker records a quest only as done, so the gate
+ *   waits for the whole quest, as ENTRY_QUEST_CHUNKS does.
  * Magic needs no runes here: they come from drops and the tutorial too.
  */
 import type { UnlockState } from '../types';
 import {
-  CHUNK_ENTRY_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_LOCKS, CHUNK_PATCH_TYPES, CHUNK_SERVICE_LOCKS,
+  CHUNK_ENTRY_QUESTS, CHUNK_FACT_QUESTS, CHUNK_FARMING_PATCHES, CHUNK_GUILD_GATES, CHUNK_ORE_SHOPS, CHUNK_PATCH_LOCKS, CHUNK_PATCH_TYPES, CHUNK_SERVICE_LOCKS,
   CHUNK_SKILL_FACTS, CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS,
 } from '../data/chunkSkillNodes';
 import { CHUNKED_START_KEY } from './chunkAdjacency';
@@ -142,10 +148,12 @@ const rangedWeapon = (run: TrainingRun): boolean => (run.equipment?.Weapon ?? 0)
 export const chunkedCombatStyleUsable = (run: TrainingRun): boolean =>
   MELEE_AND_MAGIC.some(skill => (run.skills[skill] ?? 0) >= 1) || ((run.skills.Ranged ?? 0) >= 1 && rangedWeapon(run));
 
-/** Why the run can't use a chunk's content for this fact (its entry quest, its guild), or null when it can. */
+/** Why the run can't use a chunk's content for this fact (its entry quest, the fact's own quest, its guild), or null when it can. */
 export const chunkContentBlocker = (chunk: string, fact: string, run: Partial<Pick<UnlockState, 'quests' | 'guilds'>>): string | null => {
   const quests = chunkEntryQuests(chunk).filter(quest => !(run.quests ?? []).includes(quest));
   if (quests.length > 0) return `Needs ${quests.join(' and ')} to get in.`;
+  const quest = CHUNK_FACT_QUESTS[chunk]?.[fact];
+  if (quest && !(run.quests ?? []).includes(quest)) return `Needs ${quest} done.`;
   const guild = chunkGuildFor(chunk, fact);
   if (guild && !(run.guilds ?? []).includes(guild)) return `Needs the ${guild} unlocked.`;
   return null;
@@ -184,6 +192,8 @@ const training = (chunks: readonly string[], run?: TrainingRun): Training => {
     const gated = run && gate && !guilds.has(gate[1]) ? gate[0] : null;
     for (const [fact, level] of chunkFacts(key)) {
       if (gated && gateCovers(gated, fact)) continue;
+      const quest = run && CHUNK_FACT_QUESTS[key]?.[fact];
+      if (quest && !quests.has(quest)) continue;
       // With a run, Farming comes from the unlocked patch types below.
       if (run && (fact === 'Farming' || fact === '@herb')) continue;
       note(fact, level);

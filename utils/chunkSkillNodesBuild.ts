@@ -32,6 +32,10 @@
  *                          beyond the chunk's entry (PATCH_LOCKS)
  *   CHUNK_SERVICE_LOCKS    services whose only shop in the chunk the game
  *                          locks behind a quest, a guild or a level (SHOP_LOCKS)
+ *   CHUNK_FACT_QUESTS      facts whose only source in the chunk the game keeps
+ *                          behind a quest its entry does not ask for (a rule's
+ *                          `quest` in utils/skillChunkNodes.ts: the Darkmeyer
+ *                          vyres in the chunks only partly inside the city)
  */
 import { farmingPatchOf, trainingReqFor } from './skillChunkNodes';
 import type { EntityKind } from '../services/ChunkContentService';
@@ -67,6 +71,8 @@ export interface ChunkSkillData {
   patchLocks: Record<string, Record<string, PatchLock>>;
   /** Per chunk, the services offered there only by a locked shop (SHOP_LOCKS), with the lock. */
   serviceLocks: Record<string, Record<string, ShopLock>>;
+  /** Per chunk, the facts whose only source there needs a quest beyond the chunk's entry, with that quest. */
+  factQuests: Record<string, Record<string, string>>;
 }
 
 const HERB_PATCH = /\bherb patch\b/i;
@@ -204,6 +210,8 @@ export const PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, PatchL
  * and 35,48 (the Poison Waste, whose fairy ring DLR needs no quest), 35,47
  * (the sea south of Zul-Andra), 57,52 (East Darkmeyer runs into the swamp
  * that Slepe opens onto) and 44,62 (Weiss's shore, salvaged from a boat).
+ * The Darkmeyer vyres in 56,51, 56,53 and 57,52 wait for Sins of the Father
+ * through their rule's own quest instead (CHUNK_FACT_QUESTS).
  */
 export const ENTRY_QUEST_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   // Neitiznot, Jatizso and the ice troll isles north of them: the Gunnars ferries open
@@ -328,6 +336,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
   const guildGates: ChunkSkillData['guildGates'] = {};
   const patchLocks: ChunkSkillData['patchLocks'] = {};
   const serviceLocks: ChunkSkillData['serviceLocks'] = {};
+  const factQuests: ChunkSkillData['factQuests'] = {};
   for (const id of [...entriesById.keys()].sort((a, b) => Number(a) - Number(b))) {
     const chunk = key(id);
     if (!LAND.has(chunk)) continue;
@@ -336,6 +345,10 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     const patchFloor = (patch: string, level: number) => Math.max(floor('Farming', level), GUILD_PATCH_LEVELS[chunk]?.[patch] ?? 0);
     const facts: Record<string, number> = {};
     const note = (skill: string, level: number) => { facts[skill] = Math.min(facts[skill] ?? level, level); };
+    const quests = [...new Set([...(doc.questSections?.[id] ?? []), ...(ENTRY_QUEST_CHUNKS[chunk] ?? [])])];
+    // Facts from a source behind a quest the entry does not ask for, kept apart until the chunk is read.
+    const behind: Record<string, number> = {};
+    const behindQuest: Record<string, string> = {};
     const chunkPatches: Record<string, number> = {};
     const markers = new Set<string>();
     const chunkOreShops: Record<string, number> = {};
@@ -380,6 +393,15 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
           req = ruins ? { skill: 'Runecraft', level: ruins.level } : null;
         }
         const patch = kind === 'object' ? farmingPatchOf(name) : null;
+        if (req?.quest && !quests.includes(req.quest)) {
+          if (behindQuest[req.skill] && behindQuest[req.skill] !== req.quest) {
+            throw new Error(`Chunk ${chunk}: ${req.skill} has sources behind ${behindQuest[req.skill]} and ${req.quest}; CHUNK_FACT_QUESTS holds one quest per fact.`);
+          }
+          const level = floor(req.skill, req.level);
+          behind[req.skill] = Math.min(behind[req.skill] ?? level, level);
+          behindQuest[req.skill] = req.quest;
+          req = null;
+        }
         if (req) note(req.skill, patch && req.skill === 'Farming' ? patchFloor(patch, req.level) : floor(req.skill, req.level));
         if (patch && req) chunkPatches[patch] = Math.min(chunkPatches[patch] ?? 99, patchFloor(patch, req.level));
         if (kind === 'object' && HERB_PATCH.test(name) && patch === 'Herb') note('@herb', patchFloor(patch, req!.level));
@@ -390,6 +412,15 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     const course = courses.get(chunk);
     if (course && markers.has(course.marker)) note('Agility', course.level);
     if (HOUSE_PORTAL_CHUNKS.includes(chunk) && markers.has('Portal')) note('Construction', 1);
+    // CHUNK_FACT_QUESTS keeps one level per fact, so a fact with sources both
+    // behind the quest and outside it would count wrongly one way or the other.
+    for (const [skill, quest] of Object.entries(behindQuest)) {
+      if (facts[skill] !== undefined) {
+        throw new Error(`Chunk ${chunk}: ${skill} has sources behind ${quest} and outside it; CHUNK_FACT_QUESTS cannot hold both levels.`);
+      }
+      note(skill, behind[skill]);
+      (factQuests[chunk] ??= {})[skill] = quest;
+    }
     const hasShops = Object.keys(chunkOreShops).length > 0;
     if (Object.keys(facts).length === 0 && !hasShops && Object.keys(offers).length === 0) continue;
     if (Object.keys(facts).length > 0) nodes[chunk] = facts;
@@ -399,12 +430,11 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     if (hasShops) oreShops[chunk] = chunkOreShops;
     for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
     if (Object.keys(offerLocks).length > 0) serviceLocks[chunk] = Object.fromEntries(Object.entries(offerLocks).map(([service, lock]) => [service, { ...lock }]));
-    const quests = [...new Set([...(doc.questSections?.[id] ?? []), ...(ENTRY_QUEST_CHUNKS[chunk] ?? [])])];
     if (quests.length) entryQuests[chunk] = quests;
     const gatedSkills = Object.keys(guild?.skills ?? {}).filter(skill => facts[skill] !== undefined);
     if (guild && gatedSkills.length > 0) guildGates[chunk] = [gatedSkills, guild.guild];
   }
-  return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks, serviceLocks };
+  return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks, serviceLocks, factQuests };
 }
 
 const LAND = new Set(ALL_CHUNK_KEYS);
@@ -480,5 +510,7 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
     + `// Chunk -> patch type -> the quest or diary the game locks that patch behind.\n`
     + `export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = ${JSON.stringify(data.patchLocks)};\n\n`
     + `// Chunk -> service -> the quest, guild or levels its only shop there needs before it trades.\n`
-    + `export const CHUNK_SERVICE_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly guild?: string; readonly skills?: Readonly<Record<string, number>> }>>>> = ${JSON.stringify(data.serviceLocks)};\n`;
+    + `export const CHUNK_SERVICE_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly guild?: string; readonly skills?: Readonly<Record<string, number>> }>>>> = ${JSON.stringify(data.serviceLocks)};\n\n`
+    + `// Chunk -> fact -> the quest its only source there needs beyond the chunk's entry.\n`
+    + `export const CHUNK_FACT_QUESTS: Readonly<Record<string, Readonly<Record<string, string>>>> = ${JSON.stringify(data.factQuests)};\n`;
 };

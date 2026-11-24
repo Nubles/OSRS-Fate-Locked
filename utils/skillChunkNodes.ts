@@ -27,7 +27,11 @@ export interface SkillChunkNode {
   station?: boolean;
 }
 
-interface Req { skill: string; level: number; station?: boolean }
+/**
+ * `quest`: the quest the game keeps this content behind (QUEST_DATA id). The
+ * builder gates the fact on it in chunks whose entry does not already ask for it.
+ */
+interface Req { skill: string; level: number; station?: boolean; quest?: string }
 
 // Production-skill training stations: usable from level 1 (the bar/food/item
 // you bring sets the real level), so they carry no level gate. Excludes broken/
@@ -104,7 +108,9 @@ const NOT_PICKPOCKETABLE = /^guard \((mistrock|cam torum|sinclair mansion|carnil
 // Darkmeyer's pickpocketable vyres, as the Wiki 'Vyre' page lists them ("Vyres
 // that can be pickpocketed include"; each page's options are Talk-to,
 // Pickpocket). The Vyrewatch and the Ver Sinhaza vyrelords and vyreladies
-// cannot be pickpocketed.
+// cannot be pickpocketed. Wiki 'Darkmeyer': "The city can be entered with
+// partial completion of the quest Sins of the Father", so the rule names it:
+// 56,51, 56,53 and 57,52 hold city and land outside the walls.
 const DARKMEYER_VYRE = /^(caninelle draynar|carnivus belamorta|diphylla bechstein|draconis sanguine|lasenna rasputin|mort nightshade|mortina daubenton|pipistrelle draynar|remus kaninus|valentin rasputin|vallessia dracyula|vallessia von pitt|vampyressa van von|vampyrus diaemus|violetta sanguine|vlad bechstein|vlad diaemus|vonnetta varnis|crimsonette van marr|grigor rasputin|vormar vakan|alek constantine|episcula helsing|haemas lamescus|misdrievus shadum|nakasa jovkai|natalidae shadum|noctillion lugosi|valentina diaemus|von van von)$/i;
 
 // Ordered curated NPC/monster rules (Hunter first so e.g. "Snowy knight" — a
@@ -202,7 +208,7 @@ const NPC_RULES: [RegExp, Req][] = [
   [/^paladin/i, { skill: 'Thieving', level: 70 }],
   // The TzHaar-Hur-Lek, -Tel, -Zal and -Rin shopkeepers are Talk-to, Trade only.
   [/^tzhaar-hur$/i, { skill: 'Thieving', level: 90 }],
-  [DARKMEYER_VYRE, { skill: 'Thieving', level: 82 }],
+  [DARKMEYER_VYRE, { skill: 'Thieving', level: 82, quest: 'Sins of the Father' }],
   [/^hero\b/i, { skill: 'Thieving', level: 80 }],
   [/\bgnome\b/i, { skill: 'Thieving', level: 75 }],
   // Only the explicitly thieving-tagged Al Kharid warrior (other "Warrior (…)"
