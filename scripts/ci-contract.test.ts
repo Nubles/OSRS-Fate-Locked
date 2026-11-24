@@ -21,12 +21,24 @@ const TEST_SHARDS = 3;
 // Every action is pinned to a full commit SHA (a moved tag can't change what
 // runs), with its release tag as a trailing comment for humans and Dependabot.
 // Get a SHA with `git ls-remote https://github.com/<owner>/<repo> refs/tags/<tag>`.
-const CHECKOUT = 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262';
-const SETUP_NODE = 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020';
-const UPLOAD_PAGES_ARTIFACT = 'actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa';
-const DEPLOY_PAGES = 'actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e';
-const UPLOAD_ARTIFACT = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02';
-const DOWNLOAD_ARTIFACT = 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';
+// Each pin is the lowest major whose action.yml says `runs.using: node24`
+// (upload-pages-artifact is composite and wraps upload-artifact v7, which
+// does): GitHub has deprecated Node 20 for actions. Check the runtime before
+// changing a pin.
+const CHECKOUT = 'actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09';
+const SETUP_NODE = 'actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444';
+const UPLOAD_PAGES_ARTIFACT = 'actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9';
+const DEPLOY_PAGES = 'actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346';
+const UPLOAD_ARTIFACT = 'actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f';
+const DOWNLOAD_ARTIFACT = 'actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131';
+const PINNED_RELEASES: Record<string, string> = {
+  [CHECKOUT]: 'v5.1.0',
+  [SETUP_NODE]: 'v5.0.0',
+  [UPLOAD_PAGES_ARTIFACT]: 'v5.0.0',
+  [DEPLOY_PAGES]: 'v5.0.1',
+  [UPLOAD_ARTIFACT]: 'v6.0.0',
+  [DOWNLOAD_ARTIFACT]: 'v7.0.0',
+};
 const WORKFLOWS = ['ci.yml', 'deploy.yml', 'sync-content.yml', 'discord-release.yml', 'discord-whats-new.yml', 'relay-kv-usage.yml', 'balance-check.yml'];
 const shardedTestCommand = `npm test -- --shard=\${{ matrix.shard }}/${TEST_SHARDS}`;
 
@@ -470,7 +482,7 @@ describe('workflow contract mutation coverage', () => {
   it('rejects a Pages artifact upload moved ahead of the quality gates', async () => {
     const workflow = await readRepositoryFile('.github/workflows/deploy.yml');
     const uploadPattern =
-      new RegExp(`      - name: Upload artifact\\r?\\n        uses: ${escapeRegExp(UPLOAD_PAGES_ARTIFACT)} # v3\\.0\\.1\\r?\\n        with:\\r?\\n          path: \\./dist\\r?\\n?`);
+      new RegExp(`      - name: Upload artifact\\r?\\n        uses: ${escapeRegExp(UPLOAD_PAGES_ARTIFACT)} # v5\\.0\\.0\\r?\\n        with:\\r?\\n          path: \\./dist\\r?\\n?`);
     const uploadStep = workflow.match(uploadPattern)?.[0];
     expect(uploadStep, 'upload step fixture missing').toBeTruthy();
 
@@ -814,6 +826,21 @@ describe('action pinning contract', () => {
         expect(line, `${name}: ${line.trim()}`).toMatch(
           /^\s*(?:-\s*)?uses: [\w.-]+\/[\w.-]+@[0-9a-f]{40} # v\d+\.\d+\.\d+\s*$/,
         );
+      }
+    }
+  });
+
+  it('uses only the known Node 24 pins, each with its own release tag', async () => {
+    for (const name of WORKFLOWS) {
+      const workflow = await readRepositoryFile(`.github/workflows/${name}`);
+      for (const line of workflow.split(/\r?\n/)) {
+        const pin = line.match(/^\s*(?:-\s*)?uses: (\S+) # (v\d+\.\d+\.\d+)\s*$/);
+        if (!/^\s*(?:-\s*)?uses:/.test(line)) continue;
+        expect(pin, `${name}: ${line.trim()}`).toBeTruthy();
+        expect(
+          PINNED_RELEASES[pin![1]],
+          `${name}: ${pin![1]} is not a known Node 24 pin`,
+        ).toBe(pin![2]);
       }
     }
   });
