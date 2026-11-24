@@ -108,6 +108,11 @@ shown name, mode, unlocks and time (`workers/fate-relay/clan.js`). The bot
 reads the posts back from the channel, so nothing is stored anywhere new and
 no KV write is made. The names are the ones the feed already shows in the
 Discord.
+The bot reads the channel's last 50 messages and keeps the newest 30 feed
+posts (`src/clan.ts`), so a post leaves the Clan tab only when newer ones push
+it out or it is deleted in Discord; `/unlink` stops new posts and removes none.
+The sharing text in Settings > Discord tells the player this before they link
+(pinned in `components/DiscordSettingsModal.consent.test.ts`).
 
 ## Relay API
 
