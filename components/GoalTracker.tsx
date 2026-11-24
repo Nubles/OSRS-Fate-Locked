@@ -10,6 +10,7 @@ import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 import { importWithRetry, lazyWithRetry } from '../utils/lazyRetry';
+import { resolvePinnedGoal } from '../utils/pinnedGoal';
 
 // The Resource Engine (its 3,800-item table) and the route planner load only
 // when a pinned goal needs them, not for every run that pins a quest.
@@ -19,7 +20,8 @@ const GoalRouteView = lazyWithRetry(() => import('./GoalRouteView').then(m => ({
 
 /** The requirement a quest or strategy goal is measured against, if it is one. */
 const goalRequirement = (id: string): ContentRequirement | undefined => {
-  const quest = QUEST_DATA[id];
+  // An older save may hold a quest pinned by its name; it reads as that quest.
+  const quest = QUEST_DATA[resolvePinnedGoal(id)];
   // Quest facts and readiness always come from the canonical journal.
   if (quest) {
     return {

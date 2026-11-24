@@ -3,8 +3,10 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SKILLS_LIST, REGIONS_LIST } from '../constants';
+import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { TableType } from '../types';
+import { evaluateQuestEligibility } from '../utils/journalStatus';
 
 const unlocksWith = (tier: number, level: number, over: Record<string, unknown> = {}): any => ({
   equipment: {}, skills: Object.fromEntries(SKILLS_LIST.map(s => [s, tier])),
@@ -22,6 +24,9 @@ const game = vi.hoisted(() => ({
 vi.mock('../context/GameContext', () => ({ useGame: () => game }));
 
 import { StrategyGuide, buildGuideContent, analyzeRequirement, calculateProphecyScore } from './StrategyGuide';
+
+/** The quests whose display name is not their id. */
+const RENAMED = Object.values(QUEST_DATA).filter(q => q.name !== q.id);
 
 afterEach(() => {
   cleanup();
@@ -71,5 +76,51 @@ describe('Strategy Guide skill chips', () => {
     const without = { ...analysis, missingChecks: analysis.missingChecks.filter((c: string) => c !== 'Combat level 40') };
     expect(calculateProphecyScore(western, analysis) - calculateProphecyScore(western, without)).toBe(20);
     expect(DIARY_DATA['Western Easy'].id).toBe('Western Easy');
+  });
+});
+
+describe('Strategy Guide quests', () => {
+  it('lists every quest under its id and drops it once completed', () => {
+    expect(RENAMED.map(q => q.id).sort()).toEqual(['Desert Treasure II', 'Forgettable Tale...', 'RFD: The Cook', 'The Ribbiting Tale']);
+    const open = buildGuideContent(unlocksWith(3, 10), 'vanilla');
+    for (const quest of Object.values(QUEST_DATA)) {
+      expect(open[quest.id]?.id, quest.id).toBe(quest.id);
+      expect(buildGuideContent(unlocksWith(3, 10, { quests: [quest.id] }), 'vanilla')[quest.id], quest.id).toBeUndefined();
+    }
+    for (const quest of RENAMED) expect(open[quest.name]).toBeUndefined();
+  });
+
+  it('judges each quest as the Quest Log does', () => {
+    for (const [mode, base] of [['vanilla', unlocksWith(10, 99)], ['chunked', unlocksWith(10, 99, { regions: [] })]] as const) {
+      for (const quest of Object.values(QUEST_DATA)) {
+        const unlocks = { ...base, quests: Object.keys(QUEST_DATA).filter(id => id !== quest.id) };
+        const entry = buildGuideContent(unlocks, mode)[quest.id];
+        expect(analyzeRequirement(entry, unlocks, mode).isFullyPlayable, `${mode} ${quest.id}`)
+          .toBe(evaluateQuestEligibility(quest, unlocks, mode).eligible);
+      }
+    }
+  });
+
+  it('hides a completed renamed quest and shows the name of one still to do', () => {
+    game.unlocks = unlocksWith(10, 99, { quests: Object.keys(QUEST_DATA).filter(id => id !== 'RFD: The Cook') });
+    render(<StrategyGuide onClose={() => {}} />);
+    openLocked('');
+    const titles = screen.queryAllByRole('heading', { level: 3 }).map(h => h.textContent);
+    expect(titles).toContain('RFD: Start (The Cook)');
+    expect(titles).not.toContain('Desert Treasure II - The Fallen Empire');
+  });
+
+  it('pins a quest by its id and unpins an older pin made by its name', () => {
+    game.unlocks = unlocksWith(10, 99, { quests: Object.keys(QUEST_DATA).filter(id => id !== 'RFD: The Cook') });
+    render(<StrategyGuide onClose={() => {}} />);
+    openLocked('RFD: Start');
+    fireEvent.click(screen.getByTitle('Pin as Goal'));
+    expect(game.togglePin).toHaveBeenLastCalledWith('RFD: The Cook');
+    cleanup();
+    game.pinnedGoals = ['RFD: Start (The Cook)'];
+    render(<StrategyGuide onClose={() => {}} />);
+    openLocked('RFD: Start');
+    fireEvent.click(screen.getByTitle('Unpin Goal'));
+    expect(game.togglePin).toHaveBeenLastCalledWith('RFD: Start (The Cook)');
   });
 });
