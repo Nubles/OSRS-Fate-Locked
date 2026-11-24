@@ -73,6 +73,16 @@ describe('RuneLite guide pictures on disk', () => {
     }
   });
 
+  it('shows the expired card as the plugin words it now, not the old 24 hours', () => {
+    // The picture drawn from plugin 9b6b5d3 said the tracker had not sent the rules "in the last 24 hours",
+    // beside a caption that says 30 days. Plugin main says "recently", which fits the relay's lifetime.
+    const expired = readManifest().entries.find(entry => entry.id === 'status-expired')!;
+
+    expect(expired.sha256).not.toBe('1744c577b8d0c8f623ba13d2d32f7dcae5190c5bbce8559ade084aa758b18e8b');
+    expect(expired.pluginCommit).not.toBe('9b6b5d3d677f93af1c199cef2950d5967e1288c1');
+    expect(expired.purpose).not.toMatch(/\bday\b|24 hours/);
+  });
+
   it('holds every picture it lists, and nothing else, each the file it records', () => {
     const manifest = readManifest();
     const pngs = readdirSync(root).filter((name: string) => name.endsWith('.png')).sort();

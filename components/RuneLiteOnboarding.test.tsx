@@ -143,6 +143,25 @@ describe('RuneLiteOnboarding', () => {
     );
   });
 
+  it.each([
+    ['refuses the write', () => ({
+      writeText: vi.fn(() => Promise.reject(new DOMException('Document is not focused.', 'NotAllowedError'))),
+    })],
+    ['is missing', () => undefined],
+  ])('never says Copied! when the clipboard %s', async (_case, clipboard) => {
+    const user = userEvent.setup();
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard(), configurable: true });
+    relay.enabled = true;
+    relay.code = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    relay.status = 'synced';
+    render(<RuneLiteOnboarding />);
+
+    await user.click(screen.getByRole('button', { name: 'Copy stream overlay URL' }));
+
+    expect(await screen.findByRole('button', { name: 'Copy failed' })).toBeTruthy();
+    expect(screen.queryByText('Copied!')).toBeNull();
+  });
+
   it('collapses a delivered profile as Profile sent, never Connected', () => {
     storage.fate_rl_onboard_hidden_v1 = '1';
     relay.enabled = true;

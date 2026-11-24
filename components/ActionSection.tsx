@@ -509,7 +509,7 @@ export const useFarmModel = () => {
       },
       {
         name: "Krystilia",
-        subText: "Wilderness (Elite)",
+        subText: "Edgeville (Elite)",
         source: DropSource.SLAYER_KRYSTILIA,
         image: "https://oldschool.runescape.wiki/images/Krystilia.png",
         style: TIER_STYLES.PURPLE

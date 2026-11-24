@@ -3,6 +3,8 @@ import type { LogEntry } from '../types';
 import {
   buildFateAnalytics,
   defaultFateAnalyticsQuery,
+  isVeracHitThrough,
+  rollTallyOf,
 } from './fateAnalytics';
 
 let fixtureId = 0;
@@ -490,5 +492,67 @@ describe('buildFateAnalytics', () => {
     const large = countedIterations(400);
 
     expect(large).toBeLessThan(small * 2.5);
+  });
+});
+
+// A Barrows ritual with Verac turns some misses into wins. The reducer writes
+// such a win as a ROLL_SUCCESS (or ROLL_OMNI) whose roll is above its threshold
+// and whose details end "Verac hit through the miss.", in every save since the
+// ritual came in. Its odds are the plain threshold, without the hit-through.
+const veracWin = (over: Partial<LogEntry> = {}): LogEntry => ({
+  id: 'verac',
+  timestamp: 5,
+  type: 'ROLL_SUCCESS',
+  message: 'Key Found!',
+  details: 'Rolled 80.0 (> 5.0%). Verac hit through the miss.',
+  result: 'SUCCESS',
+  source: 'Boss (High)',
+  rollValue: 80,
+  baseThreshold: 5,
+  threshold: 5,
+  meta: { roll: 80, baseThreshold: 5, threshold: 5, source: 'Boss (High)', fatePointsEarned: 0, successProbability: 0.05, luckApplied: false, drawResolution: 1000, standardKeysAwarded: 1, rewardKind: 'normal' },
+  ...over,
+});
+
+describe('Verac hit-through wins', () => {
+  it('recognises a hit-through as the reducer writes it, on a Key and on an Omni-Key, and nothing else', () => {
+    expect(isVeracHitThrough(veracWin())).toBe(true);
+    expect(isVeracHitThrough(veracWin({
+      type: 'ROLL_OMNI',
+      details: 'Rolled 80.0 (≤ 5.0%), and an Omni-Key came with the Key. Verac hit through the miss.',
+    }))).toBe(true);
+    // Another ritual's note before Verac's.
+    expect(isVeracHitThrough(veracWin({ details: 'Rolled 80.0 (> 10.0%). Odds +5% from rituals. Verac hit through the miss.' }))).toBe(true);
+    // An older save's entry: no analytics fields, only the roll and its text.
+    expect(isVeracHitThrough(veracWin({ meta: { roll: 80, threshold: 5, fatePointsEarned: 0 }, baseThreshold: undefined }))).toBe(true);
+    expect(isVeracHitThrough(veracWin({ details: 'Rolled 3.0 (≤ 5.0%).', rollValue: 3 }))).toBe(false);
+    expect(isVeracHitThrough(veracWin({ type: 'ROLL_FAIL', result: 'FAIL' }))).toBe(false);
+    expect(isVeracHitThrough(veracWin({ type: 'PITY' }))).toBe(false);
+    expect(isVeracHitThrough(veracWin({ details: undefined }))).toBe(false);
+  });
+
+  it('does not call a hit-through an entry that disagrees with itself, and keeps it out of the luck score', () => {
+    const history = [
+      exactRoll('miss', 1, 'ROLL_FAIL', 0.2),
+      exactRoll('win', 2, 'ROLL_SUCCESS', 0.3),
+      veracWin(),
+      veracWin({ id: 'old-verac', timestamp: 6, meta: { roll: 80, threshold: 5, fatePointsEarned: 0 } }),
+    ];
+    const result = buildFateAnalytics(history, allQuery());
+
+    expect(result.coverage.inconsistentEntries).toBe(0);
+    expect(result.coverage.veracHitThroughs).toBe(2);
+    expect(result.summary.genuineWins).toBe(3);
+    expect(result.summary.scoreableAttempts).toBe(2);
+    expect(result.summary.scoreableWins).toBe(1);
+    expect(result.notables.luckiestSuccess?.historyIndex).toBe(1);
+    expect(rollTallyOf(veracWin())).toEqual({ win: true, standardKeys: 1, luckyChance: null });
+  });
+
+  it('still flags a win whose roll missed with no hit-through to explain it', () => {
+    const result = buildFateAnalytics([veracWin({ details: 'Rolled 80.0 (≤ 5.0%).' })], allQuery());
+    expect(result.coverage.inconsistentEntries).toBe(1);
+    expect(result.coverage.veracHitThroughs).toBe(0);
+    expect(result.summary.scoreableAttempts).toBe(0);
   });
 });

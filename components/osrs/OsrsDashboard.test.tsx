@@ -122,7 +122,7 @@ describe('Dashboard in the OSRS layout', () => {
     expect(card.querySelector('.osrs-char-gem')).toBeNull();
     expect(card.querySelectorAll('.osrs-char-notches > .is-on')).toHaveLength(3);
     expect(card.getAttribute('data-examine-name')).toBe('Attack');
-    expect(card.getAttribute('data-examine')).toMatch(/^Level 25\. Tier 3: you can train levels 1-30\. Next Lv 26: .+ Key chance\./);
+    expect(card.getAttribute('data-examine')).toMatch(/^Level 25\. Tier 3: training methods for levels 1-30\. Next Lv 26: .+ Key chance\./);
 
     fireEvent.click(card);
     fireEvent.keyDown(card, { key: 'Enter' });

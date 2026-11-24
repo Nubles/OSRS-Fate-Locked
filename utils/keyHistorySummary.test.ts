@@ -72,6 +72,27 @@ describe('summarizeKeyHistory', () => {
     expect(s.latestKey?.id).toBe(exact.id);
   });
 
+  it("never picks a win Verac hit through as the luckiest, since that roll missed its odds", () => {
+    const fair = roll('ROLL_SUCCESS', 'Quest (Novice)', 30, { successProbability: 0.3 });
+    const verac: LogEntry = {
+      ...roll('ROLL_SUCCESS', 'Boss (High)', 5, { roll: 80, threshold: 5, successProbability: 0.05 }),
+      rollValue: 80,
+      details: 'Rolled 80.0 (> 5.0%). Verac hit through the miss.',
+    };
+    // An older save's entry: the text and the roll, no analytics fields.
+    const oldVerac: LogEntry = {
+      ...roll('ROLL_OMNI', 'Raid', 2, { roll: 90, threshold: 2 }),
+      rollValue: 90,
+      details: 'Rolled 90.0 (≤ 2.0%), and an Omni-Key came with the Key. Verac hit through the miss.',
+    };
+    const s = summarizeKeyHistory([fair, verac, oldVerac]);
+    expect(s.luckiest?.entry.id).toBe(fair.id);
+    expect(s.luckiest?.chance).toBeCloseTo(30);
+    // It still found a Key.
+    expect(s.keys).toBe(3);
+    expect(s.latestKey?.id).toBe(oldVerac.id);
+  });
+
   it('is empty for a run with no rolls', () => {
     expect(summarizeKeyHistory([])).toEqual({ rows: [], rolls: 0, keys: 0, longestDry: 0, currentDry: 0, luckiest: null, latestKey: null });
   });

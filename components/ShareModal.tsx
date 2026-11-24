@@ -6,12 +6,7 @@ import { useProfiles } from '../context/ProfileContext';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SectionGuide } from './SectionGuide';
-import { getGameMode } from '../config/gameModes';
 import { showToast } from '../utils/toast';
-import { visibleAreaUnlocks } from '../data/areaMapPolicy';
-import { BANK_IDS } from '../data/banks';
-import { completionPercent } from '../utils/completion';
-import { chunkTotals } from '../utils/runProgress';
 import { buildShareCardStats } from '../utils/shareCard';
 import { useIsOsrsUi, useTierMarks } from '../utils/uiStyle';
 import { OsrsTitleBar } from './osrs/OsrsWindowChrome';
@@ -114,20 +109,25 @@ export const ShareModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   }, [drawn]);
 
-  // The copied text summary (Discord-friendly), unchanged from the old Stats card.
-  const isChunked = gameModeId === 'chunked';
+  // The copied text summary (Discord-friendly). Every figure comes from the
+  // stats the card above draws, so the two never disagree: areas count every
+  // area the run can reach (the free start areas too), as the card and the
+  // Discord progress snapshot do, and Banks appear only when the card shows them.
   const generateTextSummary = () => {
-    const totalRegions = isChunked ? chunkTotals(unlocks).unlocked : visibleAreaUnlocks(unlocks.regions).length;
-    const totalEquipTiers = (Object.values(unlocks.equipment) as number[]).reduce((a, b) => a + b, 0);
-    const totalLevel = (Object.values(unlocks.levels) as number[]).reduce((a, b) => a + b, 0);
-    return `**Fate Locked Ironman** (${getGameMode(gameModeId).name} mode)
-Progression: ${completionPercent(unlocks, gameModeId, customMode)}% | Total Level: ${totalLevel}
-Keys: ${game.keys} | Omni: ${game.specialKeys} | Chaos: ${game.chaosKeys}
-${isChunked ? 'Chunks' : 'Areas'}: ${totalRegions} Unlocked
+    const totalEquipTiers = stats.gear.reduce((sum, slot) => sum + slot.tier, 0);
+    const held = (label: string) => stats.content.find(c => c.label === label);
+    const figure = (label: string) => {
+      const c = held(label);
+      return c ? `${label}: ${c.done}/${c.total}` : null;
+    };
+    const tables = [figure('Bosses'), figure('Minigames')].filter(Boolean).join(' | ');
+    const banks = figure('Banks');
+    return `**Fate Locked Ironman** (${stats.mode} mode)
+Progression: ${stats.completion}% | Total Level: ${stats.totalLevel}
+Keys: ${stats.keys} | Omni: ${stats.omni} | Chaos: ${stats.chaos}
+${stats.areas.unit === 'chunks' ? 'Chunks' : 'Areas'}: ${stats.areas.unlocked}/${stats.areas.total}
 Gear Tiers: ${totalEquipTiers}
-Bosses: ${unlocks.bosses.length} | Minigames: ${unlocks.minigames.length}
-Banks: ${(unlocks.banks ?? []).length}/${BANK_IDS.length}
-${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
+${tables ? `${tables}\n` : ''}${banks ? `${banks}\n` : ''}${stats.restored ? `${stats.restored}\n` : ''}#OSRS #FateLocked`;
   };
 
   const copySummary = async () => {
