@@ -200,4 +200,11 @@ describe('Chunked Thieving: chests, sea pirates and Yanille watchmen (deep audit
     const cases: [string, number][] = [['47,61', 13], ['49,61', 13], ['36,45', 28], ['18,43', 60], ['32,57', 60], ['46,35', 60], ['39,48', 65]];
     for (const [chunk, level] of cases) expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBe(level);
   });
+
+  it("keeps the Rogues' Den maze chest out of Burthorpe's Thieving floor", () => {
+    // OSRS Wiki 'Rogues' Den': entering the maze "requires level 50 in both Thieving and Agility"; the 10-coin
+    // chest ('Chest (10 coins)', 3053,5037) is in the maze, so 45,55 keeps its base Thieving 32.
+    expect(chunkFactLevel('45,55', 'Thieving')).toBe(32);
+    expect(chunkFactLevel('41,57', 'Thieving')).toBe(13);
+  });
 });

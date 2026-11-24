@@ -132,11 +132,16 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
  * named veins still count). The second Braindeath Island record names its
  * Rum Deal spots plain "Fishing spot" (the first says "Fishing spot
  * (Braindeath Island)", which the resource rules drop); the island has no
- * other fishing.
+ * other fishing. The Rogues' Den's 10-coin chest is in the maze's chest room
+ * (OSRS Wiki 'Chest (10 coins)' puts it at 3053,5037, in the maze region, not
+ * the lobby), and the Wiki ('Rogues' Den') says entering the maze "requires
+ * level 50 in both Thieving and Agility", so it does not lower the chunk's
+ * Thieving floor.
  */
 const INTERIOR_NOT_TRAINING: Readonly<Record<string, RegExp>> = {
   'Abandoned Mine': /^ore vein$/i,
   'Braindeath Island': /^fishing spot$/i,
+  "Rogues' Den": /^chest \(10 coins\)$/i,
 };
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;
 
