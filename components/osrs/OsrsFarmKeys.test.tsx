@@ -110,7 +110,7 @@ describe('OSRS Farm Keys readiness and wording (deep audit ui-osrs-a)', () => {
   it('describes a gem as a band of chances, not one chance', async () => {
     await start('ACTIVITIES', { minigames: ['Barbarian Assault'] });
     const hint = document.querySelector('.okf-blurb .hint') as HTMLElement;
-    expect(hint.textContent).toBe('Gem = odds band. Higher tier, better odds.');
+    expect(hint.textContent).toBe('Gem = odds band. Higher gem tier, better odds.');
   });
 
   it('names where each Slayer master stands (OSRS Wiki infobox locations)', async () => {
