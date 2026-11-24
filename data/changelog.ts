@@ -44,10 +44,10 @@ export const CHANGELOG_RELEASES = [
       fixed: [
         'A Key roll is now refused with a message while your progress can’t save or another tab’s newer progress is waiting, so a roll can’t be lost.',
         'Slayer tasks, quests, skill guides, Strategy Guide cards and the Resource Engine now ask for what the game asks: the right levels, quests, areas and Keys.',
-        'A dozen quest-locked places, like Tolna’s rift, now wait for their quest, and the Keldagrim, Mor Ul Rek and Zanaris banks ask for their own area.',
+        'Quest-locked places like Tolna’s rift, Agility shortcuts and three banks wait for their own requirements, and Chunked skips scenery you can’t use.',
         'Plan a route now opens a plan for every quest, diary tier and region, and pinned guide goals show the Keys and chunks they still need.',
-        'Agility shortcuts wait for their quest, diary and a way in, and Chunked no longer counts scenery you can’t chop, mine, fish or steal from.',
         'The damage calculator knows blowpipe darts, six more prayers, monster flat armour and the Fractured Archive bosses.',
+        'Farm Keys cards, the Spend Keys outlook, achievement pop-ups, share text and the RuneLite guide now show the right readiness, figures and steps.',
       ],
     },
   },
