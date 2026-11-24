@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TableType, type LogEntry } from '../types';
 import { tableDisplayName } from './tableDisplay';
+import { BANK_BY_ID, BANK_IDS } from '../data/banks';
 import { detectMilestones, narrate, timelapseBarsFit } from './timelapseNarration';
 
 const rollSuccess = (
@@ -103,6 +104,34 @@ describe('timelapse unlock narration', () => {
     expect(narrate(unlock(TableType.ARCANA))).toBe('Zulrah is unlocked under Combat Powers.');
     expect(narrate(unlock(TableType.FARMING_LAYERS))).toBe('Zulrah is unlocked under Farming.');
     expect(narrate(unlock(TableType.BOSSES))).toBe('Zulrah is unlocked under Bosses.');
+  });
+
+  it('names a chunk and a bank the way the History card does', () => {
+    // Chunks are stored by key and banks by chunk id, in old saves and new.
+    const chunk: LogEntry = {
+      id: 'c', timestamp: 1, type: 'UNLOCK', message: 'Unlocked Lumbridge (49, 50)',
+      meta: { item: '49,50', category: TableType.CHUNKS, cost: 1 },
+    };
+    expect(narrate(chunk)).toBe('Lumbridge (49, 50) is unlocked under Chunks.');
+    const rift: LogEntry = { ...chunk, message: 'Unlocked Lumbridge (49, 50) · Rift', meta: { ...chunk.meta, cost: 0, costType: 'rift' } };
+    expect(narrate(rift)).toBe('Lumbridge (49, 50) is unlocked under Chunks.');
+    const bankId = BANK_IDS[0];
+    const bankName = BANK_BY_ID[bankId].name;
+    expect(bankName).not.toBe(bankId);
+    const bank: LogEntry = {
+      id: 'b', timestamp: 1, type: 'UNLOCK', message: `Unlocked ${bankName}`,
+      meta: { item: bankId, category: TableType.BANKS, cost: 1 },
+    };
+    expect(narrate(bank)).toBe(`${bankName} is unlocked under Banks.`);
+    expect(detectMilestones([chunk]).map(m => m.label)).toContain('First unlock: Lumbridge (49, 50)');
+    expect(detectMilestones([bank]).map(m => m.label)).toContain(`First unlock: ${bankName}`);
+  });
+
+  it('keeps an unknown bank id or an odd chunk item as written', () => {
+    expect(narrate({ id: 'b', timestamp: 1, type: 'UNLOCK', message: 'Unlocked', meta: { item: 'no-such-bank', category: TableType.BANKS } }))
+      .toBe('no-such-bank is unlocked under Banks.');
+    expect(narrate({ id: 'c', timestamp: 1, type: 'UNLOCK', message: 'Unlocked', meta: { item: 'Somewhere', category: TableType.CHUNKS } }))
+      .toBe('Somewhere is unlocked under Chunks.');
   });
 
   it('still reads for an entry with no table', () => {
