@@ -40,7 +40,7 @@ describe('reviewed skill-reference facts', () => {
   });
 
   it('names the Brimhaven level-40 obstacles and zenyte products accurately', () => {
-    expect(SKILL_UNLOCK_DATA.Agility[4]).toContain('Lvl 40: Brimhaven Arena (High Obstacles)');
+    expect(SKILL_UNLOCK_DATA.Agility[4]).toContain('Lvl 40: Brimhaven Agility Arena (High Obstacles)');
     expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 92: Zenyte Necklace (Anguish)');
     expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 98: Zenyte Amulet (Torture)');
   });
@@ -330,9 +330,9 @@ describe('minigame lines added in the 23 November 2026 deep pass', () => {
     ['Cooking', 'Mess (Great Kourend)', 20],
     ['Cooking', 'Gnome Restaurant', 29],
     ['Cooking', 'Trouble Brewing (Cabin Fever)', 40],
-    ['Agility', 'Gnome Ball, Brimhaven Arena (Low Obstacles)', 1],
-    ['Agility', 'Brimhaven Arena (Medium Obstacles)', 20],
-    ['Agility', 'Brimhaven Arena (High Obstacles)', 40],
+    ['Agility', 'Gnome Ball, Brimhaven Agility Arena (Low Obstacles)', 1],
+    ['Agility', 'Brimhaven Agility Arena (Medium Obstacles)', 20],
+    ['Agility', 'Brimhaven Agility Arena (High Obstacles)', 40],
     ['Magic', 'Mage Training Arena (Enchanting Chamber)', 7],
   ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { UnlockState } from '../types';
-import { getActivityReq } from '../data/activityRequirements';
+import { ACTIVITY_REQUIREMENTS, getActivityReq } from '../data/activityRequirements';
 import { SKILLS_LIST } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { evaluateActivityReadiness } from './activityReadiness';
@@ -341,18 +341,62 @@ describe('ways in that carry their own requirement, read by the readiness badge 
 });
 
 describe('Mahogany Homes: the first contract comes from Amy (area-access.d2[0])', () => {
+  // Construction unlocked: the contracts train it (own.d1[0]).
+  const builder = { skills: { Construction: 1 } };
   const AMY_FIRST = 'Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)';
 
   it('opens at any contractor in Chunked and asks the player to confirm the first contract', () => {
     for (const office of ['46,52', '50,54', '41,51', '27,56']) {
-      expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: [office] }), 'chunked'), office)
+      expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: [office], ...builder }), 'chunked'), office)
         .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
     }
-    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: ['47,52'] }), 'chunked').status).toBe('NOT_READY');
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: ['47,52'], ...builder }), 'chunked').status).toBe('NOT_READY');
   });
 
   it('carries the same line in Vanilla', () => {
-    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked(), 'vanilla'))
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked(builder), 'vanilla'))
       .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
+  });
+});
+
+// own.d1[0]: these activities named their skill only in a note, so they read
+// ready while the run could not train it. Levels from each Wiki page, 24 Nov 2026.
+describe('a skill activity needs its skill unlocked (own.d1[0])', () => {
+  const SKILL_GATES: Array<[string, string, number]> = [
+    ['Mahogany Homes', 'Construction', 1], // Beginner contracts at level 1
+    ['Forestry', 'Woodcutting', 1], // chopping any tree near an event counts
+    ['Brimhaven Agility Arena', 'Agility', 1], // dispensers need no Agility level
+    ["Sorceress's Garden", 'Thieving', 1], // the Winter garden has no level
+    ['Canoes', 'Woodcutting', 12], // the lowest canoe station
+    ["Servants' Guild", 'Construction', 20], // Rick, the first servant
+    ['Ring of the Elements', 'Runecraft', 27], // Guardians of the Rift
+  ];
+
+  it.each(SKILL_GATES)('%s reads Not ready with %s locked or below %i', (name, skill, level) => {
+    const skillBlockers = (over: Partial<UnlockState>) => {
+      const result = evaluateActivityReadiness(true, getActivityReq(name), unlocked(over), 'vanilla');
+      return result.status === 'NOT_READY' ? result.blockers.filter(blocker => blocker.kind === 'skill') : [];
+    };
+    expect(skillBlockers({})).toEqual([{ kind: 'skill', label: `${skill} ${level}` }]);
+    expect(skillBlockers({ skills: { [skill]: 10 }, levels: { [skill]: level - 1 } }).length).toBe(level > 1 ? 1 : 0);
+    expect(skillBlockers({ skills: { [skill]: 10 }, levels: { [skill]: level } })).toEqual([]);
+  });
+
+  it('leaves no other note naming a skill without a skills entry', () => {
+    // Each of these can be done, or has a way in, with the named skill locked.
+    const NO_SKILL_GATE = new Set([
+      "Rogues' Den", // the hideout is free; the maze has its own minigame gate
+      "Warriors' Guild", // warriorsGuildEntry
+      'Blast Furnace', // stoking and pumping train Firemaking, Strength and Agility
+      'Fishing Trawler', // no Fishing level to join
+      'Slayer Ring', // a bought ring needs no Crafting
+      'Essence Pouches', // the small pouch has no Runecraft level
+      'Mine Carts', // names the Fishing Contest quest
+    ]);
+    const named = Object.entries(ACTIVITY_REQUIREMENTS)
+      .filter(([name, req]) => !NO_SKILL_GATE.has(name) && !req.skills && !req.oneOf?.some(route => route.skills)
+        && SKILLS_LIST.some(skill => req.note?.includes(skill)))
+      .map(([name]) => name);
+    expect(named).toEqual([]);
   });
 });

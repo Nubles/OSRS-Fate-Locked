@@ -61,18 +61,20 @@ export const CHANGELOG_RELEASES = [
         'Quest-locked places like Tolna’s rift, Agility shortcuts and three banks wait for their own requirements, and Chunked skips scenery you can’t use.',
         'Plan a route now opens a plan for every quest, diary tier and region, and pinned guide goals show the Keys and chunks they still need.',
         'The damage calculator, Farm Keys cards, the Spend Keys outlook, achievement pop-ups, share text and the RuneLite guide now show the right figures and steps.',
+        'Forestry, Mahogany Homes, Canoes and four more now read Not ready until the skill they need is unlocked and high enough.',
       ],
     },
   },
   {
     id: '2026-11-24-pairing-and-sharing',
-    title: 'RuneLite pairing and Discord sharing',
+    title: 'RuneLite and Discord',
     date: '2026-11-24',
     sections: {
       fixed: [
         'Pairing this browser with a new RuneLite code now tells RuneLite the old pairing was disconnected, so it stops showing Connected with no updates.',
         'Confirming the same RuneLite pairing link twice now keeps the connection working.',
         'When the relay refuses your connection, the tracker now names the button RuneLite shows: Re-pair tracker…, or Connect tracker.',
+        'RuneLite’s Here card now names the Slayer level a monster needs when that is why it isn’t ready.',
         'Discord notifications now says that once you /link, your new unlocks post in #live-unlocks and the tracker’s Clan chat shows them to everyone.',
       ],
     },

@@ -64,7 +64,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Gnome Stronghold Agility Course',
       'Lvl 1: Shayzien Basic Course',
       'Lvl 1: Shortcuts: Lumbridge Swamp, Brimhaven Dungeon',
-      'Lvl 1: Gnome Ball, Brimhaven Arena (Low Obstacles)',
+      'Lvl 1: Gnome Ball, Brimhaven Agility Arena (Low Obstacles)',
       'Lvl 5: Falador Crumbling Wall & Yanille Rocks Shortcuts',
       'Lvl 10: Corsair Cove Rocks & Brimhaven Ropeswing'
     ],
@@ -75,7 +75,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 16: Yanille Underwall Tunnel',
       'Lvl 18: Slayer Tower Broken Window Shortcut',
       'Lvl 20: Al Kharid Rooftop Course',
-      'Lvl 20: Brimhaven Arena (Medium Obstacles)',
+      'Lvl 20: Brimhaven Agility Arena (Medium Obstacles)',
       'Lvl 20: Coal Trucks Log Balance'
     ],
     3: [
@@ -92,7 +92,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 32: Catherby Grapple (Strength 35, Ranged 35) & Shilo Village Steps',
       'Lvl 35: Barbarian Outpost Course',
       'Lvl 37: Tree Gnome Stronghold Rocks',
-      'Lvl 40: Brimhaven Arena (High Obstacles)',
+      'Lvl 40: Brimhaven Agility Arena (High Obstacles)',
       'Lvl 40: Canifis Rooftop Course'
     ],
     5: [
@@ -2156,7 +2156,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Thieving': {
     1: [
       'Lvl 1: Pickpocket Man/Woman',
-      'Lvl 1: Winter Sq\'irk',
+      'Lvl 1: Winter Sq\'irk (Sorceress\'s Garden)',
       'Lvl 2: Vegetable Stalls',
       'Lvl 5: Bakery & Tea Stalls',
       'Lvl 5: Crafting Stalls',
@@ -2240,6 +2240,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Woodcutting': {
     1: [
       'Lvl 1: Bronze/Iron Axes & Felling Axes, Normal & Achey Trees',
+      'Lvl 1: Forestry',
       'Lvl 1: Kharidian Cactus (Fill Waterskins)',
       'Lvl 1: Up to 1 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 6: Steel Axes & Felling Axes',
