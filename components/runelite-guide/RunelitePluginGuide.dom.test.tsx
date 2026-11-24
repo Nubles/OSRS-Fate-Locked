@@ -125,13 +125,15 @@ describe('RunelitePluginGuide navigation and focus', () => {
 
     const menu = host.querySelector<HTMLSelectElement>('[data-runelite-guide-nav="mobile"]');
     if (!menu) throw new Error('Missing the chapter menu');
+    menu.focus();
     await act(async () => {
       menu.value = 'here';
       menu.dispatchEvent(new Event('change', { bubbles: true }));
     });
     expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: 'smooth', block: 'start' });
     expect(host.querySelector('a[href="#runelite-guide-here"]')?.getAttribute('aria-current')).toBe('location');
-    expect(document.activeElement).toBe(host.querySelector('#runelite-guide-here'));
+    // Focus stays on the menu, so a keyboard reader can keep arrowing through the chapters.
+    expect(document.activeElement).toBe(menu);
 
     const settings = host.querySelector<HTMLButtonElement>('[data-guide-quick-link="settings"]');
     if (!settings) throw new Error('Missing the introduction’s links');

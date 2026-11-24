@@ -181,14 +181,16 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
     return () => observer.disconnect();
   }, []);
 
-  const navigateTo = (chapterId: GuideChapterId) => {
+  const navigateTo = (chapterId: GuideChapterId, moveFocus = true) => {
     const node = document.getElementById(`runelite-guide-${chapterId}`);
     if (!node) return;
     const reducedMotion = typeof window.matchMedia === 'function'
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     node.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
     // Move focus into the chapter too, so Tab and a screen reader carry on from where the reader jumped.
-    node.focus({ preventScroll: true });
+    // Not from the chapter menu: arrow keys on a closed select fire change on every press in some
+    // desktop browsers, and taking focus away would stop the reader arrowing on to a later chapter.
+    if (moveFocus) node.focus({ preventScroll: true });
     setActiveChapter(chapterId);
   };
 
@@ -233,7 +235,7 @@ export const RunelitePluginGuide: React.FC<RunelitePluginGuideProps> = ({ onClos
               <select
                 data-runelite-guide-nav="mobile"
                 value={activeChapter}
-                onChange={event => navigateTo(event.target.value as GuideChapterId)}
+                onChange={event => navigateTo(event.target.value as GuideChapterId, false)}
                 className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#202020] px-2 py-1.5 font-semibold text-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               >
                 {RUNELITE_GUIDE_NAV_GROUPS.map(group => (
