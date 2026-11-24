@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { chunkContentService, type EntityHit } from '../services/ChunkContentService';
 import { skillChunkNodes, trainingReqFor } from './skillChunkNodes';
 import { chunkFactLevel } from './chunkedSkillPool';
+import { buildChunkSkillNodes } from './chunkSkillNodesBuild';
+
+type RawInterior = NonNullable<Parameters<typeof buildChunkSkillNodes>[0]['interiors']>[string];
 
 describe('skillChunkNodes Wyrmscraig resources', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -126,5 +129,28 @@ describe('Chunked object rules: Blurite rocks (deep audit chunk-sample.d1[2])', 
     // The Asgarnian Ice Dungeon is entered from 47,49 with no requirement.
     expect(chunkFactLevel('47,49', 'Mining')).toBe(10);
     expect(chunkFactLevel('22,57', 'Mining')).toBeUndefined();
+  });
+});
+
+describe('Chunked object rules: ore veins (deep audit chunk-sample.d2[1])', () => {
+  it('reads the Abandoned Mine and Motherlode Mine veins at their Mining levels', () => {
+    // OSRS Wiki, fetched 24 Nov 2026, each vein's own page (options = Mine, quest = No): 'Copper ore vein',
+    // 'Tin ore vein', 'Clay ore vein' |level = 1; 'Iron ore vein' 15; 'Coal ore vein' 30; 'Mithril ore vein' 55;
+    // 'Adamant ore vein' 70; 'Ore vein' (Motherlode Mine) |level = 30.
+    const cases: [string, number][] = [['Copper vein', 1], ['Tin vein', 1], ['Clay vein', 1], ['Iron vein', 15],
+      ['Coal vein', 30], ['Mithril vein', 55], ['Adamantite vein', 70], ['Ore vein', 30]];
+    for (const [name, level] of cases) expect(trainingReqFor(name, 'object'), name).toEqual({ skill: 'Mining', level });
+    // Dondakan's mine veins belong to Between a Rock... and stay out.
+    expect(trainingReqFor('Mineral vein', 'object')).toBeNull();
+    expect(trainingReqFor('Gold vein', 'object')).toBeNull();
+    expect(chunkFactLevel('53,50', 'Mining')).toBe(1);
+    expect(chunkFactLevel('47,52', 'Mining')).toBe(1);
+  });
+
+  it("leaves the Abandoned Mine's plain 'Ore vein' rows uncounted and counts the Motherlode Mine's", () => {
+    const interior = (name: string): RawInterior => ({ name, content: { o: [['Ore vein', 3]] }, entrances: [{ chunkId: '13618', requirements: [] }] });
+    const facts = (name: string) => buildChunkSkillNodes({ chunks: {}, interiors: { a: interior(name) } }).nodes['53,50']?.Mining;
+    expect(facts('Abandoned Mine')).toBeUndefined();
+    expect(facts('Motherlode Mine')).toBe(30);
   });
 });

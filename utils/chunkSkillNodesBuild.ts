@@ -125,6 +125,15 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
   '44,52': { altar: 'Law', level: 54 },
   '38,44': { altar: 'Wrath', level: 95 },
 };
+/**
+ * Rows of a named interior that the name-only rules would misread there. The
+ * Abandoned Mine's records also hold plain "Ore vein" rows, and the Wiki gives
+ * "Ore vein" only for the Motherlode Mine, so they stay uncounted (the mine's
+ * named veins still count).
+ */
+const INTERIOR_NOT_TRAINING: Readonly<Record<string, RegExp>> = {
+  'Abandoned Mine': /^ore vein$/i,
+};
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;
 
 /**
@@ -356,6 +365,7 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
         let req = trainingReqFor(name, kind);
         // A rune altar's own "Altar" is where runes are made, not a Prayer altar.
         if (req?.station && req.skill === 'Prayer' && interior && RUNE_ALTAR_INTERIOR.test(interior)) req = null;
+        if (req && interior && INTERIOR_NOT_TRAINING[interior]?.test(name)) req = null;
         if (req && kind === 'object' && /^mysterious ruins$/i.test(name)) {
           const ruins = RUNE_ALTAR_RUINS[chunk];
           req = ruins ? { skill: 'Runecraft', level: ruins.level } : null;

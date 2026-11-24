@@ -76,6 +76,14 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
   [/blurite rocks/i, { skill: 'Mining', level: 10 }],
   // Infernal shale rocks (78) are left out on purpose: the Wiki says "The rocks can only be accessed after
   // speaking to Yama and agreeing to sign his contract", a gate the tracker does not record.
+  // Ore veins, each vein's own Wiki page (options Mine, quest No): the Abandoned
+  // Mine's named veins, and the Motherlode Mine's "Ore vein" at 30. Dondakan's
+  // Mineral and Gold veins (Between a Rock...) match none of these.
+  [/^adamantite vein$/i, { skill: 'Mining', level: 70 }],
+  [/^mithril vein$/i, { skill: 'Mining', level: 55 }],
+  [/^(coal|ore) vein$/i, { skill: 'Mining', level: 30 }],
+  [/^iron vein$/i, { skill: 'Mining', level: 15 }],
+  [/^(copper|tin|clay) vein$/i, { skill: 'Mining', level: 1 }],
   [/(copper|tin|clay) rocks|dig site specimen/i, { skill: 'Mining', level: 1 }],
 
   // ── Fishing (by the spot's method / catch; a spot with several catches
