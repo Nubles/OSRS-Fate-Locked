@@ -9045,7 +9045,7 @@
       "id": "The Writing's on the Wall",
       "kind": "quest",
       "status": "unresolved",
-      "reviewedAt": "2026-11-03",
+      "reviewedAt": "2026-11-24",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15392368",
         "revision": 15392368,
@@ -9053,20 +9053,21 @@
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"bettys-uncles-house\",\"label\":\"Betty's uncle's house by the Tithe Farm\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":58}],\"id\":\"captain-jensens-house\",\"label\":\"Captain Jensen's house in Port Piscarilius\",\"standardAreas\":[\"Piscarilius\"]},{\"chunkOptions\":[{\"cx\":23,\"cy\":56}],\"id\":\"shayzien-war-tent\",\"label\":\"War Tent in the Shayzien Encampment\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":22,\"cy\":56}],\"id\":\"shayzien-commissioners-house\",\"label\":\"The commissioner's house in Shayzien\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":55}],\"id\":\"river-hos-island\",\"label\":\"Island west of Watson's house\",\"standardAreas\":[\"Hosidius\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Wiki revision 15392368 lists no required items."
         ],
         "travel": [
-          "Wiki revision 15392368 starts with Betty at Land's End and keeps the quest at Land's End."
+          "Wiki revision 15392368 starts with Betty at Land's End and keeps the quest at Land's End.",
+          "Place review 2026-11-24 (Wiki rev 15412011 ==Walkthrough==, mapped through data/subAreaChunks.ts): after Land's End (1519,3438, 23,53) the quest goes to Betty's uncle's house north-west of the Tithe Farm (1784-1790,3521-3527, 27,55 Hosidius) with Joyce and the monk beside it, the Port Piscarilius jail and Captain Jensen's house in its north-west corner (1753-1759,3774-3784, asked as 27,58 Piscarilius; the body upstairs at 1755,3780 is in 27,59, which the map gives to Arceuus), the War Tent in the Shayzien Encampment (1485,3636, 23,56), the commissioner's house with Kyle on the path south of it (1452,3629, 22,56 Shayzien), and the island west of Watson's house (1615,3582, 25,55 Hosidius). Each is now a location."
         ],
         "instances": [],
         "partialCompletion": []
       },
-      "discrepancy": "The Writing's on the Wall uses the locations policy with the Land's End location (23,53) and runtime regions [Kourend & Kebos]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The stable Wiki revision starts and keeps the quest at Land's End.",
-      "conservativeReason": "Keeping The Writing's on the Wall's current locations policy requirements (the Land's End location, 22 Agility and 20 Thieving; it has no quest prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      "discrepancy": "The Writing's on the Wall uses the locations policy with the Land's End (23,53), Hosidius (27,55 and 25,55), Piscarilius (27,58) and Shayzien (23,56 and 22,56) locations and runtime regions [Kourend & Kebos]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The current Wiki revision starts at Land's End and then visits Hosidius, Port Piscarilius, Shayzien and the island in the River Hos.",
+      "conservativeReason": "Keeping The Writing's on the Wall's current locations policy requirements (the Land's End, Hosidius, Piscarilius and Shayzien locations, 22 Agility and 20 Thieving; it has no quest prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "Throne of Miscellania",

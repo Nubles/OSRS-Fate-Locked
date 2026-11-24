@@ -386,3 +386,36 @@ describe('quest places checked on the Wiki (24 Nov 2026)', () => {
     expect(open.manualChecks).toContainEqual('Reached vultures north of Sophanem, the Agility Pyramid or Menaphos');
   });
 });
+
+describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+  const regionBlockers = (id: string, patch: Partial<UnlockState>, mode = 'vanilla') =>
+    evaluateQuestEligibility(QUEST_DATA[id], unlocks(patch), mode).blockers
+      .filter(blocker => blocker.kind === 'region').map(blocker => blocker.label);
+
+  it("asks The Writing's on the Wall for every place its walkthrough visits", () => {
+    // Wiki The Writing's on the Wall (rev 15412011) ==Walkthrough==: Betty at Land's End (1519,3438);
+    // "Betty's uncle's house, north west of Tithe Farm" (1784-1790,3521-3527) and Joyce (1774,3526);
+    // "House of Captain Jensen, north west corner Port Piscarilius" (1753-1759,3774-3784); "Go to the
+    // War Tent in the Shayzien Encampment" (1485,3636); the commissioner's house and Kyle (1452,3629);
+    // "Cross the bridge to the island west of Watson's House" (1615,3582).
+    const places = (QUEST_DATA["The Writing's on the Wall"].locations ?? [])
+      .map(place => `${place.standardAreas.join('|')} ${place.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`).join(' ')}`);
+    expect(places).toEqual([
+      "Land's End 23,53", 'Hosidius 27,55', 'Piscarilius 27,58', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
+    ]);
+    expect(regionBlockers("The Writing's on the Wall", { regions: ["Land's End"] })).toEqual([
+      "Betty's uncle's house by the Tithe Farm", "Captain Jensen's house in Port Piscarilius",
+      'War Tent in the Shayzien Encampment', "The commissioner's house in Shayzien", "Island west of Watson's house",
+    ]);
+    expect(regionBlockers("The Writing's on the Wall",
+      { regions: ["Land's End", 'Hosidius', 'Piscarilius', 'Shayzien'] })).toEqual([]);
+    expect(regionBlockers("The Writing's on the Wall", { chunks: ['23,53', '27,55', '27,58', '23,56', '25,55'] }, 'chunked'))
+      .toEqual(["The commissioner's house in Shayzien"]);
+  });
+});

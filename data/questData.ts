@@ -427,9 +427,17 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
     regions: ['Kourend & Kebos'],
-    // Released 3 Nov 2026: starts with Betty at Land's End and stays there.
+    // Released 3 Nov 2026: starts with Betty at Land's End, then (Wiki rev 15412011) her uncle's
+    // house by the Tithe Farm (27,55), the Port Piscarilius jail and Captain Jensen's house (27,58),
+    // the War Tent (23,56) and the commissioner's house with Kyle (22,56) in Shayzien, and the
+    // island west of Watson's house (1615,3582, 25,55).
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
+      { id: 'bettys-uncles-house', label: "Betty's uncle's house by the Tithe Farm", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 27, cy: 55 }] },
+      { id: 'captain-jensens-house', label: "Captain Jensen's house in Port Piscarilius", standardAreas: ['Piscarilius'], chunkOptions: [{ cx: 27, cy: 58 }] },
+      { id: 'shayzien-war-tent', label: 'War Tent in the Shayzien Encampment', standardAreas: ['Shayzien'], chunkOptions: [{ cx: 23, cy: 56 }] },
+      { id: 'shayzien-commissioners-house', label: "The commissioner's house in Shayzien", standardAreas: ['Shayzien'], chunkOptions: [{ cx: 22, cy: 56 }] },
+      { id: 'river-hos-island', label: "Island west of Watson's house", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 25, cy: 55 }] },
     ],
     skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
