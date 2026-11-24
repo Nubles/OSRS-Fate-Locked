@@ -509,7 +509,7 @@ setting after the workflow first appears.
 
 Build-size watch: `npm run build` fails when the eager entry chunk (the
 `dist/assets/index-*.js` that `index.html` loads) grows past its gzip budget
-in `scripts/check-entry-budget.mjs` (230 kB; the comments above
+in `scripts/check-entry-budget.mjs` (231 kB; the comments above
 `ENTRY_GZIP_BUDGET_KB` record every raise and why; about 217 kB after the 24 Sept
 2026 review moved on-demand screens and the release notes out of it, and
 about 224 kB in October 2026, after online backup and Paste from RuneLite;
@@ -522,7 +522,7 @@ step to 256 kB by 18 October 2026, and lowered to 219 kB on 19 October
 2026, when the Advisor panels, the Activities sub-panels, the RuneLite
 bundle builder and the content service behind the journal routes moved
 behind lazy loads and the entry fell from 254.8 to 216.1 kB; raised to 220 kB on 23 October 2026 for the skill cards' info button and its
-Settings choice, at 219.3 kB, with the odds box itself loading on first use; raised to 226 kB on 24 October 2026 for the combined update's Key, roll, save and Slayer changes, at 225.1 kB). The 225 kB split came from the build
+Settings choice, at 219.3 kB, with the odds box itself loading on first use; raised to 226 kB on 24 October 2026 for the combined update's Key, roll, save and Slayer changes, at 225.1 kB; raised to 231 kB on 24 November 2026 for the second accuracy pass's rule fixes in modules that already load at start, at 230.1 kB). The 225 kB split came from the build
 id stamped into the entry: CI built with a 13-digit timestamp and the deploy
 with the 40-character commit SHA. CI now stamps the SHA too (on a pull
 request, its merge commit's), and a build without `BUILD_ID` stamps a random
