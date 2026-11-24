@@ -203,8 +203,57 @@ describe('Chunked Thieving: chests, sea pirates and Yanille watchmen (deep audit
 
   it("keeps the Rogues' Den maze chest out of Burthorpe's Thieving floor", () => {
     // OSRS Wiki 'Rogues' Den': entering the maze "requires level 50 in both Thieving and Agility"; the 10-coin
-    // chest ('Chest (10 coins)', 3053,5037) is in the maze, so 45,55 keeps its base Thieving 32.
-    expect(chunkFactLevel('45,55', 'Thieving')).toBe(32);
+    // chest ('Chest (10 coins)', 3053,5037) is in the maze. The 32 this test pinned before came from the maze's
+    // Rogue Guards, who cannot be pickpocketed (chunk-sample.d3[2]), so 45,55 has no Thieving fact at all.
+    expect(chunkFactLevel('45,55', 'Thieving')).toBeUndefined();
     expect(chunkFactLevel('41,57', 'Thieving')).toBe(13);
+  });
+});
+
+describe('pickpocket targets the Wiki confirms (deep audit chunk-sample.d3[2])', () => {
+  it('drops the NPCs the Wiki says cannot be pickpocketed', () => {
+    // OSRS Wiki, fetched 24 Nov 2026: 'Guard (Mistrock)' "they cannot be pickpocketed or attacked"; 'Man (The
+    // Warrens)' "cannot be attacked or pickpocketed"; 'Woman (West Ardougne)' "not pickpocketed"; 'Town Guard'
+    // "cannot be spoken to or battled"; 'Rogue Guard' patrols the Rogues' Den maze; Talk-to only for the rest.
+    const npcs = [
+      'Guard (Mistrock)', 'Guard (Cam Torum)', 'Market Guard (Draynor)', 'Town Guard', 'Bank guard', 'Jail Guard',
+      'Guard Vemmeldo', 'Guard (Sinclair Mansion)', 'Guard (Carnillean)', 'Guard (Colosseum)', 'Guard (Prifddinas)',
+      'Man (The Warrens)', 'Man (West Ardougne)', 'Man (Hosidius)', 'Man (Catacombs of Kourend)', 'Woman (West Ardougne)',
+      'Poor looking man', 'Poor looking woman', 'Well-dressed man', 'Chief Farmer', 'Fred the Farmer', 'Farmer Brumty',
+      'Farmer Fromund', 'Farmer Gricoller', 'Farmer Hayfield', 'Farmer (Shayzien)', 'Rogue Guard', 'Cave goblin child',
+      'Gnome Waiter', 'Gnome soldier', 'Gnome traveller', 'Gnome emissary', 'Gnome baller', 'Gnome winger', 'Local Gnome',
+      'Terrorchick gnome', 'Scout (Tree Gnome Stronghold)', 'TzHaar-Hur-Lek', 'TzHaar-Hur-Tel', 'TzHaar-Hur-Zal',
+      'TzHaar-Hur-Rin', 'Vyrewatch', 'Vyrelord', 'Vyrelady',
+    ];
+    for (const name of npcs) expect(trainingReqFor(name, 'npc'), name).toBeNull();
+    const monsters = [
+      'Guard (Burthorpe)', 'Guard (dwarf)', 'Guard (Ranging Guild)', 'Guard (Desert Mining Camp)', 'Guard (Cave goblin)',
+      'Guard Bandit', 'Jail guard', 'Man (level 4)', 'Cave goblin (monster)', 'Cave goblin guard', 'Cave goblin miner',
+      'Vyrewatch', 'Vyrewatch Sentinel',
+    ];
+    for (const name of monsters) expect(trainingReqFor(name, 'monster'), name).toBeNull();
+  });
+
+  it('keeps the real pickpocket targets', () => {
+    const keep: [string, 'npc' | 'monster', number][] = [
+      ['Guard', 'monster', 40], ['Guard (Hosidius)', 'monster', 40], ['Guard (Shayzien)', 'monster', 40],
+      ['Gnome', 'monster', 75], ['Gnome woman', 'monster', 75], ['Farmer', 'npc', 10], ['Farmer (Varlamore)', 'npc', 10],
+      ['Master Farmer', 'npc', 38], ['Martin the Master Gardener', 'npc', 38], ['Man', 'npc', 1], ['Woman', 'npc', 1],
+      ['Man (East Ardougne)', 'monster', 1], ['Woman (East Ardougne)', 'monster', 1], ['Rogue', 'monster', 32],
+      ['Cave goblin', 'npc', 36], ['Cave goblin (Dorgesh-Kaan)', 'npc', 36], ['TzHaar-Hur', 'monster', 90],
+      // Wiki 'Vyre': "Vyres that can be pickpocketed include" these Darkmeyer citizens (options Talk-to, Pickpocket).
+      ['Vampyressa van Von', 'npc', 82], ['Nakasa Jovkai', 'npc', 82], ['Vormar Vakan', 'npc', 82],
+    ];
+    for (const [name, kind, level] of keep) expect(trainingReqFor(name, kind), name).toEqual({ skill: 'Thieving', level });
+  });
+
+  it('gives the chunks only the Thieving content they hold', () => {
+    for (const chunk of ['21,44', '28,48', '28,54', '28,55', '38,52', '41,56', '42,55', '49,49', '56,49', '56,50', '57,50', '58,52']) {
+      expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBeUndefined();
+    }
+    const raised: [string, number][] = [['21,45', 10], ['25,57', 5], ['27,55', 40], ['38,51', 55], ['38,53', 75], ['40,52', 25]];
+    for (const [chunk, level] of raised) expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBe(level);
+    // Darkmeyer keeps 82 from its named vyres.
+    for (const chunk of ['56,51', '56,52', '56,53', '57,52']) expect(chunkFactLevel(chunk, 'Thieving'), chunk).toBe(82);
   });
 });
