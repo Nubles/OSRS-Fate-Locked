@@ -25,7 +25,7 @@ import {
   type EligibilityBlocker,
 } from '../utils/journalStatus';
 import { requestDiaryTaskAttestation } from '../utils/manualAttestation';
-import { questIdWikiUrl } from '../utils/questWikiUrl';
+import { diaryWikiUrl, questIdWikiUrl } from '../utils/questWikiUrl';
 import { farmingPatchLabel } from '../utils/farmingPatches';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -149,25 +149,7 @@ export const useDiaryJournal = (externalSearch = '') => {
     getDiaryStatus(diary, unlocks, gameModeId, areaRoutes)
   );
 
-  const getDiaryWikiLink = (tierId: string) => {
-    const [region, tier] = tierId.split(' ');
-    const map: Record<string, string> = {
-        'Ardougne': 'Ardougne_Diary',
-        'Desert': 'Desert_Diary',
-        'Falador': 'Falador_Diary',
-        'Fremennik': 'Fremennik_Diary',
-        'Kandarin': 'Kandarin_Diary',
-        'Karamja': 'Karamja_Diary',
-        'Kourend': 'Kourend_%26_Kebos_Diary',
-        'Lumbridge': 'Lumbridge_%26_Draynor_Diary',
-        'Morytania': 'Morytania_Diary',
-        'Varrock': 'Varrock_Diary',
-        'Western': 'Western_Provinces_Diary',
-        'Wilderness': 'Wilderness_Diary'
-    };
-    const page = map[region] || 'Achievement_Diary';
-    return `https://oldschool.runescape.wiki/w/${page}#${tier}`;
-  };
+  const getDiaryWikiLink = diaryWikiUrl;
 
   const diaries = useMemo(() => {
     return Object.values(DIARY_DATA).map(d => {
