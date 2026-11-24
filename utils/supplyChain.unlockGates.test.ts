@@ -89,6 +89,20 @@ describe('every shop row has a merchant category', () => {
     expect(route('Amylase Crystal', 'Grace', gs).isAvailable).toBe(true);
   });
 
+  it("Grace's amylase costs marks of grace, which only come from Agility courses", () => {
+    const gs = state('vanilla', { regions: ['Asgarnia'], merchants: ['Reward Shops'] });
+    gs.unlocks.skills = { ...gs.unlocks.skills, Agility: 0 };
+    expect(route('Amylase Crystal', 'Grace', gs).missing).toContain('Skill Locked: Agility');
+    expect(route('Amylase Crystal', 'Grace', gs).isAvailable).toBe(false);
+  });
+
+  it("Perdu only gives back a barrelchest anchor won in The Great Brain Robbery", () => {
+    const gs = state('vanilla', { merchants: ['Lost Property'], quests: [] });
+    expect(route('Barrelchest Anchor', 'Perdu', gs).missing).toContain('Quest: The Great Brain Robbery');
+    gs.unlocks.quests = ['The Great Brain Robbery'];
+    expect(route('Barrelchest Anchor', 'Perdu', gs).isAvailable).toBe(true);
+  });
+
   it("Bert's daily sand needs The Hand in the Sand, not a Crafting level of its own", () => {
     const gs = state('vanilla', { regions: ['Kandarin'] });
     expect(route('Bucket of Sand', 'The Hand in the Sand', gs).missing).toEqual(['Quest: The Hand in the Sand']);

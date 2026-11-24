@@ -282,7 +282,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
     { type: 'SKILL', name: 'Use Vial on Fountain', regions: ['Any'], notes: 'Requires a Vial' }
   ],
   'Amylase Crystal': [
-    { type: 'MERCHANT', name: 'Grace', regions: ['Asgarnia'], merchantCategory: 'Reward Shops', notes: 'Burthorpe (10 Marks of Grace)', outputYield: 100 }
+    { type: 'MERCHANT', name: 'Grace', regions: ['Asgarnia'], merchantCategory: 'Reward Shops', skills: { 'Agility': 1 }, notes: 'Burthorpe (10 Marks of Grace)', outputYield: 100 }
   ],
   'Chocolate Dust': [
     { type: 'SHOP', name: 'Food Shop', regions: ['Kandarin'], notes: 'Buy Chocolate Bar (Grand Tree/Catherby) and grind' },
@@ -1297,7 +1297,7 @@ export const RESOURCE_MAP: Record<string, ResourceSource[]> = {
   ],
   'Barrelchest Anchor': [
     { type: 'QUEST', name: 'The Great Brain Robbery', regions: ['Morytania'], notes: 'Quest Reward' },
-    { type: 'MERCHANT', name: 'Perdu', regions: ['Any'], merchantCategory: 'Lost Property', notes: 'Reclaim' }
+    { type: 'MERCHANT', name: 'Perdu', regions: ['Any'], merchantCategory: 'Lost Property', quests: ['The Great Brain Robbery'], notes: 'Reclaim' }
   ],
   'Keris Partisan': [
     { type: 'QUEST', name: 'Beneath Cursed Sands', regions: ['Kharidian Desert'], notes: 'Quest Reward' }
