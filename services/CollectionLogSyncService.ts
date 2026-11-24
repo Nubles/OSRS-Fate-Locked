@@ -253,5 +253,10 @@ export const collectionLogSync = new CollectionLogSyncService();
 
 /** Shared guard for manual writes, detected events and their final acceptance. */
 export function collectionItemNeedsIdentityReview(progress: Record<string, number>, itemId: number, identity?: CollectionLogIdentity): boolean {
-  return collectionIdentityReview(progress, identity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, identity).blockedIds.has(itemId);
+  return collectionLogBlockedIds(progress, identity).has(itemId);
+}
+
+/** Every id the guard above holds for review, for checks that cover all pages of an item. */
+export function collectionLogBlockedIds(progress: Record<string, number>, identity?: CollectionLogIdentity): Set<number> {
+  return collectionIdentityReview(progress, identity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, identity).blockedIds;
 }

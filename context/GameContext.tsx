@@ -90,7 +90,8 @@ import { isPetId } from '../data/petIds';
 import { normalizeAccountName } from '../utils/accountName';
 import { pendingBaseline, planDetectedLevel, recordBaseline, skillBaseline } from '../utils/syncBaseline';
 import { recordScores } from '../utils/syncScores';
-import { collectionItemNeedsIdentityReview, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
+import { collectionItemNeedsIdentityReview, collectionLogBlockedIds, emptyCollectionLogIdentity } from '../services/CollectionLogSyncService';
+import { sharedSlotCount, sharedSlotIds } from '../data/collectionLogSlots';
 import {
   canEarnDiaryTier,
   diaryTaskCompletionDecision,
@@ -1296,9 +1297,9 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
       }
       // A pet is claimed with its Omni-Key (CLAIM_PET), never synced on its own.
       if (progress.kind === 'PET') return state;
-      if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, progress.itemId, state.collectionLogIdentity)) return state;
-      const current = state.unlocks.collectionLog[progress.itemId] ?? 0;
-      if (current >= 1) return state;
+      const blocked = collectionLogBlockedIds(state.unlocks.collectionLog, state.collectionLogIdentity);
+      // Held for review, or the item is already logged on any page that lists it.
+      if (blocked.has(progress.itemId) || sharedSlotCount(state.unlocks.collectionLog, progress.itemId, blocked) >= 1) return state;
       return { ...state, unlocks: { ...state.unlocks, collectionLog: { ...state.unlocks.collectionLog, [progress.itemId]: 1 } } };
     }
 
@@ -2113,21 +2114,13 @@ const rawReducer = (state: GameState & { lastEvent: GameEvent | null }, action: 
 
     case 'LOG_ITEM': {
       const itemId = action.payload;
-      if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) return state;
-      const currentCount = state.unlocks.collectionLog[itemId] || 0;
-
-      const newUnlocks = {
-        ...state.unlocks,
-        collectionLog: {
-          ...state.unlocks.collectionLog,
-          [itemId]: currentCount + 1
-        }
-      };
-
-      return {
-        ...state,
-        unlocks: newUnlocks
-      };
+      const log = state.unlocks.collectionLog;
+      const blocked = collectionLogBlockedIds(log, state.collectionLogIdentity);
+      if (blocked.has(itemId)) return state;
+      // One item is one slot on every page that lists it: add to the page that
+      // already holds it, so the log stores (and achievements count) it once.
+      const holder = log[itemId] ? itemId : sharedSlotIds(itemId).find(id => !blocked.has(id) && log[id]) ?? itemId;
+      return { ...state, unlocks: { ...state.unlocks, collectionLog: { ...log, [holder]: sharedSlotCount(log, itemId, blocked) + 1 } } };
     }
 
     default:

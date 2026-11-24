@@ -15,6 +15,7 @@ import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
+import { sharedSlotCount } from '../data/collectionLogSlots';
 import { TableType } from '../types';
 import { TestSuiteRunner } from './TestSuiteRunner';
 
@@ -276,7 +277,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         detail = isUnlocked ? "Completed" : "Incomplete";
         break;
       case 'COLLECTION_LOG_ITEM':
-        const count = unlocks.collectionLog[item.id as number] || 0;
+        const count = sharedSlotCount(unlocks.collectionLog, item.id as number);
         isUnlocked = count > 0;
         detail = isUnlocked ? `Obtained (x${count})` : "Not Obtained";
         break;

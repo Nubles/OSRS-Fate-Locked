@@ -245,9 +245,13 @@ describe('classifyFateEvent', () => {
       }
     }
     const unique = [...counts.entries()].find(([, count]) => count === 1)?.[0];
-    const ambiguous = [...counts.entries()].find(([, count]) => count > 1)?.[0];
+    // One item on several pages is one slot (Dragon pickaxe); a name that one
+    // page uses for different items (My Notes) still needs the player's choice.
+    const ambiguous = 'Ancient page';
     expect(unique).toBeTruthy();
-    expect(ambiguous).toBeTruthy();
+    expect(counts.get('ancient page')).toBe(13);
+    expect(counts.get('dragon pickaxe')).toBe(6);
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Dragon pickaxe'), state()).state).toBe('READY');
 
     expect(classifyFateEvent(event('COLLECTION_LOG', unique!), state()))
       .toMatchObject({
