@@ -109,9 +109,14 @@ describe('Chunked quests count only in their own chunks', () => {
     // One checker, so the second answer must not come from the first one's cached verdict.
     const checks = createChunkedChecks(chunkContentService);
     const doric = QUEST_DATA["Doric's Quest"];
-    expect(checks.questItems(doric, fresh({ chunks: ['44,61'] })).map(blocker => blocker.label))
+    // Ghorrock Prison, where the Duke is fought, opens with these two quests; the boss unlock is the only difference.
+    const quests = ['Secrets of the North', 'Desert Treasure II'];
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], quests })).map(blocker => blocker.label))
       .toEqual(['Iron ore (no source in your chunks yet)']);
-    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], bosses: ['Duke Sucellus'] }))).toEqual([]);
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], quests, bosses: ['Duke Sucellus'] }))).toEqual([]);
+    // Without the quests the lair stays shut, so the unlocked boss alone gives no source.
+    expect(checks.questItems(doric, fresh({ chunks: ['44,61'], bosses: ['Duke Sucellus'] })).map(blocker => blocker.label))
+      .toEqual(['Iron ore (no source in your chunks yet)']);
   });
 
   it('the Journal and the Doable tab agree on grown runs', () => {
