@@ -267,6 +267,17 @@ describe('Diary tasks behind a quest gate on the map', () => {
     expect(task('mor_elite_3').quests).toEqual(['Lunar Diplomacy', 'Priest in Peril']);
   });
 
+  it('enter Port Phasmatys for the furnace with Ghosts Ahoy, ecto-tokens or a charter ship', () => {
+    // Wiki Port Phasmatys rev 15381748: entry through the energy barriers needs two ecto-tokens unless Ghosts Ahoy is
+    // done, or a charter ship; the furnace is inside the town. Same wording as the range task (mor_easy_2).
+    expect(task('mor_med_8').oneOf).toEqual([
+      { label: 'Ghosts Ahoy', quests: ['Ghosts Ahoy'] },
+      { label: 'Ecto-tokens or charter ship', manualRequirements: ['Confirm: Ecto-tokens or charter ship'] },
+    ]);
+    expect(task('mor_easy_2').oneOf?.map(route => route.manualRequirements ?? route.quests))
+      .toContainEqual(['Confirm: Ecto-tokens or charter ship']);
+  });
+
   it('list the quest that opens every area they need, or a quest that needs it first', () => {
     const gated = ALL_DIARY_TASKS.filter(row => [...gatesNeeded(row), ...(row.oneOf ?? []).flatMap(option => [...gatesNeeded(option)])].length);
     // The check covers the Morytania tasks, Mos Le'Harmless and Harmony Island.
@@ -345,6 +356,15 @@ const SERVICE_NAMES: Readonly<Record<string, string>> = { Sawmill: 'Sawmill Oper
 const merchantsOf = (row: DiaryTask): string[] => [row, ...(row.oneOf ?? [])].flatMap(requirement => requirement.merchants ?? []);
 
 describe('Diary tasks that use a shop or a service', () => {
+  it('takes mahogany logs from Managing Miscellania for Plank Make, as for the other mahogany plank tasks', () => {
+    // Varrock Diary rev 15404243, Elite 2 names 20 mahogany logs, not a Woodcutting level. Etceteria's hardwood
+    // labour (after Royal Trouble) cuts mahogany (Wiki Managing Miscellania).
+    const miscellania = { label: 'Managing Miscellania', regions: ['Miscellania & Etceteria'], quests: ['Royal Trouble'] };
+    expect(task('var_elite_2')).toMatchObject({ skills: { Magic: 86 }, quests: ['Dream Mentor'], arcana: ['Lunar Spellbook'] });
+    expect(task('var_elite_2').oneOf).toEqual([{ skills: { Woodcutting: 50 } }, miscellania]);
+    expect(task('var_med_10').oneOf).toEqual([{ skills: { Woodcutting: 50 } }, miscellania]);
+  });
+
   it.each([
     ['mor_easy_5', 'Tanners', 'Sbott tans a hide'],
     ['var_easy_4', 'Sawmill Operators', 'the Sawmill makes a plank'],
@@ -530,6 +550,63 @@ describe('Diary tasks that need only part of a quest', () => {
     });
   });
 
+  it('keep what a started quest needs before it can be started', () => {
+    // A quest in progress is only a check the player confirms, so the quests it needs first are hard gates on the
+    // same route (the rule of the Burgh de Rott shark repair). Prerequisites come from QUEST_DATA. These are the
+    // tasks checked against the quest pages on 23 Nov 2026; tasks of other diaries are not yet reviewed this way.
+    const reviewed = new Set([
+      'mor_elite_1', 'mor_med_7', 'mor_med_9', 'mor_med_11', 'mor_hard_3', 'kou_hard_2', 'wild_hard_8',
+      'west_med_4', 'west_med_5', 'west_hard_1', 'west_hard_5', 'west_hard_6', 'west_hard_7', 'west_hard_8',
+      'west_hard_11', 'west_elite_1', 'west_elite_7', 'wilderness_med_10', 'var_med_3', 'western_med_7',
+      'kou_med_1', 'lum_med_4',
+    ]);
+    const missing: string[] = [];
+    for (const row of ALL_DIARY_TASKS.filter(candidate => reviewed.has(candidate.id))) {
+      for (const route of row.oneOf?.length ? row.oneOf : [undefined]) {
+        const done = new Set<string>();
+        for (const quest of [...(row.quests ?? []), ...(route?.quests ?? [])]) {
+          done.add(quest);
+          prerequisitesOf(quest, done);
+        }
+        for (const { quest } of [...(row.questProgress ?? []), ...(route?.questProgress ?? [])]) {
+          // Barbarian Training starts without Tai Bwo Wannai Trio (Questreqstart=no); only its smithing part needs it.
+          if (quest === 'Barbarian Training') continue;
+          for (const before of QUEST_DATA[quest]?.prereqs ?? []) {
+            if (!done.has(before)) missing.push(`${row.id}${route?.label ? ` (${route.label})` : ''}: ${before} for ${quest}`);
+          }
+        }
+      }
+    }
+    expect([...new Set(missing)]).toEqual([]);
+  });
+
+  it('asks for the start gates of each quest a task needs only started', () => {
+    // Quest pages (23 Nov 2026), Quest details: the quests needed first, and the skills marked Questreqstart=yes.
+    expect(task('mor_med_11')).toMatchObject({
+      quests: ['In Search of the Myreque'], skills: { Herblore: 22, Agility: 25, Crafting: 25, Mining: 15, Magic: 7 },
+    });
+    expect(task('mor_med_9')).toMatchObject({ quests: ['Zogre Flesh Eaters', 'Priest in Peril'], skills: { Slayer: 42 } });
+    expect(task('mor_hard_3').quests).toEqual(['Creature of Fenkenstrain', 'Cabin Fever', 'RFD: Pirate Pete']);
+    for (const id of ['west_med_4', 'west_med_5', 'west_hard_5', 'west_hard_6']) {
+      expect(task(id).quests, id).toEqual(['The Grand Tree', 'Tree Gnome Village']);
+    }
+    for (const id of ['west_hard_7', 'west_hard_11', 'west_elite_1']) expect(task(id).quests, id).toEqual(['Underground Pass']);
+    expect(task('west_hard_8')).toMatchObject({
+      quests: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], skills: { Farming: 68, Ranged: 60, Thieving: 50 },
+    });
+    expect(task('west_elite_7')).toMatchObject({
+      quests: ['Roving Elves', 'Big Chompy Bird Hunting', 'Sheep Herder'], skills: { Thieving: 85, Ranged: 60 },
+    });
+    expect(task('west_hard_1').oneOf?.[0]).toMatchObject({
+      regions: ['Lletya'], quests: ['Big Chompy Bird Hunting', 'Sheep Herder'], skills: { Thieving: 50 },
+    });
+    expect(task('west_hard_1').oneOf?.[1]).toEqual({ regions: ['Iorwerth Camp'] });
+    expect(task('wilderness_med_10').quests).toEqual(['Dwarf Cannon', 'Fishing Contest']);
+    expect(task('var_med_3')).toMatchObject({ quests: ["Gertrude's Cat", 'Creature of Fenkenstrain'], skills: { Farming: 25 } });
+    expect(task('western_med_7').quests).toEqual(['The Grand Tree', 'Rune Mysteries', 'Shilo Village']);
+    for (const id of ['kou_med_1', 'lum_med_4']) expect(task(id).quests, id).toEqual(['Fairytale I - Growing Pains']);
+  });
+
   it('never ask for the whole quest where the wiki asks for part of it', () => {
     const quests = Object.keys(QUEST_DATA);
     const partial: string[] = [];
@@ -583,6 +660,37 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
 });
 
 describe('Diary tasks with Raiments of the Eye routes', () => {
+  it.each([
+    // Lumbridge & Draynor Diary rev 15399339: "57 Runecraft with 3 Raiments of the Eye pieces, (2 pieces with Abyssal
+    // lantern lit with magic logs)". Varrock Diary rev 15404243: "52 Runecraft with 2+ Raiments of the Eye (1 piece
+    // with Abyssal lantern lit with magic logs)". Abyssal lantern rev 15393758: lighting it with magic logs takes
+    // 75 Firemaking, and that level cannot be boosted.
+    ['lum_elite_5', 57, 2, 12, { regions: ['Lumbridge'], quests: ['Rune Mysteries'] }],
+    ['var_elite_5', 52, 1, 16, { regions: ['Varrock'], quests: ['Rune Mysteries'] }],
+  ] as const)('%s takes %i Runecraft with %i Raiments piece(s) and a lit abyssal lantern', (id, level, pieces, count, place) => {
+    const lantern = (task(id).oneOf ?? []).filter(route => route.label?.includes('abyssal lantern'));
+    expect(lantern).toHaveLength(count);
+    for (const route of lantern) {
+      expect(route.skills?.Runecraft).toBe(level);
+      expect(route.skills?.Firemaking).toBe(75);
+      expect(route.items).toContain('Abyssal lantern lit with magic logs');
+      const slots = route.equipmentRequirements?.map(requirement => requirement.slot) ?? [];
+      expect(slots.filter(slot => slot !== 'Shield')).toHaveLength(pieces);
+      expect(slots).toContain('Shield');
+    }
+    const head: Record<string, number> = pieces === 2 ? { Head: 1, Body: 1 } : { Head: 1 };
+    const crafter = account({
+      skills: { Runecraft: 10, Firemaking: 10 }, levels: { Runecraft: level, Firemaking: 75 },
+      regions: [...place.regions], quests: [...place.quests], equipment: head,
+    });
+    expect(evaluateDiaryTaskEligibility(task(id), crafter).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task(id), { ...crafter, equipment: { ...head, Shield: 1 } }).machineEligible).toBe(true);
+    // One Firemaking level short of lighting the lantern with magic logs: the lantern routes are closed.
+    expect(evaluateDiaryTaskEligibility(task(id), {
+      ...crafter, levels: { Runecraft: level, Firemaking: 74 }, equipment: { ...head, Shield: 1 },
+    }).machineEligible).toBe(false);
+  });
+
   it('crafts 252 air runes at 77 Runecraft with one Raiments piece and a lit abyssal lantern', () => {
     // Falador Diary rev 15404232: "77 Runecraft with 2 Raiments of the Eye pieces or 1 Raiments of the Eye
     // piece and abyssal lantern (with willow, magic, or redwood logs)". The lantern is worn in the shield slot.
@@ -753,6 +861,18 @@ describe('Diary tasks that use a house room or a Slayer reward', () => {
       expect.objectContaining({ label: 'Craft a Digsite pendant' }),
     ]);
     expect(task('var_med_7').oneOf?.[2].housing).toBeUndefined();
+  });
+
+  it('needs the Workshop for the tool store routes', () => {
+    // Wiki Tool store 3 (level 35, brown aprons) and Tool store 4 (level 44, amulet moulds) are built in the Workshop.
+    expect(ROLLABLE_POH_ITEMS).toContain('Workshop Tools');
+    expect(task('lum_hard_11').oneOf?.find(route => route.label === 'House tool store'))
+      .toEqual({ label: 'House tool store', skills: { Construction: 44 }, housing: ['Workshop Tools'] });
+    expect(task('fal_med_10').oneOf?.find(route => route.label === 'Wear an apron (tool store)'))
+      .toMatchObject({ skills: { Construction: 35 }, housing: ['Workshop Tools'] });
+    const builder = account({ skills: { Construction: 10, Crafting: 10, Magic: 10 }, levels: { Construction: 99, Crafting: 99, Magic: 99 }, regions: ['Lumbridge'] });
+    expect(evaluateDiaryTaskEligibility(task('lum_hard_11'), builder).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('lum_hard_11'), { ...builder, housing: ['Workshop Tools'] }).machineEligible).toBe(true);
   });
 
   it('needs the Malevolent Masquerade reward to make the Slayer helmet', () => {

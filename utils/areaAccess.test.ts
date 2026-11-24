@@ -240,17 +240,22 @@ describe('reaching an owned island or enclave for a diary task (Vanilla)', () =>
   it('reaches Harmony Island through a reachable Mos Le\'Harmless', () => {
     const watermelon = task('mor_hard_3');
     const islands = account({
-      regions: ['Harmony Island', "Mos Le'Harmless"], quests: ['The Great Brain Robbery'],
+      regions: ['Harmony Island', "Mos Le'Harmless"],
+      quests: ['The Great Brain Robbery', 'Creature of Fenkenstrain', 'RFD: Pirate Pete'],
       skills: { Farming: 5 }, levels: { Farming: 47 }, farming: ['Allotment'],
     });
+    // The task also needs Cabin Fever itself, as The Great Brain Robbery cannot be started without it.
     const blocked = evaluateDiaryTaskEligibility(watermelon, islands, 'vanilla').blockers;
-    expect(blocked).toEqual([expect.objectContaining({ label: 'Travel to Harmony Island' })]);
-    expect(blocked[0].kind === 'alternative' && blocked[0].routes.map(route => route.label)).toContain(
+    expect(blocked).toEqual([
+      expect.objectContaining({ kind: 'quest', label: 'Cabin Fever' }),
+      expect.objectContaining({ label: 'Travel to Harmony Island' }),
+    ]);
+    expect(blocked[1].kind === 'alternative' && blocked[1].routes.map(route => route.label)).toContain(
       "Brother Tranquility's boat from Mos Le'Harmless, via Bill Teach's ship from Port Phasmatys",
     );
 
     // After Cabin Fever a Mos le'harmless teleport scroll will do, once confirmed.
-    const afterCabinFever = { ...islands, quests: ['The Great Brain Robbery', 'Cabin Fever'] };
+    const afterCabinFever = { ...islands, quests: [...islands.quests, 'Cabin Fever'] };
     expect(evaluateDiaryTaskEligibility(watermelon, afterCabinFever, 'vanilla')).toMatchObject({
       eligible: false, machineEligible: true,
       manualChecks: ["Reach Mos Le'Harmless with a Mos le'harmless teleport scroll (a Treasure Trails reward)"],

@@ -402,7 +402,7 @@ describe('S16: the level gates agree with the skill table', () => {
   it('opens each stall the table names at its level', () => {
     const checked: string[] = [];
     for (const [level, item] of unlocksOf('Thieving')) {
-      const kinds = item.match(/^(.+) Stalls$/)?.[1];
+      const kinds = item.match(/^(.+) Stalls(?: \([^)]*\))?$/)?.[1];
       if (!kinds) continue;
       for (const kind of kinds.split(' & ')) {
         const stall = kind === 'Vegetable' ? 'veg stall' : `${kind.toLowerCase()} stall`;
@@ -412,7 +412,7 @@ describe('S16: the level gates agree with the skill table', () => {
         }
       }
     }
-    expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall']));
+    expect(checked).toEqual(expect.arrayContaining(['Veg stall', 'Fruit Stall', 'Ore stall', 'Tea stall', 'Gem stall', 'Magic Stall']));
   });
 });
 

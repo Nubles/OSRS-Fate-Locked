@@ -25,7 +25,8 @@ import { placeOf, chunkUnlocked, showChunkOnMap } from '../utils/chunkLocations'
 import { isChunkUnlocked } from '../utils/chunkAdjacency';
 import { isAreaReachable, isBankReachable, bankLocksActive } from '../utils/reachability';
 import { farmingPatchFor } from '../utils/farmingPatches';
-import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST } from '../constants';
+import { FARMING_PATCH_LIST, GUILDS_LIST, MINIGAMES_LIST, MOBILITY_LIST, BOSSES_LIST, MISTHALIN_AREAS, REGION_GROUPS } from '../constants';
+import type { UnlockState } from '../types';
 import type { ChunkCoord } from '../utils/mapCoords';
 import { WikiLink } from './WikiLink';
 import { chunkUnlockRequirement } from '../utils/chunkLocations';
@@ -129,11 +130,24 @@ const RequirementStateBadges: React.FC<{
 // Boss name → set for O(1) lookup; diary area → home region for the diary gate.
 );
 const BOSS_SET = new Set(BOSSES_LIST.map(b => b.toLowerCase()));
+// Keyed by the diary names chunk-content uses, which spell out three of them.
+const DIARY_CONTENT_NAME: Readonly<Record<string, string>> = {
+  Kourend: 'Kourend & Kebos', Lumbridge: 'Lumbridge & Draynor', Western: 'Western Provinces',
+};
 const DIARY_AREA_REGION: Record<string, string> = {};
 for (const d of Object.values(DIARY_DATA)) {
   const area = d.id.replace(/ (Easy|Medium|Hard|Elite)$/, '');
-  DIARY_AREA_REGION[area] = d.region;
+  DIARY_AREA_REGION[DIARY_CONTENT_NAME[area] ?? area] = d.region;
 }
+/**
+ * A diary counts as reachable from this chunk when its region, the chunk's own
+ * area or any area of the region is open, not only when the whole region is:
+ * an owned Canifis chunk's Morytania tasks are not locked.
+ */
+const diaryRegionReachable = (region: string, subArea: string | null | undefined, unlocks: UnlockState, gameModeId?: string): boolean =>
+  isAreaReachable(region, unlocks, gameModeId)
+  || (!!subArea && isAreaReachable(subArea, unlocks, gameModeId))
+  || (region === 'Misthalin' ? MISTHALIN_AREAS : REGION_GROUPS[region] ?? []).some(area => isAreaReachable(area, unlocks, gameModeId));
 
 /**
  * Walk the Connect graph from a chunk to the nearest *named* areas, hopping up
@@ -493,10 +507,10 @@ export const ChunkActivityPanel: React.FC<Props> = ({ chunk, region, subArea, re
     // Group like nodes within a skill first, then by required level.
     resources.sort((a, b) => a.skill.localeCompare(b.skill) || a.level - b.level || a.name.localeCompare(b.name));
 
-    // Diary tasks → reachable when the diary's home region is unlocked.
+    // Diary tasks → reachable when the diary's region or one of its areas is open.
     const diaries = Object.entries(content.diaries).map(([area, refs]) => {
       const region = DIARY_AREA_REGION[area];
-      const reachable = !region || isAreaReachable(region, unlocks, gameModeId);
+      const reachable = !region || diaryRegionReachable(region, subArea, unlocks, gameModeId);
       return { area, refs, region, reachable };
     });
 
