@@ -801,6 +801,44 @@ describe('reviewed shop records', () => {
   });
 });
 
+describe('NPCs and objects the game renamed, moved or removed (chunk-sample.d2[2])', () => {
+  type Listed = { p?: string[]; o?: (string | number)[][] };
+  const places = [
+    ...Object.entries(content.chunks as unknown as Record<string, Listed>),
+    ...Object.entries(content.interiors as unknown as Record<string, { content: Listed }>).map(([id, interior]) => [id, interior.content] as const),
+  ];
+  const where = (name: string, field: 'p' | 'o') => places
+    .filter(([, entry]) => (entry[field] ?? []).some(value => (Array.isArray(value) ? value[0] : value) === name)).map(([id]) => id);
+
+  it('lists each renamed or moved NPC under its new name where the Wiki puts it, and the old name nowhere', () => {
+    for (const rename of contentOverrides.npcRenames) {
+      expect(rename.source, rename.from).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(String(Math.floor(rename.x / 64) * 256 + Math.floor(rename.y / 64)), rename.from).toBe(rename.chunkId);
+      expect(where(rename.from, 'p'), rename.from).toEqual([]);
+      expect(where(rename.to, 'p'), rename.to).toContain(rename.chunkId);
+    }
+    // The 3 November 2026 Lumbridge changes, by name.
+    expect(content.chunks['12850'].p).toEqual(expect.arrayContaining(['Cadmus', 'Captain Harlan', 'Feoras', 'Wilfred']));
+    expect(content.chunks['12849'].p).toEqual(expect.arrayContaining(['Finlay', 'Monlum']));
+    expect(content.chunks['12598'].p).toContain('Arthur');
+  });
+
+  it('lists no NPC or object the Wiki dates a removal for', () => {
+    for (const removal of contentOverrides.removedEntities) {
+      expect(removal.source, removal.name).toMatch(/^https:\/\/oldschool\.runescape\.wiki\/w\/.+\?oldid=\d+$/);
+      expect(where(removal.name, removal.category === 'Objects' ? 'o' : 'p'), removal.name).toEqual([]);
+    }
+    expect(contentOverrides.removedEntities.map(removal => removal.name)).toEqual(expect.arrayContaining([
+      'Banker tutor', 'Prayer tutor', 'Cooking tutor', 'Ranged combat tutor', 'Master smithing tutor', 'Pot-boiler',
+    ]));
+  });
+
+  it('keeps the Meiyerditch washing line and the Yu\'biusk strange box, which the Wiki pages of those names are not about', () => {
+    expect(where('Washing line', 'o')).toEqual(['14386']);
+    expect(where('Strange box', 'o')).toEqual(['11089']);
+  });
+});
+
 describe('reviewed chunk-content corrections', () => {
   it('cite a wiki revision for every rewrite and requirement, and reach the generated data', () => {
     for (const rewrite of contentOverrides.requirementRewrites) {

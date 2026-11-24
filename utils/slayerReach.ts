@@ -12,7 +12,7 @@ import { UnlockState } from '../types';
 import { SlayerMasters, SlayerAssignment } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
-import { chunkPlaceLabel, ownsAnyChunk, slayerMasterChunks } from './activityAccess';
+import { chunkPlaceLabel, enterableChunk, gatedEntranceLabels, ownsAnyChunk, slayerMasterChunks } from './activityAccess';
 import { canonicalBossId } from './contentIdentity';
 import { pendingQuestProgress } from '../data/questProgress';
 
@@ -102,8 +102,9 @@ const masterBlocker = (
 ): SlayerMasterBlocker | undefined => {
   // Chunked: the master's own chunk must be owned, not any chunk of the area.
   const masterChunks = gameModeId === 'chunked' ? slayerMasterChunks(master) : [];
-  if (masterChunks.length > 0 && !ownsAnyChunk(masterChunks, unlocks)) {
-    return { status: 'area-locked', label: `Master: ${masterChunks.map(chunkPlaceLabel).join(' or ')}` };
+  // A gated way in (the 51 Agility pipe to Vannaka) counts once its requirements are met.
+  if (masterChunks.length > 0 && !ownsAnyChunk(masterChunks, unlocks) && !enterableChunk([], unlocks, master).open) {
+    return { status: 'area-locked', label: `Master: ${[...masterChunks.map(chunkPlaceLabel), ...gatedEntranceLabels(master)].join(' or ')}` };
   }
 
   const requirements = SLAYER_MASTER_REQUIREMENTS[master];

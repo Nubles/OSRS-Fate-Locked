@@ -21,7 +21,7 @@ import { SLAYER_MASTER_REQUIREMENTS } from '../data/slayerMasterRequirements';
 import { BOSS_TASK_BOSSES, BOSS_TASK_REQUIREMENTS, BOSS_TASK_SLAYER_LEVELS, BOSS_TASK_UNLOCK } from '../data/slayerBossTasks';
 import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { isAreaReachable } from './reachability';
-import { chunkPlaceLabel, farmPlaceReachable, slayerMasterChunks } from './activityAccess';
+import { chunkPlaceLabel, farmPlaceReachable, gatedEntranceLabels, slayerMasterChunks } from './activityAccess';
 import { tierForLevel } from './skillTiers';
 
 type GateUnlocks = Pick<UnlockState, 'skills' | 'regions' | 'quests' | 'bosses' | 'slayerUnlocks'> & Partial<Pick<UnlockState, 'chunks'>>;
@@ -73,8 +73,8 @@ export const slayerMasterBlock = (master: string, unlocks: GateUnlocks, gameMode
   const requirements = SLAYER_MASTER_REQUIREMENTS[master];
   if (gameModeId === 'chunked') {
     const chunks = slayerMasterChunks(master);
-    if (chunks.length > 0 && !farmPlaceReachable(chunks, unlocks as UnlockState, gameModeId)) {
-      return `Needs ${chunks.map(chunkPlaceLabel).join(' or ')}`;
+    if (chunks.length > 0 && !farmPlaceReachable(chunks, unlocks as UnlockState, gameModeId, master)) {
+      return `Needs ${[...chunks.map(chunkPlaceLabel), ...gatedEntranceLabels(master)].join(' or ')}`;
     }
   } else {
     const area = requirements?.areas?.find(name => !isAreaReachable(name, unlocks as UnlockState, gameModeId));

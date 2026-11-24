@@ -207,13 +207,23 @@ describe('slayerReachability', () => {
       const blocked = standardMasterReach(master, base({
         skills: { Slayer: 10 }, levels: { Slayer: 99 }, chunks,
       }), 'chunked');
-      expect(blocked.masters[0].masterBlocker).toEqual({ status: 'area-locked', label: 'Master: Edgeville (48, 54)' });
+      // Vannaka is also reached through the 51 Agility pipe from the Varrock Sewers (area-access.d3[1]).
+      const label = master === 'Vannaka' ? 'Master: Edgeville (48, 54) or Varrock (50, 54) with Agility level 51' : 'Master: Edgeville (48, 54)';
+      expect(blocked.masters[0].masterBlocker).toEqual({ status: 'area-locked', label });
 
       const ready = standardMasterReach(master, base({
         skills: { Slayer: 10 }, levels: { Slayer: 99 }, chunks: [...chunks, '48,54'],
       }), 'chunked');
       expect(ready.masters[0]).not.toHaveProperty('masterBlocker');
     }
+  });
+
+  it('counts the 51 Agility pipe to Vannaka only at 51 Agility (area-access.d3[1])', () => {
+    const at = (agility: number) => standardMasterReach('Vannaka', base({
+      skills: { Slayer: 10, Agility: 6 }, levels: { Slayer: 99, Agility: agility }, chunks: ['50,51', '50,52', '50,53', '50,54'],
+    }), 'chunked').masters[0];
+    expect(at(51)).not.toHaveProperty('masterBlocker');
+    expect(at(50).masterBlocker).toEqual({ status: 'area-locked', label: 'Master: Edgeville (48, 54) or Varrock (50, 54) with Agility level 51' });
   });
 
   it('keeps the named-area master rule outside Chunked', () => {

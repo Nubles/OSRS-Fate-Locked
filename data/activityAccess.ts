@@ -124,6 +124,19 @@ export const ACTIVITY_ACCESS_AREAS: Readonly<Record<string, readonly string[]>> 
   'Hallowed Sepulchre': ['Darkmeyer'],
 };
 
+/**
+ * Vanilla: an area of ACTIVITY_ACCESS_AREAS that counts for an activity only
+ * after these quests. Temple Trekking's reverse route, Burgh de Rott Ramble,
+ * starts just outside the Paterdomus and opens with Darkness of Hallowvale
+ * (Wiki: Temple Trekking, oldid 15410409).
+ */
+export const ACTIVITY_AREA_QUESTS: Readonly<Record<string, { quests: Readonly<Record<string, readonly string[]>>; label: string }>> = {
+  'Temple Trekking': {
+    quests: { Paterdomus: ['Darkness of Hallowvale'] },
+    label: 'Burgh de Rott, or Paterdomus after Darkness of Hallowvale',
+  },
+};
+
 /** Activities with no hard location gate expressible by the tracked named areas. */
 export const NO_HARD_LOCATION_GATE = new Set<string>([
   // Boss venues or entrances not represented by a single tracked named area.

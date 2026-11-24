@@ -7,8 +7,17 @@ import {
 import { CHUNK_ENTRY_QUESTS } from '../data/chunkSkillNodes';
 import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS } from '../data/activityChunks';
 import { BOSSES_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../data/items';
-import { CHUNKED_ACTIVITY_RULES } from '../data/activityAccess';
+import { ACTIVITY_ACCESS_AREAS, CHUNKED_ACTIVITY_RULES } from '../data/activityAccess';
+import { GATED_ENTRANCE_CHUNKS, SLAYER_MASTER_CHUNKS } from '../data/activityChunks';
+import { enterableChunk, gatedEntrances } from './activityAccess';
+import { compileRawRequirements } from './questRoutes/accountRequirements';
+import { slayerMasterBlock } from './farmGates';
+import { SKILLS_LIST } from '../data/items';
+import { QUEST_DATA } from '../data/questData';
 import { BANK_IDS } from '../data/banks';
+import { ALL_CHUNK_KEYS } from './chunkAdjacency';
+
+const ALL_KEYS = (): string[] => [...ALL_CHUNK_KEYS];
 
 const baseUnlocks: UnlockState = {
   equipment: {},
@@ -95,7 +104,15 @@ describe('getActivityAccess', () => {
     expect(getActivityAccess('Temple Trekking', makeUnlocks({ regions: ['Burgh de Rott'] }), 'vanilla').eligible).toBe(
       true,
     );
-    expect(getActivityAccess('Temple Trekking', makeUnlocks({ regions: ['Paterdomus'] }), 'vanilla').eligible).toBe(true);
+    // Paterdomus is the start of the reverse route, which needs Darkness of Hallowvale (area-access.d1[2]).
+    expect(getActivityAccess('Temple Trekking', makeUnlocks({ regions: ['Paterdomus'] }), 'vanilla')).toEqual({
+      eligible: false,
+      requiredAreas: ['Burgh de Rott', 'Paterdomus'],
+      explanation: 'Needs Burgh de Rott, or Paterdomus after Darkness of Hallowvale',
+    });
+    expect(getActivityAccess('Temple Trekking', makeUnlocks({ regions: ['Paterdomus'], quests: ['Darkness of Hallowvale'] }), 'vanilla').eligible)
+      .toBe(true);
+    expect(getActivityAccess('Temple Trekking', makeUnlocks({ regions: ['Burgh de Rott'] }), 'vanilla').explanation).toBe('');
   });
 
   it('keeps explicit non-gates eligible without any area unlocks', () => {
@@ -173,10 +190,12 @@ describe('getActivityAccess in Chunked', () => {
   it('counts only the exact entrance chunk, not a foothold in the named area (map review 5)', () => {
     // Lumbridge's start chunk used to open Tormented Demons and Tears of Guthix (both entered from 49,49).
     for (const activity of ['Tormented Demons', 'Tears of Guthix']) {
+      // The castle cellar way (50,50) is named with what it needs (area-access.d3[0]).
+      // The start chunk 50,50 is always held, so a fresh run is told what the cellar way needs.
       expect(getActivityAccess(activity, chunked(), 'chunked')).toEqual({
         eligible: false,
-        requiredAreas: ['Lumbridge (49, 49)'],
-        explanation: 'Needs Lumbridge (49, 49)',
+        requiredAreas: ['Lumbridge (49, 49) or Lumbridge (50, 50), after The Lost Tribe started'],
+        explanation: 'Needs The Lost Tribe started',
       });
       expect(getActivityAccess(activity, chunked(['49,49']), 'chunked').eligible).toBe(true);
     }
@@ -236,8 +255,11 @@ describe('getActivityAccess in Chunked', () => {
     expect(getActivityAccess('Impetuous Impulses', chunked(['50,52']), 'chunked').eligible).toBe(true);
   });
 
-  it("opens Mahogany Homes at Amy's office, where every first contract is taken, and not at a client's house (Wiki: Mahogany Homes)", () => {
-    expect(getActivityAccess('Mahogany Homes', chunked(['46,52']), 'chunked').eligible).toBe(true);
+  it("opens Mahogany Homes at each contractor's office, and not at a client's house (Wiki: Mahogany Homes, area-access.d2[0])", () => {
+    // Amy (Falador), Marlo (Varrock), Ellie (East Ardougne), Angelo (Hosidius), from the Wiki's map pins.
+    for (const office of ['46,52', '50,54', '41,51', '27,56']) {
+      expect(getActivityAccess('Mahogany Homes', chunked([office]), 'chunked').eligible, office).toBe(true);
+    }
     for (const house of ['40,51', '47,52', '50,52']) {
       expect(getActivityAccess('Mahogany Homes', chunked([house]), 'chunked').eligible, house).toBe(false);
     }
@@ -331,3 +353,73 @@ describe('Chunked banks and Farm places', () => {
   });
 });
 
+
+describe('ways in that carry their own requirement (area-access.d3[0], d3[1], d1[2])', () => {
+  const run = (chunks: string[], over: Partial<UnlockState> = {}) => makeUnlocks({ chunks, ...over });
+
+  it('opens the Lumbridge castle cellar way to Juna only once The Lost Tribe is done', () => {
+    for (const activity of ['Tears of Guthix', 'The Fractured Archive', 'Tormented Demons']) {
+      // A fresh run on the start chunk: the cellar way stays shut and is named.
+      expect(getActivityAccess(activity, run(['50,50']), 'chunked')).toEqual({
+        eligible: false,
+        requiredAreas: ['Lumbridge (49, 49) or Lumbridge (50, 50), after The Lost Tribe started'],
+        explanation: 'Needs The Lost Tribe started',
+      });
+      // Finished proves started; a quest only begun is something the save cannot know, so it stays shut.
+      expect(getActivityAccess(activity, run(['50,50'], { quests: ['The Lost Tribe'] }), 'chunked').eligible).toBe(true);
+      expect(getActivityAccess(activity, run(['49,49']), 'chunked').eligible).toBe(true);
+    }
+  });
+
+  it('opens the 51 Agility pipe from the Varrock Sewers to Vannaka and Obor', () => {
+    const agility = (level: number) => ({ skills: { Agility: 6, Slayer: 1 }, levels: { Agility: level } });
+    expect(getActivityAccess('Obor', run(['50,54'], agility(51)), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Obor', run([]), 'chunked').requiredAreas).toEqual(['Edgeville (48, 54)', 'Varrock (50, 54) with Agility level 51']);
+    expect(getActivityAccess('Obor', run(['50,54'], agility(50)), 'chunked')).toMatchObject({ eligible: false, explanation: 'Needs Agility level 51' });
+    for (const [unlocks, open] of [[run(['50,54'], agility(51)), true], [run(['50,54'], agility(50)), false], [run(['50,54'], { skills: { Slayer: 1 } }), false]] as const) {
+      expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Vannaka, unlocks, 'chunked', 'Vannaka')).toBe(open);
+      expect(farmPlaceReachable(SLAYER_MASTER_CHUNKS.Vannaka, unlocks, 'chunked', 'Vannaka')).toBe(open);
+      expect(slayerMasterBlock('Vannaka', unlocks, 'chunked') === 'Needs Edgeville (48, 54) or Varrock (50, 54) with Agility level 51').toBe(!open);
+    }
+    // Without the name the pipe is never counted.
+    expect(farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS.Vannaka, run(['50,54'], agility(99)), 'chunked')).toBe(false);
+  });
+
+  it('opens Temple Trekking from the Paterdomus only after Darkness of Hallowvale', () => {
+    const pip = ['Priest in Peril'];
+    expect(getActivityAccess('Temple Trekking', run(['53,54'], { quests: [...pip, 'Darkness of Hallowvale'] }), 'chunked').eligible).toBe(true);
+    expect(getActivityAccess('Temple Trekking', run(['53,54'], { quests: pip }), 'chunked'))
+      .toMatchObject({ eligible: false, explanation: 'Needs Darkness of Hallowvale' });
+    // The chunk's own entry quest still applies to the gated way.
+    expect(getActivityAccess('Temple Trekking', run(['53,54'], { quests: ['Darkness of Hallowvale'] }), 'chunked').eligible).toBe(false);
+  });
+
+  it('reads every gated requirement as a gate the app checks', () => {
+    for (const ways of Object.values(GATED_ENTRANCE_CHUNKS)) {
+      for (const way of ways) {
+        const gates = compileRawRequirements(way.needs.map(raw => ({ raw, origin: 'CHUNK_ENTRY' as const })));
+        expect(gates.map(gate => gate.type), way.needs.join()).not.toContain('UNRESOLVED');
+      }
+    }
+  });
+
+  it('gives every place with no gated way the answer of its plain chunks, for a fresh run and one that owns everything', () => {
+    const everything = run(ALL_KEYS(), {
+      quests: Object.keys(QUEST_DATA),
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+      levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+    });
+    const names = new Set([...Object.keys(ACTIVITY_CHUNKS), ...Object.keys(SLAYER_MASTER_CHUNKS), ...Object.keys(FARM_SLAYER_CARD_CHUNKS)]);
+    let checked = 0;
+    for (const name of names) {
+      if (gatedEntrances(name).length) continue;
+      for (const unlocks of [run(['50,50']), everything]) {
+        const chunks = ACTIVITY_CHUNKS[name] ?? SLAYER_MASTER_CHUNKS[name] ?? FARM_SLAYER_CARD_CHUNKS[name];
+        expect(enterableChunk(chunks, unlocks, name)).toEqual(enterableChunk(chunks, unlocks));
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(100);
+    expect(Object.keys(ACTIVITY_ACCESS_AREAS)).toContain('Temple Trekking');
+  });
+});

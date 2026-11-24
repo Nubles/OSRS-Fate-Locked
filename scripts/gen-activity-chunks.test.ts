@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { generateActivityChunksSource, resolveAnchor } from './gen-activity-chunks.mjs';
+import { generateActivityChunksSource, resolveAnchor, resolveSectionWays } from './gen-activity-chunks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
-import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS, SLAYER_MASTER_CHUNKS } from '../data/activityChunks';
+import { ACTIVITY_CHUNKS, FARM_SLAYER_CARD_CHUNKS, GATED_ENTRANCE_CHUNKS, SLAYER_MASTER_CHUNKS } from '../data/activityChunks';
 import { CHUNKED_ACTIVITY_RULES, NO_HARD_LOCATION_GATE } from '../data/activityAccess';
 import { SLAYER_MASTER_REQUIREMENTS } from '../data/slayerMasterRequirements';
 import { BOSSES_LIST, GUILDS_LIST, MINIGAMES_LIST } from '../data/items';
@@ -81,8 +81,8 @@ describe('data/activityChunks.ts', () => {
     // The crop circles only: the Zanaris shed (50,49) needs Lost City.
     expect(ACTIVITY_CHUNKS['Impetuous Impulses']).toHaveLength(21);
     expect(ACTIVITY_CHUNKS['Impetuous Impulses']).not.toContain('50,49');
-    // Amy's office and Angelo's, not the client houses.
-    expect(ACTIVITY_CHUNKS['Mahogany Homes']).toEqual(['27,56', '46,52']);
+    // The four contractors' offices (Angelo, Ellie, Amy, Marlo), not the client houses.
+    expect(ACTIVITY_CHUNKS['Mahogany Homes']).toEqual(['27,56', '41,51', '46,52', '50,54']);
   });
 
   it('fails on an anchor that matches nothing', () => {
@@ -90,5 +90,35 @@ describe('data/activityChunks.ts', () => {
     expect(() => generateActivityChunksSource(doc, { activities: { X: [{ monster: 'No such monster' }] }, slayerMasters: {} }))
       .toThrow(/matches nothing/);
     expect(() => resolveAnchor(doc, { monster: 'Obor', except: ['48,53'] })).toThrow(/reason/);
+  });
+});
+
+describe('ways in that carry their own requirement', () => {
+  it('keeps each one out of the plain tables, with its requirement (area-access.d3[0], d3[1], d1[2])', () => {
+    const cellar = [{ chunk: '50,50', needs: ['Started The Lost Tribe'], label: 'The Lost Tribe started' }];
+    const pipe = [{ chunk: '50,54', needs: ['Agility level 51'], label: 'Agility level 51' }];
+    expect(GATED_ENTRANCE_CHUNKS).toEqual({
+      'Tears of Guthix': cellar,
+      'The Fractured Archive': cellar,
+      'Tormented Demons': cellar,
+      Obor: pipe,
+      Vannaka: pipe,
+      'Temple Trekking': [{ chunk: '53,54', needs: ['Darkness of Hallowvale completed'], label: 'Darkness of Hallowvale' }],
+    });
+    for (const name of ['Tears of Guthix', 'The Fractured Archive', 'Tormented Demons']) expect(ACTIVITY_CHUNKS[name]).toEqual(['49,49']);
+    expect(ACTIVITY_CHUNKS['Temple Trekking']).toEqual(['54,50']);
+    expect(FARM_SLAYER_CARD_CHUNKS.Vannaka).toEqual(['48,54']);
+  });
+
+  it('lets an ungated anchor win a chunk both give, and needs a reason', () => {
+    const both = resolveSectionWays(doc, { X: [{ monster: 'Obor', except: ['48,53'], reason: 'test' }, { monster: 'Obor', except: ['48,53'], requirements: ['Agility level 51'], reason: 'test', label: 'L' }] });
+    expect(both.table.X).toEqual(['48,54']);
+    expect(both.gated).toEqual({});
+    const gatedOnly = resolveSectionWays(doc, { X: [{ monster: 'Obor', except: ['48,53'], requirements: ['Agility level 51'], reason: 'test', label: 'L' }] });
+    expect(gatedOnly.table.X).toEqual([]);
+    expect(gatedOnly.gated.X).toEqual([{ chunk: '48,54', needs: ['Agility level 51'], label: 'L' }]);
+    expect(() => resolveSectionWays(doc, { X: [{ monster: 'Obor', requirements: ['Agility level 51'], label: 'L' }] })).toThrow(/reason/);
+    expect(() => resolveSectionWays(doc, { X: [{ monster: 'Obor', requirements: ['Agility level 51'], reason: 'test' }] })).toThrow(/label/);
+    expect(() => resolveSectionWays(doc, { X: [{ monster: 'Obor', requirements: [], reason: 'test' }] })).toThrow(/non-empty/);
   });
 });
