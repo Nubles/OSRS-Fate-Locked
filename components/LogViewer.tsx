@@ -13,7 +13,7 @@ import { ModalFallback } from './LoadingFallback';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useIsOsrsUi } from '../utils/uiStyle';
-import { foldedIncludes } from '../utils/textFold';
+import { foldText, foldedMatcher } from '../utils/textFold';
 
 const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
@@ -179,6 +179,22 @@ export type HistorySort = SortOrder;
 
 export { historyFilterMatches };
 
+/**
+ * Each entry's message, details and source folded once and kept, so a long
+ * run's History (up to 100,000 entries) is not folded again on every
+ * keystroke. The fields are joined by a line break, which a folded term never
+ * holds, so a match never runs across two fields.
+ */
+type HaystackMemo = { message: string; details?: string; source?: string; key: string };
+const haystacks = new WeakMap<LogEntry, HaystackMemo>();
+const foldedHaystack = (entry: LogEntry): string => {
+  const memo = haystacks.get(entry);
+  if (memo && memo.message === entry.message && memo.details === entry.details && memo.source === entry.source) return memo.key;
+  const key = [entry.message, entry.details, entry.source].map(f => (f ? foldText(f).text : '')).join('\n');
+  haystacks.set(entry, { message: entry.message, details: entry.details, source: entry.source, key });
+  return key;
+};
+
 /** The timeline after the category filter, the search and the sort. */
 export const filterHistory = (history: LogEntry[], filterType: FilterType, searchTerm: string, sortOrder: SortOrder): LogEntry[] => {
     let filtered = [...history]; // Copy to avoid mutation during sort
@@ -191,11 +207,12 @@ export const filterHistory = (history: LogEntry[], filterType: FilterType, searc
     // 2. Search Filter
     const term = searchTerm.trim();
     if (term) {
-      filtered = filtered.filter(entry =>
-        foldedIncludes(entry.message, term) ||
-        (entry.details && foldedIncludes(entry.details, term)) ||
-        (entry.source && foldedIncludes(entry.source, term))
-      );
+      const match = foldedMatcher(term);
+      filtered = filtered.filter(entry => match.folded
+        ? match.includes('', foldedHaystack(entry))
+        : match.includes(entry.message) ||
+          (!!entry.details && match.includes(entry.details)) ||
+          (!!entry.source && match.includes(entry.source)));
     }
 
     // 3. Sorting
