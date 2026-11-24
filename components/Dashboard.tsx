@@ -60,7 +60,7 @@ import { useUnlockReveal } from '../hooks/useUnlockReveal';
 import { UnlockReveal } from './UnlockReveal';
 import { useAchievementCatalog, useAchievementReveal } from '../hooks/useAchievementReveal';
 import { AchievementReveal } from './AchievementReveal';
-import { getGameMode } from '../config/gameModes';
+import { getGameMode, resolveModeRules } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
@@ -922,7 +922,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
                           <>
                             <div className="flex items-center gap-2 mb-2 relative z-10">
                                 <Compass className="w-5 h-5 text-emerald-400" />
-                                <span className="font-bold text-sm text-emerald-200">{misthalinListName(gameModeId)}</span>
+                                <span className="font-bold text-sm text-emerald-200">{misthalinListName(resolveModeRules(gameModeId, customMode).startArea)}</span>
                                 <span className={`ml-auto text-xs font-mono flex items-center gap-1 ${allFree ? 'text-emerald-400' : 'text-amber-400'}`}>
                                     <Unlock size={10} /> {allFree ? 'Unlocked' : `${freeCount}/${MISTHALIN_AREAS.length}`}
                                 </span>
