@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { chunkContentService, type EntityHit } from '../services/ChunkContentService';
 import { skillChunkNodes, trainingReqFor } from './skillChunkNodes';
+import { chunkFactLevel } from './chunkedSkillPool';
 
 describe('skillChunkNodes Wyrmscraig resources', () => {
   afterEach(() => vi.restoreAllMocks());
@@ -78,5 +79,39 @@ describe('trainingReqFor (Chunked skill facts, content review 8)', () => {
     expect(trainingReqFor('Butterfly', 'npc')).toBeNull();
     expect(trainingReqFor('Ruby harvest', 'npc')).toEqual({ skill: 'Hunter', level: 15 });
     expect(trainingReqFor('Tree', 'object')).toEqual({ skill: 'Woodcutting', level: 1 });
+  });
+});
+
+describe('Chunked object rules: scenery that trains nothing (deep audit chunk-sample.d1[1])', () => {
+  it('reads palm, Hunter, quest and shortcut trees, the Lighthouse stepping stones and non-stall stalls as nothing', () => {
+    // OSRS Wiki, fetched 24 Nov 2026: 'Leafy Palm Tree' "Leafy palm trees cannot be cut"; 'Grotto tree' options
+    // Look-at, Search; 'Young tree' options1 = Set-trap; 'Windswept tree' quest = Olaf's Quest, |xp = 0; 'Palm tree'
+    // location = Fruit tree patch; 'Tropical tree (Al Kharid Rooftop Course)' Swing-across and '(Ape Atoll Agility
+    // Course)' Climb; 'Strong tree' "strong trees may not be cut"; 'Stymphike tree' "Rather than chopping them, they
+    // are used in the Hunter skill"; 'Broken dead tree' options Investigate; 'Fallen Tree (Weiss)' options Pass;
+    // 'Evergreen tree (Mac)' |level = 99 |xp = 0; 'Basalt rock' options Jump-across; 'Antiques Shop Stall' Ring-bell;
+    // 'Market stall (Pollnivneach Rooftop Course)' Jump-on; 'Craft stall' "there is no option to steal";
+    // 'Boulder (dense essence mine)' "a shortcut ... requiring 49 Agility".
+    for (const name of ['Leafy Palm Tree', 'Grotto tree', 'Young tree', 'Windswept tree', 'Palm tree', 'Tropical tree',
+      'Strong tree', 'Strong Tree', 'Stymphike tree', 'Broken dead tree', 'Fallen Tree', 'Evergreen tree (Mac)',
+      'Basalt rock', 'Basalt rocks', 'Antiques Shop Stall', 'Market stall', 'Craft stall', 'Boulder (dense essence mine)']) {
+      expect(trainingReqFor(name, 'object'), name).toBeNull();
+    }
+    // 'Dense runestone': "only 38 Mining is required to mine the essence"; 'Basalt rocks (mining)' |level = 72.
+    expect(trainingReqFor('Dense runestone', 'object')).toEqual({ skill: 'Mining', level: 38 });
+    expect(trainingReqFor('Basalt rock (mining)', 'object')).toEqual({ skill: 'Mining', level: 72 });
+    expect(trainingReqFor('Market stall (wine)', 'object')).toEqual({ skill: 'Thieving', level: 22 });
+    expect(trainingReqFor('Crafting Stall', 'object')).toEqual({ skill: 'Thieving', level: 5 });
+    expect(trainingReqFor('Evergreen tree', 'object')).toEqual({ skill: 'Woodcutting', level: 1 });
+    expect(trainingReqFor('Palm tree patch', 'object')?.skill).toBe('Farming');
+  });
+
+  it('gives the Lighthouse no Mining and Darkmeyer its Blisterwood level', () => {
+    expect(chunkFactLevel('39,56', 'Mining')).toBeUndefined();
+    expect(chunkFactLevel('27,60', 'Mining')).toBe(38);
+    expect(chunkFactLevel('56,52', 'Woodcutting')).toBe(62);
+    expect(chunkFactLevel('41,49', 'Thieving')).toBeUndefined();
+    expect(chunkFactLevel('51,43', 'Thieving')).toBe(65);
+    for (const chunk of ['41,37', '48,39', '51,42', '53,52']) expect(chunkFactLevel(chunk, 'Woodcutting'), chunk).toBeUndefined();
   });
 });
