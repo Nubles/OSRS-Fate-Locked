@@ -134,6 +134,10 @@ export function bankAccess(
   return { status: withEntry(unlocked ? 'ALLOWED' : 'LOCKED', withEntry(access.status, entry)), reasons: access.reasons };
 }
 
+/** A level line as the plugin's SkillLine reads it: "Slayer 5/93 · cap 10". */
+const skillLine = (unlocks: UnlockState, skill: string, needed: number): string =>
+  `${skill} ${unlocks.levels[skill] ?? 1}/${needed} · cap ${Math.min(99, (unlocks.skills[skill] ?? 0) * 10)}`;
+
 function sortRows(rows: ChunkPermissionRow[]): ChunkPermissionRow[] {
   return rows.sort((left, right) =>
     left.name.localeCompare(right.name) || left.key.localeCompare(right.key));
@@ -212,16 +216,18 @@ export function buildChunkPermissionSnapshot(
       });
       continue;
     }
-    const status: PermissionStatus =
-      monster.slayer == null || meetsSkillRequirement(context.unlocks, 'Slayer', monster.slayer)
-        ? 'ALLOWED'
-        : 'NOT_READY';
-    add('COMBAT', {
+    const slayerMet = monster.slayer == null || meetsSkillRequirement(context.unlocks, 'Slayer', monster.slayer);
+    const row: ChunkPermissionRow = {
       key: `combat:${monster.name.toLowerCase()}`,
       name: monster.name,
-      status: withEntry(status, entry),
+      status: withEntry(slayerMet ? 'ALLOWED' : 'NOT_READY', entry),
       targetKind: 'NPC',
-    });
+    };
+    add('COMBAT', row);
+    // A row waiting on its Slayer level names it first, as skilling rows do; a locked row says only why it is locked.
+    if (!slayerMet && row.status === 'NOT_READY') {
+      row.detail = [skillLine(context.unlocks, 'Slayer', monster.slayer!), row.detail].filter(Boolean).join('; ');
+    }
   }
 
   for (const [name] of content.objects) {
@@ -238,9 +244,6 @@ export function buildChunkPermissionSnapshot(
     }
     const requirement = resourceReqFor(name);
     if (!requirement) continue;
-    const level = context.unlocks.levels[requirement.skill] ?? 1;
-    const tier = context.unlocks.skills[requirement.skill] ?? 0;
-    const cap = Math.min(99, tier * 10);
     add('SKILLING', {
       key: `skill:${name.toLowerCase()}`,
       name,
@@ -248,7 +251,7 @@ export function buildChunkPermissionSnapshot(
         resourceUsable(requirement, context.unlocks) ? 'ALLOWED' : 'NOT_READY',
         entry,
       ),
-      detail: `${requirement.skill} ${level}/${requirement.level} · cap ${cap}`,
+      detail: skillLine(context.unlocks, requirement.skill, requirement.level),
       targetKind: 'OBJECT',
     });
   }

@@ -137,7 +137,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // The Guilds row is the hideout (free; its wall safes need 50 Thieving). The Minigames
   // table reads MINIGAME_REQUIREMENT_OVERRIDES for the maze.
   "Rogues' Den": { note: 'Free entry; the wall safes need 50 Thieving, the maze 50 Thieving and 50 Agility.' },
-  "Servants' Guild": { note: 'Hire household servants (Construction).' },
+  "Servants' Guild": { skills: { Construction: 20 }, note: 'Hire household servants (Construction).' },
   "Warriors' Guild": {
     warriorsGuildEntry: true,
     requiredAreas: ["Warriors' Guild"],
@@ -208,7 +208,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     requiredAreas: ['Yanille'],
     note: 'Requires several quests completed for the dream bosses.',
   },
-  "Sorceress's Garden": { quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
+  "Sorceress's Garden": { skills: { Thieving: 1 }, quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
   'Stealing Artefacts': { skills: { Thieving: 49 }, manualRequirements: ['Have a lockpick or hair clip'], note: 'Piscarilius access (Kourend & Kebos).' },
   'Mess': { skills: { Cooking: 20 }, note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
@@ -247,7 +247,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Digsite Pendant': { quests: ['The Dig Site'], manualRequirements: ['Learned the digsite pendant enchantment at Varrock Museum'], note: 'Base Digsite teleport. Fossil Island additionally needs Bone Voyage and the destination machine unlock. Pendants cannot be recharged and crumble after five uses.' },
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: "Bought from Veos; each teleport page comes from a Great Kourend quest (Depths of Despair, Queen of Thieves, Tale of the Righteous, The Forsaken Tower, The Ascent of Arceuus)." },
-  'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
+  'Ring of the Elements': { skills: { Runecraft: 27 }, note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
   'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
   // Fortis Colosseum: as with all of Varlamore, Children of the Sun.
@@ -284,10 +284,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   // Mage Training Arena: 7 Magic to take part (one spell); 33 for all four rooms.
   'Mage Training Arena': { skills: { Magic: 7 }, requiredAreas: ['Mage Training Arena'] },
   // Wiki: Mahogany Homes (oldid 15392909): Amy gives only the first contract; after it Marlo, Ellie and Angelo give them too.
-  'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).', manualRequirements: ['Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)'] },
-  'Forestry': { note: 'Woodcutting (Forestry events).' },
+  'Mahogany Homes': { skills: { Construction: 1 }, note: 'Construction (contracts tiered 1 / 20 / 50 / 70).', manualRequirements: ['Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)'] },
+  'Forestry': { skills: { Woodcutting: 1 }, note: 'Woodcutting (Forestry events).' },
   'Tears of Guthix': { quests: ['Tears of Guthix'] },
-  'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },
+  'Brimhaven Agility Arena': { skills: { Agility: 1 }, note: 'Agility (Brimhaven).' },
 
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
   // Each place asks for its own way in, and each patch carries it (owner call U6;
@@ -305,7 +305,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Vinery': { skills: { Farming: 36 }, requiredAreas: ['Hosidius'], note: 'Grape patches.' },
 
   // ---- Mobility (gated teleport items) ---------------------------------------
-  'Canoes': { note: 'Woodcutting (stations at 12 / 27 / 42 / 57).' },
+  'Canoes': { skills: { Woodcutting: 12 }, note: 'Woodcutting (stations at 12 / 27 / 42 / 57).' },
   'Slayer Ring': { manualRequirements: ['Own a purchased Slayer ring, or craft one with 75 Crafting and Ring bling unlocked'], note: 'Crafting requires 75 Crafting; purchased rings have no Crafting requirement.' },
   "Xeric's Talisman": { note: 'Dropped by lizardmen and found in stone chests in Great Kourend.' },
 

@@ -177,7 +177,8 @@ export function slayerReachability(
       if (masterGate) status = masterGate.status;
       else if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
       else if (blocker) { status = 'slayer-locked'; rowBlocker = blocker; }
-      else if (gates.hasDataGap) status = 'access-unknown';
+      // A plain blocker wins over a question, as in permissionStatus.ts routeStatus.
+      else if (gates.hasDataGap && !gates.blockers.some(g => g.type != 'UNRESOLVED' && !(g.type == 'QUEST_PROGRESS' && !questSet.has(g.questId)))) status = 'access-unknown';
       else if (gates.blockers.length) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
       else if (!loc) status = 'no-location';

@@ -51,6 +51,34 @@ describe('buildChunkPermissionSnapshot', () => {
     unlocks.skills.Slayer = 2;
     expect(view().categories.COMBAT?.[0].status).toBe('ALLOWED');
   });
+  // own.d1[2]: the plugin shows a NOT_READY row's detail as sent, so the level that blocks it is named,
+  // in the form its SkillLine reads for skilling rows ("Slayer 5/93 \u00b7 cap 10").
+  it('names the Slayer level a NOT_READY combat row waits on, as skilling rows do', () => {
+    const SKILL_LINE = /^(\S.*?) (\d+)\/(\d+) \u00b7 cap (\d+)$/;
+    const unlocks = structuredClone(initialState.unlocks);
+    unlocks.levels.Slayer = 20; unlocks.skills.Slayer = 1;
+    const fixture = content({ monsters: [{ name: 'Cave crawler', count: 1, slayer: 10 }, { name: 'Goblin', count: 1, slayer: null }] });
+    const settings = context({ unlocks });
+    const row = (name: string) => buildChunkPermissionSnapshot(fixture, { cx: 50, cy: 50 }, settings)
+      .categories.COMBAT?.find(one => one.name === name);
+    expect(row('Cave crawler')).toMatchObject({ status: 'ALLOWED' });
+    expect(row('Cave crawler')?.detail).toBeUndefined();
+    unlocks.levels.Slayer = 9; unlocks.skills.Slayer = 2;
+    expect(row('Cave crawler')).toMatchObject({ status: 'NOT_READY', detail: 'Slayer 9/10 \u00b7 cap 20' });
+    unlocks.levels.Slayer = 10;
+    expect(row('Cave crawler')).toMatchObject({ status: 'ALLOWED' });
+    expect(row('Cave crawler')?.detail).toBeUndefined();
+    unlocks.skills.Slayer = 0;
+    expect(row('Cave crawler')).toMatchObject({ status: 'NOT_READY', detail: 'Slayer 10/10 \u00b7 cap 0' });
+    expect(row('Cave crawler')?.detail).toMatch(SKILL_LINE);
+    expect(row('Goblin')).toMatchObject({ status: 'ALLOWED' });
+    expect(row('Goblin')?.detail).toBeUndefined();
+    // A row locked for another reason says only that.
+    const locked = buildChunkPermissionSnapshot(fixture, { cx: 32, cy: 150 }, context({ unlocks }))
+      .categories.COMBAT?.find(one => one.name === 'Cave crawler');
+    expect(locked?.status).toBe('LOCKED');
+    expect(locked?.detail ?? '').not.toContain('Slayer');
+  });
   describe('TRAVEL rows judge shortcuts as the Shortcuts panels do (utils/shortcutReach.ts)', () => {
     const skilled = () => {
       const unlocks = structuredClone(initialState.unlocks);
