@@ -169,6 +169,34 @@ describe('interiorEntry', () => {
   });
 });
 
+/**
+ * A route that is plainly blocked (a quest not held) reads NOT_READY even when it
+ * also has a requirement the save can't answer; UNKNOWN only when every blocker
+ * is one of those (status-precedence). The real routes are moved to an owned
+ * Lumbridge entrance so only the route's own requirements decide.
+ */
+describe("a blocked route's status", () => {
+  const throughLumbridge = (key: string, name: string): InteriorRecord => {
+    const record = records.get(key)!;
+    expect(record.name).toBe(name);
+    return { ...record, entrances: record.entrances.map((entrance) => ({ ...entrance, chunkId: idOf(chunkForPlace('Lumbridge')!) })) };
+  };
+
+  it('keeps The Scar not ready without Temple of the Eye, unknown with it, open with Desert Treasure II too', () => {
+    const scar = throughLumbridge('31,100', 'The Scar');
+    expect(interiorEntry(scar, context(run({})))).toBe('NOT_READY');
+    expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye'] })))).toBe('UNKNOWN');
+    expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye', 'Desert Treasure II'] })))).toBe('ALLOWED');
+  });
+
+  it('keeps a route with only requirements the save cannot answer unknown', () => {
+    const cave: InteriorRecord = { key: '1,1', name: 'Test Cave', entrances: [{
+      chunkId: idOf(chunkForPlace('Lumbridge')!), requirements: ['Test Cave: a task needs confirmation', 'Started Ratcatchers'],
+    }] };
+    expect(interiorEntry(cave, context(run({})))).toBe('UNKNOWN');
+  });
+});
+
 describe("the app's own content checks", () => {
   it('agree with the entry for the interior the content is in', () => {
     // TzHaar-Ket live in Mor Ul Rek's outer area, 39,80, entered from Musa Point's 44,49.
