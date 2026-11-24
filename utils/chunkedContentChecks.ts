@@ -215,6 +215,8 @@ export function createChunkedChecks(service: ChunkContentService) {
    * memoirs task needs all five Kourend cities, the Trollheim shortcut both
    * its ends. A place takes the task's chunks in it, or else those beside it,
    * and stays an area to own when there are none (var_hard_1's Piscatoris).
+   * In the any-of group each area is a way of its own: one with none of the
+   * task's chunks is met by any chunk of it.
    */
   const diaryTask = <R extends DiaryRequirement>(taskId: string, requirement: R): R | null => {
     const place = diaryPlace(taskId);
@@ -239,11 +241,25 @@ export function createChunkedChecks(service: ChunkContentService) {
     const places: DiaryLocationRequirement[] = [];
     const keptRegions: string[] = [];
     let keptAnyOf: string[] | undefined;
+    const near = (area: string): Coord[] => {
+      const inside = chunksIn(chunkOptions, [area]);
+      return inside.length ? inside : chunksBeside(chunkOptions, [area]);
+    };
     for (const group of groups) {
-      const inside = chunksIn(chunkOptions, group);
-      const chunks = inside.length ? inside : chunksBeside(chunkOptions, group);
+      if (group === anyOfRegions) {
+        // Each way stays a way: one the task's chunks miss is met anywhere in
+        // its own area (kou_easy_6's boat also leaves from Piscarilius).
+        const ways = group.map(area => ({ area, chunks: near(area) }));
+        if (ways.every(way => way.chunks.length === 0)) { keptAnyOf = anyOfRegions; continue; }
+        const chunks = new Map<string, Coord>();
+        for (const way of ways) {
+          for (const chunk of way.chunks.length ? way.chunks : namedAreaChunks(way.area)) chunks.set(keyOf(chunk), { cx: chunk.cx, cy: chunk.cy });
+        }
+        places.push(located(group, [...chunks.values()]));
+        continue;
+      }
+      const chunks = near(group[0]);
       if (chunks.length) places.push(located(group, chunks));
-      else if (group === anyOfRegions) keptAnyOf = anyOfRegions;
       else keptRegions.push(group[0]);
     }
     if (places.length === 0) return null;

@@ -256,6 +256,13 @@ describe('Chunked diary tasks that need several places need a chunk of each (dia
     expect(ready('kou_easy_6', ['23,53', '47,50']).eligible).toBe(true);
   });
 
+  it("keeps a port the task's chunks miss as a way to go (Veos from Port Piscarilius)", () => {
+    // The task's only port chunk is Port Sarim's; the boat also leaves from Piscarilius.
+    expect(ready('kou_easy_6', ['28,58']).eligible).toBe(false);
+    expect(ready('kou_easy_6', ['23,53', '28,58']).eligible).toBe(true);
+    expect(ready('kou_easy_6', ['23,53', '27,57']).eligible).toBe(true);
+  });
+
   it('keeps an area with no chunk of the task as an area to own', () => {
     // var_hard_1's only chunk is the Fancy Dress Seller's; the dashing kebbits are in Piscatoris.
     expect(ready('var_hard_1', ['51,53']).machineEligible).toBe(false);
