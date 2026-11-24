@@ -4,7 +4,7 @@ import { EQUIPMENT_SLOTS } from '../../constants';
 import { gearService } from '../../services/GearService';
 import { monsterKey, monsterService } from '../../services/MonsterService';
 import { attackBonuses, blowpipeDarts, isBlowpipe, GearItem, ZERO_BONUSES } from '../../utils/gearStats';
-import { computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput, type Stance } from '../../utils/dps';
+import { computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput, rangedHitUsesStrength, STRENGTH_RANGED_NOTE, type Stance } from '../../utils/dps';
 import { WikiLink } from '../WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../../utils/rangedDamage';
 import { dpsCombatOptions } from '../../utils/weaponCombat';
@@ -120,13 +120,14 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
 
   const monster = monsterService.byKey(targetKey);
   const rangedType = rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride;
+  const strengthRanged = style === 'ranged' && rangedHitUsesStrength(gear.weaponName);
 
   const result = useMemo(() => {
     if (!monster || !selectedOption) return null;
     const defLevel = style === 'magic' ? monster.magicLevel : monster.defLevel;
     const defBonus = attackType === 'stab' ? monster.def.stab : attackType === 'slash' ? monster.def.slash : attackType === 'crush' ? monster.def.crush : attackType === 'ranged' ? rangedDefenceFor(monster, rangedType) : monster.def.magic;
     const input: DpsInput = {
-      style, attackType, stanceId, prayerId, potionId, baseSpellMax,
+      style, attackType, stanceId, prayerId, potionId, baseSpellMax, weaponName: gear.weaponName,
       levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: selectedOption.speedTicks ?? gear.speedTicks },
       monster: { defLevel, defBonus, hp: monster.hp, flatArmour: monster.flatArmour },
     };
@@ -134,7 +135,7 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
   }, [monster, style, attackType, stanceId, prayerId, potionId, baseSpellMax, levels, gear, rangedType, selectedOption]);
 
   const fmt = (v: number) => `${v > 0 ? '+' : ''}${v}`;
-  const strPart = style === 'melee' ? `melee str ${fmt(gear.meleeStr)}` : style === 'ranged' ? `ranged str ${fmt(gear.rangedStr)}` : `magic dmg ${fmt(gear.magicDmgPct)}%`;
+  const strPart = style === 'melee' || strengthRanged ? `melee str ${fmt(gear.meleeStr)}` : style === 'ranged' ? `ranged str ${fmt(gear.rangedStr)}` : `magic dmg ${fmt(gear.magicDmgPct)}%`;
   const summary = gear.count > 0
     ? `${gear.weaponName ?? 'Unarmed'} · ${attackType} accuracy ${fmt(gear.accuracy)} · ${strPart}`
     : 'No gear equipped. Equip items in the Gear view.';
@@ -160,7 +161,7 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
 
   const styleLevels: { key: keyof typeof levels; label: string; icon: string }[] =
     style === 'melee' ? [{ key: 'attack', label: 'Attack', icon: 'Attack' }, { key: 'strength', label: 'Strength', icon: 'Strength' }]
-      : style === 'ranged' ? [{ key: 'ranged', label: 'Ranged', icon: 'Ranged' }]
+      : style === 'ranged' ? [{ key: 'ranged', label: 'Ranged', icon: 'Ranged' }, ...(strengthRanged ? [{ key: 'strength' as const, label: 'Strength', icon: 'Strength' }] : [])]
         : [{ key: 'magic', label: 'Magic', icon: 'Magic' }];
   const stanceOf = (id: string) => STANCES[style].find((s) => s.id === id);
   const L = unlocks.levels || {};
@@ -333,7 +334,7 @@ export const OsrsCharDps: React.FC<Props> = ({ onSummary }) => {
             )}
             <p className="osrs-dash-muted-s" style={{ margin: 'auto 0 0', display: 'flex', gap: 6, lineHeight: '16px' }}>
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0, marginTop: 2 }}><path d="M1 9l1.5-6 2.5 3L6 2l1 4 2.5-3L11 9z" fill="none" stroke="#8a7c66" strokeWidth="1.2" /></svg>
-              <span>Baseline DPS for a standard setup. Special attacks and item passives (Twisted bow, Salve, Slayer helm, Void, crystal...) aren't modelled; Magic uses your spell's base max hit.</span>
+              <span>Baseline DPS for a standard setup. Special attacks and item passives (Twisted bow, Salve, Slayer helm, Void, crystal...) aren't modelled; Magic uses your spell's base max hit.{strengthRanged ? ` ${STRENGTH_RANGED_NOTE}` : ''}</span>
             </p>
           </div>
         </div>

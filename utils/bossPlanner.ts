@@ -33,7 +33,7 @@ export interface MonsterLite {
 
 export interface PlayerCombat {
   levels: { attack: number; strength: number; ranged: number; magic: number; hitpoints: number };
-  gear: { bonuses: GearBonuses; speedTicks: number; category?: string; rangedDamageType?: RangedDamageType };
+  gear: { bonuses: GearBonuses; speedTicks: number; category?: string; rangedDamageType?: RangedDamageType; weaponName?: string };
   /** Potions (super combat/ranging) and the prayers below applied. */
   boostsOn: boolean;
   /** Prayer id per style the player can use (see bestBoostPrayers); none when omitted. */
@@ -185,6 +185,7 @@ const runCombo = (p: PlayerCombat, m: MonsterLite, { style, attackType, stanceId
     style, attackType, stanceId,
     ...boostsFor(p, style),
     baseSpellMax: 0,
+    weaponName: p.gear.weaponName,
     levels: { attack: p.levels.attack, strength: p.levels.strength, ranged: p.levels.ranged, magic: p.levels.magic },
     gear: {
       accuracy: accuracyFor(p.gear.bonuses, attackType),

@@ -153,6 +153,16 @@ describe('boost prayers', () => {
     prayers,
   });
 
+  it('plans the Eclipse atlatl from Strength and melee strength, as the DPS tools do', () => {
+    const atlatl = (weaponName: string): PlayerCombat => ({
+      levels: { attack: 50, strength: 99, ranged: 75, magic: 1, hitpoints: 70 },
+      gear: { bonuses: { ...ZERO_BONUSES, ranged: 87, meleeStr: 40 }, speedTicks: 5, category: 'Bow', weaponName },
+      boostsOn: false,
+    });
+    // Ranged strength 0: only the atlatl rule gives this setup any damage beyond 0-1 hits.
+    expect(planBoss(atlatl('Eclipse atlatl'), graardor).maxHit).toBeGreaterThan(planBoss(atlatl('Magic shortbow'), graardor).maxHit);
+  });
+
   it('takes the boss\'s flat armour off melee hits', () => {
     // Wiki "Flat armour": subtracted from successful melee and ranged hits.
     const plain = planBoss(whip7070(), graardor);

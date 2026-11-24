@@ -210,4 +210,27 @@ describe('dps formulas', () => {
     const rapid = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'rapid', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
     expect(rapid.attackInterval).toBeLessThan(acc.attackInterval);
   });
+
+  it('takes the atlatl\'s max hit from Strength and melee strength, its accuracy from Ranged', () => {
+    // Wiki "Eclipse atlatl": max hit from the melee strength bonus and visible Strength boosts,
+    // accuracy from the ranged bonus; ranged prayers boost both.
+    const atlatl = (over: Partial<DpsInput> = {}, meleeStr = 40): DpsInput => ({
+      ...baseInput(), style: 'ranged', attackType: 'ranged', stanceId: 'rapid', weaponName: 'Eclipse atlatl',
+      levels: { attack: 1, strength: 99, ranged: 99, magic: 1 },
+      gear: { accuracy: 87, meleeStr, rangedStr: 0, magicDmgPct: 0, speedTicks: 5 }, ...over,
+    });
+    expect(computeDps(atlatl()).maxHit).toBe(17);                   // floor(0.5 + 107 * 104 / 640)
+    expect(computeDps(atlatl({}, 50)).maxHit).toBe(19);             // + amulet of strength (+10)
+    expect(computeDps(atlatl({ prayerId: 'rigour' })).maxHit).toBe(21); // floor(99 * 1.23) + 8 = 129
+    expect(computeDps(atlatl({ stanceId: 'accurate' })).effStr).toBe(110);
+    // A Ranging potion boosts Ranged (accuracy) but not Strength (damage).
+    const potion = computeDps(atlatl({ potionId: 'ranging' }));
+    expect(potion.maxHit).toBe(17);
+    expect(potion.effAtk).toBe(99 + 4 + 9 + 8);
+    // Ranged level and ranged strength no longer move the max hit; Strength does.
+    expect(computeDps(atlatl({ levels: { attack: 1, strength: 99, ranged: 75, magic: 1 } })).maxHit).toBe(17);
+    expect(computeDps(atlatl({ levels: { attack: 1, strength: 70, ranged: 99, magic: 1 } })).maxHit).toBe(13);
+    // Any other ranged weapon still uses Ranged and ranged strength.
+    expect(computeDps(atlatl({ weaponName: 'Magic shortbow' })).maxHit).toBe(11);
+  });
 });

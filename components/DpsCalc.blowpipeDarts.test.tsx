@@ -6,7 +6,8 @@ import { ZERO_BONUSES } from '../utils/gearStats';
 import { DpsCalc } from './DpsCalc';
 import { OsrsCharDps } from './osrs/OsrsCharDps';
 
-// Both DPS layouts share one dart select, shown only while a blowpipe is equipped.
+// Both DPS layouts share one dart select, shown only while a blowpipe is equipped,
+// and the atlatl's Strength-based max hit (utils/dps rangedHitUsesStrength).
 const fixture = vi.hoisted(() => ({
   weapon: 'Toxic blowpipe',
   game: { gameModeId: 'vanilla', unlocks: { levels: { Attack: 99, Strength: 99, Magic: 99, Ranged: 99 } }, loadout: { Weapon: 12926 } },
@@ -83,5 +84,25 @@ describe('blowpipe darts in the OSRS layout', () => {
     render(<OsrsCharDps />);
     await screen.findByRole('group', { name: 'Stance' });
     expect(dartSelect()).toBeNull();
+  });
+});
+
+describe('the Eclipse atlatl in both layouts', () => {
+  it('asks for the Strength level and says how its max hit works (classic)', async () => {
+    fixture.weapon = 'Eclipse atlatl';
+    render(<DpsCalc />);
+    expect(await screen.findByRole('spinbutton', { name: 'Strength lvl' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /target/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Test dummy/ }));
+    expect(await screen.findByText(/max hit uses your Strength level and melee strength bonus/)).toBeTruthy();
+  });
+
+  it('asks for the Strength level and shows melee strength in the summary (OSRS layout)', async () => {
+    fixture.weapon = 'Eclipse atlatl';
+    const onSummary = vi.fn();
+    render(<OsrsCharDps onSummary={onSummary} />);
+    expect(await screen.findByRole('spinbutton', { name: /Strength lvl/ })).toBeTruthy();
+    await waitFor(() => expect(onSummary).toHaveBeenLastCalledWith(expect.stringContaining('melee str 0')));
+    expect(screen.getByText(/max hit uses your Strength level and melee strength bonus/)).toBeTruthy();
   });
 });

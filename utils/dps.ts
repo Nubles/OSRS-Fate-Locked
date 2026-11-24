@@ -131,6 +131,24 @@ export const defenceRoll = (defLevel: number, defBonus: number): number =>
 export const hitChance = (atk: number, def: number): number =>
   Math.min(1, Math.max(0, atk > def ? 1 - (def + 2) / (2 * (atk + 1)) : atk / (2 * (def + 1))));
 
+/**
+ * Ranged weapons whose max hit comes from the Strength level and the melee
+ * strength bonus, while accuracy stays on Ranged and the ranged bonus.
+ * Wiki "Eclipse atlatl" (rev 15390014): "Its max hit is determined by the
+ * player's melee strength bonus, while accuracy is still based on their ranged
+ * bonus"; it uses "visible boosts to the player's Strength level (including
+ * potions)" and "does not benefit from melee prayers. Ranged prayers boost
+ * both accuracy and damage." Wiki "Hunter's spear": "the player's melee
+ * strength bonuses are used when determining the amount of ranged damage".
+ * The Wiki DPS calculator (getPlayerMaxRangedHit) treats both alike: Strength
+ * level plus boost, the ranged prayer's strength factor, +3 on Accurate, +8.
+ */
+export const rangedHitUsesStrength = (weaponName?: string): boolean =>
+  /^(eclipse atlatl|hunter's spear)\b/i.test(weaponName ?? '');
+
+/** In-app note for those weapons: the potion menus offer no Strength potion with ranged. */
+export const STRENGTH_RANGED_NOTE = "This weapon's max hit uses your Strength level and melee strength bonus. Strength potions aren't offered for it.";
+
 // ── Inputs / result ───────────────────────────────────────────────────────────
 export interface DpsInput {
   style: Style;
@@ -139,6 +157,8 @@ export interface DpsInput {
   prayerId: string;
   potionId: string;
   baseSpellMax: number;
+  /** The equipped weapon's name, for weapons with their own max-hit rule (rangedHitUsesStrength). */
+  weaponName?: string;
   levels: { attack: number; strength: number; ranged: number; magic: number };
   gear: {
     /** Accuracy bonus for the chosen attack type (stab/slash/crush/ranged/magic). */
@@ -210,16 +230,20 @@ export const computeDps = (input: DpsInput): DpsResult => {
   const potion = pick(POTIONS[style], input.potionId);
 
   // Base levels by style: melee uses attack+strength, ranged uses ranged for
-  // both rolls, magic uses magic for the attack roll.
+  // both rolls (Strength for the max hit of the atlatl and hunter's spear),
+  // magic uses magic for the attack roll.
+  const strengthRanged = style === 'ranged' && rangedHitUsesStrength(input.weaponName);
   const atkBase = style === 'melee' ? levels.attack : style === 'ranged' ? levels.ranged : levels.magic;
-  const strBase = style === 'melee' ? levels.strength : style === 'ranged' ? levels.ranged : levels.magic;
+  const strBase = style === 'melee' || strengthRanged ? levels.strength : style === 'ranged' ? levels.ranged : levels.magic;
+  // The ranged potions boost Ranged only, so they add nothing to a Strength-based max hit.
+  const strBoost = strengthRanged ? 0 : potionBoost(strBase, potion);
 
   const effAtk = effectiveLevel(atkBase, prayer.atkMult, potionBoost(atkBase, potion), stance.atk, style === 'magic' ? 9 : 8);
-  const effStr = effectiveLevel(strBase, prayer.strMult, potionBoost(strBase, potion), stance.str);
+  const effStr = effectiveLevel(strBase, prayer.strMult, strBoost, stance.str);
 
   const maxHit = style === 'magic'
     ? maxHitMagic(input.baseSpellMax, gear.magicDmgPct + (prayer.magicDamagePct ?? 0))
-    : maxHitFromStr(effStr, style === 'ranged' ? gear.rangedStr : gear.meleeStr);
+    : maxHitFromStr(effStr, style === 'ranged' && !strengthRanged ? gear.rangedStr : gear.meleeStr);
 
   const aRoll = attackRoll(effAtk, gear.accuracy);
   const dRoll = defenceRoll(monster.defLevel, monster.defBonus);

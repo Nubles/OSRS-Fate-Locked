@@ -10,7 +10,7 @@ import { gearService } from '../services/GearService';
 import { monsterKey, monsterService, MonsterStats } from '../services/MonsterService';
 import { attackBonuses, blowpipeDarts, isBlowpipe, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
-  computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
+  computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput, rangedHitUsesStrength, STRENGTH_RANGED_NOTE,
 } from '../utils/dps';
 import { WikiLink } from './WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../utils/rangedDamage';
@@ -107,13 +107,14 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
   const monster = monsterService.byKey(targetKey);
   const rangedType = rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride;
+  const strengthRanged = style === 'ranged' && rangedHitUsesStrength(gear.weaponName);
 
   const result = useMemo(() => {
     if (!monster || !selectedOption) return null;
     const defLevel = style === 'magic' ? monster.magicLevel : monster.defLevel;
     const defBonus = attackType === 'stab' ? monster.def.stab : attackType === 'slash' ? monster.def.slash : attackType === 'crush' ? monster.def.crush : attackType === 'ranged' ? rangedDefenceFor(monster, rangedType) : monster.def.magic;
     const input: DpsInput = {
-      style, attackType, stanceId, prayerId, potionId, baseSpellMax,
+      style, attackType, stanceId, prayerId, potionId, baseSpellMax, weaponName: gear.weaponName,
       levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: selectedOption.speedTicks ?? gear.speedTicks },
       monster: { defLevel, defBonus, hp: monster.hp, flatArmour: monster.flatArmour },
     };
@@ -132,7 +133,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
   const styleLevels: { key: keyof typeof levels; label: string }[] =
     style === 'melee' ? [{ key: 'attack', label: 'Attack' }, { key: 'strength', label: 'Strength' }]
-      : style === 'ranged' ? [{ key: 'ranged', label: 'Ranged' }]
+      : style === 'ranged' ? [{ key: 'ranged', label: 'Ranged' }, ...(strengthRanged ? [{ key: 'strength' as const, label: 'Strength' }] : [])]
         : [{ key: 'magic', label: 'Magic' }];
 
   return (
@@ -239,7 +240,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
           </div>
           <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
             <Crown size={11} className="shrink-0 mt-0.5" />
-            Baseline DPS for a standard setup. Special attacks and item passives (Twisted bow, Salve, Slayer helm, Void, crystal…) aren't modelled; Magic uses your spell's base max hit.
+            Baseline DPS for a standard setup. Special attacks and item passives (Twisted bow, Salve, Slayer helm, Void, crystal…) aren't modelled; Magic uses your spell's base max hit.{strengthRanged ? ` ${STRENGTH_RANGED_NOTE}` : ''}
           </p>
         </div>
       )}
