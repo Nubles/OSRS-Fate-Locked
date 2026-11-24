@@ -15,7 +15,7 @@
     },
     "chunkRuntime": {
       "version": 9,
-      "sha256": "58d7c779d67c3e8a0785385234d56389677f30fa2fae9f260eae356338057b2e"
+      "sha256": "65718b96930289b288f4996db55a07882be1b2abb8b708adb34d1c0bf10c750c"
     }
   },
   "counts": {
@@ -4855,6 +4855,6 @@
       "coverage": "STATIC_PARTIAL"
     }
   ],
-  "catalogueSha256": "b552d7a9ea81c9cd31d2949390426fccd80825cdab5a65d2fad25999d9988c9e",
+  "catalogueSha256": "a085ebbe78962b19b60ae62591aba66ebcdd7b53eff7df23066f96a4f6be51d6",
   "catalogueBytes": 49163159
 }
