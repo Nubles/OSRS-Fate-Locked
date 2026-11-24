@@ -325,7 +325,7 @@ const DiaryDetail: React.FC<{
           );
         })}
         {!isCompleted && rate !== undefined && tasks.length > 0 && (
-          <div className="ojr-gap ojr-red">Each task rolls once for a Key at {rate}% base chance.</div>
+          <div className="ojr-gap ojr-red">Each task rolls once for a Key at {rate}%.</div>
         )}
       </div>
 
