@@ -37,6 +37,20 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-24-shared-collection-log-items',
+    title: 'Shared Collection Log items',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'An item on several Collection Log pages, like the Dragon pickaxe, now fills every page that lists it, as in the game.',
+        'The log’s total counts each item once, as the game’s does.',
+      ],
+      balance: [
+        'A Collection Log item now rolls for a Key once, the first time you log it, not once for every page it’s on.',
+      ],
+    },
+  },
+  {
     id: '2026-11-24-second-accuracy-pass',
     title: 'Second accuracy pass',
     date: '2026-11-24',
