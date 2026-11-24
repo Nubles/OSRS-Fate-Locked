@@ -6,8 +6,9 @@ import { readFileSync } from 'node:fs';
 import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
 import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import chunkDoc from '../public/chunk-content.json';
-import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingLevels, chunkedTrainingTiers, chunkFactLevel, chunkPatchBlocker } from './chunkedSkillPool';
-import { PATCH_LOCKS, SHOP_LOCKS } from './chunkSkillNodesBuild';
+import { chunkContentBlocker, chunkEntryQuests, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingLevels, chunkedTrainingTiers, chunkFactLevel, chunkPatchBlocker } from './chunkedSkillPool';
+import { ENTRY_QUEST_CHUNKS, PATCH_LOCKS, SHOP_LOCKS } from './chunkSkillNodesBuild';
+import { ALL_CHUNK_KEYS } from './chunkAdjacency';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { chunkedSkillHasRoom, mercyBlocker, skillsWithRoom } from './chunkedFate';
@@ -419,5 +420,75 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     expect(chunkedSkillNeeds('Prayer', fresh())).toMatch(/^bones/);
     expect(chunkedSkillRollable('Slayer', withTiers({}, { chunks: ['49,50', '48,50', '48,51'] }))).toBe(false);
     expect(chunkedSkillRollable('Slayer', withTiers({ Defence: 1 }, { chunks: ['49,50', '48,50', '48,51'] }))).toBe(true);
+  });
+});
+
+describe('Chunked places the game opens only through a quest (deep audit chunk-sample d1[0], d2[0], d3[0])', () => {
+  // [chunk, a skill its content trains, quests the run already has, the quests its entry needs]
+  const cases: [string, string, string[], string[]][] = [
+    ['37,59', 'Mining', [], ['The Fremennik Isles']], // Jatizso
+    ['36,59', 'Thieving', [], ['The Fremennik Isles']], // Neitiznot
+    ['37,60', 'Mining', [], ['The Fremennik Isles']], // the ice troll isle north of Jatizso
+    ['33,61', 'Mining', [], ['Lunar Diplomacy']], // Lunar Isle
+    ['39,60', 'Mining', [], ['The Fremennik Trials']], // Miscellania
+    ['40,60', 'Fishing', [], ['The Fremennik Trials']], // Etceteria
+    ['44,50', 'Mining', [], ['Dragon Slayer I']], // South Crandor
+    ['44,51', 'Mining', [], ['Dragon Slayer I']], // North Crandor
+    ['38,45', 'Mining', [], ['Dragon Slayer I']], // Corsair Cove Resource Area
+    ['44,46', 'Mining', [], ['Shilo Village']], // Shilo Village gem rocks
+    ['44,61', 'Mining', [], ['Making Friends with My Arm']], // Weiss salt mine
+    ['35,49', 'Mining', [], ['Regicide']], // South Isafdar
+    ['34,47', 'Fishing', [], ['Regicide']], // Zul-Andra sacred eels
+    ['36,49', 'Farming', [], ['Regicide', "Mourning's End Part I"]], // Lletya fruit tree patch
+    ['56,51', 'Mining', ['Priest in Peril'], ['Priest in Peril', 'Darkness of Hallowvale']], // North Meiyerditch
+    ['56,52', 'Woodcutting', ['Priest in Peril'], ['Priest in Peril', 'Sins of the Father']], // Darkmeyer blisterwood
+    ['18,51', 'Mining', [], ['Desert Treasure II']], // the Stranglewood mine
+    ['18,52', 'Mining', [], ['Desert Treasure II']],
+    ['17,52', 'Fishing', [], ['Desert Treasure II']],
+  ];
+
+  it.each(cases)('%s: %s counts only once the entry quests are done', (chunk, skill, before, needed) => {
+    expect(chunkEntryQuests(chunk)).toEqual(needed);
+    const missing = needed.filter(quest => !before.includes(quest));
+    expect(chunkContentBlocker(chunk, skill, { quests: before })).toBe(`Needs ${missing.join(' and ')} to get in.`);
+    expect(chunkContentBlocker(chunk, skill, { quests: needed })).toBeNull();
+    // The run's levels: the start chunk's alone until the quests are done, then this chunk's too.
+    const run = (quests: string[]) => withTiers({}, { chunks: [chunk], quests, farming: ['Fruit Tree'] });
+    const start = chunkedTrainingLevels([], run(needed)).get(skill);
+    expect(chunkedTrainingLevels([chunk], run(before)).get(skill)).toBe(start);
+    expect(chunkedTrainingLevels([chunk], run(needed)).get(skill)).toBe(Math.min(start ?? 99, chunkFactLevel(chunk, skill)!));
+  });
+
+  it('keeps Jatizso Mining out of a fresh run until The Fremennik Isles is done', () => {
+    expect(chunkedSkillRollable('Mining', withTiers({ Mining: 0 }, { chunks: ['37,59'] }))).toBe(false);
+    expect(chunkedSkillRollable('Mining', withTiers({ Mining: 0 }, { chunks: ['37,59'], quests: ['The Fremennik Isles'] }))).toBe(true);
+    // The Stranglewood's level-1 fishing spot no longer lowers the start chunk's Fishing (20).
+    expect(chunkedTrainingLevels(['17,52'], withTiers({}, { chunks: ['17,52'] })).get('Fishing')).toBe(20);
+    expect(chunkedTrainingLevels(['17,52'], withTiers({}, { chunks: ['17,52'], quests: ['Desert Treasure II'] })).get('Fishing')).toBe(1);
+  });
+
+  it('leaves the edge chunks that also hold open land out of those gates', () => {
+    const edges: [string, string][] = [
+      ['36,58', 'The Fremennik Isles'], // the Piscatoris Fishing Colony's north shore
+      ['36,57', 'The Fremennik Isles'], // the colony itself
+      ['18,53', 'Desert Treasure II'], // the Kebos coast by the rowboat
+      ['19,53', 'Desert Treasure II'], // Custodia Mountains lake
+      ['37,52', 'Regicide'], // east of the Arandar gate
+      ['34,48', 'Regicide'], // the Poison Waste island of fairy ring DLR
+      ['44,62', 'Making Friends with My Arm'], // Weiss's shore, salvaged from a boat
+      ['57,52', 'Sins of the Father'], // East Darkmeyer reaches the swamp Slepe opens onto
+    ];
+    for (const [chunk, quest] of edges) {
+      expect(ENTRY_QUEST_CHUNKS[chunk], chunk).toBeUndefined();
+      expect(chunkEntryQuests(chunk), chunk).not.toContain(quest);
+    }
+  });
+
+  it('names only land chunks and quests the tracker knows', () => {
+    const land = new Set(ALL_CHUNK_KEYS);
+    for (const [chunk, quests] of Object.entries(ENTRY_QUEST_CHUNKS)) {
+      expect(land.has(chunk), chunk).toBe(true);
+      for (const quest of quests) expect(QUEST_DATA[quest], quest).toBeDefined();
+    }
   });
 });
