@@ -25,7 +25,7 @@ import { sealEdges, sightedSites } from '../utils/fateSiteMap';
 import { setFateMapPref, useFateMapPref } from '../utils/fateMapPrefsHook';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { FateLandLayer } from './FateLandLayer';
-import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail } from '../utils/chunkMapState';
+import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail, vanillaUnlockedCount } from '../utils/chunkMapState';
 import { canNavigateOcean, OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
@@ -2013,7 +2013,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const lensSuggestOpen = lensSuggestions.length > 0 || lensItemSuggestions.length > 0 || lensTagSuggestions.length > 0;
     const reachOn = lens?.kind === 'reach';
     const banksOn = lens?.kind === 'category' && lens.key === 'bank';
-    const unlockedCount = isChunked ? chunkedUnlockedCount(chunkUnlocks) : regionUnlocks.length;
+    const unlockedCount = isChunked ? chunkedUnlockedCount(chunkUnlocks) : vanillaUnlockedCount(regionUnlocks);
     return (
       <div className="owm-root">
         <aside className="osrs-inner owm-side" aria-label={isChunked ? 'Chunks' : 'Regions'}>

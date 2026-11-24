@@ -4,6 +4,8 @@
  */
 import { CHUNKED_START_KEY, isChunkUnlocked, isFrontierChunk } from './chunkAdjacency';
 import type { SailingAccount } from './oceanAccess';
+import { MISTHALIN_AREAS, REGION_GROUPS } from '../constants';
+import { isRegionUnlocked } from './reachability';
 
 /**
  * owned: unlocked, and a route from the start chunk reaches it.
@@ -38,6 +40,15 @@ export const chunkMapStateLine = (state: ChunkMapState): string | undefined => (
 /** How many chunks a Chunked run holds, its free start chunk included. */
 export const chunkedUnlockedCount = (chunkUnlocks: readonly string[]): number =>
   new Set([CHUNKED_START_KEY, ...chunkUnlocks]).size;
+
+/**
+ * How many named areas a Vanilla (area-roll) run holds, as the World map paints
+ * them: the mode's free start areas plus the rolled ones (isRegionUnlocked).
+ * `regionUnlocks` is the run's visible area unlocks (visibleAreaUnlocks).
+ */
+export const vanillaUnlockedCount = (regionUnlocks: string[]): number =>
+  new Set([...MISTHALIN_AREAS, ...Object.values(REGION_GROUPS).flat()]
+    .filter(area => isRegionUnlocked(area, regionUnlocks))).size;
 
 /** The Reachability lens's summary line. */
 export const reachLensDetail = (stranded: number, chunked: boolean): string => (stranded > 0
