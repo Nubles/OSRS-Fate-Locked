@@ -247,8 +247,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Digsite Pendant': { quests: ['The Dig Site'], manualRequirements: ['Learned the digsite pendant enchantment at Varrock Museum'], note: 'Base Digsite teleport. Fossil Island additionally needs Bone Voyage and the destination machine unlock. Pendants cannot be recharged and crumble after five uses.' },
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: "Bought from Veos; each teleport page comes from a Great Kourend quest (Depths of Despair, Queen of Thieves, Tale of the Righteous, The Forsaken Tower, The Ascent of Arceuus)." },
-  'Ring of the Elements': { skills: { Runecraft: 27 }, note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
-  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
+  'Ring of the Elements': { skills: { Runecraft: 27 }, quests: ['Temple of the Eye'], note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
+  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, quests: ['Temple of the Eye'], note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
   // Fortis Colosseum: as with all of Varlamore, Children of the Sun.
   'Dizana\'s Quiver': { quests: ['Children of the Sun'], note: 'Fortis Colosseum reward (ammo storage).' },
