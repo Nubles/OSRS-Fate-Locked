@@ -1215,6 +1215,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 5: Water Strike',
       'Lvl 6: Arceuus Library Teleport',
       'Lvl 7: Lvl-1 Enchant, Enchant Bolt (Sapphire)',
+      'Lvl 7: Mage Training Arena (Enchanting Chamber)',
       'Lvl 9: Earth Strike'
     ],
     2: [

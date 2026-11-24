@@ -320,7 +320,8 @@ describe('second-skill notes added in the 23 November 2026 deep pass', () => {
 // line in that skill's guide, and three Wiki level-up rows were missing. Each from a fresh Wiki fetch of the activity's
 // own page: Giants' Foundry (Sleeping Giants), Blast Furnace (Smithing 60 skips the fee), Stealing artefacts (49
 // Thieving), Gnome Restaurant (29 Cooking), Mess (20 Cooking), Trouble Brewing (Cabin Fever, 40 Cooking), Gnome Ball
-// and Brimhaven Agility Arena (low obstacles at 1, medium at 20; Agility level-up table).
+// and Brimhaven Agility Arena (low obstacles at 1, medium at 20; Agility level-up table). The Mage Training Arena
+// takes 7 Magic, which casts Lvl-1 Enchant in its Enchanting Chamber (Wiki 'Mage Training Arena', Requirements).
 describe('minigame lines added in the 23 November 2026 deep pass', () => {
   it.each([
     ['Smithing', 'Giants\' Foundry (Sleeping Giants)', 15],
@@ -332,6 +333,7 @@ describe('minigame lines added in the 23 November 2026 deep pass', () => {
     ['Agility', 'Gnome Ball, Brimhaven Arena (Low Obstacles)', 1],
     ['Agility', 'Brimhaven Arena (Medium Obstacles)', 20],
     ['Agility', 'Brimhaven Arena (High Obstacles)', 40],
+    ['Magic', 'Mage Training Arena (Enchanting Chamber)', 7],
   ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
     const matches = rowsFor(skill).filter(row => row.text.includes(name));
     expect(matches, `${skill}: ${name}`).toHaveLength(1);
