@@ -13,6 +13,8 @@ import { AREA_ALIAS_POLICIES, canonicalAreaName } from '../data/areaMapPolicy';
 import { BANK_BY_ID, bankId } from '../data/banks';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { BOSSES_LIST, MINIGAMES_LIST, MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
+import { placeOf } from './chunkLocations';
+import { OCEAN_CHUNK_KEYS } from './oceanAccess';
 import { QUEST_DATA, type QuestLocationRequirement } from '../data/questData';
 import { SUB_AREA_CHUNKS } from '../data/subAreaChunks';
 
@@ -101,17 +103,33 @@ export const DISCORD_UNGATED_REASONS: Readonly<Record<string, string>> = {
 export const discordLookupKey = (text: string): string =>
   text.toLowerCase().replace(/['\u2018\u2019`]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
-interface RegionRequirement { regions?: string[]; anyOfRegions?: string[] }
+interface DiaryLocation { chunkOptions: Array<{ cx: number; cy: number }> }
+interface RegionRequirement { regions?: string[]; anyOfRegions?: string[]; locations?: DiaryLocation[] }
+
+/**
+ * Whether a diary `locations` entry is met only inside `area`. In Vanilla the Journal
+ * opens a location chunk by its painted sub-area (utils/chunkLocations.ts chunkUnlocked),
+ * so a location needs the area when every one of its chunks lies in that sub-area. A chunk
+ * with no sub-area, or a sea chunk, is not gated on any one area.
+ */
+const locationNeeds = (location: DiaryLocation, area: string): boolean =>
+  location.chunkOptions.length > 0 && location.chunkOptions.every(({ cx, cy }) => {
+    if (OCEAN_CHUNK_KEYS.has(`${cx},${cy}`)) return false;
+    const { subArea } = placeOf(cx, cy);
+    return subArea !== null && canonicalAreaName(subArea) === area;
+  });
 
 /**
  * Whether the Journal (utils/journalStatus.ts evaluateDiaryTaskEligibility) blocks the
  * task until `area` is open: every name in `regions` is needed (aliases count as their
- * area), an `anyOfRegions` list only when all of its names are that area, and a task with
- * `oneOf` routes needs the area when it does or when every one of its routes does.
+ * area), every `locations` entry whose chunks all lie in the area, an `anyOfRegions` list
+ * only when all of its names are that area, and a task with `oneOf` routes needs the area
+ * when it does or when every one of its routes does.
  */
 const diaryTaskNeeds = (task: RegionRequirement & { oneOf?: RegionRequirement[] }, area: string): boolean => {
   const needs = (requirement: RegionRequirement): boolean =>
     (requirement.regions ?? []).some(region => canonicalAreaName(region) === area)
+    || (requirement.locations ?? []).some(location => locationNeeds(location, area))
     || (Boolean(requirement.anyOfRegions?.length)
       && requirement.anyOfRegions!.every(region => canonicalAreaName(region) === area));
   return needs(task) || (Boolean(task.oneOf?.length) && task.oneOf!.every(needs));

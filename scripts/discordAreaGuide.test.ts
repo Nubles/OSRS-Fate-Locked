@@ -147,9 +147,18 @@ describe('the Discord area guide', () => {
     for (const name of ['Menaphos', 'Agility Pyramid', 'Sophanem']) {
       expect(area(name)?.diaryTasks ?? [], name).not.toContain('Desert Easy: Kill a Vulture');
     }
-    // A route choice counts only when every route needs the area: Golden Warbler can be
-    // caught in Ruins of Uzer or at the Uzer Hunter chunks.
-    expect(area('Ruins of Uzer')?.diaryTasks ?? []).not.toContain('Desert Easy: Catch a Golden Warbler.');
+    // A route choice counts when every route needs the area. Golden Warbler is caught in
+    // Ruins of Uzer or at the Uzer Hunter chunks, and those chunks are painted Ruins of
+    // Uzer too, so in Vanilla the Journal blocks it until Ruins of Uzer is open.
+    expect(area('Ruins of Uzer')?.diaryTasks).toContain('Desert Easy: Catch a Golden Warbler.');
+    // A task met only at chunks counts for the area those chunks are painted: the Black
+    // Salamander chunk lies in Chaos Temple.
+    expect(area('Chaos Temple')?.diaryTasks).toContain('Wilderness Hard: Catch a Black Salamander in the Wilderness.');
+    // A real choice of areas still needs none of them: Orange Salamander takes Ruins of
+    // Uzer or Sophanem.
+    for (const name of ['Ruins of Uzer', 'Sophanem']) {
+      expect(area(name)?.diaryTasks ?? [], name).not.toContain('Desert Medium: Catch an Orange Salamander.');
+    }
     // Both ends of a carpet ride are needed.
     for (const name of ['Shantay Pass', 'Pollnivneach']) {
       expect(area(name)?.diaryTasks, name).toContain('Desert Easy: Travel from the Shantay Pass to Pollnivneach by Magic Carpet.');
