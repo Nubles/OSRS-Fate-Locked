@@ -12196,6 +12196,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Head, Body) and an abyssal lantern, Lumbridge ruins",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12229,6 +12230,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Head, Body) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12273,6 +12275,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Head, Legs) and an abyssal lantern, Lumbridge ruins",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12306,6 +12309,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Head, Legs) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12350,6 +12354,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Head, Boots) and an abyssal lantern, Lumbridge ruins",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12383,6 +12388,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Head, Boots) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12427,6 +12433,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Body, Legs) and an abyssal lantern, Lumbridge ruins",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12460,6 +12467,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Body, Legs) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12504,6 +12512,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Body, Boots) and an abyssal lantern, Lumbridge ruins",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12537,6 +12546,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Body, Boots) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12581,6 +12591,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Legs, Boots) and an abyssal lantern, Lumbridge ruins",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -12614,6 +12625,7 @@
         {
           "label": "2 Raiments of the Eye pieces (Legs, Boots) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 57
           },
           "items": [
@@ -15842,6 +15854,7 @@
         {
           "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Varrock ruins + Mine rune essence",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -15872,6 +15885,7 @@
         {
           "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Varrock ruins + Minotaur drops",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -15900,8 +15914,9 @@
         {
           "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Varrock ruins + Daeyalt essence",
           "skills": {
-            "Runecraft": 52,
-            "Mining": 60
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
           },
           "regions": [
             "Varrock"
@@ -15931,6 +15946,7 @@
         {
           "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "quests": [
@@ -15969,6 +15985,7 @@
         {
           "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Varrock ruins + Mine rune essence",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -15999,6 +16016,7 @@
         {
           "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Varrock ruins + Minotaur drops",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -16027,8 +16045,9 @@
         {
           "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Varrock ruins + Daeyalt essence",
           "skills": {
-            "Runecraft": 52,
-            "Mining": 60
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
           },
           "regions": [
             "Varrock"
@@ -16058,6 +16077,7 @@
         {
           "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "quests": [
@@ -16096,6 +16116,7 @@
         {
           "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Varrock ruins + Mine rune essence",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -16126,6 +16147,7 @@
         {
           "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Varrock ruins + Minotaur drops",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -16154,8 +16176,9 @@
         {
           "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Varrock ruins + Daeyalt essence",
           "skills": {
-            "Runecraft": 52,
-            "Mining": 60
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
           },
           "regions": [
             "Varrock"
@@ -16185,6 +16208,7 @@
         {
           "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "quests": [
@@ -16223,6 +16247,7 @@
         {
           "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Varrock ruins + Mine rune essence",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -16253,6 +16278,7 @@
         {
           "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Varrock ruins + Minotaur drops",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "regions": [
@@ -16281,8 +16307,9 @@
         {
           "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Varrock ruins + Daeyalt essence",
           "skills": {
-            "Runecraft": 52,
-            "Mining": 60
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
           },
           "regions": [
             "Varrock"
@@ -16312,6 +16339,7 @@
         {
           "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, through the Abyss",
           "skills": {
+            "Firemaking": 75,
             "Runecraft": 52
           },
           "quests": [

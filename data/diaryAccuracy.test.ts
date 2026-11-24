@@ -663,7 +663,8 @@ describe('Diary tasks with Raiments of the Eye routes', () => {
   it.each([
     // Lumbridge & Draynor Diary rev 15399339: "57 Runecraft with 3 Raiments of the Eye pieces, (2 pieces with Abyssal
     // lantern lit with magic logs)". Varrock Diary rev 15404243: "52 Runecraft with 2+ Raiments of the Eye (1 piece
-    // with Abyssal lantern lit with magic logs)".
+    // with Abyssal lantern lit with magic logs)". Abyssal lantern rev 15393758: lighting it with magic logs takes
+    // 75 Firemaking, and that level cannot be boosted.
     ['lum_elite_5', 57, 2, 12, { regions: ['Lumbridge'], quests: ['Rune Mysteries'] }],
     ['var_elite_5', 52, 1, 16, { regions: ['Varrock'], quests: ['Rune Mysteries'] }],
   ] as const)('%s takes %i Runecraft with %i Raiments piece(s) and a lit abyssal lantern', (id, level, pieces, count, place) => {
@@ -671,6 +672,7 @@ describe('Diary tasks with Raiments of the Eye routes', () => {
     expect(lantern).toHaveLength(count);
     for (const route of lantern) {
       expect(route.skills?.Runecraft).toBe(level);
+      expect(route.skills?.Firemaking).toBe(75);
       expect(route.items).toContain('Abyssal lantern lit with magic logs');
       const slots = route.equipmentRequirements?.map(requirement => requirement.slot) ?? [];
       expect(slots.filter(slot => slot !== 'Shield')).toHaveLength(pieces);
@@ -678,10 +680,15 @@ describe('Diary tasks with Raiments of the Eye routes', () => {
     }
     const head: Record<string, number> = pieces === 2 ? { Head: 1, Body: 1 } : { Head: 1 };
     const crafter = account({
-      skills: { Runecraft: 10 }, levels: { Runecraft: level }, regions: [...place.regions], quests: [...place.quests], equipment: head,
+      skills: { Runecraft: 10, Firemaking: 10 }, levels: { Runecraft: level, Firemaking: 75 },
+      regions: [...place.regions], quests: [...place.quests], equipment: head,
     });
     expect(evaluateDiaryTaskEligibility(task(id), crafter).machineEligible).toBe(false);
     expect(evaluateDiaryTaskEligibility(task(id), { ...crafter, equipment: { ...head, Shield: 1 } }).machineEligible).toBe(true);
+    // One Firemaking level short of lighting the lantern with magic logs: the lantern routes are closed.
+    expect(evaluateDiaryTaskEligibility(task(id), {
+      ...crafter, levels: { Runecraft: level, Firemaking: 74 }, equipment: { ...head, Shield: 1 },
+    }).machineEligible).toBe(false);
   });
 
   it('crafts 252 air runes at 77 Runecraft with one Raiments piece and a lit abyssal lantern', () => {
