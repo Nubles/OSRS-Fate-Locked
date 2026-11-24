@@ -1966,7 +1966,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 17: Iron Mace/Spit',
       'Lvl 18: Bronze Platebody, Iron Med Helm/Bolts',
       'Lvl 19: Iron Shortsword/Nails, Iron Darts (The Tourist Trap)',
-      'Lvl 20: Elemental Bars, Iron Arrows/C-balls',
+      'Lvl 20: Elemental Metal, Iron Arrows/C-balls',
       'Lvl 20: Silver Bars, Iron Scimitar/Spear/Hasta'
     ],
     3: [
