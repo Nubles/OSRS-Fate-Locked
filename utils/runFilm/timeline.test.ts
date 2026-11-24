@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { LogEntry } from '../../types';
 import { SUB_AREA_CHUNKS } from '../../data/subAreaChunks';
 import { SKILLS_LIST } from '../../data/items';
-import { buildFilmTimeline, filmDays, filmFramePlan, ownedChunksForAreas, TICKER_LINES } from './timeline';
+import { buildFilmTimeline, filmDays, filmFramePlan, offMapNote, ownedChunksForAreas, TICKER_LINES } from './timeline';
 import { chunkRect, filmLayout } from './painter';
 import { buildFateAnalytics, defaultFateAnalyticsQuery } from '../fateAnalytics';
 
@@ -63,7 +63,7 @@ describe('buildFilmTimeline', () => {
     expect(t.steps[1].added).toEqual(expect.arrayContaining(SUB_AREA_CHUNKS['Falador'].map(key)));
   });
 
-  it('lists underground Areas that have no square on the map', () => {
+  it('lists Areas that have no square of their own on the map', () => {
     const t = buildFilmTimeline([unlockArea(0, 'Keldagrim')], vanilla);
     expect(t.offMap).toEqual(['Keldagrim']);
     expect(t.steps[0].added).toEqual([]);
@@ -257,5 +257,84 @@ describe('film layout', () => {
       expect(se.x + se.w).toBeCloseTo(l.map.x + l.map.w);
       expect(se.y + se.h).toBeCloseTo(l.map.y + l.map.h);
     }
+  });
+});
+
+describe('buildFilmTimeline: only what the run really gained', () => {
+  const fate = (day: number, meta: Record<string, unknown>) => entry(day, 'FATE', 'Fate', meta);
+
+  it('opens a chunk only when the run gains it, never one fate ties a thread to', () => {
+    // Every log line that carries meta.chunk: the Cartographer's ALTAR line
+    // (a chunk the run gains with no UNLOCK line), and fate's thread,
+    // fulfilled, seal, site and mark lines. Only the thread names a chunk the
+    // run does not own; the others name the chunk the run just gained.
+    const log = [
+      entry(0, 'UNLOCK', 'Unlocked Lumbridge Swamp (50,49)', { item: '50,49', category: 'Chunks' }),
+      fate(0, { fate: 'seal', region: 'Misthalin', chunk: '50,49' }),
+      fate(0, { fate: 'mark', mark: 'BLESSED', chunk: '50,49', omen: 'boon' }),
+      fate(0, { fate: 'thread', chunk: '46,54' }),
+      entry(1, 'ALTAR', 'Cartographer charted (51,50)', { ritual: 'CARTOGRAPHER', chunk: '51,50' }),
+      fate(1, { fate: 'site', site: 'HOARD', chunk: '51,50' }),
+      fate(1, { fate: 'thread', chunk: '47,55' }),
+    ];
+    const t = buildFilmTimeline(log, { chunked: true, finalRegions: [], finalChunks: ['50,49', '51,50'] });
+    const added = t.steps.flatMap(s => s.added);
+    expect(added).toEqual(['50,49', '51,50']);
+    expect(t.steps[0].added).toEqual(['50,49']);
+    expect(t.steps[4].added).toEqual(['51,50']);
+    expect(t.steps).toHaveLength(log.length);
+    const whole = buildFilmTimeline(log.filter(e => e.meta?.fate !== 'thread'), { chunked: true, finalRegions: [], finalChunks: ['50,49', '51,50'] });
+    expect(t.summary.mapShare).toBe(whole.summary.mapShare);
+  });
+
+  it('takes the tiers a Ritual of Sacrifice took, at its line', () => {
+    const skill = (day: number, name: string) => entry(day, 'UNLOCK', `Unlocked ${name}`, { item: name, category: 'Skills' });
+    const gear = (day: number, slot: string) => entry(day, 'UNLOCK', `Unlocked ${slot}`, { item: slot, category: 'Equipment' });
+    const sacrifice = (day: number, taken: { table: 'skill' | 'gear'; name: string; tier: number }[]) =>
+      entry(day, 'ALTAR', 'Ritual of Sacrifice', { ritual: 'SACRIFICE', fateCost: 25, taken, specialKeysAwarded: 1 });
+    const log = [
+      skill(0, 'Strength'), skill(0, 'Attack'), skill(0, 'Attack'), skill(0, 'Attack'), skill(0, 'Attack'),
+      gear(0, 'Weapon'), gear(0, 'Weapon'), gear(0, 'Weapon'),
+      // Strength I is never bought back.
+      sacrifice(1, [{ table: 'skill', name: 'Attack', tier: 4 }, { table: 'gear', name: 'Weapon', tier: 3 }, { table: 'skill', name: 'Strength', tier: 1 }]),
+      skill(2, 'Attack'), gear(2, 'Weapon'),
+      // Attack and Weapon a second time; Defence II the run had before its log.
+      sacrifice(3, [{ table: 'skill', name: 'Attack', tier: 4 }, { table: 'gear', name: 'Weapon', tier: 3 }, { table: 'skill', name: 'Defence', tier: 2 }]),
+    ];
+    const finals = { finalSkills: { Attack: 3, Defence: 1, Hitpoints: 10 }, finalGear: { Weapon: 2 } };
+    const t = buildFilmTimeline(log, { ...vanilla, ...finals });
+    expect(t.opening.skills).toMatchObject({ Attack: 0, Strength: 0, Defence: 2 });
+    expect(t.opening.gear).toMatchObject({ Weapon: 0 });
+    expect(t.steps[7]).toMatchObject({ skills: { Attack: 4, Strength: 1 }, gear: { Weapon: 3 } });
+    expect(t.steps[8]).toMatchObject({ skills: { Attack: 3, Strength: 0, Defence: 2 }, gear: { Weapon: 2 }, raised: [] });
+    expect(t.steps[9].ticker[0].text).toBe('Attack IV');
+    expect(t.steps[10].ticker[0].text).toBe('Weapon III');
+    expect(t.steps[10]).toMatchObject({ skills: { Attack: 4 }, gear: { Weapon: 3 } });
+    expect(t.steps[11]).toMatchObject({ skills: { Attack: 3, Strength: 0, Defence: 1 }, gear: { Weapon: 2 } });
+    // The film ends on the run's tiers with no catch-up step.
+    expect(t.steps).toHaveLength(log.length);
+    // A film that stops on the day of the first Sacrifice ends on the tiers the run had then.
+    const early = buildFilmTimeline(log, { ...vanilla, ...finals, toDay: 2 });
+    expect(early.steps[early.steps.length - 1]).toMatchObject({ skills: { Attack: 3, Strength: 0 }, gear: { Weapon: 2 } });
+  });
+
+  it('reads an old Area name as the Area it is now', () => {
+    const t = buildFilmTimeline([unlockArea(0, 'Ranging Guild'), unlockArea(1, 'Falador')], { ...vanilla, finalRegions: ['Hemenster', 'Falador'] });
+    expect(t.offMap).toEqual([]);
+    expect(t.steps[0].added).toEqual(['41,53']);
+    expect(t.steps[0].ticker[0].text).toBe('Ranging Guild');
+    expect(t.steps).toHaveLength(2);
+    // An old save can still hold the old name among its Areas.
+    const old = buildFilmTimeline([entry(0, 'ROLL_FAIL', 'No Key.')], { ...vanilla, finalRegions: ["Heroes' Guild"] });
+    expect(old.offMap).toEqual([]);
+    expect([...old.steps[1].added].sort()).toEqual([...ownedChunksForAreas(['Taverley'])].filter(k => !old.start.includes(k)).sort());
+    expect(old.steps[1].added.length).toBeGreaterThan(0);
+    expect([...ownedChunksForAreas(["Heroes' Guild"])].sort()).toEqual([...ownedChunksForAreas(['Taverley'])].sort());
+  });
+
+  it('says an Area with no square is off the map, without calling it underground', () => {
+    expect(offMapNote(['Braindeath Island'])).toBe('Braindeath Island has no square of its own on the world map, so it shows only in the Latest list.');
+    expect(offMapNote(['Keldagrim', 'Zanaris'])).toBe('2 Areas have no square of their own on the world map, so they show only in the Latest list.');
+    expect(offMapNote([])).toBe('');
   });
 });
