@@ -1,6 +1,7 @@
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { HelpCircle, X } from 'lucide-react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 import { SKILLS_LIST } from '../data/items';
 import { DROP_RATES } from '../config/rules';
 import { BREAKTHROUGH_CHANCE, CHUNK_EXPLORE_ROLLS } from '../config/economy';
@@ -263,19 +264,8 @@ export const SectionGuide: React.FC<Props> = ({ id, className, suspendModals = f
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   // Escape closes only this popover, not the window it sits in, and focus
-  // goes back to the "?" button. Capture phase, as in SpendConfirm.
-  useEffect(() => {
-    if (!open || suspendModals) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      setOpen(false);
-      btnRef.current?.focus();
-    };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [open, suspendModals]);
+  // goes back to the "?" button.
+  useEscapeKey(() => { setOpen(false); btnRef.current?.focus(); }, open && !suspendModals, true);
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;
