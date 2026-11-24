@@ -475,7 +475,7 @@ const Header = ({ setShowAltar, setShowStats, setShowReference, setShowOracle, s
       showToast(FATE_EXPORT_DONE_MESSAGE);
   };
   // The bundle builder (rules, gear and chunk checks) loads on the click, not with the app.
-  const exportRunelite = () => importWithRetry(() => import('./utils/runeliteExport')).then(m => m.exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded }));
+  const exportRunelite = () => importWithRetry(() => import('./utils/runeliteExport')).then(m => m.exportRuneliteBundle(unlocks, { runId, runRevision, keys, specialKeys, chaosKeys, fatePoints, activeBuff, pinnedGoals, linkedAccount, gameModeId: gameModeId ?? 'vanilla', customMode, bossStandardKeysAwarded })).catch(() => showToast("Couldn't export for RuneLite. Reload the page and try again."));
   // Accept .fate files and legacy .json files
   const fileInput = <input type="file" ref={fileInputRef} className="hidden" accept=".json,.fate" onChange={handleFileChange} />;
 
