@@ -18,7 +18,10 @@ describe('Discord sharing and Adventurer\'s Log consent', () => {
   it('says before linking that unlocks post in #live-unlocks and the Clan chat, and what /unlink leaves', () => {
     // feed.ts titles each post with the member's server name; clan.ts reads the
     // channel back for the relay's public GET /clan, which the Clan tab shows.
-    expect(modal).toContain('Once you <span className="text-gray-200">/link</span>, each new unlock posts in #live-unlocks with your Discord server name,');
+    // "new unlocks", not "each new unlock": the relay posts none when the area count
+    // leaps and at most FEED_POSTS_PER_HOUR an hour (workers/fate-relay/progress.js).
+    expect(modal).toContain('Once you <span className="text-gray-200">/link</span>, new unlocks post in #live-unlocks with your Discord server name,');
+    expect(modal).not.toContain('each new unlock posts');
     expect(modal).toContain('and the tracker&apos;s Clan chat shows those posts to everyone who opens the tracker.');
     expect(modal).toContain('<span className="text-gray-200">/unlink</span> stops new posts but does not remove ones already posted.');
     const linkNote = modal.slice(modal.indexOf('Once you <span'), modal.indexOf('ones already posted.'));
