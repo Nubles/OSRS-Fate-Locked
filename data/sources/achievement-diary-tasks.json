@@ -5666,7 +5666,7 @@
         {
           "label": "Waterbirth teleport or coins",
           "manualRequirements": [
-            "Confirm: Waterbirth teleport or coins"
+            "Waterbirth teleport or coins"
           ]
         },
         {
@@ -6018,7 +6018,7 @@
         {
           "label": "Two-player door route",
           "manualRequirements": [
-            "Confirm: Two-player door route"
+            "Two-player door route"
           ]
         },
         {
@@ -6330,7 +6330,7 @@
         {
           "label": "Two-player door route",
           "manualRequirements": [
-            "Confirm: Two-player door route"
+            "Two-player door route"
           ]
         },
         {
@@ -6809,7 +6809,7 @@
             "Smithing": 59
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "label": "Dusty key + Make a mith grapple"
         },
@@ -6818,7 +6818,7 @@
             "Firemaking": 35
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "questProgress": [
             {
@@ -7287,7 +7287,7 @@
             "Crafting": 46
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "label": "Dusty key + Glassblow"
         },
@@ -7296,7 +7296,7 @@
             "Thieving": 52
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "quests": [
             "Death to the Dorgeshuun"
@@ -7908,7 +7908,7 @@
         {
           "label": "Fishing equipment",
           "manualRequirements": [
-            "Confirm: Fishing equipment"
+            "Fishing equipment"
           ]
         },
         {
@@ -9010,7 +9010,7 @@
         {
           "label": "Axe and machete",
           "manualRequirements": [
-            "Confirm: Axe and machete"
+            "Axe and machete"
           ]
         },
         {
@@ -12809,7 +12809,7 @@
             "Mort Myre Swamp"
           ],
           "manualRequirements": [
-            "Confirm: Ecto-tokens or charter ship"
+            "Ecto-tokens or charter ship"
           ],
           "label": "Ecto-tokens or charter ship + Blamish snails"
         },
@@ -12818,7 +12818,7 @@
             "General Stores"
           ],
           "manualRequirements": [
-            "Confirm: Ecto-tokens or charter ship"
+            "Ecto-tokens or charter ship"
           ],
           "regions": [
             "Burgh de Rott"
@@ -13268,7 +13268,7 @@
         {
           "label": "Ecto-tokens or charter ship",
           "manualRequirements": [
-            "Confirm: Ecto-tokens or charter ship"
+            "Ecto-tokens or charter ship"
           ]
         }
       ]
