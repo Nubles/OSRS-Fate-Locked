@@ -7,13 +7,20 @@ import type { UnlockState } from '../types';
 import { evaluateQuestEligibility, questRequirementOptionMet } from '../utils/journalStatus';
 
 describe('audited current quest requirements', () => {
-  it("puts A Ruff Situation's Outlaw Camp fight in 48,54, not the Grand Exchange chunk", () => {
+  it("puts A Ruff Situation's Outlaw Camp fight in 48,54 and keeps the first puppy in 49,54", () => {
     // OSRS Wiki 'Outlaw Camp' (rev 15394973): map x=3123 y=3472 r=6, all inside chunk 48,54.
     expect(QUEST_DATA['A Ruff Situation'].locations?.find(location => location.id === 'outlaw-camp'))
       .toMatchObject({ standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 54 }] });
     const chunks = chunkDoc.chunks as Record<string, { q?: Record<string, string> }>;
     expect(chunks['12342'].q?.['A Ruff Situation']).toBe('step');
-    expect(chunks['12598'].q?.['A Ruff Situation']).toBeUndefined();
+    // Wiki 'A Ruff Situation' (rev 15402249) ==== First puppy ====: "the dog will stop just north of
+    // the Cooks' Guild, where a cutscene will play" (the Guild's north wall is y 3454). The export's
+    // only 49,54 task is "Follow the dog until the first puppy is found"; the dog stops at 3146,3456,
+    // and waits before the outlaw fight at 3136,3467, both in 49,54 (12598).
+    expect(chunks['12598'].q?.['A Ruff Situation']).toBe('step');
+    expect(Object.entries(chunkDoc.chunks as Record<string, { q?: Record<string, string> }>)
+      .filter(([, entry]) => entry.q?.['A Ruff Situation']).map(([id, entry]) => `${id}:${entry.q!['A Ruff Situation']}`).sort())
+      .toEqual(['12086:first', '12341:step', '12342:step', '12597:step', '12598:step']);
   });
 
   it("pins Witch's Potion to Rimmington without enforcing all Asgarnia", () => {
