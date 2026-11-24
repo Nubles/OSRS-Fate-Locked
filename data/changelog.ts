@@ -67,6 +67,20 @@ export const CHANGELOG_RELEASES = [
     },
   },
   {
+    id: '2026-11-24-guides-and-shortcuts',
+    title: 'Guides, the Oracle and keyboard fixes',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'Escape now closes just a section’s ? guide, and closing the command palette puts keyboard focus back where it was.',
+        'The Oracle’s Wiki link no longer lands on a missing page, for results like Recipe for Disaster steps and diary tiers, and its footer names the right shortcut.',
+        'The Strategy Guide now shows a diary’s combat level as a plain requirement, not a locked skill, and no longer pushes those diaries down the Closest list.',
+        'The Strategy Guide now drops Desert Treasure II and three more quests once you’ve done them, and goals pinned for them show their card and route again.',
+        'In Chunked, unlocking a chunk that opens new quests or diary tiers now shows the New content panel listing them.',
+      ],
+    },
+  },
+  {
     id: '2026-11-24-pairing-and-sharing',
     title: 'RuneLite and Discord',
     date: '2026-11-24',
@@ -77,6 +91,7 @@ export const CHANGELOG_RELEASES = [
         'When the relay refuses your connection, the tracker now names the button RuneLite shows: Re-pair tracker…, or Connect tracker.',
         'RuneLite’s Here card now names the Slayer level a monster needs when that is why it isn’t ready.',
         'Discord notifications now says that once you /link, your new unlocks post in #live-unlocks and the tracker’s Clan chat shows them to everyone.',
+        'The RuneLite pairing window now warns you when this browser is already connected for another profile, before you replace that connection.',
       ],
     },
   },
