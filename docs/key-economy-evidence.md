@@ -19,7 +19,8 @@ stage suggested by current tracker completion.
 
 - anonymous UUID report ID;
 - game mode, declared stage, observed hours, schema/app version;
-- per-source attempts, successes, Pity Keys, expected successes, Fate Points;
+- per-source attempts, successes, Pity Keys, Verac hit-throughs, expected successes,
+  Fate Points;
 - overall and per-source longest and active droughts.
 
 ## What the counts mean
@@ -28,10 +29,16 @@ stage suggested by current tracker completion.
   it is a miss that Fate paid for, and it is counted on its own as `pityKeys`.
 - Expected successes add up each roll's chance of winning: the odds the roll
   recorded (a Ritual of Clarity roll's two draws included), or its threshold
-  for an older roll that recorded none.
+  for an older roll that recorded none. A roll made while Verac's ritual is
+  active records its odds without Verac's 15% hit-through, so a run that used
+  Verac shows more successes than expected.
+- A Verac hit-through is a success that Verac's ritual made out of a miss. It is
+  counted in `successes` and again on its own as `veracHitThroughs`, so the gap
+  it leaves above expected successes can be taken out.
 - A drought is a run of rolls in a row that did not win. A Pity Key does not end one.
 
-Schema version 2 added `pityKeys` and stopped counting Pity Keys as successes.
+Schema version 2 added `pityKeys` and `veracHitThroughs`, and stopped counting
+Pity Keys as successes.
 A version 1 report counted every Pity Key in `successes`, ended a drought at one,
 and took expected successes from thresholds only.
 

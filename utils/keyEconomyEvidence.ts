@@ -1,4 +1,5 @@
 import type { LogEntry } from '../types';
+import { isVeracHitThrough } from './fateAnalytics';
 import { rollCategory } from './fateReport';
 import { isRollEntry } from './logEntry';
 
@@ -25,6 +26,11 @@ export interface SourceEvidence {
   successes: number;
   /** Misses that Fate paid with a Pity Key (schema version 2). */
   pityKeys: number;
+  /**
+   * Successes that Verac's ritual hit through from a miss (schema version 2).
+   * They are in `successes`, but their recorded odds leave out the hit-through.
+   */
+  veracHitThroughs: number;
   expectedSuccesses: number;
   fatePoints: number;
   drought: DroughtSummary;
@@ -41,6 +47,7 @@ export interface KeyEconomyEvidenceReport {
     attempts: number;
     successes: number;
     pityKeys: number;
+    veracHitThroughs: number;
     expectedSuccesses: number;
     fatePoints: number;
     drought: DroughtSummary;
@@ -54,6 +61,7 @@ interface SourceAccumulator {
   attempts: number;
   successes: number;
   pityKeys: number;
+  veracHitThroughs: number;
   expectedSuccesses: number;
   fatePoints: number;
   rolls: LogEntry[];
@@ -138,6 +146,7 @@ export function buildKeyEconomyEvidence(
   const bySource = new Map<string, SourceAccumulator>();
   let successes = 0;
   let pityKeys = 0;
+  let veracHitThroughs = 0;
   let expectedSuccesses = 0;
   let fatePoints = 0;
 
@@ -151,6 +160,7 @@ export function buildKeyEconomyEvidence(
       attempts: 0,
       successes: 0,
       pityKeys: 0,
+      veracHitThroughs: 0,
       expectedSuccesses: 0,
       fatePoints: 0,
       rolls: [],
@@ -163,6 +173,10 @@ export function buildKeyEconomyEvidence(
     if (isWin(roll)) {
       accumulator.successes += 1;
       successes += 1;
+      if (isVeracHitThrough(roll)) {
+        accumulator.veracHitThroughs += 1;
+        veracHitThroughs += 1;
+      }
     } else if (roll.type === 'PITY') {
       accumulator.pityKeys += 1;
       pityKeys += 1;
@@ -191,6 +205,7 @@ export function buildKeyEconomyEvidence(
       attempts: rolls.length,
       successes,
       pityKeys,
+      veracHitThroughs,
       expectedSuccesses,
       fatePoints,
       drought: droughtSummary(rolls),

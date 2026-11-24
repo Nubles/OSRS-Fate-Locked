@@ -230,8 +230,42 @@ describe('Pity Keys and recorded odds in the evidence', () => {
     expect(report.totals.expectedSuccesses).toBeCloseTo(0.64 + 0.4 * 3);
   });
 
+  it('counts a win Verac hit through on its own, inside the successes', () => {
+    // As the reducer writes one: a roll above its threshold, a Key, the plain
+    // threshold as its recorded odds, and the hit-through in its details.
+    const veracWin = roll({
+      type: 'ROLL_SUCCESS',
+      result: 'SUCCESS',
+      threshold: 5,
+      rollValue: 80,
+      message: 'Key Found!',
+      details: 'Rolled 80.0 (> 5.0%). Verac hit through the miss.',
+      meta: { roll: 80, baseThreshold: 5, threshold: 5, fatePointsEarned: 0, successProbability: 0.05 },
+    });
+    const veracOmni = roll({
+      type: 'ROLL_OMNI',
+      result: 'SUCCESS',
+      threshold: 4,
+      rollValue: 90,
+      details: 'Rolled 90.0 (≤ 4.0%), and an Omni-Key came with the Key. Verac hit through the miss.',
+      meta: { successProbability: 0.04 },
+    });
+    // An older save's hit-through, with no analytics in its meta.
+    const oldVeracWin = roll({ result: 'SUCCESS', threshold: 10, details: 'Rolled 70.0 (> 10.0%). Verac hit through the miss.' });
+    const report = buildKeyEconomyEvidence([
+      roll({ threshold: 5 }), veracWin, veracOmni, oldVeracWin, roll({ result: 'SUCCESS', threshold: 50, details: 'Rolled 3.0 (≤ 50.0%).' }),
+    ], validInput);
+
+    expect(report.totals).toMatchObject({ attempts: 5, successes: 4, veracHitThroughs: 3, pityKeys: 0 });
+    expect(report.sources[0]).toMatchObject({ successes: 4, veracHitThroughs: 3 });
+    expect(report.totals.expectedSuccesses).toBeCloseTo(0.05 + 0.05 + 0.04 + 0.1 + 0.5);
+    expect(buildKeyEconomyEvidence([roll(), roll({ result: 'SUCCESS' })], validInput).totals.veracHitThroughs).toBe(0);
+  });
+
   it('documents what the counts mean', () => {
     expect(evidenceProtocol).toContain('schema version 2');
     expect(evidenceProtocol).toContain('A Pity Key is not a success');
+    expect(evidenceProtocol).toContain("without Verac's 15% hit-through");
+    expect(evidenceProtocol).toContain('`veracHitThroughs`');
   });
 });
