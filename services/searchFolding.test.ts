@@ -29,7 +29,8 @@ describe('monster search (both layouts of the damage calculator)', () => {
     const starts = (n: string) => foldText(n).text.startsWith('kr');
     const kr = names(monsterService.search('kr', 200));
     expect(kr.some(n => !starts(n))).toBe(true);
-    expect(kr.findIndex(n => !starts(n))).toBeGreaterThan(kr.findLastIndex(starts));
+    const firstContains = kr.findIndex(n => !starts(n));
+    expect(kr.slice(firstContains).some(starts)).toBe(false);
   });
 });
 
