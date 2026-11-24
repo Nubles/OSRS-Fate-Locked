@@ -65,6 +65,10 @@ const reviewedQuestProgress = new Map<string, [string, 'satisfies' | 'blocks']>(
   ["Mourning's End Part II: obtained the new key", ["Mourning's End Part II", 'satisfies']],
   ["Mourning's End Part II: reached the Death Altar", ["Mourning's End Part II", 'satisfies']],
   ['What Lies Below: reached the Tunnel of Chaos', ['What Lies Below', 'satisfies']],
+  // Interior gates (areas.d2[0], area-access.d1[1]); the Wiki pages are cited in interior-access.json.
+  ['Desert Treasure II: reached Ghorrock Prison', ['Desert Treasure II', 'satisfies']],
+  ['Desert Treasure II: reached the Scar', ['Desert Treasure II', 'satisfies']],
+  ['Sins of the Father: killed the mutated bloodveld', ['Sins of the Father', 'satisfies']],
 ]);
 
 const parseQuestProgress = (raw: string): RouteGate | null => {

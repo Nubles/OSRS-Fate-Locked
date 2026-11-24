@@ -241,3 +241,32 @@ describe('requirements a place meets by itself', () => {
     expect(compileRawRequirements([{ raw: ' enter the  wilderness ', origin: 'CHUNK_ENTRY' }])).toEqual([]);
   });
 });
+
+describe('reviewed interior entrance gates (areas.d1[1], areas.d2[0], area-access.d1[1], area-access.d2[2])', () => {
+  const compile = (raw: string) => compileRawRequirements([{ raw, origin: 'CHUNK_ENTRY' }]);
+
+  it.each([
+    ['Desert Treasure II: reached Ghorrock Prison', 'Desert Treasure II'],
+    ['Desert Treasure II: reached the Scar', 'Desert Treasure II'],
+    ['Sins of the Father: killed the mutated bloodveld', 'Sins of the Father'],
+  ])('reads "%s" as a stage of %s that completion meets', (raw, questId) => {
+    expect(compile(raw)).toEqual([{ type: 'QUEST_PROGRESS', questId, raw, completion: 'satisfies', label: raw }]);
+  });
+
+  it.each([
+    ['Another Slice of H.A.M. Complete the quest', 'Another Slice of H.A.M.'],
+    ['A Kingdom Divided Complete the quest', 'A Kingdom Divided'],
+    ['The Blood Moon Rises Complete the quest', 'The Blood Moon Rises'],
+    ['Secrets of the North Complete the quest', 'Secrets of the North'],
+    ["A Soul's Bane Complete the quest", "A Soul's Bane"],
+    ['Sins of the Father Complete the quest', 'Sins of the Father'],
+  ])('reads "%s" as the quest %s', (raw, questId) => {
+    expect(compile(raw)).toEqual([{ type: 'QUEST', questId, label: questId }]);
+  });
+
+  it('reads the skill and guild gates of the Scar essence mine and Wizard Distentor', () => {
+    expect(compile('Mining level 64')).toEqual([{ type: 'SKILL', skill: 'Mining', level: 64, label: 'Mining level 64' }]);
+    expect(compile('Magic level 66')).toEqual([{ type: 'SKILL', skill: 'Magic', level: 66, label: 'Magic level 66' }]);
+    expect(compile("Access the Wizards' Guild")).toEqual([{ type: 'UNLOCK', category: 'guilds', id: "Wizards' Guild", label: "Wizards' Guild" }]);
+  });
+});

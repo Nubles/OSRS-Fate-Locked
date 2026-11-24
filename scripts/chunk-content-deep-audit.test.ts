@@ -117,3 +117,50 @@ describe('Dorgesh-Kaan through the Keldagrim train (areas.d1[1])', () => {
     expect(full.interiors['11679'].entrances.map(entrance => entrance.requirements)).toEqual([['Started The Giant Dwarf']]);
   });
 });
+
+describe('more quest-locked areas the source marks as area unlocks (areas.d2[0])', () => {
+  // Each gate from the place's own Wiki page, fetched 24 Nov 2026 (oldids in interior-access.json).
+  const GATES: [string, string][] = [
+    ["Yama's Domain", 'A Kingdom Divided Complete the quest'],
+    ['Vampyrium', 'The Blood Moon Rises Complete the quest'],
+    ['Ghorrock Dungeon', 'Secrets of the North Complete the quest'],
+    ['Ghorrock Prison', 'Secrets of the North Complete the quest'],
+    ['Ghorrock Prison', 'Desert Treasure II: reached Ghorrock Prison'],
+    ["Tolna's rift", "A Soul's Bane Complete the quest"],
+    ['Daeyalt essence mine', 'Sins of the Father Complete the quest'],
+    ['The Scar', 'Desert Treasure II: reached the Scar'],
+    ['Scar essence mine', 'Desert Treasure II: reached the Scar'],
+    ['Scar essence mine', 'Mining level 64'],
+  ];
+
+  it.each(GATES)('asks at every entrance of %s for %s', (name, gate) => {
+    const records = interiorsNamed(name);
+    expect(records.length, name).toBeGreaterThan(0);
+    for (const [id, interior] of records) {
+      expect(interior.entrances.length, `${name} ${id}`).toBeGreaterThan(0);
+      for (const entrance of interior.entrances) expect(entrance.requirements, `${name} ${id} via ${entrance.chunkId}`).toContain(gate);
+    }
+  });
+});
+
+describe('the true Blood Altar and the inner Meiyerditch Laboratories (areas.d2[0], area-access.d1[1])', () => {
+  // Wiki "Meiyerditch Laboratories" oldid 15385627: the complete laboratory opens once the Sins of the Father
+  // mutated bloodveld is killed; the altar ruins are in its northern part; the Canifis route is listed after the quest.
+  // Wiki "Blood Altar" oldid 15404832: reached from the trapdoor behind the Hair of the Dog in Canifis.
+  const STAGE = 'Sins of the Father: killed the mutated bloodveld';
+  const entrancesOf = (id: string) => full.interiors[id].entrances;
+
+  it.each(['11338', '14232', '14488'])('asks interior %s for the bloodveld stage from Meiyerditch and for the quest from Canifis', id => {
+    const meiyerditch = entrancesOf(id).filter(entrance => entrance.chunkId === '14387');
+    expect(meiyerditch.length, id).toBeGreaterThan(0);
+    for (const entrance of meiyerditch) expect(entrance.requirements, id).toContain(STAGE);
+    const canifis = entrancesOf(id).filter(entrance => entrance.chunkId === '13878');
+    expect(canifis.length, id).toBeGreaterThan(0);
+    for (const entrance of canifis) expect(entrance.requirements, id).toContain('Sins of the Father Complete the quest');
+    for (const entrance of entrancesOf(id)) expect(entrance.requirements.length, `${id} via ${entrance.chunkId}`).toBeGreaterThan(0);
+  });
+
+  it('keeps the outer laboratory rooms that Darkness of Hallowvale visits open from Meiyerditch', () => {
+    expect(entrancesOf('14487').map(entrance => [entrance.chunkId, entrance.requirements])).toEqual([['14387', []]]);
+  });
+});

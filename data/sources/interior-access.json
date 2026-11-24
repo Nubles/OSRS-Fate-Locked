@@ -399,11 +399,13 @@
     },
     "Blood altar": {
       "entrances": [
-        { "chunkId": "14387", "requirements": [] },
+        { "chunkId": "14387", "requirements": ["Sins of the Father: killed the mutated bloodveld"] },
+        { "chunkId": "13878", "requirements": ["Sins of the Father Complete the quest"] },
         { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Sins of the Father Complete the quest"] }
       ],
-      "source": "https://oldschool.runescape.wiki/w/Blood_rift",
-      "note": "The True Blood Altar. The blood rift in the Abyss leads here once Sins of the Father is complete. The Meiyerditch entrance is kept as generated. Kourend's Blood Altar is a surface chunk of its own and is not changed."
+      "source": "https://oldschool.runescape.wiki/w/Meiyerditch_Laboratories?oldid=15385627",
+      "evidence": ["https://oldschool.runescape.wiki/w/Blood_Altar?oldid=15404832", "https://oldschool.runescape.wiki/w/Hair_of_the_Dog?oldid=15356764", "https://oldschool.runescape.wiki/w/Blood_rift"],
+      "note": "The True Blood Altar, in the northern part of the Meiyerditch Laboratories. From Meiyerditch (56,51) the complete laboratory opens once the mutated bloodveld of Sins of the Father is killed; the inner laboratory rooms are reached through this record and carry the same gate, while the outer rooms Darkness of Hallowvale visits stay open. The trapdoor behind the Hair of the Dog in Canifis (54,54) leads through the Myreque tunnels and the tomb of Ivandis to the end of the laboratory, a way the Wiki lists after Sins of the Father. The blood rift in the Abyss leads here once Sins of the Father is complete. Kourend's Blood Altar is a surface chunk of its own and is not changed."
     },
     "Death altar": {
       "entrances": [
@@ -524,6 +526,64 @@
       ],
       "source": "https://oldschool.runescape.wiki/w/Lighthouse?oldid=15375076",
       "note": "The Lighthouse opens during and after Horror from the Deep."
+    },
+    "Yama's Domain": {
+      "requirements": [
+        "A Kingdom Divided Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Yama?oldid=15411202",
+      "evidence": ["https://oldschool.runescape.wiki/w/Yama%27s_Domain?oldid=15212079"],
+      "note": "Reached through the Voice of Yama at the bottom of the Chasm of Fire once A Kingdom Divided is complete."
+    },
+    "Vampyrium": {
+      "requirements": [
+        "The Blood Moon Rises Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Vampyrium?oldid=15333623",
+      "note": "The quest The Blood Moon Rises unlocks access to Vampyrium."
+    },
+    "Ghorrock Dungeon": {
+      "requirements": [
+        "Secrets of the North Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Ghorrock_Dungeon?oldid=15317457",
+      "note": "Uncovered during Secrets of the North, through the Salt Mine under Weiss."
+    },
+    "Ghorrock Prison": {
+      "requirements": [
+        "Desert Treasure II: reached Ghorrock Prison"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Ghorrock_Prison?oldid=15234059",
+      "note": "Entered from the Ghorrock Dungeon, whose gate it also carries, during and after Desert Treasure II. Duke Sucellus can be fought again after the quest."
+    },
+    "Tolna's rift": {
+      "requirements": [
+        "A Soul's Bane Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Tolna%27s_rift?oldid=15407315",
+      "note": "A dungeon that can be accessed after completing A Soul's Bane."
+    },
+    "Daeyalt essence mine": {
+      "requirements": [
+        "Sins of the Father Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Daeyalt_essence_mine?oldid=15367373",
+      "note": "The essence mine becomes available after completion of Sins of the Father."
+    },
+    "The Scar": {
+      "requirements": [
+        "Desert Treasure II: reached the Scar"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/The_Scar?oldid=15380683",
+      "note": "Partial completion of Desert Treasure II is required to access the Scar. The Catalytic Guardian in the Temple of the Eye sends players there, so the route keeps that gate too."
+    },
+    "Scar essence mine": {
+      "requirements": [
+        "Desert Treasure II: reached the Scar",
+        "Mining level 64"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Scar_essence_mine?oldid=15397253",
+      "note": "Partial completion of Desert Treasure II and 64 Mining, for Hagus's permission to use the mine."
     }
   },
   "records": {
