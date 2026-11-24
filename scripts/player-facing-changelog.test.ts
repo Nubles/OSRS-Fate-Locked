@@ -62,6 +62,8 @@ describe('player-facing changelog path classification', () => {
     'styles.css',
     'types.ts',
     'components/RuneLiteOnboarding.tsx',
+    'config/economy.ts',
+    'context/GameContext.tsx',
     'data/changelog.ts',
     'hooks/useOnlineSync.ts',
     'public/manifest.webmanifest',
@@ -75,6 +77,8 @@ describe('player-facing changelog path classification', () => {
   it.each([
     'App.lifecycle.test.tsx',
     'components/RuneLiteOnboarding.test.tsx',
+    'config/gameModes.test.ts',
+    'context/GameContext.test.tsx',
     'data/changelog.test.ts',
     'utils/__tests__/saveSchema.ts',
     'fixtures/player-state.ts',
@@ -101,6 +105,19 @@ describe('player-facing changelog gate decision', () => {
       required: true,
       satisfied: false,
       playerFacingPaths: ['App.tsx'],
+    });
+  });
+
+  it('fails a change to only the Key economy or the save context without the authored changelog', () => {
+    expect(evaluatePlayerFacingChangelog(['config/economy.ts'])).toEqual({
+      required: true,
+      satisfied: false,
+      playerFacingPaths: ['config/economy.ts'],
+    });
+    expect(evaluatePlayerFacingChangelog(['context/GameContext.tsx'])).toEqual({
+      required: true,
+      satisfied: false,
+      playerFacingPaths: ['context/GameContext.tsx'],
     });
   });
 

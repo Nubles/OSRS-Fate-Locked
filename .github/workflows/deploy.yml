@@ -26,10 +26,10 @@ jobs:
         shard: [1, 2, 3]
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: npm
@@ -44,10 +44,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: npm
@@ -72,7 +72,7 @@ jobs:
           BUILD_ID: ${{ github.sha }}
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: ./dist
 
@@ -86,6 +86,49 @@ jobs:
     needs: [test, build]
     runs-on: ubuntu-latest
     steps:
+      # A re-run of an older, cancelled Deploy run would publish its older build
+      # over the newer live site, so this stops any run whose commit is no longer
+      # the head of main. It reads main with plain git (the repository is public),
+      # because this job's token has no contents permission.
+      - name: Stop if main has moved on
+        shell: bash
+        env:
+          GIT_TERMINAL_PROMPT: '0'
+          # A push that changes only these files starts no Deploy run (the
+          # paths-ignore list above), so it must not block the run before it.
+          IGNORED_PATHS: |
+            scripts/send-release-event.mjs
+            .github/workflows/discord-release.yml
+        run: |
+          repo="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          lookup_failed() {
+            echo "::error::Could not read the head of main from $repo, so this run cannot tell whether it is still the newest. Nothing was deployed. Re-run this job once GitHub is reachable."
+            exit 1
+          }
+          answer=$(git ls-remote --exit-code "$repo" refs/heads/main) || lookup_failed
+          head=$(printf '%s\n' "$answer" | cut -f1)
+          [[ $head =~ ^[0-9a-f]{40}$ ]] || lookup_failed
+          if [ "$head" = "$GITHUB_SHA" ]; then
+            echo "This run's commit $GITHUB_SHA is the head of main. Deploying."
+            exit 0
+          fi
+          # main has moved. If the newer commits change only ignored files, no
+          # newer Deploy run is coming, so this run is still the newest build.
+          git init -q "$RUNNER_TEMP/main-check"
+          cd "$RUNNER_TEMP/main-check"
+          git remote add origin "$repo"
+          git fetch -q --depth=100 --filter=blob:none origin "$head" || lookup_failed
+          if git cat-file -e "$GITHUB_SHA^{commit}" 2>/dev/null; then
+            changed=$(git diff --no-renames --name-only "$GITHUB_SHA" "$head") || lookup_failed
+            others=$(printf '%s\n' "$changed" | grep -vxF -f <(printf '%s' "$IGNORED_PATHS") | grep . || true)
+            if [ -z "$others" ]; then
+              echo "main is at $head, but the newer commits change only files that start no Deploy run. Deploying $GITHUB_SHA."
+              exit 0
+            fi
+          fi
+          echo "::error::main has moved on to $head, so this run's commit $GITHUB_SHA is out of date and was not deployed. The newest Deploy run publishes main; re-run that one instead if it failed."
+          exit 1
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

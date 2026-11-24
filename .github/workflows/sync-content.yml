@@ -55,12 +55,12 @@ jobs:
       sync_outcome: ${{ steps.sync.outcome }}
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
           cache: npm
@@ -113,7 +113,7 @@ jobs:
             git status --porcelain -- data docs | sed 's/^/- /'
             echo ""
             echo "## Collection log"
-            strip < "$RUNNER_TEMP/clog.txt" | grep -E '^\s*(RENAME|ADD|MOVE|\+|\?)|\[clog:sync\] (renames|failed|WARNING|[0-9]+ NEW)' || echo "(no changes)"
+            strip < "$RUNNER_TEMP/clog.txt" | grep -E '^\s*(RENAME|ADD|MOVE|KEEP|\+|\?)|\[clog:sync\] (renames|failed|WARNING|[0-9]+ NEW)' || echo "(no changes)"
             echo ""
             echo "## Freshness check"
             strip < "$RUNNER_TEMP/check.txt" | grep -E '\[content:check\]|^\s{2}' | grep -v 'wrote docs' || true
@@ -138,7 +138,7 @@ jobs:
       # anything else in the workspace.
       - name: Hand the synced files to the push job
         if: steps.report.outputs.changed == 'true'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: wiki-content-sync
           path: |
@@ -158,7 +158,7 @@ jobs:
       # that checks afresh, where an old report would describe the tracker as
       # it was and could undo what a later run has told the owner.
       - name: Hand the status and the report to the alert job
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: wiki-content-sync-report
           path: |
@@ -174,11 +174,11 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Take the synced files from the sync job
         if: needs.sync.outputs.changed == 'true'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: wiki-content-sync
           path: .
@@ -213,19 +213,19 @@ jobs:
       issues: write
     steps:
       - name: Checkout
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 22
 
       # Into a scratch folder: the script below runs from the checkout, and
       # nothing the sync job produced is unpacked over it.
       - name: Take the status and the report from the sync job
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: wiki-content-sync-report
           path: ${{ runner.temp }}/wiki-content-sync-report

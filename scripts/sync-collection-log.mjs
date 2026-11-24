@@ -86,6 +86,40 @@ async function loadWiki() {
   return pages;
 }
 
+// The Wiki's data module can come back empty or cut short without an error.
+// Every app slot would then read as gone from the Wiki, so the sync stops
+// before it prints or writes anything, and its step fails.
+export function assertWikiCoverage(wikiPages, appItemCount) {
+  const pageCount = Object.keys(wikiPages).length;
+  const itemCount = Object.values(wikiPages).reduce((n, items) => n + items.length, 0);
+  if (!pageCount || itemCount < appItemCount / 2)
+    throw new Error(`the Wiki's collection log data lists ${pageCount} pages and ${itemCount} items, against ${appItemCount} items in the app, so it was not used`);
+}
+
+// Move only an unambiguous physical slot that no longer exists on its former
+// wiki page. Legitimate shared drops on multiple pages keep their own slots.
+// A page whose Wiki page is gone receives nothing here: PAGE_MATCH can name a
+// title the Wiki has renamed or dropped, and that page is reported as kept
+// further down instead of stopping the sync.
+export function moveSlots(pages, wikiPages) {
+  for (const destination of pages) {
+    const listed = wikiPages[destination.target];
+    if (!listed) continue;
+    for (const name of listed) {
+      if (destination.items.some(item => norm(item.name) === norm(name))) continue;
+      const candidates = pages.flatMap(page => page === destination ? [] : page.items
+        .filter(item => norm(item.name) === norm(name)
+          && !(wikiPages[page.target] ?? []).some(wikiName => norm(wikiName) === norm(name)))
+        .map(item => ({ page, item })));
+      if (candidates.length !== 1) continue;
+      const { page, item } = candidates[0];
+      page.items = page.items.filter(other => other.id !== item.id); page.moved++;
+      destination.items.push({ ...item, name });
+      console.log(`  MOVE   ${page.name} -> ${destination.name}: ${name} (#${item.id})`);
+    }
+  }
+}
+
 export function alignItems(appItems, wikiItems, log, page, mint) {
   const pool = wikiItems.map(n => ({ n, used: false }));
   const out = [];
@@ -120,23 +154,8 @@ const run = async () => {
     while ((m = itemRe.exec(pm[6])) !== null) items.push({ id: Number(m[1]), name: unesc(m[2]) });
     pages.push({ i, pm, tab, name, items, target: PAGE_MATCH[name] || wikiByNorm[norm(name)], moved: 0 });
   }
-  // Move only an unambiguous physical slot that no longer exists on its former
-  // wiki page. Legitimate shared drops on multiple pages keep their own slots.
-  for (const destination of pages) {
-    if (!destination.target) continue;
-    for (const name of wikiPages[destination.target]) {
-      if (destination.items.some(item => norm(item.name) === norm(name))) continue;
-      const candidates = pages.flatMap(page => page === destination ? [] : page.items
-        .filter(item => norm(item.name) === norm(name)
-          && !(wikiPages[page.target] ?? []).some(wikiName => norm(wikiName) === norm(name)))
-        .map(item => ({ page, item })));
-      if (candidates.length !== 1) continue;
-      const { page, item } = candidates[0];
-      page.items = page.items.filter(other => other.id !== item.id); page.moved++;
-      destination.items.push({ ...item, name });
-      console.log(`  MOVE   ${page.name} -> ${destination.name}: ${name} (#${item.id})`);
-    }
-  }
+  assertWikiCoverage(wikiPages, pages.reduce((n, page) => n + page.items.length, 0));
+  moveSlots(pages, wikiPages);
   const allocator = createCollectionIdAllocator(pages);
   for (const page of pages) {
     const { i, pm, name, target } = page;

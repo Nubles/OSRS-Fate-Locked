@@ -57,7 +57,7 @@ const LINK_RE = /^https:\/\/[A-Za-z0-9_.:/-]+$/;
 // The notes check-content-sync.mjs writes when it could not read a source.
 // They mean "unknown this week", never "something to add".
 const UNAVAILABLE = /unavailable(?:; retry the content check)?$/;
-const CLOG_KINDS = { RENAME: 'rename', ADD: 'new item', MOVE: 'moved item', '?': 'possible rename', '+': 'new page' };
+const CLOG_KINDS = { RENAME: 'rename', ADD: 'new item', MOVE: 'moved item', KEEP: 'no longer on the Wiki', '?': 'possible rename', '+': 'new page' };
 
 // The parts of the check, told apart by how check-content-sync.mjs and this
 // script begin their lines. A part that could not be read one week keeps its
@@ -184,11 +184,17 @@ export function parseReport(report) {
   const finished = lines.some((line) => /^\[clog:sync\] renames \d+/.test(line));
   const collectionLog = [];
   for (const line of lines) {
-    const match = line.match(/^\s*(RENAME|ADD|MOVE|\?|\+)\s+(.+)$/s);
+    const match = line.match(/^\s*(RENAME|ADD|MOVE|KEEP|\?|\+)\s+(.+)$/s);
     if (!match) continue;
     // Slot ids and item counts shift from week to week; the name is what matters.
     const what = match[2].replace(/\s*\((?:#\d+|\d+ items?)\)\s*$/, '');
-    collectionLog.push(tidy(`Collection log, ${CLOG_KINDS[match[1]]}: ${what}`));
+    // A whole page the Wiki no longer has is printed as "[page <name>] no wiki
+    // match", a dash and "left as-is": the issue names the page and leaves the
+    // rest out.
+    const page = match[1] === 'KEEP' ? what.match(/^\[page (.+)\] no wiki match \u2014 left as-is$/s) : null;
+    collectionLog.push(tidy(page
+      ? `Collection log, page no longer on the Wiki: ${page[1]}`
+      : `Collection log, ${CLOG_KINDS[match[1]]}: ${what}`));
   }
   const freshness = section(report, '## Freshness check', REPORT_HEADINGS) ?? [];
   // The check prints its quest counts right after it has written the status
