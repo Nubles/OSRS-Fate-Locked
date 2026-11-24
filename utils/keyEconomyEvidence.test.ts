@@ -190,3 +190,48 @@ describe('buildKeyEconomyEvidence', () => {
     ]);
   });
 });
+
+describe('Pity Keys and recorded odds in the evidence', () => {
+  it('does not count a Pity Key as a success, and a Pity Key does not end a drought', () => {
+    const pity = (): LogEntry => roll({ type: 'PITY', result: 'SUCCESS', message: 'MAX FATE REACHED! Pity Key granted.' });
+    const report = buildKeyEconomyEvidence([
+      roll(), roll(), roll(), roll(), roll(),
+      pity(),
+      roll(),
+    ], validInput);
+
+    expect(report.schemaVersion).toBe(2);
+    expect(report.totals).toMatchObject({
+      attempts: 7,
+      successes: 0,
+      pityKeys: 1,
+      drought: { longestFailures: 7, activeFailures: 7 },
+    });
+    expect(report.sources[0]).toMatchObject({ attempts: 7, successes: 0, pityKeys: 1, drought: { longestFailures: 7, activeFailures: 7 } });
+  });
+
+  it('ends a drought on a real win, on a Key and on an Omni-Key', () => {
+    const report = buildKeyEconomyEvidence([
+      roll(), roll({ result: 'SUCCESS' }), roll(), roll({ type: 'ROLL_OMNI', result: 'SUCCESS' }),
+    ], validInput);
+    expect(report.totals).toMatchObject({ successes: 2, pityKeys: 0, drought: { longestFailures: 1, activeFailures: 0 } });
+  });
+
+  it("takes a roll's expected success from its recorded odds, and from its threshold when there are none", () => {
+    const report = buildKeyEconomyEvidence([
+      // A Ritual of Clarity roll: two draws at 40%.
+      roll({ threshold: 40, meta: { successProbability: 0.64, luckApplied: true } }),
+      // An older save's roll with no recorded odds.
+      roll({ threshold: 40, meta: undefined }),
+      // Recorded odds that cannot be right fall back to the threshold.
+      roll({ threshold: 40, meta: { successProbability: 1.5 } }),
+      roll({ threshold: 40, meta: { successProbability: Number.NaN } }),
+    ], validInput);
+    expect(report.totals.expectedSuccesses).toBeCloseTo(0.64 + 0.4 * 3);
+  });
+
+  it('documents what the counts mean', () => {
+    expect(evidenceProtocol).toContain('schema version 2');
+    expect(evidenceProtocol).toContain('A Pity Key is not a success');
+  });
+});

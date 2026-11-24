@@ -77,7 +77,7 @@ describe('KeyEconomyEvidenceExport', () => {
     expect(revokedUrl).toBe('blob:test-evidence');
     expect(downloadedBlob?.type).toBe('application/json');
     const payload = await downloadedBlob?.text();
-    expect(payload).toContain('"schemaVersion": 1');
+    expect(payload).toContain('"schemaVersion": 2');
     expect(payload).not.toContain('private-event-id');
     expect(payload).not.toContain('Sensitive Name');
     expect(payload).not.toContain('1700000000000');
