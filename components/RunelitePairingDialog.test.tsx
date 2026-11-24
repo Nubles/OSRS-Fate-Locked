@@ -60,7 +60,8 @@ describe('RunelitePairingDialog', () => {
   it('does not claim that RuneLite sent the link, since any site can open one', () => {
     renderDialog();
     expect(screen.queryByText(/RuneLite requested this connection/i)).toBeNull();
-    expect(screen.getByText(/Only continue if you just pressed Connect tracker in RuneLite/i)).toBeTruthy();
+    // A link comes from Connect tracker, or from Re-pair tracker… while a pairing works.
+    expect(screen.getByText('Only continue if you just pressed Connect tracker or Re-pair tracker… in RuneLite.')).toBeTruthy();
     expect(screen.getByText(/link from anywhere else/i)).toBeTruthy();
   });
 

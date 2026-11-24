@@ -60,7 +60,10 @@ describe('RelayPublishBanner', () => {
   it('shows at once, with what to do, when retrying cannot help', async () => {
     render(<RelayPublishBanner />);
     await publishAnswered({ ok: false, status: 403 });
-    expect(text()).toContain('Press Connect tracker in RuneLite to pair this browser again.');
+    // A RuneLite whose pairing still works shows Re-pair tracker…, not Connect tracker.
+    expect(text()).toContain(
+      "To pair this browser again, press Re-pair tracker… in RuneLite's Connection & backup, or Connect tracker if RuneLite shows that instead.",
+    );
     expect(text()).not.toContain('try again by itself');
     expect(text()).toContain('RuneLite is still using the rules it last received, so');
   });
@@ -109,6 +112,8 @@ describe('relayFailureReason', () => {
       "The tracker couldn't load its map data, so it didn't send your rules."],
     ['something odd', 'Sending failed (something odd).'],
     [null, 'Sending failed.'],
+    ['relay 403', "The relay refused this connection; another browser may have taken it over. To pair this browser again, press Re-pair tracker… in RuneLite's Connection & backup, or Connect tracker if RuneLite shows that instead."],
+    ['relay 400', "The relay refused this connection. To pair this browser again, press Re-pair tracker… in RuneLite's Connection & backup, or Connect tracker if RuneLite shows that instead."],
   ])('explains %s', (error, reason) => {
     expect(relayFailureReason(error)).toBe(reason);
   });

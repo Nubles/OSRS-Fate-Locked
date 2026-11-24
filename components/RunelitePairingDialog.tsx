@@ -63,7 +63,7 @@ export const RunelitePairingDialog: React.FC<
               Connect RuneLite tracker
             </h2>
             <p className="mt-1 text-[11px] text-gray-500">
-              Only continue if you just pressed Connect tracker in RuneLite.
+              Only continue if you just pressed Connect tracker or Re-pair tracker… in RuneLite.
             </p>
           </div>
         </div>

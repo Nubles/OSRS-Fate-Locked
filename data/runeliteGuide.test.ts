@@ -134,6 +134,13 @@ describe('RuneLite guide, as the plugin does it', () => {
     RUNELITE_GUIDE_FIGURES.find(figure => figure.id === figureId)?.callouts.find(item => item.id === id)?.body ?? '';
   const glossary = (term: string): string => RUNELITE_GUIDE_GLOSSARY.find(item => item.term === term)?.definition ?? '';
 
+  it('names the cancel button RuneLite shows while a pairing or a re-pairing waits', () => {
+    const fix = RUNELITE_GUIDE_TROUBLESHOOTING.find(item => item.id === 'waiting-for-confirmation')?.fix.join(' ') ?? '';
+    expect(fix).toContain('To start over, select Cancel, then Connect tracker.');
+    // A re-pairing offers Cancel re-pairing, which keeps the working pairing.
+    expect(fix).toContain('While re-pairing, Cancel re-pairing keeps your current pairing.');
+  });
+
   it('gives the relay’s real profile lifetime for Tracker copy expired', () => {
     const worker = readFileSync('workers/fate-relay/worker.js', 'utf8');
     const days = Number(/const PROFILE_TTL_SECONDS = (\d+) \* 86400;/.exec(worker)?.[1]);

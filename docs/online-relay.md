@@ -16,8 +16,9 @@ RuneLite GET  /r/<code>   retrieves and validates that profile
 ```
 
 RuneLite creates a random 32-character pairing code when the player presses
-**Connect tracker**, then opens the online app with that code in the URL
-fragment. After the player approves the current profile, the browser:
+**Connect tracker** (or **Re-pair tracker…** while a pairing works), then
+opens the online app with that code in the URL fragment. After the player
+approves the current profile, the browser:
 
 1. stores the pairing session and its private write token;
 2. builds the current v4 profile;
@@ -139,10 +140,10 @@ A write that claims an id nobody holds first removes any Discord link to it;
 see "Ownership" in [shared-progress.md](shared-progress.md).
 
 The pairing dialog asks the player to continue only if they just pressed
-**Connect tracker** in RuneLite, because any website can open a pairing link.
-It shows only the code's last four characters, such as `…a1b2`, so a stream
-or screenshot of the dialog does not reveal the code. The app still stores
-and sends the whole code.
+**Connect tracker** or **Re-pair tracker…** in RuneLite, because any website
+can open a pairing link. It shows only the code's last four characters, such
+as `…a1b2`, so a stream or screenshot of the dialog does not reveal the code.
+The app still stores and sends the whole code.
 
 ## Marking a code gone
 

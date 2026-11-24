@@ -57,6 +57,8 @@ describe('RuneLiteOnboarding', () => {
       /In RuneLite, open the Fate Locked panel and click/i,
     )).toBeTruthy();
     expect(screen.getByText('Connect tracker')).toBeTruthy();
+    // A RuneLite that is already paired shows Re-pair tracker… instead.
+    expect(screen.getByText('Re-pair tracker…')).toBeTruthy();
     expect(screen.queryByText(/Enable online sync/i)).toBeNull();
     expect(screen.queryByText(/Online sync code/i)).toBeNull();
     expect(screen.queryByText(/eight-character/i)).toBeNull();
