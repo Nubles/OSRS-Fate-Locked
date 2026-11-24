@@ -149,6 +149,8 @@ describe('ShareModal region summary', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
     expect(writeText.mock.calls[0][0]).toContain(`Banks: 2/${BANK_IDS.length}`);
+    // The pool includes 124 physical chunk entries plus the virtual registry unlock.
+    expect(BANK_IDS).toHaveLength(125);
   });
 
   it('copies the same figures as the card in Vanilla, counting only what the card counts', async () => {
@@ -180,8 +182,6 @@ describe('ShareModal region summary', () => {
       mockGame.current.gameModeId = 'vanilla';
       (mockGame.current as { customMode?: unknown }).customMode = undefined;
     }
-    // The pool includes 124 physical chunk entries plus the virtual registry unlock.
-    expect(BANK_IDS).toHaveLength(125);
   });
 
   it('uses all unlock families for the shared completion percentage, with no rank', async () => {
