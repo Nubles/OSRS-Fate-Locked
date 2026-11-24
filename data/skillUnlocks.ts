@@ -75,7 +75,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 16: Yanille Underwall Tunnel',
       'Lvl 18: Slayer Tower Broken Window Shortcut',
       'Lvl 20: Al Kharid Rooftop Course',
-      'Lvl 20: Brimhaven Arena (Medium Obstacles)',
+      'Lvl 20: Brimhaven Agility Arena (Medium Obstacles)',
       'Lvl 20: Coal Trucks Log Balance'
     ],
     3: [
@@ -92,7 +92,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 32: Catherby Grapple (Strength 35, Ranged 35) & Shilo Village Steps',
       'Lvl 35: Barbarian Outpost Course',
       'Lvl 37: Tree Gnome Stronghold Rocks',
-      'Lvl 40: Brimhaven Arena (High Obstacles)',
+      'Lvl 40: Brimhaven Agility Arena (High Obstacles)',
       'Lvl 40: Canifis Rooftop Course'
     ],
     5: [
