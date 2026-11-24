@@ -1240,6 +1240,7 @@ const GameLayout = () => {
         <RunelitePairingDialog
           code={runelitePairCode}
           replacing={relaySync.enabled}
+          connected={relaySync.code === runelitePairCode}
           profileName={activeProfileName}
           linkedAccount={linkedAccount ?? null}
           phase={runelitePairPhase}

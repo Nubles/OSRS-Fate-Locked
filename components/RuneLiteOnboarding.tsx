@@ -165,7 +165,8 @@ export const RuneLiteOnboarding: React.FC = () => {
               In RuneLite, open the Fate Locked panel and click
               {' '}<span className="font-semibold text-gray-100">
                 Connect tracker
-              </span>. Confirm this profile in the tab RuneLite opens.
+              </span>{' '}(<span className="font-semibold text-gray-100">Re-pair tracker…</span> if
+              it is already paired). Confirm this profile in the tab RuneLite opens.
             </p>
           )}
           {deliveryStatus === 'sending' && (

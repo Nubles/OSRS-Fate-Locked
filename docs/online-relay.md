@@ -11,13 +11,14 @@ The relay is optional. Clipboard and local-file imports remain available.
 
 ```text
 Browser  POST /r/<code>   publishes the app-authored v4 profile
-Browser  POST /r/<code>   marks the code gone when the player presses Disconnect
+Browser  POST /r/<code>   marks the code gone on Disconnect, or when a new code replaces it
 RuneLite GET  /r/<code>   retrieves and validates that profile
 ```
 
 RuneLite creates a random 32-character pairing code when the player presses
-**Connect tracker**, then opens the online app with that code in the URL
-fragment. After the player approves the current profile, the browser:
+**Connect tracker** (or **Re-pair tracker…** while a pairing works), then
+opens the online app with that code in the URL fragment. After the player
+approves the current profile, the browser:
 
 1. stores the pairing session and its private write token;
 2. builds the current v4 profile;
@@ -139,15 +140,22 @@ A write that claims an id nobody holds first removes any Discord link to it;
 see "Ownership" in [shared-progress.md](shared-progress.md).
 
 The pairing dialog asks the player to continue only if they just pressed
-**Connect tracker** in RuneLite, because any website can open a pairing link.
-It shows only the code's last four characters, such as `…a1b2`, so a stream
-or screenshot of the dialog does not reveal the code. The app still stores
-and sends the whole code.
+**Connect tracker** or **Re-pair tracker…** in RuneLite, because any website
+can open a pairing link. It shows only the code's last four characters, such
+as `…a1b2`, so a stream or screenshot of the dialog does not reveal the code.
+The app still stores and sends the whole code.
 
 ## Marking a code gone
 
 The owner can withdraw a published profile before its record expires; the app
-does so when the player presses **Disconnect**.
+does so when the player presses **Disconnect**, and when they confirm a pairing
+link for a different code, which replaces the pairing this browser held. That
+mark is sent after the new pairing is stored, waits for a publish already on
+its way to the old code, and is best effort like Disconnect's: it never holds
+up or undoes the new pairing. RuneLite reading the old code then says it was
+disconnected in the web tracker and offers **Connect tracker**. Confirming a
+link for the code this browser already holds keeps its write token, which the
+owner record was made with, and marks nothing gone.
 `POST /r/<code>` with `{ token, gone: true }` and no payload is authorised
 like a publish: it needs the code's write token and refreshes the owner
 record the same way. The Worker replaces the profile with a tombstone,
@@ -232,7 +240,9 @@ limit the relay answers `429` with `Retry-After: 60`, before touching KV:
 | `RELAY_ERROR_LIMITER` | `POST /e` | 10 a minute | A page reports each error once (and the relay forwards each message once in 10 minutes anyway). |
 
 Reads are not limited: a connected RuneLite checks once a minute (more often
-only while a pairing waits, for up to 10 minutes, and on Check now) and the
+only while a pairing waits, for up to 10 minutes; after a check that failed or
+brought rules it couldn't use, which is retried after 30 seconds, then 60,
+doubling up to 5 minutes; and on Check now, at most every 10 seconds) and the
 stream overlay every 30 seconds. The Discord bot's `/l/` routes need its secret and
 are not limited. The app already treats a `429` like a relay outage: the
 profile and backups are tried again later, and shared progress a minute
@@ -266,7 +276,7 @@ near the limit.
 | Profile publish (`r:<code>`) | The tracker tab saving a paired profile | When something RuneLite uses changes: after 15 s of quiet, at most every 2 min while changes never pause, at once when the tab is hidden; an unchanged profile is not re-sent for six hours, which keeps it well inside RuneLite's 12-hour limit for Strict Mode (see step 4 above) |
 | Owner record (`own:r:<code>`) | A publish or Disconnect | At most once a week per code |
 | Owner record (`own:p:<id>`) | A first publish, a stored summary, a link code, Stop sharing | At most once a week per run, plus once on Stop sharing; an unchanged summary writes it only for a run stored before owner records |
-| Tombstone (`r:<code>`, `gone`) | Disconnect | Once |
+| Tombstone (`r:<code>`, `gone`) | Disconnect, or a pairing for a new code replacing it | Once |
 | Backup (`b:<id>`) | `OnlineBackupDriver` | Changed runs only: at most every 30 min, or every 15 min when the tab is hidden with a change waiting; Back up now at once |
 | Previous backup copy (`b:<id>:previous`) | The first upload each day, or from another browser | At most about once a day |
 | Shared progress (`p:<id>`) | `ProgressShareDriver` | When the summary changes: after a minute of quiet, at least 3 min apart; the relay skips an unchanged summary |
@@ -359,7 +369,8 @@ enforce the player's current restrictions. It contains no password, session
 cookie, chat history, inventory dump, or arbitrary telemetry.
 
 The current relay record expires 30 days after the last publish, or sooner
-when the player presses **Disconnect**, which marks the code gone and leaves
+when the player presses **Disconnect** or pairs the browser with a new code,
+which marks the code gone and leaves
 a tombstone with no profile data. Thirty days lets RuneLite keep the rules
 between play sessions without the tracker open. Anyone with the random pairing code can read the record
 during its lifetime; the private token is required to replace it or mark it
