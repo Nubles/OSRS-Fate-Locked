@@ -5,11 +5,11 @@ import { DropSource, type UnlockState } from '../types';
 import { BOSSES_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { FARM_SLAYER_CARD_CHUNKS, SLAYER_MASTER_CHUNKS } from '../data/activityChunks';
 import { SLAYER_MASTER_REQUIREMENTS } from '../data/slayerMasterRequirements';
-import { BOSS_TASK_BOSSES, BOSS_TASK_SLAYER_LEVELS, BOSS_TASK_UNLOCK } from '../data/slayerBossTasks';
+import { BOSS_TASK_BOSSES, BOSS_TASK_REQUIREMENTS, BOSS_TASK_SLAYER_LEVELS, BOSS_TASK_UNLOCK } from '../data/slayerBossTasks';
 import { vanillaBossKeyStage } from '../config/vanillaKeyEconomy';
 import { canonicalBossId, canonicalQuestId } from './contentIdentity';
 import {
-  BOSS_TASK_ALL_SPENT, BOSS_TASK_NEEDS_BOSS, BOSS_TASK_NEEDS_MASTER, BOSS_TASK_NEEDS_TIER, BOSS_TASK_NEEDS_UNLOCK,
+  BOSS_TASK_ALL_SPENT, BOSS_TASK_NEEDS_BOSS, BOSS_TASK_NEEDS_MASTER, BOSS_TASK_NEEDS_REQUIREMENTS, BOSS_TASK_NEEDS_TIER, BOSS_TASK_NEEDS_UNLOCK,
   BOSS_TASK_ROLL_ON_CARD, SLAYER_CARD_MASTER, SLAYER_LOCKED,
   bossTaskChoices, slayerCardBlock, slayerMasterBlock, slayerMasterFloor, slayerSourceBlock,
 } from './farmGates';
@@ -19,7 +19,7 @@ const slayer = (tier: number, unlocks: Partial<UnlockState> = {}) =>
   run({ ...unlocks, skills: { ...initialState.unlocks.skills, Slayer: tier, ...unlocks.skills } });
 
 type BossTaskRule = { only?: string[]; except?: string[]; noSubstitutes?: string[] };
-type BossTaskRow = { boss: string; slayer?: number; monsters?: string[]; substitutes?: string[] };
+type BossTaskRow = { boss: string; slayer?: number; monsters?: string[]; substitutes?: string[]; quests?: string[]; skills?: Record<string, number>; anySkill?: Record<string, number> };
 
 describe('boss task data (data/slayerBossTasks.ts)', () => {
   const source = corrections.bossTasks as unknown as { unlock: string; masters: Record<string, BossTaskRule>; bosses: BossTaskRow[] };
@@ -44,6 +44,18 @@ describe('boss task data (data/slayerBossTasks.ts)', () => {
     const levels = Object.fromEntries(source.bosses.filter(row => row.slayer).map(row => [canonicalBossId(row.boss), row.slayer]));
     expect(BOSS_TASK_SLAYER_LEVELS).toEqual(levels);
     for (const boss of Object.values(BOSS_TASK_BOSSES).flat()) expect(BOSSES_LIST, boss).toContain(boss);
+  });
+
+  it('keeps each boss’s other assignment requirements, the Boss Slayer table’s (slayer.d1[3])', () => {
+    const rows = source.bosses.filter(row => row.quests || row.skills || row.anySkill);
+    const expected = Object.fromEntries(rows.flatMap(({ boss, monsters, substitutes, quests, skills, anySkill }) =>
+      [boss, ...(monsters ?? []), ...(substitutes ?? [])].map(name => [canonicalBossId(name),
+        { ...(quests ? { quests } : {}), ...(skills ? { skills } : {}), ...(anySkill ? { anySkill } : {}) }])));
+    expect(BOSS_TASK_REQUIREMENTS).toEqual(expected);
+    expect(BOSS_TASK_REQUIREMENTS['King Black Dragon']).toEqual({ quests: ['Dragon Slayer I'] });
+    expect(BOSS_TASK_REQUIREMENTS.Vorkath).toEqual({ quests: ['Dragon Slayer II'] });
+    expect(BOSS_TASK_REQUIREMENTS["Kree'arra"]).toEqual({ quests: ['Death Plateau'], skills: { Ranged: 70 }, anySkill: { Strength: 60, Agility: 60 } });
+    for (const quest of Object.values(BOSS_TASK_REQUIREMENTS).flatMap(req => req.quests ?? [])) expect(canonicalQuestId(quest), quest).toBe(quest);
   });
 });
 
@@ -146,8 +158,21 @@ describe('Boss Task card', () => {
     expect(bossTaskChoices(likeABoss(10, { bosses: ['Deranged Archaeologist', 'Crazy Archaeologist'] }), 'vanilla', {}))
       .toEqual({ bosses: ['Crazy Archaeologist'], block: null });
     // With Konar's Mount Karuulm, any task boss she assigns, the Hydra too; never Wintertodt.
-    expect(bossTaskChoices(likeABoss(10, { regions: ['Mount Karuulm'], bosses: ['Wintertodt', 'Vorkath', 'Alchemical Hydra'] }), 'vanilla', {}))
+    expect(bossTaskChoices(likeABoss(10, { regions: ['Mount Karuulm'], quests: ['Dragon Slayer II'], bosses: ['Wintertodt', 'Vorkath', 'Alchemical Hydra'] }), 'vanilla', {}))
       .toEqual({ bosses: ['Alchemical Hydra', 'Vorkath'], block: null });
+  });
+
+  it('leaves out a boss its master would not assign yet: no King Black Dragon before Dragon Slayer I (slayer.d1[3])', () => {
+    const dragons = { regions: ['Mount Karuulm'], bosses: ['King Black Dragon', 'Vorkath'] };
+    expect(bossTaskChoices(likeABoss(10, dragons), 'vanilla', {})).toEqual({ bosses: [], block: BOSS_TASK_NEEDS_REQUIREMENTS });
+    expect(bossTaskChoices(likeABoss(10, { ...dragons, quests: ['Dragon Slayer I'] }), 'vanilla', {}).bosses).toEqual(['King Black Dragon']);
+    expect(bossTaskChoices(likeABoss(10, { ...dragons, quests: ['Dragon Slayer I', 'Dragon Slayer II'] }), 'vanilla', {}).bosses)
+      .toEqual(['King Black Dragon', 'Vorkath']);
+    // Kree'arra: Death Plateau, 70 Ranged, and 60 Strength or 60 Agility for the dungeon (Skill tiers cap the level).
+    const kree = (skills: Record<string, number>) => likeABoss(10, { regions: ['Mount Karuulm'], quests: ['Death Plateau'], bosses: ["Kree'arra"], skills: { Slayer: 10, ...skills } });
+    expect(bossTaskChoices(kree({ Ranged: 7, Strength: 5, Agility: 5 }), 'vanilla', {}).block).toBe(BOSS_TASK_NEEDS_REQUIREMENTS);
+    expect(bossTaskChoices(kree({ Ranged: 7, Strength: 1, Agility: 6 }), 'vanilla', {}).bosses).toEqual(["Kree'arra"]);
+    expect(bossTaskChoices(kree({ Ranged: 6, Strength: 6, Agility: 6 }), 'vanilla', {}).block).toBe(BOSS_TASK_NEEDS_REQUIREMENTS);
   });
 
   it('leaves out a boss whose Slayer level is past Slayer’s tier', () => {

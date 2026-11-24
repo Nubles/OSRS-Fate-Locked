@@ -82,7 +82,7 @@ const NOT_TRAINING = /tall tree|tree branch|tree space|\bstump\b|\brocks \(|tree
 // combat/utility look-alikes (a "Butterfly ray" is a fish; a "Guard dog" is a
 // dog; combat gnomes/elves aren't pickpocketable; named combat warriors aren't
 // the Al Kharid thieving warrior).
-const NOT_NODE = /butterfly ray|guard dog|guard captain|\bgnome (archer|mage|troop|driver|guard|banker|coach|trainer|child)|mounted|terrorbird|elder gnome|woman-at-arms|corrupted warrior|tutor|salesman|saleswoman|shopkeeper|barman|bartender|referee|wise old man|odd old man|strange old man|weird old man|mysterious old man|doorman|tracker gnome/i;
+const NOT_NODE = /butterfly ray|guard dog|guard captain|menaphite guard|\bgnome (archer|mage|troop|driver|guard|banker|coach|trainer|child)|mounted|terrorbird|elder gnome|woman-at-arms|corrupted warrior|tutor|salesman|saleswoman|shopkeeper|barman|bartender|referee|wise old man|odd old man|strange old man|weird old man|mysterious old man|doorman|tracker gnome/i;
 
 // Ordered curated NPC/monster rules (Hunter first so e.g. "Snowy knight" — a
 // butterfly — isn't mistaken for a Thieving "knight"). First match wins.
@@ -158,7 +158,8 @@ const NPC_RULES: [RegExp, Req][] = [
   [/wealthy citizen/i, { skill: 'Thieving', level: 50 }],
   [/fremennik citizen/i, { skill: 'Thieving', level: 45 }],
   [/desert bandit|^bandit$|^bandit \(/i, { skill: 'Thieving', level: 53 }],
-  [/menaphite (thug|guard)/i, { skill: 'Thieving', level: 65 }],
+  // Menaphite guards cannot be pickpocketed (Wiki: options None); only the thugs can.
+  [/menaphite thug/i, { skill: 'Thieving', level: 65 }],
   // Only the canonical pickpocket knights (generic "Knight" = Black/White
   // Knights, not pickpocketable).
   [/knight of ardougne|knight of varlamore/i, { skill: 'Thieving', level: 55 }],
@@ -170,7 +171,7 @@ const NPC_RULES: [RegExp, Req][] = [
   // Only the explicitly thieving-tagged Al Kharid warrior (other "Warrior (…)"
   // are combat NPCs).
   [/warrior \(thieving\)|^warrior \(al kharid\)/i, { skill: 'Thieving', level: 25 }],
-  [/^guard\b|guard \(|town guard|bank guard|jail guard|menaphite guard/i, { skill: 'Thieving', level: 40 }],
+  [/^guard\b|guard \(|town guard|bank guard|jail guard/i, { skill: 'Thieving', level: 40 }],
   [/^(wo)?man\b|^man \(|poor looking (man|woman)|well-dressed man/i, { skill: 'Thieving', level: 1 }],
 ];
 
@@ -208,7 +209,7 @@ export const trainingReqFor = (name: string, kind: EntityKind): Req | null => {
     const patch = farmingPatchOf(name);
     if (patch) return { skill: 'Farming', level: FARMING_PATCH_LEVELS[patch] };
     if (NOT_TRAINING.test(name)) return null;
-    if (/bloodwood tree/i.test(name)) return { skill: 'Woodcutting', level: 85 };
+    if (/bloodwood tree/i.test(name)) return { skill: 'Woodcutting', level: 77 };
     if (/dramen tree/i.test(name)) return { skill: 'Woodcutting', level: 36 };
     // Ourania's altar takes any level.
     if (/^runecrafting altar$/i.test(name)) return { skill: 'Runecraft', level: 1 };

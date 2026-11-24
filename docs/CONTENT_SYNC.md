@@ -159,8 +159,18 @@ their original IDs, entrance routes, and access requirements. Reviewed overrides
 live in `data/sources/interior-access.json`; incomplete entrance evidence stays
 unmapped rather than becoming an unconditional surface location. Merchant stock
 supplements, empty-stock shops, and removed content are reviewed in
-`data/sources/shop-overrides.json`. `data/slayerTaskFamilies.json` records exact
-task-family membership and its source references. See
+`data/sources/shop-overrides.json`. Monsters the source still lists in an
+interior the game has since emptied of them (the Revenant Caves before the 2020
+overhaul) are removed by `interiorEntityRemovals` in
+`data/sources/chunk-content-overrides.json`. The source gates many dungeons only
+through `UnlocksArea` challenges, which the transform does not read; each such
+gate is added to `interior-access.json` after a Wiki check (Jormungand's Prison,
+the Myths' Guild basement and others, November 2026). `data/slayerTaskFamilies.json` records exact
+task-family membership and its source references. Monsters the Wiki's Slayer
+category counts for a task but that appear only in an event, a raid, a boss
+fight or once in a quest are listed with a reason in
+`data/sources/slayer-family-exclusions.json`, which `utils/slayerAccuracy.test.ts`
+checks. See
 [the repair review](CONTENT_REPAIR_REVIEW.md) for coverage and remaining gaps.
 
 Interior policy schema 2 supports common named rules (including `#Section`

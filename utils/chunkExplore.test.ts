@@ -78,6 +78,22 @@ describe('Chunked exploring rolls', () => {
     expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'] } }, '47,51', '@herb')).toBeNull();
     expect(exploreBlocker({ ...falador, unlocks: { ...falador.unlocks, farming: ['Herb'], levels: initialState.unlocks.levels } }, '47,51', '@herb')).toBe('Needs Farming level 9.');
 
+    // The Troll Stronghold roof's herb patch needs My Arm's Big Adventure; Locus Oasis' hardwood patch The Ribbiting Tale (deep audit d2[1]).
+    const roof = run({ unlocks: { ...run().unlocks, chunks: ['44,57'], skills: { Hitpoints: 1, Farming: 1 }, levels: { ...initialState.unlocks.levels, Farming: 9 }, farming: ['Herb'] } });
+    expect(exploreBlocker(roof, '44,57', '@herb')).toBe("Needs My Arm's Big Adventure done.");
+    expect(exploreBlocker(roof, '44,57', 'Farming')).toBe("Needs My Arm's Big Adventure done.");
+    expect(exploreBlocker({ ...roof, unlocks: { ...roof.unlocks, quests: ["My Arm's Big Adventure"] } }, '44,57', '@herb')).toBeNull();
+    const oasis = run({ unlocks: { ...run().unlocks, chunks: ['26,46'], skills: { Hitpoints: 1, Farming: 4 }, levels: { ...initialState.unlocks.levels, Farming: 35 }, farming: ['Hardwood Tree'], quests: ['Children of the Sun'] } });
+    expect(exploreBlocker(oasis, '26,46', 'Farming')).toBe('Needs The Ribbiting Tale done.');
+    expect(exploreBlocker({ ...oasis, unlocks: { ...oasis.unlocks, quests: ['Children of the Sun', 'The Ribbiting Tale'] } }, '26,46', 'Farming')).toBeNull();
+
+    // The Farming Guild's herb patch is in its west wing, which needs 65 Farming (deep audit d2[2]).
+    const farmingGuild = run({ unlocks: { ...run().unlocks, chunks: ['19,58'], skills: { Hitpoints: 1, Farming: 5 }, levels: { ...initialState.unlocks.levels, Farming: 45 }, farming: ['Herb'], guilds: ['Farming Guild'] } });
+    expect(exploreBlocker(farmingGuild, '19,58', '@herb')).toBe('Needs Farming tier 7.');
+    const westWing = { ...farmingGuild, unlocks: { ...farmingGuild.unlocks, skills: { Hitpoints: 1, Farming: 7 }, levels: { ...initialState.unlocks.levels, Farming: 64 } } };
+    expect(exploreBlocker(westWing, '19,58', '@herb')).toBe('Needs Farming level 65.');
+    expect(exploreBlocker({ ...westWing, unlocks: { ...westWing.unlocks, levels: { ...initialState.unlocks.levels, Farming: 65 } } }, '19,58', '@herb')).toBeNull();
+
     // Port Sarim's only patch is the spirit tree patch, which needs 83 Farming (tier 9).
     const sarim = run({ unlocks: { ...run().unlocks, chunks: ['47,50'], skills: { Hitpoints: 1, Farming: 1 }, farming: ['Spirit Tree'] } });
     expect(exploreBlocker(sarim, '47,50', 'Farming')).toBe('Needs Farming tier 9.');
@@ -142,13 +158,19 @@ describe('Chunked exploring rolls', () => {
     const guild = at(['40,53'], { Fishing: 7 }, { levels: { ...initialState.unlocks.levels, Fishing: 68 } });
     expect(exploreBlocker(guild, '40,53', 'Fishing')).toBe('Needs the Fishing Guild unlocked.');
     expect(exploreBlocker({ ...guild, unlocks: { ...guild.unlocks, guilds: ['Fishing Guild'] } }, '40,53', 'Fishing')).toBeNull();
+    // The Crafting Guild's wheels and oven are inside the guild (deep audit d2[3]).
+    const craftingGuild = at(['45,51'], { Crafting: 4 }, { levels: { ...initialState.unlocks.levels, Crafting: 40 } });
+    expect(exploreBlocker(craftingGuild, '45,51', 'Crafting')).toBe('Needs the Crafting Guild unlocked.');
+    expect(exploreBlocker({ ...craftingGuild, unlocks: { ...craftingGuild.unlocks, guilds: ['Crafting Guild'] } }, '45,51', 'Crafting')).toBeNull();
     // Sailing opens with Pandemonium.
     const port = at(['47,50'], { Sailing: 1 });
     expect(exploreBlocker(port, '47,50', 'Sailing')).toBe('Needs Pandemonium done.');
     expect(exploreBlocker({ ...port, unlocks: { ...port.unlocks, quests: ['Pandemonium'] } }, '47,50', 'Sailing')).toBeNull();
-    // Draynor rooftop needs Agility 10, not just tier 1.
+    // Al Kharid rooftop needs Agility 20, not just tier 2; Draynor rooftop needs only Agility 1 (OSRS Wiki, 8 May 2024).
+    const alKharid = at(['51,50', '51,49'], { Agility: 2 }, { levels: { ...initialState.unlocks.levels, Agility: 11 } });
+    expect(exploreBlocker(alKharid, '51,49', 'Agility')).toBe('Needs Agility level 20.');
     const draynor = at(['49,50', '48,50', '48,51'], { Agility: 1 });
-    expect(exploreBlocker(draynor, '48,51', 'Agility')).toBe('Needs Agility level 10.');
+    expect(exploreBlocker(draynor, '48,51', 'Agility')).toBeNull();
     // The Water altar needs essence as well as Runecraft 5.
     const water = at(['50,49', '49,49'], { Runecraft: 1 }, { levels: { ...initialState.unlocks.levels, Runecraft: 5 } });
     expect(exploreBlocker(water, '49,49', 'Runecraft')).toMatch(/^Needs essence: Rune Mysteries, Mining and an essence mine teleport/);

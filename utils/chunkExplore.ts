@@ -6,7 +6,8 @@
  * trains, something to fight, a Slayer master, a herb patch. A thing counts
  * once the run's tier and level in its skill reach its lowest node, and the
  * run can use it as the Skills rolls would (utils/chunkedSkillPool.ts): the
- * chunk's entry quest done, its guild unlocked, the skill's opening quest
+ * chunk's entry quest done, its guild unlocked, a patch's quest or diary
+ * lock met, the skill's opening quest
  * done, and the skill trainable at all (a Weapon slot for Ranged, essence for
  * Runecraft, and so on). Fighting needs a combat style the run can use.
  *
@@ -17,7 +18,7 @@
 import type { GameState, UnlockState } from '../types';
 import { CHUNK_EXPLORE_ROLLS } from '../config/economy';
 import {
-  COMBAT_STYLE, chunkContentBlocker, chunkedCombatStyleUsable, chunkedSkillNeeds, chunkedSkillQuestOpen, chunkedTrainingLevels, chunkFacts, chunkPatches,
+  COMBAT_STYLE, chunkContentBlocker, chunkedCombatStyleUsable, chunkedSkillNeeds, chunkedSkillQuestOpen, chunkedTrainingLevels, chunkFacts, chunkPatchBlocker, chunkPatches,
   runLevel, type TrainingRun,
 } from './chunkedSkillPool';
 import { SKILL_QUEST_GATES } from './journalStatus';
@@ -80,9 +81,13 @@ export const exploreThingBlocker = (thing: ExploreThing, unlocks: ExploreUnlocks
   const owned = unlocks.farming ?? [];
   const farmingTier = unlocks.skills.Farming ?? 0;
   const farmingLevel = runLevel(unlocks, 'Farming');
-  if (thing.patches && !thing.patches.some(([type, tier, level]) => owned.includes(type) && farmingTier >= tier && farmingLevel >= level)) {
-    const open = thing.patches.filter(([type]) => owned.includes(type));
-    if (open.length === 0) return `Needs the ${thing.patches.map(([type]) => farmingPatchLabel(type)).join(' or ')} unlocked.`;
+  const unlocked = (type: string) => owned.includes(type) && !chunkPatchBlocker(thing.chunk, type, unlocks);
+  if (thing.patches && !thing.patches.some(([type, tier, level]) => unlocked(type) && farmingTier >= tier && farmingLevel >= level)) {
+    const owns = thing.patches.filter(([type]) => owned.includes(type));
+    if (owns.length === 0) return `Needs the ${thing.patches.map(([type]) => farmingPatchLabel(type)).join(' or ')} unlocked.`;
+    // A patch the game locks behind a quest or a diary (the Troll Stronghold roof's herb patch).
+    const open = owns.filter(([type]) => unlocked(type));
+    if (open.length === 0) return chunkPatchBlocker(thing.chunk, owns[0][0], unlocks);
     const tier = Math.min(...open.map(([, need]) => need));
     if (farmingTier < tier) return `Needs Farming tier ${tier}.`;
     return `Needs Farming level ${Math.min(...open.map(([, , level]) => level))}.`;

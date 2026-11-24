@@ -343,3 +343,23 @@ describe("RuneProof's current-only item check", () => {
     }
   });
 });
+
+describe('Chunked diary tasks that name an NPC (deep audit diary-b d2[1])', () => {
+  it('needs Captain Ginea\'s chunk and a gang-meeting chunk for kou_med_8', () => {
+    // OSRS Wiki 'Intelligence Gathering': meetings are found by talking to Captain Ginea in the tent, and
+    // intelligence is turned in to her. chunk-content places her at 23,56 (South Shayzien Encampment); the
+    // export's diaryChunks for MD8 hold only the rotating meeting chunks.
+    const task = ALL_DIARY_TASKS.find(t => t.id === 'kou_med_8')!;
+    const meetings = (full as unknown as { diaryChunks: Record<string, string[]> }).diaryChunks['Kourend & Kebos|MD8'];
+    expect(meetings).not.toContain(String(23 * 256 + 56));
+    expect(meetings).toContain(String(26 * 256 + 55));
+    const ready = (chunks: string[]) =>
+      evaluateDiaryTaskEligibility(task, maxed(chunks, { minigames: ['Intelligence Gathering'] }), 'chunked').eligible;
+    expect(ready(['26,55'])).toBe(false); // a Hosidius meeting chunk alone
+    expect(ready(['23,53'])).toBe(false); // a Land's End meeting chunk alone
+    expect(ready(['23,56'])).toBe(false); // Ginea, but no meeting chunk
+    expect(ready(['23,56', '26,55'])).toBe(true);
+    const placed = createChunkedChecks(chunkContentService).diaryTask(task.id, task)!;
+    expect(placed.locations?.map(location => location.label)).toEqual(['Captain Ginea', 'Shayzien: one of 23 chunks']);
+  });
+});

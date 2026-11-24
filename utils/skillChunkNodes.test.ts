@@ -56,6 +56,21 @@ describe('trainingReqFor (Chunked skill facts, content review 8)', () => {
     for (const name of ['Bush', 'Grapevine', 'Patched Wall', 'Weedy patch']) expect(trainingReqFor(name, 'object'), name).toBeNull();
   });
 
+  it('reads the deep audit d3[0] nodes at the level the game needs', () => {
+    // OSRS Wiki, fetched 23 Nov 2026: 'Fishing spot (lantern)' harpoon |level = 52 (swordtip squid);
+    // 'Fishing spot (cage, harpoon)' harpoon |level = 35 (tuna), cage 40; 'Daeyalt rocks' 20 Mining;
+    // 'Bloodwood tree' and 'Engorged bloodwood tree' |level = 77; 'Menaphite guard' |options = None.
+    expect(trainingReqFor('Fishing spot (lantern)', 'object')).toEqual({ skill: 'Fishing', level: 52 });
+    expect(trainingReqFor('Fishing spot (cage, harpoon)', 'object')).toEqual({ skill: 'Fishing', level: 35 });
+    expect(trainingReqFor('Fishing spot (dark crab)', 'object')).toEqual({ skill: 'Fishing', level: 85 });
+    expect(trainingReqFor('Daeyalt rocks', 'object')).toEqual({ skill: 'Mining', level: 20 });
+    expect(trainingReqFor('Daeyalt Essence', 'object')).toEqual({ skill: 'Mining', level: 60 });
+    expect(trainingReqFor('Bloodwood tree', 'object')).toEqual({ skill: 'Woodcutting', level: 77 });
+    expect(trainingReqFor('Engorged bloodwood tree', 'object')).toEqual({ skill: 'Woodcutting', level: 77 });
+    expect(trainingReqFor('Menaphite Thug', 'npc')).toEqual({ skill: 'Thieving', level: 65 });
+    expect(trainingReqFor('Menaphite Guard', 'npc')).toBeNull();
+  });
+
   it('drops look-alikes that train nothing', () => {
     for (const name of ['Tall tree', 'Tree branch', 'Big Tree space', 'Tree Stump', 'Rocks (Tree Gnome Stronghold)', 'Dig Site specimen rocks', 'Rift', "Shipwrights' Workbench", 'Sawmill', 'Banana Tree']) {
       expect(trainingReqFor(name, 'object'), name).toBeNull();

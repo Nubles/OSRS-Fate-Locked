@@ -6,11 +6,14 @@ import { readFileSync } from 'node:fs';
 import { AGILITY_COURSES, buildChunkSkillNodes, chunkSkillNodesSource, factCell, GUILD_CHUNKS, oreShopSmithingLevel, RUNE_ALTAR_RUINS } from './chunkSkillNodesBuild';
 import { CHUNK_SKILL_SERVICES, CHUNK_SKILL_TIERS } from '../data/chunkSkillNodes';
 import chunkDoc from '../public/chunk-content.json';
-import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingTiers, chunkFactLevel } from './chunkedSkillPool';
+import { chunkContentBlocker, chunkedSkillNeeds, chunkedSkillRollable, chunkedTrainingLevels, chunkedTrainingTiers, chunkFactLevel, chunkPatchBlocker } from './chunkedSkillPool';
+import { PATCH_LOCKS, SHOP_LOCKS } from './chunkSkillNodesBuild';
+import { QUEST_DATA } from '../data/questData';
+import { DIARY_DATA } from '../data/diaryData';
 import { chunkedSkillHasRoom, mercyBlocker, skillsWithRoom } from './chunkedFate';
 import { randomUnlockPool } from './gameEngine';
 import { chunkKey, getChunkFrontier } from './chunkAdjacency';
-import { FARMING_PATCH_LIST, MERCHANTS_LIST } from '../data/items';
+import { FARMING_PATCH_LIST, GUILDS_LIST, MERCHANTS_LIST } from '../data/items';
 
 const fresh = () => ({ ...initialState.unlocks, chunks: [] as string[] });
 type Unlocks = ReturnType<typeof fresh>;
@@ -90,9 +93,14 @@ describe('Chunked Skills rolls', () => {
     expect(chunkedSkillRollable('Agility', fresh())).toBe(false);
     // Gnome Stronghold course (level 1) is tier 1.
     expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['38,53'] }))).toBe(true);
-    // Draynor rooftop is tier 1 too, but needs level 10: a level-1 player can't use it (deadlock audit, dead end 2).
-    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['48,51'] }))).toBe(false);
-    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['48,51'], levels: { ...fresh().levels, Agility: 10 } }))).toBe(true);
+    // OSRS Wiki: the Draynor rooftop and the Shayzien basic course need Agility 1 since 8 May 2024 (deep audit d2[0]).
+    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['48,51'] }))).toBe(true);
+    expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['24,56'] }))).toBe(true);
+    expect(levelsIn('48,51').Agility).toBe(1);
+    expect(levelsIn('24,56').Agility).toBe(1);
+    // Al Kharid rooftop is tier 2, but needs level 20: a level-11 player can't use it (deadlock audit, dead end 2).
+    expect(chunkedSkillRollable('Agility', atCap({ Agility: 1 }, { chunks: ['51,49'], levels: { ...fresh().levels, Agility: 11 } }))).toBe(false);
+    expect(chunkedSkillRollable('Agility', atCap({ Agility: 1 }, { chunks: ['51,49'], levels: { ...fresh().levels, Agility: 20 } }))).toBe(true);
     // Varrock rooftop (30) opens at tier 3, once the player's level reaches 30.
     expect(chunkedSkillRollable('Agility', withTiers({}, { chunks: ['50,53'] }))).toBe(false);
     expect(chunkedSkillRollable('Agility', atCap({ Agility: 2 }, { chunks: ['50,53'] }))).toBe(false);
@@ -152,6 +160,13 @@ describe('Chunked Skills rolls', () => {
     const guild = withTiers({ Farming: 4 }, { chunks: ['19,58'], farming: [...FARMING_PATCH_LIST] });
     expect(chunkedTrainingTiers(guild.chunks, guild).get('Farming')).toBeUndefined();
     expect(chunkedTrainingTiers(guild.chunks, { ...guild, guilds: ['Farming Guild'] }).get('Farming')).toBe(5);
+    // Each patch at its own tier's level (OSRS Wiki 'Farming Guild'): beginner 45, west wing 65, north wing 85 (deep audit d2[2]).
+    expect(built.patches['19,58']).toMatchObject({ Allotment: 45, Flower: 45, Bush: 45, Cactus: 55, Herb: 65, 'Wood Tree': 65, 'Hespori Patch': 65, Anima: 76, 'Fruit Tree': 85, 'Spirit Tree': 85, Celastrus: 85, Redwood: 90 });
+    expect(levelsIn('19,58')['@herb']).toBe(65);
+    expect(levelsIn('19,58').Farming).toBe(45);
+    const member = { ...guild, guilds: ['Farming Guild'] };
+    expect(chunkedTrainingLevels(member.chunks, { ...member, levels: { ...fresh().levels, Farming: 45 } }).has('Herblore')).toBe(false);
+    expect(chunkedTrainingLevels(member.chunks, atCap({ Farming: 7 }, { ...member, levels: { ...fresh().levels, Farming: 65 } })).get('Herblore')).toBe(1);
   });
 
   it('reads each chunk\'s skill facts at their real skill and level (content review 8)', () => {
@@ -166,7 +181,7 @@ describe('Chunked Skills rolls', () => {
     expect(levelsIn('51,54').Construction).toBeUndefined();
     expect(levelsIn('46,50').Construction).toBe(1);
     // The Fishing Guild needs 68 Fishing.
-    expect(levelsIn('40,53').Fishing).toBe(GUILD_CHUNKS['40,53'].level);
+    expect(levelsIn('40,53').Fishing).toBe(GUILD_CHUNKS['40,53'].skills.Fishing);
     // Ambient butterflies and the Museum's specimen rocks train nothing.
     expect(levelsIn('50,50').Hunter).toBeUndefined();
     expect(levelsIn('50,53').Mining).toBeUndefined();
@@ -183,6 +198,52 @@ describe('Chunked Skills rolls', () => {
     const mine = { chunks: ['45,51'] };
     expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: [] })).toBe(false);
     expect(chunkedSkillRollable('Mining', { ...fresh(), ...mine, guilds: ['Crafting Guild'] })).toBe(true);
+    // Its potter's wheels, pottery oven and spinning wheels are inside the guild too, which needs 40 Crafting (deep audit d2[3]).
+    expect(chunkContentBlocker('45,51', 'Crafting', { quests: [], guilds: [] })).toBe('Needs the Crafting Guild unlocked.');
+    expect(chunkContentBlocker('45,51', 'Crafting', { quests: [], guilds: ['Crafting Guild'] })).toBeNull();
+    expect(levelsIn('45,51').Crafting).toBe(40);
+    const crafter = atCap({ Crafting: 4 }, { chunks: ['45,51'], levels: { ...fresh().levels, Crafting: 40 } });
+    expect(chunkedTrainingLevels(['45,51'], { ...crafter, guilds: [] }).get('Crafting')).toBe(1); // Lumbridge's own spinning wheel
+    expect(chunkedTrainingLevels(['45,51'], { ...crafter, guilds: ['Crafting Guild'] }).get('Crafting')).toBe(1);
+  });
+
+  it('locks the patches the game puts behind a quest or a diary (deep audit d2[1])', () => {
+    // OSRS Wiki 'Farming/Patch locations' and 'Herb patch'.
+    expect(chunkPatchBlocker('44,57', 'Herb', { quests: [] })).toBe("Needs My Arm's Big Adventure done.");
+    expect(chunkPatchBlocker('44,57', 'Herb', { quests: ["My Arm's Big Adventure"] })).toBeNull();
+    expect(chunkPatchBlocker('44,61', 'Herb', { quests: [] })).toBe('Needs Making Friends with My Arm done.');
+    expect(chunkPatchBlocker('59,44', 'Herb', { quests: ['Cabin Fever'], diaries: [] })).toBe('Needs the Morytania Elite diary done.');
+    expect(chunkPatchBlocker('59,44', 'Herb', { quests: ['Cabin Fever'], diaries: ['Morytania Elite'] })).toBeNull();
+    expect(chunkPatchBlocker('59,44', 'Allotment', {})).toBeNull();
+    expect(chunkPatchBlocker('26,46', 'Hardwood Tree', { quests: ['Children of the Sun'] })).toBe('Needs The Ribbiting Tale done.');
+    expect(chunkPatchBlocker('48,37', 'Calquat', { quests: [] })).toBe('Needs Troubled Tortugans done.');
+    // Farming and Herblore count there only once the lock is met.
+    const roof = atCap({ Farming: 1 }, { chunks: ['44,57'], farming: ['Herb'], levels: { ...fresh().levels, Farming: 9 } });
+    expect(chunkedTrainingLevels(roof.chunks, roof).has('Herblore')).toBe(false);
+    expect(chunkedTrainingLevels(roof.chunks, roof).has('Farming')).toBe(false);
+    const done = { ...roof, quests: ["My Arm's Big Adventure"] };
+    expect(chunkedTrainingLevels(done.chunks, done).get('Herblore')).toBe(1);
+    expect(chunkedTrainingLevels(done.chunks, done).get('Farming')).toBe(9);
+    const harmony = atCap({ Farming: 1 }, { chunks: ['59,44'], farming: ['Herb', 'Allotment'], quests: ['Cabin Fever'], levels: { ...fresh().levels, Farming: 9 } });
+    expect(chunkedTrainingLevels(harmony.chunks, harmony).has('Herblore')).toBe(false);
+    expect(chunkedTrainingLevels(harmony.chunks, harmony).get('Farming')).toBe(1); // its allotment is open
+    expect(chunkedTrainingLevels(harmony.chunks, { ...harmony, diaries: ['Morytania Elite'] }).get('Herblore')).toBe(1);
+    // Every lock names a patch the chunk has, and a quest or diary the tracker knows.
+    for (const [chunk, types] of Object.entries(PATCH_LOCKS)) {
+      for (const [type, lock] of Object.entries(types)) {
+        expect(built.patches[chunk]?.[type], `${chunk} ${type}`).toBeDefined();
+        if (lock.quest) expect(QUEST_DATA[lock.quest], lock.quest).toBeDefined();
+        if (lock.diary) expect(DIARY_DATA[lock.diary], lock.diary).toBeDefined();
+      }
+    }
+  });
+
+  it('stores the deep audit d3[0] node levels per chunk (lantern 52, cage/harpoon 35, Daeyalt rocks 20, no Menaphite guard)', () => {
+    for (const chunk of ['18,42', '32,40', '32,57', '46,35']) expect(chunkFactLevel(chunk, 'Fishing'), chunk).toBe(52);
+    expect(chunkFactLevel('21,44', 'Fishing')).toBe(35);
+    expect(chunkFactLevel('49,61', 'Fishing')).toBe(85); // the dark crab spot stays at 85
+    expect(chunkFactLevel('56,51', 'Mining')).toBe(20);
+    expect(chunkFactLevel('52,42', 'Thieving')).toBeUndefined();
   });
 
   it('round-trips a tier-10 fact: the Wrath altar (95) is stored as "0" and read back as tier 10 (content review 13)', () => {
@@ -241,12 +302,12 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
   });
 
   it('compares the lowest usable level with the player\'s level, not just its tier (dead end 2)', () => {
-    // Draynor rooftop: Agility 10 at tier 1.
-    const draynor = { chunks: ['49,50', '48,50', '48,51'] };
-    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 1 }, draynor))).toBe(false);
-    expect(mercyBlocker(dry(withTiers({ Agility: 1 }, draynor)), [])).toBeNull();
-    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 1 }, { ...draynor, levels: levels({ Agility: 10 }) }))).toBe(false); // at the tier-1 cap
-    expect(chunkedSkillRollable('Agility', withTiers({ Agility: 1 }, { ...draynor, levels: levels({ Agility: 10 }) }))).toBe(true);
+    // Al Kharid rooftop: Agility 20 at tier 2.
+    const alKharid = { chunks: ['51,50', '51,49'] };
+    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 11 }) }))).toBe(false);
+    expect(mercyBlocker(dry(withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 11 }) })), [])).toBeNull();
+    expect(chunkedSkillHasRoom('Agility', withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 20 }) }))).toBe(false); // at the tier-2 cap
+    expect(chunkedSkillRollable('Agility', withTiers({ Agility: 2 }, { ...alKharid, levels: levels({ Agility: 20 }) }))).toBe(true);
     // The Water altar: Runecraft 5, two chunks from the start (with essence from Aubury).
     const water = { chunks: ['50,49', '49,49', '50,53'], quests: ['Rune Mysteries'] };
     expect(chunkedSkillHasRoom('Runecraft', withTiers({ Runecraft: 1, Mining: 1 }, water))).toBe(false);
@@ -256,8 +317,8 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     const bush = { chunks: ['49,52'], farming: ['Bush'] };
     expect(chunkedSkillRollable('Farming', withTiers({}, bush))).toBe(false);
     expect(chunkedSkillRollable('Farming', withTiers({}, { ...bush, levels: levels({ Farming: 10 }) }))).toBe(true);
-    // The generator keeps the exact level only above the tier's floor: 10 for Draynor, none for Gnome's level 1.
-    expect(CHUNK_SKILL_TIERS['48,51']).toContain('B9'); // tier 1, nine levels above its floor
+    // The generator keeps the exact level only above the tier's floor: 20 for Al Kharid, none for Gnome's level 1.
+    expect(CHUNK_SKILL_TIERS['51,49']).toContain('C9'); // tier 2, nine levels above its floor
     expect([1, 10, 11, 20, 87, 91, 95].map(factCell)).toEqual(['1', 'B9', '2', 'C9', 'J6', '0', 'A4']);
     expect(levelsIn('38,53').Agility).toBe(1);
     for (const [chunk, facts] of Object.entries(built.nodes)) {
@@ -299,6 +360,41 @@ describe('Chunked deadlock audit (18 October 2026): nothing counts as trainable 
     expect(chunkedSkillHasRoom('Hunter', desert(['53,45'], ['Hunter Shops']))).toBe(true);
     // At level 1 the warblers are still out of reach.
     expect(chunkedSkillHasRoom('Hunter', { ...desert(['53,45'], ['Hunter Shops']), levels: fresh().levels })).toBe(false);
+  });
+
+  it('counts a locked skill shop only once the run has its lock (deep audit d3[1])', () => {
+    // OSRS Wiki 'Razmire Builders Merchants.' (rev 15318751): Shades of Mort'ton must be done to use the store.
+    // 'Imia's Supplies' (rev 15399191): in the Hunter Guild, and needs 46 Hunter like all its amenities.
+    const morton = (quests: string[]) => withTiers({ Construction: 1 }, {
+      chunks: ['46,50', '46,52', '54,51'], quests: ['Priest in Peril', ...quests], merchants: ['Real Estate Agents'],
+    });
+    expect(chunkedSkillNeeds('Construction', morton([]))).toBe('a house from an estate agent and planks (a sawmill and logs, or a plank shop)');
+    expect(chunkedSkillRollable('Construction', morton([]))).toBe(false);
+    expect(chunkedSkillNeeds('Construction', morton(["Shades of Mort'ton"]))).toBeNull();
+    expect(chunkedSkillRollable('Construction', morton(["Shades of Mort'ton"]))).toBe(true);
+
+    const guild = (guilds: string[], hunter: number, tier = 5) => ({
+      ...withTiers({ Hunter: tier }, { chunks: ['21,48', '24,47'], quests: ['Children of the Sun'], merchants: ['Hunter Shops'], guilds }),
+      levels: { ...fresh().levels, Hunter: hunter },
+    });
+    expect(chunkedSkillNeeds('Hunter', guild([], 46))).toBe('traps from a Hunter shop');
+    expect(chunkedSkillNeeds('Hunter', guild(['Hunter Guild'], 45))).toBe('traps from a Hunter shop');
+    expect(chunkedSkillNeeds('Hunter', guild(['Hunter Guild'], 46, 4))).toBe('traps from a Hunter shop'); // tier 4 stops at 40
+    expect(chunkedSkillNeeds('Hunter', guild(['Hunter Guild'], 46))).toBeNull();
+    expect(chunkedSkillRollable('Hunter', guild(['Hunter Guild'], 46))).toBe(true);
+    // Without a run the content alone counts, as before.
+    expect(CHUNK_SKILL_SERVICES.planks['54,51']).toBe('Real Estate Agents');
+    expect(CHUNK_SKILL_SERVICES.traps['24,47']).toBe('Hunter Shops');
+    expect(built.serviceLocks).toEqual({
+      '24,47': { traps: { guild: 'Hunter Guild', skills: { Hunter: 46 } } },
+      '54,51': { planks: { quest: "Shades of Mort'ton" } },
+    });
+    const shops = new Set(Object.values((chunkDoc as unknown as { chunks: Record<string, { s?: string[] }> }).chunks).flatMap(entry => entry.s ?? []));
+    for (const [shop, lock] of Object.entries(SHOP_LOCKS)) {
+      expect(shops.has(shop), shop).toBe(true);
+      if (lock.quest) expect(QUEST_DATA[lock.quest], lock.quest).toBeDefined();
+      if (lock.guild) expect(GUILDS_LIST, lock.guild).toContain(lock.guild);
+    }
   });
 
   it('opens Smithing through an ore shop only with its merchant type, and never through a Thieving stall (dead end 7)', () => {

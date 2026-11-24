@@ -9,6 +9,7 @@ import type { PermissionStatus } from './chunkPermissionSnapshot';
 import { evaluateEntityAccess, type EntityAccessSource } from './entityAccess';
 import type { RawRouteRequirement } from './questRoutes/model';
 import { mostUsable } from './permissionStatus';
+import { gameTaskName } from './slayerTaskLocations';
 import type { LocateFn, SlayerReach, SlayerStatus, SlayerTaskRow } from './slayerReach';
 
 export interface SlayerLocationSource {
@@ -122,9 +123,12 @@ export function slayerDecisions(reach: SlayerReach): Record<string, SlayerDecisi
     for (const row of rows) {
       const reason = slayerReason(row);
       const decision: SlayerDecision = { status: SLAYER_DECISION[row.status], ...(reason ? { reason } : {}) };
-      const task = slayerTaskKey(row.monster);
-      decisions[`${master.toLowerCase()}:${task}`] = decision;
-      byTask.set(task, [...(byTask.get(task) ?? []), decision]);
+      // Also under the game's name where it differs, as the plugin matches the assignment chat.
+      const alias = gameTaskName(row.monster);
+      for (const task of [slayerTaskKey(row.monster), ...(alias ? [slayerTaskKey(alias)] : [])]) {
+        decisions[`${master.toLowerCase()}:${task}`] = decision;
+        byTask.set(task, [...(byTask.get(task) ?? []), decision]);
+      }
     }
   }
   for (const [task, answers] of byTask) {

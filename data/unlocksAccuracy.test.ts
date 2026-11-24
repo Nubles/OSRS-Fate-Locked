@@ -61,6 +61,23 @@ const everything = (level = 99, changes: Partial<UnlockState> = {}): UnlockState
   ...changes,
 });
 
+describe("Champions' Guild quest points (minigames-misc.d1[0])", () => {
+  // Wiki "Champions' Guild" oldid 15364426: entry needs 32 quest points.
+  it.each(["Scavvo's Rune Store", "Valaine's Shop of Champions"])('opens %s only with 32 quest points', (name) => {
+    const at = { cx: 49, cy: 52 };
+    expect(evaluateEntityAccess(name, 'shop', at, everything(99, { quests: [] }), 'vanilla', service))
+      .toEqual({ status: 'NOT_READY', reasons: ['32 Quest Points'] });
+    expect(evaluateEntityAccess(name, 'shop', at, everything(), 'vanilla', service))
+      .toEqual({ status: 'ALLOWED', reasons: [] });
+  });
+
+  it.each([['Range', 'object'], ['Chicken', 'monster'], ['Evil Chicken', 'monster']] as const)('asks for 32 quest points for the guild\'s %s', (name, kind) => {
+    const at = { cx: 49, cy: 52 };
+    expect(evaluateEntityAccess(name, kind, at, everything(99, { quests: [] }), 'vanilla', service).reasons).toContain('32 Quest Points');
+    expect(evaluateEntityAccess(name, kind, at, everything(), 'vanilla', service).reasons).not.toContain('32 Quest Points');
+  });
+});
+
 describe('S11: members content does not wait on a free-to-play tag', () => {
   it('leaves the Chunk Picker\'s "F2P Only" tag out of every requirement', () => {
     expect(JSON.stringify(content)).not.toContain('F2P Only');

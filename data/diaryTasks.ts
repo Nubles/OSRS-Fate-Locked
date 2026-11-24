@@ -347,7 +347,7 @@ export const ALL_DIARY_TASKS: DiaryTask[] = [
   { id: 'kou_med_5', tierId: 'Kourend Medium', description: 'Enter the Farming Guild.', skills: { 'Farming': 45 }, guilds: ['Farming Guild'], regions: ['Farming Guild'] },
   { id: 'kou_med_6', tierId: 'Kourend Medium', description: 'Switch to the Necromancy Spellbook at Tyss.', arcana: ['Arceuus Spellbook'], regions: ['Arceuus'] },
   { id: 'kou_med_7', tierId: 'Kourend Medium', description: 'Repair a Piscarilius crane.', skills: { 'Construction': 30, 'Crafting': 30 }, regions: ['Piscarilius'] },
-  { id: 'kou_med_8', tierId: 'Kourend Medium', description: 'Deliver some intelligence to Captain Ginea.', minigames: ['Intelligence Gathering'], regions: ['Shayzien'] },
+  { id: 'kou_med_8', tierId: 'Kourend Medium', description: 'Deliver some intelligence to Captain Ginea.', minigames: ['Intelligence Gathering'], regions: ['Shayzien'], locations: [{"label":"Captain Ginea","chunkOptions":[{"cx":23,"cy":56}]}] },
   { id: 'kou_med_9', tierId: 'Kourend Medium', description: 'Catch a Bluegill on Molch Island.', skills: { 'Fishing': 43, 'Hunter': 35 }, equipmentRequirements: [{"slot":"Weapon","tier":1,"reason":"Cormorant's glove for aerial fishing","manualCheck":"Have Cormorant's glove for aerial fishing and confirm that the specific item is permitted by your equipment tier"}], regions: ['Molch'] },
   { id: 'kou_med_10', tierId: 'Kourend Medium', description: 'Use the boulder leap shortcut in the Arceuus essence mine.', skills: { 'Agility': 49 }, regions: ['Arceuus'] },
   { id: 'kou_med_11', tierId: 'Kourend Medium', description: 'Subdue the Wintertodt', skills: { 'Firemaking': 50 }, bosses: ['Wintertodt'], regions: ['Wintertodt Camp'] },

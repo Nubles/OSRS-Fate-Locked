@@ -7,6 +7,7 @@ import {
   type RouteGateAccountState,
 } from './accountRequirements';
 import type { ExactItemSource } from './model';
+import { QUEST_DATA } from '../../data/questData';
 
 type AnalysisUnlockSnapshot = RouteGateAccountState & Pick<UnlockState, 'regions' | 'chunks'>;
 
@@ -21,6 +22,14 @@ const entity = (raw: string) => ({ raw, origin: 'ENTITY' as const });
 const chunkEntry = (raw: string) => ({ raw, origin: 'CHUNK_ENTRY' as const });
 
 describe('account requirements', () => {
+  it('reads a quest point count as a Quest Points gate, met by the points of finished quests (minigames-misc.d1[0])', () => {
+    // The Champions' Guild shops and champion scrolls ask for '32 Quest Points' (shop-overrides rewrite).
+    const gates = compileRawRequirements([entity('32 Quest Points')]);
+    expect(gates).toEqual([{ type: 'SKILL', skill: 'Quest Points', level: 32, label: '32 Quest Points' }]);
+    expect(evaluateRouteGates(gates, unlocks())).toEqual({ blockers: gates, hasDataGap: false });
+    expect(evaluateRouteGates(gates, unlocks({ quests: Object.keys(QUEST_DATA) }))).toEqual({ blockers: [], hasDataGap: false });
+  });
+
   it('reads the source’s short skill levels and the picked doors as skill gates (accuracy audit S-9)', () => {
     expect(compileRawRequirements([entity('93 Slayer')])).toEqual([{ type: 'SKILL', skill: 'Slayer', level: 93, label: 'Slayer level 93' }]);
     expect(compileRawRequirements([entity('Unlock the door (Magic axe hut)')]))
@@ -79,6 +88,21 @@ describe('account requirements', () => {
     expect(compileRawRequirements([chunkEntry('Dragon Slayer I')])).toEqual([
       { type: 'QUEST', questId: 'Dragon Slayer I', label: 'Dragon Slayer I' },
     ]);
+  });
+
+  it('reads "60 Strength or 60 Agility" as one gate that either level meets (the God Wars Dungeons, slayer.d1[0])', () => {
+    const gates = compileRawRequirements([chunkEntry('60 Strength or 60 Agility')]);
+    expect(gates).toEqual([{
+      type: 'SKILL', skill: 'Strength', level: 60, label: 'Strength level 60 or Agility level 60',
+      anyOf: [{ skill: 'Agility', level: 60 }],
+    }]);
+    const at = (levels: Record<string, number>) => evaluateRouteGates(gates, unlocks({ skills: { Strength: 10, Agility: 10 }, levels }));
+    expect(at({ Strength: 50, Agility: 50 })).toEqual({ blockers: gates, hasDataGap: false });
+    expect(at({ Strength: 60, Agility: 1 })).toEqual({ blockers: [], hasDataGap: false });
+    expect(at({ Strength: 1, Agility: 60 })).toEqual({ blockers: [], hasDataGap: false });
+    // Anything but skill levels on either side stays evidence for a person to check.
+    expect(compileRawRequirements([entity('60 Strength or a rope')]))
+      .toEqual([{ type: 'UNRESOLVED', label: '60 Strength or a rope', raw: '60 Strength or a rope' }]);
   });
 
   it('reads "60 Mining", the reviewed entrance wording, as a skill gate (the Mining Guild door)', () => {

@@ -27,6 +27,10 @@
  *                          so its content counts only once that quest is done
  *   CHUNK_GUILD_GATES      chunks whose skill content sits inside a guild, so
  *                          it counts only with that guild unlocked
+ *   CHUNK_PATCH_LOCKS      patches the game locks behind a quest or a diary
+ *                          beyond the chunk's entry (PATCH_LOCKS)
+ *   CHUNK_SERVICE_LOCKS    services whose only shop in the chunk the game
+ *                          locks behind a quest, a guild or a level (SHOP_LOCKS)
  */
 import { farmingPatchOf, trainingReqFor } from './skillChunkNodes';
 import type { EntityKind } from '../services/ChunkContentService';
@@ -56,8 +60,12 @@ export interface ChunkSkillData {
   services: Record<string, Record<string, string>>;
   /** Per chunk with facts, the quests its entry needs. */
   entryQuests: Record<string, string[]>;
-  /** Per chunk, the guild its skill's content needs: [skill, guild]. */
-  guildGates: Record<string, [string, string]>;
+  /** Per chunk, the guild its skills' content needs: [skills, guild]. */
+  guildGates: Record<string, [string[], string]>;
+  /** Per chunk, its patch types the game locks behind a quest or a diary (PATCH_LOCKS). */
+  patchLocks: Record<string, Record<string, PatchLock>>;
+  /** Per chunk, the services offered there only by a locked shop (SHOP_LOCKS), with the lock. */
+  serviceLocks: Record<string, Record<string, ShopLock>>;
 }
 
 const HERB_PATCH = /\bherb patch\b/i;
@@ -78,13 +86,15 @@ const key = (id: string | number) => `${Math.floor(Number(id) / 256)},${Number(i
 export const AGILITY_COURSES: readonly { course: string; chunk: string; level: number; marker: string }[] = [
   { course: 'Gnome Stronghold Agility Course', chunk: '38,53', level: 1, marker: 'Log balance' },
   { course: 'Brimhaven Agility Arena', chunk: '43,49', level: 1, marker: 'Brimhaven Agility Arena' },
-  { course: 'Draynor Village Rooftop Course', chunk: '48,51', level: 10, marker: 'Tightrope' },
+  // Draynor's 10 and the Shayzien basic course's 5 were removed on 8 May 2024; the Shayzien basic
+  // and advanced courses both start at its Monkeybars, so the chunk's lowest is the basic course's 1.
+  { course: 'Draynor Village Rooftop Course', chunk: '48,51', level: 1, marker: 'Tightrope' },
   { course: 'Al Kharid Rooftop Course', chunk: '51,49', level: 20, marker: 'Zip line' },
   { course: 'Varrock Rooftop Course', chunk: '50,53', level: 30, marker: 'Clothes line' },
   { course: 'Agility Pyramid', chunk: '52,44', level: 30, marker: 'Climbing rocks (Agility Pyramid entrance)' },
   { course: 'Barbarian Outpost Agility Course', chunk: '39,55', level: 35, marker: 'Ropeswing' },
   { course: 'Canifis Rooftop Course', chunk: '54,54', level: 40, marker: 'Tall tree' },
-  { course: 'Shayzien Basic Agility Course', chunk: '24,56', level: 45, marker: 'Monkeybars' },
+  { course: 'Shayzien Agility Course', chunk: '24,56', level: 1, marker: 'Monkeybars' },
   { course: 'Falador Rooftop Course', chunk: '47,52', level: 50, marker: 'Hand holds' },
   { course: 'Colossal Wyrm Agility Course', chunk: '25,45', level: 50, marker: 'Tightrope' },
   { course: 'Wilderness Agility Course', chunk: '46,61', level: 52, marker: 'Ropeswing' },
@@ -117,17 +127,47 @@ export const RUNE_ALTAR_RUINS: Readonly<Record<string, { altar: string; level: n
 const RUNE_ALTAR_INTERIOR = /^(air|mind|water|earth|fire|body|cosmic|chaos|astral|nature|law|death|blood|soul|wrath) altar$/i;
 
 /**
- * Guild chunks whose skill content is inside the guild: it needs the guild's
- * own level (OSRS Wiki entry requirements) and, at roll time, the guild unlock.
- * The Crafting Guild mine's rocks keep their own level (1): its entry level
- * is in Crafting, which the guild unlock itself requires.
+ * Guild chunks whose skill content is inside the guild: each skill listed
+ * needs the guild's own level (OSRS Wiki entry requirements) and, at roll
+ * time, the guild unlock. The Crafting Guild's potter's wheels, pottery oven
+ * and spinning wheels need its 40 Crafting; its mine's rocks keep their own
+ * level (1), since its entry level is in Crafting, not Mining.
  */
-export const GUILD_CHUNKS: Readonly<Record<string, { skill: string; guild: string; level: number }>> = {
-  '40,53': { skill: 'Fishing', guild: 'Fishing Guild', level: 68 },
-  '19,58': { skill: 'Farming', guild: 'Farming Guild', level: 45 },
-  '24,54': { skill: 'Woodcutting', guild: 'Woodcutting Guild', level: 60 },
-  '25,54': { skill: 'Woodcutting', guild: 'Woodcutting Guild', level: 60 },
-  '45,51': { skill: 'Mining', guild: 'Crafting Guild', level: 1 },
+export const GUILD_CHUNKS: Readonly<Record<string, { guild: string; skills: Readonly<Record<string, number>> }>> = {
+  '40,53': { guild: 'Fishing Guild', skills: { Fishing: 68 } },
+  '19,58': { guild: 'Farming Guild', skills: { Farming: 45 } },
+  '24,54': { guild: 'Woodcutting Guild', skills: { Woodcutting: 60 } },
+  '25,54': { guild: 'Woodcutting Guild', skills: { Woodcutting: 60 } },
+  '45,51': { guild: 'Crafting Guild', skills: { Mining: 1, Crafting: 40 } },
+};
+
+/**
+ * Guild chunks whose patches sit in wings with a higher level than the
+ * guild's own (GUILD_CHUNKS): the Farming Guild's beginner tier (45) holds the
+ * allotment, flower, bush and cactus patches, its west wing (65) the herb,
+ * tree, Hespori and anima patches, its north wing (85) the fruit tree, spirit
+ * tree, celastrus and redwood patches (OSRS Wiki 'Farming Guild').
+ */
+export const GUILD_PATCH_LEVELS: Readonly<Record<string, Readonly<Record<string, number>>>> = {
+  '19,58': { Herb: 65, 'Wood Tree': 65, 'Hespori Patch': 65, Anima: 65, 'Fruit Tree': 85, 'Spirit Tree': 85, Celastrus: 85, Redwood: 85 },
+};
+
+/** A quest (QUEST_DATA id) or an achievement diary tier (DIARY_DATA id) a patch needs done. */
+export interface PatchLock { quest?: string; diary?: string }
+
+/**
+ * Patches the game locks behind a quest or a diary beyond the chunk's own
+ * entry (OSRS Wiki 'Farming/Patch locations', 'Herb patch'). Each counts for
+ * Farming, and a herb patch for Herblore, only once the run has it done. The
+ * tracker records a quest only as done, so a patch the game opens partway
+ * through a quest (The Summer Shore's) waits for the whole quest.
+ */
+export const PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, PatchLock>>>> = {
+  '44,57': { Herb: { quest: "My Arm's Big Adventure" } }, // Troll Stronghold roof
+  '44,61': { Herb: { quest: 'Making Friends with My Arm' } }, // Weiss: the Fire of Nourishment must be built too
+  '59,44': { Herb: { diary: 'Morytania Elite' } }, // Harmony Island (its allotment is open)
+  '26,46': { 'Hardwood Tree': { quest: 'The Ribbiting Tale' } }, // Locus Oasis
+  '48,37': { Calquat: { quest: 'Troubled Tortugans' } }, // The Summer Shore: partial completion in the game
 };
 
 /**
@@ -173,6 +213,21 @@ const STALL_SHOP = /\bstall$/i;
  *   traps        a Hunter shop's snares and box traps (Hunter Shops)
  */
 export const SKILL_SERVICES = ['essence', 'estateAgent', 'sawmill', 'planks', 'traps'] as const;
+
+/** A quest (QUEST_DATA id), a guild (GUILDS_LIST name) and skill levels a shop needs before it trades. */
+export interface ShopLock { quest?: string; guild?: string; skills?: Readonly<Record<string, number>> }
+
+/**
+ * Skill shops the game locks beyond their chunk's entry. Razmire Builders
+ * Merchants (Mort'ton) needs Shades of Mort'ton done (OSRS Wiki rev 15318751);
+ * Imia's Supplies is inside the Hunter Guild and, like all its amenities,
+ * needs 46 Hunter (rev 15399191). A service from a locked shop counts only once
+ * the run has the lock; an unlocked shop in the same chunk wins over it.
+ */
+export const SHOP_LOCKS: Readonly<Record<string, ShopLock>> = {
+  'Razmire Builders Merchants': { quest: "Shades of Mort'ton" },
+  "Imia's Supplies": { guild: 'Hunter Guild', skills: { Hunter: 46 } },
+};
 const ESSENCE_NPC = /^(aubury|wizard cromperty|archmage sedridor|brimstail)$/i;
 const ESTATE_AGENT_NPC = /^estate agent$/i;
 const SAWMILL_NPC = /^sawmill operator$/i;
@@ -200,20 +255,28 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
   const services: ChunkSkillData['services'] = Object.fromEntries(SKILL_SERVICES.map(service => [service, {}]));
   const entryQuests: ChunkSkillData['entryQuests'] = {};
   const guildGates: ChunkSkillData['guildGates'] = {};
+  const patchLocks: ChunkSkillData['patchLocks'] = {};
+  const serviceLocks: ChunkSkillData['serviceLocks'] = {};
   for (const id of [...entriesById.keys()].sort((a, b) => Number(a) - Number(b))) {
     const chunk = key(id);
     if (!LAND.has(chunk)) continue;
     const guild = GUILD_CHUNKS[chunk];
-    const floor = (skill: string, level: number) => (guild?.skill === skill ? Math.max(level, guild.level) : level);
+    const floor = (skill: string, level: number) => Math.max(level, guild?.skills[skill] ?? 0);
+    const patchFloor = (patch: string, level: number) => Math.max(floor('Farming', level), GUILD_PATCH_LEVELS[chunk]?.[patch] ?? 0);
     const facts: Record<string, number> = {};
     const note = (skill: string, level: number) => { facts[skill] = Math.min(facts[skill] ?? level, level); };
     const chunkPatches: Record<string, number> = {};
     const markers = new Set<string>();
     const chunkOreShops: Record<string, number> = {};
     const offers: Record<string, string> = {};
-    const offer = (service: typeof SKILL_SERVICES[number], merchant: string) => {
-      // One that needs no merchant beats one that does.
-      if (offers[service] === undefined || merchant === '') offers[service] = merchant;
+    const offerLocks: Record<string, ShopLock> = {};
+    const offer = (service: typeof SKILL_SERVICES[number], merchant: string, lock?: ShopLock) => {
+      // An unlocked shop beats a locked one; then one that needs no merchant beats one that does.
+      const held = offerLocks[service];
+      if (offers[service] !== undefined && !(held && !lock) && !(!held === !lock && merchant === '')) return;
+      offers[service] = merchant;
+      if (lock) offerLocks[service] = lock;
+      else delete offerLocks[service];
     };
     for (const { entry, interior } of entriesById.get(id)!) {
       if (interior) markers.add(interior);
@@ -221,8 +284,8 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
         const merchant = classifyShop(shop);
         const level = oreShopLevels.get(shop);
         if (merchant && level !== undefined) chunkOreShops[merchant] = Math.min(chunkOreShops[merchant] ?? level, level);
-        if (merchant === 'Hunter Shops') offer('traps', merchant);
-        if (merchant && (shopItems[shop] ?? []).some(item => /^plank$/i.test(item))) offer('planks', merchant);
+        if (merchant === 'Hunter Shops') offer('traps', merchant, SHOP_LOCKS[shop]);
+        if (merchant && (shopItems[shop] ?? []).some(item => /^plank$/i.test(item))) offer('planks', merchant, SHOP_LOCKS[shop]);
       }
       for (const name of entry.p ?? []) {
         if (ESSENCE_NPC.test(name)) offer('essence', '');
@@ -244,10 +307,10 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
           const ruins = RUNE_ALTAR_RUINS[chunk];
           req = ruins ? { skill: 'Runecraft', level: ruins.level } : null;
         }
-        if (req) note(req.skill, floor(req.skill, req.level));
         const patch = kind === 'object' ? farmingPatchOf(name) : null;
-        if (patch && req) chunkPatches[patch] = Math.min(chunkPatches[patch] ?? 99, floor('Farming', req.level));
-        if (kind === 'object' && HERB_PATCH.test(name) && patch === 'Herb') note('@herb', floor('Farming', req!.level));
+        if (req) note(req.skill, patch && req.skill === 'Farming' ? patchFloor(patch, req.level) : floor(req.skill, req.level));
+        if (patch && req) chunkPatches[patch] = Math.min(chunkPatches[patch] ?? 99, patchFloor(patch, req.level));
+        if (kind === 'object' && HERB_PATCH.test(name) && patch === 'Herb') note('@herb', patchFloor(patch, req!.level));
         if (kind !== 'object' && masters.has(name)) note('@slayer', 1);
       }
       if ((entry.m ?? []).length > 0) note('@monster', 1);
@@ -259,13 +322,17 @@ export function buildChunkSkillNodes(doc: RawDoc): ChunkSkillData {
     if (Object.keys(facts).length === 0 && !hasShops && Object.keys(offers).length === 0) continue;
     if (Object.keys(facts).length > 0) nodes[chunk] = facts;
     if (Object.keys(chunkPatches).length > 0) patches[chunk] = chunkPatches;
+    const locks = Object.entries(PATCH_LOCKS[chunk] ?? {}).filter(([type]) => chunkPatches[type] !== undefined);
+    if (locks.length > 0) patchLocks[chunk] = Object.fromEntries(locks.map(([type, lock]) => [type, { ...lock }]));
     if (hasShops) oreShops[chunk] = chunkOreShops;
     for (const [service, merchant] of Object.entries(offers)) services[service][chunk] = merchant;
+    if (Object.keys(offerLocks).length > 0) serviceLocks[chunk] = Object.fromEntries(Object.entries(offerLocks).map(([service, lock]) => [service, { ...lock }]));
     const quests = doc.questSections?.[id];
     if (quests?.length) entryQuests[chunk] = [...quests];
-    if (guild && facts[guild.skill] !== undefined) guildGates[chunk] = [guild.skill, guild.guild];
+    const gatedSkills = Object.keys(guild?.skills ?? {}).filter(skill => facts[skill] !== undefined);
+    if (guild && gatedSkills.length > 0) guildGates[chunk] = [gatedSkills, guild.guild];
   }
-  return { nodes, patches, oreShops, services, entryQuests, guildGates };
+  return { nodes, patches, oreShops, services, entryQuests, guildGates, patchLocks, serviceLocks };
 }
 
 const LAND = new Set(ALL_CHUNK_KEYS);
@@ -273,8 +340,8 @@ const LAND = new Set(ALL_CHUNK_KEYS);
 /**
  * One fact's cell in a chunk's row: "." for none, else the tier of the lowest
  * level it needs (1-9, 0 for tier 10). A level above its tier's floor keeps
- * its exact value, which Chunked compares with the player's level (Draynor
- * rooftop is Agility 10, a tier-1 node a level-1 player can't use): a letter
+ * its exact value, which Chunked compares with the player's level (Al Kharid
+ * rooftop is Agility 20, a tier-2 node a level-11 player can't use): a letter
  * for the tier (A for tier 10, B for tier 1 … J for tier 9), then how many
  * levels above the floor, so "B9" is level 10 and "J6" level 87.
  */
@@ -336,6 +403,10 @@ export const chunkSkillNodesSource = (data: ChunkSkillData): string => {
     + `export const CHUNK_SKILL_SERVICES: Readonly<Record<string, Readonly<Record<string, string>>>> = ${JSON.stringify(data.services)};\n\n`
     + `// Quest -> the chunks whose entry needs it: "cx:cy,cy-cy;cx:…".\n`
     + `export const CHUNK_ENTRY_QUESTS: Readonly<Record<string, string>> = ${JSON.stringify(questChunks)};\n\n`
-    + `// Chunk -> [skill, guild]: that skill's content there is inside the guild.\n`
-    + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [string, string]>> = ${JSON.stringify(data.guildGates)};\n`;
+    + `// Chunk -> [skills, guild]: those skills' content there is inside the guild.\n`
+    + `export const CHUNK_GUILD_GATES: Readonly<Record<string, readonly [readonly string[], string]>> = ${JSON.stringify(data.guildGates)};\n\n`
+    + `// Chunk -> patch type -> the quest or diary the game locks that patch behind.\n`
+    + `export const CHUNK_PATCH_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly diary?: string }>>>> = ${JSON.stringify(data.patchLocks)};\n\n`
+    + `// Chunk -> service -> the quest, guild or levels its only shop there needs before it trades.\n`
+    + `export const CHUNK_SERVICE_LOCKS: Readonly<Record<string, Readonly<Record<string, { readonly quest?: string; readonly guild?: string; readonly skills?: Readonly<Record<string, number>> }>>>> = ${JSON.stringify(data.serviceLocks)};\n`;
 };
