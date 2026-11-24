@@ -223,6 +223,48 @@ describe('Chunked diary tasks with several ways check each way where it is (cont
   });
 });
 
+describe('Chunked diary tasks that need several places need a chunk of each (diary-b.d2[0])', () => {
+  const task = (id: string) => ALL_DIARY_TASKS.find(t => t.id === id)!;
+  const ready = (id: string, chunks: string[], patch: Partial<UnlockState> = {}) => (
+    evaluateDiaryTaskEligibility(task(id), maxed(chunks, patch), 'chunked')
+  );
+  const blockerText = (id: string, chunks: string[]) => JSON.stringify(ready(id, chunks).blockers);
+
+  it("teleporting to all five Kourend cities needs a chunk in each of them", () => {
+    const memoirs: Partial<UnlockState> = {
+      mobility: ["Kharedst's Memoirs"],
+      quests: ['The Depths of Despair', 'The Queen of Thieves', 'Tale of the Righteous', 'The Forsaken Tower', 'The Ascent of Arceuus'],
+    };
+    const checks = createChunkedChecks(chunkContentService);
+    const t = task('kou_med_3');
+    expect(checks.diaryTask(t.id, t)?.locations).toHaveLength(5);
+    expect(ready('kou_med_3', ['26,56'], memoirs).eligible).toBe(false);
+    expect(ready('kou_med_3', ['23,55', '24,58', '26,56', '26,58'], memoirs).eligible).toBe(false);
+    expect(ready('kou_med_3', ['23,55', '24,58', '26,56', '26,58', '28,58'], memoirs).eligible).toBe(true);
+  });
+
+  it('the Trollheim shortcut needs both ends', () => {
+    const quests: Partial<UnlockState> = { quests: ['Death Plateau', 'Troll Stronghold'] };
+    expect(ready('wild_hard_8', ['45,57'], quests).machineEligible).toBe(false);
+    expect(ready('wild_hard_8', ['46,57'], quests).machineEligible).toBe(false);
+    expect(ready('wild_hard_8', ['45,57', '46,57'], quests).machineEligible).toBe(true);
+  });
+
+  it("the boat to Land's End needs Land's End and one of its ports", () => {
+    expect(ready('kou_easy_6', ['47,50']).eligible).toBe(false);
+    expect(ready('kou_easy_6', ['23,53']).eligible).toBe(false);
+    expect(ready('kou_easy_6', ['23,53', '47,50']).eligible).toBe(true);
+  });
+
+  it('keeps an area with no chunk of the task as an area to own', () => {
+    // var_hard_1's only chunk is the Fancy Dress Seller's; the dashing kebbits are in Piscatoris.
+    expect(ready('var_hard_1', ['51,53']).machineEligible).toBe(false);
+    expect(blockerText('var_hard_1', ['51,53'])).toContain('Piscatoris Fishing Colony');
+    // lum_hard_4's only chunk is Lumbridge's canoe station; the canoe still has to reach Edgeville.
+    expect(blockerText('lum_hard_4', ['50,50'])).toContain('Edgeville');
+  });
+});
+
 describe('Chunked quests buy only from shops in the run\'s chunks (dead-ends item 9)', () => {
   it("Prince Ali Rescue's Clothes Shops counts once a clothes shop is in the run's chunks", () => {
     // Clothes shops, and Tenzing, who sells climbing boots as one.

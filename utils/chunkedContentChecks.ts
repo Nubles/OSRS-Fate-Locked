@@ -209,19 +209,47 @@ export function createChunkedChecks(service: ChunkContentService) {
    * in or beside its own areas, and keeps its areas when none are: "Chop some
    * Redwood logs" keeps its Farming Guild way, and the Dorgesh-Kaan train
    * needs Keldagrim's chunk and still a way in from Lumbridge.
+   *
+   * A task that needs several places (each of its areas, and its any-of areas
+   * as one group) needs a chunk of each, as Vanilla needs each area: the
+   * memoirs task needs all five Kourend cities, the Trollheim shortcut both
+   * its ends. A place takes the task's chunks in it, or else those beside it,
+   * and stays an area to own when there are none (var_hard_1's Piscatoris).
    */
   const diaryTask = <R extends DiaryRequirement>(taskId: string, requirement: R): R | null => {
     const place = diaryPlace(taskId);
-    const own = [...(requirement.regions ?? []), ...(requirement.anyOfRegions ?? [])];
+    const regions = requirement.regions ?? [];
+    const anyOfRegions = requirement.anyOfRegions ?? [];
+    const own = [...regions, ...anyOfRegions];
     if (!place || own.length === 0) return null;
     const chunkOptions = waysWithAreas.has(taskId) ? chunksBeside(place.chunkOptions, own) : place.chunkOptions;
     if (chunkOptions.length === 0) return null;
-    const areas = own.join(' or ');
-    const { cx, cy } = chunkOptions[0];
-    const label = chunkOptions.length === 1 ? `${areas} (${cx}, ${cy})` : `${areas}: one of ${chunkOptions.length} chunks`;
+    const located = (areas: readonly string[], chunks: Coord[]): DiaryLocationRequirement => {
+      const name = areas.join(' or ');
+      const { cx, cy } = chunks[0];
+      return { label: chunks.length === 1 ? `${name} (${cx}, ${cy})` : `${name}: one of ${chunks.length} chunks`, chunkOptions: chunks };
+    };
+    const groups = [...regions.map(region => [region]), ...(anyOfRegions.length ? [anyOfRegions] : [])];
+    if (groups.length === 1) {
+      return {
+        ...requirement, regions: undefined, anyOfRegions: undefined,
+        locations: [...(requirement.locations ?? []), located(own, chunkOptions)],
+      };
+    }
+    const places: DiaryLocationRequirement[] = [];
+    const keptRegions: string[] = [];
+    let keptAnyOf: string[] | undefined;
+    for (const group of groups) {
+      const inside = chunksIn(chunkOptions, group);
+      const chunks = inside.length ? inside : chunksBeside(chunkOptions, group);
+      if (chunks.length) places.push(located(group, chunks));
+      else if (group === anyOfRegions) keptAnyOf = anyOfRegions;
+      else keptRegions.push(group[0]);
+    }
+    if (places.length === 0) return null;
     return {
-      ...requirement, regions: undefined, anyOfRegions: undefined,
-      locations: [...(requirement.locations ?? []), { label, chunkOptions }],
+      ...requirement, regions: keptRegions.length ? keptRegions : undefined, anyOfRegions: keptAnyOf,
+      locations: [...(requirement.locations ?? []), ...places],
     };
   };
 
@@ -272,6 +300,12 @@ export function createChunkedChecks(service: ChunkContentService) {
 const waysWithAreas = new Set(ALL_DIARY_TASKS
   .filter(task => (task.oneOf ?? []).some(option => option.regions?.length))
   .map(task => task.id));
+
+/** The chunks that lie in one of these areas. */
+const chunksIn = (chunks: readonly Coord[], areas: readonly string[]): Coord[] => {
+  const keys = new Set(areas.flatMap(area => namedAreaChunks(area)).map(keyOf));
+  return chunks.filter(chunk => keys.has(keyOf(chunk)));
+};
 
 /** The chunks that lie in or beside one of these areas. */
 const chunksBeside = (chunks: readonly Coord[], areas: readonly string[]): Coord[] => {
