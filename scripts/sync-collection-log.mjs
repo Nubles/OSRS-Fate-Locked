@@ -86,6 +86,16 @@ async function loadWiki() {
   return pages;
 }
 
+// The Wiki's data module can come back empty or cut short without an error.
+// Every app slot would then read as gone from the Wiki, so the sync stops
+// before it prints or writes anything, and its step fails.
+export function assertWikiCoverage(wikiPages, appItemCount) {
+  const pageCount = Object.keys(wikiPages).length;
+  const itemCount = Object.values(wikiPages).reduce((n, items) => n + items.length, 0);
+  if (!pageCount || itemCount < appItemCount / 2)
+    throw new Error(`the Wiki's collection log data lists ${pageCount} pages and ${itemCount} items, against ${appItemCount} items in the app, so it was not used`);
+}
+
 export function alignItems(appItems, wikiItems, log, page, mint) {
   const pool = wikiItems.map(n => ({ n, used: false }));
   const out = [];
@@ -120,6 +130,7 @@ const run = async () => {
     while ((m = itemRe.exec(pm[6])) !== null) items.push({ id: Number(m[1]), name: unesc(m[2]) });
     pages.push({ i, pm, tab, name, items, target: PAGE_MATCH[name] || wikiByNorm[norm(name)], moved: 0 });
   }
+  assertWikiCoverage(wikiPages, pages.reduce((n, page) => n + page.items.length, 0));
   // Move only an unambiguous physical slot that no longer exists on its former
   // wiki page. Legitimate shared drops on multiple pages keep their own slots.
   for (const destination of pages) {

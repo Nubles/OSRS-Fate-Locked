@@ -753,7 +753,7 @@ describe('content sync workflow contract', () => {
     // status file it wrote and about the Chunk Picker.
     expect(syncJob).toContain(
       'echo "## Collection log"\n'
-      + "            strip < \"$RUNNER_TEMP/clog.txt\" | grep -E '^\\s*(RENAME|ADD|MOVE|\\+|\\?)|\\[clog:sync\\] (renames|failed|WARNING|[0-9]+ NEW)' || echo \"(no changes)\"\n",
+      + "            strip < \"$RUNNER_TEMP/clog.txt\" | grep -E '^\\s*(RENAME|ADD|MOVE|KEEP|\\+|\\?)|\\[clog:sync\\] (renames|failed|WARNING|[0-9]+ NEW)' || echo \"(no changes)\"\n",
     );
     expect(syncJob).toContain(
       'echo "## Freshness check"\n'

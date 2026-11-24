@@ -113,7 +113,7 @@ jobs:
             git status --porcelain -- data docs | sed 's/^/- /'
             echo ""
             echo "## Collection log"
-            strip < "$RUNNER_TEMP/clog.txt" | grep -E '^\s*(RENAME|ADD|MOVE|\+|\?)|\[clog:sync\] (renames|failed|WARNING|[0-9]+ NEW)' || echo "(no changes)"
+            strip < "$RUNNER_TEMP/clog.txt" | grep -E '^\s*(RENAME|ADD|MOVE|KEEP|\+|\?)|\[clog:sync\] (renames|failed|WARNING|[0-9]+ NEW)' || echo "(no changes)"
             echo ""
             echo "## Freshness check"
             strip < "$RUNNER_TEMP/check.txt" | grep -E '\[content:check\]|^\s{2}' | grep -v 'wrote docs' || true

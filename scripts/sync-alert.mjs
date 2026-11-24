@@ -57,7 +57,7 @@ const LINK_RE = /^https:\/\/[A-Za-z0-9_.:/-]+$/;
 // The notes check-content-sync.mjs writes when it could not read a source.
 // They mean "unknown this week", never "something to add".
 const UNAVAILABLE = /unavailable(?:; retry the content check)?$/;
-const CLOG_KINDS = { RENAME: 'rename', ADD: 'new item', MOVE: 'moved item', '?': 'possible rename', '+': 'new page' };
+const CLOG_KINDS = { RENAME: 'rename', ADD: 'new item', MOVE: 'moved item', KEEP: 'no longer on the Wiki', '?': 'possible rename', '+': 'new page' };
 
 // The parts of the check, told apart by how check-content-sync.mjs and this
 // script begin their lines. A part that could not be read one week keeps its
@@ -184,7 +184,7 @@ export function parseReport(report) {
   const finished = lines.some((line) => /^\[clog:sync\] renames \d+/.test(line));
   const collectionLog = [];
   for (const line of lines) {
-    const match = line.match(/^\s*(RENAME|ADD|MOVE|\?|\+)\s+(.+)$/s);
+    const match = line.match(/^\s*(RENAME|ADD|MOVE|KEEP|\?|\+)\s+(.+)$/s);
     if (!match) continue;
     // Slot ids and item counts shift from week to week; the name is what matters.
     const what = match[2].replace(/\s*\((?:#\d+|\d+ items?)\)\s*$/, '');

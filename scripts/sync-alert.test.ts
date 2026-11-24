@@ -287,6 +287,26 @@ describe('reading the weekly check', () => {
     });
   });
 
+  it('lists an item or page the Wiki no longer has, and keeps the issue open for it', () => {
+    const report = reportWith({ collectionLog: [
+      '[clog:sync] renames 0, items added 0, kept-without-wiki-match 2',
+      '  KEEP   [Vorkath] Draconic visage (#1234)',
+      '  KEEP   [page Old Page] no wiki match — left as-is',
+    ] });
+    const dropped = [
+      'Collection log, no longer on the Wiki: [Vorkath] Draconic visage',
+      'Collection log, no longer on the Wiki: [page Old Page] no wiki match — left as-is',
+    ];
+    expect(parseReport(report).collectionLog).toEqual(dropped);
+    const found = currentItems({ status: statusWith([]), report, syncOutcome: 'success' });
+    expect(found).toEqual({ items: dropped, unread: READ_EVERYTHING });
+    // A week whose only news is a slot the Wiki dropped is not "nothing left".
+    const steps = planAlert({ items: found.items, unread: found.unread, latest: ourIssue(7, 'open', dropped), date: DATE });
+    expect(steps.map((step) => step.type)).toEqual(['edit']);
+    expect(itemsFromBody(steps[0].body)).toEqual(dropped);
+    expect(planAlert({ items: found.items, unread: found.unread, latest: null, date: DATE }).map((step) => step.type)).toEqual(['create']);
+  });
+
   it('calls a collection log sync that did not print its totals unread', () => {
     expect(parseReport(reportWith({ collectionLog: ['[clog:sync] failed: HTTP 503'] })).unread).toEqual(['collection log']);
     expect(parseReport(reportWith({ collectionLog: ['(no changes)'] })).unread).toEqual(['collection log']);
@@ -341,6 +361,7 @@ describe('reading the weekly check', () => {
     expect(collectionLog).toContain("run().catch(e => { console.error('[clog:sync] failed:', e.message); process.exit(1); })");
     expect(collectionLog).toContain("console.log('  RENAME ' + r)");
     expect(collectionLog).toContain("console.log('  ADD    ' + a)");
+    expect(collectionLog).toContain("console.log('  KEEP   ' + k)");
     expect(collectionLog).toContain('console.log(`  MOVE   ${page.name} -> ${destination.name}: ${name} (#${item.id})`)');
     expect(collectionLog).toContain('console.log(`  ? "${p}" — merge the kept item into the added one (keep the OLD id) and add a CLOG_ID_MIGRATIONS entry`)');
     expect(collectionLog).toContain('console.log(`  + "${p}" (${wikiPages[p].length} items)`)');

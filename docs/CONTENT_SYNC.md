@@ -61,7 +61,8 @@ does the rest. Neither touches `main`.
    Nobody reads that branch unprompted, so the same run tells the owner
    (`scripts/sync-alert.mjs`). While `docs/SYNC_STATUS.md` lists something to
    do under **Action needed**, or the collection log sync finds an item that
-   is new, renamed, possibly renamed or moved, or a page it could not add, one
+   is new, renamed, possibly renamed, moved or no longer on the Wiki, or a page
+   it could not add or the Wiki no longer has, one
    issue labelled `content-sync` and assigned to the repository owner carries
    the list. A line under Action needed that only says a source was
    unavailable is not on it. The run opens the issue when there is something
