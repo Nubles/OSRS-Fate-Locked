@@ -418,4 +418,17 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
     expect(regionBlockers("The Writing's on the Wall", { chunks: ['23,53', '27,55', '27,58', '23,56', '25,55'] }, 'chunked'))
       .toEqual(["The commissioner's house in Shayzien"]);
   });
+
+  it("asks Curse of the Empty Lord's first sequence for the Chaos Altar, where Kharrim stands", () => {
+    // Wiki Curse of the Empty Lord (rev 15365488) ===Sequence 1===: Kharrim at 2950,3820, "The Chaos
+    // Temple (church) altar in Level 38 Wilderness". 2950,3820 is chunk 46,59, the tracker's Chaos Altar;
+    // its Chaos Temple area is the level 12 temple (50-52,56-59), where no ghost stands.
+    const quest = QUEST_DATA['Curse of the Empty Lord'];
+    expect(quest.oneOf?.[0].regions).toEqual(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]);
+    const route = (areas: string[]) => unlocks({ regions: ['Baxtorian Falls', ...areas] });
+    expect(questRequirementOptionMet(quest.oneOf![0],
+      route(['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(false);
+    expect(questRequirementOptionMet(quest.oneOf![0],
+      route(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(true);
+  });
 });

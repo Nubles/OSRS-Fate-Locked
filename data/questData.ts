@@ -2858,7 +2858,8 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'Curse of the Empty Lord', name: 'Curse of the Empty Lord',
     regions: ['Baxtorian Falls'],
     oneOf: [
-      { regions: ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"] },
+      // Sequence 1's Kharrim stands at the Chaos Temple (church) altar, 2950,3820 (46,59, Chaos Altar).
+      { regions: ['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"] },
       { regions: ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower'] },
       { regions: ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville'] },
     ],
