@@ -176,6 +176,10 @@ const chunkedSourceChunks = (source: ResourceSource, ctx: AvailabilityContext): 
   return hit?.locations.length ? hit.locations : null;
 };
 
+/** The quests a source needs: a QUEST source is the reward of the quest it is named after. */
+const sourceQuests = (source: Pick<ResourceSource, 'type' | 'name' | 'quests'>): string[] | undefined =>
+  source.type === 'QUEST' ? [...new Set([source.name, ...(source.quests ?? [])])] : source.quests;
+
 /**
  * Analyze a single source against the context. Returns {isAvailable, missing}
  * for the detail UI; the missing array is only populated when needed (short-
@@ -234,7 +238,7 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
 
   // 3. Quests, plus the unlocking quest of a gated skill: every Herblore
   // recipe needs Druidic Ritual.
-  for (const q of withSkillGateQuests(source.quests, requiredSkills)) {
+  for (const q of withSkillGateQuests(sourceQuests(source), requiredSkills)) {
     if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return result(false);
   }
 
@@ -492,7 +496,7 @@ export const calculateEngineItemProgress = (goalId: string, gameState: GameState
   const total =
     s.regions.length +
     Object.keys(s.skills || {}).length +
-    withSkillGateQuests(s.quests, s.skills).length +
+    withSkillGateQuests(sourceQuests(s), s.skills).length +
     Object.keys(s.inputs ?? {}).filter(item => item !== 'Coins').length +
     (s.unlockId ? 1 : 0);
   const completed = Math.max(0, total - path.missing.length);

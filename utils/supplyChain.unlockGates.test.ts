@@ -126,3 +126,24 @@ describe('patch crops need the farming patch', () => {
     expect(Object.values(PATCH).filter(id => !FARMING_PATCH_LIST.includes(id))).toEqual([]);
   });
 });
+
+describe('quest rewards need the quest', () => {
+  it('Silverlight needs Demon Slayer', () => {
+    const gs = state('vanilla', { regions: ['Misthalin'], quests: [] });
+    expect(route('Silverlight', 'Demon Slayer', gs).missing).toEqual(['Quest: Demon Slayer']);
+    expect(isItemAvailable('Silverlight', gs)).toBe(false);
+    gs.unlocks.quests = ['Demon Slayer'];
+    expect(isItemAvailable('Silverlight', gs)).toBe(true);
+  });
+
+  it('Excalibur needs Merlin\'s Crystal in Chunked mode too', () => {
+    const gs = state('chunked', { quests: [] });
+    expect(route('Excalibur', "Merlin's Crystal", gs).missing).toContain("Quest: Merlin's Crystal");
+  });
+
+  it('every QUEST row is named after a quest', () => {
+    const names = new Set(Object.keys(QUEST_DATA));
+    const odd = CURATED_RESOURCE_SOURCES.filter(s => s.type === 'QUEST' && !names.has(s.name)).map(s => s.name);
+    expect(odd).toEqual([]);
+  });
+});
