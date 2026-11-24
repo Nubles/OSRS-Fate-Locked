@@ -46,7 +46,7 @@ describe('MonsterService pinned targets', () => {
     expect(fetchMock).toHaveBeenCalledWith(`${base}${MONSTER_CATALOGUE.asset}`, expect.any(Object));
     expect(String(fetchMock.mock.calls[0][0])).toMatch(/^\//);
     expect(service.ready).toBe(true);
-    expect(service.search('', 10_000)).toHaveLength(2850); // Existing name+version deduplication.
+    expect(service.search('', 10_000)).toHaveLength(2913); // Existing name+version deduplication.
     expect(service.byName('Menaphite Shadow')?.size).toBe(0); // Unknown-size upstream targets remain selectable.
     // Max hits written with markup first used to parse as 0 (Danger: Low).
     expect(service.byName('Tormented Demon')?.maxHit).toBe(45);
@@ -58,6 +58,14 @@ describe('MonsterService pinned targets', () => {
     expect(service.byId(2215)).toMatchObject({ name: 'General Graardor', hp: 255, maxHit: 60, defLevel: 250,
       magicLevel: 80, def: { stab: 90, slash: 90, crush: 90, magic: 298, ranged: 90 },
       rangedDefence: { light: 90, standard: 90, heavy: 90 } });
+    // 24 November 2026 capture. Wiki "Nex" (rev 15395228): dcrush = 35 since 20 October 2026.
+    expect(service.byName('Nex')?.def.crush).toBe(35);
+    // The Fractured Archive (20 October 2026). Wiki "Ocellus" (rev 15410252) and
+    // "Archive Guardian" (rev 15409785).
+    expect(service.versionsOf('Ocellus').map(m => [m.version, m.hp, m.defLevel]))
+      .toEqual([['Phase 1', 2500, 215], ['Phase 2', 1000, 250], ['Phase 3', 5250, 250]]);
+    expect(service.versionsOf('Archive Guardian').map(m => [m.version, m.hp, m.defLevel]))
+      .toEqual([['Flying', 550, 260], ['Grounded', 1100, 260]]);
   });
 
   it('uses matching normalized cache offline even after thirty days, without changing stat semantics', async () => {
