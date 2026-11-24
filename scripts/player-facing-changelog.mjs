@@ -11,6 +11,8 @@ const playerFacingFiles = new Set([
 
 const playerFacingDirectories = [
   'components/',
+  'config/',
+  'context/',
   'data/',
   'hooks/',
   'public/',
