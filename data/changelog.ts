@@ -42,7 +42,7 @@ export const CHANGELOG_RELEASES = [
     date: '2026-11-24',
     sections: {
       fixed: [
-        'A Key roll is now refused with a message while your progress can’t save or another tab’s newer progress is waiting, so a roll can’t be lost.',
+        'Rolls that spend a Key, Breakthroughs and Fate’s Mercy are now refused with a message while your progress can’t save or another tab’s newer progress is waiting.',
         'Slayer tasks, quests, skill guides, Strategy Guide cards and the Resource Engine now ask for what the game asks: the right levels, quests, areas and Keys.',
         'Quest-locked places like Tolna’s rift, Agility shortcuts and three banks wait for their own requirements, and Chunked skips scenery you can’t use.',
         'Plan a route now opens a plan for every quest, diary tier and region, and pinned guide goals show the Keys and chunks they still need.',
