@@ -6,14 +6,14 @@
 
 ## Quests
 
-- Wiki: **191** quests (166 members + 25 F2P), 354 quest points.
+- Wiki: **192** quests (167 members + 25 F2P), 357 quest points.
 - App: **219** quest entries (includes miniquests / sub-quests, so a higher number is expected).
-- Quest points: Wiki **354**, app **354**.
+- Quest points: Wiki **357**, app **354**.
 - Watch the wiki total: an increase means a new quest was released — add it to `data/questData.ts`.
 
 ### Quest list by name
 
-- Every quest and miniquest on the Wiki's Quests/List is in the app, and the app has none the list lacks.
+- New on the Wiki: **The Graveyard** (quest).
 
 ## Combat Achievements
 
@@ -41,4 +41,7 @@ _diary content is flagged on manual review._
 
 ## Action needed
 
+- ⚠️ Quest points: wiki 357, app 354 — a quest's `points` in data/questData.ts differs from its Wiki reward; check the newest quests first.
+- ⚠️ Quests: wiki 192, app 191 official quests — reconcile newly released or missing quests.
+- ⚠️ Quests: "The Graveyard" (quest) is on the Wiki's Quests/List but not in data/questData.ts — add it with its requirements.
 - ⚠️ Chunk Picker: the export has changed since the reviewed pin — review it for map or chunk content changes and re-pin.
