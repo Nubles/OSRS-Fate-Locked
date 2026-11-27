@@ -4,7 +4,9 @@
  * uses it, so its wording stays out of the entry chunk.
  */
 import { SKILLS_LIST } from '../data/items';
-import { mercyBlocker, mercyQuietLeft, mercyRitualInReach, pendingBreakthroughs, skillsWithRoom, tierCap, type FateState } from './chunkedFate';
+import { MERCY_QUIET_MS, mercyBlocker, mercyPool, mercyQuietLeft, mercyRitualInReach, pendingBreakthroughs, skillsWithRoom, tierCap, type FateState } from './chunkedFate';
+import type { RandomUnlockCandidate } from './gameEngine';
+import { TableType } from '../types';
 
 const RITUAL_NAMES = { CHAOS: 'the Ritual of Chaos', CARTOGRAPHER: 'the Ritual of the Cartographer' } as const;
 
@@ -61,4 +63,25 @@ export const mercyShutReason = (state: FateState, doableQuests?: readonly string
       return `Fate's Mercy has nothing it can draw for you: no chunk, skill tier, patch type, guild, merchant or gear slot it could open would let you train ${unfinished.length === 1 ? unfinished[0] : `${unfinished[0]} or ${unfinished.length - 1} other skill${unfinished.length === 2 ? '' : 's'}`} further.`;
     }
   }
+};
+
+/**
+ * The line shown while Fate's Mercy is open: why it opened (every skill at its
+ * cap, or the quiet spell while a skill still has room) and what it will draw
+ * (a chunk or skill tier, or once none is left, what a skill needs).
+ */
+export const mercyOpenText = (
+  state: FateState,
+  now: number = Date.now(),
+  pool: readonly RandomUnlockCandidate[] = mercyPool(state),
+): string => {
+  const quiet = mercyQuietLeft(state, now) === 0 && skillsWithRoom(state).length > 0;
+  const why = quiet
+    ? `nothing new has come for ${Math.round(MERCY_QUIET_MS / 86_400_000)} days`
+    : 'every skill you can train is at its tier cap';
+  const land = pool.some(c => c.table === TableType.CHUNKS || c.table === TableType.SKILLS);
+  const draw = land || pool.length === 0
+    ? 'Fate draws one neighbouring chunk or skill tier for you, free.'
+    : 'No chunk or skill tier is left to draw, so Fate draws the patch type, guild, merchant or gear slot a skill needs, free.';
+  return `You have no Keys, not enough Fate for a ritual, and ${why}. ${draw}`;
 };

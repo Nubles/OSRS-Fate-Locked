@@ -5,6 +5,7 @@ import { ALL_CA_TASKS } from '../../data/caTasks';
 import {
   caTaskSearchFields, compileJournalQuery, diaryAreaAndTier, diaryTaskSearchFields, foldText, hitRanges,
   journalMatches, matchJournalFields, questSearchFields, splitHighlight,
+  caTaskMatches, foldedIncludes,
 } from './OsrsJournalSearch';
 
 const q = (term: string) => compileJournalQuery(term);
@@ -36,9 +37,13 @@ describe('Journal search: matching', () => {
   });
 
   it('finds a quest by its series, also as an acronym, and by its start point', () => {
-    expect(cooks.series).toBe('Recipe for Disaster');
-    expect(journalMatches(q('recipe'), questSearchFields(cooks))).toBe(true);
-    expect(journalMatches(q('rfd'), questSearchFields(cooks))).toBe(true);
+    // Cook's Assistant has no series on the Wiki; the first RFD part carries it.
+    const rfdCook = QUEST_DATA['RFD: The Cook'];
+    expect(rfdCook.series).toBe('Recipe for Disaster');
+    expect(cooks.series).toBeUndefined();
+    expect(journalMatches(q('recipe'), questSearchFields({ ...cooks, series: rfdCook.series }))).toBe(true);
+    expect(journalMatches(q('rfd'), questSearchFields({ ...cooks, series: rfdCook.series }))).toBe(true);
+    expect(journalMatches(q('recipe'), questSearchFields(cooks))).toBe(false);
     expect(journalMatches(q('lumbridge'), questSearchFields(cooks, 'Lumbridge Castle, Misthalin'))).toBe(true);
     expect(journalMatches(q('lumbridge'), questSearchFields(cooks))).toBe(false);
   });
@@ -89,5 +94,25 @@ describe('Journal search: highlighting', () => {
   it('highlights any word on a heading, even when only some words are in it', () => {
     const r = hitRanges(q('varrock wall'), 'Varrock Hard');
     expect(splitHighlight('Varrock Hard', r).filter(s => s.hit).map(s => s.text)).toEqual(['Varrock']);
+  });
+});
+
+describe('shared journal panel matchers', () => {
+  it('matches a Combat Achievement task by its name in both layouts', () => {
+    const noxious = ALL_CA_TASKS.find(task => task.id === 'ca_0')!;
+    expect(caTaskMatches(compileJournalQuery('Noxious Foe'), noxious)).toBe(true);
+    expect(caTaskMatches(compileJournalQuery('Easy'), noxious)).toBe(true);
+    expect(caTaskMatches(compileJournalQuery('Zulrah'), noxious)).toBe(false);
+    expect(caTaskMatches(null, noxious)).toBe(true);
+    // Every task by its own name.
+    expect(ALL_CA_TASKS.filter(task => task.name && !caTaskMatches(compileJournalQuery(task.name), task))).toEqual([]);
+  });
+
+  it('ignores apostrophes and full stops in the Quests and Collection Log searches', () => {
+    expect(foldedIncludes("Cook's Assistant", 'cooks assistant')).toBe(true);
+    expect(foldedIncludes("Karil's coif", 'karils coif')).toBe(true);
+    expect(foldedIncludes("Black Knights' Fortress", 'knights fortress')).toBe(true);
+    expect(foldedIncludes('Dragon Slayer I', 'slayer ii')).toBe(false);
+    expect(foldedIncludes("Cook's Assistant", 'COOK')).toBe(true);
   });
 });

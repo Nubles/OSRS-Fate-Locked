@@ -12,6 +12,7 @@ import {
 } from '../constants';
 import { useGame } from '../context/GameContext';
 import { useFeatureGates } from '../hooks/useFeatureGates';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import type { FeatureId } from '../utils/featureGates';
 import { Search, ExternalLink, Unlock, Lock, ChevronDown, ChevronsUp, AlertCircle, List, Filter, Info, Share2, Route, Star } from 'lucide-react';
 import { Sparkles, User, Map, Swords, Package, Compass, BookOpen, ScrollText, Globe, MapPin, Trophy, Skull } from './OsrsIcon';
@@ -63,6 +64,7 @@ import { getGameMode } from '../config/gameModes';
 import { getActivityRegion } from '../data/activityRegions';
 import { isAreaReachable, bankLocksActive } from '../utils/reachability';
 import { BANKS, BANK_IDS, BANK_BY_ID } from '../data/banks';
+import { BANK_IDS_BY_NAME } from '../utils/bankDisplayOrder';
 import { getActivityReq, ActivityReq } from '../data/activityRequirements';
 import { bossTier, TIER_LABEL } from '../data/bossKeyTiers';
 import { evaluateActivityReadiness, type ActivityReadiness } from '../utils/activityReadiness';
@@ -408,9 +410,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   const {
     unlocks, levelUpSkill, specialKeys, unlockContent, animationsEnabled, advisorsEnabled, gameModeId, customMode, pendingUnlock,
     history, petsClaimed, achievementsClaimed, settleAchievements, stateReplacements, achievementTitle, pinnedGoals,
-    hopes, toggleHope,
+    hopes, toggleHope, hasSeenOnboarding,
   } = game;
   const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
+  // An owned area no route reaches leaves its boss or minigame Not ready, as in the Journal.
+  // Not behind the first-visit onboarding (PERF-4): owning an area is enough until then.
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId, hasSeenOnboarding);
   const skillOddsHover = useSkillOddsHover();
   const achievementCatalog = useAchievementCatalog();
   const titleAchievement = achievementTitle ? achievementCatalog?.achievementById(achievementTitle) : undefined;
@@ -836,6 +841,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
               req,
               unlocks,
               gameModeId,
+              areaRoutes,
             );
 
             // Filter logic: Show if unlocked OR can unlock (Omni)
@@ -864,7 +870,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
   );
 
   const renderWorldTab = () => (
-      <div className="flex flex-col lg:h-full lg:overflow-hidden">
+      // MAP: the column scrolls when the window is too short for the map's
+      // 280 px floor, so its bottom controls are never clipped out of reach.
+      <div data-testid="world-column" className={`flex flex-col lg:h-full ${worldView === 'MAP' ? 'lg:overflow-y-auto custom-scrollbar' : 'lg:overflow-hidden'}`}>
           <div className="flex justify-between items-center mb-4 px-2 pt-2 shrink-0">
                <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">{gameModeId === 'chunked' ? 'Chunks' : 'Areas'}</h3>
                <div className="flex bg-[#1a1a1a] p-1 rounded-lg border border-white/10">
@@ -887,7 +895,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
 
           <p className="px-2 pb-2 text-[10px] text-gray-400 shrink-0">{tutorialIslandNote(gameModeId)}</p>
           {worldView === 'MAP' ? (
-              <div className="flex-1 bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
+              <div className="flex-1 lg:min-h-[280px] bg-[#050505] rounded-lg border border-white/10 overflow-hidden relative">
                   <PanelErrorBoundary name="Region map">
                     <Suspense fallback={<PaneFallback />}>
                       <RegionMap />
@@ -1042,9 +1050,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ suspendModals = false }) =
         { id: 'STORAGE',   label: 'Storage',            color: 'text-amber-600',  bar: 'bg-amber-600',  list: ROLLABLE_STORAGE_ITEMS, unlocked: ROLLABLE_STORAGE_ITEMS.filter(item => unlocks.storage.includes(item)), type: TableType.STORAGE },
         { id: 'MERCHANTS', label: 'Merchants',          color: 'text-yellow-400', bar: 'bg-yellow-500', list: MERCHANTS_LIST,     unlocked: unlocks.merchants, type: TableType.MERCHANTS, details: MERCHANT_UNLOCK_DETAILS },
         { id: 'SLAYER',    label: 'Slayer Unlocks',     color: 'text-rose-400',   bar: 'bg-rose-500',   list: SLAYER_UNLOCKS_LIST, unlocked: unlocks.slayerUnlocks,   type: TableType.SLAYER_UNLOCKS },
-        // Banks are keyed by chunk id but shown by place name; only present when
-        // the run locks banks (see bankLocksActive).
-        ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
+        // Banks are keyed by chunk id but shown by place name, A to Z (the roll pool
+        // keeps its own fixed order); only present when the run locks banks (see bankLocksActive).
+        ...(bankLocksActive(gameModeId, customMode) ? [{ id: 'BANKS', label: 'Banks', color: 'text-amber-300', bar: 'bg-amber-400', list: BANK_IDS_BY_NAME, unlocked: (unlocks.banks ?? []), type: TableType.BANKS, nameMap: Object.fromEntries(BANKS.map(b => [b.id, b.name])) as Record<string, string> }] : []),
       ];
 
       if (isOsrs) {

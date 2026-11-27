@@ -12,7 +12,7 @@ for (const bit of [15 * 48 + 35, 15 * 48 + 36]) bits[bit >> 3] |= 1 << (bit & 7)
 const map = btoa(String.fromCharCode(...bits));
 
 const snapshot = {
-  v: 1, mode: 'Vanilla', modeId: 'vanilla', account: 'Whim', startedAt: Date.UTC(2026, 9, 1),
+  v: 1, mode: 'Vanilla', modeId: 'vanilla', account: 'Runner', startedAt: Date.UTC(2026, 9, 1),
   areas: { unit: 'areas', unlocked: 34, total: 125 }, chunks: { unlocked: 2, total: 624 },
   quests: { done: 21, total: 212 }, diaryTasks: { done: 40, total: 492 }, ca: { points: 12, tier: 'Easy' },
   recent: [{ text: 'Unlocked Varrock (Areas)', at: Date.now() - 3 * 3_600_000 }],
@@ -29,7 +29,7 @@ describe('the Adventurer\'s Log page', () => {
     const updatedAt = Date.now() - 150_000;
     vi.stubGlobal('fetch', vi.fn(async () => Response.json({ snapshot, updatedAt })));
     render(<AdventurersLog id={RUN} />);
-    expect(await screen.findByText('Whim')).toBeTruthy();
+    expect(await screen.findByText('Runner')).toBeTruthy();
     expect(screen.getByText('Vanilla')).toBeTruthy();
     expect(screen.getByText('21 / 212')).toBeTruthy();
     expect(screen.getByText('Varrock (Areas)')).toBeTruthy();
@@ -37,7 +37,7 @@ describe('the Adventurer\'s Log page', () => {
     expect(screen.getByRole('img', { name: /2 owned chunks lit/ })).toBeTruthy();
     expect(screen.getByText(/Updated 2 minutes ago/)).toBeTruthy();
     // The page names itself in an effect after the run loads, which can land a tick later.
-    await waitFor(() => expect(document.title).toBe('Whim\'s Adventurer\'s Log · Fate Locked'));
+    await waitFor(() => expect(document.title).toBe('Runner\'s Adventurer\'s Log · Fate Locked'));
   });
 
   it('says so when the run is private or gone', async () => {

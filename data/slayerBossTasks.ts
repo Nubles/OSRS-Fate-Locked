@@ -3,7 +3,7 @@
  * BOSSES_LIST names, and the Slayer level a boss asks for. Read from
  * data/sources/slayer-corrections.json `bossTasks` the way
  * scripts/chunk-content-transform.mjs reads it (a boss's substitutes count,
- * bar Konar's crazy archaeologist); utils/farmGates.test.ts pins the two
+ * bar Konar's and Krystilia's crazy archaeologist); utils/farmGates.test.ts pins the two
  * together, so this stays a small table in the app instead of the whole file.
  */
 export const BOSS_TASK_UNLOCK = 'Like a Boss';
@@ -40,5 +40,6 @@ export const BOSS_TASK_BOSSES: Readonly<Record<string, readonly string[]>> = {
   'Konar quo Maten': ALL.filter(boss => boss !== 'Deranged Archaeologist'),
   Nieve: ALL.filter(boss => boss !== 'Alchemical Hydra'),
   Duradel: ALL.filter(boss => boss !== 'Alchemical Hydra'),
-  Krystilia: WILDERNESS,
+  // Her tasks count only in the Wilderness, so the Fossil Island archaeologist does not stand in.
+  Krystilia: WILDERNESS.filter(boss => boss !== 'Deranged Archaeologist'),
 };

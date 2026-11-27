@@ -37,10 +37,16 @@ vi.mock('../utils/lazyRetry', () => ({
   importWithRetry: <T,>(load: () => Promise<T>) => (failImport ? Promise.reject(new Error('offline')) : load()),
 }));
 
-const seen: AreaRoutesState[] = [];
+const seen: Omit<AreaRoutesState, 'routesFor'>[] = [];
+const seenRoutesFor: AreaRoutesState['routesFor'][] = [];
 const mount = async (enabled = true) => {
   const { useAreaRoutesState } = await import('./useAreaRoutes');
-  const Probe: React.FC<{ enabled: boolean }> = ({ enabled: on }) => { seen.push(useAreaRoutesState(unlocks, 'vanilla', on)); return null; };
+  const Probe: React.FC<{ enabled: boolean }> = ({ enabled: on }) => {
+    const { routes, pending, routesFor } = useAreaRoutesState(unlocks, 'vanilla', on);
+    seen.push({ routes, pending });
+    seenRoutesFor.push(routesFor);
+    return null;
+  };
   return render(<Probe enabled={enabled} />);
 };
 const last = () => seen[seen.length - 1];
@@ -48,7 +54,7 @@ const settle = () => act(async () => { for (let i = 0; i < 6; i++) await Promise
 
 beforeEach(() => {
   vi.resetModules();
-  seen.length = 0;
+  seen.length = 0; seenRoutesFor.length = 0;
   service.ready = false; service.listeners.clear(); service.finish = null; service.init.mockClear();
   compute.mockClear(); failImport = false;
 });
@@ -99,6 +105,19 @@ describe('useAreaRoutesState', () => {
 
     await act(async () => { service.finish!(true); });
     expect(last()).toEqual({ routes: STRANDED, pending: false });
+  });
+
+  it('works out the routes of another snapshot only once the routing has loaded', async () => {
+    await mount();
+    await settle();
+    expect(seenRoutesFor[seenRoutesFor.length - 1]).toBeNull();
+    await act(async () => { service.finish!(true); });
+    const routesFor = seenRoutesFor[seenRoutesFor.length - 1];
+    expect(routesFor).toBeTypeOf('function');
+    const snapshot = { ...unlocks, regions: ['Witchaven'] } as typeof unlocks;
+    compute.mockClear();
+    expect(routesFor!(snapshot)).toBe(STRANDED);
+    expect(compute).toHaveBeenCalledWith(expect.anything(), snapshot, 'vanilla');
   });
 
   it('gives a panel opened later its routes on the first draw', async () => {

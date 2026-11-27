@@ -78,10 +78,13 @@ describe('isRandomUnlockEligible', () => {
   });
 
   it('lets a Chunked run roll a minigame once it owns the chunk it is entered from', () => {
-    const owned = makeUnlocks({ chunks: ['41,40'] });
-    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', owned, 'chunked')).toBe(true);
+    // The landers are on the Void Knights' Outpost dock (41,41); the game island (41,40) also counts.
+    const dock = makeUnlocks({ chunks: ['41,41'] });
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', dock, 'chunked')).toBe(true);
+    const island = makeUnlocks({ chunks: ['41,40'] });
+    expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', island, 'chunked')).toBe(true);
     // Another chunk of the same named area is not enough.
-    const others = namedAreaChunks("Void Knights' Outpost").map(c => `${c.cx},${c.cy}`).filter(key => key !== '41,40');
+    const others = namedAreaChunks("Void Knights' Outpost").map(c => `${c.cx},${c.cy}`).filter(key => key !== '41,40' && key !== '41,41');
     expect(isRandomUnlockEligible(TableType.MINIGAMES, 'Pest Control', makeUnlocks({ chunks: others }), 'chunked')).toBe(false);
   });
 

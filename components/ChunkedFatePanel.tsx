@@ -1,5 +1,5 @@
 import { confirmThen } from '../utils/spendConfirm';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { Sparkles } from './OsrsIcon';
 import { BREAKTHROUGH_CHANCE, FATE_MARK_CURSED_ODDS, FATE_MARK_FORTUNATE_ODDS } from '../config/economy';
@@ -7,11 +7,11 @@ import { DROP_RATES } from '../constants';
 import { keyChance } from '../utils/keyChance';
 import { DropSource } from '../types';
 import { breakthroughTier, mercyBlocker, pendingBreakthroughs, tierCap } from '../utils/chunkedFate';
-import { mercyShutReason } from '../utils/chunkedMercyText';
+import { mercyOpenText, mercyShutReason } from '../utils/chunkedMercyText';
 import { chunksToExplore, exploreBlocker, exploreRollsLeft, exploreThings, exploredIn } from '../utils/chunkExplore';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { tierBand } from '../utils/skillTiers';
-import { chunkContentService } from '../services/ChunkContentService';
+import { useChunkContent } from '../hooks/useChunkContent';
 import { chunkedQuestRows } from './QuestDoabilityPanel';
 import { REGION_CHUNKS } from '../data/regionChunks';
 
@@ -54,10 +54,9 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   const needsQuestCheck = mercyBlocker(game) === null;
   const explore = chunksToExplore(game);
 
-  const [ready, setReady] = useState(() => chunkContentService.ready);
-  useEffect(() => {
-    if (needsQuestCheck && !ready) chunkContentService.init().then(() => setReady(true));
-  }, [needsQuestCheck, ready]);
+  // A failed load keeps Mercy shut and offers Retry, never a quest check without the data.
+  const content = useChunkContent(needsQuestCheck);
+  const ready = content.ready;
   // Mercy stays shut while a quest in the run's chunks is doable now. This
   // list only shows why; the call lists the quests again from the chunk
   // content itself (GameContext's callOnFate, utils/mercyQuests.ts).
@@ -103,10 +102,12 @@ export const ChunkedFatePanel: React.FC<{ osrs?: boolean; compact?: boolean }> =
   if (waiting.length === 0 && !showMercy && !shutReason && explore.length === 0 && !threadText && gilded.length === 0 && !omensShown) return null;
   const chance = Math.round(BREAKTHROUGH_CHANCE * 100);
   const exploreChance = keyChance(game, DropSource.CHUNK_EXPLORE, DROP_RATES[DropSource.CHUNK_EXPLORE]) ?? 0;
-  const mercyText = needsQuestCheck && !ready
+  const mercyText = needsQuestCheck && !ready && content.error
+    ? <span role="alert">Could not load the chunk data to check your quests. <button type="button" onClick={content.retry} className="underline">Retry chunk data</button></span>
+    : needsQuestCheck && !ready
     ? 'Checking your chunks for quests you can still do…'
     : shutReason
-      ?? 'You have no Keys, not enough Fate for a ritual, and every skill you can train is at its tier cap. Fate draws one neighbouring chunk or skill tier for you, free.';
+      ?? (showMercy ? mercyOpenText(game) : '');
   const shown = explore.slice(0, compact ? 1 : EXPLORE_SHOWN);
   const more = explore.length - shown.length;
   const exploreIntro = `The first time you do something new in a chunk you unlocked, roll once at ${exploreChance}%. Tick what you did.`;

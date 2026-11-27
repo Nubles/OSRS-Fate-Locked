@@ -1,6 +1,7 @@
 import React, { useDeferredValue, useMemo } from 'react';
 import { Dumbbell } from './OsrsIcon';
 import { useGame } from '../context/GameContext';
+import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { rankSkillBottlenecksCached } from '../utils/skillAdvisor';
 import { AdvisorList, AdvisorItem } from './AdvisorList';
 
@@ -18,7 +19,8 @@ export const SkillAdvisorPanel: React.FC = () => {
   // threshold. Working it out in a follow-up render lets a level-up's new
   // level draw first instead of waiting for it.
   const unlocks = useDeferredValue(liveUnlocks);
-  const ranked = useMemo(() => rankSkillBottlenecksCached(unlocks, gameModeId), [unlocks, gameModeId]);
+  const areaRoutes = useAreaRoutes(unlocks, gameModeId);
+  const ranked = useMemo(() => rankSkillBottlenecksCached(unlocks, gameModeId, areaRoutes), [unlocks, gameModeId, areaRoutes]);
 
   // Scroll the matching skill card into view + flash a highlight ring.
   const scrollToSkill = (id: string) => {

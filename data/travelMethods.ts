@@ -88,7 +88,10 @@ const SPELLS: readonly TravelMethod[] = [
   spell('standard', 'Trollheim Teleport', ['45,57'], 15134848),
   spell('standard', 'Ape Atoll Teleport', ['43,43'], 14906055, { page: 'Ape Atoll Teleport (standard)' }),
   spell('standard', 'Kourend Castle Teleport', ['25,57'], 15311656),
-  spell('standard', 'Civitas illa Fortis Teleport', ['26,48', '26,49'], 15019227),
+  // The wiki's polygon runs from corner 1679,3131 to corner 1684,3136: tiles 1679-1683 x 3131-3135, all in 26,48.
+  spell('standard', 'Civitas illa Fortis Teleport', ['26,48'], 15356637),
+  // The Home Teleports need no runes and land in one place each; the Chunk Picker has no record for them.
+  spell('standard', 'Lumbridge Home Teleport', ['50,50'], 15362019),
 
   spell('ancient', 'Paddewwa Teleport', ['48,154'], 15331334),
   // The wiki's landing square (3320,3337) is west of the Exam Centre's chunk.
@@ -99,6 +102,7 @@ const SPELLS: readonly TravelMethod[] = [
   spell('ancient', 'Carrallanger Teleport', ['49,57'], 15331347),
   spell('ancient', 'Annakarl Teleport', ['51,60'], 15331346),
   spell('ancient', 'Ghorrock Teleport', ['46,60'], 15329225),
+  spell('ancient', 'Edgeville Home Teleport', ['48,54'], 15362016),
 
   spell('lunar', 'Moonclan Teleport', ['32,61', '33,61'], 14863798),
   spell('lunar', 'Ourania Teleport', ['38,50'], 15345906),
@@ -108,13 +112,15 @@ const SPELLS: readonly TravelMethod[] = [
   spell('lunar', 'Fishing Guild Teleport', ['40,52', '40,53'], 14863806),
   spell('lunar', 'Catherby Teleport', ['43,53'], 14863808),
   spell('lunar', 'Ice Plateau Teleport', ['46,61'], 15134857),
-  spell('lunar', 'Tele Group Moonclan', ['32,61', '33,61'], 14863799),
+  // The wiki's polygon is one tile tall, corners 2107,3915 to 2112,3916: tiles 2107-2111 x 3915, all in 32,61.
+  spell('lunar', 'Tele Group Moonclan', ['32,61'], 15362973),
   spell('lunar', 'Tele Group Waterbirth', ['39,58'], 14863801),
   spell('lunar', 'Tele Group Barbarian', ['39,55'], 14863803),
   spell('lunar', 'Tele Group Khazard', ['41,49'], 14863805),
   spell('lunar', 'Tele Group Fishing Guild', ['40,52', '40,53'], 14863807),
   spell('lunar', 'Tele Group Catherby', ['43,53'], 14863809),
   spell('lunar', 'Tele Group Ice Plateau', ['46,61'], 14863811),
+  spell('lunar', 'Lunar Home Teleport', ['32,61'], 15362024),
 
   spell('arceuus', 'Arceuus Library Teleport', ['25,59'], 15343814),
   spell('arceuus', 'Draynor Manor Teleport', ['48,52'], 14863776),
@@ -126,6 +132,8 @@ const SPELLS: readonly TravelMethod[] = [
   spell('arceuus', 'Harmony Island Teleport', ['59,44'], 14863783),
   spell('arceuus', 'Cemetery Teleport', ['46,58'], 15266150),
   spell('arceuus', 'Barrows Teleport', ['55,51'], 15151762),
+  // Lands at the Dark Altar.
+  spell('arceuus', 'Arceuus Home Teleport', ['26,60'], 15362013),
   // The same name as the standard spell; the spellbook tells them apart. It
   // lands inside the Ape Atoll Dungeon (2771,9102, from the tablet's page): the
   // spell page draws that tile on the surface map, 6400 tiles north.
@@ -348,10 +356,10 @@ const JEWELLERY: readonly TravelMethod[] = [
     Play: { to: ['41,56'], afterDiary: { diary: 'Fremennik Hard', to: ['39,58', '37,59', '36,59'] } },
     Rellekka: { to: ['41,56'] }, 'Waterbirth Island': { to: ['39,58'] }, Neitiznot: { to: ['36,59'] }, Jatiszo: { to: ['37,59'] },
   }, 'Enchanted lyre', 15351821),
-  item('item:pharaohs-sceptre', "Pharaoh's sceptre", [26948], ["Pharaoh's Sceptre"],
+  item('item:pharaohs-sceptre', "Pharaoh's sceptre", [26948, 26950], ["Pharaoh's Sceptre"],
     choice({ Jalsavrah: ['30,69'], Jaleustrophos: ['52,44'], Jaldraocht: ['50,45'], Jaltevas: ['51,42'] },
       'Teleport', 'Last-Teleport'),
-    "Pharaoh's sceptre", 15322386),
+    "Pharaoh's sceptre", 15374164),
   item('item:ectophial', 'Ectophial', [4251], ['Ectophial'], { Teleport: { to: ['57,55'] } }, 'Ectophial', 15195604),
   // It lands at the Grand Tree (2466,3492 on the Grand Tree's page, oldid 15114413).
   item('item:royal-seed-pod', 'Royal seed pod', [19564], ['Royal Seed Pod'], { Commune: { to: ['38,54'] } },
@@ -423,9 +431,14 @@ const EQUIPMENT: readonly TravelMethod[] = [
     'Wilderness sword 4', 15242364),
 
   // Teleport opens a choice of the house and the portals; Tele to POH goes to the house, wherever it is.
+  // Teleport opens a sub-menu of the house (no fixed place) and the portal towns, in HOUSE_PORTALS' order.
   item('item:construct-cape', 'Construct. cape', [9789, 9790], [], {
-    Teleport: { to: HOUSE_PORTALS }, 'Tele to POH': { to: [] },
-  }, 'Construct. cape', 15327003),
+    ...choice({
+      Home: [], Rimmington: ['46,50'], Taverley: ['45,54'], Pollnivneach: ['52,46'], Hosidius: ['27,54'],
+      Aldarin: ['22,46'], Rellekka: ['41,56'], Brimhaven: ['43,49'], Yanille: ['39,48'], Prifddinas: ['50,94'],
+    }, 'Teleport'),
+    'Tele to POH': { to: [] },
+  }, 'Construct. cape', 15365081),
   item('item:crafting-cape', 'Crafting cape', [9780, 9781], [], { Teleport: { to: ['45,51'] } }, 'Crafting cape', 15232507),
   item('item:farming-cape', 'Farming cape', [9810, 9811], [], { Teleport: { to: ['19,58'] } }, 'Farming cape', 15327005),
   item('item:fishing-cape', 'Fishing cape', [9798, 9799], [], {
@@ -484,8 +497,10 @@ const EQUIPMENT: readonly TravelMethod[] = [
   item('item:amulet-of-the-eye', 'Amulet of the Eye', [26914, 26990, 26992, 26994], [], { Teleport: { to: [] } },
     'Amulet of the Eye', 15309207),
   // A choice of the Pandemonium, Port Roberts, Red Rock and Deepfin Point.
-  item("item:sailors-amulet", "Sailors' amulet", [32399], [], { Teleport: { to: ['47,46', '29,51', '43,39', '30,43'] } },
-    "Sailors' amulet", 15319506),
+  item("item:sailors-amulet", "Sailors' amulet", [32399], [],
+    choice({ 'The Pandemonium': ['47,46'], 'Port Roberts': ['29,51'], 'Red Rock': ['43,39'], 'Deepfin Point': ['30,43'] },
+      'Teleport'),
+    "Sailors' amulet", 15372200),
   // To the Lumbridge cow field.
   item('item:cowbell-amulet', 'Cowbell amulet', [33104], [], { Teleport: { to: ['50,51'] } }, 'Cowbell amulet', 15338665),
 ];
@@ -584,10 +599,11 @@ const NETWORKS: readonly TravelMethod[] = [
       '40,60', '47,50', '43,50', '26,55', '19,58',
     ], 'Travel', 'Last-destination'),
     'Spirit tree', 15356739),
-  // The pilots: Gnormadium Avlafrim, Captains Bleemadge, Errdo, Dalbur, Klemfoodle and Shoracks.
+  // The pilots: Gnormadium Avlafrim, Captains Bleemadge, Errdo, Dalbur, Klemfoodle and Shoracks. A pilot's id
+  // changes with the player's last destination: Captain Shoracks' are 10486-10491 (RuneLite's PILOT_APEATOLL_*).
   network('gnome-glider', 'Gnome glider', 'Gnome Gliders', {
     npcs: [7516, 7517, 10459, ...range(10461, 10466), ...range(10467, 10473), 6091, ...range(10452, 10458),
-      ...range(10479, 10485), 7178],
+      ...range(10479, 10485), 7178, ...range(10486, 10491)],
   }, {
     ...anyStop(['38,54', '44,54', '51,53', '51,50', '39,46', '42,43', '46,46'], 'Glider'),
     'Glider-to Gandius': { to: ['46,46'] },
@@ -636,7 +652,8 @@ const boat = (id: string, label: string, npcs: readonly number[], options: Reado
 /**
  * Boats whose crew offers a one-click trip. Each lands where the app's chunk
  * content has the crew for the way back; where the same crew works both
- * ends, the trip goes to one of the two. Left out: crews that only talk.
+ * ends, the trip goes to one of the two. Left out: crews that only talk, and
+ * Captain Barnaby, whose per-destination option texts no source gives.
  */
 const BOATS: readonly TravelMethod[] = [
   // Captain Tobias, Seaman Lorris (oldid 15315318) and Seaman Thresnor (oldid 15315315). Travel asks where.
@@ -649,7 +666,7 @@ const BOATS: readonly TravelMethod[] = [
   boat('pandemonium-ship', 'Ship from the Pandemonium', [8631], {
     'Port Sarim': { to: ['47,50'] }, 'Musa Point': { to: ['46,49'] },
   }, 'Seaman Morris', 15315347),
-  // Veos stands at both ends.
+  // Veos waits at both ports for the way back.
   boat('lands-end-ship', "Ship from Land's End", [7471], {
     'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] },
   }, 'Captain Magoro', 15353365),
@@ -674,6 +691,26 @@ const BOATS: readonly TravelMethod[] = [
   }, 'Jarvald', 15351198),
   // Between the dock north of Port Phasmatys and Slepe.
   boat('slepe-boat', "Andras's boat", [8267, 8268], { Travel: { to: ['57,51', '57,55'] } }, 'Andras', 15233277),
+  // Veos at Port Sarim and Port Piscarilius: one option for each other port, since his Travel option was split up.
+  boat('veos-ship', "Veos's ship", [2850, 8484, 8630, 10723, 10724, 10726, 10727, 10949], {
+    'Port Sarim': { to: ['47,50'] }, 'Port Piscarilius': { to: ['28,57'] }, "Land's End": { to: ['23,53'] },
+  }, 'Veos', 15365278),
+  boat('entrana-boat', 'Boat to Entrana', [1165, 1166, 1167, 1168, 1169, 1170], { 'Take-boat': { to: ['44,52', '47,50'] } },
+    'Monk of Entrana', 15258509),
+  // Between Rimmington and Corsair Cove: Captain Tock, then Cabin Boy Colin after The Corsair Curse.
+  boat('corsair-cove-ship', 'Ship to Corsair Cove', [7958, 7967], { Travel: { to: ['45,50', '40,44'] } },
+    'Captain Tock', 15168799),
+  // The squire at Port Sarim (1770) and the one at the Outpost's dock (1769).
+  boat('void-outpost-ship', "Ship to the Void Knights' Outpost", [1770], { Travel: { to: ['41,41'] } },
+    'Squire (Void Knights)', 15239656),
+  boat('void-outpost-return-ship', "Ship from the Void Knights' Outpost", [1769], { Travel: { to: ['47,50'] } },
+    'Squire (Void Knights)', 15239656),
+  // The sailor at Rellekka (3936) and the one at Miscellania (3680).
+  boat('miscellania-boat', "The sailor's boat", [3936, 3680], { Miscellania: { to: ['40,60'] }, Rellekka: { to: ['41,57'] } },
+    'Sailor', 15351110),
+  // Between Port Phasmatys and Mos Le'Harmless, after Cabin Fever.
+  boat('mos-le-harmless-ship', "Bill Teach's ship", [4011, 4012, 4014, 4015, 4016], { Travel: { to: ['57,46', '57,54'] } },
+    'Bill Teach', 15297848),
 ];
 
 export const TRAVEL_METHODS: readonly TravelMethod[] = [

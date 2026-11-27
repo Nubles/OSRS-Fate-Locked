@@ -16,7 +16,9 @@ import {
   completedCAPoints,
   earnedCATiers,
 } from '../utils/caProgress';
-import { caTaskBlocker, caTaskBlockerText } from '../utils/caTaskAccess';
+import { caTaskBlocker, caTaskBlockerHint } from '../utils/caTaskAccess';
+import { caMonsterWikiUrl } from '../utils/questWikiUrl';
+import { caTaskMatches, compileJournalQuery } from './osrs/OsrsJournalSearch';
 import { useAreaRoutes } from '../hooks/useAreaRoutes';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
@@ -56,10 +58,7 @@ export const useCAJournal = (externalSearch = '') => {
     }, 50);
   };
 
-  const getWikiUrl = (monster: string) => {
-    if (monster === 'General') return 'https://oldschool.runescape.wiki/w/Combat_Achievements';
-    return `https://oldschool.runescape.wiki/w/${encodeURIComponent(monster.replace(/ /g, '_'))}`;
-  };
+  const getWikiUrl = caMonsterWikiUrl;
 
   const totalPoints = useMemo(
     () => completedCAPoints(unlocks.completedTasks),
@@ -93,11 +92,10 @@ export const useCAJournal = (externalSearch = '') => {
       if (filterStatus === 'AVAILABLE' && !isAvailable) return false;
       if (filterStatus === 'LOCKED' && (isCompleted || isAvailable)) return false;
 
-      if (!searchTerm) return true;
-      const lowerSearch = searchTerm.toLowerCase();
-      if (ca.id.toLowerCase().includes(lowerSearch)) return true;
-      const tasks = ALL_CA_TASKS.filter(t => t.tierId === ca.id);
-      return tasks.some(t => t.monster.toLowerCase().includes(lowerSearch) || t.description.toLowerCase().includes(lowerSearch));
+      const query = compileJournalQuery(searchTerm);
+      if (!query) return true;
+      // A task's tier is one of its search fields, so a tier name keeps the tier.
+      return ALL_CA_TASKS.some(t => t.tierId === ca.id && caTaskMatches(query, t));
   });
 
   const statusCounts = useMemo(() => {
@@ -298,7 +296,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                             {tasks.map(task => {
                                 const isTaskDone = unlocks.completedTasks.includes(task.id);
                                 const blocker = caTaskBlocker(task, unlocks, gameModeId, areaRoutes);
-                                if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !task.monster.toLowerCase().includes(searchTerm.toLowerCase()) && !ca.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
+                                if (!caTaskMatches(compileJournalQuery(searchTerm), task)) return null;
 
                                 return (
                                     <button
@@ -316,7 +314,7 @@ export const CALog: React.FC<CALogProps> = ({ searchTerm: externalSearch = '' })
                                                 {blocker && (
                                                   <span
                                                     className="text-[10px] font-semibold text-amber-300 bg-amber-500/10 px-1.5 rounded"
-                                                    title={`${caTaskBlockerText(blocker)} You can still log the task by hand.`}
+                                                    title={caTaskBlockerHint(blocker, task, unlocks, gameModeId)}
                                                   >
                                                     {blocker.kind === 'boss' ? 'Boss not unlocked' : "Can't reach yet"}
                                                   </span>

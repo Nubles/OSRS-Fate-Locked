@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { initialState } from '../context/GameContext';
 import { getGameMode } from '../config/gameModes';
-import { QUEST_DATA } from '../data/questData';
+import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import type { LogEntry, UnlockState } from '../types';
 import { validProgressSnapshot } from '../workers/fate-relay/progress.js';
@@ -31,20 +31,31 @@ describe('buildProgressSnapshot', () => {
     linkedAccount: '  Nubles ',
   });
 
-  it('counts what the run card and journal count', () => {
+  it('counts the run\'s quests, diary tasks and Combat Achievement points', () => {
     expect(snapshot).toMatchObject({
       v: 1,
       mode: 'Vanilla',
       modeId: 'vanilla',
       account: 'Nubles',
       startedAt: 1000,
-      quests: { done: 1, total: Object.keys(QUEST_DATA).length },
+      quests: { done: 1, total: QUEST_CAPE_QUEST_IDS.length },
       diaryTasks: { done: 1, total: ALL_DIARY_TASKS.length },
       ca: { points: 0, tier: null },
     });
     expect(snapshot.areas.unit).toBe('areas');
     expect(snapshot.areas.unlocked).toBeGreaterThan(0);
     expect(snapshot.rulesTag).toBeUndefined();
+  });
+
+  it('counts quests only, as the Quest Cape does, so every quest done reads as done', () => {
+    // The Discord bot shows this pair as "Quests" and gives the Quest Cape role when done reaches total.
+    const miniquests = Object.values(QUEST_DATA).filter(quest => quest.kind === 'miniquest').map(quest => quest.id);
+    expect(miniquests.length).toBeGreaterThan(0);
+    const allQuests = buildProgressSnapshot({ unlocks: run({ quests: [...QUEST_CAPE_QUEST_IDS] }), history: [], gameModeId: 'vanilla' });
+    expect(allQuests.quests).toEqual({ done: QUEST_CAPE_QUEST_IDS.length, total: QUEST_CAPE_QUEST_IDS.length });
+    const onlyMiniquests = buildProgressSnapshot({ unlocks: run({ quests: [...miniquests, miniquests[0], 'Not a quest'] }), history: [], gameModeId: 'vanilla' });
+    expect(onlyMiniquests.quests).toEqual({ done: 0, total: QUEST_CAPE_QUEST_IDS.length });
+    expect(validProgressSnapshot(allQuests)).not.toBeNull();
   });
 
   it('lists the five newest unlocks, newest first, with the table players see', () => {

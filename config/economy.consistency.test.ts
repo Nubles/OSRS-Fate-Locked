@@ -2,13 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
 import { DropSource, TableType } from '../types';
 import {
-  EARN_METHODS, KEY_TYPES, SPEND_TABLES, RITUALS,
-  SKILLS_TIER_CAP, LEVEL_ROLL_MAX,
-  VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule,
-  FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES,
-  failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone,
-  gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
+  EARN_METHODS, RITUALS, SKILLS_TIER_CAP, LEVEL_ROLL_MAX, VANILLA_BOSS_KEY_RATES, VANILLA_BOSS_STANDARD_KEY_TOTAL, vanillaBossKeySchedule, FAILURE_FATE_BY_SOURCE, SKILL_CHAOS_MILESTONES, failureFateForSkillLevel, failureFateForSource, isSkillChaosMilestone, gambitKeys, getRitual, ritualEffect, ritualFateCost, STARTING_KEYS,
 } from './economy';
+import { KEY_TYPES, SPEND_TABLES } from './economyReference';
 import { BRUTUS_BOSS_NAME } from './vanillaKeyEconomy';
 import { VANILLA_RANDOM_ACCESS_POLICY, type VanillaRandomAccessPolicy } from '../data/activityAccess';
 import { BOSSES_LIST, MINIGAMES_LIST } from '../data/items';
@@ -84,6 +80,10 @@ describe('economy ↔ engine consistency', () => {
     expect(new Set(sources).size).toBe(sources.length);
   });
 
+  it('points the Pets icon at a Wiki file that exists (File:Pet Kraken.png, capital K)', () => {
+    expect(EARN_METHODS.find(m => m.category === 'Pets')?.icon).toBe('https://oldschool.runescape.wiki/images/Pet_Kraken.png');
+  });
+
   it('represents Level Ups as the dynamic Level ÷ 5 curve', () => {
     const lvl = EARN_METHODS.find(m => m.category === 'Level Ups');
     expect(lvl?.dynamic).toBe(true);
@@ -151,7 +151,7 @@ describe('economy ↔ engine consistency', () => {
       expect(counts.get(TableType.EQUIPMENT)).toBe(1);
       expect(counts.get(TableType.BANKS)).toBe(1);
     }
-    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only banks and guilds inside your chunks can come up.");
+    expect(chaos.spend).toBe("Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks. Outside Chunked, places you can't reach yet can come up too. In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up.");
   });
 
   it('defines Chaos milestones exactly and recognizes only milestone levels', () => {
@@ -374,5 +374,21 @@ describe('economy ↔ engine consistency', () => {
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).toContain('An Omni-Key follows the same rule.');
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('can still pick one');
     expect(describeVanillaRandomAccessPolicy(restrictedOmni)).not.toContain('with a warning');
+  });
+});
+
+describe("the Codex's Key and table summaries", () => {
+  it('load with the Codex, not with the first screen', () => {
+    // config/economy.ts is in the start-up download, which has no room to spare. Only the Codex shows
+    // KEY_TYPES and SPEND_TABLES, so they live in config/economyReference.ts and load with it.
+    const sources = import.meta.glob<string>(
+      ['../{components,context,hooks,services,utils,data,config}/**/*.{ts,tsx}', '../*.{ts,tsx}', '!../**/*.test.{ts,tsx}'],
+      { query: '?raw', import: 'default', eager: true },
+    );
+    const importers = Object.entries(sources)
+      .filter(([, text]) => /from '[^']*config\/economyReference'/.test(text) || /from '\.\/economyReference'/.test(text))
+      .map(([path]) => path.replace(/^\.\.\//, ''));
+    expect(importers).toEqual(['components/ReferenceModal.tsx']);
+    expect(sources['./economy.ts']).not.toMatch(/KEY_TYPES|SPEND_TABLES/);
   });
 });

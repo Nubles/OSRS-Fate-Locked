@@ -820,13 +820,12 @@ describe('canonical diary tier eligibility', () => {
     const regions = [
       ...ALL_DIARY_TASKS.flatMap(task => task.regions ?? []),
       ...ALL_DIARY_TASKS.flatMap(task => task.anyOfRegions ?? []),
-      ...Object.values(DIARY_DATA).flatMap(diary => [diary.region, ...diary.requiredRegions]),
+      ...Object.values(DIARY_DATA).map(diary => diary.region),
     ];
     const quests = [
       ...Object.keys(QUEST_DATA),
 
       ...ALL_DIARY_TASKS.flatMap(task => task.quests ?? []),
-      ...Object.values(DIARY_DATA).flatMap(diary => diary.quests),
     ];
     return unlocked({
       equipment: Object.fromEntries(EQUIPMENT_SLOTS.map(slot => [slot, 9])),
@@ -866,18 +865,19 @@ describe('canonical diary tier eligibility', () => {
     })).toBe('LOCKED_QUEST');
   });
 
-  it('ignores all 48 stale aggregate requirement payloads', () => {
+  it('reads all 48 tiers from their canonical tasks, not the tier region', () => {
     const unlocks = canonicalUnlocks();
 
     for (const diary of Object.values(DIARY_DATA)) {
       expect(getDiaryStatus(diary, unlocks)).toBe('AVAILABLE');
-      expect(getDiaryStatus({
-        ...diary,
-        region: 'Impossible aggregate region',
-        skills: { NotASkill: 99 },
-        quests: ['Impossible aggregate quest'],
-        requiredRegions: ['Impossible aggregate region'],
-      }, unlocks)).toBe('AVAILABLE');
+      expect(getDiaryStatus({ ...diary, region: 'Impossible aggregate region' }, unlocks)).toBe('AVAILABLE');
+    }
+  });
+
+  it('keeps no per-tier skill, quest or region aggregate on the diary tiers', () => {
+    // Canonical tasks own every diary requirement; the old per-tier aggregates were unused and stale.
+    for (const diary of Object.values(DIARY_DATA)) {
+      expect(Object.keys(diary).sort(), diary.id).toEqual(['difficulty', 'id', 'region', 'tier']);
     }
   });
 
@@ -985,9 +985,9 @@ describe('audited diary route eligibility', () => {
 
   it('asks to confirm Morytania bare-handed fishing access while retaining its gates', () => {
     const common = {
-      quests: ['In Aid of the Myreque'], regions: ['Burgh de Rott'],
-      skills: { Fishing: 10, Strength: 10 },
-      levels: { Fishing: 96, Strength: 76 },
+      quests: ['In Search of the Myreque'], regions: ['Burgh de Rott'],
+      skills: { Fishing: 10, Strength: 10, Agility: 10, Crafting: 10, Mining: 10, Magic: 10 },
+      levels: { Fishing: 96, Strength: 76, Agility: 25, Crafting: 25, Mining: 15, Magic: 7 },
     };
     const eligible = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked(common));
 
@@ -997,22 +997,36 @@ describe('audited diary route eligibility', () => {
     });
     expect(eligible.manualChecks).toContain('Learned barehanded fishing in Barbarian Training');
 
+    // Only a started In Aid of the Myreque is needed (Morytania Diary rev 15409170), a check the player confirms.
+    expect(eligible.blockers).not.toContainEqual({
+      kind: 'quest', label: 'In Aid of the Myreque',
+    });
+    expect(eligible.manualChecks).toContain('Started In Aid of the Myreque');
+
+    // Starting it still needs In Search of the Myreque and the quest's start levels.
     const missingQuest = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
       ...common, quests: [],
     }));
-    expect(missingQuest.blockers).toContainEqual({
-      kind: 'quest', label: 'In Aid of the Myreque',
-    });
+    expect(missingQuest.blockers).toContainEqual(expect.objectContaining({
+      kind: 'quest', label: 'In Search of the Myreque',
+    }));
+
+    const lowCrafting = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
+      ...common, levels: { ...common.levels, Crafting: 24 },
+    }));
+    expect(lowCrafting.blockers).toContainEqual(expect.objectContaining({
+      kind: 'skill', label: 'Crafting 25',
+    }));
 
     const lowFishing = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
-      ...common, levels: { Fishing: 95, Strength: 76 },
+      ...common, levels: { ...common.levels, Fishing: 95 },
     }));
     expect(lowFishing.blockers).toContainEqual(expect.objectContaining({
       kind: 'skill', label: 'Fishing 96',
     }));
 
     const lowStrength = evaluateDiaryTaskEligibility(task('mor_elite_1'), unlocked({
-      ...common, levels: { Fishing: 96, Strength: 75 },
+      ...common, levels: { ...common.levels, Strength: 75 },
     }));
     expect(lowStrength.blockers).toContainEqual(expect.objectContaining({
       kind: 'skill', label: 'Strength 76',
@@ -1065,7 +1079,7 @@ describe('audited diary route eligibility', () => {
       ['lum_elite_5', 38], ['var_elite_5', 52],
     ] as const;
     // The altar's ruins: each Raiments route also comes with the Abyss as a way in.
-    const ruins: Record<string, string[]> = { fal_hard_1: ['Goblin Village'], lum_elite_5: ['Lumbridge'], var_elite_5: ['Varrock'] };
+    const ruins: Record<string, string[]> = { fal_hard_1: ['Goblin Village'], fal_elite_1: ['Falador'], lum_elite_5: ['Lumbridge'], var_elite_5: ['Varrock'] };
     for (const [id, level] of cases) {
       const diaryTask = task(id);
       expect(evaluateDiaryTaskEligibility(diaryTask, unlocked({

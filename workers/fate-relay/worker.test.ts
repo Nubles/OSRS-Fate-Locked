@@ -182,7 +182,7 @@ describe('Fate relay profile requests', () => {
 
     expect(response.status).toBe(503);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.example.test');
-    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag, X-Backup-Updated-At');
+    expect(response.headers.get('Access-Control-Expose-Headers')).toBe('ETag, X-Backup-Updated-At, Retry-After');
   });
 
   it('lets browsers cache preflights', async () => {
@@ -984,7 +984,7 @@ describe('Fate relay error reports', () => {
       },
     }]);
     const { content } = posted()[0].body;
-    expect(content.split('\n')[0]).toBe('Fate Locked error · build abc1234 · /OSRS-Fate-Locked/#map');
+    expect(content.split('\n')[0]).toBe('Fate Locked error · build abc1234 · `/OSRS-Fate-Locked/#map`');
     expect(content).toContain('at roll (index-abc.js:1:234)');
     expect(content.length).toBeLessThanOrEqual(2000);
   });
@@ -1052,6 +1052,22 @@ describe('Fate relay error reports', () => {
     expect(content.match(/```/g)).toHaveLength(2);
     expect(content).not.toContain('\u0007');
     expect(content.startsWith('Fate Locked unhandledrejection · build abc1234')).toBe(true);
+  });
+
+  it('shows the sender\'s kind, build and path as literal text, never as Markdown or a link', async () => {
+    const env = { ERROR_WEBHOOK_URL: WEBHOOK };
+    await send(env, report({
+      kind: '**Urgent**',
+      build: '[x](https://example.invalid)',
+      path: '/OSRS-Fate-Locked/ [Fix your save here](https://example.invalid/fix) `code` ' + 'p'.repeat(400),
+    }));
+    const heading = posted()[0].body.content.split('\n')[0] as string;
+    // An unknown kind or build shape falls back; the path goes in inline code, which Discord shows as is.
+    expect(heading.startsWith('Fate Locked error · build unknown · `/OSRS-Fate-Locked/ [Fix your save here]')).toBe(true);
+    expect(heading).not.toContain('**');
+    expect(heading.match(/`/g)).toHaveLength(2);
+    expect(heading.endsWith('`')).toBe(true);
+    expect(heading.length).toBeLessThanOrEqual(400);
   });
 
   it('answers 204 but forwards nothing past the per-IP limit', async () => {

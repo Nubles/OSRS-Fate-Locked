@@ -320,7 +320,28 @@ const aggregate = (kind: AnalyticsAggregate['kind'], label: string, rolls: Norma
   };
 };
 
-export const defaultFateAnalyticsQuery = (now: number): FateAnalyticsQuery => ({
+/** One roll line as the Stats page counts it, for a summary built line by line (the Run Film's end card). */
+export interface RollTally {
+  /** A real win. A Pity Key is a miss that Fate paid for, so it is not. */
+  win: boolean;
+  /** The Standard Keys the line paid. An older line with no count paid one (two when it says it was doubled). */
+  standardKeys: number;
+  /** A win's chance (0 to 1) when it can be the luckiest roll, as Notable moments takes it: not a Verac hit-through, and only with known odds. */
+  luckyChance: number | null;
+}
+
+export const rollTallyOf = (entry: LogEntry): RollTally => {
+  const roll = normalizedRoll(entry, 0);
+  const legacyKeys = /\((Doubled|Second Key)\)/.test(entry.message ?? '') ? 2 : 1;
+  const lucky = roll.genuineWin && roll.probability !== null && !roll.inconsistent && roll.validTimestamp;
+  return {
+    win: roll.genuineWin,
+    standardKeys: rewardBearing(roll) ? roll.standardKeys ?? legacyKeys : 0,
+    luckyChance: lucky ? roll.probability : null,
+  };
+};
+
+export const defaultFateAnalyticsQuery =(now: number): FateAnalyticsQuery => ({
   range: 'all',
   scope: { kind: 'all' },
   includeLegacyEstimates: true,

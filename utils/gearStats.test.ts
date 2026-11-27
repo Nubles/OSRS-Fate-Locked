@@ -50,6 +50,8 @@ describe('ammo that applies to an attack', () => {
     expect(rangedStr(weapon('Heavy ballista', 'Crossbow', 15), ammo('Dragon javelin', 150))).toBe(165);
     expect(rangedStr(weapon('Eclipse atlatl', 'Bow'), ammo('Atlatl dart', 20))).toBe(20);
     expect(rangedStr(weapon('Black salamander', 'Salamander'), ammo('Irit tar', 60))).toBe(60);
+    // The venator bow's charges power its bounce; it still fires arrows.
+    expect(rangedStr(weapon('Venator bow', 'Bow', 25), ammo('Dragon arrow', 60))).toBe(85);
   });
 
   it('ignores ammunition the weapon does not fire', () => {
@@ -58,6 +60,7 @@ describe('ammo that applies to an attack', () => {
     expect(rangedStr(weapon('Black chinchompa', 'Chinchompas', 30), ammo('Rune arrow', 49))).toBe(30);
     expect(rangedStr(weapon('Crystal bow', 'Bow', 78), ammo('Rune arrow', 49))).toBe(78);
     expect(rangedStr(weapon('Bow of Faerdhinen', 'Bow', 106), ammo('Dragon arrow', 60))).toBe(106);
+    expect(rangedStr(weapon('Starter bow', 'Bow', 7), ammo('Dragon arrow', 60))).toBe(7); // fires its own ammunition
     expect(rangedStr(weapon('Armadyl crossbow', 'Crossbow'), ammo('Dragon arrow', 60))).toBe(0);
     expect(rangedStr(weapon('Heavy ballista', 'Crossbow', 15), ammo('Runite bolts', 115))).toBe(15);
   });

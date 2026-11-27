@@ -29,6 +29,7 @@ import { CARTOGRAPHER_OFFER_SIZE } from './cartographerOffer';
 import { FATE_MARKS, FATE_SITES } from './fateLand';
 import { legacyRunSalt } from './seededRng';
 import { MAX_HOPES } from './hopeKey';
+import { migrateQuestCapeAchievementIds, migrateQuestCapeTitle } from './questCapeAchievement';
 import { REGION_CHUNKS } from '../data/regionChunks';
 
 /** The regions a Chunked run's seals name (utils/fateLand.ts). */
@@ -69,6 +70,22 @@ export const MAX_IDENTIFIER_ARRAY = 25_000;
 export const MAX_COLLECTION_LOG_ENTRIES = 25_000;
 export const MAX_USER_NOTES = 5_000;
 export const MAX_NOTE_CHARS = 20_000;
+/** The most free Rituals of Clarity the preview achievement build could grant (eight achievements, one each). */
+export const LEGACY_FREE_CLARITY_MAX = 8;
+
+/**
+ * Keeps a run note within MAX_NOTE_CHARS. The note editor, the reducer and the
+ * loader all go through this, so nothing the app writes is refused by its own
+ * validator, and an older save that already holds a longer note keeps its text
+ * up to the limit instead of failing to load. A cut never splits a surrogate pair.
+ */
+export const clampNoteText = (text: string): string => {
+  if (text.length <= MAX_NOTE_CHARS) return text;
+  let end = MAX_NOTE_CHARS;
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+  return text.slice(0, end);
+};
 export const MAX_IDENTIFIER_CHARS = 512;
 export const MAX_HISTORY_DETAILS_CHARS = 20_000;
 export const MAX_SEED_CHARS = 256;
@@ -653,9 +670,9 @@ const normalizeNotes = (value: unknown): Outcome<Record<string, string>> => {
   if (inspected.ok === false) return inspected;
   const out: Record<string, string> = {};
   for (const key of Object.getOwnPropertyNames(inspected.value)) {
-    const note = stringValue(readOwn(inspected.value, key), pathOf('userNotes', key), MAX_NOTE_CHARS);
-    if (note.ok === false) return note;
-    out[key] = note.value;
+    const raw = readOwn(inspected.value, key);
+    if (typeof raw !== 'string') return invalid('invalid_field', pathOf('userNotes', key));
+    out[key] = clampNoteText(raw);
   }
   return { ok: true, value: out };
 };
@@ -1462,12 +1479,12 @@ const normalizeState = (
   if (own(input, 'achievementsClaimed') && readOwn(input, 'achievementsClaimed') !== undefined) {
     const checked = normalizeAchievementsClaimed(readOwn(input, 'achievementsClaimed'));
     if (checked.ok === false) return checked;
-    state.achievementsClaimed = checked.value;
+    state.achievementsClaimed = migrateQuestCapeAchievementIds(checked.value);
   }
   if (own(input, 'achievementTitle') && readOwn(input, 'achievementTitle') !== undefined) {
     const checked = stringValue(readOwn(input, 'achievementTitle'), 'achievementTitle', MAX_IDENTIFIER_CHARS);
     if (checked.ok === false) return checked;
-    if (checked.value.length > 0) state.achievementTitle = checked.value;
+    if (checked.value.length > 0) state.achievementTitle = migrateQuestCapeTitle(checked.value);
   }
   if (own(input, 'freeRituals') && readOwn(input, 'freeRituals') !== undefined) {
     const raw = readOwn(input, 'freeRituals');
@@ -1483,10 +1500,13 @@ const normalizeState = (
     if (checked.value.length > 0) state.hopes = checked.value.slice(-MAX_HOPES);
   }
   // A preview build of achievement rewards gave free Rituals of Clarity as a count.
+  // Only its eight biggest achievements gave one each, so no honest save holds
+  // more than LEGACY_FREE_CLARITY_MAX; a larger count is cut to that.
   if (own(input, 'freeClarity') && readOwn(input, 'freeClarity') !== undefined) {
     const checked = boundedInteger(readOwn(input, 'freeClarity'), 'freeClarity', 0, MAX_COUNTER);
     if (checked.ok === false) return checked;
-    if (checked.value > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(checked.value).fill('LUCK')];
+    const count = Math.min(checked.value, LEGACY_FREE_CLARITY_MAX);
+    if (count > 0) state.freeRituals = [...(state.freeRituals ?? []), ...Array<string>(count).fill('LUCK')];
   }
   if (own(input, 'rituals')) {
     const checked = normalizeRituals(readOwn(input, 'rituals'));

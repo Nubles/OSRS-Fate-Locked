@@ -11,6 +11,7 @@
  */
 
 import { computeUnlockImpact, prepareUnlockImpactContext } from './unlockImpact';
+import type { AreaRoutes } from './areaRoutes';
 import { REGION_GROUPS } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -99,12 +100,20 @@ const areaBlocker = (blocker: EligibilityBlocker): boolean => blocker.kind === '
  * (highest first). Ties broken by direct score, then alphabetically.
  *
  * @param unlocks  Current unlocks snapshot (same shape as GameContext unlocks)
+ * @param routesFor  From useAreaRoutesState: the routes of a snapshot, so an
+ *   area counts a quest only when a route reaches it, as the Quest Log does.
+ *   Left out (routes still loading), owning an area is enough.
  */
-export function rankLockedRegions(unlocks: any, gameModeId?: string): RankedRegion[] {
+export function rankLockedRegions(
+  unlocks: any,
+  gameModeId?: string,
+  routesFor?: ((snapshot: any) => AreaRoutes | null) | null,
+): RankedRegion[] {
   // Chunked mode unlocks one map chunk at a time and has no Areas table, so
   // there is nothing to rank here (the Frontier Advisor covers it).
   if (gameModeId === 'chunked') return [];
 
+  const baseRoutes = routesFor ? routesFor(unlocks) : null;
   const areas = [...new Set(
     randomUnlockPool(unlocks, gameModeId, 'key', TableType.REGIONS).map(({ item }) => canonicalAreaName(item)),
   )].filter(area => !isAreaReachable(area, unlocks, gameModeId));
@@ -114,22 +123,24 @@ export function rankLockedRegions(unlocks: any, gameModeId?: string): RankedRegi
   // probes; when none can, the impact (direct and cascade) is exactly zero.
   const watched = [
     ...Object.values(QUEST_DATA).flatMap(quest => {
-      const base = evaluateQuestEligibility(quest, unlocks, gameModeId);
+      const base = evaluateQuestEligibility(quest, unlocks, gameModeId, baseRoutes);
       const open = base.status === 'COMPLETED' || (base.status === 'AVAILABLE' && base.eligible);
       return !open && base.blockers.every(areaBlocker) ? [{
         probes: questProbes.get(quest.id) ?? [],
-        opensIn: (simulated: any) => {
-          const result = evaluateQuestEligibility(quest, simulated, gameModeId);
+        opensIn: (simulated: any, routes: AreaRoutes | null) => {
+          const result = evaluateQuestEligibility(quest, simulated, gameModeId, routes);
           return result.status === 'AVAILABLE' && result.eligible;
         },
       }] : [];
     }),
     ...Object.values(DIARY_DATA).flatMap(diary => {
-      const base = evaluateDiaryTierEligibility(diary, unlocks, gameModeId);
+      const base = evaluateDiaryTierEligibility(diary, unlocks, gameModeId, baseRoutes);
       const open = base.status === 'COMPLETED' || (base.status === 'AVAILABLE' && base.eligible);
       return !open && base.blockers.every(areaBlocker) ? [{
         probes: diaryProbes.get(diary.id) ?? [],
-        opensIn: (simulated: any) => evaluateDiaryTierEligibility(diary, simulated, gameModeId).eligible,
+        opensIn: (simulated: any, routes: AreaRoutes | null) => (
+          evaluateDiaryTierEligibility(diary, simulated, gameModeId, routes).eligible
+        ),
       }] : [];
     }),
   ];
@@ -141,12 +152,19 @@ export function rankLockedRegions(unlocks: any, gameModeId?: string): RankedRegi
     .map((area): RankedRegion => {
       const simulated = { ...unlocks, regions: [...unlocks.regions, area] };
       const opened = new Set(closedProbes.filter(probe => probeOpen(probe, simulated, gameModeId)));
+      // The new area's own routes: worked out only when it could open
+      // something, as routing the whole map is the slow part.
+      let simulatedRoutes: AreaRoutes | null | undefined;
+      const routesOf = () => (simulatedRoutes === undefined
+        ? (simulatedRoutes = routesFor ? routesFor(simulated) : null)
+        : simulatedRoutes);
       const opensAny = opened.size > 0 && watched.some(entry => (
-        entry.probes.some(probe => opened.has(probe)) && entry.opensIn(simulated)
+        entry.probes.some(probe => opened.has(probe)) && entry.opensIn(simulated, routesOf())
       ));
       const impact = opensAny
         ? computeUnlockImpact(unlocks, simulated, gameModeId, {
-            context: context ??= prepareUnlockImpactContext(unlocks, gameModeId),
+            context: context ??= prepareUnlockImpactContext(unlocks, gameModeId, baseRoutes),
+            simulatedAreaRoutes: routesOf(),
           })
         : null;
 

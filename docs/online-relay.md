@@ -33,8 +33,11 @@ fragment. After the player approves the current profile, the browser:
    (`utils/relayPublishFingerprint.ts`) and skips it when the last publish
    for the pairing that worked had the same fingerprint, from the same or an
    earlier revision, under six hours ago (remembered in `fate_relay_published_v1`,
-   so a reload or a new tab doesn't send it again either). Retry and pairing
-   publish at once, whatever the relay holds.
+   so a reload or a new tab doesn't send it again either). A tab left open
+   sends the unchanged profile again by itself once the last publish is six
+   hours old, so its export time stays inside RuneLite's 12-hour limit while
+   the tracker is open. Retry and pairing publish at once, whatever the relay
+   holds.
 
 A publish that fails is tried again by itself after 15 seconds, then 1
 minute, then every 5 minutes until one works (`relayRetryDelayMs` in
@@ -73,8 +76,13 @@ RuneLite performs only the fixed `GET` request, with optional ETag caching. A
 valid response replaces its imported snapshot. A malformed or unsupported
 response is rejected without replacing the last valid snapshot.
 
-After the initial pairing check, RuneLite revalidates a connected profile no
-more than once per minute and backs off transient failures and rate limits. The
+How often RuneLite reads the relay (`SyncMachine.java`): once a minute while
+logged in and connected, every 5 minutes while logged out. While a new pairing
+waits for the browser, it checks every 5 seconds for the first 2 minutes, then
+every 15 seconds up to 10 minutes (about every 8 and 16 seconds in practice,
+since the poll runs on a 4-second tick), so one pairing can make about 45
+reads. A failure is retried after 30 seconds, doubling up to 5 minutes, and
+rate limits are honoured. **Check now** works at most every 10 seconds. The
 optional stream overlay checks every 30 seconds.
 
 The plugin does **not** upload gameplay, account names, detected events,
@@ -120,7 +128,7 @@ only a SHA-256 hash of the token and the time it was last refreshed. It lasts
 90 days from the last refresh, and publishes refresh it at most once a week
 to spare KV writes. A code therefore stays claimed after its 30-day profile
 record expires; after 90 days without a publish it can be claimed again,
-which is safe for random 128-bit codes. Codes published before owner records
+which is safe for random 122-bit codes (a type-4 UUID without dashes). Codes published before owner records
 existed are adopted on their owner's next publish.
 
 The pairing dialog asks the player to continue only if they just pressed
@@ -216,8 +224,9 @@ limit the relay answers `429` with `Retry-After: 60`, before touching KV:
 | `RELAY_CLAIM_LIMITER` | writes that create a record: a code's first publish, a new backup id or shared run, each Discord link code | 4 a minute | Turning on RuneLite, online backup and sharing, and asking for a link code, all in one minute, is 4. |
 | `RELAY_ERROR_LIMITER` | `POST /e` | 10 a minute | A page reports each error once (and the relay forwards each message once in 10 minutes anyway). |
 
-Reads are not limited: RuneLite checks at most once a minute and the stream
-overlay every 30 seconds. The Discord bot's `/l/` routes need its secret and
+Reads are not limited: a connected RuneLite checks once a minute (more often
+only while a pairing waits, for up to 10 minutes, and on Check now) and the
+stream overlay every 30 seconds. The Discord bot's `/l/` routes need its secret and
 are not limited. The app already treats a `429` like a relay outage: the
 profile and backups are tried again later, and shared progress a minute
 later. Cloudflare counts per location and approximately, so the limits are
@@ -429,9 +438,11 @@ An export built while the app's free-area baseline belongs to another run
 sends the new run.
 
 The `FLGZ:` relay request for every golden run is tested against 240 KiB,
-16 KiB under the relay's 256 KiB limit; the golden runs' requests are
-193-197 KiB, of which the travel section is about 9 KiB (tested against
-16 KiB). RuneLite continues to load v1-v3 bundles using legacy map
+16 KiB under the relay's 256 KiB limit. On 22 November 2026 the golden runs'
+requests measured about 224-237 KiB (Vanilla 224-228, Custom and Xtreme
+228-230, Chunked about 237), so the Chunked runs have only about 3 KiB left
+under the test budget and about 19 KiB under the relay limit. The travel
+section is tested against 16 KiB. RuneLite continues to load v1-v3 bundles using legacy map
 behavior; a malformed v4 or unsupported future version is rejected without
 replacing the last valid snapshot.
 

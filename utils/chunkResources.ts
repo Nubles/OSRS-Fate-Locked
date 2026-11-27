@@ -99,6 +99,7 @@ const RESOURCE_RULES: [RegExp, ResourceReq][] = [
 
   // ── Thieving (named market stalls + thievable chests; levels are the OSRS
   //    stall requirements. Bank/quest chests are excluded below) ────────────
+  [/cannonball stall/i, { skill: 'Thieving', level: 87 }],
   [/\bore stall/i, { skill: 'Thieving', level: 82 }],
   [/gem stall/i, { skill: 'Thieving', level: 75 }],
   [/scimitar stall/i, { skill: 'Thieving', level: 65 }],

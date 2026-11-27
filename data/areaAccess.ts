@@ -49,6 +49,18 @@ const FAIRY_RING = {
 } satisfies Partial<AreaEntryRoute>;
 
 /**
+ * The enchanted lyre's island teleports. The lyre comes after The Fremennik
+ * Trials; the routes have no diary field, so the diary tier is a manual check.
+ */
+const lyre = (island: string, tier: 'hard' | 'elite'): AreaEntryRoute => ({
+  label: `Enchanted lyre teleport (${tier} Fremennik Diary)`,
+  mobility: ['Enchanted Lyre'],
+  quests: ['The Fremennik Trials'],
+  manualRequirements: [`Complete the ${tier} Fremennik Diary, which adds ${island} to the enchanted lyre`],
+  source: 'https://oldschool.runescape.wiki/w/Enchanted_lyre?oldid=15361207',
+});
+
+/**
  * Glider stations you can fly from without a quest of their own: Ta Quir Priw
  * (the Grand Tree), Sindarpos (White Wolf Mountain, in Taverley's chunk) and
  * Kar-Hewo (Al Kharid). Lemanto Andra at the Digsite is arrival-only.
@@ -222,6 +234,7 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
       manualRequirements: ['Pay Jarvald 1,000 coins for the boat to Waterbirth Island'],
       source: 'https://oldschool.runescape.wiki/w/Jarvald?oldid=15351198',
     },
+    lyre('Waterbirth Island', 'hard'),
   ],
 
   'Miscellania & Etceteria': [
@@ -254,6 +267,7 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
       source: 'https://oldschool.runescape.wiki/w/Maria_Gunnars?oldid=15351202',
     },
     sail(68, ['The Fremennik Isles']),
+    lyre('Neitiznot', 'elite'),
   ],
 
   Jatizso: [
@@ -264,6 +278,7 @@ export const AREA_ENTRY_ROUTES: Readonly<Record<string, readonly AreaEntryRoute[
       source: 'https://oldschool.runescape.wiki/w/Mord_Gunnars?oldid=15351203',
     },
     sail(68, ['The Fremennik Isles']),
+    lyre('Jatizso', 'elite'),
   ],
 
   'Lunar Isle': [

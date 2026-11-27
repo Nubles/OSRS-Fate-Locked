@@ -96,7 +96,7 @@ export const BossKillPlanner: React.FC<Props> = ({ onClose }) => {
       for (const boss of unlocks.bosses || []) {
         const versions = monsterService.versionsOf(BOSS_ALIASES[boss] ?? boss);
         const m = versions.find(version => version.version === versionChoice[boss]) ?? defaultBossVersion(versions);
-        if (m) matched.push({ boss, monster: m, versions, plan: planBoss(player, m) });
+        if (m) matched.push({ boss, monster: m, versions, plan: planBoss(player, m, boss) });
         else enc.push(boss);
       }
     }
@@ -318,7 +318,7 @@ const Detail: React.FC<{
 
       <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
         <Info size={11} className="shrink-0 mt-0.5" />
-        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Boosts use the best attack prayer you have unlocked. Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled.
+        DPS compares the melee/ranged attacks your equipped weapon supports (Magic → use the DPS tab for spell-specific numbers). Boosts use the best attack prayer you have unlocked. Kills/trip & danger are rough threat estimates assuming no protection prayers; special attacks and item passives aren't modelled. Styles a boss is immune to, such as melee on the Kraken, get no plan.
       </p>
     </div>
   );

@@ -7,7 +7,9 @@ import { resolveModeRules } from '../config/gameModes';
 import { SACRIFICE_MIN_ROLLS } from '../config/economy';
 import { BOSSES_LIST } from '../data/items';
 import { wardUsable } from '../utils/ritualWard';
-import { ritualAvailability } from '../utils/ritualEffects';
+import { applyOddsBonus, BOOST_CAP, ritualAvailability } from '../utils/ritualEffects';
+import { BARROWS_BROTHERS, RITUALS } from '../config/economy';
+import { FATE_MARK_EFFECTS, SEAL_BOON_EFFECTS } from '../utils/fateMap';
 
 /**
  * The newer Void Altar rituals end to end through the reducer: what they cost,
@@ -72,6 +74,30 @@ describe("Zamorak's Pact", () => {
     expect(s.rituals).toBeUndefined();
     expect(s.fatePoints).toBe(2);
     expectReplayMatches(s);
+  });
+
+  it('prints the odds it really added: boosts stop at 95%', () => {
+    expect(applyOddsBonus(95, 15)).toBe(95);
+    expect(applyOddsBonus(85, 15)).toBe(BOOST_CAP);
+    let s = cast(base({ fatePoints: 0 }), { type: 'RITUAL_PACT' });
+    s = rollAt(s, 300);
+    expect(s.history.at(-1)?.details).toContain('Rituals +15% odds.');
+    // An 85% roll only goes up to 95%, so the Pact adds 10.
+    s = rollAt(s, MISS, 85);
+    expect(s.history.at(-1)?.threshold).toBe(95);
+    expect(s.history.at(-1)?.details).toContain(`Rituals +10% odds (boosts stop at ${BOOST_CAP}%).`);
+    expect(s.history.at(-1)?.details).not.toContain('+15%');
+    // A 95% roll gets nothing from it.
+    s = rollAt(s, 960, 95);
+    expect(s.history.at(-1)?.details).toContain(`Rituals +0% odds (boosts stop at ${BOOST_CAP}%).`);
+  });
+
+  it('says in its text that boosts stop at 95%', () => {
+    const cap = `up to ${BOOST_CAP}%`;
+    expect(RITUALS.find(r => r.id === 'PACT')?.effect).toContain(cap);
+    for (const id of ['AHRIM', 'DHAROK', 'TORAG']) expect(BARROWS_BROTHERS.find(b => b.id === id)?.effect).toContain(cap);
+    expect(FATE_MARK_EFFECTS.FORTUNATE).toContain(cap);
+    expect(SEAL_BOON_EFFECTS.FORTUNATE).toContain(cap);
   });
 
   it('cannot be cast again while the debt stands', () => {

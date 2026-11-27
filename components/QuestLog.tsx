@@ -3,7 +3,8 @@ import { confirmThen } from '../utils/spendConfirm';
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useGame } from '../context/GameContext';
 import { QUEST_DATA, QuestData } from '../data/questData';
-import { WIKI_OVERRIDES, SLOT_CONFIG } from '../constants';
+import { SLOT_CONFIG } from '../constants';
+import { questWikiUrl } from '../utils/questWikiUrl';
 import { CheckCircle2, Lock, Bookmark, Layers, List, ExternalLink, ArrowUpRight, TrendingUp } from 'lucide-react';
 import { BookOpen, MapPin, Sparkles, Scroll } from './OsrsIcon';
 import { WikiIcon } from './WikiIcon';
@@ -22,7 +23,8 @@ import {
   questRequirementOptionLabel,
   withSkillGateQuests,
 } from '../utils/journalStatus';
-import { requestManualAttestation } from '../utils/manualAttestation';
+import { requestQuestAttestation } from '../utils/manualAttestation';
+import { foldedIncludes } from './osrs/OsrsJournalSearch';
 import { effectiveSkillLevel } from '../utils/slayerReach';
 import { DropSource, UnlockState } from '../types';
 import { JournalFilterBar, JournalStatus } from './JournalFilterBar';
@@ -72,14 +74,7 @@ export function splitJournalEntriesByKind<T extends Pick<QuestData, 'kind'>>(
 }
 
 // Helpers
-const getWikiUrl = (name: string) => {
-    // Special handling for Recipe for Disaster subquests to avoid broken links
-    if (name.startsWith('RFD:')) {
-        return 'https://oldschool.runescape.wiki/w/Recipe_for_Disaster';
-    }
-    if (WIKI_OVERRIDES[name]) return `https://oldschool.runescape.wiki/w/${WIKI_OVERRIDES[name]}`;
-    return `https://oldschool.runescape.wiki/w/${encodeURIComponent(name.replace(/ /g, '_'))}`;
-};
+const getWikiUrl = questWikiUrl;
 
 const getDifficultyColor = (difficulty: DropSource) => {
     if (difficulty === DropSource.QUEST_GRANDMASTER) return 'text-yellow-400 border-yellow-500/30 bg-yellow-900/10';
@@ -532,7 +527,7 @@ export const useQuestJournal = (externalSearch = '') => {
       d === DropSource.QUEST_GRANDMASTER ? 5 : d === DropSource.QUEST_MASTER ? 4
         : d === DropSource.QUEST_EXPERIENCED ? 3 : d === DropSource.QUEST_INTERMEDIATE ? 2 : 1;
     const list = allQuests.filter(q => {
-      const matchesSearch = q.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = foldedIncludes(q.name, searchTerm);
       if (!matchesSearch) return false;
       if (activeRegion !== 'ALL' && !enforcedQuestAreas(q).includes(activeRegion)) return false;
       if (diffFilter !== 'ALL' && getDifficultyLabel(q.difficulty) !== diffFilter) return false;
@@ -582,12 +577,7 @@ export const useQuestJournal = (externalSearch = '') => {
 
   const handleQuestToggle = (e: React.MouseEvent, quest: QuestData) => {
       e.stopPropagation();
-      const eligibility = evaluateQuestEligibility(quest, unlocks, gameModeId, areaRoutes);
-      const attestation = requestManualAttestation(
-        quest.name,
-        eligibility,
-        message => window.confirm(message),
-      );
+      const attestation = requestQuestAttestation(quest, unlocks, gameModeId, message => window.confirm(message));
       if (attestation === null) return;
       const { clientX, clientY } = e;
       confirmThen(`Complete ${quest.name} and roll for a Key?`, () => {

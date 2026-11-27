@@ -107,7 +107,7 @@ function cors(origin) {
     'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, If-None-Match, Authorization, X-Backup-Writer',
-    'Access-Control-Expose-Headers': 'ETag, X-Backup-Updated-At',
+    'Access-Control-Expose-Headers': 'ETag, X-Backup-Updated-At, Retry-After',
     // Cache preflights (browsers cap this lower), so publishes and the
     // overlay's conditional polls don't each cost an extra OPTIONS request.
     'Access-Control-Max-Age': '86400',

@@ -12,7 +12,8 @@ describe('the Discord area guide', () => {
     const area = (name: string) => guide.areas.find(entry => entry.name === name);
     expect(area('Lava Maze')?.region).toBe('Wilderness');
     expect(area('Lava Maze')?.bosses).toContain('Chaos Fanatic');
-    expect(area('Chaos Temple')?.bosses).toEqual(expect.arrayContaining(['Callisto', 'Venenatis', "Vet'ion"]));
+    expect(area('Chaos Temple')?.bosses).toEqual(expect.arrayContaining(['Venenatis', "Vet'ion"]));
+    expect(area("Rogues' Castle")?.bosses).toContain('Callisto');
     expect(area('Varrock')).toMatchObject({ region: 'Misthalin' });
     expect(area('Varrock')?.chunks).toBeGreaterThan(0);
     expect(area("Void Knights' Outpost")?.routes).toContain("Squire's boat from Port Sarim");

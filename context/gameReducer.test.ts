@@ -850,7 +850,7 @@ describe('UNLOCK — Banks (bank-locked modes)', () => {
     const s = spendKey(base(), TableType.BANKS, '13618');
     expect(s.unlocks.banks).toContain('13618');
     // History message resolves the id to the place name, not the raw number.
-    expect(s.history[s.history.length - 1].message).toBe('Unlocked Abandoned Mine');
+    expect(s.history[s.history.length - 1].message).toBe("Unlocked Tarn's Lair bank");
     expect(s.keys).toBe(initialState.keys - 1);
   });
 });

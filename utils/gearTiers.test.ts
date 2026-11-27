@@ -77,6 +77,11 @@ describe('gear tiers', () => {
     // weapons whose strength is mechanical, not in their raw bonuses
     expect(canonicalTierFromName('Abyssal whip')).toBe(7);
     expect(canonicalTierFromName('Toxic blowpipe')).toBe(8);
+    expect(canonicalTierFromName('Blazing blowpipe')).toBe(8);
+    // The wood blowpipes take their Ranged wield level from data/equipmentReview.ts.
+    expect(canonicalTierFromName('Camphor blowpipe')).toBeNull();
+    expect(canonicalTierFromName('Rosewood blowpipe')).toBeNull();
+    expect(canonicalTierFromName('Mystic cards')).toBe(1); // cosmetic, not mystic robes
     expect(canonicalTierFromName('Abyssal tentacle')).toBe(8);
     // modern sets are pinned so a set reads consistently (raw bonuses scatter it)
     expect(canonicalTierFromName('Calamity chest')).toBe(8);

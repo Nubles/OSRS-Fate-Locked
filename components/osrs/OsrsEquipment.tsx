@@ -3,7 +3,6 @@ import { useGame } from '../../context/GameContext';
 import { EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX } from '../../constants';
 import { SectionGuide } from '../SectionGuide';
 import { TIER_LABELS } from '../../utils/combatPower';
-import { canonicalTierFromName } from '../../utils/gearTiers';
 import { gearService } from '../../services/GearService';
 import { TIER_GEMS, gemColor, itemSrc, roman } from './OsrsDashGems';
 import { OsrsTierMark } from './OsrsTierMark';
@@ -163,7 +162,7 @@ export const OsrsLabCompact: React.FC<PanelProps> = ({ view, onView, onUpgrade, 
       };
     }
     const tier = item ? gearService.tierOf(item.id) : 0;
-    const est = item ? canonicalTierFromName(item.name) == null : false;
+    const est = item ? gearService.isEstimated(item.id) : false;
     return {
       slot, itemId: id, imageFile: item?.imageFile, gem: id != null ? tier : ut, dim: id == null && ut === 0, selected: pickSlot === slot,
       label: id != null

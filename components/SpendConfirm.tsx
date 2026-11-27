@@ -10,11 +10,28 @@ import './spend-confirm.css';
  */
 const SpendConfirm: React.FC<{ question: string; onAnswer: (yes: boolean) => void }> = ({ question, onAnswer }) => {
   const yesRef = useRef<HTMLButtonElement>(null);
+  const noRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     yesRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.preventDefault(); onAnswer(false); } };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // Capture phase, so the box (the top layer) has the key before the page behind it.
+    const onKey = (event: KeyboardEvent) => {
+      // A held key that opened the box can't answer it: Yes needs a fresh press.
+      if ((event.key === 'Enter' || event.key === ' ') && event.repeat) { event.preventDefault(); return; }
+      if (event.key === 'Escape') {
+        // One Esc closes one layer: the window that asked stays open.
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        onAnswer(false);
+        return;
+      }
+      if (event.key === 'Tab') {
+        // aria-modal: Tab and Shift+Tab only move between Yes and No.
+        event.preventDefault();
+        (document.activeElement === yesRef.current ? noRef.current : yesRef.current)?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
   }, [onAnswer]);
   return (
     <div className="spend-confirm-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onAnswer(false); }}>
@@ -22,7 +39,7 @@ const SpendConfirm: React.FC<{ question: string; onAnswer: (yes: boolean) => voi
         <p id="spend-confirm-q" className="spend-confirm-q">{question}</p>
         <div className="spend-confirm-actions">
           <button ref={yesRef} type="button" className="osrs-btn" onClick={() => onAnswer(true)}>Yes</button>
-          <button type="button" className="osrs-btn" onClick={() => onAnswer(false)}>No</button>
+          <button ref={noRef} type="button" className="osrs-btn" onClick={() => onAnswer(false)}>No</button>
         </div>
         <p className="spend-confirm-hint">Turn this off in Settings: Ask before Key clicks.</p>
       </div>

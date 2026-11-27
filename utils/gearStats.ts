@@ -64,8 +64,10 @@ export const sumBonuses = (items: GearItem[]): GearBonuses => {
   return total;
 };
 
-// Bows that draw charges instead of arrows; their ammo slot never fires.
-const NO_AMMO_BOW = /^(crystal bow|bow of faerdhinen|craw's bow|webweaver bow|venator bow)\b/i;
+// Bows that draw charges or make their own arrows; their ammo slot never
+// fires. The venator bow is not one: its charges power the bounce, and it
+// still fires arrows.
+const NO_AMMO_BOW = /^(crystal bow|bow of faerdhinen|craw's bow|webweaver bow|starter bow)\b/i;
 const ARROW = /\barrows?\b|\bbrutal\b/i;
 const BOLT = /\bbolts?\b|\bbolt rack\b/i;
 

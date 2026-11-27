@@ -4,7 +4,7 @@ import { GameState, TableType, UnlockState } from '../types';
 import { STRATEGY_DATABASE, ContentRequirement } from '../data/requirements';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { RESOURCE_MAP } from '../data/resourceData';
+import { RESOURCE_MAP, currentResourceName } from '../data/resourceData';
 import { REGION_GROUPS } from '../constants';
 import { canonicalAreaName, displayAreaName } from '../data/areaMapPolicy';
 import { isAreaReachable } from './reachability';
@@ -12,9 +12,11 @@ import { calculateSupplyChain } from './supplyChain';
 import { getPoolAndStateKey, isValidUnlock } from './gameEngine';
 import { tierForLevel } from './skillTiers';
 import { planForTarget, type PlanStep } from './goalPlanner';
-import { evaluateDiaryTierEligibility, evaluateQuestEligibility } from './journalStatus';
+import { evaluateDiaryTierEligibility, evaluateQuestEligibility, meetsSkillRequirement } from './journalStatus';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
 import { enforcedQuestAreas } from './questGeographyDisplay';
+import { getActivityReq } from '../data/activityRequirements';
+import { WARRIORS_GUILD_ENTRY_LABEL, meetsWarriorsGuildEntry } from './activityReadiness';
 
 /**
  * Route to goal — the planning brain behind a pinned goal.
@@ -340,8 +342,10 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
 
   // ── Resource Engine item goals: route = its sources + tables ─────────────
   if (!req) {
-    if (!RESOURCE_MAP[goalId]) return null;
-    const chain = calculateSupplyChain(goalId, gameState);
+    // A goal pinned before an item was renamed keeps its stored id.
+    const itemName = currentResourceName(goalId);
+    if (!RESOURCE_MAP[itemName]) return null;
+    const chain = calculateSupplyChain(itemName, gameState);
     const sources: RouteSource[] = (chain?.sources ?? []).map(s => ({
       type: s.source.type,
       name: s.source.name,
@@ -406,6 +410,11 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
     }
   };
   addSkills(req.skills);
+  if (req.questPoints !== undefined) qpNeed = Math.max(qpNeed, req.questPoints);
+  // A guild's own entry rule (the Champions' Guild's 32 Quest Points) is kept on the guild in
+  // data/activityRequirements.ts, where the Strategy Guide and the Goal Tracker's list read it.
+  const entryQuestPoints = kind === 'strategy' ? getActivityReq(req.activity ?? req.id)?.questPoints : undefined;
+  if (entryQuestPoints !== undefined) qpNeed = Math.max(qpNeed, entryQuestPoints);
   for (const id of chainIds) {
     const q = QUEST_DATA[id];
     if (!q) continue;
@@ -466,6 +475,20 @@ export function buildGoalRoute(goalId: string, gameState: GameState): GoalRoute 
           : ''),
       })),
     }));
+
+  // An entry that borrows the Warriors' Guild door rule shows it as one step, as its card does.
+  if (kind === 'strategy' && getActivityReq(req.activity ?? req.id)?.warriorsGuildEntry) {
+    const lvl = (skill: string) => effectiveSkillLevel(unlocks, skill);
+    alternatives.push({
+      name: WARRIORS_GUILD_ENTRY_LABEL,
+      met: meetsWarriorsGuildEntry(unlocks),
+      routes: [
+        { name: '130 combined', met: lvl('Attack') + lvl('Strength') >= 130, detail: `${lvl('Attack') + lvl('Strength')}/130` },
+        { name: '99 Attack', met: meetsSkillRequirement(unlocks, 'Attack', 99) },
+        { name: '99 Strength', met: meetsSkillRequirement(unlocks, 'Strength', 99) },
+      ],
+    });
+  }
 
   const haveQp = unlocks.quests.reduce((acc, id) => acc + (QUEST_DATA[id]?.points ?? 0), 0);
   const questPoints = qpNeed > 0 ? { need: qpNeed, have: haveQp, met: haveQp >= qpNeed } : undefined;

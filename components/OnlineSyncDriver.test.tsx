@@ -353,6 +353,23 @@ describe('OnlineSyncDriver', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
+    it('is sent again by itself while the tracker sits open and idle, before RuneLite calls it old', async () => {
+      buildBundlePayloadMock.mockResolvedValue(built('A'));
+      relaySync.adoptCode(CODE);
+      render(<OnlineSyncDriver />);
+      await advance(QUIET_MS);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      // No run change at all: six hours after the last publish (plus the quiet wait), it goes again.
+      await advance(RELAY_REPUBLISH_UNCHANGED_MS - 1_000);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      await advance(2_000 + QUIET_MS);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      // And again six hours later, so an open tab never lets exportedAt pass 12 hours.
+      await advance(RELAY_REPUBLISH_UNCHANGED_MS + 2_000 + QUIET_MS);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(sentPayloads()).toEqual(['bundle-A', 'bundle-A', 'bundle-A']);
+    });
+
     it('is sent on Retry and on pairing again, whatever the relay holds', async () => {
       buildBundlePayloadMock.mockResolvedValue(built('A'));
       relaySync.adoptCode(CODE);

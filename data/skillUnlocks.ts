@@ -151,60 +151,98 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Attack': {
     1: [
+      'Lvl 1: Bone Club, Bone Dagger, Bone Spear & Mjolnirs',
       'Lvl 1: Bronze & Iron Weapons',
-      'Lvl 1: Quest Weapons (Silverlight, Wolfbane)',
-      'Lvl 5: Steel Weapons & Decorative Swords',
+      'Lvl 1: Quest Weapons (Blurite & Shadow Swords, Blessed Axe, Dark Dagger)',
+      'Lvl 1: Quest Weapons (Silverlight, Wolfbane, Darklight, Gadderhammer)',
+      'Lvl 5: Steel Weapons & Decorative Sword (Red)',
       'Lvl 10: Black Weapons',
       'Lvl 10: White Weapons (Wanted! Quest)'
     ],
     2: [
       'Lvl 15: Ancient Mace (Another Slice of H.A.M)',
+      'Lvl 20: Decorative Sword (White)',
       'Lvl 20: Excalibur (Merlin\'s Crystal)',
       'Lvl 20: Mithril Weapons'
     ],
     3: [
       'Lvl 30: Adamant Weapons',
       'Lvl 30: Battlestaves',
+      'Lvl 30: Bryophyta\'s Staff (Magic 30)',
+      'Lvl 30: Decorative Sword (Gold)',
+      'Lvl 30: Fremennik Blades',
       'Lvl 30: Pharaoh\'s Sceptre',
       'Lvl 30: Swamp Lizards (Magic/Range 30)'
     ],
     4: [
+      'Lvl 40: Barronite Mace & Katanas',
       'Lvl 40: Brine Sabre & Hill Giant Club',
       'Lvl 40: Gilded Weapons',
+      'Lvl 40: Ivandis Flail (A Taste of Hope)',
       'Lvl 40: Mystic Staves (Magic 40)',
       'Lvl 40: Rune Weapons'
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
+      'Lvl 50: Ancient Sceptre (Str 60, Mag 70; Secrets of the North)',
+      'Lvl 50: Blisterwood Sickle & Flail (Sins of the Father)',
+      'Lvl 50: Bone Mace',
       'Lvl 50: Granite Weapons (Maul, Longsword, Hammer)',
+      'Lvl 50: Hallowed Flail & Sunspear (The Blood Moon Rises)',
       'Lvl 50: Iban\'s Staff & Ancient Staff',
+      'Lvl 50: Keris (Contact!)',
       'Lvl 50: Leaf-Bladed Sword/Spear (Slayer 55)',
-      'Lvl 50: Orange Salamander & Eclipse Atlatl'
+      'Lvl 50: Orange Salamander & Eclipse Atlatl',
+      'Lvl 50: Purging Staff (Mag 77, While Guthix Sleeps)'
     ],
     6: [
+      'Lvl 55: Glacial Temotli & Earthbound Tecpatl',
       'Lvl 55: Sulphur Blades',
+      'Lvl 60: Arkan Blade (The Final Dawn)',
+      'Lvl 60: Burning Claws & Colossal Blade',
+      'Lvl 60: Crimson Kisten (Str 85)',
       'Lvl 60: Dragon Weapons (Scimitar, Dagger, Mace)',
       'Lvl 60: Obsidian Weapons',
+      'Lvl 60: Red Salamander (Magic/Range 60)',
       'Lvl 60: Viggora\'s Chainmace & Barrelchest Anchor'
     ],
     7: [
       'Lvl 65: 3rd Age Weapons',
+      'Lvl 65: Belle\'s Folly',
+      'Lvl 65: Keris Partisan (Beneath Cursed Sands)',
       'Lvl 65: Leaf-Bladed Battleaxe',
       'Lvl 65: Sarachnis Cudgel & Zombie Axe',
       'Lvl 70: Abyssal Whip, Dagger & Bludgeon',
+      'Lvl 70: Avernic Defender (Def 70)',
       'Lvl 70: Barrows Equipment (Dharok, Guthan, etc)',
+      'Lvl 70: Black Salamander (Magic/Range 70)',
+      'Lvl 70: Blue Moon Spear (Magic 75)',
       'Lvl 70: Crystal Weapons (Halberd)',
-      'Lvl 70: Saradomin Sword & Zamorakian Spear'
+      'Lvl 70: Dual Macuahuitl (Str 75)',
+      'Lvl 70: Saradomin Sword & Zamorakian Spear',
+      'Lvl 70: Ursine Chainmace',
+      'Lvl 70: Zamorakian Hasta (Barbarian Training)'
     ],
     8: [
       'Lvl 75: Arclight, Abyssal Tentacle, Voidwaker',
+      'Lvl 75: Dinh\'s Bulwark (Def 75)',
+      'Lvl 75: Elder Maul (Str 75)',
       'Lvl 75: Godswords (AGS, BGS, SGS, ZGS)',
+      'Lvl 75: Hallowfell',
+      'Lvl 75: Saradomin\'s Blessed Sword',
+      'Lvl 75: Staves of the Dead (& Toxic), Light & Balance (Magic 75)',
+      'Lvl 77: Emberlight (Smithing 74, While Guthix Sleeps)',
+      'Lvl 78: Dragon Hunter Lance (Barbarian Training)',
       'Lvl 80: Ferocious Gloves',
-      'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor Mace',
-      'Lvl 80: Scythe of Vitur & Soulreaper Axe'
+      'Lvl 80: Ghrazi Rapier, Blade of Saeldor, Inquisitor\'s Mace',
+      'Lvl 80: Keris Partisans (Amascut, Breaching, Corruption, Sun)',
+      'Lvl 80: Noxious Halberd',
+      'Lvl 80: Scythe of Vitur & Soulreaper Axe',
+      'Lvl 80: Tecu Salamander (Magic/Range 80)'
     ],
     9: [
-      'Lvl 82: Osmumten\'s Fang'
+      'Lvl 82: Osmumten\'s Fang',
+      'Lvl 85: Obligator'
     ],
     10: [
       'Lvl 99: Skill Mastery (Attack Cape)'
@@ -218,14 +256,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Mahogany Homes (Beginner)',
       'Lvl 1: Move to Rimmington',
       'Lvl 5: Kitchen',
-      'Lvl 10: Basic Stone Decor, Dining Room',
+      'Lvl 9: Wooden Larder',
+      'Lvl 10: Basic Stone Decor, Dining Room, Wood Dining Table',
       'Lvl 10: Move to Taverley'
     ],
     2: [
       'Lvl 12: STASH Units (Beginner)',
       'Lvl 15: Workshop, Repair Bench',
       'Lvl 16: Crafting Table 1',
+      'Lvl 17: Wooden Workbench',
       'Lvl 17: Water Pump (Sailing)',
+      'Lvl 19: Cooking Pot (Sailing)',
       'Lvl 20: Bedroom, Whitewashed Stone Decor',
       'Lvl 20: Mahogany Homes (Novice)',
       'Lvl 20: Move to Pollnivneach'
@@ -233,63 +274,87 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     3: [
       'Sailing: Teak Hull, Cannons',
       'Lvl 22: Oak Dining Table',
+      'Lvl 24: Pottery & Spinning Wheels (Sailing)',
+      'Lvl 25: Crafting Table 2',
       'Lvl 25: Skill Hall, Move to Hosidius',
       'Lvl 27: STASH Units (Easy)',
-      'Lvl 30: Games Room',
+      'Lvl 30: Games Room, Fremennik Wood Decor',
       'Lvl 30: Move to Rellekka'
     ],
     4: [
+      'Lvl 31: Loom (Sailing)',
       'Lvl 32: Combat Room',
       'Lvl 32: Oak Workbench',
       'Lvl 33: Oak Larder',
+      'Lvl 34: Crafting Table 3, Steel Range',
       'Lvl 35: Quest Hall, Move to Aldarin',
       'Lvl 37: Menagerie',
+      'Lvl 37: Pottery Oven (Sailing)',
       'Lvl 38: Pet List, Teak Table',
       'Lvl 40: Servant (Butler), Move to Brimhaven',
-      'Lvl 40: Study'
+      'Lvl 40: Study',
+      'Lvl 40: Tropical Wood Decor'
     ],
     5: [
       'Lvl 42: Costume Room',
-      'Lvl 42: Fancy Range',
+      'Lvl 42: Fancy Range, Crafting Table 4',
       'Lvl 42: STASH Units (Medium)',
+      'Lvl 43: Teak Larder, Anvil (Sailing)',
       'Lvl 45: Chapel, Oak Altar',
+      'Lvl 46: Steel Framed Workbench',
       'Lvl 47: Mounted Glory, Mythical Cape',
       'Lvl 50: Mahogany Homes (Adept)',
       'Lvl 50: Portal Chamber, Teleport Focus',
+      'Lvl 50: Fancy Stone Decor, Teak Altar, Teak Portal, Rowboat (Sailing)',
       'Lvl 50: Servant (Demon Butler), Move to Yanille'
     ],
     6: [
       'Lvl 52: Mahogany Table',
+      'Lvl 55: Formal Garden',
       'Lvl 55: STASH Units (Hard)',
+      'Lvl 56: Cloth Altar, Furnace (Sailing)',
       'Lvl 58: Servant\'s Moneybag',
-      'Lvl 60: Throne Room, Gilded 4-Poster'
+      'Lvl 60: Throne Room, Gilded 4-Poster',
+      'Lvl 60: Mahogany Altar, Oak Throne'
     ],
     7: [
+      'Lvl 61: Oak Incense Burners',
+      'Lvl 62: Bench with Vice',
+      'Lvl 64: Limestone Altar',
       'Lvl 65: Oubliette (Dungeon)',
       'Lvl 65: Restoration Pool, Superior Garden',
+      'Lvl 65: Mahogany Portal, Mahogany Incense Burners',
       'Lvl 67: Teak Throne',
       'Lvl 69: Marble Incense Burners',
       'Lvl 70: Dungeon Entrance, Marble Altar',
       'Lvl 70: Mahogany Homes (Expert)',
+      'Lvl 70: Revitalisation Pool, Bank Chest (Sailing)',
       'Lvl 70: Move to Prifddinas'
     ],
     8: [
       'Lvl 72: Portal Nexus (Marble)',
+      'Lvl 74: Mahogany Throne',
+      'Lvl 75: Treasure Room',
       'Lvl 75: Spirit Tree (Farming 83), Gilded Altar',
       'Lvl 77: STASH Units (Elite)',
+      'Lvl 77: Bench with Lathe',
       'Lvl 80: Achievement Gallery, Ancient Altar',
+      'Lvl 80: Lunar & Dark Altars, Marble Portal',
       'Lvl 80: Rejuvenation Pool'
     ],
     9: [
-      'Lvl 81: Jewellery Box',
+      'Lvl 81: Jewellery Box, Gilded Throne',
       'Lvl 82: Gilded Portal Nexus',
       'Lvl 85: Fairy Ring, Fancy Rejuvenation Pool',
       'Lvl 88: STASH Units (Master)',
+      'Lvl 88: Skeleton Throne',
       'Lvl 90: Occult Altar, Ornate Rejuvenation Pool'
     ],
     10: [
       'Lvl 91: Ornate Jewellery Box',
       'Lvl 95: Spirit Tree & Fairy Ring',
+      'Lvl 95: Crystal Throne',
+      'Lvl 99: Demonic Throne',
       'Lvl 99: Construction Cape (Teleports)'
     ],
   },
@@ -365,66 +430,124 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Crafting': {
     1: [
       'Lvl 1: Leather, Pots, Molten Glass, Opals',
+      'Lvl 4: Candle Lanterns',
       'Lvl 5: Gold Jewelry, Birdhouses (5)',
-      'Lvl 7: Leather Boots, Gold Bracelets',
+      'Lvl 7: Leather Boots, Gold Bracelets, Pie Dishes',
+      'Lvl 8: Bowls',
+      'Lvl 9: Leather Cowls',
       'Lvl 10: Bowstrings, Crossbow Strings'
     ],
     2: [
+      'Lvl 11: Leather Vambraces',
       'Lvl 12: Linen Yarn, Bolts of Linen',
+      'Lvl 12: Oil Lamps',
       'Lvl 13: Jade, Jade Jewelry',
-      'Lvl 14: Leather Bodies',
-      'Lvl 16: Red Topaz, Unstrung Symbols',
+      'Lvl 14: Leather Bodies, Xerician Hats',
+      'Lvl 15: Oak Bird Houses, Snelms, Crab Armour (Freeing Pirate Pete)',
+      'Lvl 16: Red Topaz, Topaz Rings, Opal Necklaces, Unstrung Symbols',
+      'Lvl 17: Unstrung Emblems, Xerician Robes',
+      'Lvl 18: Leather Chaps, Silver Sickles',
+      'Lvl 19: Magic Strings',
       'Lvl 20: Sapphires, Sapphire Rings'
     ],
     3: [
+      'Lvl 21: Empty Sacks, Silver Bolts (Unf)',
+      'Lvl 22: Sapphire Necklaces, Opal Bracelets, Xerician Tops',
       'Lvl 23: Tiaras, Sapphire Bracelets',
-      'Lvl 27: Emeralds, Emerald Rings',
+      'Lvl 24: Sapphire Amulets',
+      'Lvl 25: Jade Necklaces, Willow Bird Houses',
+      'Lvl 26: Oil Lanterns, Drift Nets',
+      'Lvl 27: Emeralds, Emerald Rings, Opal Amulets',
       'Lvl 28: Hardleather Body',
+      'Lvl 29: Emerald Necklaces, Jade Bracelets',
       'Lvl 30: Emerald Bracelets, Ropes'
     ],
     4: [
+      'Lvl 31: Emerald Amulets',
+      'Lvl 32: Topaz Necklaces, Spiky Vambraces',
       'Lvl 33: Vials',
-      'Lvl 34: Rubies, Ruby Rings',
-      'Lvl 38: Coifs',
+      'Lvl 34: Rubies, Ruby Rings, Jade Amulets',
+      'Lvl 35: Teak Bird Houses, Broodoo Shields',
+      'Lvl 36: Baskets',
+      'Lvl 38: Coifs, Topaz Bracelets, Heraldic Helms',
       'Lvl 39: Hemp Yarn, Bolts of Canvas',
-      'Lvl 40: Crafting Guild Access'
+      'Lvl 40: Crafting Guild Access',
+      'Lvl 40: Ruby Necklaces'
     ],
     5: [
-      'Lvl 42: Ruby Bracelets',
+      'Lvl 41: Hard Leather Shields, Studded Bodies',
+      'Lvl 42: Ruby Bracelets, Gold Tiaras, Empty Fishbowls',
       'Lvl 43: Diamonds, Diamond Rings',
-      'Lvl 46: Unpowered Orbs',
+      'Lvl 43: Heraldic Kiteshields, Yak-hide Legs (The Fremennik Isles)',
+      'Lvl 44: Studded Chaps',
+      'Lvl 45: Topaz Amulets, Maple Bird Houses, Snakeskin Boots',
+      'Lvl 46: Unpowered Orbs, Yak-hide Top (The Fremennik Isles)',
+      'Lvl 47: Snakeskin Vambraces',
+      'Lvl 48: Snakeskin Bandanas',
+      'Lvl 49: Lantern Lenses',
       'Lvl 50: Ruby Amulet, Mahogany Bird Houses'
     ],
     6: [
+      'Lvl 51: Snakeskin Chaps',
+      'Lvl 52: Serpentine Helms',
+      'Lvl 53: Snakeskin Bodies',
       'Lvl 54: Water Battlestaves',
-      'Lvl 55: Dragonstones, Slayer Helmets',
+      'Lvl 55: Dragonstones, Dragonstone Rings, Slayer Helmets',
+      'Lvl 56: Diamond Necklaces, Snakeskin Shields',
       'Lvl 57: Green D\'hide Vambraces',
+      'Lvl 58: Diamond Bracelets, Earth Battlestaves',
+      'Lvl 59: Toxic Staff of the Dead, Trident of the Swamp',
       'Lvl 60: Green D\'hide Chaps, Yew Bird Houses',
+      'Lvl 60: Splitbark Gauntlets/Boots',
       'Lvl 60: Sunstone Golem Crafting (Wyrmscraig; Fallen From Grace)'
     ],
     7: [
+      'Lvl 61: Splitbark Helms',
+      'Lvl 62: Fire Battlestaves, Green D\'hide Shields',
+      'Lvl 62: Splitbark Legs/Body, Bryophyta\'s Staff',
       'Lvl 63: Green D\'hide Bodies',
+      'Lvl 64: Repair Gloves of Silence',
       'Lvl 66: Air Battlestaves, Blue D\'hide Vambraces',
       'Lvl 67: Onyx Rings (Cut Onyx)',
-      'Lvl 70: Diamond Amulet (Power)'
+      'Lvl 68: Blue D\'hide Chaps, Mixed Hide Capes',
+      'Lvl 69: Blue D\'hide Shields, Mixed Hide Boots',
+      'Lvl 70: Diamond Amulet (Power)',
+      'Lvl 70: Crystal Helm, Celestial Signet (Smithing 70; Song of the Elves)'
     ],
     8: [
-      'Lvl 71: Blue D\'hide Bodies',
+      'Lvl 71: Blue D\'hide Bodies, Mixed Hide Legs',
+      'Lvl 72: Dragon Necklaces, Mixed Hide Tops, Noxious Halberd (Smithing 72)',
+      'Lvl 72: Crystal Legs (Smithing 72; Song of the Elves)',
       'Lvl 73: Red D\'hide Vambraces',
       'Lvl 73: Cotton Yarn, Bolts of Cotton',
+      'Lvl 74: Dragonstone Bracelets, Purging Staff (While Guthix Sleeps)',
+      'Lvl 74: Crystal Body (Smithing 74; Song of the Elves)',
       'Lvl 75: Magic Bird Houses, Slayer Rings',
-      'Lvl 77: Red D\'hide Bodies',
-      'Lvl 80: Dragonstone Amulet (Glory)'
+      'Lvl 75: Red D\'hide Chaps, Divine Rune Pouches',
+      'Lvl 76: Red D\'hide Shields, Hueycoatl Hide Coif/Vambraces',
+      'Lvl 76: Crystal Tools (Smithing 76; Song of the Elves)',
+      'Lvl 77: Red D\'hide Bodies, Hueycoatl Hide Chaps',
+      'Lvl 78: Hueycoatl Hide Body',
+      'Lvl 78: Crystal Bow/Halberd/Shield (Smithing 78; Song of the Elves)',
+      'Lvl 79: Black D\'hide Vambraces',
+      'Lvl 80: Dragonstone Amulet (Glory), Ancient Rings (Magic 90)',
+      'Lvl 80: Crystal Key/Teleport (Smithing 80; Song of the Elves)'
     ],
     9: [
+      'Lvl 82: Black D\'hide Chaps, Onyx Necklaces',
+      'Lvl 82: Saeldor/Faerdhinen (Smithing 82; Song of the Elves)',
       'Lvl 83: Amethyst Bolt Tips',
-      'Lvl 84: Black D\'hide Bodies',
+      'Lvl 83: Black D\'hide Shields, Confliction Gauntlets (Smithing 70)',
+      'Lvl 84: Black D\'hide Bodies, Onyx Bracelets, Necklace of Rupture',
       'Lvl 85: Amethyst Arrowtips',
+      'Lvl 85: Accursed Sceptres',
+      'Lvl 86: Amulet of Rancour',
       'Lvl 87: Light Orbs',
       'Lvl 87: Amethyst Javelin Tips',
       'Lvl 89: Zenyte Rings, Cut Zenyte',
       'Lvl 89: Amethyst Dart Tips',
-      'Lvl 90: Onyx Amulet (Fury), Redwood Bird Houses'
+      'Lvl 90: Onyx Amulet (Fury), Redwood Bird Houses',
+      'Lvl 90: Fortified Masori Armour, Armadylean Plates'
     ],
     10: [
       'Lvl 92: Zenyte Necklace (Anguish)',
@@ -435,65 +558,111 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Defence': {
     1: [
-      'Lvl 1: Bronze & Iron Armour',
+      'Lvl 1: Bronze & Iron Armour, Bronze & Iron Defenders',
       'Lvl 1: Wizard Robes, Leather',
-      'Lvl 5: Steel Armour, Defenders',
-      'Lvl 10: Black Armour, White Armour',
-      'Lvl 10: Hardleather Shield',
+      'Lvl 5: Steel Armour, Steel Defender, Red Decorative Armour',
+      'Lvl 10: Black Armour, Black Defender, White Armour',
+      'Lvl 10: Black Mask (Strength 20, Combat 40)',
+      'Lvl 10: Hard Leather Shield',
+      'Lvl 10: Oak Shield',
       'Lvl 10: Slayer Helmet (Craft 55)',
       'Lvl 10: Xerician Robes'
     ],
     2: [
       'Lvl 20: Initiate Armour (Prayer 10)',
-      'Lvl 20: Mithril Armour',
-      'Lvl 20: Mystic Robes (Magic 40)'
+      'Lvl 20: Mithril Armour, Mithril Defender, White Decorative Armour',
+      'Lvl 20: Mystic Robes, Enchanted Robes, Robes of Darkness (Magic 40)',
+      'Lvl 20: Shayzien Armour, Yak-hide Armour',
+      'Lvl 20: Studded Body (Ranged 20)'
     ],
     3: [
       'Lvl 25: Infinity Robes, Frog Leather',
-      'Lvl 30: Adamant Armour',
+      'Lvl 25: Neitiznot Shield',
+      'Lvl 30: 3rd Age Mage Robes (Magic 65)',
+      'Lvl 30: Adamant Armour, Adamant Defender, Gold Decorative Armour',
+      'Lvl 30: Fremennik Helm & Shield (The Fremennik Trials)',
       'Lvl 30: Inquisitor\'s Armour',
       'Lvl 30: Masori Armour (Range 80)',
       'Lvl 30: Proselyte Armour',
-      'Lvl 30: Snakeskin Armour'
+      'Lvl 30: Ram Skull Helm (Rag and Bone Man II)',
+      'Lvl 30: Snakeskin Armour',
+      'Lvl 30: Willow Shield'
     ],
     4: [
-      'Lvl 40: Fighter Torso',
+      'Lvl 35: Samurai Armour',
+      'Lvl 40: Blessed D\'hide Body, Coif, Boots & Shield (Ranged 70)',
+      'Lvl 40: Blue/Red/Black D\'hide Bodies (Ranged 50/60/70)',
+      'Lvl 40: Dagon\'hai Robes (Magic 70)',
+      'Lvl 40: Fighter Torso, Penance Skirt & Gloves, Runner Boots',
+      'Lvl 40: Green/Blue/Red/Black D\'hide Shields (Ranged 40/50/60/70)',
+      'Lvl 40: Hueycoatl Hide Body & Coif (Ranged 70)',
+      'Lvl 40: Lunar Equipment (Magic 65, Lunar Diplomacy)',
+      'Lvl 40: Maple, Yew, Magic & Redwood Shields',
+      'Lvl 40: Rock-shell, Spined & Skeletal Armour (The Fremennik Trials)',
       'Lvl 40: Rune Armour, Green D\'hide Body',
-      'Lvl 40: Rune Defender'
+      'Lvl 40: Rune Defender',
+      'Lvl 40: Splitbark Armour (Magic 40)',
+      'Lvl 40: Sunfire Fanatic Armour (Prayer 60)',
+      'Lvl 40: V\'s Shield (Slayer 60, The Fremennik Exiles)'
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
-      'Lvl 45: Berserker/Archer/Seer Helms',
+      'Lvl 45: 3rd Age Range Equipment (Ranged 65)',
+      'Lvl 45: Berserker/Warrior/Archer/Farseer Helms',
+      'Lvl 45: Fighter/Ranger/Healer/Runner Hats',
       'Lvl 45: Spirit Shields (Prayer 55)',
+      'Lvl 45: Zaryte Vambraces (Ranged 80)',
+      'Lvl 50: Dwarven Helmet (Grim Tales)',
       'Lvl 50: Granite Armour',
+      'Lvl 50: Mixed Hide Armour (Ranged 60)',
       'Lvl 50: Moons of Peril Armour (Blood/Blue/Eclipse)',
-      'Lvl 50: Swampbark Armour'
+      'Lvl 50: Swampbark Armour',
+      'Lvl 50: Zombie Helmet (Strength 50)'
     ],
     6: [
       'Lvl 55: Helm of Neitiznot',
+      'Lvl 60: Bloodbark Armour (Magic 60)',
       'Lvl 60: Dragon Armour',
       'Lvl 60: Dragon Defender',
-      'Lvl 60: Obsidian Armour'
+      'Lvl 60: Obsidian Armour',
+      'Lvl 60: Odium & Malediction Wards'
     ],
     7: [
+      'Lvl 65: 3rd Age Melee Equipment',
       'Lvl 65: Ancestral Robes',
       'Lvl 65: Bandos Armour',
+      'Lvl 65: Chivalry (Prayer 60)',
       'Lvl 70: Armadyl Armour',
+      'Lvl 70: Avernic Defender (Attack 70)',
       'Lvl 70: Barrows Equipment',
+      'Lvl 70: Blessed Spirit Shield (Prayer 60)',
+      'Lvl 70: Boots of Brimstone (Magic 70, Ranged 70)',
       'Lvl 70: Crystal Armour',
-      'Lvl 70: Piety (Prayer 70)'
+      'Lvl 70: Neitiznot Faceguard (The Fremennik Exiles)',
+      'Lvl 70: Piety (Prayer 70), Rigour (Prayer 74), Augury (Prayer 77)'
     ],
     8: [
+      'Lvl 75: Ancient Wyvern Shield (Magic 70)',
+      'Lvl 75: Arcane & Spectral Spirit Shields (Prayer 70, Magic 65)',
+      'Lvl 75: Dinh\'s Bulwark (Attack 75)',
       'Lvl 75: Dragonfire Shield / Ward',
+      'Lvl 75: Elysian Spirit Shield (Prayer 75)',
       'Lvl 75: Justiciar Armour',
-      'Lvl 75: Primordial/Pegasian/Eternal Boots',
+      'Lvl 75: Primordial/Pegasian/Eternal Boots, Guardian & Echo Boots',
+      'Lvl 75: Serpentine Helm',
+      'Lvl 75: Twisted Buckler (Ranged 75)',
+      'Lvl 75: Virtus Robes (Magic 78)',
+      'Lvl 78: Oathplate Armour',
+      'Lvl 80: Avernic Treads (Strength, Ranged & Magic 80)',
       'Lvl 80: Elidinis\' Ward',
       'Lvl 80: Ferocious Gloves',
       'Lvl 80: Fortified Masori',
+      'Lvl 80: Rondache',
       'Lvl 80: Torva Armour'
     ],
     9: [],
     10: [
+      'Lvl 99: Rockslide to Mac\'s Island (Mining 99)',
       'Lvl 99: Skill Mastery (Defence Cape)'
     ],
   },
@@ -675,15 +844,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 10: Herring'
     ],
     2: [
-      'Lvl 15: Anchovies, Fishing Trawler',
-      'Lvl 16: Mackerel, Oysters',
+      'Lvl 15: Anchovies, Suphi Fish, Fishing Trawler',
+      'Lvl 16: Mackerel, Oysters, Caskets',
       'Lvl 20: Trout, Cavefish'
     ],
     3: [
       'Lvl 23: Cod',
       'Lvl 25: Pike',
       'Lvl 28: Slimy Eels',
-      'Lvl 30: Salmon'
+      'Lvl 30: Salmon, Leckish Fish'
     ],
     4: [
       'Lvl 33: Tetra, Frog Spawns',
@@ -694,7 +863,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     5: [
       'Lvl 43: Bluegills (Aerial Fishing)',
+      'Lvl 45: Brawk Fish',
       'Lvl 46: Bass, Catfish',
+      'Lvl 47: Fish Shoals (Hunter 44, Bone Voyage)',
       'Lvl 48: Leaping Trout',
       'Lvl 50: Swordfish'
     ],
@@ -702,6 +873,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 52: Swordtip Squid',
       'Lvl 53: Lava Eels',
       'Lvl 55: Barehanded Catching (Tuna/Harpoonfish)',
+      'Lvl 56: Common Tench (Aerial Fishing, Hunter 51)',
       'Lvl 58: Leaping Salmon',
       'Lvl 60: Mycil Fish'
     ],
@@ -710,15 +882,18 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 62: Monkfish',
       'Lvl 65: Karambwan',
       'Lvl 68: Fishing Guild Access',
-      'Lvl 69: Giant Krill, Jumbo Squid',
-      'Lvl 70: Leaping Sturgeon'
+      'Lvl 69: Giant Krill, Jumbo Squid, Shimmering Shoals',
+      'Lvl 70: Leaping Sturgeon',
+      'Lvl 70: Barehanded Swordfish (Strength 50)'
     ],
     8: [
       'Lvl 71: Crystal Harpoon',
       'Lvl 73: Mottled Eel',
       'Lvl 73: Haddock',
       'Lvl 75: Infernal Harpoon',
+      'Lvl 75: Roqed Fish',
       'Lvl 76: Sharks',
+      'Lvl 76: Glistening Shoals',
       'Lvl 78: Leechfin (The Blood Moon Rises)',
       'Lvl 79: Yellowfin, Sea Turtles',
       'Lvl 80: Infernal Eels'
@@ -728,6 +903,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 82: Anglerfish, Minnows',
       'Lvl 83: Halibut',
       'Lvl 85: Dark Crabs',
+      'Lvl 86: Vibrant Shoals',
       'Lvl 87: Sacred Eels',
       'Lvl 87: Bluefin',
       'Lvl 90: Kyren Fish'
@@ -742,13 +918,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Fletching': {
     1: [
       'Lvl 1: Arrow Shafts, Bronze Arrows',
+      'Lvl 1: Wasp Darts (The Birds and the Wasps)',
+      'Lvl 3: Javelin Shafts, Bronze Javelins',
       'Lvl 5: Shortbows, Ogre Arrows',
+      'Lvl 7: Bronze Brutal Arrows',
       'Lvl 9: Bronze Crossbows/Bolts',
       'Lvl 10: Longbows, Bronze Darts'
     ],
     2: [
       'Lvl 11: Opal Bolts',
       'Lvl 15: Iron Arrows, Oak Arrow Shafts',
+      'Lvl 15: Killer Wasp Darts (The Birds and the Wasps)',
       'Lvl 17: Iron Javelins',
       'Lvl 18: Iron Brutal Arrows',
       'Lvl 20: Oak Shortbows',
@@ -764,35 +944,41 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 32: Steel Javelins, Kebbit Bolts',
-      'Lvl 35: Willow Shortbows',
+      'Lvl 33: Steel Brutal Arrows',
+      'Lvl 35: Willow Shortbows/Totems',
       'Lvl 37: Steel Darts',
+      'Lvl 38: Black Brutal Arrows',
       'Lvl 39: Iron Crossbows/Bolts',
       'Lvl 40: Willow Longbows, Battlestaves'
     ],
     5: [
       'Lvl 41: Pearl Bolts',
       'Lvl 42: Willow Shields',
+      'Lvl 43: Silver Bolts',
       'Lvl 45: Mithril Arrows, Maple Arrow Shafts',
       'Lvl 46: Steel Crossbows/Bolts',
-      'Lvl 47: Light Ballista',
+      'Lvl 47: Light Ballista, Mithril Javelins',
       'Lvl 48: Topaz Bolts',
-      'Lvl 50: Maple Shortbows'
+      'Lvl 49: Mithril Brutal Arrows',
+      'Lvl 50: Maple Shortbows/Totems'
     ],
     6: [
+      'Lvl 51: Barbed Bolts',
       'Lvl 52: Broad Arrows, Mithril Darts',
       'Lvl 54: Mithril Crossbows/Bolts',
       'Lvl 55: Maple Longbows, Broad Bolts',
       'Lvl 56: Sapphire Bolts',
       'Lvl 57: Maple Shields',
-      'Lvl 58: Camphor Blowpipe',
+      'Lvl 58: Camphor Blowpipe, Emerald Bolts',
       'Lvl 59: Mithril Grapples',
-      'Lvl 60: Adamant Arrows, Yew Arrow Shafts'
+      'Lvl 60: Adamant Arrows, Yew Arrow Shafts',
+      'Lvl 60: Hunters\' Spears'
     ],
     7: [
       'Lvl 61: Adamant Crossbows/Bolts',
-      'Lvl 62: Sunlight Antler Bolts',
+      'Lvl 62: Sunlight Antler Bolts, Adamant Javelins/Brutal Arrows',
       'Lvl 63: Ruby Bolts',
-      'Lvl 65: Yew Shortbows, Diamond Bolts',
+      'Lvl 65: Yew Shortbows/Totems, Diamond Bolts',
       'Lvl 67: Adamant Darts',
       'Lvl 69: Rune Crossbows/Bolts',
       'Lvl 70: Yew Longbows',
@@ -804,19 +990,23 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 72: Ironwood Blowpipe, Moonlight Antler Bolts',
       'Lvl 73: Onyx Bolts',
       'Lvl 74: Sunlight Crossbows, Atlatl Darts',
+      'Lvl 74: Scorching Bows (While Guthix Sleeps)',
       'Lvl 75: Rune Arrows, Magic Arrow Shafts',
       'Lvl 76: Amethyst Broad Bolts',
+      'Lvl 77: Rune Javelins/Brutal Arrows',
       'Lvl 78: Dragon Crossbow, Toxic Blowpipe',
-      'Lvl 80: Magic Shortbows'
+      'Lvl 80: Magic Shortbows/Totems'
     ],
     9: [
       'Lvl 81: Rune Darts',
       'Lvl 82: Amethyst Arrows',
       'Lvl 84: Dragon Bolts, Amethyst Javelins',
       'Lvl 84: Rosewood Blowpipe',
-      'Lvl 85: Magic Longbows',
+      'Lvl 85: Magic Longbows, Webweaver Bows',
+      'Lvl 86: Ascension Bolts (Diamond, Onyx)',
       'Lvl 87: Magic Shields',
-      'Lvl 90: Dragon Arrows, Amethyst Darts'
+      'Lvl 90: Dragon Arrows, Amethyst Darts',
+      'Lvl 90: Redwood Totems/Hiking Staff'
     ],
     10: [
       'Lvl 92: Dragon Javelins',
@@ -839,7 +1029,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 20: Clean Harralander'
     ],
     3: [
-      'Lvl 22: Restore Potion, Guthix Balance',
+      'Lvl 22: Restore Potion, Guthix Balance, Compost Potion',
       'Lvl 25: Clean Ranarr Weed',
       'Lvl 26: Energy Potion',
       'Lvl 30: Clean Toadflax, Defence Potion'
@@ -847,7 +1037,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     4: [
       'Lvl 34: Agility Potion',
       'Lvl 36: Combat Potion',
-      'Lvl 38: Prayer Potion',
+      'Lvl 38: Prayer Potion, Moonlight Potion (Perilous Moons)',
       'Lvl 40: Clean Irit Leaf'
     ],
     5: [
@@ -858,17 +1048,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 52: Super Energy Potion',
       'Lvl 53: Hunter Potion',
-      'Lvl 54: Clean Kwuarm',
+      'Lvl 54: Clean Kwuarm, Goading Potion',
       'Lvl 55: Super Strength Potion',
       'Lvl 56: Haemostatic Dressing',
       'Lvl 58: Clean Huasca',
       'Lvl 59: Clean Snapdragon',
-      'Lvl 60: Weapon Poison'
+      'Lvl 60: Weapon Poison, Mastering Mixology'
     ],
     7: [
       'Lvl 62: Super Fishing Potion',
       'Lvl 63: Super Restore Potion',
-      'Lvl 65: Clean Cadantine',
+      'Lvl 65: Clean Cadantine, Sanfew Serum (Zogre Flesh Eaters)',
       'Lvl 66: Super Defence Potion',
       'Lvl 66: Extreme Energy',
       'Lvl 67: Clean Lantadyme',
@@ -887,10 +1077,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Bastion & Battlemage Potions'
     ],
     9: [
-      'Lvl 81: Saradomin Brew',
+      'Lvl 81: Saradomin Brew, Surge Potion',
       'Lvl 84: Extended Antifire',
       'Lvl 85: Ancient Brew, Extended Stamina',
       'Lvl 87: Anti-venom',
+      'Lvl 88: Menaphite Remedy',
       'Lvl 89: Armadyl Brew',
       'Lvl 90: Super Combat Potion'
     ],
@@ -906,7 +1097,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Hunter': {
     1: [
       'Lvl 1: Crimson Swifts, Bird Snares',
+      'Lvl 1: Honey Buzzards, Wasps (The Birds and the Wasps)',
+      'Lvl 1: Guanic Bats, Polar Kebbits, Noose Wands, Insect Nets',
+      'Lvl 1: Polar & Woodland Camouflage',
       'Lvl 3: Common Kebbits',
+      'Lvl 4: Jungle Camouflage',
       'Lvl 5: Golden Warblers, Bird Houses',
       'Lvl 7: Feldip Weasels',
       'Lvl 9: Copper Longtails',
@@ -914,19 +1109,22 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     2: [
       'Lvl 11: Cerulean Twitches',
+      'Lvl 12: Killer Wasps (The Birds and the Wasps)',
       'Lvl 13: Desert Devils',
       'Lvl 14: Oak Bird Houses',
-      'Lvl 15: Ruby Harvests, Sandworms',
+      'Lvl 15: Ruby Harvests, Sandworms, Prael Bats, Butterfly Jars',
       'Lvl 17: Puro-Puro, Baby Implings',
+      'Lvl 17: Black Honey Buzzards (The Birds and the Wasps)',
       'Lvl 19: Tropical Wagtails'
     ],
     3: [
       'Lvl 21: Red Crabs',
       'Lvl 22: Young Implings',
       'Lvl 23: Wild Kebbits',
-      'Lvl 24: Willow Bird Houses',
+      'Lvl 24: Willow Bird Houses, Strung Rabbit Foot',
       'Lvl 25: Sapphire Glacialis',
       'Lvl 27: Eagle Transport, Box Traps, Rabbit Snares',
+      'Lvl 27: Ferrets, White Rabbits (Eagles\' Peak)',
       'Lvl 28: Gourmet Implings, Larupia Gear',
       'Lvl 29: Swamp Lizards',
       'Lvl 30: Giral Bats'
@@ -947,15 +1145,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 42: Essence Implings',
       'Lvl 43: Spotted Kebbits',
       'Lvl 44: Fish Shoals, Maple Bird Houses',
-      'Lvl 45: Black Warlocks',
+      'Lvl 45: Black Warlocks, Phluxia Bats',
       'Lvl 46: Hunter Guild, Rumours (Basic)',
       'Lvl 47: Orange Salamanders',
       'Lvl 48: Blue Crabs',
       'Lvl 49: Razor-backed Kebbits, Mahogany Bird Houses',
-      'Lvl 50: Eclectic Implings, Sunlight Crossbow'
+      'Lvl 50: Eclectic Implings, Sunlight Crossbow, Horn of Plenty'
     ],
     6: [
-      'Lvl 51: Sabre-toothed Kebbits',
+      'Lvl 51: Sabre-toothed Kebbits, Common Tench (Fishing 56)',
       'Lvl 52: Kyatt Gear',
       'Lvl 53: Grey Chinchompas',
       'Lvl 54: Gloves of Silence',
@@ -964,10 +1162,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 57: Pyre Foxes',
       'Lvl 58: Nature Implings',
       'Lvl 59: Red Salamanders, Yew Bird Houses',
-      'Lvl 60: Maniacal Monkeys, 4 Traps',
+      'Lvl 60: Maniacal Monkeys, Kryket Bats, 4 Traps',
       'Lvl 60: Goat Hunting (Wyrmscraig; Sheep Herder)'
     ],
     7: [
+      'Lvl 62: Wild Broavs (While Guthix Sleeps)',
       'Lvl 63: Red Chinchompas',
       'Lvl 65: Magpie Implings, Sunlight Moths',
       'Lvl 66: Spottier Cape',
@@ -980,7 +1179,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 72: Sunlight Antelope, Rumours (Expert)',
       'Lvl 73: Black Chinchompas',
       'Lvl 74: Ninja Implings, Magic Bird Houses',
-      'Lvl 75: Moonlight Moths',
+      'Lvl 75: Moonlight Moths, Murng Bats',
       'Lvl 76: Letvek (The Blood Moon Rises)',
       'Lvl 77: Rainbow Crabs',
       'Lvl 79: Tecu Salamanders',
@@ -1004,6 +1203,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 3: Confuse',
       'Lvl 4: Enchant Bolt (Opal)',
       'Lvl 5: Water Strike',
+      'Lvl 6: Arceuus Library Teleport',
       'Lvl 7: Lvl-1 Enchant, Enchant Bolt (Sapphire)',
       'Lvl 9: Earth Strike'
     ],
@@ -1012,88 +1212,142 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 13: Fire Strike',
       'Lvl 14: Enchant Bolt (Jade)',
       'Lvl 15: Bones to Bananas',
-      'Lvl 17: Wind Bolt',
+      'Lvl 16: Basic Reanimation',
+      'Lvl 17: Wind Bolt, Draynor Manor Teleport',
       'Lvl 19: Curse',
       'Lvl 20: Bind, Xerician Robes'
     ],
     3: [
       'Lvl 21: Low Level Alchemy',
-      'Lvl 23: Water Bolt',
+      'Lvl 23: Water Bolt, Battlefront Teleport',
       'Lvl 24: Enchant Bolt (Pearl)',
       'Lvl 25: Varrock Teleport',
       'Lvl 27: Lvl-2 Enchant, Enchant Bolt (Emerald)',
+      'Lvl 28: Mind Altar Teleport',
       'Lvl 29: Earth Bolt, Enchant Bolt (Red Topaz)',
-      'Lvl 30: Battlestaves, Swamp Lizards'
+      'Lvl 30: Battlestaves, Swamp Lizards, Bryophyta\'s Staff'
     ],
     4: [
       'Lvl 31: Lumbridge Teleport',
       'Lvl 33: Telekinetic Grab',
-      'Lvl 35: Fire Bolt',
+      'Lvl 34: Respawn Teleport',
+      'Lvl 35: Fire Bolt, Ghostly Grasp',
       'Lvl 37: Falador Teleport',
+      'Lvl 38: Resurrect Lesser Thralls (A Kingdom Divided)',
       'Lvl 39: Crumble Undead',
-      'Lvl 40: House Teleport, Mystic Robes'
+      'Lvl 40: House Teleport, Mystic Robes, Mystic Staves, Salve Graveyard Teleport',
+      'Lvl 40: Enchanted Robes, Elder Chaos Druid Robes, Robes of Darkness',
+      'Lvl 40: Splitbark Armour, Skeletal Armour (The Fremennik Trials)'
     ],
     5: [
-      'Lvl 41: Wind Blast',
+      'Lvl 41: Wind Blast, Adept Reanimation',
+      'Lvl 42: Monster Inspect, Void Knight Equipment',
       'Lvl 43: Superheat Item',
-      'Lvl 45: Camelot Teleport',
-      'Lvl 47: Water Blast',
+      'Lvl 44: Inferior Demonbane',
+      'Lvl 45: Camelot Teleport, Beginner Wand',
+      'Lvl 47: Water Blast, Shadow Veil (A Kingdom Divided)',
+      'Lvl 48: Kourend Castle Teleport (Client of Kourend)',
+      'Lvl 48: Fenkenstrain\'s Castle Teleport',
       'Lvl 49: Lvl-3 Enchant, Enchant Bolt (Ruby)',
-      'Lvl 50: Snare, Iban Blast, Magic Dart, Smoke Rush'
+      'Lvl 50: Snare, Iban Blast, Magic Dart, Smoke Rush',
+      'Lvl 50: Dark Lure (A Kingdom Divided)',
+      'Lvl 50: Infinity Robes, Swampbark Armour, Apprentice Wand',
+      'Lvl 50: Ancient, Iban\'s, Slayer\'s and Bone Staves, Orange Salamander',
+      'Lvl 50: Tomes of Fire, Water and Earth'
     ],
     6: [
       'Lvl 51: Ardougne Teleport',
       'Lvl 52: Shadow Rush',
       'Lvl 53: Earth Blast',
-      'Lvl 55: High Level Alchemy',
-      'Lvl 56: Charge Water Orb, Blood Rush',
+      'Lvl 54: Paddewwa Teleport, Civitas illa Fortis Teleport (Twilight\'s Promise)',
+      'Lvl 55: High Level Alchemy, Teacher Wand',
+      'Lvl 56: Charge Water Orb, Blood Rush, Summon Boat (Pandemonium)',
+      'Lvl 56: Skeletal Grasp (A Kingdom Divided)',
       'Lvl 57: Lvl-4 Enchant, Enchant Bolt (Diamond)',
+      'Lvl 57: Resurrect Superior Thralls (A Kingdom Divided)',
       'Lvl 58: Ice Rush, Watchtower Teleport',
-      'Lvl 59: Fire Blast',
-      'Lvl 60: God Spells (Claws of Guthix etc), Master Wand'
+      'Lvl 59: Fire Blast, Mark of Darkness (A Kingdom Divided), Elemental Amulets',
+      'Lvl 60: God Spells (Claws of Guthix etc), Master Wand, God Staves, God Capes',
+      'Lvl 60: Charge Earth Orb, Senntisten Teleport',
+      'Lvl 60: Bones to Peaches (Mage Training Arena)',
+      'Lvl 60: Bloodbark Armour, Twinflame Staff, Thammaron\'s Sceptre, Mage\'s Book',
+      'Lvl 60: Toktz-Mej-Tal, Red Salamander',
+      'Lvl 60: Craft Primordial, Pegasian and Eternal Boots (Runecraft 60)'
     ],
     7: [
-      'Lvl 61: Trollheim Teleport',
-      'Lvl 62: Wind Wave, Smoke Burst',
+      'Lvl 61: Trollheim Teleport, West Ardougne Teleport (Biohazard)',
+      'Lvl 62: Wind Wave, Smoke Burst, Superior Demonbane (A Kingdom Divided)',
+      'Lvl 62: Warped Sceptre',
       'Lvl 63: Charge Fire Orb',
-      'Lvl 64: Shadow Burst',
-      'Lvl 65: Water Wave, Lunar Spells (Bake Pie)',
-      'Lvl 66: Charge Air Orb, Vulnerability',
-      'Lvl 67: Teleport to Boat (Pandemonium)',
-      'Lvl 68: Blood Burst, Humidify, Lvl-5 Enchant',
-      'Lvl 70: Earth Wave, Ice Burst, Ahrim\'s, Occult Necklace'
+      'Lvl 64: Shadow Burst, Ape Atoll Teleport (Recipe for Disaster)',
+      'Lvl 64: Lesser Corruption (A Kingdom Divided)',
+      'Lvl 65: Water Wave, Lunar Spells (Bake Pie), Geomancy',
+      'Lvl 65: Harmony Island Teleport (The Great Brain Robbery)',
+      'Lvl 65: 3rd Age Mage Robes, 3rd Age Wand, Dragon Hunter Wand',
+      'Lvl 65: Arcane and Spectral Spirit Shields',
+      'Lvl 66: Charge Air Orb, Vulnerability, Kharyrll Teleport, Cure Plant',
+      'Lvl 66: Monster Examine (Dream Mentor), Vile Vigour (A Kingdom Divided)',
+      'Lvl 66: Wizards\' Guild, Forge Ancient Wyvern Shield (Smithing 66)',
+      'Lvl 67: Teleport to Boat (Pandemonium), Astral Contact',
+      'Lvl 68: Blood Burst, Humidify, Lvl-5 Enchant, Enchant Bolt (Dragonstone)',
+      'Lvl 68: Cure Other',
+      'Lvl 69: Moonclan Teleport',
+      'Lvl 70: Earth Wave, Ice Burst, Ahrim\'s, Occult Necklace',
+      'Lvl 70: Tele Group Moonclan, Degrime (A Kingdom Divided)',
+      'Lvl 70: Dagon\'hai Robes, Boots of Brimstone, Ancient Wyvern Shield',
+      'Lvl 70: Ancient Sceptre (Secrets of the North), Accursed Sceptre',
+      'Lvl 70: Black Salamander'
     ],
     8: [
-      'Lvl 71: Ourania Teleport',
-      'Lvl 72: Waterbirth Teleport, Nightmare Staff',
-      'Lvl 73: Enfeeble',
-      'Lvl 74: Smoke Blitz',
+      'Lvl 71: Ourania Teleport, Cemetery Teleport, Cure Me, Hunter Kit (Dream Mentor)',
+      'Lvl 72: Waterbirth Teleport, Nightmare Staff, Lassar Teleport',
+      'Lvl 72: Expert Reanimation',
+      'Lvl 73: Enfeeble, Tele Group Waterbirth, Ward of Arceuus (A Kingdom Divided)',
+      'Lvl 74: Smoke Blitz, Teleother Lumbridge, Cure Group',
       'Lvl 75: Fire Wave, Trident of the Seas, Ancestral',
-      'Lvl 76: Shadow Blitz, Spin Flax',
-      'Lvl 77: Superglass Make',
-      'Lvl 78: Trident of the Swamp, Tan Leather',
-      'Lvl 79: Entangle, Dream',
+      'Lvl 75: Barbarian Teleport, Stat Spy (Dream Mentor)',
+      'Lvl 75: Imbued God Capes (Mage Arena II), Eternal Boots, Blue Moon Armour',
+      'Lvl 75: Staff of the Dead, Toxic Staff of the Dead, Staff of Light',
+      'Lvl 75: Staff of Balance, Slayer\'s Staff (e), Blue Moon Spear',
+      'Lvl 76: Shadow Blitz, Spin Flax, Tele Group Barbarian',
+      'Lvl 76: Resurrect Greater Thralls (A Kingdom Divided)',
+      'Lvl 77: Superglass Make, Purging Staff (While Guthix Sleeps)',
+      'Lvl 78: Trident of the Swamp, Tan Leather, Virtus Robes',
+      'Lvl 78: Dareeyak Teleport, Khazard Teleport, Resurrect Crops',
+      'Lvl 79: Entangle, Dream, Tele Group Khazard, Undead Grasp (A Kingdom Divided)',
       'Lvl 80: Blood Blitz',
-      'Lvl 80: Charge, Stun, Kodai Wand'
+      'Lvl 80: Charge, Stun, Kodai Wand',
+      'Lvl 80: String Jewellery, Death Charge (A Kingdom Divided)',
+      'Lvl 80: Elidinis\' Ward, Tecu Salamander, Soulflame Horn, Avernic Treads'
     ],
     9: [
-      'Lvl 81: Wind Surge',
-      'Lvl 82: Ice Blitz, Magic Imbue, Sanguinesti Staff',
-      'Lvl 83: Barrows Teleport, Fertile Soil',
-      'Lvl 85: Tele Block, Water Surge, Tumeken\'s Shadow',
-      'Lvl 86: Plank Make, Smoke Barrage',
-      'Lvl 87: Lvl-6 Enchant, Enchant Bolt (Onyx)',
-      'Lvl 88: Shadow Barrage',
-      'Lvl 90: Earth Surge'
+      'Lvl 81: Wind Surge, Stat Restore Pot Share',
+      'Lvl 82: Ice Blitz, Magic Imbue, Sanguinesti Staff, Teleother Falador',
+      'Lvl 82: Dark Demonbane (A Kingdom Divided)',
+      'Lvl 82: Eldritch, Harmonised and Volatile Nightmare Staves',
+      'Lvl 83: Barrows Teleport, Fertile Soil, Eye of Ayak',
+      'Lvl 84: Carrallanger Teleport, Boost Potion Share',
+      'Lvl 84: Demonic Offering (A Kingdom Divided)',
+      'Lvl 85: Tele Block, Water Surge, Tumeken\'s Shadow, Zorya\'s Tome',
+      'Lvl 85: Fishing Guild Teleport, Teleport to Target (Target Teleport Scroll)',
+      'Lvl 85: Greater Corruption (A Kingdom Divided)',
+      'Lvl 86: Plank Make, Smoke Barrage, Tele Group Fishing Guild',
+      'Lvl 87: Lvl-6 Enchant, Enchant Bolt (Onyx), Catherby Teleport',
+      'Lvl 88: Shadow Barrage, Tele Group Catherby',
+      'Lvl 89: Ice Plateau Teleport, Recharge Dragonstone (Hard Fremennik Diary)',
+      'Lvl 90: Earth Surge, Teleother Camelot, Annakarl Teleport',
+      'Lvl 90: Tele Group Ice Plateau, Master Reanimation',
+      'Lvl 90: Ape Atoll Teleport (Arceuus; Monkey Madness I)',
+      'Lvl 90: Craft Ancient Rings (Magus, Ultor etc; Crafting 80)'
     ],
     10: [
       'Lvl 91: Energy Transfer',
-      'Lvl 92: Blood Barrage',
+      'Lvl 92: Blood Barrage, Heal Other, Sinister Offering (A Kingdom Divided)',
       'Lvl 93: Lvl-7 Enchant',
       'Lvl 93: Vengeance Other',
       'Lvl 94: Ice Barrage, Vengeance',
-      'Lvl 95: Fire Surge',
-      'Lvl 96: Spellbook Swap',
+      'Lvl 95: Fire Surge, Heal Group',
+      'Lvl 96: Spellbook Swap, Ghorrock Teleport',
       'Lvl 99: Skill Mastery (Magic Cape)'
     ],
   },
@@ -1101,59 +1355,92 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Copper & Tin Ore, Clay',
       'Lvl 1: Rune Essence',
+      'Lvl 1: Bronze & Iron Pickaxes',
       'Lvl 6: Steel Pickaxe',
-      'Lvl 10: Blurite Ore, Limestone'
+      'Lvl 10: Blurite Ore, Limestone',
+      'Lvl 10: Size-1 Crashed Stars'
     ],
     2: [
       'Lvl 11: Black Pickaxe',
       'Lvl 14: Barronite',
       'Lvl 15: Iron Ore',
-      'Lvl 20: Silver Ore'
+      'Lvl 20: Silver Ore',
+      'Lvl 20: Size-2 Crashed Stars',
+      'Lvl 20: Daeyalt Ore (Darkness of Hallowvale)',
+      'Lvl 20: Elemental Ore (Elemental Workshop I)'
     ],
     3: [
       'Lvl 21: Mithril Pickaxe',
       'Lvl 22: Volcanic Ash',
       'Lvl 25: Lead Ore',
       'Lvl 30: Coal, Pure Essence',
-      'Lvl 30: Motherlode Mine (Lower)'
+      'Lvl 30: Motherlode Mine (Lower)',
+      'Lvl 30: Size-3 Crashed Stars'
     ],
     4: [
       'Lvl 31: Adamant Pickaxe',
       'Lvl 35: Sandstone',
+      'Lvl 37: Volcanic Ash (2 per Action)',
       'Lvl 38: Dense Essence',
-      'Lvl 40: Gold Ore, Gem Rocks'
+      'Lvl 40: Gold Ore, Gem Rocks',
+      'Lvl 40: Size-4 Crashed Stars'
     ],
     5: [
-      'Lvl 41: Rune Pickaxe, Calcified Rocks',
+      'Lvl 41: Rune Pickaxe, Gilded Pickaxe, Calcified Rocks',
       'Lvl 42: Volcanic Sulphur',
       'Lvl 43: Blast Mine',
       'Lvl 45: Granite',
-      'Lvl 50: Volcanic Mine'
+      'Lvl 48: Rubium Splinters',
+      'Lvl 50: Volcanic Mine',
+      'Lvl 50: Size-5 Crashed Stars'
     ],
     6: [
+      'Lvl 52: Volcanic Ash (3 per Action)',
       'Lvl 53: Sunstone Mining (Wyrmscraig; Fallen From Grace)',
       'Lvl 55: Mithril Ore',
       'Lvl 57: Motherlode Mine (Upper)',
       'Lvl 60: Lunar Ore, Daeyalt Shards',
-      'Lvl 60: Mining Guild'
+      'Lvl 60: Mining Guild',
+      'Lvl 60: Size-6 Crashed Stars'
     ],
     7: [
-      'Lvl 61: Dragon & Infernal Pickaxe',
+      'Lvl 61: Dragon, Infernal & 3rd Age Pickaxe',
+      'Lvl 64: Tainted Essence Chunks (Desert Treasure II)',
       'Lvl 65: Lovakite Ore',
-      'Lvl 70: Adamantite Ore'
+      'Lvl 67: Volcanic Ash (4 per Action)',
+      'Lvl 70: Adamantite Ore',
+      'Lvl 70: Size-7 Crashed Stars',
+      'Lvl 70: Expert Mining Gloves',
+      'Lvl 70: Soft Clay Rocks (Song of the Elves)',
+      'Lvl 70: Salt Deposits (4 Salax Salt per Action)'
     ],
     8: [
       'Lvl 71: Crystal Pickaxe',
       'Lvl 72: Basalt & Salts',
       'Lvl 74: Nickel Ore',
-      'Lvl 75: Ancient Essence'
+      'Lvl 75: Ancient Essence',
+      'Lvl 75: Salt Deposits (5 Salax Salt per Action)',
+      'Lvl 78: Infernal Shale (A Kingdom Divided)',
+      'Lvl 78: Meiyerditch Lab Shortcut (Agility 93, Darkness of Hallowvale)',
+      'Lvl 80: Ascension Shards (While Guthix Sleeps)',
+      'Lvl 80: Size-8 Crashed Stars',
+      'Lvl 80: Salt Deposits (6 Salax Salt per Action)'
     ],
     9: [
-      'Lvl 85: Runite Ore'
+      'Lvl 81: Te, Efh & Urt Salt (3-5 per Action)',
+      'Lvl 82: Volcanic Ash (5 per Action)',
+      'Lvl 85: Runite Ore',
+      'Lvl 85: Het\'s Seal +7 Damage (Tombs of Amascut)',
+      'Lvl 90: Size-9 Crashed Stars',
+      'Lvl 90: Te, Efh & Urt Salt (4-6 per Action)'
     ],
     10: [
       'Lvl 92: Amethyst',
-      'Lvl 99: Skill Mastery (Mining Cape)'
+      'Lvl 97: Volcanic Ash (6 per Action)',
+      'Lvl 99: Skill Mastery (Mining Cape)',
+      'Lvl 99: Te, Efh & Urt Salt (5-7 per Action)',
+      'Lvl 99: Het\'s Seal +9 Damage (Tombs of Amascut)',
+      'Lvl 99: Mac\'s Island Rockslide'
     ],
   },
   'Prayer': {
@@ -1170,7 +1457,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 13: Superhuman Strength',
       'Lvl 16: Improved Reflexes',
       'Lvl 19: Rapid Restore',
-      'Lvl 20: Proselyte Armour'
+      'Lvl 20: Proselyte Armour',
+      'Lvl 20: Vestment Robe Tops & Legs'
     ],
     3: [
       'Lvl 22: Rapid Heal, Void Knight',
@@ -1185,6 +1473,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 31: Ultimate Strength, Monastery',
       'Lvl 34: Incredible Reflexes',
       'Lvl 37: Protect from Magic',
+      'Lvl 40: Ectoplasmators',
       'Lvl 40: Protect from Missiles',
       'Lvl 40: Vestment Cloaks, Mitres'
     ],
@@ -1194,7 +1483,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 45: Mystic Might',
       'Lvl 46: Retribution',
       'Lvl 49: Redemption',
-      'Lvl 50: Bless Symbols, Antler Guards'
+      'Lvl 50: Bless Symbols, Antler Guards',
+      'Lvl 50: Bologa\'s Blessings'
     ],
     6: [
       'Lvl 52: Smite',
@@ -1202,13 +1492,16 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: Preserve, Spirit Shields',
       'Lvl 60: Blessed Spirit Shields',
       'Lvl 60: Chivalry',
-      'Lvl 60: Devout Boots, Stoles'
+      'Lvl 60: Croziers',
+      'Lvl 60: Devout Boots, Stoles',
+      'Lvl 60: Sunfire Fanatic Armour (Defence 40)'
     ],
     7: [
       'Lvl 62: Deadeye',
       'Lvl 63: Mystic Vigour',
       'Lvl 65: 3rd Age Druidic',
       'Lvl 70: Arcane/Spectral Spirit Shields',
+      'Lvl 70: Bonecrusher & Dragonbone Necklaces',
       'Lvl 70: Piety',
       'Lvl 70: Soul Capes',
       'Lvl 70: Superior Dragon Bones'
@@ -1220,6 +1513,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Elidinis\' Ward'
     ],
     9: [
+      'Lvl 84: Zeal (Attack 75, Strength 75, Defence 70; Horn of Bran)',
       'Lvl 85: Bless Spirit Shields',
       'Lvl 90: Sigil Smithing'
     ],
@@ -1230,7 +1524,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Ranged': {
     1: [
       'Lvl 1: Crossbows, Knives, Darts',
-      'Lvl 1: Shortbows, Longbows',
+      'Lvl 1: Shortbows, Longbows, Training Bows',
       'Lvl 1: Bronze Cannon (Sailing 28), Iron Cannon (Sailing 35)',
       'Lvl 5: Oak Bows, Steel Thrown',
       'Lvl 5: Steel Cannon (Sailing 47)',
@@ -1240,59 +1534,94 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 16: Blurite Crossbow',
       'Lvl 19: Falador Wall Shortcut',
       'Lvl 20: Studded Leather, Mithril Thrown',
-      'Lvl 20: Willow Bows, Coifs',
-      'Lvl 20: Mithril Cannon (Sailing 57)'
+      'Lvl 20: Willow Bows, Willow Comp Bow, Coifs',
+      'Lvl 20: Mithril Cannon (Sailing 57)',
+      'Lvl 20: Hard Leather Shield (Defence 10)'
     ],
     3: [
+      'Lvl 21: Yanille Wall Shortcut (Agility 39, Strength 38)',
+      'Lvl 25: Frog-Leather Armour (Defence 25)',
       'Lvl 26: Iron Crossbow',
       'Lvl 28: Dorgeshuun Crossbow',
       'Lvl 30: Adamant Thrown, Snakeskin',
       'Lvl 30: Ava\'s Attractor',
-      'Lvl 30: Maple Bows, Ogre Bows',
-      'Lvl 30: Adamant Cannon (Sailing 69)'
+      'Lvl 30: Maple Bows, Ogre Bows, Comp Ogre Bow (Zogre Flesh Eaters)',
+      'Lvl 30: Adamant Cannon (Sailing 69)',
+      'Lvl 30: Swamp Lizard (Attack & Magic 30)'
     ],
     4: [
       'Lvl 31: Steel Crossbow',
+      'Lvl 35: Catherby Rocks Shortcut (Agility 32, Strength 35)',
       'Lvl 36: Mithril Crossbow',
+      'Lvl 37: Lumbridge Broken Raft Shortcut (Agility 8, Strength 19)',
+      'Lvl 39: Taverley Dungeon Rocks Shortcut (Agility 36, Strength 22)',
       'Lvl 40: Ranging Guild',
       'Lvl 40: Rune Thrown, Spined Armour',
-      'Lvl 40: Yew Bows, Green D\'hide',
-      'Lvl 40: Rune Cannon (Sailing 80)'
+      'Lvl 40: Yew Bows, Yew Comp Bow, Green D\'hide',
+      'Lvl 40: Rune Cannon (Sailing 80)',
+      'Lvl 40: Gilded D\'hide (Dragon Slayer I for the Body)',
+      'Lvl 40: Robin Hood Hat, Ranger Boots/Gloves, Rangers\' Tunic/Tights'
     ],
     5: [
       'Lvl 42: Void Knight Equipment',
+      'Lvl 42: Karamja Volcano Rocks Shortcut (Agility 53, Strength 21)',
       'Lvl 45: Chinchompas (Grey)',
       'Lvl 45: Camphor Blowpipe',
+      'Lvl 46: Adamant Crossbow',
       'Lvl 50: Ava\'s Accumulator',
       'Lvl 50: Broad Arrows, Amethyst Darts',
       'Lvl 50: Hunters\' Crossbow',
-      'Lvl 50: Magic Bows, Blue D\'hide'
+      'Lvl 50: Magic Bows, Magic Comp Bow, Blue D\'hide',
+      'Lvl 50: Seercull, Bone Shortbow',
+      'Lvl 50: Orange Salamander (Attack & Magic 50)'
     ],
     6: [
       'Lvl 55: Red Chinchompas',
       'Lvl 55: Ironwood Blowpipe',
-      'Lvl 60: Dragon Thrown',
+      'Lvl 55: Hunter\'s Spear (Strength 30)',
+      'Lvl 60: Dragon Darts, Dragon Knives',
       'Lvl 60: Red D\'hide, Dark Bow',
-      'Lvl 60: Dragon Cannon (Sailing 92)'
+      'Lvl 60: Dragon Cannon (Sailing 92)',
+      'Lvl 60: Craw\'s Bow, Toktz-Xil-Ul, Aquanite Hopper',
+      'Lvl 60: Mixed Hide Armour (Defence 50)',
+      'Lvl 60: Penance Skirt (Barbarian Assault, Defence 40)',
+      'Lvl 60: Red Salamander (Attack & Magic 60)'
     ],
     7: [
+      'Lvl 61: Dragon Thrownaxes',
       'Lvl 61: Rune Crossbow, Broad Bolts',
+      'Lvl 62: Hallowed Sepulchre Pillar Grapples',
       'Lvl 64: Dragon Crossbow',
       'Lvl 65: 3rd Age Range',
       'Lvl 65: 3rd Age Bow',
       'Lvl 65: Rosewood Blowpipe',
+      'Lvl 65: Black Chinchompas, Light Ballista',
+      'Lvl 66: Hunters\' Sunlight Crossbow (Hunter 50)',
       'Lvl 70: Armadyl Armour, Crystal Bow',
       'Lvl 70: Ava\'s Assembler',
       'Lvl 70: Black D\'hide, Karil\'s',
-      'Lvl 70: Dragon Hunter Crossbow'
+      'Lvl 70: Dragon Hunter Crossbow',
+      'Lvl 70: Armadyl Crossbow, Webweaver Bow',
+      'Lvl 70: Armadyl\'s Eyrie (God Wars Dungeon)',
+      'Lvl 70: Blessed D\'hide, Hueycoatl Hide Armour',
+      'Lvl 70: Black Salamander (Attack & Magic 70)',
+      'Lvl 70: Boots of Brimstone (Magic & Defence 70)',
+      'Lvl 70: Dragonfire Ward (Defence 75, Dragon Slayer I)'
     ],
     8: [
       'Lvl 75: Pegasian Boots',
       'Lvl 75: Toxic Blowpipe, Twisted Buckler',
+      'Lvl 75: Heavy Ballista, Dizana\'s Quiver',
+      'Lvl 75: Eclipse Moon Armour (Defence 50)',
+      'Lvl 75: Eclipse Atlatl (Attack & Strength 50)',
+      'Lvl 77: Scorching Bow (While Guthix Sleeps)',
       'Lvl 80: Bow of Faerdhinen',
+      'Lvl 80: Ascension Crossbows',
       'Lvl 80: Masori Armour',
       'Lvl 80: Venator Bow',
-      'Lvl 80: Zaryte Crossbow'
+      'Lvl 80: Zaryte Crossbow, Zaryte Vambraces (Defence 45)',
+      'Lvl 80: Avernic Treads (Defence, Strength & Magic 80)',
+      'Lvl 80: Tecu Salamander (Attack & Magic 80)'
     ],
     9: [
       'Lvl 85: Twisted Bow'
@@ -1303,7 +1632,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Runecraft': {
     1: [
-      'Lvl 1: Air Runes, Mind/Water/Earth/Fire/Body Tiaras',
+      'Lvl 1: Air Runes, Air/Mind/Water/Earth/Fire/Body Tiaras',
+      'Lvl 1: Cosmic/Chaos/Nature/Law/Death/Blood/Wrath Tiaras (Altar Access)',
+      'Lvl 1: Dark Essence Blocks',
+      'Lvl 1: Elemental & Catalytic Tiaras',
       'Lvl 1: Ourania Altar (ZMI)',
       'Lvl 1: Small Pouch',
       'Lvl 2: Mind Runes',
@@ -1316,17 +1648,21 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 11: 2 Air Runes',
       'Lvl 13: Mud Runes',
       'Lvl 14: Fire Runes, 2 Mind Runes',
+      'Lvl 14: Rune Case 1 (Construction 41)',
       'Lvl 15: Smoke Runes',
-      'Lvl 19: 2 Water Runes, Steam Runes',
-      'Lvl 20: Body Runes'
+      'Lvl 18: Amulet of Air',
+      'Lvl 19: 2 Water Runes, Steam Runes, Amulet of Water',
+      'Lvl 20: Body Runes, Amulet of Earth'
     ],
     3: [
+      'Lvl 21: Amulet of Fire',
       'Lvl 22: 3 Air Runes',
       'Lvl 23: Lava Runes',
       'Lvl 25: Medium Pouch, Colossal Pouch (8)',
       'Lvl 26: 2 Earth Runes',
       'Lvl 27: Cosmic Runes, Guardians of the Rift',
-      'Lvl 28: 3 Mind Runes'
+      'Lvl 28: 3 Mind Runes',
+      'Lvl 30: Elemental Amulets'
     ],
     4: [
       'Lvl 33: 4 Air Runes, Sunfire Runes',
@@ -1337,10 +1673,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     5: [
       'Lvl 42: 4 Mind Runes, Swampbark Gauntlets/Boots',
       'Lvl 44: 5 Air Runes, Nature Runes',
+      'Lvl 44: Rune Case 2 (Construction 41)',
       'Lvl 46: 2 Body Runes, Swampbark Helm',
       'Lvl 48: Swampbark Body/Legs',
       'Lvl 49: 2 Sunfire Runes',
-      'Lvl 50: Large Pouch, Colossal Pouch (16)'
+      'Lvl 50: Large Pouch, Colossal Pouch (16)',
+      'Lvl 50: Reinvigorate Pages (Burnt, Soaked, Soiled)'
     ],
     6: [
       'Lvl 52: 3 Earth Runes',
@@ -1360,7 +1698,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 74: 2 Chaos Runes',
       'Lvl 75: Giant Pouch, Colossal Pouch (27)',
       'Lvl 76: 5 Water Runes',
-      'Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Hands/Feet',
+      'Lvl 77: 8 Air Runes, Blood Runes, Bloodbark Gauntlets/Boots',
       'Lvl 78: 4 Earth Runes',
       'Lvl 79: Bloodbark Helm'
     ],
@@ -1371,13 +1709,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 85: Colossal Pouch (40)',
       'Lvl 88: 9 Air Runes',
       'Lvl 90: Soul Runes',
-      'Lvl 90: Aether Runes'
+      'Lvl 90: Aether Runes',
+      'Lvl 90: Rune Case 3 (Construction 41)'
     ],
     10: [
       'Lvl 91: 2 Nature Runes',
       'Lvl 92: 3 Body Runes',
       'Lvl 95: Wrath Runes, 2 Law Runes, 6 Water Runes',
       'Lvl 98: 8 Mind Runes, 3 Sunfire Runes',
+      'Lvl 99: 10 Air Runes, 2 Death Runes',
       'Lvl 99: Skill Mastery (Runecraft Cape)'
     ],
   },
@@ -1385,6 +1725,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Lvl 1: Basic Boat (Wooden Hull, Bronze Helm, Linen Sails)',
       'Lvl 1: Basic Cargo Hold, Charting',
+      'Lvl 1: Chart Bay of Sarim, Kharidian Sea',
       'Lvl 1: Dock Port Sarim, Pandemonium',
       'Lvl 5: Dock Land\'s End, Hosidius',
       'Lvl 7: 2 Port Tasks',
@@ -1392,8 +1733,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     2: [
       'Lvl 12: Drink Crate Charting',
+      'Lvl 13: Chart Mudskipper Sound',
       'Lvl 15: Sail Skiff, 2 Boats, Port Piscarillius',
       'Lvl 15: Salvage Small Shipwrecks, Bronze Salvage Hook',
+      'Lvl 16: Range (Construction 6)',
       'Lvl 17: Chart Rimmington Strait, Iron Helm',
       'Lvl 18: Dock Rimmington, Oak Cargo Hold',
       'Lvl 20: Dock Catherby, Oak Hull'
@@ -1407,10 +1750,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 27: Steel Salvaging Hook',
       'Lvl 28: Dock Ardougne, 3 Port Tasks, Bronze Cannon',
       'Lvl 29: Teak Cargo Hold',
-      'Lvl 30: Dock Port Khazard, Barracuda Trials'
+      'Lvl 30: Dock Port Khazard, Barracuda Trials',
+      'Lvl 30: Bounty Port Tasks'
     ],
     4: [
       'Lvl 31: Teak Hull',
+      'Lvl 33: Keg (Construction 25)',
       'Lvl 34: Dock Witchaven',
       'Lvl 35: Salvage Barracuda Shipwrecks, Iron Cannon',
       'Lvl 36: Dock Entrana, Teak Mast, Canvas Sails',
@@ -1418,9 +1763,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 38: Dock Civitas illa Fortis, Sea Depth Charting, Steel Helm',
       'Lvl 39: Steel Keel',
       'Lvl 40: 1 Crewmate (Jobless Jim)',
-      'Lvl 40: Dock Corsair Cove, Dognose Island'
+      'Lvl 40: Dock Corsair Cove, Dognose Island',
+      'Lvl 40: Inoculation Station (Construction 37)'
     ],
     5: [
+      'Lvl 41: Recolour Sails (Construction 27)',
       'Lvl 42: Dock Cairn Isle, Chinchompa Island, Salvaging Station',
       'Lvl 44: Dock Sunset Coast, Mithril Salvaging Hook',
       'Lvl 45: Dock Summer Shore, Little Pearl',
@@ -1430,7 +1777,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 49: Dock Shimmering Atoll',
       'Lvl 50: Dock Void Outpost, Port Roberts',
       'Lvl 50: Recruit Captain Siad',
-      'Lvl 50: Sail Sloop, 3 Boats'
+      'Lvl 50: Sail Sloop, 3 Boats',
+      'Lvl 50: Ballistic Attractor (Construction 44; Animal Magnetism)'
     ],
     6: [
       'Lvl 51: Dock Anglers\' Retreat',
@@ -1440,6 +1788,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 55: 2 Crewmates (Adventurer Ada)',
       'Lvl 55: Dock Isle of Souls, Mithril Helm, Teleport Focus',
       'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net',
+      'Lvl 56: Chum Station (Construction 45)',
       'Lvl 57: Weather Pattern Charting, Mithril Cannon',
       'Lvl 58: Dock Laguna Aurorae',
       'Lvl 59: Adamant Salvaging Hook',
@@ -1450,6 +1799,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 61: Dock Tear of the Soul, Rename Boat',
       'Lvl 62: Dock Rellekka, Wyrmscraig',
       'Lvl 63: Dock Wintumber Island',
+      'Lvl 63: Bosun\'s Workbench (Construction 54; The Red Reef)',
       'Lvl 64: Dock Crown Jewel, Salvage Pirate Shipwrecks',
       'Lvl 65: Dock Etceteria, Recruit Oarswoman Olga',
       'Lvl 65: Linen Trawling Net (Construction 61)',
@@ -1515,7 +1865,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 32: Mogres (Fishing Explosive)',
-      'Lvl 33: Harpie Bug Swarms (Lit Lantern)',
+      'Lvl 33: Harpie Bug Swarms (Lit Bug Lantern)',
       'Lvl 35: Wall Beasts, Slayer Helmet',
       'Lvl 35: Witchwood Icon',
       'Lvl 37: Killerwatts, Insulated Boots',
@@ -1525,7 +1875,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     5: [
       'Lvl 42: Fever Spiders, Slayer Gloves',
-      'Lvl 44: Sulphur Lizards, Boots of Stone',
+      'Lvl 44: Sulphur Lizards, Boots of Stone, Boots of Brimstone',
       'Lvl 45: Infernal Mages',
       'Lvl 47: Brine Rats',
       'Lvl 48: Sulphur/Frost/Earthen Nagua',
@@ -1535,11 +1885,13 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 51: Gryphons, Shellbane Gryphon (Boss)',
       'Lvl 52: Jellies',
       'Lvl 54: Juvenile Custodian Stalkers',
+      'Lvl 55: Slayer\'s Staff & Magic Dart (Magic 50)',
       'Lvl 55: Turoth, Broad Ammo, Leaf-Bladed Weapons',
       'Lvl 56: Warped Terrorbirds/Tortoises',
       'Lvl 57: Mutated Zygomites (Fungicide)',
       'Lvl 58: Cave Horrors (Witchwood Icon), Black Mask',
-      'Lvl 60: Aberrant Spectres, Basilisk Knights, Nose Peg'
+      'Lvl 60: Aberrant Spectres, Basilisk Knights, Nose Peg',
+      'Lvl 60: V\'s Shield (Defence 40; The Fremennik Exiles)'
     ],
     7: [
       'Lvl 62: Wyrms, Lava Strykewyrms (Sailing 60)',
@@ -1581,11 +1933,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Smith Bronze Axe/Dagger',
       'Lvl 2: Bronze Mace',
       'Lvl 3: Bronze Med Helm/Bolts',
-      'Lvl 4: Bronze Sword/Nails/Wire',
-      'Lvl 5: Bronze Scimitar/Arrows/C-balls/Spear',
-      'Lvl 6: Bronze Longsword/Limbs',
+      'Lvl 4: Bronze Shortsword/Nails/Wire/Darts',
+      'Lvl 5: Bronze Scimitar/Arrows/C-balls/Spear/Hasta',
+      'Lvl 6: Bronze Longsword/Limbs/Javelin Tips',
       'Lvl 7: Bronze Full Helm/Knives',
-      'Lvl 8: Bronze Sq Shield',
+      'Lvl 8: Bronze Sq Shield, Blurite Bolts (The Knight\'s Sword)',
       'Lvl 9: Bronze Warhammer',
       'Lvl 10: Bronze Battleaxe/Keel'
     ],
@@ -1597,13 +1949,13 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 15: Iron Bars/Daggers',
       'Lvl 16: Iron Axe, Bronze Legs/Skirt',
       'Lvl 17: Iron Mace/Spit',
-      'Lvl 18: Bronze Platebody, Iron Med Helm',
-      'Lvl 19: Iron Sword/Nails/Darts',
+      'Lvl 18: Bronze Platebody, Iron Med Helm/Bolts',
+      'Lvl 19: Iron Shortsword/Nails/Darts',
       'Lvl 20: Elemental Bars, Iron Arrows/C-balls',
-      'Lvl 20: Silver Bars, Iron Scimitar'
+      'Lvl 20: Silver Bars, Iron Scimitar/Spear/Hasta'
     ],
     3: [
-      'Lvl 21: Iron Longsword',
+      'Lvl 21: Iron Longsword/Javelin Tips',
       'Lvl 22: Iron Full Helm/Knives/Keel',
       'Lvl 23: Iron Sq Shield/Limbs',
       'Lvl 24: Iron Warhammer',
@@ -1617,10 +1969,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     4: [
       'Lvl 31: Steel Axe, Iron Legs/Skirt',
       'Lvl 32: Steel Mace',
-      'Lvl 33: Iron Platebody, Steel Med Helm',
-      'Lvl 34: Steel Sword/Nails/Darts',
-      'Lvl 35: Steel Scimitar/Arrows/C-balls',
-      'Lvl 36: Steel Longsword/Limbs',
+      'Lvl 33: Iron Platebody, Steel Med Helm/Bolts',
+      'Lvl 34: Steel Shortsword/Nails/Darts',
+      'Lvl 35: Steel Scimitar/Arrows/C-balls/Spear/Hasta',
+      'Lvl 35: Secateurs Attachments (Woodcutting 35)',
+      'Lvl 36: Steel Longsword/Limbs/Javelin Tips/Studs',
       'Lvl 37: Steel Full Helm/Knives',
       'Lvl 38: Steel Sq Shield/Keel',
       'Lvl 39: Steel Warhammer',
@@ -1642,13 +1995,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 51: Mithril Axe, Shayzien T1 Greaves',
       'Lvl 52: Mithril Mace',
-      'Lvl 53: Mithril Med Helm, Shayzien T1 Body',
-      'Lvl 54: Mithril Sword/Darts/Nails',
-      'Lvl 55: Mithril Scimitar/Arrows/C-balls',
-      'Lvl 56: Mithril Longsword/Limbs/Keel',
-      'Lvl 57: Mithril Full Helm/Knives',
+      'Lvl 53: Mithril Med Helm/Bolts, Shayzien T1 Body',
+      'Lvl 54: Mithril Shortsword/Darts/Nails',
+      'Lvl 55: Mithril Scimitar/Arrows/C-balls/Spear/Hasta, Shayzien T2 Gloves',
+      'Lvl 55: Purging Staff (While Guthix Sleeps)',
+      'Lvl 56: Mithril Longsword/Limbs/Keel/Javelin Tips',
+      'Lvl 57: Mithril Full Helm/Knives, Shayzien T2 Boots',
       'Lvl 58: Mithril Sq Shield',
-      'Lvl 59: Mithril Warhammer',
+      'Lvl 59: Mithril Warhammer, Mith Grapple Tips, Shayzien T2 Helm',
+      'Lvl 60: Aquanite Hoppers',
       'Lvl 60: Mithril Battleaxe, Dragon Sq Shield'
     ],
     7: [
@@ -1662,20 +2017,23 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 68: Mithril Platebody',
       'Lvl 69: Shayzien T3 Helm',
       'Lvl 70: Adamant Bars/Daggers',
-      'Lvl 70: Crystal Helm, Celestial Signet'
+      'Lvl 70: Crystal Helm, Celestial Signet',
+      'Lvl 70: Confliction Gauntlets (Crafting 83)',
+      'Lvl 70: Zombie Axe/Helm Repair, Belle\'s Folly Repair (Sleeping Giants)'
     ],
     8: [
       'Lvl 71: Adamant Axe, Shayzien T3 Greaves',
-      'Lvl 72: Adamant Mace, Crystal Legs',
-      'Lvl 73: Adamant Med Helm, Shayzien T3 Body',
-      'Lvl 74: Adamant Sword/Keel, Crystal Body',
-      'Lvl 74: Cupronickel Bars',
-      'Lvl 75: Adamant Scimitar/Arrows/C-balls',
-      'Lvl 75: Dragon Kiteshield',
-      'Lvl 76: Adamant Longsword, Crystal Tools',
-      'Lvl 77: Adamant Full Helm, Shayzien T4 Boots',
+      'Lvl 72: Adamant Mace, Crystal Legs, Noxious Halberd (Crafting 72)',
+      'Lvl 73: Adamant Med Helm/Bolts, Shayzien T3 Body',
+      'Lvl 74: Adamant Shortsword/Keel/Darts/Nails, Crystal Body',
+      'Lvl 74: Cupronickel Bars, Emberlight (While Guthix Sleeps)',
+      'Lvl 75: Adamant Scimitar/Arrows/C-balls/Spear/Hasta',
+      'Lvl 75: Dragon Kiteshield, Shayzien T4 Gloves',
+      'Lvl 75: Sturdy Harnesses (Woodcutting 75)',
+      'Lvl 76: Adamant Longsword/Limbs/Javelin Tips, Crystal Tools',
+      'Lvl 77: Adamant Full Helm/Knives, Shayzien T4 Boots',
       'Lvl 78: Adamant Sq Shield, Crystal Weapon/Shield',
-      'Lvl 79: Adamant Warhammer',
+      'Lvl 79: Adamant Warhammer, Shayzien T4 Helm',
       'Lvl 80: Adamant Battleaxe, Godsword Blade',
       'Lvl 80: Crystal Key/Teleport'
     ],
@@ -1683,22 +2041,23 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 81: Adamant Chainbody, Shayzien T4 Greaves',
       'Lvl 82: Adamant Kiteshield, Saeldor/Faerdhinen',
       'Lvl 83: Adamant Claws, Shayzien T4 Body',
+      'Lvl 83: Oathplate Armour (A Kingdom Divided)',
       'Lvl 84: Adamant 2h Sword',
-      'Lvl 85: Infernal Pickaxe, Ursine Chainmace',
+      'Lvl 85: Infernal Pickaxe, Ursine Chainmace, Shayzien T5 Gloves',
       'Lvl 85: Runite Bars/Daggers, Spirit Sigils',
       'Lvl 86: Adamant Legs/Skirt, Rune Axe/Keel',
-      'Lvl 87: Rune Mace',
-      'Lvl 88: Adamant Platebody, Rune Med Helm',
-      'Lvl 89: Rune Sword/Nails',
+      'Lvl 87: Rune Mace, Shayzien T5 Boots',
+      'Lvl 88: Adamant Platebody, Rune Med Helm/Bolts',
+      'Lvl 89: Rune Shortsword/Nails/Darts, Shayzien T5 Helm',
       'Lvl 90: Dragon Platebody, dfs/Ward',
-      'Lvl 90: Rune Scimitar/Arrows/C-balls',
+      'Lvl 90: Rune Scimitar/Arrows/C-balls/Spear/Hasta',
       'Lvl 90: Torva Repair'
     ],
     10: [
-      'Lvl 91: Rune Longsword/Limbs',
-      'Lvl 92: Rune Full Helm/Knives',
-      'Lvl 93: Rune Sq Shield',
-      'Lvl 94: Rune Warhammer',
+      'Lvl 91: Rune Longsword/Limbs/Javelin Tips, Shayzien T5 Greaves',
+      'Lvl 92: Rune Full Helm/Knives, Dragon Nails',
+      'Lvl 93: Rune Sq Shield, Shayzien T5 Body',
+      'Lvl 94: Rune Warhammer, Dragon Keel',
       'Lvl 95: Rune Battleaxe',
       'Lvl 96: Rune Chainbody',
       'Lvl 97: Rune Kiteshield',
@@ -1717,14 +2076,18 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     2: [
       'Lvl 15: Adamant Halberds (Att 30)',
       'Lvl 15: Leaping Trout (Fish 48)',
+      'Lvl 19: Lumbridge Raft Grapple',
       'Lvl 20: Black Mask (Def 10)',
       'Lvl 20: Mithril Warhammers',
       'Lvl 20: Rune Halberds (Att 40)'
     ],
     3: [
+      'Lvl 21: Karamja Volcano Grapple',
+      'Lvl 22: Taverley Dungeon Grapple',
       'Lvl 28: Observatory Grapple',
       'Lvl 30: Adamant Warhammers',
       'Lvl 30: Dragon Halberd (Att 60)',
+      'Lvl 30: Hunter\'s Spear (Range 55)',
       'Lvl 30: Leaping Salmon (Fish 58)'
     ],
     4: [
@@ -1732,6 +2095,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 35: Catherby Grapple',
       'Lvl 35: Crystal Halberd (Att 70)',
       'Lvl 37: Falador Grapple',
+      'Lvl 38: Yanille Grapple',
       'Lvl 40: Barrelchest Anchor (Att 60)',
       'Lvl 40: Rune Warhammers'
     ],
@@ -1753,16 +2117,20 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 70: Abyssal Bludgeon',
       'Lvl 70: Bandos Stronghold (GWD)',
       'Lvl 70: Dharok\'s Greataxe/Torag\'s Hammers',
+      'Lvl 70: Dorgesh-Kaan Cave Crossing (Agil 70, Range 70)',
       'Lvl 70: Inquisitor\'s Armour'
     ],
     8: [
       'Lvl 75: Blood Moon Armour',
+      'Lvl 75: Dual Macuahuitl (Att 70)',
       'Lvl 75: Elder Maul, Primordial Boots',
+      'Lvl 75: Statius\'s Warhammer (Bounty Hunter, PvP Areas Only)',
       'Lvl 76: Barehanded Sharks',
       'Lvl 80: Avernic Treads',
       'Lvl 80: Soulreaper Axe'
     ],
     9: [
+      'Lvl 85: Crimson Kisten (Att 60)',
       'Lvl 90: Scythe of Vitur'
     ],
     10: [
@@ -1772,45 +2140,69 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Thieving': {
     1: [
       'Lvl 1: Pickpocket Man/Woman',
+      'Lvl 1: Winter Sq\'irk',
       'Lvl 2: Vegetable Stalls',
       'Lvl 5: Bakery & Tea Stalls',
+      'Lvl 5: Crafting Stalls',
+      'Lvl 5: Monkey Food & General Stalls (Monkey Madness I)',
       'Lvl 10: Pickpocket Farmers'
     ],
     2: [
+      'Lvl 13: Chest (10 Coins)',
       'Lvl 15: HAM Members',
-      'Lvl 20: Silk Stalls'
+      'Lvl 20: Silk Stalls, Ogre Coffins'
     ],
     3: [
       'Lvl 21: Pyramid Plunder (Room 1)',
-      'Lvl 25: Warriors, Fruit Stalls',
+      'Lvl 22: Wine Stalls',
+      'Lvl 25: Warriors, Digsite Workmen, Fruit Stalls, Spring Sq\'irk',
+      'Lvl 27: Seed Stalls',
+      'Lvl 28: Chest (Nature Runes), Dark Chest, Isle of Souls Chest',
+      'Lvl 30: Pickpocket Villagers',
       'Lvl 30: The Feud (Blackjack)'
     ],
     4: [
       'Lvl 31: Pyramid Plunder (Room 2)',
       'Lvl 32: Pickpocket Rogues',
+      'Lvl 33: Rusty Chest',
+      'Lvl 35: Fur Stalls',
+      'Lvl 36: Cave Goblins (Death to the Dorgeshuun)',
+      'Lvl 36: Aldarin Villas Chest (Children of the Sun)',
       'Lvl 38: Master Farmers',
       'Lvl 40: Pickpocket Guards'
     ],
     5: [
       'Lvl 41: Pyramid Plunder (Room 3)',
+      'Lvl 42: Fish Stalls',
+      'Lvl 43: Chest (50 Coins)',
       'Lvl 45: Bandits, Fremennik Citizens, Autumn Sq\'irk',
+      'Lvl 47: Chest (Steel Arrowtips)',
+      'Lvl 49: Crossbow Stalls',
       'Lvl 50: Rogues\' Den (Wall Safes)',
       'Lvl 50: Wealthy Citizens, Silver Stalls'
     ],
     6: [
       'Lvl 51: Pyramid Plunder (Room 4)',
+      'Lvl 52: Dorgesh-Kaan Average Chests (Death to the Dorgeshuun)',
       'Lvl 53: Desert Bandits',
-      'Lvl 55: Ardougne Knights'
+      'Lvl 54: Tarnished Chest',
+      'Lvl 55: Ardougne Knights',
+      'Lvl 59: Chest (Blood Runes)',
+      'Lvl 60: Pickpocket Pirates'
     ],
     7: [
       'Lvl 61: Pyramid Plunder (Room 5)',
       'Lvl 64: Stone Chests',
       'Lvl 65: Menaphite Thugs, Magic Stalls, Summer Sq\'irk',
+      'Lvl 65: Watchmen, Spice & Scimitar Stalls',
+      'Lvl 66: Hallowed Sepulchre Coffins (Sins of the Father)',
       'Lvl 70: Paladins'
     ],
     8: [
       'Lvl 71: Pyramid Plunder (Room 6)',
+      'Lvl 72: Chest (Ardougne Castle)',
       'Lvl 75: Gnomes, Gem Stalls',
+      'Lvl 76: Reinforced Chest',
       'Lvl 78: Dorgesh-Kaan Rich Chests',
       'Lvl 80: Heroes'
     ],
@@ -1818,7 +2210,9 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 81: Pyramid Plunder (Room 7)',
       'Lvl 82: Vyres, Ore Stalls',
       'Lvl 84: Rogues\' Castle Chests',
+      'Lvl 84: Grand Hallowed Coffin (Sins of the Father)',
       'Lvl 85: Elves',
+      'Lvl 87: Cannonball Stalls',
       'Lvl 90: TzHaar-Hurs'
     ],
     10: [
@@ -1828,57 +2222,71 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   },
   'Woodcutting': {
     1: [
-      'Lvl 1: Bronze/Iron Axes, Achey Trees',
-      'Lvl 6: Steel Axes',
+      'Lvl 1: Bronze/Iron Axes & Felling Axes, Normal & Achey Trees',
+      'Lvl 1: Kharidian Cactus (Fill Waterskins)',
+      'Lvl 1: Up to 1 Kindling (Ice Demon, Chambers of Xeric)',
+      'Lvl 6: Steel Axes & Felling Axes',
       'Lvl 10: Light Jungle'
     ],
     2: [
-      'Lvl 11: Black Axes',
+      'Lvl 11: Black Axes & Felling Axes',
       'Lvl 12: Log Canoes',
       'Lvl 15: Oak Logs',
       'Lvl 20: Medium Jungle'
     ],
     3: [
-      'Lvl 21: Mithril Axes',
+      'Lvl 21: Mithril Axes & Felling Axes',
+      'Lvl 24: Up to 2 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 27: Dugout Canoes',
       'Lvl 30: Willow Logs'
     ],
     4: [
-      'Lvl 31: Adamant Axes',
+      'Lvl 31: Adamant Axes & Felling Axes',
       'Lvl 35: Teak Logs, Forester\'s Rations',
+      'Lvl 35: Dense Jungle (Jungle Potion)',
+      'Lvl 35: Secateurs Attachment (Smithing 35)',
       'Lvl 36: Lost City',
+      'Lvl 36: Up to 3 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 40: Jatoba Logs'
     ],
     5: [
-      'Lvl 41: Rune/Gilded Axes',
+      'Lvl 41: Rune/Gilded Axes, Rune Felling Axes',
       'Lvl 42: Stable Dugout Canoes, Juniper Logs',
       'Lvl 44: Lumberjack/Forestry Outfit',
       'Lvl 45: Maple Logs, Bark',
+      'Lvl 48: Up to 4 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 50: Mahogany Logs, Clothes Pouch'
     ],
     6: [
       'Lvl 54: Arctic Pine Logs',
+      'Lvl 56: Split Arctic Pine, Neitiznot Shield',
       'Lvl 57: Waka Canoes',
-      'Lvl 60: Yew Logs, Woodcutting Guild'
+      'Lvl 60: Yew Logs, Woodcutting Guild',
+      'Lvl 60: Up to 5 Kindling (Ice Demon, Chambers of Xeric)'
     ],
     7: [
-      'Lvl 61: Dragon/Infernal/3rd Age Axes',
+      'Lvl 61: Dragon/Infernal/3rd Age Axes, Dragon/3rd Age Felling Axes',
       'Lvl 62: Blisterwood Logs',
       'Lvl 65: Sulliuscep Mushrooms',
-      'Lvl 66: Camphor Logs'
+      'Lvl 66: Camphor Logs',
+      'Lvl 68: Nature Offerings (Farming 50)'
     ],
     8: [
-      'Lvl 71: Crystal Axes',
+      'Lvl 71: Crystal Axes & Felling Axes (Song of the Elves)',
+      'Lvl 72: Up to 6 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 75: Magic Logs, Sturdy Harness',
       'Lvl 77: Bloodwood Trees (The Blood Moon Rises)',
       'Lvl 80: Infected Roots, Ironwood Logs'
     ],
     9: [
+      'Lvl 84: Up to 7 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 90: Redwood Logs'
     ],
     10: [
       'Lvl 92: Rosewood Logs',
-      'Lvl 99: Skill Mastery (Woodcutting Cape)'
+      'Lvl 96: Up to 8 Kindling (Ice Demon, Chambers of Xeric)',
+      'Lvl 99: Skill Mastery (Woodcutting Cape)',
+      'Lvl 99: Mac\'s Island Evergreen Tree'
     ],
   },
 };

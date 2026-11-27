@@ -18,6 +18,7 @@ import { collectionLogSync, collectionIdentityReview } from '../services/Collect
 import { WikiLink } from './WikiLink';
 import { collogReachability } from '../utils/collogReach';
 import { collectionGridColumns } from '../utils/collectionGrid';
+import { foldedIncludes } from './osrs/OsrsJournalSearch';
 
 interface CollectionLogProps {
   searchTerm?: string;
@@ -63,7 +64,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
   const needsReview = blockedIds.has(item.id);
   const count = needsReview ? 0 : unlocks.collectionLog[item.id] || 0;
   const isUnlocked = count > 0;
-  const isHighlighted = searchTerm && item.name.toLowerCase().includes(searchTerm.toLowerCase());
+  const isHighlighted = searchTerm && foldedIncludes(item.name, searchTerm);
 
   return (
     <div style={style} className="p-1">
@@ -199,12 +200,11 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
   // 1. Gather all matching pages for the Sidebar
   const filteredPages = useMemo(() => {
     if (searchTerm) {
-        const lowerSearch = searchTerm.toLowerCase();
         const results: { tab: string; key: string; data: any }[] = [];
         Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
             Object.entries(tabData.pages).forEach(([pageKey, pageData]) => {
-                const nameMatch = pageData.name.toLowerCase().includes(lowerSearch);
-                const itemMatch = pageData.items.some(item => item.name.toLowerCase().includes(lowerSearch));
+                const nameMatch = foldedIncludes(pageData.name, searchTerm);
+                const itemMatch = pageData.items.some(item => foldedIncludes(item.name, searchTerm));
                 if (nameMatch || itemMatch) results.push({ tab: tabName, key: pageKey, data: pageData });
             });
         });
@@ -217,19 +217,18 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
   // 2. Gather ALL matching items for "All Results" view
   const allSearchItems = useMemo(() => {
       if (!searchTerm) return [];
-      const lowerSearch = searchTerm.toLowerCase();
       const results: any[] = [];
       
       Object.entries(COLLECTION_LOG_DATA).forEach(([tabName, tabData]) => {
         Object.entries(tabData.pages).forEach(([pageKey, pageData]) => {
-          const pageNameMatch = pageData.name.toLowerCase().includes(lowerSearch);
+          const pageNameMatch = foldedIncludes(pageData.name, searchTerm);
           if (pageNameMatch) {
              // If page matches, include all items
              pageData.items.forEach(item => results.push({ ...item, sourcePage: pageData.name, sourceTab: tabName }));
           } else {
              // Otherwise include only matching items
              pageData.items.forEach(item => {
-                if (item.name.toLowerCase().includes(lowerSearch)) {
+                if (foldedIncludes(item.name, searchTerm)) {
                    results.push({ ...item, sourcePage: pageData.name, sourceTab: tabName });
                 }
              });

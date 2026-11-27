@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useGame } from '../../context/GameContext';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useAreaRoutes } from '../../hooks/useAreaRoutes';
+import type { AreaRoutes } from '../../utils/areaRoutes';
 import { computeUnlockImpact } from '../../utils/unlockImpact';
 import { showChunkOnMap } from '../../utils/chunkLocations';
 import {
@@ -16,7 +17,7 @@ import { JournalIcon } from './OsrsJournalParts';
  * opening an OSRS "Choose Option" menu with the classic menu's actions.
  */
 
-const ChooseOption: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => void; onClose: () => void }> = ({ a, onPick, onClose }) => {
+const ChooseOption: React.FC<{ a: JournalNextBestAction; areaRoutes: AreaRoutes | null; onPick: (s: SubTab) => void; onClose: () => void }> = ({ a, areaRoutes, onPick, onClose }) => {
   const { unlocks, gameModeId } = useGame();
   const [showUnlocks, setShowUnlocks] = useState(false);
   const place = placeFor(a, unlocks);
@@ -41,9 +42,9 @@ const ChooseOption: React.FC<{ a: JournalNextBestAction; onPick: (s: SubTab) => 
 
   const opens = useMemo(() => {
     if (a.kind !== 'quest') return null;
-    const imp = computeUnlockImpact(unlocks, { ...unlocks, quests: [...unlocks.quests, a.id] }, gameModeId);
+    const imp = computeUnlockImpact(unlocks, { ...unlocks, quests: [...unlocks.quests, a.id] }, gameModeId, { areaRoutes });
     return { quests: imp.directQuestNames, diaries: imp.directDiaryIds };
-  }, [a, unlocks, gameModeId]);
+  }, [a, unlocks, gameModeId, areaRoutes]);
 
   const Item: React.FC<{ verb: string; onClick?: () => void; disabled?: boolean }> = ({ verb, onClick, disabled }) => (
     <button
@@ -125,7 +126,7 @@ export const OsrsJournalNextBest: React.FC<{ onPick: (sub: SubTab) => void }> = 
                   <span className="ojr-nb-name" style={{ color: isReady ? '#ffff00' : undefined }}>{a.name}</span>
                   <span className="ojr-nb-tag" style={{ color: isReady ? '#00ff00' : 'var(--osrs-tan, #c8b897)' }}>{isReady ? 'ready' : a.firstBlocker}</span>
                 </button>
-                {openItem === key && <ChooseOption a={a} onPick={onPick} onClose={() => setOpenItem(null)} />}
+                {openItem === key && <ChooseOption a={a} areaRoutes={areaRoutes} onPick={onPick} onClose={() => setOpenItem(null)} />}
               </div>
             );
           })}

@@ -61,3 +61,32 @@ describe('full-source content conservation', () => {
     expect(result.full.tags.mining).toEqual(['256']);
   });
 });
+
+describe('reviewed shop placements (chunk audit, November 2026)', () => {
+  const shopsIn = (id: string): string[] => (full.chunks as Record<string, { s?: string[] }>)[id]?.s ?? [];
+
+  it("lists Spria's Slayer Equipment shop in Draynor and Chris's Lost Property shop at Emir's Arena", () => {
+    // OSRS Wiki 'Slayer Equipment (shop)' rev 15364486: Spria, Draynor Village, 3092,3268 (48,51).
+    expect(shopsIn('12339')).toContain('Slayer Equipment (shop)');
+    // OSRS Wiki 'Lost Property shop' rev 15349467: Chris, Emir's Arena, 3385,3269 (52,51).
+    expect(shopsIn('13363')).toContain('Lost Property shop');
+    expect((full.taskUnlocks.Shops as Record<string, Record<string, string[]>>)['Lost Property shop']['13363'])
+      .toEqual(['Previously earned the replacement quest reward']);
+  });
+
+  it("names Sir Tiffy Cashien's shops by their Wiki titles", () => {
+    // OSRS Wiki 'Initiate Temple Knight Armoury' rev 15318625 and 'Proselyte Temple Knight Armoury' rev 15318742.
+    const shops = full.taskUnlocks.Shops as Record<string, Record<string, string[]>>;
+    const items = full.shopItems as Record<string, string[]>;
+    for (const [title, quest, item] of [
+      ['Initiate Temple Knight Armoury', 'Recruitment Drive', 'Initiate sallet'],
+      ['Proselyte Temple Knight Armoury', 'The Slug Menace', 'Proselyte sallet'],
+    ]) {
+      expect(shopsIn('11828')).toContain(title);
+      expect(shops[title]['11828']).toEqual([`${quest} Complete the quest`]);
+      expect(items[title]).toContain(item);
+    }
+    expect(shopsIn('11828').filter(name => name.startsWith('Sir Tiffy Cashien'))).toEqual([]);
+    expect(Object.keys(items).filter(name => name.startsWith('Sir Tiffy Cashien'))).toEqual([]);
+  });
+});

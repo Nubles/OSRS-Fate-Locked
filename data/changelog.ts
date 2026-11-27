@@ -37,13 +37,55 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
-    id: '2026-11-11-gated-quest-items',
+    id: '2026-11-27-gated-quest-items',
     title: 'Quest items behind locked doors',
-    date: '2026-11-11',
+    date: '2026-11-27',
     sections: {
       fixed: [
         'Chunked: owning the Lumbridge Swamp shed no longer counts Zanaris’s dairy cow, mill and wheat for quests until you’ve done Lost City.',
         'Quest item checks now ask for the way in to cows, mills, sheep and rocks inside places like the Mining Guild, Keldagrim and Prifddinas.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-22-accuracy-pass',
+    title: 'Big accuracy pass and two new quests',
+    date: '2026-11-22',
+    sections: {
+      added: [
+        'A New Leaf and Rag and Bone Man III, from the 18 November update, are in the Quest Journal.',
+        'The skill guides list about 400 more unlocks from the Wiki’s level-up tables, across 19 skills.',
+      ],
+      fixed: [
+        'A very long note can’t stop your run from saving any more, and coming back to a tab with Back no longer overwrites newer progress.',
+        'Saradomin’s Ward no longer lands a Key on a bank or guild you can’t use yet, and Ask before Key clicks now covers Farm Keys and Sync & Roll too.',
+        'Over 100 facts were checked against the Wiki and corrected: bank, boss, quest and goal requirements, Slayer tasks, gear tiers, diary routes and drop sources.',
+        'On shorter laptop screens the classic World map now fits its pane, so every overlay and zoom button can be reached.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-12-quest-month-week-two',
+    title: 'Two more Quest Month quests',
+    date: '2026-11-12',
+    sections: {
+      added: [
+        'The Birds and the Wasps (Novice, 1 quest point) starts with Farmer Bea on her farm between Varrock and the Digsite.',
+        'A Shell of a Friend (Intermediate, 2 quest points) starts on a little island in the Haunted Woods. It needs Priest in Peril, 16 Herblore and 15 Construction.',
+        'Hunter and Fletching now list the new wasps, honey buzzards and wasp darts, which need The Birds and the Wasps.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-11-run-film-controls',
+    title: 'Run Film gets lengths, an end card and more',
+    date: '2026-11-11',
+    sections: {
+      added: [
+        'Pick a length: 10s for Discord, 15s for an intro, 30s for TikTok or 60s for YouTube. Or set a speed from 25% to 400%.',
+        'An end card sums it up: unlocks, Key rolls, your luckiest roll and longest dry run, plus where to find Fate Locked.',
+        'Film just part of your run: choose the first and last day, and it opens on your map as it stood.',
+        'Show your levels, tiers or both, write your own title, make it in 1080p, and drag the preview to see any moment.',
       ],
     },
   },

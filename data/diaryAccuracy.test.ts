@@ -36,10 +36,11 @@ const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
 
 describe('Diary tasks are in the areas the game has them in', () => {
   it('puts the Jaldraocht Pyramid altar beside the pyramid, not in Sophanem', () => {
-    // The pyramid's chunk (50,45) has no area of its own; Bandit Camp and Pollnivneach border it.
-    // In Chunked the chunk itself counts too (the place audit, diaryPlaceAudit.test.ts).
+    // The pyramid's chunk (50,45) has been a Bandit Camp chunk since the map change of 8 October 2026;
+    // Pollnivneach only borders it. In Chunked the chunk itself counts too (diaryPlaceAudit.test.ts).
+    expect(SUB_AREA_CHUNKS['Bandit Camp']).toContainEqual({ cx: 50, cy: 45 });
     expect(task('des_hard_7').oneOf).toEqual([
-      { regions: ['Bandit Camp'] }, { regions: ['Pollnivneach'] },
+      { regions: ['Bandit Camp'] },
       { locations: [{ label: 'Jaldraocht Pyramid', chunkOptions: [{ cx: 50, cy: 45 }] }] },
     ]);
     expect(task('des_hard_7').regions).toBeUndefined();
@@ -359,6 +360,23 @@ describe('Diary tasks that use a shop or a service', () => {
     expect(task(id).merchants).toEqual([merchant]);
   });
 
+  it('buys the dragon sq shield right half in the Legends\' Guild or the Myths\' Guild', () => {
+    // Shield right half rev 15184183: "can be bought in the Legends' Guild or the Myths' Guild"; nothing drops it.
+    // The tracker files the Legends' Guild shop under General Stores and the Myths' Guild Armoury under Platebody Shops.
+    expect(task('ard_hard_11').oneOf).toEqual([
+      expect.objectContaining({ quests: ["Legends' Quest"], guilds: ["Legends' Guild"], merchants: ['General Stores'] }),
+      expect.objectContaining({ quests: ['Dragon Slayer II'], guilds: ["Myths' Guild"], merchants: ['Platebody Shops'] }),
+    ]);
+    const smith = account({ skills: { Smithing: 10 }, levels: { Smithing: 99 }, regions: ['East Ardougne'] });
+    expect(evaluateDiaryTaskEligibility(task('ard_hard_11'), smith).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('ard_hard_11'), {
+      ...smith, regions: ['East Ardougne', "Legends' Guild"], quests: ["Legends' Quest"], merchants: ['General Stores'], guilds: ["Legends' Guild"],
+    }).machineEligible).toBe(true);
+    expect(evaluateDiaryTaskEligibility(task('ard_hard_11'), {
+      ...smith, regions: ['East Ardougne', 'Corsair Cove'], quests: ['Dragon Slayer II'], merchants: ['Platebody Shops'], guilds: ["Myths' Guild"],
+    }).machineEligible).toBe(true);
+  });
+
   it('asks des_elite_4 for Taxidermists, because the Canifis taxidermist stuffs the KQ head, and Stonemasons for the gold leaves', () => {
     expect(task('des_elite_4').merchants).toEqual(['Taxidermists', 'Stonemasons']);
   });
@@ -471,11 +489,37 @@ describe('Diary tasks that need only part of a quest', () => {
     },
   );
 
+  it('needs 60 Strength or 60 Agility to enter the God Wars Dungeon for the Spiritual mage', () => {
+    // God Wars Dungeon rev 15384639: entry needs "either 60 Strength or 60 Agility", as the Wilderness
+    // God Wars Dungeon tasks already ask; the generals' task asks 70 of both.
+    expect(task('frem_elite_6').anyOfSkillsLevel).toEqual({ skills: ['Strength', 'Agility'], level: 60 });
+    const slayer = account({ skills: { Slayer: 10 }, levels: { Slayer: 99 }, regions: ['Burthorpe'], cas: ['Easy'] });
+    expect(evaluateDiaryTaskEligibility(task('frem_elite_6'), slayer).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('frem_elite_6'), {
+      ...slayer, skills: { Slayer: 10, Agility: 10 }, levels: { Slayer: 99, Agility: 60 },
+    }).machineEligible).toBe(true);
+  });
+
   it('smelts in The Forsaken Tower partway through the quest, after Client of Kourend', () => {
     // The pinned wiki text said completion; the current page says "Partial completion" (rev 15357910).
     expect(task('kou_hard_2')).toMatchObject({
       quests: ['Client of Kourend'],
       questProgress: [expect.objectContaining({ quest: 'The Forsaken Tower' })],
+    });
+  });
+
+  it('catches the Burgh de Rott shark once In Aid of the Myreque is started', () => {
+    // The pinned wiki text said completion; the current page says "Partial completion" (rev 15409170), and
+    // Burgh de Rott needs only the quest started.
+    expect(task('mor_elite_1').quests ?? []).not.toContain('In Aid of the Myreque');
+    expect(task('mor_elite_1').questProgress).toEqual(expect.arrayContaining([
+      { quest: 'In Aid of the Myreque', label: 'Started In Aid of the Myreque' },
+    ]));
+    // Starting the quest still needs what the quest page marks for the start: In Search of the Myreque done, and
+    // 25 Agility, 25 Crafting, 15 Mining and 7 Magic (In Aid of the Myreque, Questreqstart).
+    expect(task('mor_elite_1')).toMatchObject({
+      quests: ['In Search of the Myreque'],
+      skills: { Fishing: 96, Strength: 76, Agility: 25, Crafting: 25, Mining: 15, Magic: 7 },
     });
   });
 
@@ -521,6 +565,39 @@ describe('Diary tasks in the Karuulm Slayer Dungeon', () => {
       .toMatchObject({ machineEligible: true, manualChecks: [BOOTS.manualCheck] });
     expect(evaluateDiaryTaskEligibility(task('kou_hard_9'), { ...wyrmHunter, diaries: ['Kourend Elite'] }))
       .toMatchObject({ eligible: true, blockers: [] });
+  });
+
+  it('needs the same boots to reach the hydras, which are past the entrance chamber', () => {
+    // Karuulm Slayer Dungeon (Wiki, 20 September 2026 revision): the boots are needed beyond the entrance
+    // chamber. The Kourend Elite reward cannot help here, as this task is part of it.
+    const { unlessDiary: _reward, ...boots } = BOOTS;
+    expect(task('kou_elite_5')).toMatchObject({ regions: ['Mount Karuulm'], equipmentRequirements: [boots], merchants: ['Slayer Equipment'] });
+    const hydraHunter = account({
+      regions: ['Mount Karuulm'], merchants: ['Slayer Equipment'], skills: { Slayer: 10 }, levels: { Slayer: 95 },
+    });
+    expect(evaluateDiaryTaskEligibility(task('kou_elite_5'), hydraHunter).blockers)
+      .toEqual([expect.objectContaining({ kind: 'equipment', slot: 'Boots', tier: 1 })]);
+    expect(evaluateDiaryTaskEligibility(task('kou_elite_5'), { ...hydraHunter, equipment: { Boots: 1 } }))
+      .toMatchObject({ machineEligible: true, manualChecks: [BOOTS.manualCheck] });
+  });
+});
+
+describe('Diary tasks with Raiments of the Eye routes', () => {
+  it('crafts 252 air runes at 77 Runecraft with one Raiments piece and a lit abyssal lantern', () => {
+    // Falador Diary rev 15404232: "77 Runecraft with 2 Raiments of the Eye pieces or 1 Raiments of the Eye
+    // piece and abyssal lantern (with willow, magic, or redwood logs)". The lantern is worn in the shield slot.
+    const lantern = (task('fal_elite_1').oneOf ?? []).filter(route => route.label?.includes('abyssal lantern'));
+    expect(lantern).toHaveLength(8);
+    for (const route of lantern) {
+      expect(route.skills).toEqual({ Runecraft: 77 });
+      expect(route.equipmentRequirements?.map(requirement => requirement.slot)).toContain('Shield');
+    }
+    const crafter = account({
+      skills: { Runecraft: 10 }, levels: { Runecraft: 77 }, regions: ['Falador'], quests: ['Rune Mysteries'], equipment: { Head: 1 },
+    });
+    expect(evaluateDiaryTaskEligibility(task('fal_elite_1'), crafter).machineEligible).toBe(false);
+    expect(evaluateDiaryTaskEligibility(task('fal_elite_1'), { ...crafter, equipment: { Head: 1, Shield: 1 } }).machineEligible)
+      .toBe(true);
   });
 });
 
@@ -637,6 +714,8 @@ describe('Diary tasks that use a farming patch', () => {
     ['ard_elite_6', 'Herb'], ['kan_elite_2', 'Herb'], ['mor_elite_3', 'Herb'],
     ['fal_med_4', 'Flower'], ['kan_med_8', 'Flower'], ['mor_easy_8', 'Flower'],
     ['fal_elite_3', 'Wood Tree'], ['var_hard_8', 'Wood Tree'], ['west_elite_3', 'Wood Tree'],
+    // Willow branch rev 15366185: cut with secateurs from a willow grown in a tree patch, and nowhere else.
+    ['fal_med_13', 'Wood Tree'],
     ['kan_easy_5', 'Hops'],
     ['karamja_elite_5', 'Calquat'],
     ['kou_elite_8', 'Celastrus'],

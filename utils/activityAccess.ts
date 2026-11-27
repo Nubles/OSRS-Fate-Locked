@@ -104,7 +104,7 @@ const chunkedRule = (activity: string) =>
  * Chunked: whether an activity can be done in the run's chunks. It counts only
  * when the exact chunk it is entered from is owned, never any chunk of its
  * named area, and the quest that chunk's entry needs is done (Barrows waits for
- * Priest in Peril). A place no chunk holds, such as the Mimic, can be fought
+ * Priest in Peril). An activity no chunk holds back, such as the Mimic, can be fought
  * once unlocked; whether a random Key may land on it is randomKeyActivityAccess.
  */
 export const getChunkedActivityAccess = (activity: string, unlocks: UnlockState): ActivityAccessResult => {

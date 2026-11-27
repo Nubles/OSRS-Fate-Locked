@@ -25,7 +25,7 @@ export interface AchievementPayout {
 
 /**
  * The rituals a free one can be. Sacrifice and Transmutation are left out
- * (Alex, 2026-10-15), Zamorak's Pact is free already, and the Void Gambit
+ * (the owner, 2026-10-15), Zamorak's Pact is free already, and the Void Gambit
  * stakes your own Fate, so a free one has nothing to stake.
  */
 export const FREE_RITUAL_IDS: readonly Ritual['id'][] = ['LUCK', 'GREED', 'CHAOS', 'CARTOGRAPHER', 'WARD', 'TEARS', 'INVOCATIONS', 'BARROWS'];
@@ -42,7 +42,7 @@ export const pickFreeRitual = (gameModeId: string | undefined, draw: number): Ri
 
 export const ritualName = (id: string): string => RITUALS.find((r) => r.id === id)?.name ?? id;
 
-/** Achievements with no set Fate pay a random 1 to 5, rolled on each run (Alex, 2026-10-15). */
+/** Achievements with no set Fate pay a random 1 to 5, rolled on each run (the owner, 2026-10-15). */
 export const SMALL_FATE_MIN = 1;
 export const SMALL_FATE_MAX = 5;
 
@@ -115,7 +115,7 @@ export const settleAchievements = (
   if (state.achievementsClaimed === undefined) {
     // Back pay, once: the free rituals those achievements give, and their Fate
     // up to the pity line at most, in one entry. No Chaos Keys, so a long run
-    // isn't handed a pile of unlocks on release day (Alex, 2026-10-15).
+    // isn't handed a pile of unlocks on release day (the owner, 2026-10-15).
     const seen = new Set<string>();
     const already = earned.filter((a) => !seen.has(a.id) && seen.add(a.id));
     const owed = already.reduce((n, a) => n + fateDue(a, state.runId), 0);

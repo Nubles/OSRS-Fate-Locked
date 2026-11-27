@@ -4,6 +4,7 @@ import { relaySync, relayRetryDelayMs } from '../services/relaySync';
 import type { UnlockState } from '../types';
 import { importWithRetry } from '../utils/lazyRetry';
 import type { RuneliteRunInput } from '../utils/runeliteExport';
+import { RELAY_REPUBLISH_UNCHANGED_MS } from '../utils/relayPublishFingerprint';
 
 // The bundle builder loads with the first publish, so a tracker that is not
 // paired with RuneLite never downloads it. A failed load is a failed publish:
@@ -32,7 +33,8 @@ export const NOT_SAVING_PUBLISH_MESSAGE =
  * full KV write, so changes are coalesced: one publish of the newest state
  * once they pause, with at most one publish in flight, and a profile the
  * relay already holds (the same fingerprint, sent under six hours ago) is not
- * sent again (relaySync.alreadyPublished). Pairing and Retry publish at once,
+ * sent again (relaySync.alreadyPublished); an open tab re-sends it by itself
+ * once the last publish is six hours old. Pairing and Retry publish at once,
  * whatever the relay holds. A bundle built from failed rules data is never sent: the
  * failure is shown as the relay error and the last good publish stays. Only
  * the tab that holds this profile's save lease publishes: another tab of the
@@ -64,6 +66,7 @@ export function OnlineSyncDriver() {
     let cancelled = false;
     let timer: number | null = null;
     let retryTimer: number | null = null;
+    let refreshTimer: number | null = null;
     let pendingSince: number | null = null;
     let inFlight = false;
     let again = false;
@@ -90,11 +93,29 @@ export function OnlineSyncDriver() {
       }, delay);
     };
 
+    const clearRefresh = () => {
+      if (refreshTimer != null) window.clearTimeout(refreshTimer);
+      refreshTimer = null;
+    };
+    // An open, idle tracker sends its unchanged profile again once the last
+    // publish is six hours old, so the relay's copy and its export time stay
+    // within RuneLite's 12-hour limit. A publish already waiting covers it.
+    const scheduleRefresh = () => {
+      clearRefresh();
+      if (!isCurrent() || relaySync.status !== 'synced' || relaySync.lastSyncAt == null) return;
+      const delay = Math.max(0, relaySync.lastSyncAt + RELAY_REPUBLISH_UNCHANGED_MS - Date.now()) + 1_000;
+      refreshTimer = window.setTimeout(() => {
+        refreshTimer = null;
+        if (timer == null) schedule.current?.(false);
+      }, delay);
+    };
+
     const publish = async (): Promise<void> => {
       if (timer != null) window.clearTimeout(timer);
       timer = null;
       pendingSince = null;
       clearRetry();
+      clearRefresh();
       // Only the saving tab publishes. While the lease is still being checked,
       // wait: a publish follows once this tab holds it. A blocked tab says why
       // instead of showing "syncing" forever; retrying can't help it.
@@ -134,6 +155,7 @@ export function OnlineSyncDriver() {
           void publish();
         } else if (!cancelled && timer == null) {
           scheduleRetry();
+          scheduleRefresh();
         }
       }
     };
@@ -161,6 +183,7 @@ export function OnlineSyncDriver() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       if (timer != null) window.clearTimeout(timer);
       clearRetry();
+      clearRefresh();
       relaySync.setRetryAt(null, true);
     };
   }, [enabled, sessionCode]);

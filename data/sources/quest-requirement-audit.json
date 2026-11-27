@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-11-03",
+  "reviewedAt": "2026-11-22",
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
     "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
@@ -97,6 +97,37 @@
       }
     },
     {
+      "id": "A New Leaf",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-22",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_New_Leaf&oldid=15412103",
+        "revision": 15412103,
+        "revisionTimestamp": "2026-11-22T16:53:30Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\",\"Asgarnia\",\"Kandarin\",\"Morytania\",\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"hosidius-cabbage-field\",\"label\":\"Cabbage field in south Hosidius\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":20,\"cy\":58}],\"id\":\"dishop-dennis-farm\",\"label\":\"Dishop Dennis's farm, south-east of the Farming Guild\",\"standardAreas\":[\"Mount Karuulm\"]},{\"chunkOptions\":[{\"cx\":19,\"cy\":58}],\"id\":\"farming-guild\",\"label\":\"Farming Guild\",\"standardAreas\":[\"Farming Guild\"]},{\"chunkOptions\":[{\"cx\":19,\"cy\":57}],\"id\":\"kebos-farm-mary\",\"label\":\"Mary's farm, south of the Farming Guild\",\"standardAreas\":[\"Molch\"]},{\"chunkOptions\":[{\"cx\":20,\"cy\":59}],\"id\":\"mount-karuulm-konar\",\"label\":\"Konar on top of Mount Karuulm\",\"standardAreas\":[\"Mount Karuulm\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":52}],\"id\":\"white-knights-castle-range\",\"label\":\"Range in the White Knights' Castle\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":56}],\"id\":\"hosidius-mess-hall\",\"label\":\"Hosidius Mess Hall\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":54}],\"id\":\"gnome-restaurant-range\",\"label\":\"Gnome Restaurant range in the Tree Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]},{\"chunkOptions\":[{\"cx\":57,\"cy\":54}],\"id\":\"port-phasmatys-range\",\"label\":\"Range in Port Phasmatys\",\"standardAreas\":[\"Port Phasmatys\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":49}],\"id\":\"al-kharid-kebab-shop\",\"label\":\"Kebab shop in Al Kharid\",\"standardAreas\":[\"Al Kharid\"]}],\"skills\":{\"Cooking\":35,\"Farming\":45,\"Herblore\":32},\"prereqs\":[\"Priest in Peril\"],\"oneOf\":[{\"guilds\":[\"Farming Guild\"],\"regions\":[\"Farming Guild\"]}],\"manualRequirements\":[\"Completed at least one farming contract\"],\"points\":2}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15412103 lists two cabbages, compost, cabbage, rosemary and potato seeds and four bowls (all obtainable during the quest), a vial of water and a spade."
+        ],
+        "travel": [
+          "Wiki revision 15412103 starts by picking and eating a communication cabbage in the cabbage field south of Hosidius; its startmap is empty, so the chunk (27,55) is taken from the Cabbage page's Hosidius cabbage patch.",
+          "Dishop Dennis is at his farm south-east of the Farming Guild (20,58); the stew goes to Guildmaster Jane and a sergeant at the Farming Guild (19,58), Mary at the farm south of it (19,57) and Konar on top of Mount Karuulm (20,59); Allanna in the guild gives the potion book only after a farming contract.",
+          "Sprout spies go on the ranges in the White Knights' Castle in Falador (46,52), the Hosidius Mess Hall (25,56), the Gnome Restaurant in the Tree Gnome Stronghold (38,54), Port Phasmatys (57,54) and the Al Kharid kebab shop (51,49)."
+        ],
+        "instances": [
+          "Wiki revision 15412103 ends with a fight against five melee enemies in an instance of the wheat field south of Dishop Dennis's house."
+        ],
+        "partialCompletion": []
+      },
+      "discrepancy": "A New Leaf uses the locations policy with the Hosidius cabbage field (27,55), Dishop Dennis's farm (20,58), the Farming Guild (19,58), Mary's farm (19,57), Mount Karuulm (20,59), the White Knights' Castle (46,52), the Hosidius Mess Hall (25,56), the Gnome Restaurant (38,54), Port Phasmatys (57,54) and the Al Kharid kebab shop (51,49), plus the Farming Guild guild and the confirmed manual requirement \"Completed at least one farming contract\". It was released on 18 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The Wiki gives no start map; the start chunk follows the Cabbage page's Hosidius patch and the rest follow the stable Wiki revision's walkthrough map pins.",
+      "conservativeReason": "Keeping A New Leaf's current locations policy requirements (the ten walkthrough locations; the Farming Guild; Farming 45, Cooking 35, Herblore 32; Priest in Peril; one farming contract) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+    },
+    {
       "id": "A Night at the Theatre",
       "kind": "quest",
       "status": "verified-with-notes",
@@ -189,7 +220,7 @@
       "id": "A Ruff Situation",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-21",
+      "reviewedAt": "2026-11-22",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Ruff_Situation&oldid=15350582",
         "revision": 15350582,
@@ -197,7 +228,7 @@
       },
       "chunkSourceCommit": "fa71ed3b207e6a501444987dee23b875ec27cacd",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Edgeville\",\"Varrock\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"dog-shelter\",\"label\":\"Dog Shelter\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"gertrudes-house\",\"label\":\"Gertrude's house and Cooks' Guild\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":54}],\"id\":\"outlaw-camp\",\"label\":\"Outlaw Camp\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":53}],\"id\":\"shelter-road\",\"label\":\"Barbarian Village crossing\",\"standardAreas\":[\"Barbarian Village\"]}],\"skills\":{\"Crafting\":15},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Edgeville\",\"Varrock\"],\"locations\":[{\"chunkOptions\":[{\"cx\":47,\"cy\":54}],\"id\":\"dog-shelter\",\"label\":\"Dog Shelter\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":53}],\"id\":\"gertrudes-house\",\"label\":\"Gertrude's house and Cooks' Guild\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":54}],\"id\":\"outlaw-camp\",\"label\":\"Outlaw Camp\",\"standardAreas\":[\"Edgeville\"]},{\"chunkOptions\":[{\"cx\":48,\"cy\":53}],\"id\":\"shelter-road\",\"label\":\"Barbarian Village crossing\",\"standardAreas\":[\"Barbarian Village\"]}],\"skills\":{\"Crafting\":15},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "47,54",
@@ -215,13 +246,40 @@
           "Needle (or costume needle), thread when using a regular needle, one suitable fur and grain; grain can be picked near the Cooks' Guild."
         ],
         "travel": [
-          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode."
+          "Dog Shelter, Barbarian Village crossing, western Varrock and the Outlaw Camp; exact chunks are required in Chunked mode. The Outlaw Camp lies wholly in chunk 48,54 (Wiki Outlaw Camp, oldid 15394973)."
         ],
         "instances": [
           "Defeat the two quest outlaws, combat levels 22 and 23."
         ],
         "partialCompletion": []
       }
+    },
+    {
+      "id": "A Shell of a Friend",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-12",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Shell_of_a_Friend&oldid=15400784",
+        "revision": 15400784,
+        "revisionTimestamp": "2026-11-12T05:39:55Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Morytania\"],\"locations\":[{\"chunkOptions\":[{\"cx\":55,\"cy\":54}],\"id\":\"haunted-woods-snail-island\",\"label\":\"Snail island in the Haunted Woods\",\"standardAreas\":[\"Haunted Woods\"]}],\"skills\":{\"Construction\":15,\"Herblore\":16},\"prereqs\":[\"Priest in Peril\"],\"points\":2}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15400784 lists any woodcutting axe, with a bronze axe spawning by the island during the quest."
+        ],
+        "travel": [
+          "Wiki revision 15400784 starts with the juvenile snail on the island close to fairy ring ALQ in the eastern Haunted Woods and every step stays around that island."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "A Shell of a Friend uses the locations policy with the Snail island in the Haunted Woods (55,54), and runtime regions [Morytania]. It was released on 11 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The location follows the stable Wiki revision's walkthrough around the island.",
+      "conservativeReason": "Keeping A Shell of a Friend's current locations policy requirements (the Snail island in the Haunted Woods; Herblore 16, Construction 15; Priest in Peril) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "A Soul's Bane",
@@ -2441,7 +2499,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Crafting\":50,\"Firemaking\":45,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Crafting\":50,\"Magic\":39,\"Prayer\":43},\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,45",
@@ -2463,7 +2521,8 @@
           "Quest-only interiors and instances are represented by their unavoidable surface route or entrance requirement; interior instance state is not separately tracked."
         ],
         "partialCompletion": [
-          "The standard spellbook restriction is represented as a manual requirement."
+          "The standard spellbook restriction is represented as a manual requirement.",
+          "Level 45 Firemaking is bypassable by guessing which item goes in each brazier, so it is not gated."
         ]
       }
     },
@@ -5507,6 +5566,35 @@
       }
     },
     {
+      "id": "Rag and Bone Man III",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-22",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_III&oldid=15412074",
+        "revision": 15412074,
+        "revisionTimestamp": "2026-11-22T16:18:01Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":54}],\"id\":\"odd-old-man-house\",\"label\":\"Odd Old Man's house in Silvarea\",\"standardAreas\":[\"Silvarea\"]}],\"skills\":{\"Slayer\":58},\"equipmentRequirements\":[{\"reason\":\"Wear earmuffs or a Slayer helmet to fight the ancient banshee\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wield Sedridor's staff to kill Tolna's heads\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"Rag and Bone Man II\",\"Dragon Slayer I\",\"The Great Brain Robbery\",\"Defender of Varrock\",\"Tower of Life\",\"A Soul's Bane\"],\"points\":3}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15412074 lists a Slayer helmet or earmuffs (obtainable during the quest), worn for the ancient banshee; Sedridor's staff is wielded in the death loop to kill Tolna's heads."
+        ],
+        "travel": [
+          "Wiki revision 15412074 starts with the Odd Old Man at his house in northern Silvarea (startmap 3362,3507, chunk 52,54). Any two wish-list bones will do; the nearest are the armoured zombies round the mountain and the angry giant rats in Tolna's rift, behind the required Defender of Varrock and A Soul's Bane."
+        ],
+        "instances": [
+          "Wiki revision 15412074: the death loop (Death's Office, Oblivion, an illusory Tutorial Island, the Ruins of Camdozaal, the Wizards' Tower basement and Tolna's Rift) and the Ancient Asylum under the Odd Old Man's house are entered through him."
+        ],
+        "partialCompletion": []
+      },
+      "discrepancy": "Rag and Bone Man III uses the locations policy with the Odd Old Man's house in Silvarea (52,54), the Head and Weapon slots, and runtime regions [Misthalin]. It was released on 18 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The location follows the stable Wiki revision's startmap; the two wish-list bones have many sources and are not pinned to one chunk.",
+      "conservativeReason": "Keeping Rag and Bone Man III's current locations policy requirements (the Odd Old Man's house in Silvarea; Slayer 58; Rag and Bone Man II, Dragon Slayer I, The Great Brain Robbery, Defender of Varrock, Tower of Life and A Soul's Bane; the Head and Weapon slots) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+    },
+    {
       "id": "Ratcatchers",
       "kind": "quest",
       "status": "verified-with-notes",
@@ -7297,6 +7385,33 @@
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
       }
+    },
+    {
+      "id": "The Birds and the Wasps",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-12",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Birds_and_the_Wasps&oldid=15400869",
+        "revision": 15400869,
+        "revisionTimestamp": "2026-11-12T10:17:11Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":51,\"cy\":52}],\"id\":\"beas-farm\",\"label\":\"Bea's farm, between Varrock and the Digsite\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":54}],\"id\":\"grand-exchange\",\"label\":\"Grand Exchange\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"equipmentRequirements\":[{\"reason\":\"Wear the bee hunter's hat to catch the swarms of wasps\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wield the insect net to catch the swarms of wasps\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[],\"points\":1}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Wiki revision 15400869 lists insect repellent, a beekeeper's or bee hunter's hat, an insect net and bird snares, all obtainable during the quest from the crate next to Farmer Bea."
+        ],
+        "travel": [
+          "Wiki revision 15400869 starts with Farmer Bea at Bea's farm, east of the south-east Varrock mine, and makes one trip to the bee dealer inside the Grand Exchange's east entrance."
+        ],
+        "instances": [],
+        "partialCompletion": []
+      },
+      "discrepancy": "The Birds and the Wasps uses the locations policy with Bea's farm (51,52) and the Grand Exchange (49,54), and runtime regions [Misthalin]. It was released on 11 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The locations follow the stable Wiki revision's route between Bea's farm and the Grand Exchange.",
+      "conservativeReason": "Keeping The Birds and the Wasps's current locations policy requirements (Bea's farm and the Grand Exchange; the bee hunter's hat and insect net slots; it has no quest or skill prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
     },
     {
       "id": "The Blood Moon Rises",

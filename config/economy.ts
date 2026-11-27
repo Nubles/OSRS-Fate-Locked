@@ -10,15 +10,8 @@
  * When you change a drop rate, change it in `config/rules.ts` (DROP_RATES) — the
  * tables below read from it, so they update for free.
  */
-import { DropSource, TableType, type FailureFateAward } from '../types';
-import { BANK_IDS } from '../data/banks';
-import { DROP_RATES, EQUIPMENT_TIER_MAX } from './rules';
-import {
-  SKILLS_LIST, EQUIPMENT_SLOTS, REGIONS_LIST, MOBILITY_LIST, ARCANA_LIST,
-  ROLLABLE_POH_ITEMS, MERCHANTS_LIST, MINIGAMES_LIST, BOSSES_LIST, ROLLABLE_STORAGE_ITEMS,
-  GUILDS_LIST, FARMING_PATCH_LIST, SLAYER_UNLOCKS_LIST,
-} from '../data/items';
-import { COMBAT_POWERS_DESCRIPTION, COMBAT_POWERS_LABEL } from '../utils/tableDisplay';
+import { DropSource, type FailureFateAward } from '../types';
+import { DROP_RATES } from './rules';
 
 import { skillLevelKeyChance } from '../utils/keyRoll';
 const WIKI = 'https://oldschool.runescape.wiki/images/';
@@ -124,7 +117,7 @@ export const XTREME_MILESTONE_INTERVAL = 50; // total-level gap between guarante
 // no run stuck, with Mercy needed about 14 times over an 80-chunk run.
 export const BREAKTHROUGH_CHANCE = 0.5;
 
-// Exploring (Alex picked "Every chunk pays", 2026-10-17): each chunk a Chunked
+// Exploring (the owner picked "Every chunk pays", 2026-10-17): each chunk a Chunked
 // run unlocks gives a Key roll for each new thing done there for the first
 // time (training a skill it has, fighting its monsters, its Slayer master or
 // herb patch), up to this many rolls per chunk, at DROP_RATES' Exploring rate.
@@ -133,7 +126,7 @@ export const BREAKTHROUGH_CHANCE = 0.5;
 // tasks, with waits between unlocks no longer than before.
 export const CHUNK_EXPLORE_ROLLS = 3;
 
-// Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; Alex, 2026-10-18).
+// Chunked: Fate's Thread and fate's marks (utils/fateLand.ts; the owner, 2026-10-18).
 /** Fate ties its thread to a chunk this many frontiers past the run's land, at least... */
 export const FATE_THREAD_MIN_STEPS = 2;
 /** ...and at most. */
@@ -168,7 +161,7 @@ export const FATE_MARK_WITHERED_FATE = 10;
 /** Key rolls a Clouded chunk leaves without Fate when they fail. */
 export const FATE_MARK_CLOUDED_ROLLS = 3;
 /**
- * Fated sites and region seals (utils/fateLand.ts; Alex, 2026-10-22). Fate
+ * Fated sites and region seals (utils/fateLand.ts; the owner, 2026-10-22). Fate
  * hides this many sites in a run's fog when the run starts...
  */
 export const FATE_SITE_COUNT = 16;
@@ -308,7 +301,7 @@ const EARN_METHOD_DEFINITIONS: EarnMethod[] = [
   },
   {
     category: 'Pets',
-    icon: `${WIKI}Pet_kraken.png`,
+    icon: `${WIKI}Pet_Kraken.png`,
     where: 'Farm Keys → Activities: claim each new pet.',
     blurb: 'Each new pet gives an Omni-Key, once per pet.',
     tiers: [
@@ -368,99 +361,17 @@ export const omniFloor = (source: DropSource): number => {
   return omni;
 };
 
-// ── Key types ────────────────────────────────────────────────────────────────
-export interface KeyTypeInfo {
-  id: 'standard' | 'omni' | 'chaos';
-  name: string;
-  icon: string;
-  /** Tailwind text colour token used across the UI. */
-  accent: string;
-  tagline: string;
-  earn: string[];
-  spend: string;
-}
-
+// ── Key texts ───────────────────────────────────────────────────────────────
+// The Codex's Key and table summaries that quote these live in config/economyReference.ts.
 /** Where land comes from in Chunked, since an Omni-Key can't pick it (the UNLOCK reducer refuses). */
 /** How a Chaos Key picks (utils/gameEngine.ts pickChaosEntry). */
 export const CHAOS_PICK_TEXT = 'Fate picks one of the tables with something left to unlock, each equally likely, then a random entry in it, so Skills and Equipment come up as often as big tables like Banks.';
 export const CHAOS_REACH_TEXT = "Places you can't reach yet can come up too.";
-export const CHUNKED_CHAOS_TEXT = 'In Chunked, only banks and guilds inside your chunks can come up.';
+export const CHUNKED_CHAOS_TEXT = 'In Chunked, only bosses, minigames, banks and guilds inside your chunks, and skills your chunks can train, can come up.';
 /** A seeded run from before the table-first rule keeps its old draw (utils/seededRng.ts chaosPicksTableFirst). */
 export const OLD_SEEDED_CHAOS_TEXT = 'Your seeded run began before this rule, so it keeps its old odds: every entry of every table equally likely, so big tables come up most.';
 
 export const CHUNKED_OMNI_LAND_TEXT = "In Chunked an Omni-Key can't pick land: chunks come from Chunks Keys, Chaos Keys that land on Chunks, the Ritual of the Cartographer and Fate's Mercy.";
-
-export const KEY_TYPES: KeyTypeInfo[] = [
-  {
-    id: 'standard',
-    name: 'Standard Key',
-    icon: `${WIKI}Crystal_key.png`,
-    accent: 'text-osrs-gold',
-    tagline: 'The everyday Key.',
-    earn: [
-      'Any successful roll, wherever you log it (+1, or +2 with the Ritual of Greed).',
-      'A Pity Key when Fate Points hit your mode’s threshold.',
-      'A won Void Gambit.',
-      `The ${STARTING_KEYS} every run starts with.`,
-    ],
-    spend: 'Spend it on a table you choose to unlock a random entry from it.',
-  },
-  {
-    id: 'omni',
-    name: 'Omni-Key',
-    icon: `${WIKI}Enhanced_crystal_key.png`,
-    accent: 'text-purple-400',
-    tagline: 'Pick what you unlock.',
-    earn: [
-      'A bonus on a successful roll, on top of the Key: your mode’s base chance, raised to 20% on Grandmaster quests, 15% on raids and 10% on Elite diaries and high-tier bosses.',
-      'Each new pet: an Omni-Key instead of a Key, once per pet.',
-      'The Ritual of Transmutation: 5 Keys make 1 Omni-Key.',
-    ],
-    spend: `Click a locked skill, gear slot, area, boss or other entry on the Dashboard to unlock exactly that. ${CHUNKED_OMNI_LAND_TEXT}`,
-  },
-  {
-    id: 'chaos',
-    name: 'Chaos Key',
-    icon: `${WIKI}Eternal_crystal.png`,
-    accent: 'text-red-400',
-    tagline: 'One random unlock from any table.',
-    earn: [
-      `Guaranteed at skill levels ${andList(SKILL_CHAOS_MILESTONES)}: ${SKILL_CHAOS_MILESTONES.length} per skill.`,
-      `A separate ${LEVEL_CHAOS_CHANCE}% chance on every level-up, milestones included.`,
-      'The Ritual of Chaos turns Fate Points into one.',
-    ],
-    spend: `${CHAOS_PICK_TEXT} Outside Chunked, places you can't reach yet can come up too. ${CHUNKED_CHAOS_TEXT}`,
-  },
-];
-
-// ── Spending tables ──────────────────────────────────────────────────────────
-export interface SpendTable {
-  type: TableType;
-  label: string;
-  /** Distinct entries (slots/skills for tiered tables). */
-  count: number;
-  /** For tiered tables, how many upgrades each entry takes. */
-  tiers?: number;
-  blurb: string;
-}
-
-export const SPEND_TABLES: SpendTable[] = [
-  { type: TableType.EQUIPMENT,       label: 'Equipment',  count: EQUIPMENT_SLOTS.length, tiers: EQUIPMENT_TIER_MAX, blurb: 'Open a gear slot, then upgrade its tier toward endgame.' },
-  { type: TableType.SKILLS,          label: 'Skills',     count: SKILLS_LIST.length,     tiers: SKILLS_TIER_CAP,    blurb: 'Raise a skill’s tier cap by +10 levels of usable methods.' },
-  { type: TableType.REGIONS,         label: 'Areas',      count: REGIONS_LIST.length,    blurb: 'Unlock a new area you can go to.' },
-  { type: TableType.MOBILITY,        label: 'Mobility',   count: MOBILITY_LIST.length,   blurb: 'Teleports, spirit trees, fairy rings and transport networks.' },
-  { type: TableType.ARCANA,          label: COMBAT_POWERS_LABEL, count: ARCANA_LIST.length, blurb: COMBAT_POWERS_DESCRIPTION },
-  { type: TableType.STORAGE,         label: 'Storage',    count: ROLLABLE_STORAGE_ITEMS.length, blurb: 'Looting bag, rune pouch, seed box and other storage. Banks are their own table.' },
-  { type: TableType.POH,             label: 'Housing',    count: ROLLABLE_POH_ITEMS.length, blurb: 'Player-owned house rooms and facilities.' },
-  { type: TableType.MERCHANTS,       label: 'Merchants',  count: MERCHANTS_LIST.length,  blurb: 'Shops and traders you’re permitted to use.' },
-  { type: TableType.MINIGAMES,       label: 'Minigames',  count: MINIGAMES_LIST.length,  blurb: 'Activities, from Pest Control to Guardians of the Rift.' },
-  { type: TableType.BOSSES,          label: 'Bosses',     count: BOSSES_LIST.length,     blurb: 'Permission to fight each major boss encounter.' },
-  { type: TableType.GUILDS,          label: 'Guilds',     count: GUILDS_LIST.length,     blurb: 'Skill guilds and their perks.' },
-  { type: TableType.FARMING_LAYERS,  label: 'Farming',    count: FARMING_PATCH_LIST.length, blurb: 'Farming patches across the world.' },
-  { type: TableType.SLAYER_UNLOCKS,  label: 'Slayer',     count: SLAYER_UNLOCKS_LIST.length, blurb: 'Slayer reward unlocks: new tasks, superiors, helmet & more.' },
-  // Bank-locked modes only (rules.bankLocks) — filtered in on demand.
-  { type: TableType.BANKS,           label: 'Banks',      count: BANK_IDS.length,        blurb: 'Banking is locked by place: each place with a bank, bank chest or deposit box is one unlock.' },
-];
 
 /** Flat cost, in keys, of a single unlock from any table. */
 export const UNLOCK_KEY_COST = 1;
@@ -503,7 +414,7 @@ export const GREED_REFUND_FRACTION = 0.5;
 
 export const RITUALS: Ritual[] = [
   { id: 'LUCK',         name: 'Ritual of Clarity',       tagline: 'Roll twice, keep the better.', fateCost: 8,  effect: 'Your next Key roll is made twice and the better result is kept.' },
-  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a Vanilla boss with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
+  { id: 'GREED',        name: 'Ritual of Greed',         tagline: 'Try to double your next Key.', fateCost: 15, effect: 'If your next Key roll succeeds you get 2 Keys, even when it also brings an Omni-Key (a boss or minigame with 1 Key left gives 1). If it fails, half the Fate comes back, unless the fail brings a Pity Key.' },
   { id: 'CHAOS',        name: 'Ritual of Chaos',         tagline: 'Buy a Chaos Key.',       fateCost: 25, effect: 'Get 1 Chaos Key now: one random unlock from any table.' },
   { id: 'GAMBIT',       name: 'Void Gambit',             tagline: 'A coin flip for Keys.', fateCost: GAMBIT_STAKE, stakesAllFate: true,
     effect: gambitText(GAMBIT_STAKE) },
@@ -515,7 +426,7 @@ export const RITUALS: Ritual[] = [
   { id: 'TEARS',        name: 'Tears of Guthix',         tagline: 'Double Fate from fails.', fateCost: 10, god: 'Guthix',
     effect: 'Your next 10 failed rolls give double Fate. It ends when a roll lands, and works once per dry spell.' },
   { id: 'PACT',         name: "Zamorak's Pact",          tagline: 'Better odds now, pay later.', fateCost: 0, god: 'Zamorak',
-    effect: 'Your next 3 rolls get +15% odds. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
+    effect: 'Your next 3 rolls get +15% odds, up to 95%. Then Zamorak takes the next 40 Fate you would earn, and the debt stays even after a roll lands.' },
   { id: 'INVOCATIONS',  name: "Amascut's Invocations",   tagline: 'Take handicaps for Omni-Keys.', fateCost: 10,
     effect: 'Pick handicaps for your next 3 rolls. Each one raises the Omni-Key chance on those rolls.' },
   { id: 'BARROWS',      name: 'Barrows Chest',           tagline: 'A brother powers your next rolls.', fateCost: 20,
@@ -569,11 +480,11 @@ export const invocationOmniBonus = (ids: readonly Invocation['id'][]): number =>
 /** The Barrows brothers and the set effect each puts on your next rolls. */
 export interface BarrowsBrother { id: 'AHRIM' | 'DHAROK' | 'GUTHAN' | 'KARIL' | 'TORAG' | 'VERAC'; name: string; effect: string }
 export const BARROWS_BROTHERS: BarrowsBrother[] = [
-  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds' },
-  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (up to +25%)' },
+  { id: 'AHRIM',  name: 'Ahrim the Blighted',  effect: '+10% odds, up to 95%' },
+  { id: 'DHAROK', name: 'Dharok the Wretched', effect: '+1% odds for every 2 Fate you hold (at most +25%), up to 95%' },
   { id: 'GUTHAN', name: 'Guthan the Infested', effect: 'Every fail heals 8 Fate back' },
   { id: 'KARIL',  name: 'Karil the Tainted',   effect: 'Every success has a 50% chance of a second Key' },
-  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, and the 20 Fate comes back if all 3 fail' },
+  { id: 'TORAG',  name: 'Torag the Corrupted', effect: '+5% odds, up to 95%, and the 20 Fate comes back if all 3 fail' },
   { id: 'VERAC',  name: 'Verac the Defiled',   effect: 'Every fail has a 15% chance to become a success' },
 ];
 

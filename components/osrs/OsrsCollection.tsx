@@ -7,6 +7,7 @@ import { COLLECTION_LOG_DATA } from '../../data/collectionLogData';
 import { collectionLogSync } from '../../services/CollectionLogSyncService';
 import { wikiService } from '../../services/WikiService';
 import { useCollectionLogModel } from '../CollectionLog';
+import { foldedIncludes } from './OsrsJournalSearch';
 import { WikiIcon } from '../WikiIcon';
 import { UTILITY_ITEM_IDS } from '../../constants';
 import { failureFateForSource } from '../../config/economy';
@@ -84,7 +85,7 @@ const Cell = ({ columnIndex, rowIndex, style, data }: GridChildComponentProps<Ce
   const item = data.items[i];
   const review = data.blocked.has(item.id);
   const count = review ? 0 : data.counts[item.id] || 0;
-  const hit = !!data.searchTerm && item.name.toLowerCase().includes(data.searchTerm.toLowerCase());
+  const hit = !!data.searchTerm && foldedIncludes(item.name, data.searchTerm);
   const page = item.sourcePage ?? data.pageName;
   return (
     <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

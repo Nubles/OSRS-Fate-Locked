@@ -12,6 +12,8 @@ vi.mock('../utils/mapAuthoring', () => ({
 vi.mock('../services/ChunkContentService', () => ({
   chunkContentService: {
     ready: false,
+    error: null,
+    subscribe: vi.fn(() => () => {}),
     init: vi.fn(async () => false),
     contentFor: vi.fn(() => null),
     aggregate: vi.fn(() => null),

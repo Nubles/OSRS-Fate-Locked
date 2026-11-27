@@ -71,6 +71,17 @@ describe('interiorEntry', () => {
       .toBe('ALLOWED');
   });
 
+  it('needs What Lies Below for the Chaos altar through the Tunnel of Chaos (51,54)', () => {
+    // OSRS Wiki 'Chaos Altar': the tunnel opens after partial completion of What Lies Below.
+    const chaos = [...records.values()].find(record => record.name === 'Chaos altar')!;
+    const chunked = (unlocks: UnlockState): InteriorContext => ({ ...context(unlocks), gameModeId: 'chunked' });
+    // Partial progress can't be confirmed from completed quests alone.
+    expect(interiorEntry(chaos, chunked(run({ chunks: ['51,54'], quests: [] })))).toBe('UNKNOWN');
+    expect(interiorEntry(chaos, chunked(run({ chunks: ['51,54'], quests: ['What Lies Below'] })))).toBe('ALLOWED');
+    // The Wilderness ruins (47,56) need no quest.
+    expect(interiorEntry(chaos, chunked(run({ chunks: ['47,56'], quests: [] })))).toBe('ALLOWED');
+  });
+
   it("holds an interior to its entrance chunk's own requirements", () => {
     const lumbridge = chunkForPlace('Lumbridge')!;
     const cellar: InteriorRecord = { key: '1,1', name: 'Test Cellar', entrances: [{ chunkId: idOf(lumbridge), requirements: [] }] };

@@ -20,6 +20,7 @@
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { evaluateQuestEligibility, evaluateDiaryTierEligibility } from './journalStatus';
+import type { AreaRoutes } from './areaRoutes';
 
 export interface UnlockImpact {
   /** Quests LOCKED → AVAILABLE in one step. */
@@ -55,6 +56,11 @@ export interface UnlockImpactContext {
   baseDiaryStatus: Map<string, string>;
   baseAvailableIds: Set<string>;
   baseCompletedQuestIds: Set<string>;
+  /**
+   * The routes the base statuses were worked out with (useAreaRoutes), so an
+   * owned place no route reaches is "No route to ...", as in the Quest Log.
+   */
+  areaRoutes?: AreaRoutes | null;
 }
 
 export interface PreparedUnlockImpactContext extends UnlockImpactContext {
@@ -64,24 +70,26 @@ export interface PreparedUnlockImpactContext extends UnlockImpactContext {
 export function prepareUnlockImpactContext(
   baseUnlocks: any,
   gameModeId?: string,
+  areaRoutes?: AreaRoutes | null,
 ): PreparedUnlockImpactContext {
   const allQuests = Object.values(QUEST_DATA);
   const allDiaries = Object.values(DIARY_DATA);
   const baseQuestEligibility = new Map(
-    allQuests.map(q => [q.id, evaluateQuestEligibility(q, baseUnlocks, gameModeId)]),
+    allQuests.map(q => [q.id, evaluateQuestEligibility(q, baseUnlocks, gameModeId, areaRoutes)]),
   );
   const baseQuestStatus = new Map<string, string>(
     allQuests.map(q => [q.id, baseQuestEligibility.get(q.id)!.status]),
   );
   const baseDiaryStatus = new Map<string, string>(
     allDiaries.map(d => {
-      const result = evaluateDiaryTierEligibility(d, baseUnlocks, gameModeId);
+      const result = evaluateDiaryTierEligibility(d, baseUnlocks, gameModeId, areaRoutes);
       return [d.id, result.status === 'AVAILABLE' && !result.eligible ? 'NEEDS_CONFIRMATION' : result.status];
     }),
   );
   return {
     allQuests,
     allDiaries,
+    areaRoutes,
     questStatusById: baseQuestStatus,
     baseQuestStatus,
     baseDiaryStatus,
@@ -101,6 +109,14 @@ export interface UnlockImpactOptions {
   context?: UnlockImpactContext;
   /** Restrict diary evaluation; an empty list skips diary work entirely. */
   diaryIds?: readonly string[];
+  /** Routes for the base snapshot, used when no `context` is given. */
+  areaRoutes?: AreaRoutes | null;
+  /**
+   * Routes for the simulated snapshot. Defaults to the base routes, which is
+   * right for a quest or a level (no area changes hands); a simulated area
+   * needs its own, or the new area would count as reached.
+   */
+  simulatedAreaRoutes?: AreaRoutes | null;
 }
 
 /**
@@ -115,7 +131,8 @@ export function computeUnlockImpact(
   gameModeId?: string,
   options: UnlockImpactOptions = {},
 ): UnlockImpact {
-  const context = options.context ?? prepareUnlockImpactContext(baseUnlocks, gameModeId);
+  const context = options.context ?? prepareUnlockImpactContext(baseUnlocks, gameModeId, options.areaRoutes);
+  const routes = options.simulatedAreaRoutes !== undefined ? options.simulatedAreaRoutes : context.areaRoutes;
   const {
     allQuests, baseCompletedQuestIds, baseDiaryStatus, baseAvailableIds,
   } = context;
@@ -129,7 +146,7 @@ export function computeUnlockImpact(
   const directQuests = allQuests
     .filter(q => {
       if (baseCompletedQuestIds.has(q.id) || baseAvailableIds.has(q.id)) return false;
-      const eligibility = evaluateQuestEligibility(q, simulatedUnlocks, gameModeId);
+      const eligibility = evaluateQuestEligibility(q, simulatedUnlocks, gameModeId, routes);
       return eligibility.status === 'AVAILABLE' && eligibility.eligible;
     });
   const directQuestNames = directQuests.map((q) => q.name);
@@ -138,7 +155,7 @@ export function computeUnlockImpact(
     .filter(
       (d) =>
         !isOpen(baseDiaryStatus.get(d.id)) &&
-        evaluateDiaryTierEligibility(d, simulatedUnlocks, gameModeId).eligible,
+        evaluateDiaryTierEligibility(d, simulatedUnlocks, gameModeId, routes).eligible,
     )
     .map((d) => d.id);
 
@@ -157,7 +174,7 @@ export function computeUnlockImpact(
       if (completed.has(q.id)) continue;
       if (baseCompletedQuestIds.has(q.id)) continue;
       if (baseAvailableIds.has(q.id)) continue; // don't claim the existing automatic backlog
-      const eligibility = evaluateQuestEligibility(q, snap, gameModeId);
+      const eligibility = evaluateQuestEligibility(q, snap, gameModeId, routes);
       if (eligibility.status === 'AVAILABLE' && eligibility.eligible) {
         completed.add(q.id);
         changed = true;
@@ -179,7 +196,7 @@ export function computeUnlockImpact(
     .filter(
       (d) =>
         !isOpen(baseDiaryStatus.get(d.id)) &&
-        evaluateDiaryTierEligibility(d, finalSnap, gameModeId).eligible,
+        evaluateDiaryTierEligibility(d, finalSnap, gameModeId, routes).eligible,
     )
     .map((d) => d.id);
 

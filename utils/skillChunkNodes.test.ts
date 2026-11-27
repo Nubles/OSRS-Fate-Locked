@@ -35,6 +35,12 @@ describe('skillChunkNodes Wyrmscraig resources', () => {
 });
 
 describe('trainingReqFor (Chunked skill facts, content review 8)', () => {
+  it('reads Wealthy citizens at 50 Thieving and Fremennik citizens at 45', () => {
+    // OSRS Wiki 'Wealthy citizen' (rev 15286220): pickpocketed at 50 Thieving; Fremennik citizens at 45.
+    expect(trainingReqFor('Wealthy citizen', 'npc')).toEqual({ skill: 'Thieving', level: 50 });
+    expect(trainingReqFor('Fremennik citizen', 'npc')).toEqual({ skill: 'Thieving', level: 45 });
+  });
+
   it('reads farming patches as Farming at their lowest crop level, before any tree rule', () => {
     expect(trainingReqFor('Tree patch', 'object')).toEqual({ skill: 'Farming', level: 15 });
     expect(trainingReqFor('Fruit Tree Patch', 'object')).toEqual({ skill: 'Farming', level: 27 });

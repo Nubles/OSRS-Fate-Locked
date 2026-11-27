@@ -307,8 +307,9 @@ const dropOldestCopy = (key: string): boolean => {
 /**
  * Give up one ring copy so the save itself can be written: the oldest of this
  * profile's, then, once those are gone, the oldest of the largest ring another
- * profile keeps in this browser. Nothing is lost by it, because each copy is
- * also a checkpoint in the recovery journal, which the Backups list reads.
+ * profile keeps in this browser. Each copy was also written to the recovery
+ * journal as a checkpoint, which the Backups list reads; its retention keeps
+ * the newest session start, the recent intervals and one copy per earlier day.
  * Returns false when no ring is left to shrink.
  */
 export const reclaimBackupSpace = (storageKey: string): boolean => {

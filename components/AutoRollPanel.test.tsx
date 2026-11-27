@@ -44,7 +44,7 @@ describe('AutoRollPanel backup coordination', () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({
       ok: true,
       json: async () => ({
-        displayName: 'Alex',
+        displayName: 'Fated Iron',
         type: 'ironman',
         latestSnapshot: {
           data: {
@@ -59,7 +59,7 @@ describe('AutoRollPanel backup coordination', () => {
 
     render(<AutoRollPanel />);
     fireEvent.change(screen.getByPlaceholderText('OSRS username…'), {
-      target: { value: 'Alex' },
+      target: { value: 'Fated Iron' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Fetch' }));
     await act(async () => {
@@ -90,14 +90,14 @@ describe('AutoRollPanel unmount', () => {
       vi.stubGlobal('fetch', vi.fn(async () => ({
         ok: true,
         json: async () => ({
-          displayName: 'Alex',
+          displayName: 'Fated Iron',
           type: 'ironman',
           latestSnapshot: { data: { skills: { attack: { level: 60 } } } },
         }),
       })));
 
       const { unmount } = render(<AutoRollPanel />);
-      fireEvent.change(screen.getByPlaceholderText('OSRS username…'), { target: { value: 'Alex' } });
+      fireEvent.change(screen.getByPlaceholderText('OSRS username…'), { target: { value: 'Fated Iron' } });
       fireEvent.click(screen.getByRole('button', { name: 'Fetch' }));
       await act(async () => {
         await Promise.resolve();
@@ -124,10 +124,10 @@ describe('AutoRollPanel unmount', () => {
 
 describe('Auto-Roll current hiscores', () => {
   it('refreshes tracked users with POST and includes Sailing', async () => {
-    const request = vi.fn(async (_url: string, init?: RequestInit) => ({ ok: true, json: async () => ({ displayName: 'Alex', latestSnapshot: { data: { skills: { attack: { level: init?.method === 'POST' ? 99 : 50 }, sailing: { level: 80 } } } } }) }));
+    const request = vi.fn(async (_url: string, init?: RequestInit) => ({ ok: true, json: async () => ({ displayName: 'Fated Iron', latestSnapshot: { data: { skills: { attack: { level: init?.method === 'POST' ? 99 : 50 }, sailing: { level: 80 } } } } }) }));
     vi.stubGlobal('fetch', request);
     for (let i = 0; i < 2; i++) {
-      const player = await fetchPlayer('Alex');
+      const player = await fetchPlayer('Fated Iron');
       expect(player.skills).toContainEqual({ skill: 'Sailing', level: 80 });
       expect(player.skills).toContainEqual({ skill: 'Attack', level: 99 });
     }
@@ -135,7 +135,7 @@ describe('Auto-Roll current hiscores', () => {
   });
   it('reports a failed refresh instead of silently returning a stale snapshot', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) })));
-    await expect(fetchPlayer('Alex')).rejects.toThrow('Rate-limited');
+    await expect(fetchPlayer('Fated Iron')).rejects.toThrow('Rate-limited');
   });
 });
 
