@@ -37,6 +37,92 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-24-shared-collection-log-items',
+    title: 'Shared Collection Log items',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'An item on several Collection Log pages, like the Dragon pickaxe, now fills every page that lists it, as in the game.',
+        'The log’s total counts each item once, as the game’s does.',
+        'Oracle search leaves out Collection Log counts held for identity review, including when an item appears on several pages.',
+      ],
+      balance: [
+        'A Collection Log item now rolls for a Key once, the first time you log it, not once for every page it’s on.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-24-second-accuracy-pass',
+    title: 'Second accuracy pass',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'Rolls that spend a Key, Breakthroughs and Fate’s Mercy are now refused with a message while your progress can’t save or another tab’s newer progress is waiting.',
+        'Slayer tasks, quests, skill guides, Strategy Guide cards and the Resource Engine now ask for what the game asks: the right levels, quests, areas and Keys.',
+        'Quest-locked places like Tolna’s rift, Agility shortcuts and three banks wait for their own requirements, and Chunked skips scenery you can’t use.',
+        'Plan a route now opens a plan for every quest, diary tier and region, and pinned guide goals show the Keys and chunks they still need.',
+        'The damage calculator, Farm Keys cards, the Spend Keys outlook, achievement pop-ups, share text and the RuneLite guide now show the right figures and steps.',
+        'Forestry, Mahogany Homes, Canoes and four more now read Not ready until the skill they need is unlocked and high enough.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-24-search-film-and-osrs-layout',
+    title: 'Search, Run Film and OSRS layout fixes',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'The diary, World list, gear, History, damage calculator and map Highlight searches now find names typed without an apostrophe, like ‘karils coif’.',
+        'The OSRS layout’s doll shows your worn items, its Collection Log lists rolls of items RuneLite logged, and boosted Key chances aren’t called base chances.',
+        'Three shops now show their in-game names, like Worm Tongue’s Wares, and in Vanilla the World map’s Unlocked count includes your free start areas.',
+        'Ring of the Elements and Colossal Pouch now show Temple of the Eye as a requirement, like Guardians of the Rift.',
+        'The Run Film now opens only land you unlocked, shows the tiers a Ritual of Sacrifice took, and opens Areas logged under old names like Ranging Guild.',
+        'On Safari, iPhone and iPad, the Run Film and the share card now grey out locked land and locked icons.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-24-guides-and-shortcuts',
+    title: 'Guides, the Oracle, the keyboard and Brutus',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'Escape now closes just a section’s ? guide, and closing the command palette puts keyboard focus back where it was.',
+        'The Oracle’s Wiki link no longer lands on a missing page, for results like Recipe for Disaster steps and diary tiers, and its footer names the right shortcut.',
+        'The Strategy Guide now shows a diary’s combat level as a plain requirement, not a locked skill, and no longer pushes those diaries down the Closest list.',
+        'The Strategy Guide now drops Desert Treasure II and three more quests once you’ve done them, and goals pinned for them show their card and route again.',
+        'In Chunked, unlocking a chunk that opens new quests or diary tiers now shows the New content panel listing them.',
+        'Brutus now shows as ready once The Ides of Milk is done, and Demonic Brutus says it needs Desert Treasure II and an abyssal potato.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-24-pairing-and-sharing',
+    title: 'RuneLite and Discord',
+    date: '2026-11-24',
+    sections: {
+      fixed: [
+        'Pairing this browser with a new RuneLite code now tells RuneLite the old pairing was disconnected, so it stops showing Connected with no updates.',
+        'Confirming the same RuneLite pairing link twice now keeps the connection working.',
+        'When the relay refuses your connection, the tracker now names the button RuneLite shows: Re-pair tracker…, or Connect tracker.',
+        'RuneLite’s Here card now names the Slayer level a monster needs when that is why it isn’t ready.',
+        'Discord notifications now says that once you /link, your new unlocks post in #live-unlocks and the tracker’s Clan chat shows them to everyone.',
+        'The RuneLite pairing window now warns you when this browser is already connected for another profile, before you replace that connection.',
+      ],
+    },
+  },
+  {
+    id: '2026-11-23-shared-progress-link',
+    title: 'Shared progress keeps its link',
+    date: '2026-11-23',
+    sections: {
+      fixed: [
+        'Your shared run’s link and its Discord link stay yours after you stop sharing.',
+        'If the relay refuses your run’s link, the tracker now moves the run to a new link and tells you.',
+      ],
+    },
+  },
+  {
     id: '2026-11-22-accuracy-pass',
     title: 'Big accuracy pass and two new quests',
     date: '2026-11-22',

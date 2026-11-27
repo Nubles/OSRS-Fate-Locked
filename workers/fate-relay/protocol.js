@@ -4,8 +4,12 @@
  * relay can't be used to store arbitrary files.
  */
 
-/** The largest publish request: `{ token, payload }` with the compressed profile. */
-export const MAX_REQUEST_BYTES = 256 * 1024;
+/**
+ * The largest publish request: `{ token, payload }` with the compressed profile.
+ * A Chunked run's request is about 240 KiB (scripts/goldenBundles.test.ts keeps
+ * every golden run 16 KiB under this), and RuneLite reads a reply of up to 1 MiB.
+ */
+export const MAX_REQUEST_BYTES = 384 * 1024;
 
 /**
  * A RuneLite pairing code: a random UUID without its dashes, which is how

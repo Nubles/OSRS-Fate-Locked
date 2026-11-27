@@ -69,8 +69,8 @@ const FILTERS: { id: HistoryFilter; label: string; icon: string }[] = [
   { id: 'PROGRESS', label: 'Level', icon: CHAOS_KEY_ICON },
 ];
 
-/** Unlocks fate drew for free in Chunked, by their recorded costType. */
-const FREE_DRAWS: Record<string, string> = { mercy: "Fate's Mercy", breakthrough: 'a Breakthrough' };
+/** Unlocks fate drew for free in Chunked, by their recorded costType (a Rift's from utils/fateLand.ts). */
+const FREE_DRAWS: Record<string, string> = { mercy: "Fate's Mercy", breakthrough: 'a Breakthrough', rift: 'a Rift' };
 
 /** The chosen entry in full: what kind it is, where it came from, its Key roll and its place in the chain. */
 export const EntryDetail: React.FC<{ entry: LogEntry; num: number; total: number }> = ({ entry: e, num, total }) => {

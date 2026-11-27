@@ -6,6 +6,7 @@ const shopOverrides = JSON.parse(readFileSync(new URL('../data/sources/shop-over
 const contentAliases = JSON.parse(readFileSync(new URL('../data/contentAliases.json', import.meta.url), 'utf8'));
 const contentOverrides = JSON.parse(readFileSync(new URL('../data/sources/chunk-content-overrides.json', import.meta.url), 'utf8'));
 const slayerCorrections = JSON.parse(readFileSync(new URL('../data/sources/slayer-corrections.json', import.meta.url), 'utf8'));
+const shortcutCorrections = JSON.parse(readFileSync(new URL('../data/sources/shortcut-corrections.json', import.meta.url), 'utf8'));
 const REASONS = new Set([
   'interior-preserved', 'interior-unmapped', 'reviewed-content-override', 'interior-metadata-conserved',
   'base-record', 'section-merged', 'variant-name-cleaned', 'name-typo-corrected', 'quest-subpath-collapsed',
@@ -17,6 +18,10 @@ const REASONS = new Set([
 ]);
 
 const cleanName = (value) => String(value).split('#')[0].trim();
+// Reviewed spellings of shortcut objects the source misspells (data/sources/shortcut-corrections.json),
+// applied to chunk object lists and shortcut rows alike so a shortcut still places by its object.
+const OBJECT_RENAMES = new Map((shortcutCorrections.objectRenames ?? []).map((rename) => [rename.from, rename]));
+const objectName = (value) => { const name = cleanName(value); return OBJECT_RENAMES.get(name)?.to ?? name; };
 const stripWiki = (value) => String(value).replace(/~\|/g, '').replace(/\|~/g, '').trim();
 const tidyReq = (value) => stripWiki(value).replace(/\s+/g, ' ').replace(/\s+Complete the quest$/i, '').replace(/\s+\d[a-z0-9]*$/i, '').trim();
 const numericSort = (a, b) => +a - +b;
@@ -80,7 +85,7 @@ function mergeBlob(rec, blob, slayerReq, audit, sourceKey, isSection) {
     else rec.monsters.set(name, { count, slayer: req ?? null });
   }
   if (blob.NPC) for (const raw of Object.keys(blob.NPC)) { const name = cleanName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (rec.npcs.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.npcs.add(name); }
-  if (blob.Object) for (const [raw, count] of Object.entries(blob.Object)) { const name = cleanName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (rec.objects.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.objects.set(name, (rec.objects.get(name) ?? 0) + count); }
+  if (blob.Object) for (const [raw, count] of Object.entries(blob.Object)) { const name = objectName(raw); noteClean(audit, 'chunks', sourceKey, raw, name); if (name !== cleanName(raw)) audit.add('chunks', sourceKey, 'normalized', 'name-typo-corrected', [name], false, OBJECT_RENAMES.get(cleanName(raw)).source); if (rec.objects.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.objects.set(name, (rec.objects.get(name) ?? 0) + count); }
   if (blob.Shop) for (const raw of Object.keys(blob.Shop)) { const name = raw.replace(/\.$/, ''); if (rec.shops.has(name)) audit.add('chunks', sourceKey, 'normalized', 'duplicate-deduped', [name], false); rec.shops.add(name); }
   if (blob.Quest) for (const [raw, kind] of Object.entries(blob.Quest)) {
     const base = contentAliases.quests[raw] ?? cleanName(raw.split('/')[0]);
@@ -182,10 +187,14 @@ function applySlayerCorrections(masters) {
     if (!tasks) continue;
     const bosses = bossTasks.bosses
       .filter(({ boss }) => (!rule.only || rule.only.includes(boss)) && !(rule.except ?? []).includes(boss))
-      .map(({ boss, slayer, monsters, substitutes }) => ({
+      .map(({ boss, slayer, monsters, substitutes, quests, skills, anySkill }) => ({
         name: boss,
         monsters: [...(monsters ?? [boss]), ...((rule.noSubstitutes ?? []).includes(boss) ? [] : substitutes ?? [])],
         ...(slayer ? { slayer } : {}),
+        // The Boss Slayer table's other requirements: a master assigns the boss only once they are met.
+        ...(quests ? { quests } : {}),
+        ...(skills ? { skills } : {}),
+        ...(anySkill ? { anySkill } : {}),
       }));
     tasks.Bosses = { weight: rule.weight, unlock: bossTasks.unlock, bosses };
   }
@@ -193,17 +202,53 @@ function applySlayerCorrections(masters) {
 
 function buildShortcuts(data, audit, accounted = new Set()) {
   const out = [];
+  const renames = new Map(shortcutCorrections.renames.map((rename) => [`${rename.skill}/${rename.from}`, rename]));
   for (const [skill, challenges] of Object.entries(data.challenges ?? {})) for (const [name, info] of Object.entries(challenges)) {
     const sourceKey = `${skill}/${name}`;
     if (!(info.Category ?? []).includes('Shortcut')) {
       if (!accounted.has(sourceKey)) audit.add('challenges', sourceKey, 'excluded', 'non-walkable-content', []);
       continue;
     }
-    const target = `${skill}/${stripWiki(name)}`;
-    out.push({ name: stripWiki(name), skill, level: info.Level ?? 1, objects: (info.Objects ?? []).map(cleanName), chunks: info.Chunks ?? [] });
+    const rename = renames.get(`${skill}/${stripWiki(name)}`);
+    const shortcutName = rename?.to ?? stripWiki(name);
+    const target = `${skill}/${shortcutName}`;
+    const objects = (info.Objects ?? []).map(objectName);
+    out.push({ name: shortcutName, skill, level: info.Level ?? 1, objects, chunks: info.Chunks ?? [] });
     audit.add('challenges', sourceKey, name.includes('#') ? 'normalized' : 'imported', name.includes('#') ? 'variant-name-cleaned' : 'base-record', [target]);
+    if (rename) audit.add('overrides', `shortcut-name/${skill}/${rename.from}`, 'normalized', 'name-typo-corrected', [target], false, rename.source);
+    for (const raw of info.Objects ?? []) {
+      const objectRename = OBJECT_RENAMES.get(cleanName(raw));
+      if (objectRename) audit.add('overrides', `shortcut-object/${skill}/${shortcutName}/${objectRename.from}`, 'normalized', 'name-typo-corrected', [target], false, objectRename.source);
+    }
   }
+  applyShortcutCorrections(out, audit);
   return out;
+}
+
+/**
+ * Reviewed corrections to the source's shortcut rows, each from the shortcut's
+ * own Wiki page (data/sources/shortcut-corrections.json): a level the source
+ * has wrong, and rows it lacks (a second skill a shortcut needs, or a shortcut
+ * it has no challenge for). An addition goes after its anchor row and only when
+ * the source has that anchor and not the row itself, so small test sources and
+ * a source that has since gained the row are left alone. Each is recorded in
+ * the ledger; utils/shortcutReach.content.test.ts checks they reached the output.
+ */
+function applyShortcutCorrections(rows, audit) {
+  for (const correction of shortcutCorrections.levels) {
+    const row = rows.find((entry) => entry.name === correction.name && entry.skill === correction.skill);
+    if (!row || row.level === correction.level) continue;
+    row.level = correction.level;
+    audit.add('overrides', `shortcut-level/${correction.skill}/${correction.name}`, 'normalized', 'reviewed-requirement-rewritten', [`${correction.skill}/${correction.name}`], false, correction.source);
+  }
+  for (const addition of shortcutCorrections.additions) {
+    const { row } = addition;
+    if (rows.some((entry) => entry.name === row.name && entry.skill === row.skill)) continue;
+    const anchor = rows.findLastIndex((entry) => entry.name === addition.anchor);
+    if (anchor < 0) continue;
+    rows.splice(anchor + 1, 0, structuredClone(row));
+    audit.add('overrides', `shortcut-add/${row.skill}/${row.name}`, 'normalized', 'reviewed-content-override', [`${row.skill}/${row.name}`], false, addition.source);
+  }
 }
 function buildDrops(data, audit) {
   const out = {};
@@ -440,7 +485,71 @@ function applyReviewedContent(data, chunks, interiors, taskUnlocks, audit) {
     ((taskUnlocks[override.category] ??= {})[override.name] ??= {})[override.chunkId] = [...override.requirements].sort();
     audit.add('overrides', `requirements/${override.category}/${override.name}/${override.chunkId}`, 'normalized', 'reviewed-content-override', [override.chunkId], false, override.source);
   }
+  // Entities the source still lists in an interior the game has since emptied of them, such as the
+  // monsters the 2020 overhaul moved out of the Revenant Caves.
+  for (const override of contentOverrides.interiorEntityRemovals ?? []) {
+    const field = ENTITY_FIELDS[override.category];
+    if (!field) throw new Error(`Unknown reviewed removal category: ${override.category}`);
+    const kind = REQUIREMENT_KINDS[override.category], names = new Set(override.names), touched = [];
+    for (const [id, interior] of Object.entries(interiors)) {
+      if (interior.name !== override.interior) continue;
+      const before = interior.content[field] ?? [];
+      const kept = before.filter(value => !names.has(Array.isArray(value) ? value[0] : value));
+      if (kept.length === before.length) continue;
+      if (kept.length) interior.content[field] = kept; else delete interior.content[field];
+      for (const name of names) delete interior.requirements?.[kind]?.[name];
+      if (interior.requirements?.[kind] && !Object.keys(interior.requirements[kind]).length) delete interior.requirements[kind];
+      touched.push(id);
+    }
+    if (touched.length) audit.add('overrides', `removal/${override.interior}/${override.category}`, 'normalized', 'reviewed-content-override', touched, false, override.source);
+  }
 }
+
+// NPCs the game renamed or moved (npcRenames) and NPCs and objects it removed (removedEntities),
+// each from its Wiki page (data/sources/chunk-content-overrides.json). It runs before shops are
+// placed, so a shop placed by its owner finds the owner's current name.
+function applyReviewedEntityChanges(data, chunks, interiors, taskUnlocks, audit) {
+  const validChunks = new Set((data.walkableChunks ?? []).map(String));
+  for (const rename of contentOverrides.npcRenames ?? []) {
+    const expected = String(Math.floor(rename.x / 64) * 256 + Math.floor(rename.y / 64));
+    if (expected !== rename.chunkId) throw new Error(`Reviewed NPC rename coordinate disagrees: ${rename.from}`);
+    const fromId = rename.fromChunkId ?? rename.chunkId, from = chunks[fromId];
+    if (!from?.p?.includes(rename.from) || !validChunks.has(rename.chunkId)) continue;
+    from.p = from.p.filter(name => name !== rename.from);
+    if (!from.p.length) delete from.p;
+    const to = chunks[rename.chunkId] ??= {};
+    to.p = [...new Set([...(to.p ?? []), rename.to])].sort();
+    const unlocks = taskUnlocks.NPCs?.[rename.from];
+    if (unlocks?.[fromId]) {
+      ((taskUnlocks.NPCs[rename.to] ??= {})[rename.chunkId] ??= unlocks[fromId]);
+      delete unlocks[fromId];
+      if (!Object.keys(unlocks).length) delete taskUnlocks.NPCs[rename.from];
+    }
+    audit.add('overrides', `npc-rename/${rename.from}`, 'normalized', 'reviewed-content-override', [rename.chunkId], false, rename.source);
+  }
+  for (const removal of contentOverrides.removedEntities ?? []) {
+    const field = ENTITY_FIELDS[removal.category];
+    if (!field) throw new Error(`Unknown reviewed removal category: ${removal.category}`);
+    const kind = REQUIREMENT_KINDS[removal.category], touched = [];
+    const drop = (id, entry) => {
+      const before = entry?.[field] ?? [];
+      const kept = before.filter(value => (Array.isArray(value) ? value[0] : value) !== removal.name);
+      if (kept.length === before.length) return;
+      if (kept.length) entry[field] = kept; else delete entry[field];
+      touched.push(id);
+    };
+    for (const [id, entry] of Object.entries(chunks)) drop(id, entry);
+    for (const [id, interior] of Object.entries(interiors)) {
+      drop(id, interior.content);
+      if (interior.requirements?.[kind]?.[removal.name]) delete interior.requirements[kind][removal.name];
+      if (interior.requirements?.[kind] && !Object.keys(interior.requirements[kind]).length) delete interior.requirements[kind];
+    }
+    if (taskUnlocks[removal.category]?.[removal.name]) delete taskUnlocks[removal.category][removal.name];
+    if (touched.length) audit.add('overrides', `removed/${removal.category}/${removal.name}`, 'normalized', 'reviewed-content-override', touched, false, removal.source);
+  }
+}
+
+const REQUIREMENT_KINDS = { Monsters: 'monster', NPCs: 'npc', Objects: 'object', Shops: 'shop', Spawns: 'spawn' };
 
 const ENTITY_FIELDS = { Monsters: 'm', NPCs: 'p', Objects: 'o', Shops: 's', Spawns: 'i' };
 
@@ -504,7 +613,11 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
   for (const [category, entities] of Object.entries(data.taskUnlocks ?? {})) {
     const result = {};
     for (const [rawName, value] of Object.entries(entities)) {
-      const name = cleanName(rawName), locations = Array.isArray(value) ? [['*', value]] : Object.entries(value ?? {}), byChunk = result[name] ?? {};
+      // A shop keeps the name the chunk lists give it, without the source's trailing full stop,
+      // so its requirements reach the shop where it stands.
+      const name = category === 'Shops' ? cleanName(rawName).replace(/\.$/, '') : cleanName(rawName);
+      const renamed = rawName.includes('#') || name !== cleanName(rawName);
+      const locations = Array.isArray(value) ? [['*', value]] : Object.entries(value ?? {}), byChunk = result[name] ?? {};
       for (const [location, requirements] of locations) {
         const sourceKey = `${category}/${rawName}/${location}`;
         if (!Array.isArray(requirements)) { audit.add('taskUnlocks', sourceKey, 'excluded', 'non-walkable-content', []); continue; }
@@ -522,7 +635,7 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
             const chunkIds = [...new Set(entranceChunks)].sort(numericSort);
             const targetKeys = reqs.length ? chunkIds.map((chunkId) => `${name}/${chunkId}`) : [];
             const duplicate = entranceChunks.length !== chunkIds.length || chunkIds.some((chunkId) => Boolean(byChunk[chunkId]));
-            if (rawName.includes('#')) audit.add('taskUnlocks', sourceKey, 'normalized', 'variant-name-cleaned', targetKeys, false);
+            if (renamed) audit.add('taskUnlocks', sourceKey, 'normalized', 'variant-name-cleaned', targetKeys, false);
             if (duplicate) audit.add('taskUnlocks', sourceKey, 'normalized', 'duplicate-deduped', targetKeys, false);
             if (reqs.length) for (const chunkId of chunkIds) byChunk[chunkId] = [...new Set([...(byChunk[chunkId] ?? []), ...reqs])].sort();
             audit.add('taskUnlocks', sourceKey, 'normalized', 'named-location-mapped', targetKeys);
@@ -530,12 +643,12 @@ function buildTaskUnlocks(data, audit, namedLocationIndex) {
           }
           const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'), duplicate = Boolean(byChunk[base]);
           if (reqs.length) byChunk[base] = [...new Set([...(byChunk[base] ?? []), ...reqs])].sort();
-          const normalized = rawName.includes('#') || String(location).includes('-') || duplicate;
-          audit.add('taskUnlocks', sourceKey, normalized ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : rawName.includes('#') ? 'variant-name-cleaned' : String(location).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', reqs.length ? [`${name}/${base}`] : []);
+          const normalized = renamed || String(location).includes('-') || duplicate;
+          audit.add('taskUnlocks', sourceKey, normalized ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : renamed ? 'variant-name-cleaned' : String(location).includes('-') ? 'subarea-suffix-collapsed' : 'base-record', reqs.length ? [`${name}/${base}`] : []);
         } else {
           const reqs = cleanReqs(requirements, audit, sourceKey, 'taskUnlocks'), duplicate = Boolean(byChunk['*']);
           if (reqs.length) byChunk['*'] = [...new Set([...(byChunk['*'] ?? []), ...reqs])].sort();
-          audit.add('taskUnlocks', sourceKey, rawName.includes('#') || duplicate ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : rawName.includes('#') ? 'variant-name-cleaned' : 'base-record', reqs.length ? [`${name}/*`] : []);
+          audit.add('taskUnlocks', sourceKey, renamed || duplicate ? 'normalized' : 'imported', duplicate ? 'duplicate-deduped' : renamed ? 'variant-name-cleaned' : 'base-record', reqs.length ? [`${name}/*`] : []);
         }
       }
       if (Object.keys(byChunk).length) result[name] = byChunk;
@@ -685,6 +798,7 @@ export function transformChunkContent(data, sourceManifest, namedLocationRegistr
   addBaseRecords(audit, 'searchTerms', data.searchTerms ?? {});
   const sourceMeta = { repository: sourceManifest.repository, commit: sourceManifest.commit, blobSha: sourceManifest.blobSha, rawSha256: sourceManifest.rawSha256, policyVersion: sourceManifest.policyVersion, namedLocationPolicyVersion: namedLocationRegistry?.policyVersion, namedLocationReviewedAt: namedLocationRegistry?.reviewedAt };
   const entrances = buildEntranceIndex(namedLocationRegistry ?? { locations: [] });
+  applyReviewedEntityChanges(data, chunks, interiors, taskUnlocks, audit);
   // A shop the export names by its owner takes its Wiki title (a record's sourceNames).
   const renameShop = (from, to) => {
     if (from in shopItems) { shopItems[to] = [...new Set([...(shopItems[to] ?? []), ...shopItems[from]])]; delete shopItems[from]; }

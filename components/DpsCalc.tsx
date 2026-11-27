@@ -8,9 +8,9 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { gearService } from '../services/GearService';
 import { monsterKey, monsterService, MonsterStats } from '../services/MonsterService';
-import { attackBonuses, GearItem, ZERO_BONUSES } from '../utils/gearStats';
+import { attackBonuses, blowpipeDarts, isBlowpipe, GearItem, ZERO_BONUSES } from '../utils/gearStats';
 import {
-  computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput,
+  computeDps, formatTimeToKill, STANCES, PRAYERS, POTIONS, Style, AttackType, DpsInput, rangedHitUsesStrength, STRENGTH_RANGED_NOTE,
 } from '../utils/dps';
 import { WikiLink } from './WikiLink';
 import { rangedDefenceFor, type RangedDamageType } from '../utils/rangedDamage';
@@ -57,6 +57,8 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   const [stanceId, setStanceId] = useState('aggressive');
   const [prayerId, setPrayerId] = useState('none');
   const [potionId, setPotionId] = useState('none');
+  // The darts loaded in a blowpipe (darts are Weapon-slot items, so not in the loadout).
+  const [dartId, setDartId] = useState<number | null>(null);
   const [baseSpellMax, setBaseSpellMax] = useState(24);
   const [levels, setLevels] = useState({ attack: 99, strength: 99, ranged: 99, magic: 99 });
   // The exact catalogue row: several versions can share an NPC id.
@@ -81,11 +83,13 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
   // Equipped gear → summed bonuses + weapon speed.
   const gear = useMemo(() => {
     const items = EQUIPMENT_SLOTS.map((s) => gearService.byId(loadout[s])).filter((x): x is GearItem => !!x);
-    const b = items.length ? attackBonuses(items) : { ...ZERO_BONUSES };
     const weapon = gearService.byId(loadout['Weapon']);
+    const darts = blowpipeDarts(weapon, isBlowpipe(weapon) ? gearService.bySlot('Weapon') : []);
+    const dart = darts.find((d) => d.id === dartId);
+    const b = items.length ? attackBonuses(items, dart) : { ...ZERO_BONUSES };
     const accuracy = attackType === 'stab' ? b.stab : attackType === 'slash' ? b.slash : attackType === 'crush' ? b.crush : attackType === 'ranged' ? b.ranged : b.magic;
-    return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length };
-  }, [loadout, attackType, status]);
+    return { bonuses: b, accuracy, meleeStr: b.meleeStr, rangedStr: b.rangedStr, magicDmgPct: b.magicStr, speedTicks: weapon?.speed || 4, weaponName: weapon?.name, category: weapon?.category ?? (loadout['Weapon'] == null ? 'Unarmed' : undefined), rangedDamageType: weapon?.rangedDamageType, count: items.length, darts, dartId: dart?.id ?? null };
+  }, [loadout, attackType, status, dartId]);
 
   const combatOptions = useMemo(() => dpsCombatOptions(gear.category), [gear.category]);
   const styleOptions = combatOptions.filter(option => option.style === style);
@@ -103,15 +107,16 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
   const monster = monsterService.byKey(targetKey);
   const rangedType = rangedOverride === 'auto' ? gear.rangedDamageType ?? 'standard' : rangedOverride;
+  const strengthRanged = style === 'ranged' && rangedHitUsesStrength(gear.weaponName);
 
   const result = useMemo(() => {
     if (!monster || !selectedOption) return null;
     const defLevel = style === 'magic' ? monster.magicLevel : monster.defLevel;
     const defBonus = attackType === 'stab' ? monster.def.stab : attackType === 'slash' ? monster.def.slash : attackType === 'crush' ? monster.def.crush : attackType === 'ranged' ? rangedDefenceFor(monster, rangedType) : monster.def.magic;
     const input: DpsInput = {
-      style, attackType, stanceId, prayerId, potionId, baseSpellMax,
+      style, attackType, stanceId, prayerId, potionId, baseSpellMax, weaponName: gear.weaponName,
       levels, gear: { accuracy: gear.accuracy, meleeStr: gear.meleeStr, rangedStr: gear.rangedStr, magicDmgPct: gear.magicDmgPct, speedTicks: selectedOption.speedTicks ?? gear.speedTicks },
-      monster: { defLevel, defBonus, hp: monster.hp },
+      monster: { defLevel, defBonus, hp: monster.hp, flatArmour: monster.flatArmour },
     };
     return computeDps(input);
   }, [monster, style, attackType, stanceId, prayerId, potionId, baseSpellMax, levels, gear, rangedType, selectedOption]);
@@ -128,7 +133,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
 
   const styleLevels: { key: keyof typeof levels; label: string }[] =
     style === 'melee' ? [{ key: 'attack', label: 'Attack' }, { key: 'strength', label: 'Strength' }]
-      : style === 'ranged' ? [{ key: 'ranged', label: 'Ranged' }]
+      : style === 'ranged' ? [{ key: 'ranged', label: 'Ranged' }, ...(strengthRanged ? [{ key: 'strength' as const, label: 'Strength' }] : [])]
         : [{ key: 'magic', label: 'Magic' }];
 
   return (
@@ -159,6 +164,14 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
             <select value={rangedOverride} onChange={e => setRangedOverride(e.target.value as RangedDamageType | 'auto')} className={selectCls}>
               <option value="auto">{gear.rangedDamageType ? `Weapon: ${gear.rangedDamageType}` : 'Standard assumed — select your type'}</option>
               <option value="light">Light</option><option value="standard">Standard</option><option value="heavy">Heavy</option>
+            </select>
+          </Field>
+        )}
+        {gear.darts.length > 0 && (
+          <Field label="Darts loaded">
+            <select value={gear.dartId ?? ''} onChange={(e) => setDartId(e.target.value ? +e.target.value : null)} className={selectCls}>
+              <option value="">None</option>
+              {gear.darts.map((d) => <option key={d.id} value={d.id}>{d.name} (+{d.bonuses.rangedStr})</option>)}
             </select>
           </Field>
         )}
@@ -227,7 +240,7 @@ export const DpsCalc: React.FC<DpsCalcProps> = ({ suspendModals = false }) => {
           </div>
           <p className="text-[9px] text-gray-600 leading-relaxed flex items-start gap-1.5">
             <Crown size={11} className="shrink-0 mt-0.5" />
-            Baseline DPS for a standard setup. Special attacks and item passives (Twisted bow, Salve, Slayer helm, Void, crystal…) aren't modelled; Magic uses your spell's base max hit.
+            Baseline DPS for a standard setup. Special attacks and item passives (Twisted bow, Salve, Slayer helm, Void, crystal…) aren't modelled; Magic uses your spell's base max hit.{strengthRanged ? ` ${STRENGTH_RANGED_NOTE}` : ''}
           </p>
         </div>
       )}

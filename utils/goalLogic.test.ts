@@ -74,7 +74,7 @@ describe('calculateGoalProgress for pinned Strategy Guide entries', () => {
 
   it('still asks for the Key of a root entry such as the Mining Guild', () => {
     const req = STRATEGY_DATABASE['Mining Guild (Amethyst)'];
-    const state = baseUnlocks({ regions: [...REGION_GROUPS.Asgarnia], skills: { Mining: 6 }, levels: { Mining: 60 } });
+    const state = baseUnlocks({ regions: [...REGION_GROUPS.Asgarnia], skills: { Mining: 10 }, levels: { Mining: 92 } });
     expect(calculateGoalProgress(req, state, 'vanilla').missing).toEqual(['Unlock: Mining Guild']);
     expect(calculateGoalProgress(req, { ...state, guilds: ['Mining Guild'] }, 'vanilla').percentage).toBe(100);
   });
@@ -110,9 +110,11 @@ describe('calculateGoalProgress for pinned Strategy Guide entries', () => {
       for (const state of [unlocks([]), maxed()]) {
         const progress = calculateGoalProgress(req, state, 'vanilla');
         for (const item of progress.missing.filter(entry => entry.startsWith('Unlock: '))) {
-          const id = item.slice('Unlock: '.length);
           // Usually its own table's Key; Soda Ash (Charter Ships) needs the Mobility Key.
-          expect(Object.values(ROLLABLE).some(list => list?.includes(id)), `${key}: ${item}`).toBe(true);
+          // A Key with several sources reads 'Temple Trekking or Forestry': each must be rollable.
+          for (const id of item.slice('Unlock: '.length).split(' or ')) {
+            expect(Object.values(ROLLABLE).some(list => list?.includes(id)), `${key}: ${item}`).toBe(true);
+          }
         }
         expect(progress.percentage === 100, key).toBe(analyzeRequirement(req, state, 'vanilla').isFullyPlayable);
         expect(progress.percentage === 100, key).toBe(progress.missing.length === 0);

@@ -8,8 +8,8 @@
 //
 // Hard gates use structured fields; notes are descriptive only.
 
-import { ACTIVITY_ACCESS_AREAS } from './activityAccess';
-import { ACTIVITY_CHUNKS } from './activityChunks';
+import { ACTIVITY_ACCESS_AREAS, ACTIVITY_AREA_QUESTS } from './activityAccess';
+import { ACTIVITY_CHUNKS, GATED_ENTRANCE_CHUNKS } from './activityChunks';
 import type { QuestProgressRequirement } from './questProgress';
 
 export interface ActivityReq {
@@ -21,6 +21,8 @@ export interface ActivityReq {
   requiredAreas?: string[];
   /** Chunked mode only: the entrance chunks ("cx,cy"), one of which must be owned. Replaces requiredAreas there. */
   requiredChunks?: string[];
+  /** The place's name when a way in carries its own requirement (Chunked gated ways, Vanilla ACTIVITY_AREA_QUESTS). */
+  entrance?: string;
   /** Minimum real OSRS combat level. */
   combatLevel?: number;
   /** Minimum real OSRS total level. */
@@ -91,7 +93,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Sarachnis': { manualRequirements: ['Bring a slash weapon or a knife to cut the webs, or wear Aranea boots'] },
   'Dagannoth Kings': { manualRequirements: ['Bring another player, or a pet rock and a rune thrownaxe, or use the 85 Agility shortcut on Waterbirth Island'] },
   'Hespori': { skills: { Farming: 65 } },
-  'Coral Nursery': { manualRequirements: ['Complete Troubled Tortugans; requires diving apparatus + fishbowl helmet, or a Medallion of the deep.'] },
+  // Coral nursery (patch): the nurseries open after Troubled Tortugans.
+  'Coral Nursery': { quests: ['Troubled Tortugans'], manualRequirements: ['Dive with a diving apparatus and fishbowl helmet, or a Medallion of the deep.'] },
   'Phantom Muspah': { quests: ['Secrets of the North'] },
   'Zulrah': { quests: ['Regicide'] },
   'Wintertodt': { skills: { Firemaking: 50 } },
@@ -131,8 +134,10 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   "Legends' Guild": { quests: ["Legends' Quest"] },
   "Myths' Guild": { quests: ['Dragon Slayer II'] },
   'Ranging Guild': { skills: { Ranged: 40 } },
-  "Rogues' Den": { note: 'Free entry; the safecracking maze needs 50 Thieving & 50 Agility.' },
-  "Servants' Guild": { note: 'Hire household servants (Construction).' },
+  // The Guilds row is the hideout (free; its wall safes need 50 Thieving). The Minigames
+  // table reads MINIGAME_REQUIREMENT_OVERRIDES for the maze.
+  "Rogues' Den": { note: 'Free entry; the wall safes need 50 Thieving, the maze 50 Thieving and 50 Agility.' },
+  "Servants' Guild": { skills: { Construction: 20 }, note: 'Hire household servants (Construction).' },
   "Warriors' Guild": {
     warriorsGuildEntry: true,
     requiredAreas: ["Warriors' Guild"],
@@ -196,13 +201,14 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     totalLevel: 750,
     note: 'Pete Kayer at Ferox Enclave. 750 total level is needed to claim rewards.',
   },
-  'Blast Furnace': { note: '60 Smithing to use free; under 60, pay a fee.' },
+  // Blast Furnace: Keldagrim needs The Giant Dwarf started.
+  'Blast Furnace': { questProgress: [{ quest: 'The Giant Dwarf', label: 'Started The Giant Dwarf to reach Keldagrim' }], note: '60 Smithing to use free; under 60, pay a fee.' },
   'Nightmare Zone': {
     manualRequirements: ['Completed at least five quests with bosses eligible for Nightmare Zone'],
     requiredAreas: ['Yanille'],
     note: 'Requires several quests completed for the dream bosses.',
   },
-  "Sorceress's Garden": { quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
+  "Sorceress's Garden": { skills: { Thieving: 1 }, quests: ['Prince Ali Rescue'], note: 'Gardens gated by Thieving level (Winter 1, Spring 25, Autumn 45, Summer 65).' },
   'Stealing Artefacts': { skills: { Thieving: 49 }, manualRequirements: ['Have a lockpick or hair clip'], note: 'Piscarilius access (Kourend & Kebos).' },
   'Mess': { skills: { Cooking: 20 }, note: "Hosidius kitchen — a cook's duties in Great Kourend." },
 
@@ -241,10 +247,11 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Digsite Pendant': { quests: ['The Dig Site'], manualRequirements: ['Learned the digsite pendant enchantment at Varrock Museum'], note: 'Base Digsite teleport. Fossil Island additionally needs Bone Voyage and the destination machine unlock. Pendants cannot be recharged and crumble after five uses.' },
   'Camulet': { note: "Enakhra's Lament quest reward (desert teleport)." },
   'Kharedst\'s Memoirs': { note: "Bought from Veos; each teleport page comes from a Great Kourend quest (Depths of Despair, Queen of Thieves, Tale of the Righteous, The Forsaken Tower, The Ascent of Arceuus)." },
-  'Ring of the Elements': { note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
-  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
+  'Ring of the Elements': { skills: { Runecraft: 27 }, quests: ['Temple of the Eye'], note: 'Guardians of the Rift reward (Runecraft altar teleports).' },
+  'Colossal Pouch': { skills: { Runecraft: 25, Crafting: 56 }, quests: ['Temple of the Eye'], note: 'Guardians of the Rift. It holds more essence as Runecraft rises, up to 40 at 85.' },
   'Gricoller\'s Can': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
-  'Dizana\'s Quiver': { note: 'Fortis Colosseum reward (ammo storage).' },
+  // Fortis Colosseum: as with all of Varlamore, Children of the Sun.
+  'Dizana\'s Quiver': { quests: ['Children of the Sun'], note: 'Fortis Colosseum reward (ammo storage).' },
   'Forestry Kit': { note: 'Forestry Shop (anima-infused bark).' },
   "Drakan's Medallion": { quests: ['A Taste of Hope'] },
   'Royal Seed Pod': { quests: ['Monkey Madness II'] },
@@ -274,17 +281,21 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
     requiredAreas: ['Mor Ul Rek (TzHaar City)'],
   },
   'Burthorpe Games Room': { requiredAreas: ['Burthorpe'] },
-  'Mage Training Arena': { requiredAreas: ['Mage Training Arena'] },
-  'Mahogany Homes': { note: 'Construction (contracts tiered 1 / 20 / 50 / 70).' },
-  'Forestry': { note: 'Woodcutting (Forestry events).' },
+  // Mage Training Arena: 7 Magic to take part (one spell); 33 for all four rooms.
+  'Mage Training Arena': { skills: { Magic: 7 }, requiredAreas: ['Mage Training Arena'] },
+  // Wiki: Mahogany Homes (oldid 15392909): Amy gives only the first contract; after it Marlo, Ellie and Angelo give them too.
+  'Mahogany Homes': { skills: { Construction: 1 }, note: 'Construction (contracts tiered 1 / 20 / 50 / 70).', manualRequirements: ['Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)'] },
+  'Forestry': { skills: { Woodcutting: 1 }, note: 'Woodcutting (Forestry events).' },
   'Tears of Guthix': { quests: ['Tears of Guthix'] },
-  'Brimhaven Agility Arena': { note: 'Agility (Brimhaven).' },
+  'Brimhaven Agility Arena': { skills: { Agility: 1 }, note: 'Agility (Brimhaven).' },
 
   // ---- Farming patches (access/level-gated; basic patches need nothing) ------
   // Each place asks for its own way in, and each patch carries it (owner call U6;
   // Special patches/Patches, oldid 15319393): no quest is asked of the unlock itself.
-  'Hardwood Tree': { note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
-  'Seaweed': { quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
+  // Teak tree: teak, the lowest hardwood, needs 35 Farming.
+  'Hardwood Tree': { skills: { Farming: 35 }, note: "Fossil Island's three patches need Bone Voyage, the Locus Oasis patch The Ribbiting Tale of a Lily Pad Labour Dispute, and the Anglers' Retreat patch 51 Sailing." },
+  // Giant seaweed: harvested at 23 Farming.
+  'Seaweed': { skills: { Farming: 23 }, quests: ['Bone Voyage'], note: 'Underwater, Fossil Island.' },
   'Spirit Tree': { skills: { Farming: 83 }, note: 'Grow a spirit tree.' },
   'Celastrus': { skills: { Farming: 85 }, note: 'Farming Guild (high tier).' },
   'Redwood': { skills: { Farming: 90 }, note: 'Farming Guild (high tier).' },
@@ -294,7 +305,7 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Vinery': { skills: { Farming: 36 }, requiredAreas: ['Hosidius'], note: 'Grape patches.' },
 
   // ---- Mobility (gated teleport items) ---------------------------------------
-  'Canoes': { note: 'Woodcutting (stations at 12 / 27 / 42 / 57).' },
+  'Canoes': { skills: { Woodcutting: 12 }, note: 'Woodcutting (stations at 12 / 27 / 42 / 57).' },
   'Slayer Ring': { manualRequirements: ['Own a purchased Slayer ring, or craft one with 75 Crafting and Ring bling unlocked'], note: 'Crafting requires 75 Crafting; purchased rings have no Crafting requirement.' },
   "Xeric's Talisman": { note: 'Dropped by lizardmen and found in stone chests in Great Kourend.' },
 
@@ -304,7 +315,8 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Lectern': { skills: { Construction: 40 }, note: 'Study.' },
   'Workshop Tools': { skills: { Construction: 15 }, note: 'Workshop.' },
   'Combat Dummy': { skills: { Construction: 48 } },
-  'Mounted Mythical Cape': { skills: { Construction: 47 } },
+  // Mythical cape (mounted): 47 Construction and Dragon Slayer II completed.
+  'Mounted Mythical Cape': { skills: { Construction: 47 }, quests: ['Dragon Slayer II'] },
   "Mounted Xeric's Talisman": { skills: { Construction: 72 }, note: 'Amulet space in the portal nexus room.' },
   'Mounted Digsite Pendant': { skills: { Construction: 82 }, note: 'Amulet space in the portal nexus room.' },
   'Spellbook Altars': { skills: { Construction: 80 }, note: 'Achievement gallery altar space (occult altar at 90).' },
@@ -328,22 +340,46 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
   'Seed Vault': { skills: { Farming: 45 }, requiredAreas: ['Farming Guild'], note: 'Seed storage inside the Farming Guild.' },
   'Fossil Storage': { quests: ['Bone Voyage'], note: 'Fossil Island museum.' },
   'Plank Sack': { note: 'Mahogany Homes reward.' },
-  "Huntsman's Kit": { note: 'Varlamore (Hunter Guild).' },
-  'Meat Pouch': { note: 'Crafted from Hunter furs with a needle and thread.' },
-  'Essence Pouches': { note: 'Larger pouches need higher Runecraft.' },
-  'Seed Box': { note: 'Tithe Farm reward.' },
-  'Herb Sack': { note: 'Purchased with Slayer reward points or Tithe Farm points.' },
-  'Gem Bag': { note: 'Motherlode Mine reward.' },
-  'Coal Bag': { note: 'Motherlode Mine / Prospector reward.' },
-  'Fish Barrel': { note: 'Tempoross reward.' },
-  'Tackle Box': { note: 'Tempoross reward pool.' },
+  // Wiki, November 2026. Huntsman's kit: Hunters' Rumours loot sacks (46 Hunter,
+  // the Hunter Guild in Varlamore). Small meat pouch: 35 Crafting from fox fur
+  // (pyre foxes, 57 Hunter, Varlamore; the fur shops stock none). Essence pouch:
+  // the Abyss (Enter the Abyss), the Abyssal Area (fairy ring ALR) or Guardians of
+  // the Rift (behind Temple of the Eye, so Enter the Abyss). Seed box: Tithe Farm
+  // (34 Farming). Herb sack: buying needs 58 Herblore from either shop. Gem bag,
+  // coal bag: golden nuggets come only from pay-dirt, which needs 30 Mining.
+  // Fish barrel, tackle box: Tempoross (35 Fishing).
+  "Huntsman's Kit": { skills: { Hunter: 46 }, quests: ['Children of the Sun'], note: "Hunters' Rumours reward (Hunter Guild, Varlamore)." },
+  'Meat Pouch': { skills: { Crafting: 35, Hunter: 57 }, quests: ['Children of the Sun'], note: 'Crafted at 35 Crafting from 4 fox fur (pyre foxes, 57 Hunter, Avium Savannah).' },
+  'Essence Pouches': {
+    oneOf: [
+      { manualRequirements: ['Completed Enter the Abyss (Mage of Zamorak): a free small pouch and Abyss drops'] },
+      { manualRequirements: ['Reached the Abyssal Area by fairy ring code ALR for pouch drops'] },
+    ],
+    note: 'Larger pouches need higher Runecraft.',
+  },
+  'Seed Box': { skills: { Farming: 34 }, note: 'Tithe Farm reward.' },
+  'Herb Sack': { skills: { Herblore: 58 }, note: 'Bought with 750 Slayer reward points or 250 Tithe Farm points; buying needs 58 Herblore (not boostable).' },
+  'Gem Bag': { skills: { Mining: 30 }, note: 'Motherlode Mine reward.' },
+  'Coal Bag': { skills: { Mining: 30 }, note: 'Motherlode Mine / Prospector reward.' },
+  'Fish Barrel': { skills: { Fishing: 35 }, note: 'Tempoross reward.' },
+  'Tackle Box': { skills: { Fishing: 35 }, note: 'Tempoross reward pool.' },
   'Log Basket': { note: 'Forestry Shop reward.' },
-  'Beginner STASH': { note: 'Clue STASH unit (Construction).' },
-  'Easy STASH': { note: 'Clue STASH unit (Construction).' },
-  'Medium STASH': { note: 'Clue STASH unit (Construction).' },
-  'Hard STASH': { note: 'Clue STASH unit (Construction).' },
-  'Elite STASH': { note: 'Clue STASH unit (Construction).' },
-  'Master STASH': { note: 'Clue STASH unit (Construction).' },
+  // STASH units: build levels 12 / 27 / 42 / 55 / 77 / 88 (boostable).
+  'Beginner STASH': { skills: { Construction: 12 }, note: 'Clue STASH unit (Construction).' },
+  'Easy STASH': { skills: { Construction: 27 }, note: 'Clue STASH unit (Construction).' },
+  'Medium STASH': { skills: { Construction: 42 }, note: 'Clue STASH unit (Construction).' },
+  'Hard STASH': { skills: { Construction: 55 }, note: 'Clue STASH unit (Construction).' },
+  'Elite STASH': { skills: { Construction: 77 }, note: 'Clue STASH unit (Construction).' },
+  'Master STASH': { skills: { Construction: 88 }, note: 'Clue STASH unit (Construction).' },
+};
+
+/**
+ * Gates that apply only when a name the Guilds table shares is rolled as a
+ * minigame. Rogues' Den, oldid 15379507: the maze needs 50 Thieving and 50
+ * Agility (not boostable), while the hideout itself is free.
+ */
+export const MINIGAME_REQUIREMENT_OVERRIDES: Record<string, ActivityReq> = {
+  "Rogues' Den": { skills: { Thieving: 50, Agility: 50 } },
 };
 
 /**
@@ -354,11 +390,13 @@ export const ACTIVITY_REQUIREMENTS: Record<string, ActivityReq> = {
 export const getActivityReq = (item: string): ActivityReq | undefined => {
   const requirement = ACTIVITY_REQUIREMENTS[item];
   const requiredAreas = ACTIVITY_ACCESS_AREAS[item];
-  const requiredChunks = Object.prototype.hasOwnProperty.call(ACTIVITY_CHUNKS, item) ? ACTIVITY_CHUNKS[item] : undefined;
+  const own = (table: object) => Object.prototype.hasOwnProperty.call(table, item);
+  const requiredChunks = own(ACTIVITY_CHUNKS) ? ACTIVITY_CHUNKS[item] : undefined;
   if (!requirement && !requiredAreas) return undefined;
   return {
     ...requirement,
     ...(requiredAreas ? { requiredAreas: [...requiredAreas] } : {}),
     ...(requiredChunks ? { requiredChunks: [...requiredChunks] } : {}),
+    ...(own(GATED_ENTRANCE_CHUNKS) || own(ACTIVITY_AREA_QUESTS) ? { entrance: item } : {}),
   };
 };

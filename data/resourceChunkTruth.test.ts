@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { RESOURCE_MAP } from './resourceData';
+import { CURATED_RESOURCE_SOURCES, RESOURCE_MAP, type ResourceSource } from './resourceData';
 import { REGION_GROUPS, MISTHALIN_AREAS } from './items';
 import { REGION_CHUNKS } from './regionChunks';
 import chunkDoc from '../public/chunk-content.json';
@@ -14,6 +14,13 @@ import chunkDoc from '../public/chunk-content.json';
  *
  *   every chunk-proven region for a DROP source's monster must be listed in
  *   that source's regions (directly, via 'Any', or via a listed sub-area).
+ *
+ * A monster whose spawn in one region sits behind a quest is split into one
+ * row per gate (black dragons at Mynydd need Song of the Elves), so the
+ * regions are judged across an item's rows for that monster. Wiki rows borrow
+ * their gates from the first hand-written row of the same monster and are
+ * never shown as available; they are judged across that monster's
+ * hand-written rows too.
  *
  * If a chunk resync adds a monster to a new region, this fails until the
  * engine data is updated — keeping the Resource Engine current with the map.
@@ -55,13 +62,27 @@ describe('resource engine ↔ chunk truth', () => {
   it('every chunk-proven region for a DROP monster is listed on the source', () => {
     const truth = monsterRegionTruth();
     const violations: string[] = [];
+    const curatedDrops = new Map<string, ResourceSource[]>();
+    for (const s of CURATED_RESOURCE_SOURCES) {
+      if (s.type !== 'DROP') continue;
+      const k = s.name.toLowerCase();
+      curatedDrops.set(k, [...(curatedDrops.get(k) ?? []), s]);
+    }
     for (const [item, sources] of Object.entries(RESOURCE_MAP)) {
+      const byMonster = new Map<string, ResourceSource[]>();
       for (const s of sources) {
         if (s.type !== 'DROP') continue;
-        const proven = truth.get(s.name.toLowerCase());
+        const k = s.name.toLowerCase();
+        byMonster.set(k, [...(byMonster.get(k) ?? []), s]);
+      }
+      for (const [k, group] of byMonster) {
+        const proven = truth.get(k);
         if (!proven) continue; // not in chunk data — nothing enforceable
+        const listed = group.every(s => s.requirementsUnverified)
+          ? [...group, ...(curatedDrops.get(k) ?? [])]
+          : group;
         for (const r of proven) {
-          if (!covers(s.regions, r)) violations.push(`${item} ← ${s.name}: missing '${r}'`);
+          if (!listed.some(s => covers(s.regions, r))) violations.push(`${item} ← ${group[0].name}: missing '${r}'`);
         }
       }
     }

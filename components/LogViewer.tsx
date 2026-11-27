@@ -8,14 +8,16 @@ import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { LogEntry } from '../types';
 import { isRollEntry } from '../utils/logEntry';
+import { historyFilterMatches, type HistoryFilter as HistoryFilterType } from '../utils/historyFilter';
 import { ModalFallback } from './LoadingFallback';
 import { formatKeyPercent, formatKeyRollValue } from '../utils/keyRoll';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 import { useIsOsrsUi } from '../utils/uiStyle';
+import { foldText, foldedMatcher } from '../utils/textFold';
 
 const TimelapseModal = lazyWithRetry(() => import('./TimelapseModal').then(m => ({ default: m.TimelapseModal })));
 
-type FilterType = 'ALL' | 'ROLLS' | 'UNLOCKS' | 'RITUALS' | 'PROGRESS';
+type FilterType = HistoryFilterType;
 type SortOrder = 'ASC' | 'DESC';
 
 // The virtual list's own scroller. Its rows hold no controls, so the scroller takes keyboard
@@ -175,16 +177,22 @@ export const LogRow = ({ index, style, data }: ListChildComponentProps<{ entries
 export type HistoryFilter = FilterType;
 export type HistorySort = SortOrder;
 
-/** Which history entries a filter keeps; shared by the classic and OSRS timelines. */
-export const historyFilterMatches = (entry: LogEntry, filterType: FilterType): boolean => {
-  // A lost Chunked Breakthrough is stored as LEVEL_UP (so the audit's Key
-  // balances skip it) but is a fate roll: it files under Rolls, not Level.
-  const lostBreakthrough = entry.type === 'LEVEL_UP' && typeof entry.meta?.breakthrough === 'string';
-  if (filterType === 'ROLLS') return isRollEntry(entry) || lostBreakthrough;
-  if (filterType === 'UNLOCKS') return entry.type === 'UNLOCK';
-  if (filterType === 'RITUALS') return entry.type === 'ALTAR';
-  if (filterType === 'PROGRESS') return !lostBreakthrough && (entry.type === 'LEVEL_UP' || entry.type === 'XTREME_MILESTONE' || entry.type === 'ACHIEVEMENT' || entry.type === 'FATE');
-  return true;
+export { historyFilterMatches };
+
+/**
+ * Each entry's message, details and source folded once and kept, so a long
+ * run's History (up to 100,000 entries) is not folded again on every
+ * keystroke. The fields are joined by a line break, which a folded term never
+ * holds, so a match never runs across two fields.
+ */
+type HaystackMemo = { message: string; details?: string; source?: string; key: string };
+const haystacks = new WeakMap<LogEntry, HaystackMemo>();
+const foldedHaystack = (entry: LogEntry): string => {
+  const memo = haystacks.get(entry);
+  if (memo && memo.message === entry.message && memo.details === entry.details && memo.source === entry.source) return memo.key;
+  const key = [entry.message, entry.details, entry.source].map(f => (f ? foldText(f).text : '')).join('\n');
+  haystacks.set(entry, { message: entry.message, details: entry.details, source: entry.source, key });
+  return key;
 };
 
 /** The timeline after the category filter, the search and the sort. */
@@ -197,13 +205,14 @@ export const filterHistory = (history: LogEntry[], filterType: FilterType, searc
     }
 
     // 2. Search Filter
-    if (searchTerm) {
-      const lowerTerm = searchTerm.toLowerCase();
-      filtered = filtered.filter(entry => 
-        entry.message.toLowerCase().includes(lowerTerm) || 
-        (entry.details && entry.details.toLowerCase().includes(lowerTerm)) ||
-        (entry.source && entry.source.toLowerCase().includes(lowerTerm))
-      );
+    const term = searchTerm.trim();
+    if (term) {
+      const match = foldedMatcher(term);
+      filtered = filtered.filter(entry => match.folded
+        ? match.includes('', foldedHaystack(entry))
+        : match.includes(entry.message) ||
+          (!!entry.details && match.includes(entry.details)) ||
+          (!!entry.source && match.includes(entry.source)));
     }
 
     // 3. Sorting

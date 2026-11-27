@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const levelUpSkill = vi.hoisted(() => vi.fn());
@@ -90,7 +90,9 @@ describe('Dashboard in the OSRS layout', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Journal' }));
     expect(getOsrsNav().screen).toBe('journal');
     // The tab row shows on every screen (#23), so it marks the Journal there.
-    expect(screen.getByRole('tab', { name: 'Journal' }).getAttribute('aria-selected')).toBe('true');
+    // Awaited: a click can land before the row's first effects have subscribed
+    // it to the screen store, and the row catches up as soon as they run.
+    expect(await screen.findByRole('tab', { name: 'Journal', selected: true })).toBeTruthy();
     expect(character.getAttribute('aria-selected')).toBe('false');
     act(() => openOsrsScreen('home'));
     expect(character.getAttribute('aria-selected')).toBe('true');
@@ -120,7 +122,7 @@ describe('Dashboard in the OSRS layout', () => {
     expect(card.querySelector('.osrs-char-gem')).toBeNull();
     expect(card.querySelectorAll('.osrs-char-notches > .is-on')).toHaveLength(3);
     expect(card.getAttribute('data-examine-name')).toBe('Attack');
-    expect(card.getAttribute('data-examine')).toMatch(/^Level 25\. Tier 3: you can train levels 1-30\. Next Lv 26: .+ Key chance\./);
+    expect(card.getAttribute('data-examine')).toMatch(/^Level 25\. Tier 3: training methods for levels 1-30\. Next Lv 26: .+ Key chance\./);
 
     fireEvent.click(card);
     fireEvent.keyDown(card, { key: 'Enter' });
@@ -145,6 +147,11 @@ describe('Dashboard in the OSRS layout', () => {
     const head = screen.getByRole('button', { name: 'Head: Tier 2. Click for its tier ladder.' });
     expect(head.querySelector('.osrs-char-slotgem')).toBeNull();
     act(() => setTierMarks('gems'));
+    // Awaited, like the Journal tab above: the cells read the setting from a store.
+    await waitFor(() => {
+      expect(card.querySelector('.osrs-char-gem')).not.toBeNull();
+      expect(head.querySelector('.osrs-char-slotgem')).not.toBeNull();
+    });
     // Tier III is Red topaz; the Head slot's Tier 2 keeps its numeral and gains a Jade gem.
     expect((card.querySelector('.osrs-char-gem') as HTMLElement).style.backgroundImage).toContain('red_topaz');
     expect(card.querySelector('.osrs-char-tiernum')).toBeNull();

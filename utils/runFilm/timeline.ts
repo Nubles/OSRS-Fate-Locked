@@ -7,6 +7,7 @@ import { isRollEntry } from '../logEntry';
 import { rollTallyOf } from '../fateAnalytics';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
 import { EQUIPMENT_TIER_MAX } from '../../config/rules';
+import { canonicalAreaName } from '../../data/areaMapPolicy';
 
 /**
  * Run Film: the run's log played back as map steps. Pure, so the same log
@@ -72,7 +73,7 @@ export interface FilmTimeline {
   /** Whether the log or the run shows any skill levels, so the film can show them. */
   hasLevels: boolean;
   summary: FilmSummary;
-  /** Areas the run unlocked that have no square on the world map (underground ones). */
+  /** Areas the run unlocked that have no square of their own on the world map (Keldagrim, Braindeath Island and the like). */
   offMap: string[];
 }
 
@@ -127,7 +128,8 @@ const SUB_AREA_OF: Record<string, string> = (() => {
  * fog (a chunk follows its sub-area when it has one, else its continent).
  */
 export const ownedChunksForAreas = (regions: readonly string[]): Set<string> => {
-  const list = [...regions];
+  // Old logs and saves can hold an Area's former name; the world map reads it as the Area it is now.
+  const list = regions.map(canonicalAreaName);
   const owned = new Set<string>();
   for (const [region, chunks] of Object.entries(REGION_CHUNKS)) {
     const continentOpen = isRegionUnlocked(region, list);
@@ -235,6 +237,29 @@ const regionsWithArea = new Set(Object.keys(SUB_AREA_CHUNKS));
 const hasMapSquare = (area: string): boolean =>
   regionsWithArea.has(area) || Object.prototype.hasOwnProperty.call(REGION_CHUNKS, area);
 
+/** The note under the film for the Areas it cannot show on the map, or '' when there are none. */
+export const offMapNote = (offMap: readonly string[]): string => {
+  if (offMap.length === 0) return '';
+  return offMap.length === 1
+    ? `${offMap[0]} has no square of its own on the world map, so it shows only in the Latest list.`
+    : `${offMap.length} Areas have no square of their own on the world map, so they show only in the Latest list.`;
+};
+
+/** The tiers a Ritual of Sacrifice line took (its meta.taken), as the reducer logs them. */
+const sacrificedTiers = (e: LogEntry): { table: 'skill' | 'gear'; name: string; tier: number }[] => {
+  if (e.type !== 'ALTAR' || e.meta?.ritual !== 'SACRIFICE' || !Array.isArray(e.meta.taken)) return [];
+  const out: { table: 'skill' | 'gear'; name: string; tier: number }[] = [];
+  for (const t of e.meta.taken as unknown[]) {
+    if (!t || typeof t !== 'object') continue;
+    const { table, name, tier } = t as Record<string, unknown>;
+    if (typeof name !== 'string') continue;
+    // A tier that is not a number is still a tier taken; the film then drops one from where it is.
+    if (table === 'skill' && SKILLS_LIST.includes(name) && name !== FREE_SKILL) out.push({ table, name, tier: Number(tier) });
+    if (table === 'gear' && EQUIPMENT_SLOTS.includes(name)) out.push({ table, name, tier: Number(tier) });
+  }
+  return out;
+};
+
 export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimelineOptions): FilmTimeline => {
   const log = sortedLog(history);
   const t0 = log[0]?.timestamp ?? 0;
@@ -262,20 +287,28 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
   const steps: FilmStep[] = [];
   let unlocks = 0, rolls = 0, keysWon = 0, landChanged = false;
 
-  // Tiers: the run's tiers now, less every tier the log shows it buying, is
-  // where it started. Hitpoints starts (and stays) where it is now.
+  // Tiers: the run's tiers now, less every tier the log shows it buying, plus
+  // every tier a Ritual of Sacrifice took, is where it started. Hitpoints
+  // starts (and stays) where it is now.
   // Without the run's tiers now, everything starts at 0 and only the log counts.
   const finalSkills = opts.finalSkills ? tierRecord(SKILLS_LIST, opts.finalSkills, SKILL_TIER_MAX) : null;
   const finalGear = opts.finalGear ? tierRecord(EQUIPMENT_SLOTS, opts.finalGear, EQUIPMENT_TIER_MAX) : null;
   const bought = { skills: {} as Record<string, number>, gear: {} as Record<string, number> };
+  const taken = { skills: {} as Record<string, number>, gear: {} as Record<string, number> };
   for (const e of log) {
+    for (const t of sacrificedTiers(e)) {
+      const into = t.table === 'skill' ? taken.skills : taken.gear;
+      into[t.name] = (into[t.name] ?? 0) + 1;
+    }
     if (e.type !== 'UNLOCK' || typeof e.meta?.item !== 'string') continue;
     const item = e.meta.item;
     if (e.meta.category === 'Skills' && SKILLS_LIST.includes(item) && item !== FREE_SKILL) bought.skills[item] = (bought.skills[item] ?? 0) + 1;
     if (e.meta.category === 'Equipment' && EQUIPMENT_SLOTS.includes(item)) bought.gear[item] = (bought.gear[item] ?? 0) + 1;
   }
-  const skills: Record<string, number> = Object.fromEntries(SKILLS_LIST.map(n => [n, Math.max(0, (finalSkills?.[n] ?? 0) - (bought.skills[n] ?? 0))]));
-  const gear: Record<string, number> = Object.fromEntries(EQUIPMENT_SLOTS.map(n => [n, Math.max(0, (finalGear?.[n] ?? 0) - (bought.gear[n] ?? 0))]));
+  const startTier = (now: number | undefined, boughtN: number | undefined, takenN: number | undefined, max: number) =>
+    Math.min(max, Math.max(0, (now ?? 0) - (boughtN ?? 0) + (takenN ?? 0)));
+  const skills: Record<string, number> = Object.fromEntries(SKILLS_LIST.map(n => [n, startTier(finalSkills?.[n], bought.skills[n], taken.skills[n], SKILL_TIER_MAX)]));
+  const gear: Record<string, number> = Object.fromEntries(EQUIPMENT_SLOTS.map(n => [n, startTier(finalGear?.[n], bought.gear[n], taken.gear[n], EQUIPMENT_TIER_MAX)]));
   let raised: string[] = [];
 
   // Levels: each skill starts one below the first level the log records for
@@ -341,16 +374,27 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
       }
       ticker.unshift({ text, kind: tickerKind(category) });
       if (ticker.length > TICKER_LINES) ticker.length = TICKER_LINES;
-      if (category === 'Regions' && item && !regions.includes(item)) {
-        regions.push(item);
+      // An old log can name an Area by its former name: open the Area it is now, as the world map does.
+      const area = category === 'Regions' && item ? canonicalAreaName(item) : '';
+      if (area && !regions.includes(area)) {
+        regions.push(area);
         landChanged = true;
-        if (!hasMapSquare(item)) offMap.add(item);
+        if (!hasMapSquare(area)) offMap.add(area);
       }
       if (category === 'Chunks' && CHUNK_KEY.test(item)) { chunks.add(item); landChanged = true; }
     }
-    // The Cartographer charts a chunk without an UNLOCK line.
-    const charted = e.meta?.chunk;
+    // The Cartographer charts a chunk without an UNLOCK line. Fate's lines
+    // name chunks too, but never one the run gains there: a thread is tied
+    // to land beyond the run's, and the rest name a chunk it just gained.
+    const charted = e.type === 'ALTAR' && e.meta?.ritual === 'CARTOGRAPHER' ? e.meta.chunk : undefined;
     if (typeof charted === 'string' && CHUNK_KEY.test(charted)) { chunks.add(charted); landChanged = true; }
+    // A Ritual of Sacrifice takes a tier from each skill or slot it names.
+    for (const t of sacrificedTiers(e)) {
+      const list = t.table === 'skill' ? skills : gear;
+      const max = t.table === 'skill' ? SKILL_TIER_MAX : EQUIPMENT_TIER_MAX;
+      const to = Number.isFinite(t.tier) ? Math.floor(t.tier) - 1 : list[t.name] - 1;
+      list[t.name] = Math.min(max, Math.max(0, to));
+    }
     const lv = loggedLevel(e);
     if (lv && lv.level > levels[lv.skill]) levels[lv.skill] = lv.level;
 
@@ -385,7 +429,10 @@ export const buildFilmTimeline = (history: readonly LogEntry[], opts: FilmTimeli
   // run's last day ends where the log is on that day instead.
   let tiersChanged = false;
   if (reachesEnd) {
-    for (const r of opts.finalRegions) if (!regions.includes(r)) { regions.push(r); landChanged = true; }
+    for (const name of opts.finalRegions) {
+      const r = canonicalAreaName(name);
+      if (!regions.includes(r)) { regions.push(r); landChanged = true; }
+    }
     for (const c of opts.finalChunks) if (!chunks.has(c)) { chunks.add(c); landChanged = true; }
     for (const [list, now, kind] of [[skills, finalSkills, 'skill'], [gear, finalGear, 'gear']] as const) {
       if (!now) continue;

@@ -176,7 +176,30 @@ export function validateBankLocationRegistry(registry, { validChunkIds, validBan
     validateWikiEvidence(gate.wiki, `Bank access gate ${gate.id}`, sourceUrls);
     gated.add(gate.id);
   }
+
+  // The area a bank stands in when its chunk is only the entrance of a place the map files under
+  // another area (the Keldagrim bank's chunk is Mountain Camp's): the bank needs that area.
+  const areas = registry.areas ?? [];
+  if (!Array.isArray(areas)) throw new Error('Bank areas must be an array');
+  const placed = new Set();
+  for (const entry of areas) {
+    assertNonEmptyString(entry?.id, 'Bank area id');
+    if (placed.has(entry.id)) throw new Error(`Duplicate bank area: ${entry.id}`);
+    if (merged.has(entry.id)) throw new Error(`Bank area ${entry.id} is on a merged bank`);
+    if (validBankIds instanceof Set && !validBankIds.has(entry.id) && !ids.has(entry.id) && !virtualIds.has(entry.id)) {
+      throw new Error(`Bank area ${entry.id} is not on a bank`);
+    }
+    assertNonEmptyString(entry.area, `Bank ${entry.id} area`);
+    assertNonEmptyString(entry.reason, `Bank area ${entry.id} reason`);
+    validateWikiEvidence(entry.wiki, `Bank area ${entry.id}`, sourceUrls);
+    placed.add(entry.id);
+  }
   return registry;
+}
+
+/** Each bank the registry places in an area other than its chunk's, as id -> area. */
+export function bankAreas(registry) {
+  return new Map((registry.areas ?? []).map(({ id, area }) => [String(id), area]));
 }
 
 /** Each merged bank unlock and the bank it leads to, as id pairs. */

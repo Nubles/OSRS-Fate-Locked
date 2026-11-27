@@ -219,7 +219,9 @@ describe('pinned Chunk Picker source', () => {
       contentChunks: 938,
       connections: 1110,
       slayerMasters: 10,
-      shortcuts: 219,
+      // Up from 219: the reviewed shortcut corrections add the mausoleum bridge's Construction row and
+      // four shortcuts the source lacks (data/sources/shortcut-corrections.json, audit reach-map).
+      shortcuts: 224,
       // Up from 439: the ten shops added from the wiki (accuracy audit, missing shops).
       shops: 449,
       // Up from 800: Emissary Ascended (Varlamore) gained a drop table in the 7 Oct export.
@@ -232,7 +234,9 @@ describe('pinned Chunk Picker source', () => {
       // Up from 28,083 with the 7 Oct 2026 Chunk Picker export (net +3 ledger events).
       // Up from 28,087: the reviewed A Ruff Situation step override (the Outlaw Camp is in 48,54)
       // and the North Rantz Peninsula spelling correction.
-      auditEvents: 28089,
+      // Up from 28,108: the eight shortcut corrections, each one ledger event.
+      // Up from 28,118: seven renamed NPCs and 18 removed NPCs and objects, each one ledger event.
+      auditEvents: 28144,
       unresolvedTaskUnlocks: 0,
     });
     expect(taskUnlockTotals.source).toBe(1958);
@@ -241,8 +245,8 @@ describe('pinned Chunk Picker source', () => {
       .toBe(1958);
     expect(taskUnlockTotals).toEqual({
       source: 1958,
-      imported: 1300,
-      normalized: 654,
+      imported: 1295,
+      normalized: 659,
       excluded: 4,
       unresolved: 0,
     });

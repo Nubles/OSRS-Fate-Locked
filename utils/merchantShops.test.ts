@@ -87,7 +87,9 @@ describe('classifyShop', () => {
       ["Honest Jimmy's House of Stuff", 'Reward Shops'],
       ['Shop of Distaste', 'Vegetable Shops'],
       ['The Shrimp and Parrot', 'Food Shops'],
-      ["Worm Tounge's Wares", 'Reward Shops'],
+      ["Worm Tongue's Wares", 'Reward Shops'],
+      ["Huito's Herbal Supplies", 'Herblore Shops'],
+      ["Arhein's General Goods", 'General Stores'],
       // Pubs with misleading names and clothing stores called reward shops.
       ['Garlic Cocktail Supply', 'Bars & Inns'],
       ["Myreque's Rest", 'Bars & Inns'],
@@ -123,6 +125,8 @@ describe('classifyShop', () => {
       ['Temple Supplies', 'Reward Shops'],
       ["Sian's Ranged Weaponry", 'Archery Shops'],
       ['Ore seller', 'Ore Merchants'],
+      // Elven clothing and a crystal crown; Clothes shop icon (audit minigames-misc d3 1).
+      ["Lliann's Wares", 'Clothes Shops'],
     ];
     for (const [name, want] of cases) {
       expect(classifyShop(name), name).toBe(want);

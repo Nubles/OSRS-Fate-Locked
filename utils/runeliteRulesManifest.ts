@@ -6,6 +6,7 @@ import {
   chunkContentService,
   type ChunkContent,
   type ConnectGraph,
+  type EntityKind,
   type Shortcut,
   type SlayerMasters,
 } from '../services/ChunkContentService';
@@ -30,6 +31,7 @@ import {
 import { bankLocksActive } from './reachability';
 import { canonicalizeAreaUnlocks } from '../data/areaMapPolicy';
 import type { EntityAccessSource } from './entityAccess';
+import type { ShortcutContent } from './shortcutReach';
 import type { EquipmentPermissionCoverage } from '../data/equipmentCatalogue';
 const RULES_VERSION = '1';
 const CONTENT_VERSION = 1;
@@ -119,6 +121,9 @@ export interface RulesContentSource extends Partial<EntityAccessSource> {
   contentFor(cx: number, cy: number): ChunkContent | null;
   connectGraph(): ConnectGraph;
   shortcuts(): Shortcut[];
+  /** Where a shortcut's object is, and the chunks an interior is entered from (utils/shortcutReach.ts places shortcuts with them). */
+  entityLocations?(name: string, kinds?: EntityKind[]): { locations: readonly { cx: number; cy: number }[] } | null;
+  interiorEntranceChunks?(keyOrName: string): { cx: number; cy: number }[];
   questSections(): Record<string, string[]>;
   interiorRecords?(): InteriorRecord[];
   surfaceContentFor?(cx: number, cy: number): ChunkContent | null;
@@ -200,10 +205,13 @@ export async function buildRuneliteRulesManifest(
   };
 
   if (loaded) {
+    const shortcuts = service.shortcuts();
+    const shortcutContent = service.entityLocations && service.interiorEntranceChunks && service.chunkEntryRequirements
+      ? service as ShortcutContent : undefined;
     for (const coord of service.allChunkCoords()) {
       const content = service.contentFor(coord.cx, coord.cy);
       if (!content) continue;
-      const snapshot = buildChunkPermissionSnapshot(content, coord, { ...permissions, shortcuts: service.shortcuts() });
+      const snapshot = buildChunkPermissionSnapshot(content, coord, { ...permissions, shortcuts, shortcutContent });
       chunks[snapshot.chunkKey] = snapshot;
     }
   }

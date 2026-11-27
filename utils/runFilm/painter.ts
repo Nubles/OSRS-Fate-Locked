@@ -1,6 +1,7 @@
 import type { FilmStep, FilmSummary, FilmTickerKind } from './timeline';
 import { romanTier } from './timeline';
 import { EQUIPMENT_SLOTS, SKILLS_LIST } from '../../data/items';
+import { drawGrey } from '../canvasGrey';
 
 /**
  * Draws one Run Film frame on a canvas: the world map under fog, owned chunks
@@ -166,9 +167,8 @@ export class FilmPainter {
     this.fog = document.createElement('canvas');
     this.fog.width = w; this.fog.height = h;
     const fc = this.fog.getContext('2d')!;
-    fc.filter = 'grayscale(1) brightness(0.32)';
-    fc.drawImage(this.colour, 0, 0);
-    fc.filter = 'none';
+    // Safari's canvas has no filter: drawGrey works the grey out from the pixels there.
+    drawGrey(fc, this.colour, 1, 0.32);
     fc.fillStyle = C.fogTint;
     fc.fillRect(0, 0, w, h);
     for (const [skill, icon] of Object.entries(sprites.skills ?? {})) {
@@ -178,8 +178,7 @@ export class FilmPainter {
       g.width = iw; g.height = ih;
       const gc = g.getContext('2d');
       if (!gc) continue;
-      gc.filter = 'grayscale(1) brightness(0.5)';
-      gc.drawImage(icon, 0, 0);
+      drawGrey(gc, icon, 1, 0.5);
       this.greySkills.set(skill, g);
     }
   }

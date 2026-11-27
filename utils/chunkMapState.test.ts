@@ -1,5 +1,8 @@
-import { beforeAll, describe, expect, it } from 'vitest';
-import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail } from './chunkMapState';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail, vanillaUnlockedCount } from './chunkMapState';
+import { setStartArea } from './freeAreas';
+import { visibleAreaUnlocks } from '../data/areaMapPolicy';
+import regionMapSource from '../components/RegionMap.tsx?raw';
 import { loadWalkSections } from './walkSections';
 
 beforeAll(() => loadWalkSections());
@@ -31,5 +34,33 @@ describe('the World map legend and lens', () => {
     expect(reachLensDetail(2, true)).toBe('2 stranded (owned but no route from your start chunk)');
     expect(reachLensDetail(2, false)).toBe('2 stranded (owned but no route from Lumbridge)');
     expect(reachLensDetail(0, true)).toBe('Every owned chunk is reachable.');
+  });
+});
+
+// ui-osrs-b.d3[1]: the World map's Vanilla 'Unlocked' legend counts what the map paints as unlocked.
+describe('vanillaUnlockedCount', () => {
+  afterEach(() => setStartArea('misthalin'));
+
+  it('counts the free Misthalin start areas of a new run', () => {
+    setStartArea('misthalin');
+    expect(vanillaUnlockedCount(visibleAreaUnlocks([]))).toBe(9);
+    expect(vanillaUnlockedCount(visibleAreaUnlocks(['Falador']))).toBe(10);
+    // Tutorial Island is never counted, as the map does not show it.
+    expect(vanillaUnlockedCount(visibleAreaUnlocks(['Tutorial Island']))).toBe(9);
+  });
+
+  it('counts only Lumbridge for a Lumbridge-only start', () => {
+    setStartArea('lumbridge');
+    expect(vanillaUnlockedCount(visibleAreaUnlocks([]))).toBe(1);
+    expect(vanillaUnlockedCount(visibleAreaUnlocks(['Varrock']))).toBe(2);
+  });
+
+  it('keeps the Chunked count, start chunk included', () => {
+    expect(chunkedUnlockedCount([])).toBe(1);
+  });
+
+  it('is what the World map legend shows', () => {
+    // It used to show regionUnlocks.length: 0 for a new run while nine areas were painted.
+    expect(regionMapSource).toContain('isChunked ? chunkedUnlockedCount(chunkUnlocks) : vanillaUnlockedCount(regionUnlocks)');
   });
 });

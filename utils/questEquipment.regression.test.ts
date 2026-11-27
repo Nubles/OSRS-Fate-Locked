@@ -73,7 +73,6 @@ describe('mandatory quest equipment readiness', () => {
   it('does not require wearing items used from inventory or worn by another character', () => {
     expect(QUEST_DATA['Waterfall Quest'].equipmentRequirements).toBeUndefined();
     expect(QUEST_DATA['Prince Ali Rescue'].equipmentRequirements).toBeUndefined();
-    expect(QUEST_DATA['Ghosts Ahoy'].equipmentRequirements?.some(req => req.slot === 'Gloves')).toBe(false);
   });
 
   // Rechecked on the Wiki after a player found A Soul's Bane's rage room needs
@@ -81,7 +80,13 @@ describe('mandatory quest equipment readiness', () => {
   it.each([
     ["Heroes' Quest", { Gloves: 1 }],
     ['Sheep Herder', { Body: 1, Legs: 1, Weapon: 1 }],
-    ['Underground Pass', { Gloves: 2 }],
+    // Wiki (23 Nov 2026): the bow and lit fire arrow are equipped to shoot the bridge guide rope.
+    ['Underground Pass', { Gloves: 2, Weapon: 1, Ammo: 1 }],
+    // Wiki (23 Nov 2026): nettles for the nettle tea can only be picked while wearing gloves.
+    ['Ghosts Ahoy', { Neck: 1, Head: 1, Gloves: 1 }],
+    ['Skippy and the Mogres', { Gloves: 1 }],
+    // Wiki (23 Nov 2026): the mith grapple is carried in the ammunition slot and fired from a crossbow.
+    ['The Frozen Door', { Weapon: 1, Ammo: 3 }],
     ['The Fremennik Isles', { Head: 1, Body: 1, Legs: 1, Boots: 1 }],
     ['A Taste of Hope', { Weapon: 5 }],
     ['Sins of the Father', { Weapon: 5, Body: 1, Legs: 1, Boots: 1 }],

@@ -103,7 +103,10 @@ export const SOURCE_TYPE_KINDS: Record<string, ('monster' | 'object' | 'npc' | '
   DROP: ['monster'],
   SHOP: ['shop', 'npc'],
   SPAWN: ['spawn'],
-  PICKPOCKET: ['npc', 'monster'],
+  // Monster entries first: the Wiki's monster locations are where a
+  // pickpocket target stands; a same-named quest NPC elsewhere (the Mourner
+  // Headquarters 'Gnome') must not hide them.
+  PICKPOCKET: ['monster', 'npc'],
   SKILL: ['object', 'npc'],
 };
 

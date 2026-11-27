@@ -148,3 +148,23 @@ it('leaves legacy review retryable when historical browser evidence cannot be re
   vi.stubGlobal('localStorage', { getItem: (key: string) => key === 'fate_clog_sync_v3' ? original : null });
   expect(captureCollectionLogIdentity({ '101004': 1 })).toEqual({ version: 1, quarantinedIds: [101002, 101004] });
 });
+
+
+it('drops cached notices for entries the bundled catalogue now has, without refetching', async () => {
+  // A cache written before a release that bundled these entries (same stored shape as before).
+  const cache = JSON.stringify({ timestamp: Date.now() - 86400000, data: {
+    additions: [{ tab: 'Bosses', page: 'Abyssal Sire', name: 'Abyssal orphan' }, { tab: 'Bosses', page: 'Abyssal Sire', name: 'New item B' }],
+    newSources: [{ name: 'Abyssal Sire', itemCount: 3 }, { name: 'Magic Training Arena', itemCount: 2 }, { name: 'Brand new page', itemCount: 4 }],
+  } });
+  const storage: Record<string, string> = { fate_clog_sync_v4: cache };
+  vi.stubGlobal('localStorage', { getItem: (key: string) => storage[key] ?? null, setItem: (key: string, value: string) => { storage[key] = value; } });
+  const fetchSpy = vi.fn();
+  vi.stubGlobal('fetch', fetchSpy);
+  const service = new CollectionLogSyncService();
+  await service.init();
+  expect(service.ready).toBe(true);
+  expect(service.pendingAdditions).toEqual([{ tab: 'Bosses', page: 'Abyssal Sire', name: 'New item B' }]);
+  expect(service.newSources).toEqual([{ name: 'Brand new page', itemCount: 4 }]);
+  expect(fetchSpy).not.toHaveBeenCalled();
+  expect(storage.fate_clog_sync_v4).toBe(cache);
+});

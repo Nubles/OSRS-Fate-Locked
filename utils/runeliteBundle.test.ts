@@ -11,6 +11,7 @@ import equipmentCatalogueJson from '../public/equipment-catalogue.294c0a5ab539ea
 import { EQUIPMENT_CATALOGUE, EQUIPMENT_CACHE_SOURCE } from '../data/equipmentCatalogue';
 import { setStartArea } from './freeAreas';
 import { ZERO_BONUSES } from './gearStats';
+import { MAX_REQUEST_BYTES } from '../workers/fate-relay/protocol.js';
 
 const state: RuneliteRunState = {
   keys: 3, specialKeys: 0, chaosKeys: 0, fatePoints: 0, activeBuff: 'NONE', pinnedGoals: [],
@@ -223,7 +224,7 @@ describe('buildRuneliteBundle — unlockedChunks presence', () => {
       expect(bundle.rules.itemRules['552']).toEqual({ tier: 1, slot: 'Neck' });
       expect(compressed.startsWith('FLGZ:')).toBe(true);
       const body = JSON.stringify({ token: 'f'.repeat(32), payload: compressed });
-      expect(new TextEncoder().encode(body).byteLength).toBeLessThan(256 * 1024 - 16 * 1024);
+      expect(new TextEncoder().encode(body).byteLength).toBeLessThan(MAX_REQUEST_BYTES - 16 * 1024);
       const worker = (await import('../workers/fate-relay/worker.js')).default;
       const put = vi.fn(async (_key: string, _value: string, _options?: unknown) => {});
       // A pairing code in RuneLite's form, the only one the relay accepts.
@@ -541,7 +542,8 @@ describe('buildRuneliteBundle - v4 category snapshot', () => {
       regions: [...REGIONS_LIST], bosses: ['General Graardor'], merchants: ['General Stores'],
       skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
       levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
-      quests: Object.keys(QUEST_DATA).filter(id => id !== 'Dragon Slayer II'),
+      // Barbarian Training stays open so the pyre-ship milestone is still pending.
+      quests: Object.keys(QUEST_DATA).filter(id => id !== 'Dragon Slayer II' && id !== 'Barbarian Training'),
     };
     const manifest = await buildRuneliteRulesManifest({
       unlocks, run: { runId: 'confirmation-parity', runRevision: 1, gameModeId: 'vanilla' },

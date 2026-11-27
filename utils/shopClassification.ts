@@ -113,7 +113,7 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "prospector percy's nugget shop": 'Reward Shops',
   // The Guardians of the Rift reward shop, and the only shop with the ring of the elements.
   'temple supplies': 'Reward Shops',
-  "worm tounge's wares": 'Reward Shops',
+  "worm tongue's wares": 'Reward Shops',
   // Shops that take an activity's own currency are Reward Shops whatever they sell, and
   // also need the activity's unlock where the app has one (owner call U1;
   // data/sources/shop-overrides.json): mermaid's tears, unidentified minerals, Volcanic
@@ -144,6 +144,8 @@ const SHOP_CATEGORY_OVERRIDES: Record<string, string> = {
   "simon's wilderness cape shop": 'Clothes Shops',
   "trader sven's black-market goods": 'Clothes Shops',
   "where wyrmscraig's wear wares were": 'Clothes Shops',
+  // Elven clothing and a crystal crown in Prifddinas; Clothes shop icon (wiki rev 15294630).
+  "lliann's wares": 'Clothes Shops',
   "william's wilderness cape shop": 'Clothes Shops',
   "yrsa's accoutrements": 'Clothes Shops',
 

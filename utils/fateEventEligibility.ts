@@ -8,7 +8,8 @@ import { MINIGAME_KEY_RESERVES } from '../data/minigameKeyReserves';
 import { ALL_CA_TASKS, type CATask } from '../data/caTasks';
 import { BOSS_TIERS, TIER_SOURCE, type BossTier } from '../data/bossKeyTiers';
 import { COLLECTION_LOG_DATA, type CollectionLogItem } from '../data/collectionLogData';
-import { collectionItemNeedsIdentityReview } from '../services/CollectionLogSyncService';
+import { collectionLogBlockedIds } from '../services/CollectionLogSyncService';
+import { sharedSlotCount, sharedSlotIds } from '../data/collectionLogSlots';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { petById, unclaimedPets } from '../data/pets';
 import { QUEST_DATA, type QuestData } from '../data/questData';
@@ -311,11 +312,12 @@ function classifyCombatAchievement(event: FateEventEnvelope, state: GameState): 
 }
 
 function collectionItemBlock(state: GameState, itemId: number): EventClassification | null {
-  if (collectionItemNeedsIdentityReview(state.unlocks.collectionLog, itemId, state.collectionLogIdentity)) {
+  const held = collectionLogBlockedIds(state.unlocks.collectionLog, state.collectionLogIdentity);
+  if (held.has(itemId)) {
     return { state: 'BLOCKED', reason: 'Saved Collection Log entries need identity review before this item can be logged or rewarded.' };
   }
-  // Like a manual log, only a newly logged item rolls.
-  return (state.unlocks.collectionLog[itemId] ?? 0) >= 1
+  // Like a manual log, only a newly logged item rolls: logged on any page that lists it counts.
+  return sharedSlotCount(state.unlocks.collectionLog, itemId, held) >= 1
     ? blocked('This item is already in the Collection Log.')
     : null;
 }
@@ -324,7 +326,9 @@ function classifyCollectionLog(event: FateEventEnvelope, state: GameState): Even
   if (!event.canonicalLabel) return needsConfirmation('Choose the Collection Log item.');
   const exact = COLLECTION_INDEX.get(normalize(event.canonicalLabel));
   const matches = exact ?? COLLECTION_VARIANT_INDEX.get(normalize(event.canonicalLabel)) ?? [];
-  if (matches.length !== 1 || !exact) {
+  // One item on several pages is one slot: no page to choose.
+  const oneItem = !!exact && matches.every(match => sharedSlotIds(matches[0].item.id).includes(match.item.id));
+  if (!oneItem) {
     return needsConfirmation(
       !matches.length
         ? 'Collection Log item is not in the current rules.'
@@ -339,7 +343,8 @@ function classifyCollectionLog(event: FateEventEnvelope, state: GameState): Even
       ),
     );
   }
-  const { item } = matches[0];
+  const held = collectionLogBlockedIds(state.unlocks.collectionLog, state.collectionLogIdentity);
+  const { item } = matches.find(match => !held.has(match.item.id)) ?? matches[0];
   return collectionItemBlock(state, item.id) ?? ready(DropSource.COLLECTION_LOG, item.name, {
     kind: 'COLLECTION_ITEM',
     itemId: item.id,

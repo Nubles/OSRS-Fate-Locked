@@ -130,9 +130,13 @@ describe('classifyFateEvent', () => {
         reason: 'Requires: Rimmington, Port Sarim, Crandor, Dwarven Mine, '
           + 'Smithing 34 + Bars & Inns + Clothes Shops or Smithing 34 + Bars & Inns + Silk Shops'
           + ' or Smithing 34 + Thieving 20 + Bars & Inns or Civitas illa Fortis + Smithing 34 + Bars & Inns'
-          + ' or Smithing 34 + General Stores or Sawmill Operators + Bars & Inns + Clothes Shops'
+          + ' or Deepfin Point + Smithing 34 + Sailing 67 + Pandemonium + Bars & Inns + General Stores'
+          + ' or Deepfin Point + Lighthouse + Smithing 34 + Sailing 67 + Pandemonium + Horror from the Deep + General Stores'
+          + ' or Sawmill Operators + Bars & Inns + Clothes Shops'
           + ' or Sawmill Operators + Bars & Inns + Silk Shops or Thieving 20 + Sawmill Operators + Bars & Inns'
-          + ' or Civitas illa Fortis + Sawmill Operators + Bars & Inns or Sawmill Operators + General Stores'
+          + ' or Civitas illa Fortis + Sawmill Operators + Bars & Inns'
+          + ' or Deepfin Point + Sailing 67 + Pandemonium + Sawmill Operators + Bars & Inns + General Stores'
+          + ' or Deepfin Point + Lighthouse + Sailing 67 + Pandemonium + Horror from the Deep + Sawmill Operators + General Stores'
           + ', Quest Points 32, Crafting 8, '
           + "Shield T1: Equip the anti-dragon shield against Elvarg's dragonfire",
       });
@@ -241,9 +245,13 @@ describe('classifyFateEvent', () => {
       }
     }
     const unique = [...counts.entries()].find(([, count]) => count === 1)?.[0];
-    const ambiguous = [...counts.entries()].find(([, count]) => count > 1)?.[0];
+    // One item on several pages is one slot (Dragon pickaxe); a name that one
+    // page uses for different items (My Notes) still needs the player's choice.
+    const ambiguous = 'Ancient page';
     expect(unique).toBeTruthy();
-    expect(ambiguous).toBeTruthy();
+    expect(counts.get('ancient page')).toBe(13);
+    expect(counts.get('dragon pickaxe')).toBe(6);
+    expect(classifyFateEvent(event('COLLECTION_LOG', 'Dragon pickaxe'), state()).state).toBe('READY');
 
     expect(classifyFateEvent(event('COLLECTION_LOG', unique!), state()))
       .toMatchObject({

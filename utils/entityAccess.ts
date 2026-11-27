@@ -13,6 +13,7 @@ import { interiorArea } from '../data/interiorAreas';
 import { evaluateActivityReadiness } from './activityReadiness';
 import { isAreaReachable } from './reachability';
 import { meetsSkillRequirement } from './journalStatus';
+import { routeStatus } from './permissionStatus';
 
 export type EntityAccessStatus = 'ALLOWED' | 'NOT_READY' | 'LOCKED' | 'UNKNOWN';
 export interface EntityAccessResult { status: EntityAccessStatus; reasons: string[]; }
@@ -153,7 +154,7 @@ export function evaluateBankRequirements(
   const results = facilities.map(({ name, kind, requirements }) => {
     const access = evaluateEntityRequirements(name, kind, coord, unlocks, source, mode);
     const extra = evaluateRouteGates(compileRawRequirements((requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))), unlocks);
-    const facility = combineAccess(access, { status: !extra.blockers.length ? 'ALLOWED' : extra.hasDataGap ? 'UNKNOWN' : 'NOT_READY',
+    const facility = combineAccess(access, { status: routeStatus(extra, unlocks.quests),
       reasons: extra.blockers.map(blocker => blocker.label) });
     return gate ? combineAccess(facility, { ...gate, reasons: gateReasonsBeyond(facility.reasons, gate.reasons) }) : facility;
   });
@@ -217,7 +218,6 @@ function evaluateSourceRequirements(
       return { status: 'LOCKED', reasons: [`Unlock ${canonicalArea}`] };
     }
     const result = evaluateRouteGates(compileRawRequirements([...requirements, ...(service?.requirements ?? []).map(raw => ({ raw, origin: 'ENTITY' as const }))]), unlocks);
-    return { status: !result.blockers.length ? 'ALLOWED' : result.hasDataGap ? 'UNKNOWN' : 'NOT_READY',
-      reasons: result.blockers.map(gate => gate.label) };
+    return { status: routeStatus(result, unlocks.quests), reasons: result.blockers.map(gate => gate.label) };
   }));
 }

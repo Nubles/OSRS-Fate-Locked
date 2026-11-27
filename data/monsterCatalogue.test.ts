@@ -10,10 +10,13 @@ describe('release-pinned monster source', () => {
     const bytes = readFileSync(new URL(`../public/${MONSTER_CATALOGUE.asset}`, import.meta.url));
     expect(createHash('sha256').update(bytes).digest('hex')).toBe(MONSTER_CATALOGUE.sha256);
     expect(createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')).toBe(MONSTER_CATALOGUE.sourceBlob);
-    const monsters = JSON.parse(bytes.toString('utf8')) as { id: number; name: string; skills: { hp: number }; defensive: { light: number; standard: number; heavy: number } }[];
+    const monsters = JSON.parse(bytes.toString('utf8')) as { id: number; name: string; skills: { hp: number }; defensive: { light: number; standard: number; heavy: number; crush: number } }[];
     expect(monsters).toHaveLength(MONSTER_CATALOGUE.rowCount);
     const graardor = monsters.find(m => m.id === 2215)!;
     expect(graardor.skills.hp).toBe(255);
     expect([graardor.defensive.light, graardor.defensive.standard, graardor.defensive.heavy]).toEqual([90, 90, 90]);
+    // The 24 November 2026 capture holds the 20 October 2026 update.
+    expect(monsters.find(m => m.id === 11278)?.defensive.crush).toBe(35); // Nex, Wiki dcrush = 35
+    expect(monsters.filter(m => m.name === 'Ocellus').map(m => m.skills.hp)).toEqual([2500, 1000, 5250]);
   });
 });

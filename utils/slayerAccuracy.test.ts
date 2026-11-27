@@ -3,10 +3,12 @@ import content from '../public/chunk-content.json';
 import { ChunkContentService } from '../services/ChunkContentService';
 import { locateSlayerTask } from './slayerTaskLocations';
 import corrections from '../data/sources/slayer-corrections.json';
+import families from '../data/slayerTaskFamilies.json';
+import familyExclusions from '../data/sources/slayer-family-exclusions.json';
 import type { SlayerMasters } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
 import { slayerReachability, type LocateFn } from './slayerReach';
-import { isOnTaskRequirement, slayerLocate, slayerReason } from './slayerDecisions';
+import { isOnTaskRequirement, slayerDecisions, slayerLocate, slayerReason } from './slayerDecisions';
 import { BOSSES_LIST, MISTHALIN_AREAS, MOBILITY_LIST, REGIONS_LIST, SKILLS_LIST, SLAYER_UNLOCKS_LIST } from '../data/items';
 import { QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
@@ -93,6 +95,27 @@ describe('where a master’s task is fought', () => {
     expect(wilderness.every(hit => hit.location.locationName === 'Wilderness God Wars Dungeon')).toBe(true);
   });
 
+  it('keeps Krystilia’s tasks in the Wilderness: not the Entrana Dungeon nor the King Black Dragon (slayer.d1[1])', () => {
+    // Wiki "Entrana Dungeon" oldid 15353043 (its Wilderness door is an exit only) and "Krystilia" oldid 15389119.
+    for (const task of ['Zombies', 'Black demons', 'Greater demons']) {
+      expect(located('Krystilia', task).filter(hit => hit.location.locationName === 'Entrana Dungeon'), task).toEqual([]);
+    }
+    expect(located('Krystilia', 'Black dragons').map(hit => hit.name)).not.toContain('King Black Dragon');
+    expect(located('Krystilia', 'Black dragons').length).toBeGreaterThan(0);
+    expect(located('Vannaka', 'Greater demons').filter(hit => hit.location.locationName === 'Entrana Dungeon')
+      .map(hit => `${hit.location.cx},${hit.location.cy}`)).toEqual(['44,52']);
+  });
+
+  it('finds no moved-out monster in the Revenant Caves, and the revenants still there (slayer.d2[0])', () => {
+    // Wiki "Revenant Caves" oldid 15397220: the 2020 overhaul moved them to the Wilderness Slayer Cave.
+    for (const [master, task] of [['Vannaka', 'Lesser demons'], ['Vannaka', 'Ankous'], ['Krystilia', 'Greater demons'], ['Nieve', 'Hellhounds'], ['Krystilia', 'Ice giants'], ['Krystilia', 'Green dragons']]) {
+      const hits = located(master, task);
+      expect(hits.filter(hit => hit.location.locationName === 'Revenant Caves'), `${master}/${task}`).toEqual([]);
+      expect(hits.some(hit => hit.location.locationName === 'Wilderness Slayer Cave'), `${master}/${task}`).toBe(true);
+    }
+    expect(located('Krystilia', 'Revenants').some(hit => hit.location.locationName === 'Revenant Caves')).toBe(true);
+  });
+
   it('names boss monsters the map knows', () => {
     for (const master of ['Konar quo Maten', 'Nieve', 'Krystilia']) {
       for (const boss of MASTERS[master].Bosses.bosses!) for (const monster of boss.monsters) {
@@ -169,6 +192,38 @@ describe('gates a player on the task meets (accuracy audit S-9)', () => {
   });
 });
 
+describe('quest-locked places the source marks as area unlocks (slayer.d3[0])', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+  const maxed = (without: string[] = []) => account({
+    skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+    levels: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])),
+    regions: [...REGIONS_LIST, ...MISTHALIN_AREAS],
+    mobility: [...MOBILITY_LIST],
+    bosses: [...BOSSES_LIST],
+    slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+    quests: Object.keys(QUEST_DATA).filter(quest => !without.includes(quest)),
+    diaries: Object.keys(DIARY_DATA),
+  });
+  const status = (unlocks: UnlockState, task: string) =>
+    slayerReachability({ 'Konar quo Maten': { [task]: MASTERS['Konar quo Maten'][task] } }, unlocks, slayerLocate(chunkContentService, unlocks, 'vanilla'), 'vanilla')
+      .masters[0].rows[0].status;
+
+  it('asks for the quest that opens the only place Konar names', () => {
+    for (const [task, quest] of [
+      ["Basilisks - Jormungand's Prison", 'The Fremennik Exiles'],
+      ["Dagannoths - Jormungand's Prison", 'The Fremennik Exiles'],
+      ['Fire giants - Waterfall Dungeon', 'Waterfall Quest'],
+    ]) {
+      expect(status(maxed(), task), task).toBe('ready');
+      expect(status(maxed([quest]), task), `${task} without ${quest}`).not.toBe('ready');
+    }
+  });
+});
+
 describe('boss tasks (Like a Boss)', () => {
   const names = (master: string) => MASTERS[master].Bosses.bosses!.map(boss => boss.name);
 
@@ -194,12 +249,32 @@ describe('boss tasks (Like a Boss)', () => {
       offered.push((assignment?.bosses ?? []).map(boss => boss.name));
       return { cx: 1, cy: 1, unlocked: true, accessStatus: 'ALLOWED' };
     };
-    const unlocks = masters({ levels: { ...account().levels, Slayer: 50 }, slayerUnlocks: ['Like a Boss'] });
+    const unlocks = masters({ levels: { ...account().levels, Slayer: 50 }, slayerUnlocks: ['Like a Boss'], quests: [...masters().quests, 'Regicide', 'Dragon Slayer II'] });
     expect(slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } }, unlocks, record).masters[0].rows[0].status).toBe('ready');
     expect(offered[0]).toContain('Zulrah');
     expect(offered[0]).toContain('Vorkath');
     expect(offered[0]).not.toContain('Shellbane gryphon');
     expect(offered[0]).not.toContain('Cerberus');
+  });
+
+  it('offer only the bosses whose quests and levels the run has (slayer.d1[3])', () => {
+    let offered: string[] = [];
+    const record: LocateFn = (_task, assignment) => {
+      offered = (assignment?.bosses ?? []).map(boss => boss.name);
+      return { cx: 1, cy: 1, unlocked: true, accessStatus: 'ALLOWED' };
+    };
+    const base = masters({ slayerUnlocks: ['Like a Boss'], quests: ['Lost City'] });
+    slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } }, base, record);
+    for (const boss of ['King Black Dragon', 'Vorkath', 'Zulrah', 'Barrows brothers', 'General Graardor', 'Duke Sucellus']) expect(offered, boss).not.toContain(boss);
+    expect(offered).toContain('Giant Mole');
+    slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } },
+      masters({ slayerUnlocks: ['Like a Boss'], quests: ['Lost City', 'Dragon Slayer I', 'Dragon Slayer II', 'Regicide', 'Priest in Peril', 'Death Plateau', 'Desert Treasure II'] }), record);
+    for (const boss of ['King Black Dragon', 'Vorkath', 'Zulrah', 'Barrows brothers', 'General Graardor', 'Duke Sucellus']) expect(offered, boss).toContain(boss);
+    // With the quest, the God Wars generals still need their own level.
+    slayerReachability({ Nieve: { Bosses: MASTERS.Nieve.Bosses } },
+      masters({ slayerUnlocks: ['Like a Boss'], quests: ['Lost City', 'Death Plateau'], levels: { ...account().levels, Strength: 65 } }), record);
+    expect(offered).not.toContain('General Graardor');
+    expect(offered).toContain("Kree'arra");
   });
 });
 
@@ -268,5 +343,215 @@ describe('Slayer rows from the November 2026 audit', () => {
     for (const entry of [...extra.removals, ...extra.places]) {
       expect(entry.wiki.every(url => corrections.sourceRevisions.some(source => source.url === url))).toBe(true);
     }
+  });
+});
+
+describe('God Wars Dungeon tasks need 60 Strength or 60 Agility (slayer.d1[0])', () => {
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+  const maxed = (strength: number, agility: number) => {
+    const unlocks = account({
+      skills: Object.fromEntries(SKILLS_LIST.map(skill => [skill, 10])),
+      levels: { ...Object.fromEntries(SKILLS_LIST.map(skill => [skill, 99])), Strength: strength, Agility: agility },
+      regions: [...REGIONS_LIST, ...MISTHALIN_AREAS],
+      mobility: [...MOBILITY_LIST],
+      bosses: [...BOSSES_LIST],
+      slayerUnlocks: [...SLAYER_UNLOCKS_LIST],
+      quests: Object.keys(QUEST_DATA),
+      diaries: Object.keys(DIARY_DATA),
+    });
+    return unlocks;
+  };
+  const status = (master: string, task: string, unlocks: UnlockState, mode = 'vanilla') =>
+    slayerReachability({ [master]: { [task]: MASTERS[master][task] } }, unlocks, slayerLocate(chunkContentService, unlocks, mode), mode)
+      .masters[0].rows[0].status;
+  const tasks: [string, string][] = [
+    ['Krystilia', 'Aviansies'], ['Krystilia', 'Bloodvelds'], ['Krystilia', 'Spiritual creatures'],
+    ['Nieve', 'Spiritual creatures'], ['Nieve', 'Aviansies'], ['Vannaka', 'Spiritual creatures'],
+    ['Konar quo Maten', 'Aviansies - God Wars Dungeon'], ['Konar quo Maten', 'Bloodvelds - God Wars Dungeon'],
+  ];
+
+  it('are not ready below both levels, and ready with either', () => {
+    for (const [master, task] of tasks) {
+      expect(status(master, task, maxed(50, 50)), `${master} ${task} at 50/50`).not.toBe('ready');
+      expect(status(master, task, maxed(60, 1)), `${master} ${task} with 60 Strength`).toBe('ready');
+      expect(status(master, task, maxed(1, 60)), `${master} ${task} with 60 Agility`).toBe('ready');
+    }
+  });
+
+  it('keep tasks with other places open: Nieve’s bloodvelds and Konar’s Slayer Tower bloodvelds', () => {
+    expect(status('Nieve', 'Bloodvelds', maxed(50, 50))).toBe('ready');
+    expect(status('Konar quo Maten', 'Bloodvelds - Slayer Tower', maxed(50, 50))).toBe('ready');
+  });
+});
+
+/**
+ * Map monsters whose own Wiki page (infobox_monster slayer_category, live query
+ * 23 November 2026) puts them in a task the family left out (slayer.d1[2]).
+ */
+const WIKI_CATEGORY_GAPS = `
+  spiders|Acidic Araxyte
+  araxytes|Acidic Araxyte
+  shades|Asyn shadow (Temple Trekking)
+  rats|Blessed giant rat
+  hellhounds|Bouncer
+  ogres|City guard
+  hill giants|Cyclops (Ardougne Zoo)
+  hill giants|Cyclops (Catacombs of Kourend)
+  dagannoths|Dagannoth Rex
+  dagannoths|Dagannoth Supreme
+  birds|Duckling
+  green dragons|Elvarg
+  ogres|Enclave guard
+  birds|Evil Chicken
+  ghosts|Ghost (Grave of Scorpius)
+  ghosts|Ghost (Melzar's Maze)
+  skeletons|Giant skeleton (Shadow Dungeon)
+  skeletons|Giant skeleton (Tarn's Lair)
+  goblins|Goblin (Goblin Village)
+  goblins|Goblin (God Wars Dungeon)
+  goblins|Goblin guard
+  ogres|Gorad
+  skeletons|Greater Skeleton Hellhound (Calvar'ion)
+  skeletons|Greater Skeleton Hellhound (Vet'ion)
+  goblins|Guard (Cave goblin)
+  ghosts|Haze
+  tzhaar|Jal-Ak
+  tzhaar|Jal-ImKot
+  tzhaar|Jal-MejJak
+  tzhaar|Jal-MejRah
+  tzhaar|Jal-Nib
+  tzhaar|Jal-Xil
+  tzhaar|Jal-Zek
+  tzhaar|JalTok-Jad
+  tzhaar|Ket-Zek
+  lizardmen|Lizardman shaman (Chambers of Xeric)
+  monkeys|Maniacal Monkey Archer
+  spiders|Mirrorback Araxyte
+  araxytes|Mirrorback Araxyte
+  monkeys|Monkey Archer
+  birds|Mounted terrorbird gnome
+  ogres|Ogre chieftain
+  ghosts|Revenant cyclops
+  ghosts|Revenant dark beast
+  ghosts|Revenant demon
+  ghosts|Revenant dragon
+  ghosts|Revenant goblin
+  ghosts|Revenant hellhound
+  ghosts|Revenant hobgoblin
+  ghosts|Revenant imp
+  ghosts|Revenant knight
+  ghosts|Revenant ork
+  ghosts|Revenant pyrefiend
+  shades|Riyl shadow (Temple Trekking)
+  spiders|Ruptura Araxyte
+  araxytes|Ruptura Araxyte
+  chaos druids|Salarin the twisted
+  scorpions|Scorpia's offspring (monster)
+  goblins|Sergeant Grimspike
+  goblins|Sergeant Steelwill
+  shades|Shade (Temple Trekking)
+  skeletons|Skeletal Mystic
+  skeletons|Skeletal miner
+  skeletons|Skeleton (Catacombs of Kourend)
+  skeletons|Skeleton (Forthos Ruin)
+  skeletons|Skeleton (Lucien's camp)
+  skeletons|Skeleton (Wilderness Agility Course)
+  skeletons|Skeleton Hellhound (Calvar'ion)
+  skeletons|Skeleton Hellhound (Vet'ion)
+  skeletons|Skeleton brute
+  skeletons|Skeleton fremennik
+  skeletons|Skeleton heavy
+  skeletons|Skeleton hero
+  skeletons|Skeleton thug
+  skeletons|Skeleton warlord
+  zombies|Skogre
+  zombies|Summoned Zombie
+  tzhaar|Tok-Xil
+  tzhaar|Tz-Kek
+  tzhaar|Tz-Kih
+  skeletons|Undead one
+  goblins|Wormbrain
+  tzhaar|Yt-HurKot
+  tzhaar|Yt-MejKot
+  zombies|Zombie (Entrana Dungeon)
+  zombies|Zombie (Kourend)
+  zombies|Zombie (Melzar's Maze)
+  zombies|Zombie (Sepulchre of Death)
+  zombies|Zombie (Shayzien Crypts)
+  zombies|Zombie (Stronghold of Security)
+  zombies|Zombie (Tarn's Lair)
+  zombies|Zombie (Temple Trekking)
+  zombies|Zombie (Wilderness)
+  pirates|Zombie pirate
+  zombies|Zombie pirate (Harmony Island)
+`.trim().split('\n').map(line => line.trim().split('|') as [string, string]);
+
+describe('task families hold every map monster the Wiki counts for the task (slayer.d1[2])', () => {
+  const service = new ChunkContentService();
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await service.init();
+    vi.unstubAllGlobals();
+  });
+  const list = families.families as Record<string, string[]>;
+  const excluded: Record<string, Record<string, string>> = familyExclusions.excluded;
+
+  it('list each audited monster, or leave it out with a reason (event, boss-fight spawn, raid or quest only)', () => {
+    expect(WIKI_CATEGORY_GAPS).toHaveLength(95);
+    for (const [family, name] of WIKI_CATEGORY_GAPS) {
+      const listed = list[family].includes(name);
+      const reason = excluded[family]?.[name];
+      expect(listed !== Boolean(reason), `${family}: ${name}`).toBe(true);
+    }
+    for (const [family, names] of Object.entries(excluded)) for (const [name, reason] of Object.entries(names)) {
+      expect(list[family], family).toBeDefined();
+      expect(list[family].includes(name), `${family}: ${name}`).toBe(false);
+      expect(reason.trim().length, `${family}: ${name}`).toBeGreaterThan(0);
+    }
+  });
+
+  it('count Krystilia’s zombies at the Graveyard of Shadows, her pirates at the Chaos Temple and ghosts in the Revenant Caves', () => {
+    const at = (master: string, task: string, monster: string) =>
+      locateSlayerTask(task, [service.entityLocations(monster, ['monster'])!], MASTERS[master][task], master);
+    expect(at('Krystilia', 'Zombies', 'Zombie (Wilderness)').length).toBeGreaterThan(0);
+    expect(at('Krystilia', 'Pirates', 'Zombie pirate').length).toBeGreaterThan(0);
+    expect(at('Mazchna', 'Ghosts', 'Revenant imp').map(hit => hit.location.locationName)).toContain('Revenant Caves');
+    expect(at('Nieve', 'Dagannoths', 'Dagannoth Rex').length).toBeGreaterThan(0);
+  });
+});
+
+describe('tasks the game names differently keep their decision and places (slayer.d2[1])', () => {
+  const service = new ChunkContentService();
+  beforeAll(async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => content })));
+    await service.init();
+    await chunkContentService.init();
+    vi.unstubAllGlobals();
+  });
+  // RuneLite's Slayer plugin reads the game's own task names: Fleshcrawlers, Scabarites, Mutated zygomites.
+  const pairs: [string, string][] = [
+    ['flesh crawler', 'fleshcrawler'], ['minions of scabara', 'scabarite'], ['zygomite', 'mutated zygomite'],
+    ['mazchna:flesh crawler', 'mazchna:fleshcrawler'], ['nieve:minions of scabara', 'nieve:scabarite'],
+    ['duradel:zygomite', 'duradel:mutated zygomite'],
+    ['konar quo maten:zygomites - zanari', 'konar quo maten:mutated zygomites - zanari'],
+    ['konar quo maten:zygomites - fossil island', 'konar quo maten:mutated zygomites - fossil island'],
+  ];
+
+  it('answer under the game’s name as under the tracker’s', () => {
+    const unlocks = account({ regions: [...REGIONS_LIST, ...MISTHALIN_AREAS], quests: Object.keys(QUEST_DATA), slayerUnlocks: [...SLAYER_UNLOCKS_LIST] });
+    const decisions = slayerDecisions(slayerReachability(MASTERS, unlocks, slayerLocate(chunkContentService, unlocks, 'vanilla'), 'vanilla'));
+    const index = service.slayerReachIndex();
+    for (const [ours, game] of pairs) {
+      expect(decisions[ours], ours).toBeDefined();
+      expect(decisions[game], game).toEqual(decisions[ours]);
+      expect(index[ours]?.length, ours).toBeGreaterThan(0);
+      expect(index[game], game).toEqual(index[ours]);
+    }
+    // The tracker's own names stay as they are: saves and older plugins use them.
+    expect(Object.keys(MASTERS.Mazchna)).toContain('Flesh Crawlers');
   });
 });

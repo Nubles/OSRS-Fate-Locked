@@ -7,6 +7,7 @@ import { GameProvider } from '../context/GameContext';
 import { CommandPalette } from './CommandPalette';
 import { RIVAL_ENABLED } from '../config/rules';
 import { useEscapeKey } from '../hooks/useEscapeKey';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -156,5 +157,73 @@ describe('CommandPalette Escape and focus', () => {
     } finally {
       if (offsetParent) Object.defineProperty(HTMLElement.prototype, 'offsetParent', offsetParent);
     }
+  });
+
+  it('after Ctrl+K, returns focus to the control that had it inside an open window', async () => {
+    const offsetParent = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetParent');
+    Object.defineProperty(HTMLElement.prototype, 'offsetParent', {
+      configurable: true,
+      get() { return (this as HTMLElement).parentNode; },
+    });
+    const TrappedWindow: React.FC = () => {
+      const ref = React.useRef<HTMLDivElement>(null);
+      useFocusTrap(ref, true);
+      return (
+        <div ref={ref} role="dialog" aria-modal="true" aria-label="Strategy" tabIndex={-1}>
+          <button type="button">Inside A</button>
+          <button type="button">Inside B</button>
+        </div>
+      );
+    };
+    try {
+      render(
+        <GameProvider storageKey="command-palette-shortcut-focus">
+          <button type="button" data-tour="palette">open palette</button>
+          <TrappedWindow />
+          <CommandPalette />
+        </GameProvider>,
+      );
+      const inside = screen.getByText('Inside B');
+      inside.focus();
+      const input = await openPalette();
+      await act(async () => { fireEvent.keyDown(input, { key: 'Escape' }); });
+      expect(screen.queryByRole('dialog', { name: 'Command palette' })).toBeNull();
+      expect(document.activeElement).toBe(inside);
+    } finally {
+      if (offsetParent) Object.defineProperty(HTMLElement.prototype, 'offsetParent', offsetParent);
+    }
+  });
+
+  it('after Ctrl+K with nothing focused, returns focus to the header Search button', async () => {
+    render(
+      <GameProvider storageKey="command-palette-shortcut-body">
+        <button type="button" data-tour="palette">open palette</button>
+        <CommandPalette />
+      </GameProvider>,
+    );
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.activeElement).toBe(document.body);
+    const input = await openPalette();
+    await act(async () => { fireEvent.keyDown(input, { key: 'Escape' }); });
+    expect(document.activeElement).toBe(screen.getByText('open palette'));
+  });
+
+  it('opened from the header button event, returns focus to that button', async () => {
+    render(
+      <GameProvider storageKey="command-palette-event-focus">
+        <button type="button" data-tour="palette">open palette</button>
+        <button type="button">elsewhere</button>
+        <CommandPalette />
+      </GameProvider>,
+    );
+    const header = screen.getByText('open palette');
+    screen.getByText('elsewhere').focus();
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('fate:open-palette', { detail: { returnFocusTarget: header } }));
+    });
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 40)); });
+    const input = screen.getByPlaceholderText(/Jump to a tab/);
+    await act(async () => { fireEvent.keyDown(input, { key: 'Escape' }); });
+    expect(document.activeElement).toBe(header);
   });
 });

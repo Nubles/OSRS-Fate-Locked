@@ -25,7 +25,7 @@ import { sealEdges, sightedSites } from '../utils/fateSiteMap';
 import { setFateMapPref, useFateMapPref } from '../utils/fateMapPrefsHook';
 import { chunkPlaceLabel } from '../utils/chunkPlaceLabel';
 import { FateLandLayer } from './FateLandLayer';
-import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail } from '../utils/chunkMapState';
+import { chunkMapState, chunkMapStateLine, chunkedUnlockedCount, reachLensDetail, vanillaUnlockedCount } from '../utils/chunkMapState';
 import { canNavigateOcean, OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { rankFrontierChunks } from '../utils/frontierAdvisor';
 import { hasMixedAreaOwnership, isNamedAreaReachableViaChunks, isRegionUnlocked } from '../utils/reachability';
@@ -119,6 +119,7 @@ import {
 } from '../utils/mapCoords';
 import { mapImageIndexForScale } from '../utils/mapImageSize';
 import { pointsAtRetiredFeed } from '../utils/starFeedOverride';
+import { foldedIncludes } from '../utils/textFold';
 
 const REGION_COORDS: Record<string, { x: number; y: number }> = {
   'Misthalin': { x: 73.41, y: 41.69 },
@@ -617,8 +618,8 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
   // boss/food/boost are excluded — too broad/low-signal to be useful.
   const lensTagSuggestions = useMemo(() => {
     if (!lensReady || lens || lensInput.trim().length < 2) return [];
-    const q = lensInput.trim().toLowerCase();
-    return chunkContentService.tagList().filter(t => t.includes(q) && !HIDDEN_TAGS.has(t)).slice(0, 5);
+    const q = lensInput.trim();
+    return chunkContentService.tagList().filter(t => foldedIncludes(t, q) && !HIDDEN_TAGS.has(t)).slice(0, 5);
   }, [lensInput, lensReady, lens]);
 
   // The run's routes from its start, as RuneLite's "Not ready" and the
@@ -2012,7 +2013,7 @@ const MapContent = React.memo(({ regionUnlocks, chunkUnlocks, isChunked, getGame
     const lensSuggestOpen = lensSuggestions.length > 0 || lensItemSuggestions.length > 0 || lensTagSuggestions.length > 0;
     const reachOn = lens?.kind === 'reach';
     const banksOn = lens?.kind === 'category' && lens.key === 'bank';
-    const unlockedCount = isChunked ? chunkedUnlockedCount(chunkUnlocks) : regionUnlocks.length;
+    const unlockedCount = isChunked ? chunkedUnlockedCount(chunkUnlocks) : vanillaUnlockedCount(regionUnlocks);
     return (
       <div className="owm-root">
         <aside className="osrs-inner owm-side" aria-label={isChunked ? 'Chunks' : 'Regions'}>

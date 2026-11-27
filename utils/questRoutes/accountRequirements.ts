@@ -65,6 +65,10 @@ const reviewedQuestProgress = new Map<string, [string, 'satisfies' | 'blocks']>(
   ["Mourning's End Part II: obtained the new key", ["Mourning's End Part II", 'satisfies']],
   ["Mourning's End Part II: reached the Death Altar", ["Mourning's End Part II", 'satisfies']],
   ['What Lies Below: reached the Tunnel of Chaos', ['What Lies Below', 'satisfies']],
+  // Interior gates (areas.d2[0], area-access.d1[1]); the Wiki pages are cited in interior-access.json.
+  ['Desert Treasure II: reached Ghorrock Prison', ['Desert Treasure II', 'satisfies']],
+  ['Desert Treasure II: reached the Scar', ['Desert Treasure II', 'satisfies']],
+  ['Sins of the Father: killed the mutated bloodveld', ['Sins of the Father', 'satisfies']],
 ]);
 
 const parseQuestProgress = (raw: string): RouteGate | null => {
@@ -101,9 +105,25 @@ const parseSkill = (raw: string): RouteGate | null => {
   // (the Mining Guild's door and the Slayer lairs, data/sources/named-task-unlock-locations.json).
   const named = raw.match(/^(.+?)\s+level\s+(\d+)$/i);
   const short = named ? null : raw.match(/^(\d+)\s+(.+)$/);
-  const skill = skills.get(normalise((named?.[1] ?? short?.[2]) ?? ''));
+  const word = normalise((named?.[1] ?? short?.[2]) ?? '');
   const level = Number(named?.[2] ?? short?.[1]);
+  // "32 Quest Points" (the Champions' Guild): evaluateRouteGates counts it from finished quests.
+  if (word === 'quest points' && level > 0) return { type: 'SKILL', skill: 'Quest Points', level, label: `${level} Quest Points` };
+  const skill = skills.get(word);
   return skill && level > 0 ? { type: 'SKILL', skill, level, label: `${skill} level ${level}` } : null;
+};
+
+/**
+ * "60 Strength or 60 Agility": either level is enough, as at the God Wars
+ * Dungeons' boulder and crack (slayer.d1[0]). Every side must be a skill level.
+ */
+const parseSkillChoice = (raw: string): RouteGate | null => {
+  const sides = raw.split(/\s+or\s+/i);
+  if (sides.length < 2) return null;
+  const gates = sides.map(parseSkill);
+  if (!gates.every((gate): gate is Extract<RouteGate, { type: 'SKILL' }> => gate?.type === 'SKILL' && gate.skill !== 'Quest Points')) return null;
+  const [first, ...rest] = gates;
+  return { ...first, label: gates.map(gate => gate.label).join(' or '), anyOf: rest.map(({ skill, level }) => ({ skill, level })) };
 };
 
 const parseUnlock = (raw: string): RouteGate | null => {
@@ -140,7 +160,7 @@ export const compileRawRequirements = (rawRequirements: readonly RawRouteRequire
   const normalisedEvidence = { ...evidence, raw: requirement };
   const rfd = requirement.match(/^RFD Chest ([1-8]) Subquests?$/i);
   if (rfd) return [{ type: 'RFD_SUBQUESTS', count: Number(rfd[1]), label: `Complete ${rfd[1]} Recipe for Disaster rescues` }];
-  return [parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw)];
+  return [parseQuest(normalisedEvidence) ?? parseQuestProgress(requirement) ?? parseSkill(requirement) ?? parseSkillChoice(requirement) ?? parseUnlock(requirement) ?? unresolved(evidence.raw)];
 });
 
 /** Appends compiled gates while preserving the original structured source evidence. */
@@ -179,7 +199,8 @@ export const evaluateRouteGates = (
       case 'SKILL':
         if (gate.skill === 'Quest Points'
           ? currentQuestPoints(unlocks) < gate.level
-          : !meetsSkillRequirement(unlocks, gate.skill, gate.level)) blockers.push(gate);
+          : !meetsSkillRequirement(unlocks, gate.skill, gate.level)
+            && !(gate.anyOf ?? []).some(other => meetsSkillRequirement(unlocks, other.skill, other.level))) blockers.push(gate);
         break;
       case 'EQUIPMENT': {
         const tier = unlocks.equipment?.[gate.slot] ?? 0;

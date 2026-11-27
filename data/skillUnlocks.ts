@@ -64,16 +64,18 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Gnome Stronghold Agility Course',
       'Lvl 1: Shayzien Basic Course',
       'Lvl 1: Shortcuts: Lumbridge Swamp, Brimhaven Dungeon',
+      'Lvl 1: Gnome Ball, Brimhaven Agility Arena (Low Obstacles)',
       'Lvl 5: Falador Crumbling Wall & Yanille Rocks Shortcuts',
       'Lvl 10: Corsair Cove Rocks & Brimhaven Ropeswing'
     ],
     2: [
       'Lvl 12: Western Brimhaven Stepping Stones',
-      'Lvl 15: Catch Leaping Trout (Barbarian Fishing)',
+      'Lvl 15: Catch Leaping Trout (Fishing 48, Strength 15; Barbarian Fishing)',
       'Lvl 15: Edgeville Monkeybars & Corsair Cove Pillar',
       'Lvl 16: Yanille Underwall Tunnel',
       'Lvl 18: Slayer Tower Broken Window Shortcut',
       'Lvl 20: Al Kharid Rooftop Course',
+      'Lvl 20: Brimhaven Agility Arena (Medium Obstacles)',
       'Lvl 20: Coal Trucks Log Balance'
     ],
     3: [
@@ -82,55 +84,57 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 26: Falador Underwall Tunnel',
       'Lvl 29: Mount Karuulm Lower Rocks',
       'Lvl 30: Agility Pyramid & Varrock Rooftop Course',
-      'Lvl 30: Catch Leaping Salmon',
+      'Lvl 30: Catch Leaping Salmon (Fishing 58, Strength 30)',
       'Lvl 30: Penguin Agility Course (Quest Req)'
     ],
     4: [
       'Lvl 31: Champions\' Guild Stepping Stone',
-      'Lvl 32: Catherby Grapple & Shilo Village Steps',
+      'Lvl 32: Catherby Grapple (Strength 35, Ranged 35) & Shilo Village Steps',
       'Lvl 35: Barbarian Outpost Course',
       'Lvl 37: Tree Gnome Stronghold Rocks',
-      'Lvl 40: Brimhaven Arena (High Obstacles)',
+      'Lvl 40: Brimhaven Agility Arena (High Obstacles)',
       'Lvl 40: Canifis Rooftop Course'
     ],
     5: [
       'Lvl 42: Dwarven Mine Crevice & Draynor Tunnel',
-      'Lvl 45: Catch Leaping Sturgeon',
+      'Lvl 45: Catch Leaping Sturgeon (Fishing 70, Strength 45)',
       'Lvl 45: Shayzien Advanced Course',
       'Lvl 47: Trollheim Hard Rocks',
       'Lvl 48: Ape Atoll Agility Course',
       'Lvl 49: Yanille Dungeon Pipe',
       'Lvl 50: Falador Rooftop & Colossal Wyrm Basic Courses',
-      'Lvl 50: Rogues\' Den Minigame Access'
+      'Lvl 50: Rogues\' Den Minigame Access (Thieving 50)'
     ],
     6: [
-      'Lvl 52: Hallowed Sepulchre (Floor 1) & Wilderness Course',
-      'Lvl 53: Karamja Strong Tree (Grapple)',
+      'Lvl 52: Hallowed Sepulchre (Floor 1; Sins of the Father) & Wilderness Course',
+      'Lvl 53: Karamja Strong Tree (Grapple; Strength 21, Ranged 42)',
       'Lvl 54: Motherlode Mine Dark Tunnels',
       'Lvl 55: Miscellania Stepping Stone',
       'Lvl 57: Yanille Dungeon Monkeybars',
-      'Lvl 60: God Wars Dungeon Access (Boulder)',
+      'Lvl 60: God Wars Dungeon Access (Little Crack)',
       'Lvl 60: Seers\' Village Rooftop & Werewolf Courses'
     ],
     7: [
       'Lvl 61: Slayer Tower Medium Chain',
-      'Lvl 62: Colossal Wyrm Advanced & Sepulchre Floor 2',
+      'Lvl 62: Colossal Wyrm Advanced & Hallowed Sepulchre (Floor 2; Sins of the Father)',
       'Lvl 62: Mount Karuulm Upper Rocks',
       'Lvl 63: Darkmeyer Wall & Taverley Railing',
       'Lvl 65: Revenant Caves Easy Pillar',
       'Lvl 66: Taverley Rocks & Lumbridge Swamp Stone',
+      'Lvl 68: Catherby Rocks (No Grapple)',
       'Lvl 70: Pollnivneach Rooftop & Dorgesh-Kaan Courses',
       'Lvl 70: Saradomin Encampment (GWD)',
       'Lvl 70: Taverley Dungeon Pipe (Blue Dragons)'
     ],
     8: [
       'Lvl 71: Slayer Tower Advanced Chain',
-      'Lvl 72: Hallowed Sepulchre (Floor 3)',
+      'Lvl 72: Hallowed Sepulchre (Floor 3; Sins of the Father)',
       'Lvl 73: Troll Stronghold Rocks',
       'Lvl 74: Lava Dragon Isle Stone',
       'Lvl 75: Prifddinas Agility Course',
       'Lvl 76: Zul-Andra Stepping Stone',
-      'Lvl 77: Hallowed Sepulchre (Floor 4)',
+      'Lvl 77: Hallowed Sepulchre (Floor 4; Sins of the Father)',
+      'Lvl 78: Karamja Strong Tree (No Grapple)',
       'Lvl 80: Rellekka Rooftop Course',
       'Lvl 80: Taverley Strange Floor'
     ],
@@ -140,7 +144,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 85: Tirannwn Advanced Rocks',
       'Lvl 86: Kalphite Lair Crevice (KQ Shortcut)',
       'Lvl 87: Brimhaven Dungeon Vine',
-      'Lvl 87: Hallowed Sepulchre (Floor 5)',
+      'Lvl 87: Hallowed Sepulchre (Floor 5; Sins of the Father)',
       'Lvl 88: Hydra Shortcut (Mount Karuulm)',
       'Lvl 90: Ardougne Rooftop Course'
     ],
@@ -252,9 +256,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     1: [
       'Sailing: Wooden Hull, Mast, Bronze Helm',
       'Lvl 1: Basic Wood Decor, Garden, Parlour',
-      'Lvl 1: Crude Furniture, Fireplaces',
+      'Lvl 1: Crude Furniture',
       'Lvl 1: Mahogany Homes (Beginner)',
       'Lvl 1: Move to Rimmington',
+      'Lvl 3: Clay Fireplace',
       'Lvl 5: Kitchen',
       'Lvl 9: Wooden Larder',
       'Lvl 10: Basic Stone Decor, Dining Room, Wood Dining Table',
@@ -352,7 +357,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     10: [
       'Lvl 91: Ornate Jewellery Box',
-      'Lvl 95: Spirit Tree & Fairy Ring',
+      'Lvl 95: Spirit Tree & Fairy Ring (Farming 83)',
       'Lvl 95: Crystal Throne',
       'Lvl 99: Demonic Throne',
       'Lvl 99: Construction Cape (Teleports)'
@@ -370,18 +375,22 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 11: Roasted Bird Meat (Firemaking 20)',
       'Lvl 15: Trout',
       'Lvl 18: Cod',
+      'Lvl 20: Mess (Great Kourend)',
       'Lvl 20: Pike, Meat Pie, Nettle Tea'
     ],
     3: [
       'Lvl 22: Fat Snail',
       'Lvl 25: Salmon, Stew, Fruit Batta',
       'Lvl 28: Sweetcorn, Slimy Eel',
+      'Lvl 29: Gnome Restaurant',
       'Lvl 30: Karambwan (Thoroughly), Chompy Bird',
+      'Lvl 30: Moss Lizards (Perilous Moons)',
       'Lvl 30: Tuna, Apple Pie'
     ],
     4: [
       'Lvl 32: Cooks\' Guild Access',
       'Lvl 35: Plain Pizza, Jug of Wine',
+      'Lvl 40: Trouble Brewing (Cabin Fever)',
       'Lvl 40: Lobster, Cake'
     ],
     5: [
@@ -921,7 +930,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Wasp Darts (The Birds and the Wasps)',
       'Lvl 3: Javelin Shafts, Bronze Javelins',
       'Lvl 5: Shortbows, Ogre Arrows',
-      'Lvl 7: Bronze Brutal Arrows',
+      'Lvl 7: Bronze Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 9: Bronze Crossbows/Bolts',
       'Lvl 10: Longbows, Bronze Darts'
     ],
@@ -930,7 +939,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 15: Iron Arrows, Oak Arrow Shafts',
       'Lvl 15: Killer Wasp Darts (The Birds and the Wasps)',
       'Lvl 17: Iron Javelins',
-      'Lvl 18: Iron Brutal Arrows',
+      'Lvl 18: Iron Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 20: Oak Shortbows',
       'Lvl 20: Vale Totems'
     ],
@@ -944,10 +953,10 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     4: [
       'Lvl 32: Steel Javelins, Kebbit Bolts',
-      'Lvl 33: Steel Brutal Arrows',
+      'Lvl 33: Steel Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 35: Willow Shortbows/Totems',
       'Lvl 37: Steel Darts',
-      'Lvl 38: Black Brutal Arrows',
+      'Lvl 38: Black Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 39: Iron Crossbows/Bolts',
       'Lvl 40: Willow Longbows, Battlestaves'
     ],
@@ -959,7 +968,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 46: Steel Crossbows/Bolts',
       'Lvl 47: Light Ballista, Mithril Javelins',
       'Lvl 48: Topaz Bolts',
-      'Lvl 49: Mithril Brutal Arrows',
+      'Lvl 49: Mithril Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 50: Maple Shortbows/Totems'
     ],
     6: [
@@ -976,7 +985,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     7: [
       'Lvl 61: Adamant Crossbows/Bolts',
-      'Lvl 62: Sunlight Antler Bolts, Adamant Javelins/Brutal Arrows',
+      'Lvl 62: Sunlight Antler Bolts, Adamant Javelins, Adamant Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 63: Ruby Bolts',
       'Lvl 65: Yew Shortbows/Totems, Diamond Bolts',
       'Lvl 67: Adamant Darts',
@@ -993,7 +1002,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 74: Scorching Bows (While Guthix Sleeps)',
       'Lvl 75: Rune Arrows, Magic Arrow Shafts',
       'Lvl 76: Amethyst Broad Bolts',
-      'Lvl 77: Rune Javelins/Brutal Arrows',
+      'Lvl 77: Rune Javelins, Rune Brutal Arrows (Zogre Flesh Eaters)',
       'Lvl 78: Dragon Crossbow, Toxic Blowpipe',
       'Lvl 80: Magic Shortbows/Totems'
     ],
@@ -1115,7 +1124,8 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 15: Ruby Harvests, Sandworms, Prael Bats, Butterfly Jars',
       'Lvl 17: Puro-Puro, Baby Implings',
       'Lvl 17: Black Honey Buzzards (The Birds and the Wasps)',
-      'Lvl 19: Tropical Wagtails'
+      'Lvl 19: Tropical Wagtails',
+      'Lvl 20: Moss Lizards (Perilous Moons)'
     ],
     3: [
       'Lvl 21: Red Crabs',
@@ -1133,7 +1143,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 31: Spined Larupias, Teasing Sticks',
       'Lvl 33: Barb-tailed Kebbits',
       'Lvl 34: Teak Bird Houses',
-      'Lvl 35: Bluegills, Snowy Knights',
+      'Lvl 35: Bluegills (Fishing 43), Snowy Knights',
       'Lvl 36: Earth Implings',
       'Lvl 37: Prickly Kebbits',
       'Lvl 38: Graahk Gear',
@@ -1155,7 +1165,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     6: [
       'Lvl 51: Sabre-toothed Kebbits, Common Tench (Fishing 56)',
       'Lvl 52: Kyatt Gear',
-      'Lvl 53: Grey Chinchompas',
+      'Lvl 53: Grey Chinchompas (Eagles\' Peak)',
       'Lvl 54: Gloves of Silence',
       'Lvl 55: Sabre-toothed Kyatts',
       'Lvl 57: Dark Kebbits, Rumours (Adept)',
@@ -1167,17 +1177,17 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     ],
     7: [
       'Lvl 62: Wild Broavs (While Guthix Sleeps)',
-      'Lvl 63: Red Chinchompas',
+      'Lvl 63: Red Chinchompas (Eagles\' Peak)',
       'Lvl 65: Magpie Implings, Sunlight Moths',
       'Lvl 66: Spottier Cape',
       'Lvl 67: Black Salamanders',
-      'Lvl 68: Mottled Eels',
+      'Lvl 68: Mottled Eels (Fishing 73)',
       'Lvl 69: Dashing Kebbits'
     ],
     8: [
       'Lvl 71: Imps (Magic Boxes)',
       'Lvl 72: Sunlight Antelope, Rumours (Expert)',
-      'Lvl 73: Black Chinchompas',
+      'Lvl 73: Black Chinchompas (Eagles\' Peak)',
       'Lvl 74: Ninja Implings, Magic Bird Houses',
       'Lvl 75: Moonlight Moths, Murng Bats',
       'Lvl 76: Letvek (The Blood Moon Rises)',
@@ -1188,7 +1198,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
     9: [
       'Lvl 82: Stymphikes (The Blood Moon Rises)',
       'Lvl 83: Dragon Implings',
-      'Lvl 87: Greater Sirens',
+      'Lvl 87: Greater Sirens (Fishing 91)',
       'Lvl 89: Lucky Implings, Redwood Bird Houses',
       'Lvl 90: Psykk Bats'
     ],
@@ -1205,6 +1215,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 5: Water Strike',
       'Lvl 6: Arceuus Library Teleport',
       'Lvl 7: Lvl-1 Enchant, Enchant Bolt (Sapphire)',
+      'Lvl 7: Mage Training Arena (Enchanting Chamber)',
       'Lvl 9: Earth Strike'
     ],
     2: [
@@ -1750,7 +1761,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 27: Steel Salvaging Hook',
       'Lvl 28: Dock Ardougne, 3 Port Tasks, Bronze Cannon',
       'Lvl 29: Teak Cargo Hold',
-      'Lvl 30: Dock Port Khazard, Barracuda Trials',
+      'Lvl 30: Dock Port Khazard, Barracuda Trials (The Tempor Tantrum)',
       'Lvl 30: Bounty Port Tasks'
     ],
     4: [
@@ -1770,30 +1781,32 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 41: Recolour Sails (Construction 27)',
       'Lvl 42: Dock Cairn Isle, Chinchompa Island, Salvaging Station',
       'Lvl 44: Dock Sunset Coast, Mithril Salvaging Hook',
-      'Lvl 45: Dock Summer Shore, Little Pearl',
+      'Lvl 45: Dock Summer Shore, Little Pearl, Remote Island',
       'Lvl 46: Dock Vatrachos Island, Aldarin, Mahogany Cargo Hold',
       'Lvl 47: Dock Onyx Crest, Steel Cannon',
       'Lvl 48: Dock Ruins of Unkah, Mahogany Hull',
       'Lvl 49: Dock Shimmering Atoll',
       'Lvl 50: Dock Void Outpost, Port Roberts',
-      'Lvl 50: Recruit Captain Siad',
+      'Lvl 50: Recruit Captain Siad (The Tourist Trap)',
       'Lvl 50: Sail Sloop, 3 Boats',
       'Lvl 50: Ballistic Attractor (Construction 44; Animal Magnetism)'
     ],
     6: [
       'Lvl 51: Dock Anglers\' Retreat',
+      'Lvl 52: Dock Red Rock (The Red Reef)',
       'Lvl 52: Mahogany Mast, Canvas Sails',
       'Lvl 53: Salvage Large Shipwrecks, Wind Catcher',
       'Lvl 54: Dock Minotaurs\' Rest, Mithril Keel',
       'Lvl 55: 2 Crewmates (Adventurer Ada)',
+      'Lvl 55: Barracuda Trials (The Jubbly Jive)',
       'Lvl 55: Dock Isle of Souls, Mithril Helm, Teleport Focus',
-      'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net',
+      'Lvl 56: Dock Isle of Bones, 4 Port Tasks, Rope Trawling Net (Construction 45)',
       'Lvl 56: Chum Station (Construction 45)',
       'Lvl 57: Weather Pattern Charting, Mithril Cannon',
       'Lvl 58: Dock Laguna Aurorae',
       'Lvl 59: Adamant Salvaging Hook',
       'Lvl 60: Dock Charred Island, Camphor Cargo Hold',
-      'Lvl 60: Recruit Cabin Boy Jenkins'
+      'Lvl 60: Recruit Cabin Boy Jenkins (Dragon Slayer I; The Restless Ghost)'
     ],
     7: [
       'Lvl 61: Dock Tear of the Soul, Rename Boat',
@@ -1801,17 +1814,18 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 63: Dock Wintumber Island',
       'Lvl 63: Bosun\'s Workbench (Construction 54; The Red Reef)',
       'Lvl 64: Dock Crown Jewel, Salvage Pirate Shipwrecks',
-      'Lvl 65: Dock Etceteria, Recruit Oarswoman Olga',
+      'Lvl 65: Dock Etceteria, Recruit Oarswoman Olga (In Aid of the Myreque)',
       'Lvl 65: Linen Trawling Net (Construction 61)',
       'Lvl 66: Dock Port Tyras, Lledrith Island, Adamant Keel',
       'Lvl 67: Dock Deepfin Point, Camphor Hull',
       'Lvl 68: Dock Jatizso/Neitiznot, Camphor Mast',
-      'Lvl 68: Advanced Chum Station',
+      'Lvl 68: Advanced Chum Station (Construction 61)',
       'Lvl 69: Dock Rainbow\'s End, Adamant Cannon',
       'Lvl 70: 3 Crewmates (Jittery Jim)',
       'Lvl 70: Dock Prifddinas, Fathom Stone'
     ],
     8: [
+      'Lvl 72: Barracuda Trials (The Gwenith Glide; Regicide)',
       'Lvl 72: Dock Sunbleak Island, Adamant Helm',
       'Lvl 73: Dock Ynysdail, Salvage Mercenary Shipwrecks, Crystal Extractor',
       'Lvl 74: Dock Waterbirth Island, Rune Salvaging Hook',
@@ -1821,13 +1835,13 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 78: 4 Boats, Eternal Brazier',
       'Lvl 79: Dock Drumstick Isle, Gale Catcher',
       'Lvl 80: Dock Weiss, Salvage Fremennik Shipwrecks',
-      'Lvl 80: Ironwood Cargo Hold, Rune Cannon, Recruit Bosun Zarah'
+      'Lvl 80: Ironwood Cargo Hold, Rune Cannon, Recruit Bosun Zarah (Royal Trouble; Hard Fremennik Diary)'
     ],
     9: [
       'Lvl 81: Dock Brittle Isle, Ironwood Hull',
-      'Lvl 82: Chum Spreader',
+      'Lvl 82: Chum Spreader (Construction 74)',
       'Lvl 83: Ironwood Mast, Cotton Sails',
-      'Lvl 84: 5 Port Tasks, Cotton Trawling Net',
+      'Lvl 84: 5 Port Tasks, Cotton Trawling Net (Construction 73)',
       'Lvl 85: Rune Keel, 4 Crewmates (Jolly Jim)',
       'Lvl 86: Dragon Salvaging Hook',
       'Lvl 87: Dock Grimstone, Salvage Merchant Shipwrecks, Rune Helm',
@@ -1933,7 +1947,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 1: Smith Bronze Axe/Dagger',
       'Lvl 2: Bronze Mace',
       'Lvl 3: Bronze Med Helm/Bolts',
-      'Lvl 4: Bronze Shortsword/Nails/Wire/Darts',
+      'Lvl 4: Bronze Shortsword/Nails/Wire, Bronze Darts (The Tourist Trap)',
       'Lvl 5: Bronze Scimitar/Arrows/C-balls/Spear/Hasta',
       'Lvl 6: Bronze Longsword/Limbs/Javelin Tips',
       'Lvl 7: Bronze Full Helm/Knives',
@@ -1947,11 +1961,12 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 13: Blurite Bars/Limbs/Bronze Claws',
       'Lvl 14: Bronze 2h Sword, Barronite',
       'Lvl 15: Iron Bars/Daggers',
+      'Lvl 15: Giants\' Foundry (Sleeping Giants)',
       'Lvl 16: Iron Axe, Bronze Legs/Skirt',
       'Lvl 17: Iron Mace/Spit',
       'Lvl 18: Bronze Platebody, Iron Med Helm/Bolts',
-      'Lvl 19: Iron Shortsword/Nails/Darts',
-      'Lvl 20: Elemental Bars, Iron Arrows/C-balls',
+      'Lvl 19: Iron Shortsword/Nails, Iron Darts (The Tourist Trap)',
+      'Lvl 20: Elemental Metal, Iron Arrows/C-balls',
       'Lvl 20: Silver Bars, Iron Scimitar/Spear/Hasta'
     ],
     3: [
@@ -1970,7 +1985,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 31: Steel Axe, Iron Legs/Skirt',
       'Lvl 32: Steel Mace',
       'Lvl 33: Iron Platebody, Steel Med Helm/Bolts',
-      'Lvl 34: Steel Shortsword/Nails/Darts',
+      'Lvl 34: Steel Shortsword/Nails, Steel Darts (The Tourist Trap)',
       'Lvl 35: Steel Scimitar/Arrows/C-balls/Spear/Hasta',
       'Lvl 35: Secateurs Attachments (Woodcutting 35)',
       'Lvl 36: Steel Longsword/Limbs/Javelin Tips/Studs',
@@ -1996,7 +2011,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 51: Mithril Axe, Shayzien T1 Greaves',
       'Lvl 52: Mithril Mace',
       'Lvl 53: Mithril Med Helm/Bolts, Shayzien T1 Body',
-      'Lvl 54: Mithril Shortsword/Darts/Nails',
+      'Lvl 54: Mithril Shortsword/Nails, Mithril Darts (The Tourist Trap)',
       'Lvl 55: Mithril Scimitar/Arrows/C-balls/Spear/Hasta, Shayzien T2 Gloves',
       'Lvl 55: Purging Staff (While Guthix Sleeps)',
       'Lvl 56: Mithril Longsword/Limbs/Keel/Javelin Tips',
@@ -2004,6 +2019,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 58: Mithril Sq Shield',
       'Lvl 59: Mithril Warhammer, Mith Grapple Tips, Shayzien T2 Helm',
       'Lvl 60: Aquanite Hoppers',
+      'Lvl 60: Blast Furnace (No Entrance Fee)',
       'Lvl 60: Mithril Battleaxe, Dragon Sq Shield'
     ],
     7: [
@@ -2012,30 +2028,30 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 63: Mithril Claws, Shayzien T2 Body',
       'Lvl 64: Mithril 2h Sword',
       'Lvl 65: Shayzien T3 Gloves',
-      'Lvl 66: Mithril Legs/Skirt, Wyvern Shield',
+      'Lvl 66: Mithril Legs/Skirt, Wyvern Shield (Magic 66)',
       'Lvl 67: Shayzien T3 Boots',
       'Lvl 68: Mithril Platebody',
       'Lvl 69: Shayzien T3 Helm',
       'Lvl 70: Adamant Bars/Daggers',
-      'Lvl 70: Crystal Helm, Celestial Signet',
+      'Lvl 70: Crystal Helm, Celestial Signet (Crafting 70; Song of the Elves)',
       'Lvl 70: Confliction Gauntlets (Crafting 83)',
       'Lvl 70: Zombie Axe/Helm Repair, Belle\'s Folly Repair (Sleeping Giants)'
     ],
     8: [
       'Lvl 71: Adamant Axe, Shayzien T3 Greaves',
-      'Lvl 72: Adamant Mace, Crystal Legs, Noxious Halberd (Crafting 72)',
+      'Lvl 72: Adamant Mace, Crystal Legs (Crafting 72; Song of the Elves), Noxious Halberd (Crafting 72)',
       'Lvl 73: Adamant Med Helm/Bolts, Shayzien T3 Body',
-      'Lvl 74: Adamant Shortsword/Keel/Darts/Nails, Crystal Body',
+      'Lvl 74: Adamant Shortsword/Keel/Nails, Adamant Darts (The Tourist Trap), Crystal Body (Crafting 74; Song of the Elves)',
       'Lvl 74: Cupronickel Bars, Emberlight (While Guthix Sleeps)',
       'Lvl 75: Adamant Scimitar/Arrows/C-balls/Spear/Hasta',
       'Lvl 75: Dragon Kiteshield, Shayzien T4 Gloves',
       'Lvl 75: Sturdy Harnesses (Woodcutting 75)',
-      'Lvl 76: Adamant Longsword/Limbs/Javelin Tips, Crystal Tools',
+      'Lvl 76: Adamant Longsword/Limbs/Javelin Tips, Crystal Tools (Crafting 76; Song of the Elves)',
       'Lvl 77: Adamant Full Helm/Knives, Shayzien T4 Boots',
-      'Lvl 78: Adamant Sq Shield, Crystal Weapon/Shield',
+      'Lvl 78: Adamant Sq Shield, Crystal Weapon/Shield (Crafting 78; Song of the Elves)',
       'Lvl 79: Adamant Warhammer, Shayzien T4 Helm',
       'Lvl 80: Adamant Battleaxe, Godsword Blade',
-      'Lvl 80: Crystal Key/Teleport'
+      'Lvl 80: Crystal Key/Teleport (Crafting 80; Song of the Elves)'
     ],
     9: [
       'Lvl 81: Adamant Chainbody, Shayzien T4 Greaves',
@@ -2044,11 +2060,11 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 83: Oathplate Armour (A Kingdom Divided)',
       'Lvl 84: Adamant 2h Sword',
       'Lvl 85: Infernal Pickaxe, Ursine Chainmace, Shayzien T5 Gloves',
-      'Lvl 85: Runite Bars/Daggers, Spirit Sigils',
+      'Lvl 85: Runite Bars/Daggers, Spirit Sigils (Prayer 90)',
       'Lvl 86: Adamant Legs/Skirt, Rune Axe/Keel',
       'Lvl 87: Rune Mace, Shayzien T5 Boots',
       'Lvl 88: Adamant Platebody, Rune Med Helm/Bolts',
-      'Lvl 89: Rune Shortsword/Nails/Darts, Shayzien T5 Helm',
+      'Lvl 89: Rune Shortsword/Nails, Rune Darts (The Tourist Trap), Shayzien T5 Helm',
       'Lvl 90: Dragon Platebody, dfs/Ward',
       'Lvl 90: Rune Scimitar/Arrows/C-balls/Spear/Hasta',
       'Lvl 90: Torva Repair'
@@ -2140,7 +2156,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
   'Thieving': {
     1: [
       'Lvl 1: Pickpocket Man/Woman',
-      'Lvl 1: Winter Sq\'irk',
+      'Lvl 1: Winter Sq\'irk (Sorceress\'s Garden)',
       'Lvl 2: Vegetable Stalls',
       'Lvl 5: Bakery & Tea Stalls',
       'Lvl 5: Crafting Stalls',
@@ -2153,7 +2169,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 20: Silk Stalls, Ogre Coffins'
     ],
     3: [
-      'Lvl 21: Pyramid Plunder (Room 1)',
+      'Lvl 21: Pyramid Plunder (Room 1; Icthlarin\'s Little Helper)',
       'Lvl 22: Wine Stalls',
       'Lvl 25: Warriors, Digsite Workmen, Fruit Stalls, Spring Sq\'irk',
       'Lvl 27: Seed Stalls',
@@ -2162,7 +2178,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 30: The Feud (Blackjack)'
     ],
     4: [
-      'Lvl 31: Pyramid Plunder (Room 2)',
+      'Lvl 31: Pyramid Plunder (Room 2; Icthlarin\'s Little Helper)',
       'Lvl 32: Pickpocket Rogues',
       'Lvl 33: Rusty Chest',
       'Lvl 35: Fur Stalls',
@@ -2172,17 +2188,18 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 40: Pickpocket Guards'
     ],
     5: [
-      'Lvl 41: Pyramid Plunder (Room 3)',
+      'Lvl 41: Pyramid Plunder (Room 3; Icthlarin\'s Little Helper)',
       'Lvl 42: Fish Stalls',
       'Lvl 43: Chest (50 Coins)',
       'Lvl 45: Bandits, Fremennik Citizens, Autumn Sq\'irk',
       'Lvl 47: Chest (Steel Arrowtips)',
       'Lvl 49: Crossbow Stalls',
+      'Lvl 49: Stealing Artefacts',
       'Lvl 50: Rogues\' Den (Wall Safes)',
       'Lvl 50: Wealthy Citizens, Silver Stalls'
     ],
     6: [
-      'Lvl 51: Pyramid Plunder (Room 4)',
+      'Lvl 51: Pyramid Plunder (Room 4; Icthlarin\'s Little Helper)',
       'Lvl 52: Dorgesh-Kaan Average Chests (Death to the Dorgeshuun)',
       'Lvl 53: Desert Bandits',
       'Lvl 54: Tarnished Chest',
@@ -2191,15 +2208,15 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 60: Pickpocket Pirates'
     ],
     7: [
-      'Lvl 61: Pyramid Plunder (Room 5)',
+      'Lvl 61: Pyramid Plunder (Room 5; Icthlarin\'s Little Helper)',
       'Lvl 64: Stone Chests',
-      'Lvl 65: Menaphite Thugs, Magic Stalls, Summer Sq\'irk',
+      'Lvl 65: Menaphite Thugs, Magic Stalls (Monkey Madness I), Summer Sq\'irk',
       'Lvl 65: Watchmen, Spice & Scimitar Stalls',
       'Lvl 66: Hallowed Sepulchre Coffins (Sins of the Father)',
       'Lvl 70: Paladins'
     ],
     8: [
-      'Lvl 71: Pyramid Plunder (Room 6)',
+      'Lvl 71: Pyramid Plunder (Room 6; Icthlarin\'s Little Helper)',
       'Lvl 72: Chest (Ardougne Castle)',
       'Lvl 75: Gnomes, Gem Stalls',
       'Lvl 76: Reinforced Chest',
@@ -2207,7 +2224,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 80: Heroes'
     ],
     9: [
-      'Lvl 81: Pyramid Plunder (Room 7)',
+      'Lvl 81: Pyramid Plunder (Room 7; Icthlarin\'s Little Helper)',
       'Lvl 82: Vyres, Ore Stalls',
       'Lvl 84: Rogues\' Castle Chests',
       'Lvl 84: Grand Hallowed Coffin (Sins of the Father)',
@@ -2216,13 +2233,14 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 90: TzHaar-Hurs'
     ],
     10: [
-      'Lvl 91: Pyramid Plunder (Room 8)',
+      'Lvl 91: Pyramid Plunder (Room 8; Icthlarin\'s Little Helper)',
       'Lvl 99: Skill Mastery (Thieving Cape)'
     ],
   },
   'Woodcutting': {
     1: [
       'Lvl 1: Bronze/Iron Axes & Felling Axes, Normal & Achey Trees',
+      'Lvl 1: Forestry',
       'Lvl 1: Kharidian Cactus (Fill Waterskins)',
       'Lvl 1: Up to 1 Kindling (Ice Demon, Chambers of Xeric)',
       'Lvl 6: Steel Axes & Felling Axes',

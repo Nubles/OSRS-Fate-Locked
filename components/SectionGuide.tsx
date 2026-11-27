@@ -143,7 +143,7 @@ export const GUIDES: Record<string, Guide> = {
     bullets: [
       'Browse locked and unlocked achievements across categories.',
       'They unlock by themselves as you reach quest, skill, area, gear, roll, ritual, unlock and pet milestones.',
-      'Each one is a title you can wear. Each also gives Fate (1 to 5 for first steps, up to 25 for the hardest), and the biggest a free random ritual.',
+      'Each one is a title you can wear. Each also gives Fate (1 to 5 for first steps, up to 25 for the hardest). The hardest also give a Chaos Key, and the biggest of those a free random ritual.',
       'Achievements for levels, quests, diaries, Combat Achievements, the collection log, Slayer, clues, bosses and minigames also raise that activity\'s Key chance: 0.2% for first steps, 0.3% or 0.5% for bigger ones. Vanilla and Chunked minigame stashes keep their own odds.',
       'Achievements earned before rewards arrived pay once: their free rituals, and their Fate up to the pity line.',
     ],
@@ -263,7 +263,9 @@ export const SectionGuide: React.FC<Props> = ({ id, className, suspendModals = f
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  useEscapeKey(() => setOpen(false), open && !suspendModals);
+  // Escape closes only this popover, not the window it sits in, and focus
+  // goes back to the "?" button.
+  useEscapeKey(() => { setOpen(false); btnRef.current?.focus(); }, open && !suspendModals, true);
 
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;

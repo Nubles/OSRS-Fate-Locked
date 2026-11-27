@@ -15,6 +15,7 @@ import { FixedSizeGrid as Grid } from 'react-window';
 import { wikiService } from '../services/WikiService';
 import { priceService } from '../services/PriceService';
 import { collectionLogSync, collectionIdentityReview } from '../services/CollectionLogSyncService';
+import { sharedSlotIds, withSharedSlots } from '../data/collectionLogSlots';
 import { WikiLink } from './WikiLink';
 import { collogReachability } from '../utils/collogReach';
 import { collectionGridColumns } from '../utils/collectionGrid';
@@ -112,7 +113,8 @@ const Cell = ({ columnIndex, rowIndex, style, data }: any) => {
 export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefault?: boolean }) => {
   const { unlocks: savedUnlocks, collectionLogIdentity, logCollectionItem, rollForKey } = useGame();
   const identityReview = useMemo(() => collectionIdentityReview(savedUnlocks.collectionLog, collectionLogIdentity ? [] : collectionLogSync.legacyMappings(), COLLECTION_LOG_DATA, collectionLogIdentity), [savedUnlocks.collectionLog, collectionLogIdentity]);
-  const unlocks = useMemo(() => ({ ...savedUnlocks, collectionLog: Object.fromEntries(Object.entries(savedUnlocks.collectionLog).filter(([id]) => !identityReview.blockedIds.has(Number(id)))) }), [savedUnlocks, identityReview]);
+  // One item fills every page that lists it, so both layouts read the log through its shared slots.
+  const unlocks = useMemo(() => ({ ...savedUnlocks, collectionLog: withSharedSlots(Object.fromEntries(Object.entries(savedUnlocks.collectionLog).filter(([id]) => !identityReview.blockedIds.has(Number(id)))), identityReview.blockedIds) }), [savedUnlocks, identityReview]);
   const [activeTab, setActiveTab] = useState(Object.keys(COLLECTION_LOG_DATA)[0]);
   const [activePage, setActivePage] = useState<string>('');
   const [viewMode, setViewMode] = useState<'PAGE' | 'SEARCH_ALL'>('PAGE');
@@ -135,13 +137,16 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
         await priceService.init();
         let total = 0;
         let maxItem = { name: '', value: 0 };
+        const valued = new Set<number>();
 
-        // Iterate all known collection log items
+        // Iterate all known collection log items, each item once however many pages list it
         Object.values(COLLECTION_LOG_DATA).forEach(tab => {
             Object.values(tab.pages).forEach(page => {
                 page.items.forEach(item => {
                     const count = unlocks.collectionLog[item.id] || 0;
-                    if (count > 0) {
+                    const slot = sharedSlotIds(item.id)[0];
+                    if (count > 0 && !valued.has(slot)) {
+                        valued.add(slot);
                         const price = priceService.getPrice(item.name);
                         const stackValue = price * count;
                         if (price > 0) {
@@ -255,12 +260,16 @@ export const useCollectionLogModel = (searchTerm: string, opts?: { showReachDefa
   }), [activeItems, unlocks, searchTerm]);
 
   const globalStats = useMemo(() => {
-    let obtained = 0, total = 0;
+    // The game's total counts an item once, however many pages list it.
+    const counted = new Set<number>();
+    let obtained = 0;
     Object.values(COLLECTION_LOG_DATA).forEach(tab => Object.values(tab.pages).forEach(page => page.items.forEach(item => {
-        total++;
-        if (unlocks.collectionLog[item.id]) obtained++;
+        const slot = sharedSlotIds(item.id);
+        if (counted.has(slot[0])) return;
+        counted.add(slot[0]);
+        if (slot.some(id => unlocks.collectionLog[id])) obtained++;
     })));
-    return { obtained, total };
+    return { obtained, total: counted.size };
   }, [unlocks.collectionLog, syncVersion]);
 
   // Reachable %: how much of the log is even obtainable given current unlocks

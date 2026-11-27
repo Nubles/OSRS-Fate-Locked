@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFreshState, GameProvider, prepareKeyRollAction } from '../context/GameContext';
-import { EQUIP_TIER_TEXT_COLORS, ReferenceModal } from './ReferenceModal';
+import { ChunkedFateRules, EQUIP_TIER_TEXT_COLORS, ReferenceModal } from './ReferenceModal';
 import { unlockableAreas } from '../utils/freeAreas';
 import { MISTHALIN_AREAS } from '../constants';
 import { STARTING_KEYS } from '../config/economy';
@@ -275,5 +275,19 @@ describe('ReferenceModal Areas table size', () => {
     expect(counts('vanilla')).toBe(unlockableAreas('vanilla').length);
     expect(counts('xtreme')).toBe(unlockableAreas('xtreme').length);
     expect(counts('xtreme')).toBe(counts('vanilla') + MISTHALIN_AREAS.filter(area => area !== 'Lumbridge').length);
+  });
+});
+
+describe('ReferenceModal Fate\'s Mercy', () => {
+  // utils/chunkedFate.ts mercyBlocker: a waiting Breakthrough keeps Mercy shut
+  // however long the run has been quiet (pinned in utils/chunkedFate.test.ts,
+  // 'still waits on what always works'); only the skill room, exploring and
+  // doable quest guesses give way after the quiet spell.
+  it('keeps a waiting Breakthrough out of the guesses a quiet spell overrides', () => {
+    const text = renderToStaticMarkup(<ChunkedFateRules chaosCost={25} cartographerCost={40} />)
+      .replace(/<[^>]+>/g, '').replace(/&#x27;/g, "'");
+    const mercy = text.slice(text.indexOf("Fate's Mercy. It opens only"));
+    expect(mercy).toContain('no Breakthrough roll is waiting (roll it first); no skill your chunks can train is below its tier cap; no exploring roll is waiting; and no quest in your chunks is doable now. Those last three are the tracker\'s best guess');
+    expect(mercy).not.toContain('Breakthrough or exploring roll');
   });
 });

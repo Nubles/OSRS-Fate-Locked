@@ -8,6 +8,7 @@ import {
   RUNELITE_GUIDE_GLOSSARY,
   RUNELITE_GUIDE_ICON,
   RUNELITE_GUIDE_NAV_GROUPS,
+  RUNELITE_GUIDE_PRESETS,
   RUNELITE_GUIDE_SETTINGS,
   RUNELITE_GUIDE_TROUBLESHOOTING,
   type GuideBlock,
@@ -133,6 +134,13 @@ describe('RuneLite guide, as the plugin does it', () => {
     RUNELITE_GUIDE_FIGURES.find(figure => figure.id === figureId)?.callouts.find(item => item.id === id)?.body ?? '';
   const glossary = (term: string): string => RUNELITE_GUIDE_GLOSSARY.find(item => item.term === term)?.definition ?? '';
 
+  it('names the cancel button RuneLite shows while a pairing or a re-pairing waits', () => {
+    const fix = RUNELITE_GUIDE_TROUBLESHOOTING.find(item => item.id === 'waiting-for-confirmation')?.fix.join(' ') ?? '';
+    expect(fix).toContain('To start over, select Cancel, then Connect tracker.');
+    // A re-pairing offers Cancel re-pairing, which keeps the working pairing.
+    expect(fix).toContain('While re-pairing, Cancel re-pairing keeps your current pairing.');
+  });
+
   it('gives the relay’s real profile lifetime for Tracker copy expired', () => {
     const worker = readFileSync('workers/fate-relay/worker.js', 'utf8');
     const days = Number(/const PROFILE_TTL_SECONDS = (\d+) \* 86400;/.exec(worker)?.[1]);
@@ -147,6 +155,38 @@ describe('RuneLite guide, as the plugin does it', () => {
     const strict = chapter('strict-mode');
     expect(strict).toContain('Spirit trees, and fairy rings, charters and boats unless Block networks and boats is on.');
     expect(strict).not.toContain('Fairy rings, spirit trees, charters and boats. These get');
+  });
+
+  it('tags only a network or boat option that goes to one place, never a spirit tree’s Travel', () => {
+    // The plugin's taggedLocked() tags a matched trip only when its option has one destination.
+    const strict = chapter('strict-mode');
+    expect(strict).toContain('An option to one locked place gets the (Locked) tag instead.');
+    expect(strict).toContain('such as a spirit tree’s Travel or a charter’s Charter, gets no tag.');
+    expect(strict).not.toContain('These get the (Locked) tag instead.');
+  });
+
+  it('turns off every game-view drawing in the Clear screen setup', () => {
+    const preset = RUNELITE_GUIDE_PRESETS.find(item => item.id === 'minimal-screen');
+    expect(preset?.summary).toContain('the game view stays clear');
+    const text = preset?.adjustments.join(' ') ?? '';
+    expect(text).toContain(`${setting('hudMode').label} to Off`);
+    expect(text).toContain(`${setting('chunkBorders').label} to Off`);
+    const turnedOff = /Turn off ([^.]*)\./.exec(text)?.[1] ?? '';
+    for (const key of ['shadeNearbyLocked', 'outlineLocked']) expect(turnedOff, key).toContain(setting(key).label);
+  });
+
+  it('gives the backup folder for Windows and for macOS and Linux', () => {
+    // The plugin reads RuneLite.RUNELITE_DIR/fate-locked, and RUNELITE_DIR is .runelite in the home folder.
+    const windows = '%USERPROFILE%\\.runelite\\fate-locked\\ on Windows';
+    const unix = '~/.runelite/fate-locked/ on macOS and Linux';
+    const step = RUNELITE_GUIDE_CHAPTERS.flatMap(item => [...item.blocks])
+      .flatMap(block => (block.kind === 'steps' ? block.steps : []))
+      .find(item => item.title === 'From a file')?.body ?? '';
+    const troubleshooting = RUNELITE_GUIDE_TROUBLESHOOTING.find(item => item.id === 'backup-file')?.fix.join(' ') ?? '';
+    for (const text of [step, troubleshooting]) {
+      expect(text).toContain(windows);
+      expect(text).toContain(unix);
+    }
   });
 
   it('says Strict Mode also stops a teleport of a kind not unlocked, and a worn item’s (owner’s call T6)', () => {

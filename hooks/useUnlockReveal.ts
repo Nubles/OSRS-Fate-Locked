@@ -52,10 +52,15 @@ export function getUnlockRevealTransition(
     boss => !previous.bosses.includes(boss),
   );
 
+  const earned = completedQuests.length + newRegions.length + newBosses.length > 0;
+  // In Chunked a new chunk opens areas; it starts a reveal below only when it
+  // makes a quest or diary tier available.
+  const previousChunks = previous.chunks ?? [];
+  const newChunk = current.chunks !== previous.chunks
+    && (current.chunks ?? []).some(chunk => !previousChunks.includes(chunk));
+
   // Diary task / CA task ticks do not initiate a reveal by themselves.
-  if (completedQuests.length === 0 && newRegions.length === 0 && newBosses.length === 0) {
-    return null;
-  }
+  if (!earned && !newChunk) return null;
 
   const newQuestsAvailable = Object.values(QUEST_DATA)
     .filter(quest => !current.quests.includes(quest.id))
@@ -73,6 +78,8 @@ export function getUnlockRevealTransition(
     ))
     .map(diary => diary.id);
 
+  if (!earned && newQuestsAvailable.length + newDiaryTiersAvailable.length === 0) return null;
+
   return {
     completedQuests: completedQuests.map(
       questId => QUEST_DATA[questId]?.name ?? questId,
@@ -86,11 +93,10 @@ export function getUnlockRevealTransition(
 
 /**
  * Watches `unlocks` and fires a reveal whenever a meaningful change happens
- * (quest complete, region / boss unlock). Returns [revealData, dismiss,
- * revealId].
+ * (quest complete, region / boss unlock, or a Chunked chunk that makes a
+ * quest or diary tier available). Returns [revealData, dismiss, revealId].
  *
- * Only triggers on quests / regions / bosses — diary task ticks and CA
- * task ticks do not produce a reveal.
+ * Diary task ticks and CA task ticks do not produce a reveal.
  *
  * Every reveal gets a new id. Key the panel by it so a reveal that replaces
  * one still on screen remounts with its own slide-in and auto-dismiss timer.

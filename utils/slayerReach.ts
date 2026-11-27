@@ -12,7 +12,7 @@ import { UnlockState } from '../types';
 import { SlayerMasters, SlayerAssignment } from '../services/ChunkContentService';
 import { SLAYER_MASTER_REQUIREMENTS, type SlayerMasterRequirementOption } from '../data/slayerMasterRequirements';
 import { isAreaReachable } from './reachability';
-import { chunkPlaceLabel, ownsAnyChunk, slayerMasterChunks } from './activityAccess';
+import { chunkPlaceLabel, enterableChunk, gatedEntranceLabels, ownsAnyChunk, slayerMasterChunks } from './activityAccess';
 import { canonicalBossId } from './contentIdentity';
 import { pendingQuestProgress } from '../data/questProgress';
 
@@ -102,8 +102,9 @@ const masterBlocker = (
 ): SlayerMasterBlocker | undefined => {
   // Chunked: the master's own chunk must be owned, not any chunk of the area.
   const masterChunks = gameModeId === 'chunked' ? slayerMasterChunks(master) : [];
-  if (masterChunks.length > 0 && !ownsAnyChunk(masterChunks, unlocks)) {
-    return { status: 'area-locked', label: `Master: ${masterChunks.map(chunkPlaceLabel).join(' or ')}` };
+  // A gated way in (the 51 Agility pipe to Vannaka) counts once its requirements are met.
+  if (masterChunks.length > 0 && !ownsAnyChunk(masterChunks, unlocks) && !enterableChunk([], unlocks, master).open) {
+    return { status: 'area-locked', label: `Master: ${[...masterChunks.map(chunkPlaceLabel), ...gatedEntranceLabels(master)].join(' or ')}` };
   }
 
   const requirements = SLAYER_MASTER_REQUIREMENTS[master];
@@ -153,9 +154,12 @@ export function slayerReachability(
     const masterGate = masterBlocker(master, unlocks, gameModeId, questSet, combat);
     const rows: SlayerTaskRow[] = [];
     for (const [monster, info] of Object.entries(tasks)) {
-      // A boss task: the master picks only a boss whose Slayer level the run has.
+      // A boss task: the master picks only a boss whose Slayer level, quests and other levels the run has.
       const assignment = info.bosses
-        ? { ...info, bosses: info.bosses.filter(boss => slayerLevel >= (boss.slayer ?? 1)) }
+        ? { ...info, bosses: info.bosses.filter(boss => slayerLevel >= (boss.slayer ?? 1)
+          && (boss.quests ?? []).every(quest => questSet.has(quest))
+          && Object.entries(boss.skills ?? {}).every(([skill, level]) => effectiveSkillLevel(unlocks, skill) >= level)
+          && (!boss.anySkill || Object.entries(boss.anySkill).some(([skill, level]) => effectiveSkillLevel(unlocks, skill) >= level))) }
         : info;
       const loc = locate(monster, assignment, master);
       // Fate Locked locks each boss too: a boss task with none of its bosses unlocked says so.
@@ -173,7 +177,8 @@ export function slayerReachability(
       if (masterGate) status = masterGate.status;
       else if (!slayerUnlocked || (info.slayer != null && slayerLevel < info.slayer)) status = 'slayer-locked';
       else if (blocker) { status = 'slayer-locked'; rowBlocker = blocker; }
-      else if (gates.hasDataGap) status = 'access-unknown';
+      // A plain blocker wins over a question, as in permissionStatus.ts routeStatus.
+      else if (gates.hasDataGap && !gates.blockers.some(g => g.type != 'UNRESOLVED' && !(g.type == 'QUEST_PROGRESS' && !questSet.has(g.questId)))) status = 'access-unknown';
       else if (gates.blockers.length) status = 'quest-locked';
       else if (info.combat != null && combat < info.combat) status = 'combat-locked';
       else if (!loc) status = 'no-location';

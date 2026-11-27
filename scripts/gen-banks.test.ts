@@ -2,10 +2,11 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BANK_IDS } from '../data/banks';
-import { readBankLocationRegistry } from './bank-locations.mjs';
+import { REGIONS_LIST } from '../data/items';
+import { readBankLocationRegistry, validateBankLocationRegistry } from './bank-locations.mjs';
 import {
-  buildBankDefinitions, facilityPictureKind, generateBankAccessSource, generateBankPictureSource, generateBankSource,
-  orderBanksForRolls, readBankRollOrder,
+  buildBankDefinitions, buildDepositOnlyBanks, facilityBankUse, facilityPictureKind, generateBankAccessSource,
+  generateBankDepositOnlySource, generateBankPictureSource, generateBankSource, orderBanksForRolls, readBankRollOrder,
 } from './gen-banks.mjs';
 import { generatedTextMatches } from './generated-text.mjs';
 
@@ -93,6 +94,26 @@ describe('bank source generator', () => {
     expect(source).toContain("  '10810': '11066',\n  '12085': '12084',");
   });
 
+  // Audit areas d1 0: these three banks sit on their place's entrance chunk, which the map files
+  // under the surface area outside (Mountain Camp, Musa Point, Lumbridge).
+  it('places the banks that stand behind an entrance chunk in the area they stand in', () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const defs = buildBankDefinitions(doc, readBankLocationRegistry());
+    const placed = Object.fromEntries(defs.filter(def => def.area).map(def => [def.id, def.area]));
+    expect(placed).toEqual({ '11066': 'Keldagrim', '11313': 'Mor Ul Rek (TzHaar City)', '12849': 'Zanaris' });
+    for (const area of Object.values(placed)) expect(REGIONS_LIST).toContain(area);
+    expect(defs.map(def => def.id)).toEqual(BANK_IDS);
+  });
+
+  it('refuses a bank area on an id that is not a bank', () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const validBankIds = new Set<string>((doc.banks ?? []).map(String));
+    expect(() => validateBankLocationRegistry(registry, { validBankIds })).not.toThrow();
+    const broken = { ...registry, areas: [{ id: '1', area: 'Keldagrim', reason: 'test', wiki: ['https://oldschool.runescape.wiki/w/Keldagrim'] }] };
+    expect(() => validateBankLocationRegistry(broken, { validBankIds })).toThrow('Bank area 1 is not on a bank');
+  });
+
   it('does not add the virtual bank to the public physical chunk list', () => {
     const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
 
@@ -114,6 +135,53 @@ describe('bank source generator', () => {
       readFileSync('data/bankPictureKinds.ts', 'utf8'),
       generateBankPictureSource(doc, registry),
     )).toBe(true);
+    expect(generatedTextMatches(
+      readFileSync('data/bankDepositOnly.ts', 'utf8'),
+      generateBankDepositOnlySource(doc, registry),
+    )).toBe(true);
+  });
+
+  it('tells a facility that opens the bank from one that only takes deposits, by the facility', () => {
+    for (const bank of ['Bank booth', 'Bank chest', 'Bank counter']) expect(facilityBankUse(bank), bank).toBe('bank');
+    expect(facilityBankUse('Banker', 'npc')).toBe('bank');
+    expect(facilityBankUse('Ent dungeon bank chest', 'registry')).toBe('bank');
+    expect(facilityBankUse('Keldagrim bank', 'registry')).toBe('bank');
+    for (const box of ['Bank deposit box', 'Bank Deposit Chest']) expect(facilityBankUse(box), box).toBe('deposit');
+    for (const box of ['Port Sarim deposit boxes', 'Zul-Andra deposit chest', 'Guardians of the Rift deposit pool']) {
+      expect(facilityBankUse(box, 'registry'), box).toBe('deposit');
+    }
+    expect(facilityBankUse('Peer the Seer', 'registry')).toBe('deposit');
+    expect(facilityBankUse('Rionasta', 'npc')).toBe('deposit');
+    for (const none of ['Bank boat', 'Bank buffalo', 'Salt Deposit']) expect(facilityBankUse(none, 'registry'), none).toBeUndefined();
+  });
+
+  it('marks a place deposit-only by its facilities, not by its name', () => {
+    const doc = JSON.parse(readFileSync('public/chunk-content.json', 'utf8'));
+    const registry = readBankLocationRegistry();
+    const names = new Map(buildBankDefinitions(doc, registry).map(({ id, name }) => [id, name]));
+    const ids = buildDepositOnlyBanks(doc, registry);
+    expect(ids.map((id) => names.get(id))).toEqual([
+      'Aldarin dock deposit box', 'Saltpetre mine deposit box', 'Fortis Cothon deposit box',
+      'Port Piscarilius dock deposit box', 'West Prifddinas dock deposit box', 'Lunar Isle dock deposit box',
+      'Zul-Andra deposit chest', 'Gwenith deposit box', 'Neitiznot dock deposit box', 'Peer the Seer deposit service',
+      'Rionasta deposit service', 'Port Sarim deposit boxes', 'Great Conch Sacred Grove deposit box',
+    ]);
+    // Full banks named after a deposit box too, and the East Woodcutting Guild deposit box, which
+    // leads to the Ent cavern's bank chest.
+    for (const full of ['Arceuus bank and deposit box', 'Guardians of the Rift bank and deposit pool',
+      'Prifddinas north bank and Gauntlet deposit box', 'East Woodcutting Guild deposit box', 'Bank boat']) {
+      const id = [...names].find(([, name]) => name === full)?.[0];
+      expect(id, full).toBeDefined();
+      expect(ids, full).not.toContain(id);
+    }
+    // The export alone reads it: data/banks.ts loads with the first screen.
+    expect(generateBankSource(doc, registry)).not.toMatch(/depositOnly|DEPOSIT_ONLY/);
+    const sources = import.meta.glob<string>(
+      ['../{components,context,hooks,services,utils,data,config}/**/*.{ts,tsx}', '../*.{ts,tsx}', '!../**/*.test.{ts,tsx}'],
+      { query: '?raw', import: 'default', eager: true },
+    );
+    expect(Object.entries(sources).filter(([, text]) => /from '[^']*data\/bankDepositOnly'/.test(text))
+      .map(([path]) => path.replace(/^\.\.\//, ''))).toEqual(['utils/bankDecisions.ts']);
   });
 
   it('reads a bank picture from the facility, not from the place name', () => {

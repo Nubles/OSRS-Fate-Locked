@@ -27,7 +27,11 @@ browser: only the summary in `utils/progressSnapshot.ts` is sent.
    unchanged summary is not sent again, and the relay doesn't store one it
    already holds (after a reload): it answers `{ updatedAt, unchanged: true }`
    with no KV write and nothing for the bot, unless the stored summary is
-   30 days old, so a shared run doesn't expire.
+   30 days old, so a shared run doesn't expire. Only the tab that owns the
+   save publishes (a held tab's progress is older), and it reads the stored
+   record when it publishes, so Stop sharing or Public: off in another tab of
+   the profile holds there too. A held tab's settings change is saved and
+   published by the owner tab.
 
 ## Unlock feed and roles
 
@@ -48,9 +52,35 @@ beside each `l:<discordId>` link; links made before it existed gain it the
 next time the bot reads them. With `DISCORD_EVENTS_URL` unset, nothing is
 sent.
 
-**Stop sharing** deletes the summary from the relay. The Discord link stays
-until the player runs `/unlink`; meanwhile `/progress` says the run isn't
-shared. An unrefreshed summary expires after 90 days.
+**Stop sharing** deletes the summary from the relay. The run's id stays the
+player's (see "Ownership" below), and so does the Discord link, until the
+player runs `/unlink`; meanwhile `/progress` says the run isn't shared, and
+turning sharing on again in the same browser picks up where it left off. An
+unrefreshed summary expires after 90 days.
+
+### Ownership
+
+The first publish claims the run's id for its write token. The relay keeps
+only a SHA-256 hash of the token: in the summary's metadata and in a separate
+owner record, `own:p:<id>`, which lasts 180 days after its last refresh. Like
+a RuneLite code's owner record ([online-relay.md](online-relay.md)), it is
+refreshed at most once a week, by a publish that stores a summary, a link
+code or Stop sharing (which always refreshes it). So another token can't take
+the id after Stop sharing or after the summary expires, which matters because
+a public Adventurer's Log shows the id to anyone with the link. A summary
+stored before owner records existed gets one on its owner's next publish.
+
+A Discord link never passes to a new owner. When a write claims an id nobody
+holds (both records gone), the relay first removes the link its `ld:<id>`
+names. It also records the claim's time with the run, and each new link
+records when it was made, so an older link the relay can't find from the run
+(a second Discord account linked to it, or a link made before `ld:` existed)
+is never served or told about the new owner's run: the bot's next read of
+such a link answers `404 {linked: false}` and forgets it.
+
+If the relay refuses this browser's own id (`403`), another token holds it, so
+the browser moves the run to a new id and token once and says so: the
+Adventurer's Log link changes and Discord needs linking again.
 
 ## Adventurer's Log
 
@@ -64,7 +94,9 @@ account name as its title and heading, with the mode, start date, counts, last
 few unlocks and map. Anyone with the link can read the whole summary, account
 name included, through `GET /p/<id>`; a private summary and a missing one both answer
 `404`, so a private run can't be found by guessing. Turning it off republishes
-without the flag, and **Stop sharing** deletes the summary, page and all.
+without the flag, and **Stop sharing** deletes the summary, page and all. When
+the relay asks the switch to wait (one summary a minute), the driver sends the
+change within a few minutes and the toast says it is on its way, not done.
 
 ## Clan feed
 
@@ -76,6 +108,11 @@ shown name, mode, unlocks and time (`workers/fate-relay/clan.js`). The bot
 reads the posts back from the channel, so nothing is stored anywhere new and
 no KV write is made. The names are the ones the feed already shows in the
 Discord.
+The bot reads the channel's last 50 messages and keeps the newest 30 feed
+posts (`src/clan.ts`), so a post leaves the Clan tab only when newer ones push
+it out or it is deleted in Discord; `/unlink` stops new posts and removes none.
+The sharing text in Settings > Discord tells the player this before they link
+(pinned in `components/DiscordSettingsModal.consent.test.ts`).
 
 ## Relay API
 
@@ -91,7 +128,7 @@ Bot     DELETE /l/<discordId>     forget the link
 ```
 
 The first publish claims an id; the relay keeps only a SHA-256 hash of its
-write token. A run id that isn't 16 bytes in base64url, or a Discord id that
+write token (see "Ownership" above). A run id that isn't 16 bytes in base64url, or a Discord id that
 isn't a snowflake, is answered `400` before the relay looks anything up. The
 browser's publishes, deletes and link codes count toward the relay's per-IP
 write limit, and a new run or link code toward its claim limit; the bot's

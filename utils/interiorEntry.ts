@@ -6,7 +6,7 @@ import { interiorArea } from '../data/interiorAreas';
 import type { UnlockState } from '../types';
 import { chunkEntry } from './chunkEntry';
 import type { PermissionStatus } from './chunkPermissionSnapshot';
-import { leastUsable, mostUsable } from './permissionStatus';
+import { leastUsable, mostUsable, routeStatus } from './permissionStatus';
 import { compileRawRequirements, evaluateRouteGates } from './questRoutes/accountRequirements';
 import { isAreaReachable } from './reachability';
 
@@ -53,10 +53,9 @@ export function interiorEntry(record: InteriorRecord, context: InteriorContext):
       [...entrance.requirements, ...context.chunkEntryRequirements(coord.cx, coord.cy)]
         .map((raw) => ({ raw, origin: 'CHUNK_ENTRY' as const })),
     ), context.unlocks);
-    const routeStatus: PermissionStatus = !route.blockers.length ? 'ALLOWED'
-      : route.hasDataGap ? 'UNKNOWN' : 'NOT_READY';
     // Interiors take no quest's way in: Pandemonium's route stops at the cave mouth.
-    return leastUsable(chunkEntry(coord, context.unlocks, context.gameModeId, context.reachable, false), routeStatus);
+    return leastUsable(chunkEntry(coord, context.unlocks, context.gameModeId, context.reachable, false),
+      routeStatus(route, context.unlocks.quests));
   });
   return mostUsable(ways) ?? 'UNKNOWN';
 }

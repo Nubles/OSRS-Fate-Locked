@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { SKILL_UNLOCK_DATA } from './skillUnlocks';
 import { STRATEGY_DATABASE } from './requirements';
+import { MINIGAMES_LIST } from './items';
+import { ACTIVITY_REQUIREMENTS } from './activityRequirements';
 
 // S01–S04: independently reviewed OSRS Wiki revisions and Jagex 12-Aug-2026
 // patch notes, retained in the 22-Sep-2026 skill-reference audit.
@@ -9,8 +11,8 @@ const rowsFor = (skill: string) => Object.entries(SKILL_UNLOCK_DATA[skill])
 
 describe('reviewed skill-reference facts', () => {
   it.each([
-    ['Agility', 'Hallowed Sepulchre (Floor 4)', 77],
-    ['Agility', 'Hallowed Sepulchre (Floor 5)', 87],
+    ['Agility', 'Hallowed Sepulchre (Floor 4; Sins of the Father)', 77],
+    ['Agility', 'Hallowed Sepulchre (Floor 5; Sins of the Father)', 87],
     ['Attack', 'Mystic Staves', 40],
     ['Construction', 'Kitchen', 5],
     ['Construction', 'Combat Room', 32],
@@ -38,7 +40,7 @@ describe('reviewed skill-reference facts', () => {
   });
 
   it('names the Brimhaven level-40 obstacles and zenyte products accurately', () => {
-    expect(SKILL_UNLOCK_DATA.Agility[4]).toContain('Lvl 40: Brimhaven Arena (High Obstacles)');
+    expect(SKILL_UNLOCK_DATA.Agility[4]).toContain('Lvl 40: Brimhaven Agility Arena (High Obstacles)');
     expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 92: Zenyte Necklace (Anguish)');
     expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 98: Zenyte Amulet (Torture)');
   });
@@ -184,5 +186,172 @@ describe('unlocks added in the 9 November 2026 review', () => {
       ['Rimmington', 1], ['Taverley', 10], ['Pollnivneach', 20], ['Hosidius', 25], ['Rellekka', 30],
       ['Aldarin', 35], ['Brimhaven', 40], ['Yanille', 50], ['Prifddinas', 70],
     ]);
+  });
+});
+
+// Deep pass of 23 November 2026 (skills-b.d1, skills-b.d2), each row from a fresh Wiki fetch of the item's own
+// page: Little crack, Clay fireplace, Remote Island, Red Rock, Barracuda Trials, Moss lizard, Cooked moss lizard,
+// Rocks (Catherby), Strong Tree (Karamja volcano), Rogues' Den, Leaping trout/salmon/sturgeon.
+describe('unlocks corrected in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Agility', 'God Wars Dungeon Access (Little Crack)', 60],
+    ['Construction', 'Crude Furniture', 1],
+    ['Construction', 'Clay Fireplace', 3],
+    ['Sailing', 'Remote Island', 45],
+    ['Sailing', 'Dock Red Rock (The Red Reef)', 52],
+    ['Sailing', 'Barracuda Trials (The Tempor Tantrum)', 30],
+    ['Sailing', 'Barracuda Trials (The Jubbly Jive)', 55],
+    ['Sailing', 'Barracuda Trials (The Gwenith Glide; Regicide)', 72],
+    ['Hunter', 'Moss Lizards (Perilous Moons)', 20],
+    ['Cooking', 'Moss Lizards (Perilous Moons)', 30],
+    ['Agility', 'Catherby Grapple (Strength 35, Ranged 35)', 32],
+    ['Agility', 'Catherby Rocks (No Grapple)', 68],
+    ['Agility', 'Karamja Strong Tree (Grapple; Strength 21, Ranged 42)', 53],
+    ['Agility', 'Karamja Strong Tree (No Grapple)', 78],
+    ['Agility', 'Rogues\' Den Minigame Access (Thieving 50)', 50],
+    ['Agility', 'Catch Leaping Trout (Fishing 48, Strength 15; Barbarian Fishing)', 15],
+    ['Agility', 'Catch Leaping Salmon (Fishing 58, Strength 30)', 30],
+    ['Agility', 'Catch Leaping Sturgeon (Fishing 70, Strength 45)', 45],
+  ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('no longer names the Strength boulder in Agility or fireplaces at Construction 1', () => {
+    expect(rowsFor('Agility').some(row => row.text.includes('Boulder'))).toBe(false);
+    expect(rowsFor('Construction').some(row => row.level === 1 && /fireplace/i.test(row.text))).toBe(false);
+    expect(rowsFor('Sailing').filter(row => row.text.includes('Barracuda Trials')).map(row => row.level)).toEqual([30, 55, 72]);
+  });
+});
+
+// Deep pass of 23 November 2026 (skills-b.d3[0]): lines that hid the quest the game needs, while the same list or its
+// twin list notes that quest on matching lines. Each row from a fresh Wiki fetch of the item's or activity's own page
+// and its skill's level-up table: Chinchompa (Hunter), Carnivorous chinchompa, Black chinchompa (Hunter), Magic Stall,
+// Pyramid Plunder, Hallowed Sepulchre, Crystal helm, Bronze dart tip, Bronze brutal, Crew Management.
+describe('quest notes added in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Hunter', 'Grey Chinchompas (Eagles\' Peak)', 53],
+    ['Hunter', 'Red Chinchompas (Eagles\' Peak)', 63],
+    ['Hunter', 'Black Chinchompas (Eagles\' Peak)', 73],
+    ['Thieving', 'Magic Stalls (Monkey Madness I)', 65],
+    ['Thieving', 'Pyramid Plunder (Room 1; Icthlarin\'s Little Helper)', 21],
+    ['Thieving', 'Pyramid Plunder (Room 2; Icthlarin\'s Little Helper)', 31],
+    ['Thieving', 'Pyramid Plunder (Room 3; Icthlarin\'s Little Helper)', 41],
+    ['Thieving', 'Pyramid Plunder (Room 4; Icthlarin\'s Little Helper)', 51],
+    ['Thieving', 'Pyramid Plunder (Room 5; Icthlarin\'s Little Helper)', 61],
+    ['Thieving', 'Pyramid Plunder (Room 6; Icthlarin\'s Little Helper)', 71],
+    ['Thieving', 'Pyramid Plunder (Room 7; Icthlarin\'s Little Helper)', 81],
+    ['Thieving', 'Pyramid Plunder (Room 8; Icthlarin\'s Little Helper)', 91],
+    ['Agility', 'Hallowed Sepulchre (Floor 1; Sins of the Father)', 52],
+    ['Agility', 'Hallowed Sepulchre (Floor 2; Sins of the Father)', 62],
+    ['Agility', 'Hallowed Sepulchre (Floor 3; Sins of the Father)', 72],
+    ['Smithing', 'Crystal Helm, Celestial Signet (Crafting 70; Song of the Elves)', 70],
+    ['Smithing', 'Crystal Legs (Crafting 72; Song of the Elves)', 72],
+    ['Smithing', 'Crystal Body (Crafting 74; Song of the Elves)', 74],
+    ['Smithing', 'Crystal Tools (Crafting 76; Song of the Elves)', 76],
+    ['Smithing', 'Crystal Weapon/Shield (Crafting 78; Song of the Elves)', 78],
+    ['Smithing', 'Crystal Key/Teleport (Crafting 80; Song of the Elves)', 80],
+    ['Smithing', 'Bronze Darts (The Tourist Trap)', 4],
+    ['Smithing', 'Iron Darts (The Tourist Trap)', 19],
+    ['Smithing', 'Steel Darts (The Tourist Trap)', 34],
+    ['Smithing', 'Mithril Darts (The Tourist Trap)', 54],
+    ['Smithing', 'Adamant Darts (The Tourist Trap)', 74],
+    ['Smithing', 'Rune Darts (The Tourist Trap)', 89],
+    ['Fletching', 'Bronze Brutal Arrows (Zogre Flesh Eaters)', 7],
+    ['Fletching', 'Iron Brutal Arrows (Zogre Flesh Eaters)', 18],
+    ['Fletching', 'Steel Brutal Arrows (Zogre Flesh Eaters)', 33],
+    ['Fletching', 'Black Brutal Arrows (Zogre Flesh Eaters)', 38],
+    ['Fletching', 'Mithril Brutal Arrows (Zogre Flesh Eaters)', 49],
+    ['Fletching', 'Adamant Brutal Arrows (Zogre Flesh Eaters)', 62],
+    ['Fletching', 'Rune Brutal Arrows (Zogre Flesh Eaters)', 77],
+    ['Sailing', 'Recruit Captain Siad (The Tourist Trap)', 50],
+    ['Sailing', 'Recruit Cabin Boy Jenkins (Dragon Slayer I; The Restless Ghost)', 60],
+    ['Sailing', 'Recruit Oarswoman Olga (In Aid of the Myreque)', 65],
+    ['Sailing', 'Recruit Bosun Zarah (Royal Trouble; Hard Fremennik Diary)', 80],
+  ] as const)('%s: %s is listed with its quest at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('notes the quest on every chinchompa, Pyramid Plunder, Sepulchre floor, dart tip and brutal arrow line', () => {
+    const bare = (skill: string, pattern: RegExp, note: string) => rowsFor(skill)
+      .filter(row => pattern.test(row.text) && !row.text.includes(note)).map(row => row.text);
+    expect(bare('Hunter', /Chinchompas/, '(Eagles\' Peak)')).toEqual([]);
+    expect(bare('Thieving', /Pyramid Plunder/, 'Icthlarin\'s Little Helper')).toEqual([]);
+    expect(bare('Agility', /Hallowed Sepulchre \(Floor/, 'Sins of the Father')).toEqual([]);
+    expect(bare('Smithing', /Darts/, '(The Tourist Trap)')).toEqual([]);
+    expect(bare('Fletching', /Brutal Arrows/, '(Zogre Flesh Eaters)')).toEqual([]);
+    expect(bare('Smithing', /Crystal (Helm|Legs|Body|Tools|Weapon|Key)/, 'Song of the Elves)')).toEqual([]);
+  });
+});
+
+// Deep pass of 23 November 2026 (skills-b.d4[0]): lines that hid a second-skill level the same list or its twin writes
+// on sibling lines. Each row from a fresh Wiki fetch of the item's own page (infobox skill2): Bluegill, Mottled eel,
+// Greater siren, Rope trawling net, Advanced chum station, Chum spreader, Cotton trawling net, Spirit tree & fairy
+// ring, Ancient wyvern shield, Arcane spirit shield. The leaping fish lines are pinned in the block above.
+describe('second-skill notes added in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Hunter', 'Bluegills (Fishing 43)', 35],
+    ['Hunter', 'Mottled Eels (Fishing 73)', 68],
+    ['Hunter', 'Greater Sirens (Fishing 91)', 87],
+    ['Sailing', 'Rope Trawling Net (Construction 45)', 56],
+    ['Sailing', 'Advanced Chum Station (Construction 61)', 68],
+    ['Sailing', 'Chum Spreader (Construction 74)', 82],
+    ['Sailing', 'Cotton Trawling Net (Construction 73)', 84],
+    ['Construction', 'Spirit Tree & Fairy Ring (Farming 83)', 95],
+    ['Smithing', 'Wyvern Shield (Magic 66)', 66],
+    ['Smithing', 'Spirit Sigils (Prayer 90)', 85],
+  ] as const)('%s: %s is listed with its second skill at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('notes the Construction level on every chum facility and trawling net', () => {
+    const bare = rowsFor('Sailing')
+      .filter(row => /Chum|Trawling Net/.test(row.text) && !/\(Construction \d+\)/.test(row.text)).map(row => row.text);
+    expect(bare).toEqual([]);
+  });
+});
+
+// Deep pass of 23 November 2026 (skills-b.d3[1], skills-b.d4[1]): minigames the tracker gates on a skill level had no
+// line in that skill's guide, and three Wiki level-up rows were missing. Each from a fresh Wiki fetch of the activity's
+// own page: Giants' Foundry (Sleeping Giants), Blast Furnace (Smithing 60 skips the fee), Stealing artefacts (49
+// Thieving), Gnome Restaurant (29 Cooking), Mess (20 Cooking), Trouble Brewing (Cabin Fever, 40 Cooking), Gnome Ball
+// and Brimhaven Agility Arena (low obstacles at 1, medium at 20; Agility level-up table). The Mage Training Arena
+// takes 7 Magic, which casts Lvl-1 Enchant in its Enchanting Chamber (Wiki 'Mage Training Arena', Requirements).
+describe('minigame lines added in the 23 November 2026 deep pass', () => {
+  it.each([
+    ['Smithing', 'Giants\' Foundry (Sleeping Giants)', 15],
+    ['Smithing', 'Blast Furnace (No Entrance Fee)', 60],
+    ['Thieving', 'Stealing Artefacts', 49],
+    ['Cooking', 'Mess (Great Kourend)', 20],
+    ['Cooking', 'Gnome Restaurant', 29],
+    ['Cooking', 'Trouble Brewing (Cabin Fever)', 40],
+    ['Agility', 'Gnome Ball, Brimhaven Agility Arena (Low Obstacles)', 1],
+    ['Agility', 'Brimhaven Agility Arena (Medium Obstacles)', 20],
+    ['Agility', 'Brimhaven Agility Arena (High Obstacles)', 40],
+    ['Magic', 'Mage Training Arena (Enchanting Chamber)', 7],
+  ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
+    const matches = rowsFor(skill).filter(row => row.text.includes(name));
+    expect(matches, `${skill}: ${name}`).toHaveLength(1);
+    expect(matches[0]).toMatchObject({ level, tier: Math.ceil(level / 10) });
+  });
+
+  it('lists every minigame the tracker gates on a skill level in that skill at that level', () => {
+    const listedAs: Record<string, string> = { 'Impetuous Impulses': 'Puro-Puro' };
+    // Not yet in the Magic and Ranged guides; left for a later review of those lists.
+    const notYetListed = new Set(['Mage Arena', 'Archery Competition']);
+    const missing: string[] = [];
+    for (const minigame of MINIGAMES_LIST as readonly string[]) {
+      if (notYetListed.has(minigame)) continue;
+      for (const [skill, level] of Object.entries(ACTIVITY_REQUIREMENTS[minigame]?.skills ?? {})) {
+        const name = listedAs[minigame] ?? minigame;
+        if (!rowsFor(skill).some(row => row.level === level && row.text.includes(name))) missing.push(`${skill} ${level}: ${minigame}`);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 });

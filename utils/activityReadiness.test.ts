@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { UnlockState } from '../types';
-import { getActivityReq } from '../data/activityRequirements';
+import { ACTIVITY_REQUIREMENTS, getActivityReq } from '../data/activityRequirements';
 import { SKILLS_LIST } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { evaluateActivityReadiness } from './activityReadiness';
@@ -177,7 +177,8 @@ describe('evaluateActivityReadiness', () => {
       templeTrekking,
       unlocked({
         regions: ['Paterdomus'],
-        quests: ['In Aid of the Myreque'],
+        // The Paterdomus side counts only after Darkness of Hallowvale (area-access.d1[2]).
+        quests: ['In Aid of the Myreque', 'Darkness of Hallowvale'],
       }),
       'vanilla',
     )).toEqual({ status: 'READY' });
@@ -281,6 +282,22 @@ describe('evaluateActivityReadiness', () => {
       ...trials, quests: ['Pandemonium'],
     }, 'vanilla')).toEqual({ status: 'READY' });
   });
+
+  it('needs Temple of the Eye for the two Guardians of the Rift rewards (own.d1[11])', () => {
+    // OSRS Wiki, November 2026: the ring of the elements costs abyssal pearls at Temple Supplies
+    // ('Ring of the elements' rev 15321585), and the colossal pouch needs the abyssal needle from the
+    // Rewards Guardian or Temple Supplies ('Abyssal needle' rev 15398526); pearls come only from
+    // Guardians of the Rift, which needs Temple of the Eye ('Guardians of the Rift' rev 15412895).
+    const levels = unlocked({ skills: { Runecraft: 3, Crafting: 6 }, levels: { Runecraft: 27, Crafting: 56 } });
+    for (const reward of ['Ring of the Elements', 'Colossal Pouch']) {
+      expect(getActivityReq(reward)?.quests, reward).toEqual(getActivityReq('Guardians of the Rift')?.quests);
+      expect(evaluateActivityReadiness(true, getActivityReq(reward), levels, 'vanilla'), reward).toEqual({
+        status: 'NOT_READY', blockers: [{ kind: 'quest', label: 'Temple of the Eye' }],
+      });
+      expect(evaluateActivityReadiness(true, getActivityReq(reward), { ...levels, quests: ['Temple of the Eye'] }, 'vanilla'), reward)
+        .toEqual({ status: 'READY' });
+    }
+  });
 });
 
 describe('evaluateActivityReadiness with routes', () => {
@@ -302,5 +319,100 @@ describe('evaluateActivityReadiness with routes', () => {
     expect(withRoute.status).not.toBe('NOT_READY');
     expect(evaluateActivityReadiness(true, getActivityReq('Zulrah'), unlocks, 'vanilla')).toEqual(withRoute);
     expect(bossAreaBlocker('Zulrah', unlocks, 'vanilla', reached)).toBeUndefined();
+  });
+});
+
+describe('ways in that carry their own requirement, read by the readiness badge (area-access.d3[0], d3[1], d1[2])', () => {
+  const areaBlockers = (name: string, over: Partial<UnlockState>, mode: string) => {
+    const readiness = evaluateActivityReadiness(true, getActivityReq(name), unlocked(over), mode);
+    return readiness.status === 'NOT_READY' ? readiness.blockers.filter(blocker => blocker.kind === 'area').map(blocker => blocker.label) : [];
+  };
+
+  it('counts the Lumbridge castle cellar way to Juna once The Lost Tribe is done', () => {
+    for (const name of ['Tears of Guthix', 'The Fractured Archive', 'Tormented Demons']) {
+      expect(areaBlockers(name, { chunks: ['50,50'], quests: ['The Lost Tribe', 'While Guthix Sleeps', 'Tears of Guthix'] }, 'chunked'), name).toEqual([]);
+      expect(areaBlockers(name, { chunks: ['50,50'] }, 'chunked'), name)
+        .toEqual(['Lumbridge (49, 49) or Lumbridge (50, 50) with The Lost Tribe started']);
+      expect(areaBlockers(name, { chunks: ['49,49'] }, 'chunked'), name).toEqual([]);
+    }
+    expect(evaluateActivityReadiness(true, getActivityReq('The Fractured Archive'), unlocked({ chunks: ['50,50'], quests: ['The Lost Tribe', 'While Guthix Sleeps'] }), 'chunked').status).not.toBe('NOT_READY');
+  });
+
+  it('counts the 51 Agility pipe from the Varrock Sewers for Obor', () => {
+    const agility = (level: number) => ({ chunks: ['50,54'], skills: { Agility: 6 }, levels: { Agility: level } });
+    expect(areaBlockers('Obor', agility(51), 'chunked')).toEqual([]);
+    expect(areaBlockers('Obor', agility(50), 'chunked')).toEqual(['Edgeville (48, 54) or Varrock (50, 54) with Agility level 51']);
+  });
+
+  it('counts Temple Trekking from the Paterdomus only after Darkness of Hallowvale, in both modes', () => {
+    const myreque = ['Priest in Peril', 'In Aid of the Myreque'];
+    expect(evaluateActivityReadiness(true, getActivityReq('Temple Trekking'), unlocked({ regions: ['Paterdomus'], quests: myreque }), 'vanilla'))
+      .toEqual({ status: 'NOT_READY', blockers: [{ kind: 'area', label: 'Burgh de Rott, or Paterdomus after Darkness of Hallowvale' }] });
+    expect(evaluateActivityReadiness(true, getActivityReq('Temple Trekking'), unlocked({ regions: ['Paterdomus'], quests: [...myreque, 'Darkness of Hallowvale'] }), 'vanilla').status).toBe('READY');
+    expect(evaluateActivityReadiness(true, getActivityReq('Temple Trekking'), unlocked({ regions: ['Burgh de Rott'], quests: myreque }), 'vanilla').status).toBe('READY');
+    expect(areaBlockers('Temple Trekking', { chunks: ['53,54'], quests: [...myreque, 'Darkness of Hallowvale'] }, 'chunked')).toEqual([]);
+    expect(areaBlockers('Temple Trekking', { chunks: ['53,54'], quests: myreque }, 'chunked'))
+      .toEqual(['Burgh de Rott (54, 50) or Paterdomus (53, 54) with Darkness of Hallowvale']);
+  });
+});
+
+describe('Mahogany Homes: the first contract comes from Amy (area-access.d2[0])', () => {
+  // Construction unlocked: the contracts train it (own.d1[0]).
+  const builder = { skills: { Construction: 1 } };
+  const AMY_FIRST = 'Take your first contract from Amy in Falador (Marlo, Ellie and Angelo give contracts only after that)';
+
+  it('opens at any contractor in Chunked and asks the player to confirm the first contract', () => {
+    for (const office of ['46,52', '50,54', '41,51', '27,56']) {
+      expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: [office], ...builder }), 'chunked'), office)
+        .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
+    }
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked({ chunks: ['47,52'], ...builder }), 'chunked').status).toBe('NOT_READY');
+  });
+
+  it('carries the same line in Vanilla', () => {
+    expect(evaluateActivityReadiness(true, getActivityReq('Mahogany Homes'), unlocked(builder), 'vanilla'))
+      .toEqual({ status: 'NEEDS_CONFIRMATION', checks: [AMY_FIRST] });
+  });
+});
+
+// own.d1[0]: these activities named their skill only in a note, so they read
+// ready while the run could not train it. Levels from each Wiki page, 24 Nov 2026.
+describe('a skill activity needs its skill unlocked (own.d1[0])', () => {
+  const SKILL_GATES: Array<[string, string, number]> = [
+    ['Mahogany Homes', 'Construction', 1], // Beginner contracts at level 1
+    ['Forestry', 'Woodcutting', 1], // chopping any tree near an event counts
+    ['Brimhaven Agility Arena', 'Agility', 1], // dispensers need no Agility level
+    ["Sorceress's Garden", 'Thieving', 1], // the Winter garden has no level
+    ['Canoes', 'Woodcutting', 12], // the lowest canoe station
+    ["Servants' Guild", 'Construction', 20], // Rick, the first servant
+    ['Ring of the Elements', 'Runecraft', 27], // Guardians of the Rift
+  ];
+
+  it.each(SKILL_GATES)('%s reads Not ready with %s locked or below %i', (name, skill, level) => {
+    const skillBlockers = (over: Partial<UnlockState>) => {
+      const result = evaluateActivityReadiness(true, getActivityReq(name), unlocked(over), 'vanilla');
+      return result.status === 'NOT_READY' ? result.blockers.filter(blocker => blocker.kind === 'skill') : [];
+    };
+    expect(skillBlockers({})).toEqual([{ kind: 'skill', label: `${skill} ${level}` }]);
+    expect(skillBlockers({ skills: { [skill]: 10 }, levels: { [skill]: level - 1 } }).length).toBe(level > 1 ? 1 : 0);
+    expect(skillBlockers({ skills: { [skill]: 10 }, levels: { [skill]: level } })).toEqual([]);
+  });
+
+  it('leaves no other note naming a skill without a skills entry', () => {
+    // Each of these can be done, or has a way in, with the named skill locked.
+    const NO_SKILL_GATE = new Set([
+      "Rogues' Den", // the hideout is free; the maze has its own minigame gate
+      "Warriors' Guild", // warriorsGuildEntry
+      'Blast Furnace', // stoking and pumping train Firemaking, Strength and Agility
+      'Fishing Trawler', // no Fishing level to join
+      'Slayer Ring', // a bought ring needs no Crafting
+      'Essence Pouches', // the small pouch has no Runecraft level
+      'Mine Carts', // names the Fishing Contest quest
+    ]);
+    const named = Object.entries(ACTIVITY_REQUIREMENTS)
+      .filter(([name, req]) => !NO_SKILL_GATE.has(name) && !req.skills && !req.oneOf?.some(route => route.skills)
+        && SKILLS_LIST.some(skill => req.note?.includes(skill)))
+      .map(([name]) => name);
+    expect(named).toEqual([]);
   });
 });

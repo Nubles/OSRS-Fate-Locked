@@ -101,6 +101,7 @@ export interface AvailabilityContext {
   arcana: Set<string>;
   storage: Set<string>;
   housing: Set<string>;
+  slayerUnlocks: Set<string>;
   levels: Record<string, number>;
   skillsUnlocked: Set<string>;
   /** Explicit player inventory. Owning inputs permits crafting without a new supply route. */
@@ -138,6 +139,7 @@ export const buildAvailabilityContext = (gs: GameState, owned: Readonly<Record<s
     arcana: new Set(u.arcana),
     storage: new Set(u.storage),
     housing: new Set(u.housing),
+    slayerUnlocks: new Set(u.slayerUnlocks ?? []),
     levels: u.levels || {},
     skillsUnlocked,
     owned,
@@ -160,6 +162,7 @@ const hasTypedUnlock = (
     case TableType.ARCANA: return ctx.arcana.has(id);
     case TableType.STORAGE: return ctx.storage.has(id);
     case TableType.POH: return ctx.housing.has(id);
+    case TableType.SLAYER_UNLOCKS: return ctx.slayerUnlocks.has(id);
     default: return false;
   }
 };
@@ -172,6 +175,10 @@ const chunkedSourceChunks = (source: ResourceSource, ctx: AvailabilityContext): 
   const hit = kinds ? chunkContentService.entityLocations(source.name, kinds) : null;
   return hit?.locations.length ? hit.locations : null;
 };
+
+/** The quests a source needs: a QUEST source is the reward of the quest it is named after. */
+const sourceQuests = (source: Pick<ResourceSource, 'type' | 'name' | 'quests'>): string[] | undefined =>
+  source.type === 'QUEST' ? [...new Set([source.name, ...(source.quests ?? [])])] : source.quests;
 
 /**
  * Analyze a single source against the context. Returns {isAvailable, missing}
@@ -231,7 +238,7 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
 
   // 3. Quests, plus the unlocking quest of a gated skill: every Herblore
   // recipe needs Druidic Ritual.
-  for (const q of withSkillGateQuests(source.quests, requiredSkills)) {
+  for (const q of withSkillGateQuests(sourceQuests(source), requiredSkills)) {
     if (!ctx.quests.has(q) && !fail(`Quest: ${q}`)) return result(false);
   }
 
@@ -246,7 +253,11 @@ const analyzeSource = (source: ResourceSource, ctx: AvailabilityContext, collect
       if (dependency) unlockDependencies.push(dependency);
       if (!fail(`Unlock: ${u}`)) return result(false);
     }
-    if (ok) {
+    // A Slayer reward is bought with points; it has no access requirements
+    // of its own to confirm (the source's Slayer skill gate covers earning them).
+    // A farming patch unlock asks nothing of its own either: each patch source
+    // carries its own areas and quests (owner call U6).
+    if (ok && dependency?.table !== TableType.SLAYER_UNLOCKS && dependency?.table !== TableType.FARMING_LAYERS) {
       const readiness = evaluateActivityReadiness(true, getActivityReq(u), ctx.gameState.unlocks, ctx.gameState.gameModeId);
       const checks = readiness.status === 'NOT_READY' ? readiness.blockers.map(b => b.label)
         : readiness.status === 'NEEDS_CONFIRMATION' ? readiness.checks : [];
@@ -485,7 +496,7 @@ export const calculateEngineItemProgress = (goalId: string, gameState: GameState
   const total =
     s.regions.length +
     Object.keys(s.skills || {}).length +
-    withSkillGateQuests(s.quests, s.skills).length +
+    withSkillGateQuests(sourceQuests(s), s.skills).length +
     Object.keys(s.inputs ?? {}).filter(item => item !== 'Coins').length +
     (s.unlockId ? 1 : 0);
   const completed = Math.max(0, total - path.missing.length);

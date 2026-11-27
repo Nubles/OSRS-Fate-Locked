@@ -30,7 +30,9 @@ import { gzipSync } from 'node:zlib';
 // 228: Spend Keys refuses a click that lands just after the page moved (utils/clickGuard.ts), so a late-loading line can't turn a click into a spend (227.0 on 2026-10-26).
 // 229: First Steps' small progress store and switches, the Effects switches (Fate fill, pity glow, dry run lines, sounds) and the platform's palette shortcut; the guide, the sounds and the dry-run check load on demand (227.7 on 2026-10-30).
 // 230: a tab that regains the right to save asks the recovery journal for the newest copy before it writes, a full browser storage gives up old backup copies to fit the save, and the Rules open from a link. The save checks run before any save can, so none of them may load on demand (228.8 on 2026-11-09).
-export const ENTRY_GZIP_BUDGET_KB = 230;
+// 231: the second accuracy pass's rule fixes, all in modules that already load at start because rolls and saves run through them: rolls refused while a save is stuck or another tab's progress waits, Chunked's skill node locks and exploring gates, the quest point and either-skill gates of places, guild areas for Saradomin's Ward, boss task filters and backup titles. The entry holds the same 247 modules as before (230.1 on 2026-11-24).
+// 232: ways in that carry their own requirement (a quest started, a skill level), which the readiness badge and the access check now read alike; utils/activityAccess.ts, utils/activityReadiness.ts and utils/slayerReach.ts load at start because Key rolls run through them. That left 0.1 kB, less than the next rule fix needs (230.9 on 2026-11-24).
+export const ENTRY_GZIP_BUDGET_KB = 232;
 
 /** The entry script that dist/index.html loads, as a path inside distDir. */
 export const entryScriptPath = (distDir, indexHtml) => {

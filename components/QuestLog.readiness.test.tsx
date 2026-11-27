@@ -80,8 +80,9 @@ describe('quest journal skill alternatives in Vanilla', () => {
     const unlocks: UnlockState = {
       ...account(),
       // Smithing (steel bars) and Woodcutting (magic logs) since the 10 October 2026 item audit.
-      skills: { Thieving: 6, Firemaking: 5, Magic: 5, Slayer: slayerTier, Smithing: 3, Woodcutting: 8 },
-      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10, Smithing: 30, Woodcutting: 75 },
+      // Crafting (molten glass) since the 23 November 2026 item audit.
+      skills: { Thieving: 6, Firemaking: 5, Magic: 5, Slayer: slayerTier, Smithing: 3, Woodcutting: 8, Crafting: 1 },
+      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10, Smithing: 30, Woodcutting: 75, Crafting: 1 },
       regions: [...quest.regions],
       quests: [...quest.prereqs, ...(plagueCity ? ['Plague City'] : [])],
       merchants: ['Spice Shops'],

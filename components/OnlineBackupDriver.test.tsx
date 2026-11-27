@@ -166,6 +166,34 @@ describe('OnlineBackupDriver', () => {
     expect(nextRetryDelay(60_000, 0)).toBe(60_000);
     expect(nextRetryDelay(0, 0)).toBeGreaterThanOrEqual(5_000);
   });
+
+  it('keeps backing off while the player switches away from the page and back', async () => {
+    const hide = async () => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      await act(async () => { document.dispatchEvent(new Event('visibilitychange')); await Promise.resolve(); });
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    };
+    const uploaded = backupRun.getMockImplementation();
+    backupRun.mockImplementation(async () => ({ kind: 'retry', afterMs: 60_000 }) as never);
+    try {
+      // The first upload is refused, so no upload time is on record.
+      writeOnlineBackupRecord('P', { code: '0123456789ABCDEFGHJK' });
+      render(<OnlineBackupDriver />);
+      await act(async () => { await vi.advanceTimersByTimeAsync(ONLINE_BACKUP_SETTLE_MS); });
+      expect(backupRun).toHaveBeenCalledTimes(1);
+      // Away every 20 seconds for ten minutes: retries still wait 1, 2 and 4 minutes.
+      const calls: number[] = [];
+      for (let step = 0; step < 30; step += 1) {
+        await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
+        await hide();
+        calls.push(backupRun.mock.calls.length);
+      }
+      expect(calls[0]).toBe(1);
+      expect(backupRun).toHaveBeenCalledTimes(4);
+    } finally {
+      backupRun.mockImplementation(uploaded!);
+    }
+  });
 });
 
 describe('nextUploadDelay', () => {
