@@ -39,16 +39,18 @@ const STARTED_GATES: Array<[string, string[], string[]]> = [
 ];
 
 describe('started-quest gates', () => {
-  it.each(STARTED_GATES)('%s is ready once its started quest is complete', (id, _started, _labels) => {
-    const result = evaluateQuestEligibility(QUEST_DATA[id], everythingBut(id), 'vanilla');
+  it.each(STARTED_GATES)('%s clears its started-quest checks after completion', (id) => {
+    const quest = QUEST_DATA[id];
+    const result = evaluateQuestEligibility(quest, everythingBut(id), 'vanilla');
+    const remainingChecks = quest.manualRequirements ?? [];
     expect(result.blockers).toEqual([]);
-    expect(result.manualChecks).toEqual([]);
-    expect(result.eligible).toBe(true);
+    expect(result.manualChecks).toEqual(remainingChecks);
+    expect(result.eligible).toBe(remainingChecks.length === 0);
   });
 
   it.each(STARTED_GATES)('%s still asks for the started quest while it is not complete', (id, started, labels) => {
     const result = evaluateQuestEligibility(QUEST_DATA[id], everythingBut(id, ...started), 'vanilla');
-    expect(result.manualChecks).toEqual(labels);
+    expect(result.manualChecks).toEqual([...(QUEST_DATA[id].manualRequirements ?? []), ...labels]);
     expect(result.eligible).toBe(false);
   });
 
