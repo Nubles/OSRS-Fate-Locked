@@ -18,6 +18,7 @@ import { DIARY_DATA } from '../data/diaryData';
 import { CA_DATA } from '../data/caData';
 import { COLLECTION_LOG_DATA } from '../data/collectionLogData';
 import { sharedSlotCount } from '../data/collectionLogSlots';
+import { collectionLogBlockedIds } from '../services/CollectionLogSyncService';
 import { TableType } from '../types';
 import { TestSuiteRunner } from './TestSuiteRunner';
 
@@ -138,7 +139,11 @@ export function buildOracleSearchIndex(): SearchItem[] {
 const DIAGNOSTICS_ENABLED = import.meta.env.DEV;
 
 export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
-  const { unlocks, gameModeId } = useGame();
+  const { unlocks, gameModeId, collectionLogIdentity } = useGame();
+  const blockedCollectionIds = useMemo(
+    () => collectionLogBlockedIds(unlocks.collectionLog, collectionLogIdentity),
+    [unlocks.collectionLog, collectionLogIdentity],
+  );
   const [query, setQuery] = useState('');
   const [isRunningTest, setIsRunningTest] = useState(false);
   // World-entity search (monsters / objects / NPCs / spawns / shops / quest
@@ -278,7 +283,7 @@ export const OracleSearch: React.FC<OracleSearchProps> = ({ onClose }) => {
         detail = isUnlocked ? "Completed" : "Incomplete";
         break;
       case 'COLLECTION_LOG_ITEM':
-        const count = sharedSlotCount(unlocks.collectionLog, item.id as number);
+        const count = sharedSlotCount(unlocks.collectionLog, item.id as number, blockedCollectionIds);
         isUnlocked = count > 0;
         detail = isUnlocked ? `Obtained (x${count})` : "Not Obtained";
         break;

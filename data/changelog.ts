@@ -44,6 +44,7 @@ export const CHANGELOG_RELEASES = [
       fixed: [
         'An item on several Collection Log pages, like the Dragon pickaxe, now fills every page that lists it, as in the game.',
         'The log’s total counts each item once, as the game’s does.',
+        'Oracle search leaves out Collection Log counts held for identity review, including when an item appears on several pages.',
       ],
       balance: [
         'A Collection Log item now rolls for a Key once, the first time you log it, not once for every page it’s on.',

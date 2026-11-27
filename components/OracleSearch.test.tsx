@@ -13,8 +13,10 @@ const mockGame = vi.hoisted(() => ({
       cas: [] as string[],
       regions: [] as string[],
       chunks: [] as string[],
+      collectionLog: {} as Record<number, number>,
     },
     gameModeId: 'standard',
+    collectionLogIdentity: { version: 1, quarantinedIds: [] as number[] },
   },
 }));
 
@@ -40,6 +42,27 @@ vi.mock('../hooks/useFocusTrap', () => ({
 vi.mock('./SectionGuide', () => ({
   SectionGuide: () => null,
 }));
+
+describe('OracleSearch shared collection items', () => {
+  afterEach(() => {
+    mockGame.current.unlocks.collectionLog = {};
+    mockGame.current.collectionLogIdentity.quarantinedIds = [];
+  });
+
+  it('shows the Dragon pickaxe only on confirmed pages and ignores unconfirmed counts', () => {
+    mockQuery.current = 'Dragon pickaxe';
+    const game = mockGame.current;
+    game.unlocks.collectionLog = { 109002: 8 };
+    game.collectionLogIdentity.quarantinedIds = [109002];
+    const search = () => renderToStaticMarkup(<OracleSearch onClose={vi.fn()} />);
+    expect(search()).not.toContain('Obtained (x');
+
+    game.unlocks.collectionLog[128003] = 2;
+    const markup = search();
+    expect(markup.match(/Obtained \(x2\)/g)).toHaveLength(5);
+    expect(markup).not.toContain('Obtained (x8)');
+  });
+});
 
 describe('OracleSearch Combat Achievement status', () => {
   it('shows a tier earned from current cumulative points as completed without a stored marker', () => {
