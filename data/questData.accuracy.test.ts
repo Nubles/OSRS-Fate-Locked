@@ -186,13 +186,10 @@ describe('quest item gates checked on the Wiki (23 Nov 2026)', () => {
     expect(QUEST_DATA["Enakhra's Lament"].skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43, Mining: 45 });
   });
 
-  it("gates Enakhra's Lament's normal, oak, willow and maple logs on a route for each", () => {
-    // Wiki Enakhra's Lament (rev 15411975): maple from Woodcutting 45, Managing Miscellania or the
-    // Wintertodt reward cart; willow needs Woodcutting 30, which also covers oak and normal logs.
-    expect(QUEST_DATA["Enakhra's Lament"].oneOf).toEqual([
-      { skills: { Woodcutting: 45 } },
-      { skills: { Woodcutting: 30 }, regions: ['Miscellania & Etceteria'], quests: ['Throne of Miscellania'] },
-      { skills: { Woodcutting: 30, Firemaking: 50 }, regions: ['Wintertodt Camp'] },
+  it("accepts Enakhra's Lament's logs from any permitted source", () => {
+    expect(QUEST_DATA["Enakhra's Lament"].preparationRequirements).toEqual([
+      { skill: 'Woodcutting', level: 45, action: 'cut the four types of logs',
+        alternative: 'you have normal, oak, willow and maple logs from sources permitted by your run' },
     ]);
   });
 
@@ -451,6 +448,22 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
       route(['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(false);
     expect(questRequirementOptionMet(quest.oneOf![0],
       route(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(true);
+  });
+
+  it('requires 31 Prayer only for the upstairs monastery on ghost sequence two', () => {
+    const option = QUEST_DATA['Curse of the Empty Lord'].oneOf![1];
+    const regions = option.regions!;
+    const atLevel = (level: number) => unlocks({ regions, skills: { Prayer: 4 }, levels: { Prayer: level } });
+    expect(questRequirementOptionMet(option, atLevel(30), 'vanilla')).toBe(false);
+    expect(questRequirementOptionMet(option, atLevel(31), 'vanilla')).toBe(true);
+  });
+
+  it('accepts an alternative into Isafdar when the Roving Elves overland route is unavailable', () => {
+    const quest = QUEST_DATA['Roving Elves'];
+    const account = unlocks({ regions: ['Isafdar', 'Baxtorian Falls'], quests: ['Regicide', 'Waterfall Quest'] });
+    const result = evaluateQuestEligibility(quest, account, 'vanilla');
+    expect(result.blockers).toEqual([]);
+    expect(result.manualChecks).toContain('Can reach Islwyn in Isafdar using a permitted charter ship to Port Tyras or an Iorwerth camp teleport');
   });
 
   it("does not ask The General's Shadow for the Tree Gnome Stronghold or Falador", () => {

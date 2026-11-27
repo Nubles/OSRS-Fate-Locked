@@ -1092,8 +1092,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
   'Roving Elves': {
     kind: 'quest', accessPolicy: 'regions',
     id: 'Roving Elves', name: 'Roving Elves',
-    regions: ['Tyras Camp', 'Isafdar', 'Baxtorian Falls'],
-    skills: {}, prereqs: ['Regicide', 'Waterfall Quest'], points: 1, series: 'Elf',
+    regions: ['Isafdar', 'Baxtorian Falls'],
+    skills: { Agility: 56 }, prereqs: ['Regicide', 'Waterfall Quest'], points: 1, series: 'Elf',
+    skillAlternatives: [{
+      skill: 'Agility', quests: [],
+      manualRequirements: ['Can reach Islwyn in Isafdar using a permitted charter ship to Port Tyras or an Iorwerth camp teleport'],
+    }],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Ghosts Ahoy': {
@@ -1489,13 +1493,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     ],
     skills: { 'Crafting': 50, 'Magic': 39, 'Prayer': 43, 'Mining': 45 }, prereqs: [],
     manualRequirements: ["Must be on the standard spellbook"], points: 2, series: 'Mahjarrat',
-    // Items checked on the Wiki (23 Nov): Sandstone (Mining 35) and granite (Mining 45), mined only; normal, oak, willow and maple logs.
-    // Maple logs also from Managing Miscellania or the Wintertodt reward cart; Woodcutting 30 covers the willow, oak and normal logs.
-    oneOf: [
-      { skills: { 'Woodcutting': 45 } },
-      { skills: { 'Woodcutting': 30 }, regions: ['Miscellania & Etceteria'], quests: ['Throne of Miscellania'] },
-      { skills: { 'Woodcutting': 30, 'Firemaking': 50 }, regions: ['Wintertodt Camp'] },
-    ],
+    preparationRequirements: [{
+      skill: 'Woodcutting', level: 45, action: 'cut the four types of logs',
+      alternative: 'you have normal, oak, willow and maple logs from sources permitted by your run',
+    }],
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Cabin Fever': {
@@ -2884,7 +2885,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     oneOf: [
       // Sequence 1's Kharrim stands at the Chaos Temple (church) altar, 2950,3820 (46,59, Chaos Altar).
       { regions: ['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"] },
-      { regions: ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower'] },
+      { regions: ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower'], skills: { Prayer: 31 } },
       { regions: ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville'] },
     ],
     skills: { 'Thieving': 53 }, prereqs: [],
@@ -2893,10 +2894,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { quest: 'The Restless Ghost', label: 'Started The Restless Ghost' },
     ],
     points: 0, series: 'Mahjarrat',
-    // Items checked on the Wiki: Ring of visibility and ghostspeak amulet.
+    manualRequirements: [
+      'Can reach the ghosts in the sequence Valdez assigned, including the upstairs monastery for sequence 2',
+      'Can wear a ghostspeak amulet, or Morytania legs 2 or better outside the Entrana sequence',
+    ],
     equipmentRequirements: [
       { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility while speaking to the ghosts' },
-      { slot: 'Neck', tier: 1, reason: 'Wear the ghostspeak amulet (sequence 1 requires the amulet)' },
     ],
     difficulty: DropSource.QUEST_EXPERIENCED
   },

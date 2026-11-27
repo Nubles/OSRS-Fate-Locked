@@ -29,7 +29,7 @@ import type {
   RawRouteRequirement,
   RouteGate,
 } from './model';
-import { rankRoutes } from './ranker';
+import { rankRoutes, routeAccess } from './ranker';
 import { compileRawRequirements, evaluateRouteGates } from './accountRequirements';
 import { questRouteStatusForItems } from './questRouteStatus';
 
@@ -332,13 +332,15 @@ const easiestStationAccess = (
 ): readonly RawRouteRequirement[] => {
   if (copies.length <= 1) return copies[0]?.rawRequirements ?? [];
   let best: readonly RawRouteRequirement[] = [];
-  let bestScore = Infinity;
+  let bestAccess = Infinity;
+  let fewestBlockers = Infinity;
   for (const { rawRequirements } of copies) {
     const { blockers, hasDataGap } = evaluateRouteGates(compileRawRequirements(rawRequirements), account);
-    const score = blockers.length * 2 + (hasDataGap ? 1 : 0);
-    if (score < bestScore) {
+    const access = routeAccess(blockers, hasDataGap);
+    if (access < bestAccess || (access === bestAccess && blockers.length < fewestBlockers)) {
       best = rawRequirements;
-      bestScore = score;
+      bestAccess = access;
+      fewestBlockers = blockers.length;
     }
   }
   return best;

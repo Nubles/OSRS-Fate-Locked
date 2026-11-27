@@ -22,7 +22,7 @@ export interface RawRouteRequirement {
 
 export type RouteGate =
   | { type: 'QUEST'; questId: string; label: string }
-  | { type: 'QUEST_PROGRESS'; questId: string; label: string; raw: string; completion: 'satisfies' | 'blocks' }
+  | { type: 'QUEST_PROGRESS'; questId: string; label: string; raw: string; completion: 'satisfies' | 'blocks'; closedByCompletion?: true }
   | { type: 'RFD_SUBQUESTS'; count: number; label: string }
   /** anyOf: other levels, any one of which meets the gate instead ("60 Strength or 60 Agility"). */
   | { type: 'SKILL'; skill: string; level: number; label: string; anyOf?: readonly { skill: string; level: number }[] }

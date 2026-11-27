@@ -67,7 +67,9 @@ describe('account requirements', () => {
     const chamber = compileRawRequirements([chunkEntry('The Depths of Despair: lower chamber before quest completion')]);
     const state = unlocks({ quests: ['The Depths of Despair'] });
     expect(evaluateRouteGates(cave, state)).toEqual({ blockers: [], hasDataGap: false });
-    expect(evaluateRouteGates(chamber, state)).toEqual({ blockers: chamber, hasDataGap: false });
+    expect(evaluateRouteGates(chamber, state)).toEqual({
+      blockers: [{ ...chamber[0], closedByCompletion: true }], hasDataGap: false,
+    });
     expect(evaluateRouteGates(chamber, unlocks())).toEqual({ blockers: chamber, hasDataGap: true });
   });
 

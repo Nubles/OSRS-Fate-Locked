@@ -16,8 +16,8 @@
     "banks:verify": "node scripts/gen-banks.mjs --check",
     "keepers:sync": "node scripts/gen-shop-keepers.mjs --refresh",
     "keepers:verify": "node scripts/gen-shop-keepers.mjs --check",
-    "chunks:sync": "node scripts/sync-chunk-content.mjs && node scripts/gen-banks.mjs && node scripts/gen-ocean-chunks.mjs && node scripts/quest-walking-graph.mjs && npx tsx scripts/buildChunkSkillNodes.ts",
-    "chunks:verify": "node scripts/sync-chunk-content.mjs --check && node scripts/gen-banks.mjs --check && node scripts/gen-ocean-chunks.mjs --check && node scripts/quest-walking-graph.mjs --check && npx tsx scripts/buildChunkSkillNodes.ts --check",
+    "chunks:sync": "node scripts/sync-chunk-content.mjs && node scripts/gen-banks.mjs && node scripts/gen-ocean-chunks.mjs && node scripts/quest-walking-graph.mjs && tsx scripts/buildChunkSkillNodes.ts",
+    "chunks:verify": "node scripts/sync-chunk-content.mjs --check && node scripts/gen-banks.mjs --check && node scripts/gen-ocean-chunks.mjs --check && node scripts/quest-walking-graph.mjs --check && tsx scripts/buildChunkSkillNodes.ts --check",
     "quest-walking:generate": "node scripts/quest-walking-graph.mjs",
     "quest-walking:verify": "node scripts/quest-walking-graph.mjs --check",
     "chunks:source-check": "node scripts/chunk-source.mjs --check-upstream",
@@ -61,15 +61,16 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "autoprefixer": "^10.4.18",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.23.15",
     "typescript": "^5.0.2",
-    "vite": "^5.0.0",
-    "vitest": "^4.1.6"
+    "vite": "^7.3.8",
+    "vitest": "^4.1.12"
   }
 }

@@ -193,7 +193,7 @@ export const evaluateRouteGates = (
         // A completion can close a quest-only room. Incomplete does not prove
         // that the player has reached a particular stage of that quest.
         if (!completed) hasDataGap = true;
-        blockers.push(gate);
+        blockers.push(completed ? { ...gate, closedByCompletion: true } : gate);
         break;
       }
       case 'SKILL':

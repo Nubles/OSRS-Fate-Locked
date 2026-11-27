@@ -1451,7 +1451,7 @@
       "id": "Curse of the Empty Lord",
       "kind": "miniquest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-11-24",
+      "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Curse_of_the_Empty_Lord&oldid=15365488",
         "revision": 15365488,
@@ -1459,7 +1459,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Baxtorian Falls\"],\"skills\":{\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear the ring of visibility while speaking to the ghosts\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear the ghostspeak amulet (sequence 1 requires the amulet)\",\"slot\":\"Neck\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Altar\",\"Rogues' Castle\",\"Entrana\",\"Wizards' Tower\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Port Sarim\",\"Edgeville\",\"Slayer Tower\"]},{\"regions\":[\"Bandit Camp\",\"Lava Maze\",\"Tree Gnome Stronghold\",\"Falador\",\"Edgeville\"]}],\"questProgress\":[{\"label\":\"Started Desert Treasure I\",\"quest\":\"Desert Treasure I\"},{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Baxtorian Falls\"],\"skills\":{\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear the ring of visibility while speaking to the ghosts\",\"slot\":\"Ring\",\"tier\":1}],\"prereqs\":[],\"oneOf\":[{\"regions\":[\"Wilderness Agility Course\",\"Chaos Altar\",\"Rogues' Castle\",\"Entrana\",\"Wizards' Tower\"]},{\"regions\":[\"Wilderness Bandit Camp\",\"Graveyard of Shadows\",\"Port Sarim\",\"Edgeville\",\"Slayer Tower\"],\"skills\":{\"Prayer\":31}},{\"regions\":[\"Bandit Camp\",\"Lava Maze\",\"Tree Gnome Stronghold\",\"Falador\",\"Edgeville\"]}],\"manualRequirements\":[\"Can reach the ghosts in the sequence Valdez assigned, including the upstairs monastery for sequence 2\",\"Can wear a ghostspeak amulet, or Morytania legs 2 or better outside the Entrana sequence\"],\"questProgress\":[{\"label\":\"Started Desert Treasure I\",\"quest\":\"Desert Treasure I\"},{\"label\":\"Started The Restless Ghost\",\"quest\":\"The Restless Ghost\"}],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1470,12 +1470,14 @@
       "notes": {
         "items": [
           "A ring of visibility and a ghostspeak item are required; item possession is not machine-enforced.",
-          "Item gate review 2026-10-09: gated for Ring of visibility and ghostspeak amulet, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot)."
+          "Item gate review 2026-10-09: gated for Ring of visibility and ghostspeak amulet, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
+          "The ring of visibility is required on all routes. A ghostspeak amulet is required on Entrana. Morytania legs 2 or better also work on the other sequences."
         ],
         "travel": [
           "The three randomized sequences all require Glarial's Tomb in Kandarin and an Asgarnia stop. Their distinct Wilderness and route-only stops are represented as three alternatives instead of requiring every Wilderness subarea. The picker records only Glarial's Tomb (39,53).",
           "The catalogue-wide parent-region audit replaced Asgarnia, Kandarin with the exact tracked access set: Baxtorian Falls.",
-          "Place review 2026-11-24 (Wiki rev 15365488 ===Sequence 1===, mapped through data/subAreaChunks.ts): Kharrim stands at 2950,3820, 'The Chaos Temple (church) altar in Level 38 Wilderness', which is 46,59, the Chaos Altar area since it was split from the Chaos Temple; the first alternative now asks for the Chaos Altar instead of the level 12 Chaos Temple."
+          "Place review 2026-11-24 (Wiki rev 15365488 ===Sequence 1===, mapped through data/subAreaChunks.ts): Kharrim stands at 2950,3820, 'The Chaos Temple (church) altar in Level 38 Wilderness', which is 46,59, the Chaos Altar area since it was split from the Chaos Temple; the first alternative now asks for the Chaos Altar instead of the level 12 Chaos Temple.",
+          "Sequence 2 visits Dhalak upstairs at Edgeville Monastery and requires 31 Prayer. Valdez assigns the sequence, so players confirm they can follow that specific route."
         ],
         "instances": [],
         "partialCompletion": [
@@ -2500,7 +2502,7 @@
       "id": "Enakhra's Lament",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-11-23",
+      "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Enakhra's_Lament&oldid=15411975",
         "revision": 15411975,
@@ -2508,7 +2510,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Crafting\":50,\"Magic\":39,\"Mining\":45,\"Prayer\":43},\"prereqs\":[],\"oneOf\":[{\"skills\":{\"Woodcutting\":45}},{\"quests\":[\"Throne of Miscellania\"],\"regions\":[\"Miscellania & Etceteria\"],\"skills\":{\"Woodcutting\":30}},{\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":30}}],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kharidian Desert\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":45}],\"id\":\"desert-quarry-and-temple\",\"label\":\"Desert Quarry and Enakhra's Temple\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Crafting\":50,\"Magic\":39,\"Mining\":45,\"Prayer\":43},\"preparationRequirements\":[{\"action\":\"cut the four types of logs\",\"alternative\":\"you have normal, oak, willow and maple logs from sources permitted by your run\",\"level\":45,\"skill\":\"Woodcutting\"}],\"prereqs\":[],\"manualRequirements\":[\"Must be on the standard spellbook\"],\"points\":2}",
       "chunkEvidence": [
         {
           "chunkId": "49,45",
@@ -2519,7 +2521,8 @@
       "notes": {
         "items": [
           "The pinned Wiki item requirements for Enakhra's Lament were reviewed; inventory possession and pre-obtained supplies are not machine-enforced.",
-          "Item gate review 2026-11-23: gated for Mining 45 (sandstone at 35 and granite at 45 are only mined) and for the logs: Woodcutting 45, or Woodcutting 30 with Managing Miscellania or the Wintertodt reward cart (Firemaking 50) for the maple log."
+          "Item gate review 2026-11-23: gated for Mining 45 (sandstone at 35 and granite at 45 are only mined) and for the logs: Woodcutting 45, or Woodcutting 30 with Managing Miscellania or the Wintertodt reward cart (Firemaking 50) for the maple log.",
+          "Woodcutting 45 supplies all four types of logs. An ironman can alternatively confirm logs from permitted sources, including maple logs from Hunters’ Rumours and willow logs from vampyre juvinates."
         ],
         "travel": [
           "The unavoidable Desert Quarry and temple entrance are represented by the pinned chunk.",
@@ -6226,15 +6229,15 @@
       "id": "Roving Elves",
       "kind": "quest",
       "status": "verified-with-notes",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Roving_Elves&oldid=15262777",
-        "revision": 15262777,
-        "revisionTimestamp": "2026-07-14T03:18:16Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Roving_Elves&oldid=15401434",
+        "revision": 15401434,
+        "revisionTimestamp": "2026-11-12T20:08:58Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Tyras Camp\",\"Isafdar\",\"Baxtorian Falls\"],\"skills\":{},\"prereqs\":[\"Regicide\",\"Waterfall Quest\"],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions\",\"regions\":[\"Isafdar\",\"Baxtorian Falls\"],\"skills\":{\"Agility\":56},\"prereqs\":[\"Regicide\",\"Waterfall Quest\"],\"skillAlternatives\":[{\"manualRequirements\":[\"Can reach Islwyn in Isafdar using a permitted charter ship to Port Tyras or an Iorwerth camp teleport\"],\"quests\":[],\"skill\":\"Agility\"}],\"points\":1}",
       "chunkEvidence": [
         {
           "chunkId": "34,49",
@@ -6263,11 +6266,12 @@
         ],
         "travel": [
           "The fixed route crosses Isafdar/Tirannwn and Glarial's Tomb plus Baxtorian Falls/Kandarin.",
-          "The catalogue-wide parent-region audit replaced Tirannwn, Kandarin with the exact tracked access set: Tyras Camp, Isafdar, Baxtorian Falls."
+          "The catalogue-wide parent-region audit replaced Tirannwn, Kandarin with the exact tracked access set: Tyras Camp, Isafdar, Baxtorian Falls.",
+          "Islwyn is in Isafdar. Port Tyras is only the charter route. The player can instead travel overland or use an Iorwerth camp teleport."
         ],
         "instances": [],
         "partialCompletion": [
-          "Agility 56 is not enforced because the pinned source permits charter-ship access to the elven woods."
+          "The overland route requires 56 Agility. An account below that level can confirm a permitted charter ship or Iorwerth camp teleport instead."
         ]
       }
     },

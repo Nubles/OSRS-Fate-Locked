@@ -34,6 +34,12 @@ const account = (overrides: Partial<UnlockState> = {}): UnlockState => ({
   completedTasks: [], collectionLog: {}, ...overrides,
 });
 
+it('lists the tools needed to catch a snowy knight and black salamander and chop yew logs from an Ent', () => {
+  expect(task('frem_med_6').oneOf?.find(route => route.label === 'Insect net')?.items).toEqual(['Insect net']);
+  expect(task('wild_hard_3').items).toEqual(['Net trap']);
+  expect(task('wilderness_med_2').items).toEqual(['Mithril axe or better']);
+});
+
 describe('Diary tasks are in the areas the game has them in', () => {
   it('puts the Jaldraocht Pyramid altar beside the pyramid, not in Sophanem', () => {
     // The pyramid's chunk (50,45) has been a Bandit Camp chunk since the map change of 8 October 2026;

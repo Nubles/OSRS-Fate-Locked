@@ -15,6 +15,8 @@ import { indexDirectItemSources, type ChunkSourceSnapshot } from './chunkSourceI
 import {
   compareRouteRankTuples,
   prepareRouteRanker,
+  routeAccess,
+  RouteAccess,
   routeRankTuple,
   type RouteRankTuple,
 } from './ranker';
@@ -524,6 +526,9 @@ const analysisState = (
     return 'OBTAINABLE_NOW';
   }
   if (searchIncompleteMayHideUsable) return 'DATA_INCOMPLETE';
+  if (currentRoutes.some(route => routeAccess(route.blockers, route.hasDataGap) === RouteAccess.CheckQuestStage)) {
+    return 'DATA_INCOMPLETE';
+  }
   if (currentRoutes.some(route => route.blockers.length > 0 && !route.hasDataGap)) {
     return 'ROUTE_BLOCKED';
   }
@@ -531,7 +536,7 @@ const analysisState = (
     // An unrecorded quest stage cannot open a route with a missing level or
     // unlock. Every known alternative must have such an independent blocker.
     if (checkedEveryCurrentRoute && currentRoutes.every(route =>
-      route.blockers.some(gate => gate.type !== 'UNRESOLVED' && gate.type !== 'QUEST_PROGRESS'))) {
+      route.blockers.some(gate => gate.type !== 'UNRESOLVED' && (gate.type !== 'QUEST_PROGRESS' || gate.closedByCompletion)))) {
       return 'ROUTE_BLOCKED';
     }
     return 'DATA_INCOMPLETE';
@@ -880,8 +885,7 @@ const combineStationChoices = (
     const hasDataGap = station.hasDataGap || choices.some(choice => (
       !choice.route || choice.analysisIncomplete || choice.route.hasDataGap
     ));
-    const hasBlocker = station.blockers.length > 0
-      || choices.some(choice => (choice.route?.blockers.length ?? 0) > 0);
+    const blockers = station.blockers.concat(choices.flatMap(choice => choice.route?.blockers ?? []));
     const requiredLevels = new Map<string, number>();
     const addSkillRequirements = (requirements: readonly [string, number][]) => {
       for (const [skill, level] of requirements) {
@@ -908,7 +912,8 @@ const combineStationChoices = (
       ? probabilityValues.reduce((product, value) => product * value, 1)
       : undefined;
     return [
-      !hasDataGap && !hasBlocker ? 0 : !hasDataGap ? 1 : 2,
+      // A remaining ingredient may add a quest-stage check to an otherwise unspecified gap.
+      hasRemainingDependencies && hasDataGap && !blockers.length ? RouteAccess.CheckQuestStage : routeAccess(blockers, hasDataGap),
       recipeDeterministic && choices.every(choice => choice.route?.deterministic !== false) ? 0 : 1,
       choices.reduce((cost, choice) => cost + (choice.route?.recursiveCost ?? 0), 0),
       choices.reduce((cost, choice) => cost
@@ -1105,9 +1110,7 @@ const resolveRequirement = (
     if (context.phase === 'current') {
       const witness = branchAnalysis.currentRoutes[0];
       if (witness) {
-        const witnessPriority = !witness.hasDataGap && witness.blockers.length === 0
-          ? 0
-          : !witness.hasDataGap ? 1 : 2;
+        const witnessPriority = routeAccess(witness.blockers, witness.hasDataGap);
         if (witnessPriority < retainedCurrentWitnessPriority) {
           retainedCurrentWitness = witness;
           retainedCurrentWitnessPriority = witnessPriority;
@@ -1183,9 +1186,7 @@ const resolveRequirement = (
   if (context.phase === 'current' && retainedCurrentWitness) {
     const rankedWitness = rankedCurrentRoutes[0];
     const rankedPriority = rankedWitness
-      ? !rankedWitness.hasDataGap && rankedWitness.blockers.length === 0
-        ? 0
-        : !rankedWitness.hasDataGap ? 1 : 2
+      ? routeAccess(rankedWitness.blockers, rankedWitness.hasDataGap)
       : Number.POSITIVE_INFINITY;
     if (retainedCurrentWitnessPriority < rankedPriority) {
       rankedCurrentRoutes = [retainedCurrentWitness];

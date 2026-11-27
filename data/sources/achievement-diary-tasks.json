@@ -1228,7 +1228,7 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( or a Blighted ancient ice sack for every cast)",
+      "sourceRequirements": "Completion of Desert Treasure I, 94 Magic. Castle Wars supplies a rune pouch that can cast Ice Barrage.",
       "regions": [
         "Castle Wars"
       ],
@@ -5940,7 +5940,7 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Hunter 35 Hunter with a butterfly net and jar",
+      "sourceRequirements": "45 Hunter bare-handed, or 35 Hunter with an insect net. A butterfly jar is optional.",
       "oneOf": [
         {
           "label": "Bare-handed",
@@ -5954,8 +5954,7 @@
             "Hunter": 35
           },
           "items": [
-            "Insect net",
-            "Butterfly jar"
+            "Insect net"
           ],
           "equipmentRequirements": [
             {
@@ -18918,7 +18917,10 @@
       "quests": [],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "61 Woodcutting Any axe and weaponry",
+      "sourceRequirements": "61 Woodcutting (not boostable), at least a mithril axe, and a fallen Ent.",
+      "items": [
+        "Mithril axe or better"
+      ],
       "locations": [
         {
           "label": "Wilderness Ents",
@@ -19331,7 +19333,10 @@
       "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "67 Hunter Small fishing net and a rope",
+      "sourceRequirements": "67 Hunter and a net trap, made from a small fishing net and a rope.",
+      "items": [
+        "Net trap"
+      ],
       "locations": [
         {
           "label": "Boneyard black salamanders",

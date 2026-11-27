@@ -1,5 +1,5 @@
 import type { ConnectGraph } from '../../services/ChunkContentService';
-import type { ChunkKey, ItemRoute } from './model';
+import type { ChunkKey, ItemRoute, RouteGate } from './model';
 
 export interface RouteTravelCost {
   travelCost: number;
@@ -106,12 +106,23 @@ export type RouteRankTuple = readonly [
   number, number, number, number, number, number, number, number, number, string,
 ];
 
+export enum RouteAccess {
+  Available,
+  CheckQuestStage,
+  Blocked,
+  Incomplete,
+}
+
+export const routeAccess = (blockers: readonly RouteGate[], hasDataGap: boolean): RouteAccess => {
+  if (!hasDataGap) return blockers.length ? RouteAccess.Blocked : RouteAccess.Available;
+  if (blockers.length && blockers.every(gate => gate.type === 'QUEST_PROGRESS' && !gate.closedByCompletion)) {
+    return RouteAccess.CheckQuestStage;
+  }
+  return RouteAccess.Incomplete;
+};
+
 export const routeRankTuple = (route: ItemRoute): RouteRankTuple => [
-  route.blockers.length === 0 && !route.hasDataGap
-    ? 0
-    : !route.hasDataGap
-      ? 1
-      : 2,
+  routeAccess(route.blockers, route.hasDataGap),
   route.deterministic ? 0 : 1,
   route.recursiveCost,
   route.consumedIngredientCost,
@@ -180,11 +191,7 @@ const fallbackRouteRankTuple = (
   route: ItemRoute,
   originTravelCost: number,
 ): FallbackRouteRankTuple => [
-  route.blockers.length === 0 && !route.hasDataGap
-    ? 0
-    : !route.hasDataGap
-      ? 1
-      : 2,
+  routeAccess(route.blockers, route.hasDataGap),
   route.deterministic ? 0 : 1,
   originTravelCost + route.travelCost,
   route.recursiveCost,

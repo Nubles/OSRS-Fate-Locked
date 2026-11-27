@@ -866,7 +866,7 @@ describe('Achievement Diary id-classification audit', () => {
       oneOf: [
         { label: 'Bare-handed', skills: { Hunter: 45 } },
         // The butterfly net was renamed the insect net on 11 November 2026 (Insect net rev 15402554).
-        expect.objectContaining({ label: 'Insect net', skills: { Hunter: 35 }, items: ['Insect net', 'Butterfly jar'] }),
+        expect.objectContaining({ label: 'Insect net', skills: { Hunter: 35 }, items: ['Insect net'] }),
       ],
     });
     for (const id of ['frem_med_6', 'lum_med_11']) {

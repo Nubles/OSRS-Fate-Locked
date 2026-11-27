@@ -168,6 +168,18 @@ describe('resolveItemRequirement direct routes', () => {
     const state = (records: ItemSourceRecord[]) => resolveItemRequirement(plankRequirement, fixture({ records })).state;
     expect(state([mine])).toBe('ROUTE_BLOCKED');
     expect(state([mine, other])).toBe('DATA_INCOMPLETE');
+    const locked = source({ rawRequirements: [level] });
+    expect(state([locked, other])).toBe('DATA_INCOMPLETE');
+    expect(state([other, locked])).toBe('DATA_INCOMPLETE');
+    const capped = resolveItemRequirement(plankRequirement, fixture({ records: [locked, other] }), { maxRoutesPerItem: 1 });
+    expect(capped.state).toBe('DATA_INCOMPLETE');
+    expect(capped.currentRoutes[0].sourceLabel).toBe('Other entrance');
+    const closedChamber = source({ rawRequirements: [stage, {
+      raw: 'The Depths of Despair: lower chamber before quest completion', origin: 'CHUNK_ENTRY',
+    }] });
+    expect(resolveItemRequirement(plankRequirement, fixture({
+      records: [closedChamber], account: unlocks({ quests: ['The Depths of Despair'] }),
+    })).state).toBe('ROUTE_BLOCKED');
     expect(state([mine, source({ hostName: 'Surface' })])).toBe('OBTAINABLE_NOW');
   });
 

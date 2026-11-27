@@ -58,7 +58,7 @@ export const AchievementReveal: React.FC<Props> = ({ data, onDismiss, onView, ga
     <div
       className={`
         pointer-events-auto w-[20rem]
-        transition-transform duration-[280ms] ease-out
+        transition-transform [transition-duration:280ms] ease-out
         ${visible ? 'translate-x-0' : 'translate-x-[120%]'}
       `}
     >

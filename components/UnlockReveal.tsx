@@ -77,7 +77,7 @@ export const UnlockReveal: React.FC<Props> = ({ data, onDismiss, onViewJournal }
     <div
       className={`
         pointer-events-auto w-[22rem]
-        transition-transform duration-[280ms] ease-out
+        transition-transform [transition-duration:280ms] ease-out
         ${visible ? 'translate-x-0' : 'translate-x-[115%]'}
       `}
     >

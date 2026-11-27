@@ -656,6 +656,18 @@ describe('analyzeQuest', () => {
     })).items)).toBe('READY_NOW');
   });
 
+  it('checks the possible quest-stage entrance when another copy of a station is locked', () => {
+    const analysis = analyzeQuest("Cook's Assistant", fixture({
+      records: [source('Bucket of milk'), source('Pot of flour')],
+      recipes: [recipe('Egg')],
+      entityHits: [{ name: 'Egg station', kind: 'object', locations: [{ cx: 1, cy: 2 }] }],
+      stationEvidence: ['17 Mining', 'The Lost Tribe started'].map(raw => ({
+        name: 'Egg station', kind: 'object', chunk: '1,2', rawRequirements: [{ raw, origin: 'CHUNK_ENTRY' }],
+      })),
+    }));
+    expect(questRouteStatusForItems(analysis.items)).toBe('ANALYSIS_INCOMPLETE');
+  });
+
   it('does not reuse cached analysis after station requirements change', () => {
     const records = [source('Bucket of milk'), source('Pot of flour')];
     const recipes = [recipe('Egg')];

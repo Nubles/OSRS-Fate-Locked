@@ -2213,6 +2213,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 64: Stone Chests',
       'Lvl 65: Menaphite Thugs, Magic Stalls (Monkey Madness I), Summer Sq\'irk',
       'Lvl 65: Watchmen, Spice & Scimitar Stalls',
+      'Lvl 65: Prison of Ræun Chest (The Graveyard, 65 Agility, lockpick)',
       'Lvl 66: Hallowed Sepulchre Coffins (Sins of the Father)',
       'Lvl 70: Paladins'
     ],

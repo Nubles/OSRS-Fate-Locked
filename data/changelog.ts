@@ -43,9 +43,12 @@ export const CHANGELOG_RELEASES = [
     sections: {
       added: [
         'The Graveyard, a Master quest worth 3 quest points, starts at Olaf’s camp east of Rellekka. Its Prison of Ræun course is in the Agility guide.',
+        'The Collection Log includes the three Prison of Ræun rewards and the Ghostly sail fabric under Sailing Miscellaneous.',
       ],
       fixed: [
         'Quest Cape and Discord progress count Recipe for Disaster once after all ten parts. The full list is now 192 quests and 357 quest points.',
+        'Diary checklists show the net trap for black salamanders and the axe for Wilderness Ents. You can catch a snowy knight without a butterfly jar.',
+        'The Journal checks your assigned ghost route, accepts other sources of logs for Enakhra’s Lament and lets you reach Islwyn without visiting Port Tyras.',
       ],
     },
   },
@@ -58,6 +61,7 @@ export const CHANGELOG_RELEASES = [
         'Chunked: owning the Lumbridge Swamp shed no longer counts Zanaris’s dairy cow, mill and wheat for quests until you’ve done Lost City.',
         'Quest item checks now ask for the way in to cows, mills, sheep and rocks inside places like the Mining Guild, Keldagrim and Prifddinas.',
         'For Doric’s Quest, iron ore from the Dorgesh-Kaan mine or Duke Sucellus now depends on reaching the mine or prison.',
+        'When one entrance is locked and another depends on your progress in a quest, the Journal shows which quest stage to check.',
       ],
     },
   },

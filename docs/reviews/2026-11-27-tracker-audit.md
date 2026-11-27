@@ -1,0 +1,27 @@
+# Tracker audit, 27 November 2026
+
+This review covers the combined tracker in draft #186. Game facts were compared with the OSRS Wiki. Fate Locked rules, save handling and companion exports were checked against the tracker’s own implementation, regression tests and generated files.
+
+| Surface | Check and result |
+| --- | --- |
+| Quest Journal | Matched all 220 Journal IDs and their quest-point rewards. The game counts 192 quests worth 357 points. The Journal splits Recipe for Disaster into ten parts and includes 19 miniquests. Read the requirement and difficulty sections of all 220 Wiki pages. The ten Recipe for Disaster parts have an official difficulty of Special and retain the game mode’s individual reward tiers. [Quest list](https://oldschool.runescape.wiki/w/Quests/List) |
+| Combat Achievements | Compared all 655 Wiki task IDs, tiers, monsters, names and descriptions. Every row matched after removing editorial markup. [Combat Achievements](https://oldschool.runescape.wiki/w/Combat_Achievements) |
+| Achievement Diaries | Matched all 492 descriptions by area, tier and ordinal across the 12 regional Wiki pages. Reviewed differences in the accompanying requirements, including equipment names, alternative methods and Wiki footnotes. The tracker’s requirements also model the run’s own equipment and area permissions. [Achievement Diaries](https://oldschool.runescape.wiki/w/Achievement_Diary) |
+| Collection Log | Reconciled 1,948 page slots with 1,738 unique Wiki item IDs across 126 pages. Compared the full set of page memberships for each item, including shared items and distinct items that share a name. Accounted for the Wiki’s page aliases. [Collection Log](https://oldschool.runescape.wiki/w/Collection_log) · [Wiki item data, revision 15417466](https://oldschool.runescape.wiki/w/Special:PermanentLink/15417466) |
+| Oracle | Queried all 2,394 recorded Wiki titles. All resolved, including 152 redirects. Checked The Graveyard and the Dragon pickaxe in the tracker’s search interface. |
+| Game economy | Simulated 1,000 runs for each of seven play styles. Median rolls to completion stayed within 0.2% of the baseline. These simulations cover the mechanics listed in the balance report. |
+| Persistence and interface | In an isolated browser, opened the six dashboard sections, inspected The Graveyard in the Journal and saved an Attack note. Reloading the production build restored the note verbatim. The automated suite also covers profile migrations, import/export, save recovery, concurrent tabs, reward attribution, relay contracts and both game modes. |
+| Build and dependencies | The original production dependency audit reported zero advisories. The full lockfile had 12 affected development packages. Updated the build and test tools, checked the entry bundle against its existing 232 kB gzip budget, and pinned the TypeScript runner used by the offline content check. |
+
+## Player-facing corrections
+
+- The Chunked Journal keeps an entrance that might already be open visible when another entrance is definitely locked. A quest-only chamber that closes on completion still counts as closed. This applies to item sources and multiple copies of a station.
+- The Collection Log now places Sunken treasure, the Fremennik graceful ornament kit and Fremennik sail fabric on the Prison of Ræun page under Other. Ghostly sail fabric is on Sailing Miscellaneous. The Thieving guide records the chest’s level 65 requirement and lockpick. [Prison of Ræun](https://oldschool.runescape.wiki/w/Special:PermanentLink/15417923)
+- The snowy knight checklist accepts an insect net without a butterfly jar. The Wilderness diary lists the net trap for a black salamander and a mithril axe or better for yew logs from an Ent. [Snowy knight](https://oldschool.runescape.wiki/w/Snowy_knight) · [Wilderness Diary](https://oldschool.runescape.wiki/w/Special:PermanentLink/15404244)
+- Curse of the Empty Lord checks 31 Prayer on the sequence that visits the upstairs monastery. The player confirms their assigned sequence and the ghostspeak equipment allowed there. Roving Elves accepts 56 Agility or a permitted alternative into Isafdar. Enakhra’s Lament accepts logs acquired from permitted sources. [Curse of the Empty Lord](https://oldschool.runescape.wiki/w/Special:PermanentLink/15365488) · [Roving Elves](https://oldschool.runescape.wiki/w/Special:PermanentLink/15401434) · [Enakhra’s Lament](https://oldschool.runescape.wiki/w/Special:PermanentLink/15411975)
+
+## Outstanding evidence
+
+The pinned quest audit has 11 entries with unresolved evidence. Their records document the specific area, stage or source question and the conservative gate in use. The Graveyard’s new mooring is one example. The separate Chunk Picker refresh in #184 can change access evidence. This audit used the existing reviewed map pin. [Quest evidence](../../data/sources/quest-requirement-audit.json) · [Chunk Picker issue #184](https://github.com/Nubles/OSRS-Fate-Locked/issues/184)
+
+Hand-authored equipment, skill, resource and boss guides have regression coverage. A text match or passing test cannot establish every possible in-game route, item interaction or intermediate quest stage. Live RuneLite detection and production relay traffic require separate verification.
