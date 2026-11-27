@@ -518,6 +518,7 @@ const analysisState = (
   sourceCoverage: ItemSourceFamilyCoverage,
   analysisIncomplete: boolean,
   searchIncompleteMayHideUsable: boolean,
+  checkedEveryCurrentRoute = false,
 ): ItemRouteState => {
   if (currentRoutes.some(route => route.blockers.length === 0 && !route.hasDataGap)) {
     return 'OBTAINABLE_NOW';
@@ -526,7 +527,15 @@ const analysisState = (
   if (currentRoutes.some(route => route.blockers.length > 0 && !route.hasDataGap)) {
     return 'ROUTE_BLOCKED';
   }
-  if (currentRoutes.length > 0) return 'DATA_INCOMPLETE';
+  if (currentRoutes.length > 0) {
+    // An unrecorded quest stage cannot open a route with a missing level or
+    // unlock. Every known alternative must have such an independent blocker.
+    if (checkedEveryCurrentRoute && currentRoutes.every(route =>
+      route.blockers.some(gate => gate.type !== 'UNRESOLVED' && gate.type !== 'QUEST_PROGRESS'))) {
+      return 'ROUTE_BLOCKED';
+    }
+    return 'DATA_INCOMPLETE';
+  }
   if (analysisIncomplete) return 'DATA_INCOMPLETE';
   if (
     sourceCoverage.direct === 'COMPLETE'
@@ -1535,6 +1544,7 @@ function resolveConcreteRequirement(
             indexed.familyCoverage,
             analysisIncomplete,
             searchIncompleteMayHideUsable,
+            !currentBudgetExceeded && depth < context.maxDepth,
           ),
       currentRoutes: finalCurrentRoutes,
       missingChunkRoutes: finalMissingChunkRoutes,

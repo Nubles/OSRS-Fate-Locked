@@ -40,6 +40,13 @@
         "Lost City Complete the quest"
       ]
     },
+    "Dorgesh-Kaan mine": {
+      "entrances": [
+        { "chunkId": "12850", "requirements": ["The Lost Tribe started", "17 Mining", "13 Agility"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/The_Lost_Tribe",
+      "note": "From Lumbridge Castle cellar, mine the rubble and squeeze through the gap to reach the tunnels."
+    },
     "Dorgesh-Kaan": {
       "requirements": [
         "Death to the Dorgeshuun Complete the quest"

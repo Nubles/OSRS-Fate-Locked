@@ -73,7 +73,7 @@ const reviewedQuestProgress = new Map<string, [string, 'satisfies' | 'blocks']>(
 
 const parseQuestProgress = (raw: string): RouteGate | null => {
   const reviewed = reviewedQuestProgress.get(raw);
-  const partial = raw.match(/^Started (.+)$/i) ?? raw.match(/^(.+?) \d[a-z0-9]*$/i);
+  const partial = raw.match(/^Started (.+)$/i) ?? raw.match(/^(.+?) started$/i) ?? raw.match(/^(.+?) \d[a-z0-9]*$/i);
   const questId = canonicalQuestId(reviewed?.[0] ?? partial?.[1] ?? '');
   if (!questId) return null;
   const completion = reviewed?.[1] ?? 'satisfies';

@@ -51,11 +51,11 @@ describe('account requirements', () => {
     }
   });
 
-  it('distinguishes an unrecorded quest stage from missing completion', () => {
-    const gates = compileRawRequirements([chunkEntry('Started The Giant Dwarf')]);
+  it.each(['Started The Giant Dwarf', 'The Giant Dwarf started'])('distinguishes the stage "%s" from missing completion', raw => {
+    const gates = compileRawRequirements([chunkEntry(raw)]);
     expect(gates).toEqual([{
       type: 'QUEST_PROGRESS', questId: 'The Giant Dwarf', completion: 'satisfies',
-      label: 'Started The Giant Dwarf', raw: 'Started The Giant Dwarf',
+      label: raw, raw,
     }]);
     expect(evaluateRouteGates(gates, unlocks())).toEqual({ blockers: gates, hasDataGap: true });
     expect(evaluateRouteGates(gates, unlocks({ quests: ['The Giant Dwarf'] })))

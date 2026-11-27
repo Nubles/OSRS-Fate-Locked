@@ -57,6 +57,7 @@ export const CHANGELOG_RELEASES = [
       fixed: [
         'Chunked: owning the Lumbridge Swamp shed no longer counts Zanaris’s dairy cow, mill and wheat for quests until you’ve done Lost City.',
         'Quest item checks now ask for the way in to cows, mills, sheep and rocks inside places like the Mining Guild, Keldagrim and Prifddinas.',
+        'For Doric’s Quest, iron ore from the Dorgesh-Kaan mine or Duke Sucellus now depends on reaching the mine or prison.',
       ],
     },
   },

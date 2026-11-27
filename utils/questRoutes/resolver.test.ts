@@ -160,6 +160,17 @@ describe('resolveItemRequirement direct routes', () => {
     );
   });
 
+  it('keeps an unconfirmed entrance open for review unless every route also has a definite blocker', () => {
+    const stage: RawRouteRequirement = { raw: 'The Lost Tribe started', origin: 'CHUNK_ENTRY' };
+    const level: RawRouteRequirement = { raw: '17 Mining', origin: 'CHUNK_ENTRY' };
+    const mine = source({ rawRequirements: [stage, level] });
+    const other = source({ hostName: 'Other entrance', rawRequirements: [stage] });
+    const state = (records: ItemSourceRecord[]) => resolveItemRequirement(plankRequirement, fixture({ records })).state;
+    expect(state([mine])).toBe('ROUTE_BLOCKED');
+    expect(state([mine, other])).toBe('DATA_INCOMPLETE');
+    expect(state([mine, source({ hostName: 'Surface' })])).toBe('OBTAINABLE_NOW');
+  });
+
   it('preserves usable and blocked current routes together for later ranking', () => {
     const analysis = resolveItemRequirement(plankRequirement, fixture({
       records: [
