@@ -92,9 +92,13 @@ describe('Strategy Guide quests', () => {
 
   it('judges each quest as the Quest Log does', () => {
     for (const [mode, base] of [['vanilla', unlocksWith(10, 99)], ['chunked', unlocksWith(10, 99, { regions: [] })]] as const) {
+      // Quest cards contain the catalogue requirements. The player's other
+      // completed quests are supplied to both eligibility checks below.
+      const entries = buildGuideContent(base, mode);
+      const questIds = Object.keys(QUEST_DATA);
       for (const quest of Object.values(QUEST_DATA)) {
-        const unlocks = { ...base, quests: Object.keys(QUEST_DATA).filter(id => id !== quest.id) };
-        const entry = buildGuideContent(unlocks, mode)[quest.id];
+        const unlocks = { ...base, quests: questIds.filter(id => id !== quest.id) };
+        const entry = entries[quest.id];
         expect(analyzeRequirement(entry, unlocks, mode).isFullyPlayable, `${mode} ${quest.id}`)
           .toBe(evaluateQuestEligibility(quest, unlocks, mode).eligible);
       }
