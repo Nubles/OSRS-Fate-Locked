@@ -428,6 +428,40 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
     evaluateQuestEligibility(QUEST_DATA[id], unlocks(patch), mode).blockers
       .filter(blocker => blocker.kind === 'region').map(blocker => blocker.label);
 
+  it("requires the Key Master's lair permission even with no Chunked content loaded", () => {
+    const chunks = ['25,59', '28,60', '26,59'];
+    expect(regionBlockers('Bear Your Soul', { regions: ['Arceuus'] })).toEqual(["Key Master in Cerberus' Lair"]);
+    expect(regionBlockers('Bear Your Soul', { chunks }, 'chunked')).toEqual(["Key Master in Cerberus' Lair"]);
+    expect(regionBlockers('Bear Your Soul', { chunks: [...chunks, '45,53'] }, 'chunked')).toEqual([]);
+    const result = evaluateQuestEligibility(QUEST_DATA['Bear Your Soul'], unlocks({ chunks: [...chunks, '45,53'] }), 'chunked');
+    expect(result.manualChecks).toContain(QUEST_DATA['Bear Your Soul'].manualRequirements![0]);
+  });
+
+  it('checks both sides of the Piscarilius house without a separate jail confirmation', () => {
+    const quest = QUEST_DATA["The Writing's on the Wall"];
+    const chunks = ['23,53', '27,55', '27,59', '23,56', '22,56', '25,55'];
+    expect(regionBlockers(quest.id, { chunks }, 'chunked')).toEqual(["Captain Jensen's top-floor bed"]);
+    const result = evaluateQuestEligibility(quest, unlocks({ chunks: [...chunks, '27,58'] }), 'chunked');
+    expect(result.manualChecks).toEqual([]);
+    expect(result.blockers.filter(b => b.kind === 'region')).toEqual([]);
+  });
+
+  it('checks the Graveyard mooring as open sea and never suggests buying it', () => {
+    const quest = QUEST_DATA['The Graveyard'];
+    const mooring = quest.locations!.find(place => place.id === 'graveyard-mooring')!;
+    const chunks = ['42,58', '41,57', '41,56'];
+    const before = evaluateQuestEligibility(quest, unlocks({ chunks: [...chunks, '43,62'] }), 'chunked');
+    expect(before.blockers).toContainEqual({ kind: 'region', label: mooring.label, location: { areas: [], chunks: [] } });
+    expect(regionBlockers(quest.id, { regions: ['Rellekka'] })).toEqual([mooring.label]);
+    const sailor = unlocks({ chunks, quests: quest.prereqs, skills: { Sailing: 7 }, levels: { Sailing: 65 } });
+    const ready = evaluateQuestEligibility(quest, sailor, 'chunked');
+    expect(ready.evidence).toContain(mooring.label);
+    expect(regionBlockers(quest.id, { ...sailor, regions: ['Rellekka'] })).toEqual([]);
+    expect(ready.manualChecks).toContain(quest.manualRequirements![0]);
+    const stranded = evaluateQuestEligibility(quest, sailor, 'chunked', { strandedAreas: new Set(), strandedChunks: new Set(['43,62']) });
+    expect(stranded.blockers).toContainEqual(expect.objectContaining({ label: 'No route to ' + mooring.label }));
+  });
+
   it("asks The Writing's on the Wall for every place its walkthrough visits", () => {
     // Wiki The Writing's on the Wall (rev 15412011) ==Walkthrough==: Betty at Land's End (1519,3438);
     // "Betty's uncle's house, north west of Tithe Farm" (1784-1790,3521-3527) and Joyce (1774,3526);
@@ -437,16 +471,16 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
     const places = (QUEST_DATA["The Writing's on the Wall"].locations ?? [])
       .map(place => `${place.standardAreas.join('|')} ${place.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`).join(' ')}`);
     expect(places).toEqual([
-      "Land's End 23,53", 'Hosidius 27,55', 'Arceuus 27,59', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
+      "Land's End 23,53", 'Hosidius 27,55', 'Piscarilius 27,58', 'Arceuus 27,59', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
     ]);
     expect(regionBlockers("The Writing's on the Wall", { regions: ["Land's End"] })).toEqual([
-      'Piscarilius', "Betty's uncle's house by the Tithe Farm", "Captain Jensen's house in Port Piscarilius",
+      "Betty's uncle's house by the Tithe Farm", "Captain Jensen's top-floor bed", "Captain Jensen's body and the Piscarilius jail cell",
       'War Tent in the Shayzien Encampment', "The commissioner's house in Shayzien", "Island west of Watson's house",
     ]);
     expect(regionBlockers("The Writing's on the Wall",
       { regions: ["Land's End", 'Hosidius', 'Piscarilius', 'Arceuus', 'Shayzien'] })).toEqual([]);
     expect(regionBlockers("The Writing's on the Wall", { chunks: ['23,53', '27,55', '27,58', '23,56', '25,55'] }, 'chunked'))
-      .toEqual(["Captain Jensen's house in Port Piscarilius", "The commissioner's house in Shayzien"]);
+      .toEqual(["Captain Jensen's body and the Piscarilius jail cell", "The commissioner's house in Shayzien"]);
   });
 
   it("requires the warrior outlaw's graveyard instead of the neighbouring cow field", () => {

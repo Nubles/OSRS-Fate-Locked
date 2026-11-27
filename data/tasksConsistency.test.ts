@@ -1,3 +1,4 @@
+import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { describe, it, expect } from 'vitest';
 import { ALL_CA_TASKS } from './caTasks';
 import { ALL_DIARY_TASKS } from './diaryTasks';
@@ -217,7 +218,7 @@ describe('Quest data integrity', () => {
         }
         for (const coord of location.chunkOptions) {
           const key = chunkKey(coord);
-          if (!VALID_CHUNK.has(key)) badChunks.push(questId + ' -> ' + location.id + ' -> ' + key);
+          if (!VALID_CHUNK.has(key) && !OCEAN_CHUNK_KEYS.has(key)) badChunks.push(questId + ' -> ' + location.id + ' -> ' + key);
         }
       }
     }

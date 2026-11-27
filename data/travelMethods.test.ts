@@ -13,6 +13,12 @@ import { DIARY_DATA } from './diaryData';
 import { EQUIPMENT_CATALOGUE } from './equipmentCatalogue';
 import { choice, NON_TRAVEL_OPTIONS, TRAVEL_METHODS } from './travelMethods';
 
+it('gates the Guthixian temple scroll on the completed quest and the chasm destination', () => {
+  const scroll = TRAVEL_METHODS.find(method => method.id === 'scroll:guthixian-temple-teleport')!;
+  expect(scroll.match).toEqual({ items: [29684] });
+  expect(scroll.options.Teleport).toEqual({ to: ['63,71'], quests: ['While Guthix Sleeps'] });
+});
+
 /** Every chunk a player can stand in: land, ocean and interiors. */
 let places: Set<string>;
 /** Interior chunks by the interior's name. */
@@ -471,7 +477,6 @@ const LEFT_OUT: Readonly<Record<string, string>> = {
   'Scaperune teleport': 'A 2019 Christmas event item, no longer in the game.',
   'Target teleport': "It goes to the player's assigned target, wherever they are.",
   "Wise old man's teleport tablet": NO_LANDING_SQUARE,
-  'Guthixian temple teleport': 'The app has no chunk for the temple (63,71).',
   'Revenant cave teleport': "Its page and the caves' page disagree on where it goes.",
   Directions: 'It works only in Ardougne, during the Ratcatchers quest.',
   'Disk of Returning': 'It works only in the Dwarven Mine, into the Blackhole and back.',

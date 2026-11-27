@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import official from './sources/quest-list.json';
-import audit from './sources/quest-requirement-audit.json';
+import auditSource from './sources/quest-requirement-audit.json';
 import { QUEST_DATA } from './questData';
 import {
   questRequirementFingerprint,
   validateQuestRequirementAudit,
+  type QuestRequirementAuditEntry,
 } from './questRequirementAudit';
+
+const audit = { ...auditSource, entries: auditSource.entries as QuestRequirementAuditEntry[] };
 
 const EXPECTED_TZ_INSTANCE_EVIDENCE: Record<string, string[]> = {
   'Tale of the Righteous': [
@@ -354,14 +357,12 @@ describe('official quest and miniquest audit coverage', () => {
     })).toEqual([]);
   });
 
-  it('retains the four unresolved entrances, landings and jail locations', () => {
-    const outstanding = audit.entries.filter(entry => entry.status === 'unresolved');
-    expect(outstanding.map(entry => entry.id)).toEqual([
-      'Bear Your Soul', 'The Fractured Archive', 'The Graveyard', "The Writing's on the Wall",
-    ]);
-    for (const entry of outstanding) {
-      expect(entry.discrepancy).toContain(QUEST_DATA[entry.id].manualRequirements![0]);
-      expect(entry.conservativeReason).toContain(entry.id);
+  it('records the reviewed routes without inventing upstream activity markers', () => {
+    for (const id of ['Bear Your Soul', 'The Fractured Archive', 'The Graveyard', "The Writing's on the Wall"]) {
+      expect(audit.entries.find(entry => entry.id === id)).toMatchObject({ status: 'verified-with-notes' });
+    }
+    for (const id of ['The Fractured Archive', 'The Graveyard', "The Writing's on the Wall"]) {
+      expect(audit.entries.find(entry => entry.id === id)?.chunkEvidence).toEqual([]);
     }
   });
 
@@ -392,6 +393,7 @@ describe('official quest and miniquest audit coverage', () => {
   it('rejects generic procedural unresolved placeholders', () => {
     const generic = structuredClone(audit);
     const unresolved = generic.entries.find(entry => entry.id === 'Bear Your Soul')!;
+    unresolved.status = 'unresolved';
     unresolved.discrepancy =
       'Pending review of the permanent Wiki and Chunk Picker sources.';
     unresolved.conservativeReason =

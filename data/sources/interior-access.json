@@ -602,6 +602,22 @@
     }
   },
   "records": {
+    "16199": {
+      "name": "Chasm of Tears#Ancient Guthixian Temple entrance",
+      "mapTile": { "x": 4050, "y": 4567 },
+      "anchors": ["12593", "12850"],
+      "requirements": ["While Guthix Sleeps: reached the Ancient Guthixian Temple"],
+      "source": "https://oldschool.runescape.wiki/w/Special:PermanentLink/15404462",
+      "note": "Game map object 62542 leads to the Archive lobby. The lantern and Guthixian temple scroll reach this floor. The swamp and castle are the two surface permissions. Reaching this stage of While Guthix Sleeps entails The Lost Tribe."
+    },
+    "16470": {
+      "name": "The Fractured Archive#Lobby",
+      "mapTile": { "x": 4123, "y": 5562 },
+      "anchors": ["12593", "12850"],
+      "requirements": ["While Guthix Sleeps Complete the quest"],
+      "source": "https://oldschool.runescape.wiki/w/Special:PermanentLink/15414647",
+      "note": "The chasm entrance opens into this lobby. Game map object 62768 is the entrance from the lobby into the raid."
+    },
     "12190": {
       "requirements": [
         "60 Strength or 60 Agility"

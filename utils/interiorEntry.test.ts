@@ -74,6 +74,19 @@ describe('interiorEntry', () => {
       .toBe('ALLOWED');
   });
 
+  it('maps the temple scroll landing and raid lobby to the same two surface permissions', () => {
+    const floor = records.get('63,71')!;
+    const lobby = records.get('64,86')!;
+    const finished = run({ quests: ['While Guthix Sleeps'] });
+    const ctx = (unlocks: UnlockState): InteriorContext => ({ ...context(unlocks), gameModeId: 'chunked' });
+    expect(floor.entrances.map(route => route.chunkId)).toEqual(['12593', '12850']);
+    expect(lobby.entrances.map(route => route.chunkId)).toEqual(['12593', '12850']);
+    expect(interiorEntry(floor, ctx(run({ quests: [] })))).toBe('UNKNOWN');
+    expect(interiorEntry(lobby, ctx(run({ quests: [] })))).toBe('NOT_READY');
+    expect(interiorEntry(floor, ctx(finished))).toBe('ALLOWED');
+    expect(interiorEntry(lobby, ctx(finished))).toBe('ALLOWED');
+  });
+
   it('needs What Lies Below for the Chaos altar through the Tunnel of Chaos (51,54)', () => {
     // OSRS Wiki 'Chaos Altar': the tunnel opens after partial completion of What Lies Below.
     const chaos = [...records.values()].find(record => record.name === 'Chaos altar')!;

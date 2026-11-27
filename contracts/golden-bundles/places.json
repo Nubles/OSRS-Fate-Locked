@@ -6186,6 +6186,14 @@
    "kind": "interior",
    "entrances": []
   },
+  "63,71": {
+   "kind": "interior",
+   "name": "Chasm of Tears · Ancient Guthixian Temple entrance",
+   "entrances": [
+    "49,49",
+    "50,50"
+   ]
+  },
   "63,141": {
    "kind": "interior",
    "entrances": []
@@ -6193,6 +6201,14 @@
   "63,142": {
    "kind": "interior",
    "entrances": []
+  },
+  "64,86": {
+   "kind": "interior",
+   "name": "The Fractured Archive · Lobby",
+   "entrances": [
+    "49,49",
+    "50,50"
+   ]
   },
   "65,142": {
    "kind": "interior",

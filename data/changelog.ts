@@ -37,6 +37,18 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-27-four-quest-routes',
+    title: 'Four quest routes checked',
+    date: '2026-11-27',
+    sections: {
+      fixed: [
+        "The Journal checks both sides of Captain Jensen's house and the jail cell in The Writing's on the Wall.",
+        "Bear Your Soul checks the Key Master's lair. The Fractured Archive recognises the temple scroll landing and raid lobby.",
+        "The Graveyard uses the open sea for its mooring. You can take your own ice-ready boat or pay Volf 5,000 coins.",
+      ],
+    },
+  },
+  {
     id: '2026-11-27-the-graveyard',
     title: 'The Graveyard',
     date: '2026-11-27',

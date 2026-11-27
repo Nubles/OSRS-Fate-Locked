@@ -644,7 +644,7 @@
     {
       "id": "Bear Your Soul",
       "kind": "miniquest",
-      "status": "unresolved",
+      "status": "verified-with-notes",
       "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Bear_Your_Soul&oldid=15413323",
@@ -652,8 +652,8 @@
         "revisionTimestamp": "2026-11-23T08:06:22Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Arceuus\",\"Taverley\"],\"locations\":[{\"chunkOptions\":[{\"cx\":25,\"cy\":59}],\"id\":\"arceuus-library\",\"label\":\"Arceuus Library\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":28,\"cy\":60}],\"id\":\"aretha-soul-altar\",\"label\":\"Aretha near the Soul Altar\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":26,\"cy\":59}],\"id\":\"arceuus-church\",\"label\":\"Arceuus church crypt\",\"standardAreas\":[\"Arceuus\"]}],\"skills\":{},\"prereqs\":[],\"manualRequirements\":[\"Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport\"],\"points\":0}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Arceuus\",\"Taverley\"],\"locations\":[{\"chunkOptions\":[{\"cx\":25,\"cy\":59}],\"id\":\"arceuus-library\",\"label\":\"Arceuus Library\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":28,\"cy\":60}],\"id\":\"aretha-soul-altar\",\"label\":\"Aretha near the Soul Altar\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":26,\"cy\":59}],\"id\":\"arceuus-church\",\"label\":\"Arceuus church crypt\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":45,\"cy\":53}],\"id\":\"key-master\",\"label\":\"Key Master in Cerberus' Lair\",\"standardAreas\":[\"Taverley\"]}],\"skills\":{},\"prereqs\":[],\"manualRequirements\":[\"Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "25,59",
@@ -676,15 +676,13 @@
           "A spade plus a dusty key, sufficient Agility, or a Key master teleport is needed; item possession and route choice are not machine-enforced."
         ],
         "travel": [
-          "The three mandatory Arceuus stops are the library (1633,3808), Aretha (1814,3854) and the church crypt (1698,3794). The Blood Altar marker in 26,59 describes the church chunk, not Aretha's position in 28,60. The Key Master is inside a dungeon with a direct teleport as well as walking routes."
+          "The three Arceuus stops are the library (1633,3808), Aretha (1814,3854) and the church crypt (1698,3794). The Key Master is at 1310,1251 in interior 5139. Its reviewed Fate entrance is South Taverley (45,53). The dusty key, Agility shortcuts and direct key master teleport all lead to the same lair. A Slayer task is only needed to fight Cerberus."
         ],
         "instances": [
           "Cerberus' Lair is reached through Taverley Dungeon or by Key master teleport."
         ],
         "partialCompletion": []
-      },
-      "discrepancy": "Bear Your Soul uses the regions-and-locations policy including Arceuus Library. The pinned South Taverley (45,53) marks a surface approach. A key master teleport lands inside Cerberus' Lair, so one exact surface entrance cannot represent both routes. The player confirms: Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport.",
-      "conservativeReason": "The regions-and-locations policy for Bear Your Soul retains Arceuus Library and the route confirmation to prevent premature completion/key-roll eligibility."
+      }
     },
     {
       "id": "Below Ice Mountain",
@@ -7926,7 +7924,7 @@
     {
       "id": "The Fractured Archive",
       "kind": "miniquest",
-      "status": "unresolved",
+      "status": "verified-with-notes",
       "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fractured_Archive_(miniquest)&oldid=15386187",
@@ -7935,20 +7933,20 @@
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-swamp-caves\",\"label\":\"Lumbridge Swamp Caves\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[\"While Guthix Sleeps\"],\"manualRequirements\":[\"Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"archive-entrance\",\"label\":\"Fractured Archive entrance in the Chasm of Tears\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[\"While Guthix Sleeps\"],\"manualRequirements\":[\"Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "The miniquest lists combat gear and supplies. The raid includes the Archive Guardian, three branching encounters and Ocellus."
         ],
         "travel": [
-          "The miniquest starts by the Ancient Guthixian Temple at 4052,4562 in the Chasm of Tears. The raid page describes the light creature route with a lit sapphire lantern and the direct Guthixian temple teleport. The two surface cave entries are only a proxy for permission to enter the area."
+          "A light creature near Juna takes a lit sapphire lantern down to the chasm floor. A games necklace can reach Juna. The temple scroll lands at 4062–4065,4556–4559 on the same floor (63,71). Game object 62542 at 4050,4567 leads to the lobby, where object 62768 at 4123,5562 starts the raid (64,86). Both dungeon chunks inherit the two Lumbridge cave entrance permissions. While Guthix Sleeps requires The Lost Tribe through Wanted! and is mandatory for the miniquest and the scroll. The untradeable archivist’s folio comes from the raid reward chest."
         ],
-        "instances": [],
+        "instances": [
+          "Enter the raid from the lobby and defeat Ocellus to complete the miniquest."
+        ],
         "partialCompletion": []
-      },
-      "discrepancy": "The Fractured Archive uses the locations policy including Lumbridge Swamp Caves. There is no pinned Chunk Picker first/step activity chunk for this quest. The Wiki's start tile is in the dungeon. A Guthixian temple teleport skips the surface cave entrances, and the pinned tracker map has no separate Archive entrance. The player confirms: Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport.",
-      "conservativeReason": "The locations policy for The Fractured Archive retains Lumbridge Swamp Caves and the route confirmation to prevent premature completion/key-roll eligibility. The prerequisite is While Guthix Sleeps."
+      }
     },
     {
       "id": "The Fremennik Exiles",
@@ -8413,7 +8411,7 @@
     {
       "id": "The Graveyard",
       "kind": "quest",
-      "status": "unresolved",
+      "status": "verified-with-notes",
       "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Graveyard&oldid=15417876",
@@ -8422,23 +8420,20 @@
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Rellekka\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":58}],\"id\":\"olafs-camp\",\"label\":\"Olaf Hradson's camp\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":57}],\"id\":\"rellekka\",\"label\":\"Rellekka longhall and harbour\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":56}],\"id\":\"fossegrimen\",\"label\":\"Fossegrimen's lake\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":65,\"Fletching\":54,\"Sailing\":65,\"Woodcutting\":56},\"prereqs\":[\"Olaf's Quest\",\"The Fremennik Exiles\",\"Pandemonium\"],\"manualRequirements\":[\"Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins\",\"Can make the seven binding stakes with 7 arctic pine logs, 21 soul runes and a usable runic altar\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Rellekka\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":58}],\"id\":\"olafs-camp\",\"label\":\"Olaf Hradson's camp\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":57}],\"id\":\"rellekka\",\"label\":\"Rellekka longhall and harbour\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":56}],\"id\":\"fossegrimen\",\"label\":\"Fossegrimen's lake\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":43,\"cy\":62}],\"id\":\"graveyard-mooring\",\"label\":\"Graveyard mooring in Weissmere\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":65,\"Fletching\":54,\"Sailing\":65,\"Woodcutting\":56},\"prereqs\":[\"Olaf's Quest\",\"The Fremennik Exiles\",\"Pandemonium\"],\"manualRequirements\":[\"Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins\",\"Can make the seven binding stakes with 7 arctic pine logs, 21 soul runes and a usable runic altar\"],\"points\":3}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Olaf's parchment or a spade to retrieve it, a knife, seven arctic pine logs, 21 soul runes and a hammer or chisel. An axe and spyglass are available on the route. Infuse the stakes at a usable runic altar; the Kourend Blood and Soul altars and Ourania do not work."
         ],
         "travel": [
-          "Olaf starts the quest at 2722,3727 (42,58). Volf and Brundt are in Rellekka (41,57), and Fossegrimen is in 41,56. Sail to Weissmere by ice-ready boat or pay Volf 5,000 coins. Plan a way back to Rellekka after the fight.",
-          "The Mooring point table (Wiki revision 15415761) pins the dock at 2760,3975, in 43,62. On this map pin the tracker treats 43,62 as navigable water and has no ownable Graveyard landing."
+          "Olaf is at 2722,3727 (42,58), Volf and Brundt are in 41,57, and Fossegrimen is in 41,56. The mooring table pins 2760,3973. The docking map icon (object 58134) at 2755,3969 and the adjacent wreck are in the same open-sea chunk (43,62). Both voyages depart Rellekka. Chunked checks navigation and never offers this ocean tile as a land roll. Volf charges 5,000 coins if the player does not use their own ice-ready boat."
         ],
         "instances": [
           "The quest expedition reaches the shipwrecks, the echoes and Ræun from the Graveyard mooring."
         ],
         "partialCompletion": []
-      },
-      "discrepancy": "The Graveyard uses the locations policy including Olaf Hradson's camp. There is no pinned Chunk Picker first/step activity chunk for this quest. The Mooring point table (Wiki revision 15415761) pins the dock at 2760,3975, in 43,62. On this map pin the tracker treats 43,62 as navigable water and has no ownable Graveyard landing. The player confirms: Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins.",
-      "conservativeReason": "The locations policy for The Graveyard retains Olaf Hradson's camp and the route confirmation to prevent premature completion/key-roll eligibility. The prerequisite is Olaf's Quest."
+      }
     },
     {
       "id": "The Great Brain Robbery",
@@ -9065,7 +9060,7 @@
     {
       "id": "The Writing's on the Wall",
       "kind": "quest",
-      "status": "unresolved",
+      "status": "verified-with-notes",
       "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15417487",
@@ -9073,22 +9068,19 @@
         "revisionTimestamp": "2026-11-27T12:52:55Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
-      "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Piscarilius\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"bettys-uncles-house\",\"label\":\"Betty's uncle's house by the Tithe Farm\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":59}],\"id\":\"captain-jensens-house\",\"label\":\"Captain Jensen's house in Port Piscarilius\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":23,\"cy\":56}],\"id\":\"shayzien-war-tent\",\"label\":\"War Tent in the Shayzien Encampment\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":22,\"cy\":56}],\"id\":\"shayzien-commissioners-house\",\"label\":\"The commissioner's house in Shayzien\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":55}],\"id\":\"river-hos-island\",\"label\":\"Island west of Watson's house\",\"standardAreas\":[\"Hosidius\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"manualRequirements\":[\"Can reach the Port Piscarilius jail cell and return to inspect the writing\"],\"points\":1}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Piscarilius\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"bettys-uncles-house\",\"label\":\"Betty's uncle's house by the Tithe Farm\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":58}],\"id\":\"captain-jensens-bed\",\"label\":\"Captain Jensen's top-floor bed\",\"standardAreas\":[\"Piscarilius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":59}],\"id\":\"captain-jensens-house\",\"label\":\"Captain Jensen's body and the Piscarilius jail cell\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":23,\"cy\":56}],\"id\":\"shayzien-war-tent\",\"label\":\"War Tent in the Shayzien Encampment\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":22,\"cy\":56}],\"id\":\"shayzien-commissioners-house\",\"label\":\"The commissioner's house in Shayzien\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":55}],\"id\":\"river-hos-island\",\"label\":\"Island west of Watson's house\",\"standardAreas\":[\"Hosidius\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Wiki revision 15392368 lists no required items."
         ],
         "travel": [
-          "Betty starts in 23,53. The uncle's house is in 27,55. Captain Jensen's upstairs body is at 1755,3780 (27,59), although the building straddles 27,58/59. The War Tent, Commissioner Edwards and final trapdoor are in 23,56, 22,56 and 25,55 respectively. The arrest and return to the jail cell are separate steps.",
-          "The tracker assigns the upstairs body tile to Arceuus in Standard mode. The separate arrest and jail visit still require Piscarilius."
+          "The Piscarilius jail's east-wall writing is object 63309 at 1788,3780,0. The escape plank (50812) and Jensen's body (50815) share 27,59. Upstairs, the required bed (63315) is at 1754,3775,2 in 27,58. Both chunks are mandatory. Their Standard owners are Arceuus and Piscarilius respectively. Betty, her uncle, the War Tent, the commissioner and the final island retain their other verified chunks."
         ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "The Writing's on the Wall uses the regions-and-locations policy including Land's End. There is no pinned Chunk Picker first/step activity chunk for this quest. Captain Jensen's body has an exact Wiki pin. The walkthrough requires returning to the jail cell to inspect the blood but does not pin its tile. The player confirms: Can reach the Port Piscarilius jail cell and return to inspect the writing.",
-      "conservativeReason": "The regions-and-locations policy for The Writing's on the Wall retains Land's End and the route confirmation to prevent premature completion/key-roll eligibility."
+      }
     },
     {
       "id": "Throne of Miscellania",

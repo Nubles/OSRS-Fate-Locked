@@ -14,7 +14,7 @@ import { chunkUnlocked, placeOf, chunkUnlockRequirement } from './chunkLocations
 import { ALL_DIARY_TASKS, DiaryTaskRequirementOption, DiaryLocationRequirement, DiaryEquipmentRequirement } from '../data/diaryTasks';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
-import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
+import { OCEAN_CHUNK_KEYS, canNavigateOcean } from './oceanAccess';
 import { isAreaReachable } from './reachability';
 import { getFreeAreas } from './freeAreas';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
@@ -187,15 +187,16 @@ export const withSkillGateQuests = (
   ...skillGateQuests(Object.keys(skills ?? {}), [...(quests ?? []), ...(self === undefined ? [] : [self])]),
 ];
 
+const isOceanChunk = ({ cx, cy }: { cx: number; cy: number }): boolean => OCEAN_CHUNK_KEYS.has(`${cx},${cy}`);
+
 export const locationRequirementMet = (
   location: QuestLocationRequirement,
   unlocks: UnlockState,
   gameModeId?: string,
 ): boolean => gameModeId === 'chunked'
-  ? location.chunkOptions.some(coord =>
-      isChunkUnlocked(chunkKey(coord), unlocks.chunks ?? []))
-  : location.standardAreas.every(area =>
-      isAreaReachable(area, unlocks, gameModeId));
+  ? location.chunkOptions.some(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId))
+  : location.standardAreas.every(area => isAreaReachable(area, unlocks, gameModeId))
+    && (!location.chunkOptions.every(isOceanChunk) || canNavigateOcean(unlocks));
 
 export const locationUnlockTargets = (
   location: QuestLocationRequirement,
@@ -204,7 +205,7 @@ export const locationUnlockTargets = (
 ): LocationUnlockTargets => locationRequirementMet(location, unlocks, gameModeId)
   ? { areas: [], chunks: [] }
   : gameModeId === 'chunked'
-    ? { areas: [], chunks: location.chunkOptions }
+    ? { areas: [], chunks: location.chunkOptions.filter(coord => !isOceanChunk(coord)) }
     : { areas: location.standardAreas.filter(area => !isAreaReachable(area, unlocks, gameModeId)), chunks: [] };
 
 export const questRequirementOptionMet = (
@@ -239,8 +240,11 @@ const strandedLocation = (
   areaRoutes?: AreaRoutes | null,
 ): boolean => {
   if (!areaRoutes) return false;
-  if (gameModeId !== 'chunked') return location.standardAreas.some(area => strandedArea(area, areaRoutes));
-  const owned = location.chunkOptions.filter(coord => isChunkUnlocked(chunkKey(coord), unlocks.chunks ?? []));
+  if (gameModeId !== 'chunked') {
+    if (location.standardAreas.some(area => strandedArea(area, areaRoutes))) return true;
+    if (!location.chunkOptions.every(isOceanChunk)) return false;
+  }
+  const owned = location.chunkOptions.filter(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId));
   return owned.length > 0 && owned.every(({ cx, cy }) => areaRoutes.strandedChunks.has(`${cx},${cy}`));
 };
 

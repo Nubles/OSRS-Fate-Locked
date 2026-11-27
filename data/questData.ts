@@ -427,7 +427,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
   },
   // A members' quest (3 Nov 2026), left here so the order of QUEST_DATA does not move.
   'The Writing\'s on the Wall': {
-    kind: 'quest', accessPolicy: 'regions-and-locations',
+    kind: 'quest', accessPolicy: 'locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
     regions: ['Piscarilius'],
     // Released 3 Nov 2026: starts with Betty at Land's End, then (Wiki rev 15412011) her uncle's
@@ -437,12 +437,12 @@ export const QUEST_DATA: Record<string, QuestData> = {
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
       { id: 'bettys-uncles-house', label: "Betty's uncle's house by the Tithe Farm", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 27, cy: 55 }] },
-      { id: 'captain-jensens-house', label: "Captain Jensen's house in Port Piscarilius", standardAreas: ['Arceuus'], chunkOptions: [{ cx: 27, cy: 59 }] },
+      { id: 'captain-jensens-bed', label: "Captain Jensen's top-floor bed", standardAreas: ['Piscarilius'], chunkOptions: [{ cx: 27, cy: 58 }] },
+      { id: 'captain-jensens-house', label: "Captain Jensen's body and the Piscarilius jail cell", standardAreas: ['Arceuus'], chunkOptions: [{ cx: 27, cy: 59 }] },
       { id: 'shayzien-war-tent', label: 'War Tent in the Shayzien Encampment', standardAreas: ['Shayzien'], chunkOptions: [{ cx: 23, cy: 56 }] },
       { id: 'shayzien-commissioners-house', label: "The commissioner's house in Shayzien", standardAreas: ['Shayzien'], chunkOptions: [{ cx: 22, cy: 56 }] },
       { id: 'river-hos-island', label: "Island west of Watson's house", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 25, cy: 55 }] },
     ],
-    manualRequirements: ['Can reach the Port Piscarilius jail cell and return to inspect the writing'],
     skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -2840,10 +2840,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
       { id: 'olafs-camp', label: "Olaf Hradson's camp", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 58 }] },
       { id: 'rellekka', label: 'Rellekka longhall and harbour', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 57 }] },
       { id: 'fossegrimen', label: "Fossegrimen's lake", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 56 }] },
+      { id: 'graveyard-mooring', label: 'Graveyard mooring in Weissmere', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 43, cy: 62 }] },
     ],
     skills: { Sailing: 65, Agility: 65, Woodcutting: 56, Fletching: 54 },
     prereqs: ["Olaf's Quest", 'The Fremennik Exiles', 'Pandemonium'],
-    // The pinned map predates the new mooring. Volf's boat is available even without an eternal brazier.
+    // Both voyages depart from Rellekka and use the same open-sea mooring.
     manualRequirements: [
       "Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins",
       'Can make the seven binding stakes with 7 arctic pine logs, 21 soul runes and a usable runic altar',
@@ -2878,13 +2879,14 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bear Your Soul': {
-    kind: 'miniquest', accessPolicy: 'regions-and-locations',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'Bear Your Soul', name: 'Bear Your Soul',
     regions: ['Arceuus', 'Taverley'],
     locations: [
       { id: 'arceuus-library', label: 'Arceuus Library', standardAreas: ['Arceuus'], chunkOptions: [{ cx: 25, cy: 59 }] },
       { id: 'aretha-soul-altar', label: 'Aretha near the Soul Altar', standardAreas: ['Arceuus'], chunkOptions: [{ cx: 28, cy: 60 }] },
       { id: 'arceuus-church', label: 'Arceuus church crypt', standardAreas: ['Arceuus'], chunkOptions: [{ cx: 26, cy: 59 }] },
+      { id: 'key-master', label: "Key Master in Cerberus' Lair", standardAreas: ['Taverley'], chunkOptions: [{ cx: 45, cy: 53 }] },
     ],
     manualRequirements: ["Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport"],
     skills: {}, prereqs: [], points: 0, series: 'Great Kourend',
@@ -3110,10 +3112,10 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'miniquest', accessPolicy: 'locations',
     id: 'The Fractured Archive', name: 'The Fractured Archive',
     regions: ['Misthalin'],
-    // Starts near the Ancient Guthixian Temple in the Chasm of Tears, reached
-    // through the Tears of Guthix cave in the Lumbridge Swamp Caves.
+    // The lantern and scroll meet in 63,71. The cave entrances are the
+    // interior's Fate permissions. While Guthix Sleeps already requires The Lost Tribe.
     locations: [{
-      id: 'lumbridge-swamp-caves', label: 'Lumbridge Swamp Caves', standardAreas: ['Lumbridge'],
+      id: 'archive-entrance', label: 'Fractured Archive entrance in the Chasm of Tears', standardAreas: ['Lumbridge'],
       chunkOptions: [{ cx: 49, cy: 49 }, { cx: 50, cy: 50 }]
     }],
     manualRequirements: ['Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport'],

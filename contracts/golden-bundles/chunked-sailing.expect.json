@@ -3562,8 +3562,10 @@
   "60,155": "LOCKED",
   "62,141": "UNKNOWN",
   "62,142": "UNKNOWN",
+  "63,71": "UNKNOWN",
   "63,141": "UNKNOWN",
   "63,142": "UNKNOWN",
+  "64,86": "NOT_READY",
   "65,142": "UNKNOWN",
   "66,142": "UNKNOWN"
  },

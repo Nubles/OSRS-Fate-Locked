@@ -73,6 +73,20 @@ const doableNow = (unlocks: UnlockState) => chunkedQuestRows(unlocks, 'chunked')
   .filter(row => row.bucket === 'DOABLE').map(row => row.id).sort();
 
 describe('Chunked quests count only in their own chunks', () => {
+  it('checks the same lair and all three Arceuus stops after loading Bear Your Soul markers', () => {
+    const quest = QUEST_DATA['Bear Your Soul'];
+    const stops = ['25,59', '28,60', '26,59', '45,53'];
+    for (const missing of stops) {
+      const account = maxed(stops.filter(key => key !== missing));
+      const result = evaluateQuestEligibility(quest, account, 'chunked');
+      expect(result.blockers.some(b => b.kind === 'region' &&
+        b.location?.chunks.some(({ cx, cy }) => `${cx},${cy}` === missing)), missing).toBe(true);
+    }
+    const result = evaluateQuestEligibility(quest, maxed(stops), 'chunked');
+    expect(result.blockers.filter(b => b.kind === 'region' && b.location?.chunks.length)).toEqual([]);
+    expect(result.manualChecks).toContain(quest.manualRequirements![0]);
+  });
+
   it('accepts all eleven treasure sites without a visit to Jorral to start The Enchanted Key', () => {
     const digs = ['42,56', '40,50', '37,52', '38,53', '47,53', '46,51', '47,49', '49,49', '51,50', '51,52', '49,54'];
     const checks = createChunkedChecks(chunkContentService);

@@ -28,8 +28,8 @@ describe('reviewed content repairs', () => {
     const unlocated = Object.values(content.interiors).filter(entry => !entry.entrances.length);
     expect(unlocated).toHaveLength(149);
     expect(unlocated.every(entry => entry.name.startsWith('Interior '))).toBe(true);
-    expect(Object.keys(content.interiors)).toHaveLength(932);
-    for (const id of ['12690', '6303', '5278', '11081'] as const) expect(content.interiors[id].entrances.length).toBeGreaterThan(0);
+    expect(Object.keys(content.interiors)).toHaveLength(934);
+    for (const id of ['12690', '6303', '5278', '11081', '16199', '16470'] as const) expect(content.interiors[id].entrances.length).toBeGreaterThan(0);
     expect(evaluateEntityAccess('Giant rat', 'monster', { cx: 50, cy: 50, sourceId: '12436' }, account(), 'chunked', service).status)
       .toBe('UNKNOWN');
   });

@@ -228,10 +228,10 @@ const TABLETS: readonly TravelMethod[] = [
   tablet('arceuus', 'Battlefront teleport', [22949], ['21,58'], 15189104),
 ];
 
-// The Guthixian temple scroll lands at 4062,4556, in a region no area or
-// interior covers, so it is left out; so is the Revenant cave scroll, which
-// offers three entrances.
+// The Revenant cave scroll offers three entrances.
 const SCROLLS: readonly TravelMethod[] = [
+  item('scroll:guthixian-temple-teleport', 'Guthixian temple teleport scroll', [29684], [],
+    { Teleport: { to: ['63,71'], quests: ['While Guthix Sleeps'] } }, 'Guthixian temple teleport', 15403048),
   scroll('Nardah teleport', 12402, ['53,45'], 15186014),
   scroll('Digsite teleport', 12403, ['51,53'], 15186009),
   scroll('Feldip hills teleport', 12404, ['39,45'], 15186010),
