@@ -212,7 +212,7 @@ describe('ChunkActivityPanel activity accordions', () => {
       monsters: [{ name: 'King Black Dragon', count: 1, slayer: null }, { name: 'Rat', count: 1, slayer: null }],
       objects: [['Herb patch', 1], ['Yew tree', 1], ['Fairy ring', 1]],
       shops: ['Varrock General Store'],
-      diaries: { Lumbridge: '1' },
+      diaries: { 'Lumbridge & Draynor': '1' },
     };
     mocks.state.bosses = ['King Black Dragon'];
     mocks.state.farming = ['Herb'];
@@ -236,7 +236,7 @@ describe('ChunkActivityPanel activity accordions', () => {
       expect(within(row as HTMLElement).getByText('Locked')).toBeTruthy();
     };
 
-    ['King Black Dragon', 'Rat', 'Herb patch', 'Yew tree', 'Varrock General Store', 'Fairy ring', 'Lumbridge'].forEach(expectRowLocked);
+    ['King Black Dragon', 'Rat', 'Herb patch', 'Yew tree', 'Varrock General Store', 'Fairy ring', 'Lumbridge & Draynor'].forEach(expectRowLocked);
 
     const travelSection = screen.getByRole('button', { name: /Travel/ }).closest('section') as HTMLElement;
     const lockedDestination = within(travelSection).getAllByTitle('Chunk locked').find(element => element.tagName === 'BUTTON');
@@ -246,7 +246,7 @@ describe('ChunkActivityPanel activity accordions', () => {
   });
 
   it('keeps reachable diary references neutral until task requirements are evaluated', async () => {
-    mocks.state.content = { ...emptyContent(), diaries: { Lumbridge: 'LB1' } };
+    mocks.state.content = { ...emptyContent(), diaries: { 'Lumbridge & Draynor': 'LB1' } };
     mocks.state.regions = ['Misthalin'];
 
     render(<ChunkActivityPanel {...baseProps} />);
@@ -260,7 +260,7 @@ describe('ChunkActivityPanel activity accordions', () => {
   });
 
   it('still counts diary references as locked when the selected chunk is locked', () => {
-    mocks.state.content = { ...emptyContent(), diaries: { Lumbridge: 'LB1' } };
+    mocks.state.content = { ...emptyContent(), diaries: { 'Lumbridge & Draynor': 'LB1' } };
     mocks.state.regions = ['Misthalin'];
 
     render(<ChunkActivityPanel {...baseProps} unlocked={false} />);
@@ -396,10 +396,10 @@ describe('ChunkActivityPanel activity accordions', () => {
       quests: { 'Prying Times': 'first' },
     };
     mocks.state.completedQuests = ['Pandemonium', "The Knight's Sword"];
-    mocks.state.regions = ['The Pandemonium', 'Port Sarim', 'Rimmington'];
+    mocks.state.regions = ['Cam Torum', 'The Pandemonium', 'Port Sarim', 'Rimmington'];
     mocks.state.skills = { Smithing: 3, Sailing: 2 };
     mocks.state.levels = { Smithing: 30, Sailing: 12 };
-    // Food Shops sell the redberry pie the quest needs.
+    // Food Shops in Cam Torum (Yarnio) sell the redberry pie the quest needs.
     mocks.state.merchants = ['Food Shops'];
 
     render(<ChunkActivityPanel {...baseProps} />);
@@ -558,7 +558,7 @@ describe('ChunkActivityPanel activity accordions', () => {
       monsters: [{ name: 'Rat', count: 1, slayer: null }],
       objects: [['Fairy ring', 1], ['Herb patch', 1], ['Yew tree', 1], ['Statue', 2]],
       npcs: ["Cooks' Guild", 'Castle Wars', 'Shopkeeper'],
-      diaries: { Lumbridge: 'LB1' },
+      diaries: { 'Lumbridge & Draynor': 'LB1' },
       clues: { hard: 1 },
       spawns: ['Bronze dagger'],
     };
@@ -908,5 +908,48 @@ describe('ChunkActivityPanel body states', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Retry loading chunk content' }));
     expect(await screen.findByText('Available now')).toBeTruthy();
+  });
+});
+
+// diary-b.d3[0]: a diary row is checked against the area the chunk is in, not
+// the whole region group, and every diary is found under its chunk-content name.
+describe('ChunkActivityPanel diary rows on owned and locked chunks', () => {
+  const diaryRow = (area: string) => screen.getAllByText(area)
+    .map(element => element.closest('div[title]'))
+    .find((row): row is HTMLElement => row instanceof HTMLElement) as HTMLElement;
+  const renderDiary = (area: string, owned: string[], region: string, subArea: string, cx: number, cy: number, unlocked = owned.length > 0) => {
+    mocks.state.regions = owned;
+    mocks.state.content = { ...emptyContent(), name: subArea, diaries: { [area]: 'EA1' } };
+    render(<ChunkActivityPanel chunk={{ cx, cy }} region={region} subArea={subArea} regionChunks={[{ cx, cy }]}
+      unlocked={unlocked} wholeAreaOwnershipMixed={false} onClose={() => undefined} />);
+    return diaryRow(area);
+  };
+
+  for (const [area, owned, region, subArea, cx, cy] of [
+    ['Morytania', ['Canifis'], 'Morytania', 'Canifis', 54, 54],
+    ['Wilderness', ['Ferox Enclave'], 'Wilderness', 'Ferox Enclave', 49, 56],
+    ['Falador', ['Falador'], 'Asgarnia', 'Falador', 46, 52],
+    ['Varrock', ['Varrock'], 'Misthalin', 'Varrock', 50, 53],
+  ] as const) {
+    it(`does not call the ${area} diary locked on an owned ${subArea} chunk`, () => {
+      const row = renderDiary(area, [...owned], region, subArea, cx, cy);
+      expect(within(row).getByText('Tasks here')).toBeTruthy();
+      expect(row.getAttribute('title')).toBe('Task requirements are not evaluated in this summary');
+    });
+  }
+
+  it('says the chunk, not the region, is locked when another area of the diary is owned', () => {
+    const row = renderDiary('Morytania', ['Canifis'], 'Morytania', 'Barrows', 55, 53, false);
+    expect(within(row).getByText('Locked')).toBeTruthy();
+    expect(row.getAttribute('title')).toBe('Chunk locked');
+    cleanup();
+    const none = renderDiary('Morytania', [], 'Morytania', 'Barrows', 55, 53);
+    expect(none.getAttribute('title')).toBe("Locked: the Morytania region isn't unlocked yet");
+  });
+
+  it('finds the Kourend & Kebos diary under its chunk-content name', () => {
+    const row = renderDiary('Kourend & Kebos', [], 'Kourend & Kebos', 'Hosidius', 27, 55);
+    expect(within(row).getByText('Locked')).toBeTruthy();
+    expect(row.getAttribute('title')).toBe("Locked: the Kourend & Kebos region isn't unlocked yet");
   });
 });

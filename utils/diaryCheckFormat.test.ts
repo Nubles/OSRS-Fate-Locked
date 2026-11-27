@@ -17,6 +17,13 @@ describe('formatDiaryChecks', () => {
       .toEqual(['Have: Karamjan monkey greegree (tier-checked)']);
   });
 
+  it('names the gloves on the Draynor Manor belladonna task as an item', () => {
+    // Lumbridge & Draynor Diary, Hard 8: "any gloves". The check names the item, as every other check does.
+    const belladonna = ALL_DIARY_TASKS.find(row => row.id === 'lum_hard_8')!;
+    const checks = (belladonna.equipmentRequirements ?? []).map(item => item.manualCheck ?? '');
+    expect(formatDiaryChecks(checks, belladonna.description)).toEqual(['Have: Gloves to pick belladonna (tier-checked)']);
+  });
+
   it('shortens quest progress to the quest name', () => {
     expect(formatDiaryChecks([
       "Reached the required progress in Icthlarin's Little Helper for: Sell some artefacts to Simon Templeton.",

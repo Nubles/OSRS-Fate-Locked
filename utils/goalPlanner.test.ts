@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { SKILLS_LIST } from '../constants';
 import { QUEST_CAPE_QUEST_IDS, QUEST_DATA } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
-import { MISTHALIN_AREAS, REGION_GROUPS } from '../data/items';
+import { MISTHALIN_AREAS, REGION_GROUPS, REGIONS_LIST } from '../data/items';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { planForTarget, listGoalTargets, questPointsForEntry } from './goalPlanner';
 import { getQuestStatus } from './journalStatus';
@@ -666,3 +666,22 @@ describe('listGoalTargets', () => {
       ALL_DIARY_TASKS.length = syntheticLength;
     }
   });
+
+describe('planForTarget — diary checks carry one Confirm prefix', () => {
+  // Every reader of a diary task's manualRequirements adds its own "Confirm: ", so the data never does.
+  it('no diary task route stores a check that already starts with "Confirm: "', () => {
+    const prefixed = ALL_DIARY_TASKS.flatMap(task => [
+      ...((task as { manualRequirements?: string[] }).manualRequirements ?? []),
+      ...(task.oneOf ?? []).flatMap(route => route.manualRequirements ?? []),
+    ]).filter(check => /^Confirm: /.test(check));
+    expect(prefixed).toEqual([]);
+  });
+
+  it('no diary plan shows "Confirm: Confirm:"', () => {
+    const unlocks = maxedUnlocks({ regions: [...REGIONS_LIST] });
+    const labels = Object.keys(DIARY_DATA).flatMap(id => planForTarget('diary', id, unlocks as any, 'vanilla')?.manualSteps ?? [])
+      .map(step => step.label);
+    expect(labels).toContain('Confirm: Fishing equipment');
+    expect(labels.filter(label => /^Confirm: Confirm:/.test(label))).toEqual([]);
+  });
+});

@@ -184,7 +184,7 @@ const TierDetail: React.FC<{
             </div>
           );
         })}
-        {rate !== undefined && <div className="ojr-gap ojr-red">Each task rolls once for a Key at {rate}% base chance.</div>}
+        {rate !== undefined && <div className="ojr-gap ojr-red">Each task rolls once for a Key at {rate}%.</div>}
       </div>
 
       <WikiTable href="https://oldschool.runescape.wiki/w/Combat_Achievements" rows={rows} />

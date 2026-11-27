@@ -64,7 +64,10 @@ const LINES: [number, number, number, boolean][] = [
 /** The slot's icon, the same OSRS Wiki image the classic Equipment Lab and Gear view show. */
 const slotIconSrc = (slot: string): string => wikiImageSrc(SLOT_CONFIG[slot]?.file ?? 'Worn_Equipment.png');
 
-/** A worn item's wiki image (as the classic Gear view shows it); the slot icon if it does not load. */
+/**
+ * A worn item's wiki image (as the classic Gear view shows it); the slot icon if it does not load.
+ * Keyed on the item and its picture, so it starts again when the gear catalogue loads the picture.
+ */
 const SlotItem: React.FC<{ slot: string; imageFile?: string }> = ({ slot, imageFile }) => {
   const [failed, setFailed] = useState(!imageFile);
   if (failed) return <img key="icon" className="osrs-char-slotsil" src={slotIconSrc(slot)} alt="" aria-hidden="true" />;
@@ -118,7 +121,7 @@ export const OsrsCharDoll: React.FC<{ slots: DollSlot[]; suspendModals?: boolean
               aria-label={s.label}
             >
               {s.itemId != null
-                ? <SlotItem key={s.itemId} slot={s.slot} imageFile={s.imageFile} />
+                ? <SlotItem key={`${s.itemId}:${s.imageFile ?? ''}`} slot={s.slot} imageFile={s.imageFile} />
                 : <img className="osrs-char-slotsil" src={slotIconSrc(s.slot)} alt="" aria-hidden="true" />}
               {s.gem > 0 && <span className="osrs-char-slottier" style={{ color: gemColor(s.gem) }} aria-hidden="true">{roman(s.gem)}</span>}
               {gems && s.gem > 0 && <img className="osrs-px osrs-char-slotgem" src={gemSmallSrc(s.gem)} alt="" aria-hidden="true" />}

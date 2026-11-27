@@ -16,8 +16,18 @@ export const PORTS_BEYOND_CHUNK_CONTENT: readonly string[] = [
 ];
 
 /**
+ * Mooring points the wiki pins (Mooring point, oldid 15398388) in a chunk that is
+ * no port and touches no open sea: Rimmington and Witchaven. A boat docks
+ * there, so each is a landing too.
+ */
+export const MOORING_POINTS_INLAND: readonly string[] = [
+  '42,51', // Witchaven (pin 2747,3305)
+  '45,50', // Rimmington (pin 2906,3225)
+];
+
+/**
  * Sailing ports: every land chunk where the chunk content (public/chunk-content.json,
- * from the pinned Chunk Picker export) has a Port master, and the ports above. Most of them touch
+ * from the pinned Chunk Picker export) has a Port master, and the ports and mooring points above. Most of them touch
  * no chunk of data/oceanChunks.json, which holds only chunks that are all
  * water (Catherby, Brimhaven, Port Khazard, Rellekka and Port Sarim's
  * church chunk among them), so they are named here. With Sailing, you set
@@ -45,12 +55,13 @@ export const SAILING_PORT_CHUNKS: readonly string[] = [
   '43,46', // Cairn Isle
   '43,50', // Brimhaven
   '43,53', // Catherby
-  '46,49', // Port Sarim
+  '46,49', // Musa Point
   '47,46', // The Pandemonium
   '47,49', // Port Sarim
   '49,37', // The Summer Shore
   '49,44', // Ruins of Unkah
   ...PORTS_BEYOND_CHUNK_CONTENT,
+  ...MOORING_POINTS_INLAND,
 ];
 
 /**

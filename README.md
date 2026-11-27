@@ -45,7 +45,7 @@ React 18 · TypeScript · Vite · Tailwind CSS · Recharts · Vitest
 
 ## Run locally
 
-**Prerequisites:** Node.js 22+
+Use Node.js 22.13 or later in the 22.x line to match CI.
 
 ```bash
 npm install
@@ -101,11 +101,12 @@ overlays, and troubleshooting. It follows the plugin's main branch (through
 `contracts/golden-bundles/runelite-wording.json`), so until the next Plugin
 Hub release it can describe settings the Hub build does not have yet.
 
-Pairing is one-way. RuneLite's **Connect tracker** makes a random pairing
-code and opens the tracker with it in the URL fragment. The browser then
-publishes an app-authored v4 profile with `POST /r/<code>`, and the plugin
-retrieves and validates it with `GET /r/<code>`. It does not upload gameplay,
-account, event, acknowledgement, suggestion, or heartbeat data.
+Pairing is one-way. RuneLite's **Connect tracker** (or **Re-pair tracker…**
+while a pairing works) makes a random pairing code and opens the tracker
+with it in the URL fragment. The browser then publishes an app-authored v4
+profile with `POST /r/<code>`, and the plugin retrieves and validates it
+with `GET /r/<code>`. It does not upload gameplay, account, event,
+acknowledgement, suggestion, or heartbeat data.
 
 The browser cannot know whether RuneLite imported the profile because the
 current Plugin Hub candidate sends no receipt. “Profile sent” therefore

@@ -1228,7 +1228,7 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Desert Treasure I 94 Magic Means to cast Ice Barrage ( or a Blighted ancient ice sack for every cast)",
+      "sourceRequirements": "Completion of Desert Treasure I, 94 Magic. Castle Wars supplies a rune pouch that can cast Ice Barrage.",
       "regions": [
         "Castle Wars"
       ],
@@ -3615,6 +3615,9 @@
               "reason": "Brown or golden apron",
               "manualCheck": "Have Brown or golden apron and confirm that the specific item is permitted by your equipment tier"
             }
+          ],
+          "housing": [
+            "Workshop Tools"
           ]
         },
         {
@@ -5663,7 +5666,7 @@
         {
           "label": "Waterbirth teleport or coins",
           "manualRequirements": [
-            "Confirm: Waterbirth teleport or coins"
+            "Waterbirth teleport or coins"
           ]
         },
         {
@@ -5937,7 +5940,7 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "45 Hunter 35 Hunter with a butterfly net and jar",
+      "sourceRequirements": "45 Hunter bare-handed, or 35 Hunter with an insect net. A butterfly jar is optional.",
       "oneOf": [
         {
           "label": "Bare-handed",
@@ -5951,8 +5954,7 @@
             "Hunter": 35
           },
           "items": [
-            "Insect net",
-            "Butterfly jar"
+            "Insect net"
           ],
           "equipmentRequirements": [
             {
@@ -6015,7 +6017,7 @@
         {
           "label": "Two-player door route",
           "manualRequirements": [
-            "Confirm: Two-player door route"
+            "Two-player door route"
           ]
         },
         {
@@ -6327,7 +6329,7 @@
         {
           "label": "Two-player door route",
           "manualRequirements": [
-            "Confirm: Two-player door route"
+            "Two-player door route"
           ]
         },
         {
@@ -6806,7 +6808,7 @@
             "Smithing": 59
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "label": "Dusty key + Make a mith grapple"
         },
@@ -6815,7 +6817,7 @@
             "Firemaking": 35
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "questProgress": [
             {
@@ -7284,7 +7286,7 @@
             "Crafting": 46
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "label": "Dusty key + Glassblow"
         },
@@ -7293,7 +7295,7 @@
             "Thieving": 52
           },
           "manualRequirements": [
-            "Confirm: Dusty key"
+            "Dusty key"
           ],
           "quests": [
             "Death to the Dorgeshuun"
@@ -7905,7 +7907,7 @@
         {
           "label": "Fishing equipment",
           "manualRequirements": [
-            "Confirm: Fishing equipment"
+            "Fishing equipment"
           ]
         },
         {
@@ -9007,7 +9009,7 @@
         {
           "label": "Axe and machete",
           "manualRequirements": [
-            "Confirm: Axe and machete"
+            "Axe and machete"
           ]
         },
         {
@@ -9570,7 +9572,9 @@
       "ordinal": 1,
       "description": "Travel to the Fairy Ring south of Mount Karuulm.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Fairytale I - Growing Pains"
+      ],
       "regions": [
         "Mount Karuulm"
       ],
@@ -9775,7 +9779,23 @@
       "sourceRequirements": "Combat gear",
       "minigames": [
         "Intelligence Gathering"
-      ]
+      ],
+      "locations": [
+        {
+          "label": "Captain Ginea",
+          "chunkOptions": [
+            {
+              "cx": 23,
+              "cy": 56
+            }
+          ]
+        }
+      ],
+      "geographyVerification": {
+        "reviewedAt": "2026-11-23",
+        "source": "oldschool.runescape.wiki",
+        "notes": "Intelligence drops at the rotating gang meetings and is handed to Captain Ginea in her tent in the South Shayzien Encampment (23,56); Chunked also needs one meeting chunk (diaryChunks MD8)."
+      }
     },
     {
       "id": "kou_med_9",
@@ -10686,7 +10706,9 @@
       "ordinal": 4,
       "description": "Travel to the Wizards' Tower by Fairy ring.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Fairytale I - Growing Pains"
+      ],
       "regions": [
         "Wizards' Tower"
       ],
@@ -10908,6 +10930,12 @@
               "tier": 1,
               "reason": "Insect net or magic insect net",
               "manualCheck": "Have Insect net or magic insect net and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
             }
           ],
           "items": [
@@ -10915,6 +10943,9 @@
           ],
           "regions": [
             "Zanaris"
+          ],
+          "quests": [
+            "Lost City"
           ]
         },
         {
@@ -11023,6 +11054,17 @@
           ],
           "regions": [
             "Zanaris"
+          ],
+          "quests": [
+            "Lost City"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Weapon",
+              "tier": 1,
+              "reason": "Dramen or lunar staff to enter Zanaris",
+              "manualCheck": "Have Dramen or lunar staff to enter Zanaris and confirm that the specific item is permitted by your equipment tier"
+            }
           ]
         },
         {
@@ -11501,8 +11543,8 @@
         {
           "slot": "Gloves",
           "tier": 1,
-          "reason": "Gloves must be worn to pick belladonna",
-          "manualCheck": "Have gloves must be worn to pick belladonna and confirm that the specific item is permitted by your equipment tier"
+          "reason": "Gloves to pick belladonna",
+          "manualCheck": "Have Gloves to pick belladonna and confirm that the specific item is permitted by your equipment tier"
         }
       ]
     },
@@ -11582,6 +11624,12 @@
           },
           "regions": [
             "Keldagrim"
+          ],
+          "questProgress": [
+            {
+              "quest": "The Giant Dwarf",
+              "label": "Reached the required progress in The Giant Dwarf for: Craft, string and enchant an Amulet of Power in Lumbridge."
+            }
           ]
         },
         {
@@ -11597,7 +11645,10 @@
           "label": "House tool store",
           "skills": {
             "Construction": 44
-          }
+          },
+          "housing": [
+            "Workshop Tools"
+          ]
         }
       ]
     },
@@ -12156,6 +12207,480 @@
               ]
             }
           ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Body) and an abyssal lantern, Lumbridge ruins",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Body) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Legs) and an abyssal lantern, Lumbridge ruins",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Legs) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Boots) and an abyssal lantern, Lumbridge ruins",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Head, Boots) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Legs) and an abyssal lantern, Lumbridge ruins",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Legs) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Boots) and an abyssal lantern, Lumbridge ruins",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Body, Boots) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Legs, Boots) and an abyssal lantern, Lumbridge ruins",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "regions": [
+            "Lumbridge"
+          ]
+        },
+        {
+          "label": "2 Raiments of the Eye pieces (Legs, Boots) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 57
+          },
+          "items": [
+            "2 Raiments of the Eye pieces",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ],
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ]
         }
       ],
       "geographyVerification": {
@@ -12283,7 +12808,7 @@
             "Mort Myre Swamp"
           ],
           "manualRequirements": [
-            "Confirm: Ecto-tokens or charter ship"
+            "Ecto-tokens or charter ship"
           ],
           "label": "Ecto-tokens or charter ship + Blamish snails"
         },
@@ -12292,7 +12817,7 @@
             "General Stores"
           ],
           "manualRequirements": [
-            "Confirm: Ecto-tokens or charter ship"
+            "Ecto-tokens or charter ship"
           ],
           "regions": [
             "Burgh de Rott"
@@ -12731,7 +13256,21 @@
       ],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "Completion of Dwarf Cannon 35 Smithing Steel bar and ammo mould (or 2 steel bars and double ammo mould )"
+      "sourceRequirements": "Completion of Dwarf Cannon 35 Smithing Steel bar and ammo mould (or 2 steel bars and double ammo mould )",
+      "oneOf": [
+        {
+          "label": "Ghosts Ahoy",
+          "quests": [
+            "Ghosts Ahoy"
+          ]
+        },
+        {
+          "label": "Ecto-tokens or charter ship",
+          "manualRequirements": [
+            "Ecto-tokens or charter ship"
+          ]
+        }
+      ]
     },
     {
       "id": "mor_med_9",
@@ -12743,7 +13282,10 @@
       "skills": {
         "Slayer": 42
       },
-      "quests": [],
+      "quests": [
+        "Zogre Flesh Eaters",
+        "Priest in Peril"
+      ],
       "regions": [
         "Braindeath Island"
       ],
@@ -12786,9 +13328,15 @@
       "ordinal": 11,
       "description": "Mix a Guthix Balance potion while in Morytania.",
       "skills": {
-        "Herblore": 22
+        "Herblore": 22,
+        "Agility": 25,
+        "Crafting": 25,
+        "Mining": 15,
+        "Magic": 7
       },
-      "quests": [],
+      "quests": [
+        "In Search of the Myreque"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Partial completion of In Aid of the Myreque 22 Herblore Restore potion, garlic, and silver dust (made by using a silver bar on the Ectofuntus bone grinder )",
@@ -12927,7 +13475,11 @@
       "skills": {
         "Farming": 47
       },
-      "quests": [],
+      "quests": [
+        "Creature of Fenkenstrain",
+        "Cabin Fever",
+        "RFD: Pirate Pete"
+      ],
       "regions": [
         "Harmony Island"
       ],
@@ -13721,9 +14273,12 @@
       "tierId": "Varrock Medium",
       "ordinal": 3,
       "description": "Select a colour for your kitten.",
-      "skills": {},
+      "skills": {
+        "Farming": 25
+      },
       "quests": [
-        "Gertrude's Cat"
+        "Gertrude's Cat",
+        "Creature of Fenkenstrain"
       ],
       "regions": [
         "Varrock"
@@ -14290,8 +14845,7 @@
       "ordinal": 2,
       "description": "Use Lunar magic to make 20 mahogany planks at the Lumberyard.",
       "skills": {
-        "Magic": 86,
-        "Woodcutting": 50
+        "Magic": 86
       },
       "quests": [
         "Dream Mentor"
@@ -14304,6 +14858,22 @@
       "sourceRequirements": "Completion of Dream Mentor 86 Magic Lunar spellbook selected 21,000 coins and 20 mahogany logs Means to cast Plank Make twenty times ( )",
       "arcana": [
         "Lunar Spellbook"
+      ],
+      "oneOf": [
+        {
+          "skills": {
+            "Woodcutting": 50
+          }
+        },
+        {
+          "label": "Managing Miscellania",
+          "regions": [
+            "Miscellania & Etceteria"
+          ],
+          "quests": [
+            "Royal Trouble"
+          ]
+        }
       ]
     },
     {
@@ -15295,6 +15865,530 @@
               "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
             }
           ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Varrock ruins + Mine rune essence",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Varrock ruins + Minotaur drops",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Head) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Head",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Varrock ruins + Mine rune essence",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Varrock ruins + Minotaur drops",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Body) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Body",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Varrock ruins + Mine rune essence",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Varrock ruins + Minotaur drops",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Legs) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Legs",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Varrock ruins + Mine rune essence",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Rune Mysteries"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Varrock ruins + Minotaur drops",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock",
+            "Barbarian Village"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, Varrock ruins + Daeyalt essence",
+          "skills": {
+            "Firemaking": 75,
+            "Mining": 60,
+            "Runecraft": 52
+          },
+          "regions": [
+            "Varrock"
+          ],
+          "quests": [
+            "Sins of the Father"
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
+        },
+        {
+          "label": "1 Raiments of the Eye piece (Boots) and an abyssal lantern, through the Abyss",
+          "skills": {
+            "Firemaking": 75,
+            "Runecraft": 52
+          },
+          "quests": [
+            "Enter the Abyss"
+          ],
+          "locations": [
+            {
+              "label": "Mage of Zamorak (Abyss)",
+              "chunkOptions": [
+                {
+                  "cx": 48,
+                  "cy": 55
+                }
+              ]
+            }
+          ],
+          "items": [
+            "1 Raiments of the Eye piece",
+            "Abyssal lantern lit with magic logs"
+          ],
+          "equipmentRequirements": [
+            {
+              "slot": "Boots",
+              "tier": 1,
+              "reason": "Raiments of the Eye",
+              "manualCheck": "Have Raiments of the Eye and confirm that the specific item is permitted by your equipment tier"
+            },
+            {
+              "slot": "Shield",
+              "tier": 1,
+              "reason": "Abyssal lantern",
+              "manualCheck": "Have Abyssal lantern and confirm that the specific item is permitted by your equipment tier"
+            }
+          ]
         }
       ],
       "geographyVerification": {
@@ -15649,7 +16743,10 @@
       "skills": {
         "Fishing": 46
       },
-      "quests": [],
+      "quests": [
+        "The Grand Tree",
+        "Tree Gnome Village"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Fish some Bass.",
@@ -15675,7 +16772,10 @@
         "Firemaking": 35,
         "Woodcutting": 35
       },
-      "quests": [],
+      "quests": [
+        "The Grand Tree",
+        "Tree Gnome Village"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "previousDescription": "Chop some Teak logs.",
@@ -15719,7 +16819,9 @@
       "description": "Travel to the Feldip Hills by Gnome Glider.",
       "skills": {},
       "quests": [
-        "The Grand Tree"
+        "The Grand Tree",
+        "Rune Mysteries",
+        "Shilo Village"
       ],
       "aliases": [],
       "classification": "new-canonical",
@@ -15895,7 +16997,14 @@
               "quest": "Mourning's End Part I",
               "label": "Reached the required progress in Mourning's End Part I for: Kill an Elf with a Crystal bow."
             }
-          ]
+          ],
+          "quests": [
+            "Big Chompy Bird Hunting",
+            "Sheep Herder"
+          ],
+          "skills": {
+            "Thieving": 50
+          }
         },
         {
           "regions": [
@@ -15986,7 +17095,10 @@
       "skills": {
         "Agility": 48
       },
-      "quests": [],
+      "quests": [
+        "The Grand Tree",
+        "Tree Gnome Village"
+      ],
       "regions": [
         "Ape Atoll"
       ],
@@ -16019,7 +17131,10 @@
         "Firemaking": 50,
         "Woodcutting": 50
       },
-      "quests": [],
+      "quests": [
+        "The Grand Tree",
+        "Tree Gnome Village"
+      ],
       "regions": [
         "Ape Atoll"
       ],
@@ -16043,7 +17158,9 @@
       "skills": {
         "Mining": 70
       },
-      "quests": [],
+      "quests": [
+        "Underground Pass"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Regicide 70 Mining Any pickaxe",
@@ -16083,9 +17200,15 @@
       "ordinal": 8,
       "description": "Check the health of your Palm tree in Lletya.",
       "skills": {
-        "Farming": 68
+        "Farming": 68,
+        "Ranged": 60,
+        "Thieving": 50
       },
-      "quests": [],
+      "quests": [
+        "Roving Elves",
+        "Big Chompy Bird Hunting",
+        "Sheep Herder"
+      ],
       "regions": [
         "Lletya"
       ],
@@ -16200,7 +17323,9 @@
       "ordinal": 11,
       "description": "Kill Zulrah.",
       "skills": {},
-      "quests": [],
+      "quests": [
+        "Underground Pass"
+      ],
       "regions": [
         "Zul-Andra"
       ],
@@ -16272,7 +17397,9 @@
       "skills": {
         "Fletching": 85
       },
-      "quests": [],
+      "quests": [
+        "Underground Pass"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Regicide 85 Fletching Magic longbow (u) and a bow string",
@@ -16530,9 +17657,14 @@
       "ordinal": 7,
       "description": "Pickpocket an Elf.",
       "skills": {
-        "Thieving": 85
+        "Thieving": 85,
+        "Ranged": 60
       },
-      "quests": [],
+      "quests": [
+        "Roving Elves",
+        "Big Chompy Bird Hunting",
+        "Sheep Herder"
+      ],
       "aliases": [],
       "classification": "preserved-semantic",
       "sourceRequirements": "Started Mourning's End Part I 85 Thieving",
@@ -17785,7 +18917,10 @@
       "quests": [],
       "aliases": [],
       "classification": "new-canonical",
-      "sourceRequirements": "61 Woodcutting Any axe and weaponry",
+      "sourceRequirements": "61 Woodcutting (not boostable), at least a mithril axe, and a fallen Ent.",
+      "items": [
+        "Mithril axe or better"
+      ],
       "locations": [
         {
           "label": "Wilderness Ents",
@@ -18069,7 +19204,10 @@
       "skills": {
         "Smithing": 50
       },
-      "quests": [],
+      "quests": [
+        "Dwarf Cannon",
+        "Fishing Contest"
+      ],
       "aliases": [],
       "classification": "new-canonical",
       "sourceRequirements": "Partial completion of Between a Rock... 50 Smithing 7500 coins, 3 gold bars, and a hammer",
@@ -18195,7 +19333,10 @@
       "quests": [],
       "aliases": [],
       "classification": "preserved-semantic",
-      "sourceRequirements": "67 Hunter Small fishing net and a rope",
+      "sourceRequirements": "67 Hunter and a net trap, made from a small fishing net and a rope.",
+      "items": [
+        "Net trap"
+      ],
       "locations": [
         {
           "label": "Boneyard black salamanders",

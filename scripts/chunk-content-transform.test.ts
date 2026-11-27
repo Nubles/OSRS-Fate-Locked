@@ -368,6 +368,32 @@ describe('transformChunkContent', () => {
     }));
   });
 
+  it('renames, moves and removes the NPCs and objects the game changed (chunk-sample.d2[2])', () => {
+    const result = transformChunkContent({
+      walkableChunks: [12850, 12598, 13366],
+      chunks: {
+        12850: { Nickname: 'Lumbridge Castle', NPC: { 'Smithing apprentice': true, 'Arthur the Clue Hunter': true, 'Prayer tutor': true, Duke: true } },
+        12598: { Nickname: 'Grand Exchange', NPC: { Banker: true } },
+        13366: { Nickname: 'Silvarea', Object: { 'Pot-boiler': 1, Tree: 2 } },
+      },
+      slayerMonsters: {},
+      taskUnlocks: { NPCs: { 'Prayer tutor': { 12850: [{ 'Example Quest Complete the quest': 'Nonskill' }] } } },
+    }, manifest);
+    const { chunks, taskUnlocks } = result.full;
+    // data/sources/chunk-content-overrides.json: Smithing apprentice is Feoras, Arthur the Clue
+    // Hunter is Arthur at the Grand Exchange, the Prayer tutor and the pot-boiler are gone.
+    expect(chunks[12850].p).toEqual(['Duke', 'Feoras']);
+    expect(chunks[12598].p).toEqual(['Arthur', 'Banker']);
+    expect(chunks[13366].o).toEqual([['Tree', 2]]);
+    expect(taskUnlocks.NPCs?.['Prayer tutor']).toBeUndefined();
+    expect(result.audit.events).toContainEqual(expect.objectContaining({
+      category: 'overrides', sourceKey: 'npc-rename/Arthur the Clue Hunter', targetKeys: ['12598'], reason: 'reviewed-content-override',
+    }));
+    expect(result.audit.events).toContainEqual(expect.objectContaining({
+      category: 'overrides', sourceKey: 'removed/Objects/Pot-boiler', targetKeys: ['13366'], reason: 'reviewed-content-override',
+    }));
+  });
+
   it('accounts independently for duplicate banks and nested consumed records', () => {
     const result = transformChunkContent({
       walkableChunks: [], chunks: {}, slayerMonsters: {},

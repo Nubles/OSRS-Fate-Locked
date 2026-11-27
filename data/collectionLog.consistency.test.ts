@@ -5,6 +5,14 @@ import { COLLECTION_LOG_DATA } from './collectionLogData';
 const TAB_ID: Record<string, number> = { Bosses: 1, Raids: 2, Clues: 3, Minigames: 4, Other: 5 };
 
 describe('collection log data integrity', () => {
+  it('places the Graveyard rewards on their in-game pages', () => {
+    const pages = COLLECTION_LOG_DATA.Other.pages;
+    expect(pages['Prison of Ræun'].items.map(item => item.name)).toEqual([
+      'Sunken treasure', 'Fremennik graceful ornament kit', 'Fremennik sail fabric',
+    ]);
+    expect(pages['Sailing Miscellaneous'].items).toContainEqual({ id: 523013, name: 'Ghostly sail fabric' });
+  });
+
   it('has exactly the five expected tabs', () => {
     expect(Object.keys(COLLECTION_LOG_DATA).sort()).toEqual(['Bosses', 'Clues', 'Minigames', 'Other', 'Raids']);
   });
@@ -131,12 +139,12 @@ describe('collection log data integrity', () => {
   // Page structure mirrors the live wiki: every wiki collection-log page is
   // present (incl. Brutus, kept for log parity though it isn't an unlockable
   // boss — see consistency.test). Bosses 57 (The Mad Angel, August 2026), Raids 4 (The Fractured Archive, October 2026),
-  // Minigames 22, Other 32 (Venators, July 2026);
+  // Minigames 22, Other 32 (Prison of Ræun, November 2026);
   // Clues 11 = the 10 Treasure-Trail tiers + Scroll Cases.
   it('has the audited page count in each tab', () => {
     const counts = Object.fromEntries(
       Object.entries(COLLECTION_LOG_DATA).map(([k, t]) => [k, Object.keys(t.pages).length])
     );
-    expect(counts).toEqual({ Bosses: 57, Raids: 4, Clues: 11, Minigames: 22, Other: 31 });
+    expect(counts).toEqual({ Bosses: 57, Raids: 4, Clues: 11, Minigames: 22, Other: 32 });
   });
 });

@@ -46,6 +46,7 @@ import { RUNELITE_WORDING } from '../data/runeliteWording';
 import { vanillaSpentBosses } from '../config/vanillaKeyEconomy';
 import { MAX_REQUEST_BYTES, validBundlePayload } from '../workers/fate-relay/protocol.js';
 import type { UnlockState } from '../types';
+import { buildShopKeepers, readDoc, readSource, shopNames } from './gen-shop-keepers.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'contracts', 'golden-bundles');
@@ -636,6 +637,8 @@ describe('golden bundles', () => {
     files['cases.json'] = bundleCases();
     files['places.json'] = placesAnswer;
     files['banks.json'] = banksAnswer;
+    // Who runs each shop a SHOPS row can name, for the plugin (scripts/gen-shop-keepers.mjs).
+    files['shop-keepers.json'] = buildShopKeepers(readSource(), shopNames(readDoc()));
 
     for (const [name, content] of Object.entries(files)) {
       const file = join(OUT, name);

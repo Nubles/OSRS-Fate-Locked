@@ -157,6 +157,12 @@ export function buildInteriorContent(data, registry, encode, accessPolicy = poli
     }
     interiors[id] = { name: nameOf(id), content, entrances: routes(id), requirements };
   }
+  // A reviewed map tile can establish an interior even before the pinned export lists its content.
+  for (const [id, rule] of Object.entries(accessPolicy.records ?? {})) {
+    if (rule.mapTile && !interiors[id]) {
+      interiors[id] = { name: nameOf(id), content: {}, entrances: routes(id), requirements: {} };
+    }
+  }
   return interiors;
 }
 
@@ -199,7 +205,16 @@ export function validateInteriorAccessPolicy(data, accessPolicy = policy) {
   const names = new Set(Object.values(source).map(row => row.Name).filter(Boolean));
   for (const [scope, rows] of Object.entries({ locations: accessPolicy.locations, records: accessPolicy.records ?? {} })) {
     for (const [key, rule] of Object.entries(rows ?? {})) {
-      if (scope === 'records' ? !source[key] : !source[key] && !names.has(key)) throw new Error(`Unknown interior policy ${scope}/${key}`);
+      if (rule.mapTile) {
+        const { x, y } = rule.mapTile;
+        const regionId = String(Math.floor(x / 64) * 256 + Math.floor(y / 64));
+        if (scope !== 'records' || !Number.isInteger(x) || !Number.isInteger(y) || regionId !== key ||
+            surface.has(key) || !rule.name || !rule.source || !(rule.anchors?.length || rule.entrances?.length)) {
+          throw new Error(`Invalid interior map tile: ${key}`);
+        }
+      } else if (scope === 'records' ? !source[key] : !source[key] && !names.has(key)) {
+        throw new Error(`Unknown interior policy ${scope}/${key}`);
+      }
       if (rule.anchors && rule.entrances) throw new Error(`Conflicting interior entrances: ${key}`);
       const routes = rule.entrances ?? (rule.anchors ?? []).map(chunkId => ({ chunkId, requirements: [] }));
       const seen = new Set();

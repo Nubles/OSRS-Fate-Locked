@@ -13,7 +13,7 @@ import {
   type QuestPreparationRouteAnalysis,
   type QuestRouteAnalysisSnapshot,
 } from '../utils/questRoutes/analyzeQuest';
-import { isRuneProofQuestSupported } from '../data/questItemRequirements';
+import { isPublicRuneProofQuest, isRuneProofQuestSupported } from '../data/questItemRequirements';
 import { GoalPlannerModal } from './GoalPlannerModal';
 import userEvent from '@testing-library/user-event';
 import { ALL_CHUNK_KEYS, parseChunkKey } from '../utils/chunkAdjacency';
@@ -361,9 +361,11 @@ describe('Goal Planner responsive layout', () => {
 
 describe('RuneProof Goal Planner integration', () => {
   it('uses the five independently authored guides in public RuneProof and hides preview-only quests', async () => {
+    // A preview-only quest as a target opens its Goal Planner plan instead
+    // (see 'Plan a route on a target without a public RuneProof guide').
     const view = renderGoalPlanner({
       availability: 'PUBLIC',
-      selectedQuest: "Daddy's Home",
+      selectedQuest: "Cook's Assistant",
     });
 
     expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
@@ -1840,5 +1842,177 @@ describe('RuneProof Goal Planner integration', () => {
     await act(async () => { await Promise.resolve(); });
     expect(analyze).toHaveBeenCalledTimes(1);
     expect(contentService.initCalls).toBe(1);
+  });
+});
+
+describe('Plan a route on a target without a public RuneProof guide', () => {
+  // The live build always runs with availability PUBLIC. Diaries, regions and
+  // quests outside the public guides keep the ordinary Goal Planner, drawn
+  // exactly as it is with RuneProof off; the guide quests keep RuneProof.
+  const loadPublicCatalogue = async () => {
+    const actual = await vi.importActual<typeof import('../data/questWalkthroughLoader')>(
+      '../data/questWalkthroughLoader',
+    );
+    const loaded = actual.loadQuestStrategyCatalogue('PUBLIC');
+    walkthroughLoaderControl.loadCatalogue = () => loaded;
+    return loaded;
+  };
+  const settle = async (catalogue: Promise<unknown>) => {
+    await act(async () => { await catalogue; });
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)); });
+  };
+  const nonGuideTargets = [
+    { kind: 'diary' as const, id: 'Karamja Easy' },
+    { kind: 'quest' as const, id: 'Dragon Slayer I' },
+    // Preview-only guides are not public guides: the live build plans them too.
+    { kind: 'quest' as const, id: "Daddy's Home" },
+    { kind: 'quest' as const, id: "Doric's Quest" },
+    { kind: 'quest' as const, id: 'Elemental Workshop I' },
+    listGoalTargets().find(target => target.kind === 'region')!,
+  ];
+
+  for (const layout of ['classic', 'osrs'] as const) {
+    for (const target of nonGuideTargets) {
+      it(`shows the plan for ${target.kind} ${target.id} in the ${layout} layout`, async () => {
+        const label = listGoalTargets().find(candidate => (
+          candidate.kind === target.kind && candidate.id === target.id
+        ))!.label;
+        if (layout === 'osrs') window.localStorage.setItem('fate_ui_style_v1', 'osrs');
+        // A guide remembered for the run must not take the target's place either.
+        window.localStorage.setItem(runeProofGuideStorageKey('run-a'), 'Imp Catcher');
+
+        const off = render(
+          <GoalPlannerModal
+            onClose={() => undefined}
+            initialTarget={{ kind: target.kind, id: target.id }}
+            runeProof={runeProof(loadedContent(), { availability: 'OFF' })}
+          />,
+        );
+        const offMarkup = off.container.innerHTML;
+        cleanup();
+
+        const catalogue = loadPublicCatalogue();
+        const contentService = loadedContent();
+        const view = render(
+          <GoalPlannerModal
+            onClose={() => undefined}
+            initialTarget={{ kind: target.kind, id: target.id }}
+            runeProof={runeProof(contentService, { availability: 'PUBLIC' })}
+          />,
+        );
+        await settle(catalogue);
+
+        expect(screen.getByRole('heading', { level: 3, name: label })).toBeTruthy();
+        expect(screen.getByRole('dialog', { name: 'Goal Planner' })).toBeTruthy();
+        expect(screen.queryByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeNull();
+        expect(screen.queryByRole('heading', { level: 2, name: 'Imp Catcher' })).toBeNull();
+        expect(screen.queryByText('Choose a RuneProof quest')).toBeNull();
+        expect(screen.queryByRole('button', { name: 'Choose another quest' })).toBeNull();
+        expect(view.container.innerHTML).toBe(offMarkup);
+        expect(contentService.initCalls).toBe(0);
+        expect(window.localStorage.getItem(runeProofGuideStorageKey('run-a'))).toBe('Imp Catcher');
+      });
+    }
+  }
+
+  it('decides from the same five quests the public guide catalogue loads', async () => {
+    const actual = await vi.importActual<typeof import('../data/questWalkthroughLoader')>(
+      '../data/questWalkthroughLoader',
+    );
+    const publicIds = (await actual.loadQuestStrategyCatalogue('PUBLIC')).map(strategy => strategy.questId);
+    expect(publicIds.slice().sort()).toEqual(
+      listGoalTargets().filter(target => target.kind === 'quest' && isPublicRuneProofQuest(target.id))
+        .map(target => target.id).sort(),
+    );
+    expect(publicIds).toHaveLength(5);
+  });
+
+  it("still opens Cook's Assistant on its RuneProof guide", async () => {
+    const catalogue = loadPublicCatalogue();
+    renderGoalPlanner({ availability: 'PUBLIC', selectedQuest: "Cook's Assistant" });
+    await settle(catalogue);
+
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'RuneProof' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Choose another quest' })).toBeTruthy();
+  });
+
+  it('moves from the plan to a guide quest picked in the planner list', async () => {
+    const catalogue = loadPublicCatalogue();
+    render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        initialTarget={{ kind: 'diary', id: 'Karamja Easy' }}
+        runeProof={runeProof(loadedContent(), { availability: 'PUBLIC' })}
+      />,
+    );
+    await settle(catalogue);
+
+    fireEvent.click(goalPlannerTargetButton('Dragon Slayer I'));
+    expect(screen.getByRole('heading', { level: 3, name: 'Dragon Slayer I' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Goal Planner' })).toBeTruthy();
+
+    fireEvent.click(goalPlannerTargetButton('Sheep Shearer'));
+    expect(await screen.findByRole('heading', { level: 2, name: 'Sheep Shearer' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'RuneProof' })).toBeTruthy();
+  });
+
+  it('opens the guide picked in the planner list before the guides finished loading', async () => {
+    const actual = await vi.importActual<typeof import('../data/questWalkthroughLoader')>(
+      '../data/questWalkthroughLoader',
+    );
+    const gate = deferred<void>();
+    const catalogue = gate.promise.then(() => actual.loadQuestStrategyCatalogue('PUBLIC'));
+    walkthroughLoaderControl.loadCatalogue = () => catalogue;
+    render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        initialTarget={{ kind: 'diary', id: 'Karamja Easy' }}
+        runeProof={runeProof(loadedContent(), { availability: 'PUBLIC' })}
+      />,
+    );
+
+    fireEvent.click(goalPlannerTargetButton('Imp Catcher'));
+    expect(screen.getByRole('heading', { level: 3, name: 'Imp Catcher' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Goal Planner' })).toBeTruthy();
+
+    gate.resolve();
+    await settle(catalogue);
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Imp Catcher' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'RuneProof' })).toBeTruthy();
+    expect(screen.queryByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeNull();
+  });
+
+  for (const layout of ['classic', 'osrs'] as const) {
+    it(`keeps the RuneProof window for a null target, as the Dashboard passes it, in the ${layout} layout`, async () => {
+      if (layout === 'osrs') window.localStorage.setItem('fate_ui_style_v1', 'osrs');
+      const catalogue = loadPublicCatalogue();
+      render(
+        <GoalPlannerModal
+          onClose={() => undefined}
+          initialTarget={null}
+          runeProof={runeProof(loadedContent(), { availability: 'PUBLIC' })}
+        />,
+      );
+      await settle(catalogue);
+
+      expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+      expect(screen.getByRole('dialog', { name: 'RuneProof' })).toBeTruthy();
+    });
+  }
+
+  it('keeps the RuneProof window when opened with no target', async () => {
+    const catalogue = loadPublicCatalogue();
+    render(
+      <GoalPlannerModal
+        onClose={() => undefined}
+        runeProof={runeProof(loadedContent(), { availability: 'PUBLIC' })}
+      />,
+    );
+    await settle(catalogue);
+
+    expect(await screen.findByRole('heading', { level: 2, name: "Cook's Assistant" })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'RuneProof' })).toBeTruthy();
   });
 });

@@ -509,7 +509,7 @@ export const useFarmModel = () => {
       },
       {
         name: "Krystilia",
-        subText: "Wilderness (Elite)",
+        subText: "Edgeville (Elite)",
         source: DropSource.SLAYER_KRYSTILIA,
         image: "https://oldschool.runescape.wiki/images/Krystilia.png",
         style: TIER_STYLES.PURPLE
@@ -528,7 +528,7 @@ export const useFarmModel = () => {
         image: "https://oldschool.runescape.wiki/images/Purple_slayer_helmet.png",
         style: TIER_STYLES.AMBER
       }
-    ].filter(card => farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS[card.name], unlocks, gameModeId));
+    ].filter(card => farmPlaceReachable(FARM_SLAYER_CARD_CHUNKS[card.name], unlocks, gameModeId, card.name));
   }, [unlocks, gameModeId]);
 
   return {

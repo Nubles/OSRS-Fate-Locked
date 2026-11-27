@@ -13,7 +13,9 @@ import { UnlockState } from '../types';
 
 export type Obtainability = 'obtainable' | 'locked' | 'unknown';
 
-export function itemObtainability(itemName: string, unlocks: UnlockState, gameModeId?: string): Obtainability {
+/** gameModeId is required (it may be undefined) so no caller can drop it:
+ *  Chunked runs own chunks, not regions, and read as locked without it. */
+export function itemObtainability(itemName: string, unlocks: UnlockState, gameModeId: string | undefined): Obtainability {
   if (!chunkContentService.ready || !itemName) return 'unknown';
   const sources = chunkContentService.itemSourceChunks(itemName);
   if (sources.length === 0) return 'unknown';

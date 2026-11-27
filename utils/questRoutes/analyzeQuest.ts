@@ -29,7 +29,8 @@ import type {
   RawRouteRequirement,
   RouteGate,
 } from './model';
-import { rankRoutes } from './ranker';
+import { rankRoutes, routeAccess } from './ranker';
+import { compileRawRequirements, evaluateRouteGates } from './accountRequirements';
 import { questRouteStatusForItems } from './questRouteStatus';
 
 export type QuestRouteStatus =
@@ -97,6 +98,8 @@ export interface QuestRouteAccountSnapshot {
   readonly minigames: readonly string[];
   readonly mobility: readonly string[];
   readonly slayerUnlocks: readonly string[];
+  /** Older materialized snapshots omit bosses and are treated as having none unlocked. */
+  readonly bosses?: readonly string[];
 }
 
 export interface QuestRouteStationRequirement {
@@ -154,6 +157,7 @@ const accountStateFingerprint = (
   minigames: normalizedList(unlocks.minigames),
   mobility: normalizedList(unlocks.mobility),
   slayerUnlocks: normalizedList(unlocks.slayerUnlocks),
+  ...(unlocks.bosses?.length ? { bosses: normalizedList(unlocks.bosses) } : {}),
 });
 
 const serializedGate = (gate: DeepReadonly<RouteGate>): object => {
@@ -258,7 +262,7 @@ const resolverUnlocks = (snapshot: QuestRouteAccountSnapshot): UnlockState => ({
   housing: [],
   merchants: [...snapshot.merchants],
   minigames: [...snapshot.minigames],
-  bosses: [],
+  bosses: [...(snapshot.bosses ?? [])],
   storage: [],
   guilds: [...snapshot.guilds],
   farming: [],
@@ -315,6 +319,32 @@ const copiedEntityLocations = (
   kind: hit.kind,
   locations: hit.locations.map(location => ({ ...location })),
 }));
+
+/**
+ * One chunk can hold several copies of a station, each with its own way in:
+ * Groats' Farm's dairy cows are in the open, while Brutus' arena's, listed at
+ * the same chunk, are behind its entrance. Any one copy will do, so a station
+ * needs only what its easiest copy needs, not what every copy needs together.
+ */
+const easiestStationAccess = (
+  copies: readonly { rawRequirements: readonly RawRouteRequirement[] }[],
+  account: UnlockState,
+): readonly RawRouteRequirement[] => {
+  if (copies.length <= 1) return copies[0]?.rawRequirements ?? [];
+  let best: readonly RawRouteRequirement[] = [];
+  let bestAccess = Infinity;
+  let fewestBlockers = Infinity;
+  for (const { rawRequirements } of copies) {
+    const { blockers, hasDataGap } = evaluateRouteGates(compileRawRequirements(rawRequirements), account);
+    const access = routeAccess(blockers, hasDataGap);
+    if (access < bestAccess || (access === bestAccess && blockers.length < fewestBlockers)) {
+      best = rawRequirements;
+      bestAccess = access;
+      fewestBlockers = blockers.length;
+    }
+  }
+  return best;
+};
 
 const resolverSnapshotFrom = (
   snapshot: QuestRouteAnalysisSnapshot,
@@ -396,6 +426,7 @@ const resolverSnapshotFrom = (
   const connectGraph: ConnectGraph = Object.fromEntries(
     Object.entries(snapshot.connectGraph).map(([from, destinations]) => [from, [...destinations]]),
   );
+  const account = resolverUnlocks(snapshot.unlocks);
 
   return {
     resolution: {
@@ -423,10 +454,8 @@ const resolverSnapshotFrom = (
         (entityLocationByKey.get(entityKey(name, kind))?.advisory.locations.length ?? 0) > 0
       ),
       stationRequirements: (name, kind, chunk) => (
-        stationRequirementsByKey.get(stationRequirementKey(name, kind, chunk)) ?? []
-      ).flatMap(requirement => (
-        requirement.rawRequirements.map(evidence => ({ ...evidence }))
-      )),
+        easiestStationAccess(stationRequirementsByKey.get(stationRequirementKey(name, kind, chunk)) ?? [], account)
+      ).map(evidence => ({ ...evidence })),
       connectGraph,
       fingerprint,
     },

@@ -76,11 +76,13 @@ describe('Strategy Guide corrections from the roll data audit (7 October 2026)',
     expect(skills('Sinister Chest')).toEqual({ Agility: 49 });
     expect(skills('Miscellania Dock Stepping Stone')).toEqual({ Agility: 55 });
     expect(skills('Observatory Grapple')).toEqual({ Agility: 23, Strength: 28, Ranged: 24 });
-    expect(skills('Red Dragon Isle')).toEqual({ Agility: 56 });
+    // 23 November 2026: the stones sit past the 10 Woodcutting entrance vine (requirements.deepFacts.test.ts).
+    expect(skills('Red Dragon Isle')).toEqual({ Agility: 56, Woodcutting: 10 });
     expect(skills("Angler's Outfit")).toEqual({ Fishing: 34 });
     expect(skills('Superglass Make')).toEqual({ Magic: 77 });
-    expect(skills('Games Necklace (Wintertodt)')).toEqual({ Crafting: 22 });
-    expect(skills('Necklace of Passage')).toEqual({ Crafting: 25 });
+    // 23 November 2026: the enchant spell too (requirements.wikiFactsB.test.ts, teleport jewellery).
+    expect(skills('Games Necklace (Wintertodt)')).toEqual({ Crafting: 22, Magic: 7 });
+    expect(skills('Necklace of Passage')).toEqual({ Crafting: 25, Magic: 27 });
     expect(skills('Bonecrusher')).toEqual({});
     expect(skills('Boots of Brimstone')).toEqual({ Slayer: 84 });
   });

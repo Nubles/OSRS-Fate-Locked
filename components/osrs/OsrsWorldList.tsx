@@ -9,10 +9,12 @@ import { chunkRegion } from '../../utils/chunkAdjacency';
 import { chunkContentService } from '../../services/ChunkContentService';
 import { displayAreaName } from '../../data/areaMapPolicy';
 import { misthalinListName } from '../../utils/worldWording';
+import { resolveModeRules } from '../../config/gameModes';
 import { NoteTrigger } from '../NoteTrigger';
 import { TableType } from '../../types';
 import { hopeKey } from '../../utils/hopeKey';
 import { itemSrc } from './OsrsDashGems';
+import { foldedIncludes } from '../../utils/textFold';
 import './osrs-world.css';
 
 /**
@@ -75,10 +77,11 @@ const useAdvisor = (): { heading: string; caption: string; sub: string; empty: s
 };
 
 export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable, onUnlockArea, suspendModals, viewButtons }) => {
-  const { unlocks, specialKeys, gameModeId, advisorsEnabled, hopes, toggleHope } = useGame();
+  const { unlocks, specialKeys, gameModeId, customMode, advisorsEnabled, hopes, toggleHope } = useGame();
+  const misthalinName = misthalinListName(resolveModeRules(gameModeId, customMode).startArea);
   const hopeSet = useMemo(() => new Set(hopes ?? []), [hopes]);
   const adv = useAdvisor();
-  const q = searchQuery.toLowerCase();
+  const q = searchQuery.trim();
   const canOmni = gameModeId !== 'chunked' && specialKeys > 0;
 
   // Every region with its areas, filtered the classic way (search, Actionable).
@@ -86,19 +89,19 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
     const all: [string, string[]][] = [[MISTHALIN, MISTHALIN_AREAS], ...Object.entries(REGION_GROUPS)];
     return all.map(([group, areas]) => {
       const got = areas.filter((a) => isAreaReachable(a, unlocks, gameModeId)).length;
-      const matchesGroup = group.toLowerCase().includes(q);
+      const matchesGroup = foldedIncludes(group, q);
       const shown = areas.filter((a) => {
         const free = isAreaReachable(a, unlocks, gameModeId);
         // Match every name the row shows (the area and its aliases, e.g. Heroes' Guild).
-        if (searchQuery && !matchesGroup && !displayAreaName(a).toLowerCase().includes(q)) return false;
+        if (q && !matchesGroup && !foldedIncludes(displayAreaName(a), q)) return false;
         if (showOnlyActionable && !free && !canOmni) return false;
         return true;
       });
-      const hidden = (searchQuery && !matchesGroup && shown.length === 0)
+      const hidden = (q && !matchesGroup && shown.length === 0)
         || (group !== MISTHALIN && showOnlyActionable && got === 0 && !canOmni);
       return { group, areas, got, shown, hidden };
     }).filter((g) => !g.hidden);
-  }, [unlocks, gameModeId, q, searchQuery, showOnlyActionable, canOmni]);
+  }, [unlocks, gameModeId, q, showOnlyActionable, canOmni]);
 
   const [selGroup, setSelGroup] = useState<string>(MISTHALIN);
   const [flashArea, setFlashArea] = useState<string | null>(null);
@@ -176,7 +179,7 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
                   {g.got > 0
                     ? <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}><path d="M1 6l3 3 7-7" fill="none" stroke="#0dc10d" strokeWidth="2" /></svg>
                     : <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" style={{ flexShrink: 0 }}><rect x="2" y="5" width="8" height="6" fill="#b83030" /><path d="M4 5V3.5a2 2 0 0 1 4 0V5" fill="none" stroke="#b83030" strokeWidth="1.5" /></svg>}
-                  <span className="owl-dir-name" style={{ color: g.got > 0 ? '#ffffff' : '#8a7c66' }}>{g.group === MISTHALIN ? misthalinListName(gameModeId) : g.group}</span>
+                  <span className="owl-dir-name" style={{ color: g.got > 0 ? '#ffffff' : '#8a7c66' }}>{g.group === MISTHALIN ? misthalinName : g.group}</span>
                   <span className="owl-dir-count" style={{ color: all ? '#0dc10d' : g.got > 0 ? '#ffff00' : '#6f6250' }}>{all ? 'Unlocked' : `${g.got}/${g.areas.length}`}</span>
                 </button>
               );
@@ -190,7 +193,7 @@ export const OsrsWorldList: React.FC<Props> = ({ searchQuery, showOnlyActionable
       {current && (
         <section className="osrs-win owl-areas" aria-label={current.group}>
           <div className="owl-areas-head">
-            <h3>{current.group === MISTHALIN ? misthalinListName(gameModeId) : current.group}</h3>
+            <h3>{current.group === MISTHALIN ? misthalinName : current.group}</h3>
             <span className="owl-yellow-s">{current.got} / {current.areas.length} unlocked</span>
             <span className="owl-legend"><span style={{ color: '#0dc10d' }}>Unlocked</span>{canOmni && <span style={{ color: '#c77dff' }}>Omni-Key</span>}<span style={{ color: '#ff3030' }}>Locked</span></span>
             <span className="oact-note"><NoteTrigger id={current.group} title={current.group} suspendModals={suspendModals} /></span>

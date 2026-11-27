@@ -717,6 +717,100 @@
         "url": "https://oldschool.runescape.wiki/w/Old_Man_Ral's_Supplies?oldid=15318712",
         "revision": 15318712
       }
+    },
+    {
+      "name": "Oobapohk's Javelin Store",
+      "status": "stocked",
+      "requirements": [
+        "Monkey Madness II Complete the quest"
+      ],
+      "note": "The source gives the store no gate; it opens once Monkey Madness II is completed.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Oobapohk's_Javelin_Store?oldid=14991780",
+        "revision": 14991780
+      }
+    },
+    {
+      "name": "Martin Thwait's Lost and Found",
+      "status": "stocked",
+      "replaces": [
+        "Access Martin Thwait's shop"
+      ],
+      "requirements": [
+        "Agility level 50",
+        "Thieving level 50"
+      ],
+      "note": "The store asks for 50 Thieving and 50 Agility, or 99 Thieving; the 99 Thieving way is not modelled.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Martin_Thwait's_Lost_and_Found?oldid=15318685",
+        "revision": 15318685
+      }
+    },
+    {
+      "name": "Ali's Discount Wares",
+      "status": "stocked",
+      "replaces": [
+        "Access Ali's shop"
+      ],
+      "note": "Ali's own stock needs nothing on members worlds; the flyer is for free-to-play worlds only. His Rogue Trader stores are separate shops.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Ali's_Discount_Wares?oldid=15355193",
+        "revision": 15355193
+      }
+    },
+    {
+      "name": "Razmire Builders Merchants",
+      "status": "stocked",
+      "replaces": [
+        "Shades of Mort'ton 2"
+      ],
+      "requirements": [
+        "Shades of Mort'ton Complete the quest"
+      ],
+      "note": "The store opens once Shades of Mort'ton is completed; Razmire's general store opens during the quest.",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Razmire_Builders_Merchants?oldid=15318751",
+        "revision": 15318751
+      }
+    },
+    {
+      "name": "Worm Tongue's Wares",
+      "status": "stocked",
+      "sourceNames": [
+        "Worm Tounge's Wares"
+      ],
+      "requirements": [
+        "Access Worm Tongue's Wares"
+      ],
+      "replaces": [
+        "Access Worm Tounge's Wares"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Worm_Tongue's_Wares?oldid=15318850",
+        "revision": 15318850
+      }
+    },
+    {
+      "name": "Huito's Herbal Supplies",
+      "status": "stocked",
+      "sourceNames": [
+        "Huita's Herbal Supplies"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Huito's_Herbal_Supplies?oldid=15322178",
+        "revision": 15322178
+      }
+    },
+    {
+      "name": "Arhein's General Goods",
+      "status": "stocked",
+      "sourceNames": [
+        "Arhein Store"
+      ],
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/Arhein's_General_Goods?oldid=15318491",
+        "revision": 15318491
+      }
     }
   ]
 }

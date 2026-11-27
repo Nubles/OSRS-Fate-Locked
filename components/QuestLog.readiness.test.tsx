@@ -80,8 +80,9 @@ describe('quest journal skill alternatives in Vanilla', () => {
     const unlocks: UnlockState = {
       ...account(),
       // Smithing (steel bars) and Woodcutting (magic logs) since the 10 October 2026 item audit.
-      skills: { Thieving: 6, Firemaking: 5, Magic: 5, Slayer: slayerTier, Smithing: 3, Woodcutting: 8 },
-      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10, Smithing: 30, Woodcutting: 75 },
+      // Crafting (molten glass) since the 23 November 2026 item audit.
+      skills: { Thieving: 6, Firemaking: 5, Magic: 5, Slayer: slayerTier, Smithing: 3, Woodcutting: 8, Crafting: 1 },
+      levels: { Thieving: 53, Firemaking: 50, Magic: 50, Slayer: 10, Smithing: 30, Woodcutting: 75, Crafting: 1 },
       regions: [...quest.regions],
       quests: [...quest.prereqs, ...(plagueCity ? ['Plague City'] : [])],
       merchants: ['Spice Shops'],
@@ -101,7 +102,9 @@ describe('quest journal skill alternatives in Vanilla', () => {
   it('counts the gas-mask confirmation once instead of also demanding Slayer training', () => {
     const html = desertTreasure(true);
     expect(html).toContain('Have a gas mask from Plague City');
-    expect(html).toContain('27/28 reqs');
+    const progress = html.match(/(\d+)\/(\d+) reqs/);
+    expect(progress).not.toBeNull();
+    expect(Number(progress![2]) - Number(progress![1])).toBe(1);
     expect(html).not.toContain('Training guide: Slayer');
     expect(html).not.toContain('Ready to complete!');
   });

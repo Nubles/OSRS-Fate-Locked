@@ -12,9 +12,11 @@ import { X, Webhook, Send, Link2, BookOpen, Copy } from 'lucide-react';
 import { relaySync } from '../services/relaySync';
 import {
   deleteProgress, formatLinkCode, newProgressShareRecord, publishProgress,
-  readProgressShare, requestLinkCode, writeProgressShare,
+  readProgressShare, replaceRefusedShare, requestLinkCode, writeProgressShare, type PublishResult,
 } from '../utils/progressShare';
-import type { ProgressShareRecord } from '../utils/progressShareRecord';
+import {
+  PROGRESS_SHARE_EVENT, type ProgressShareEventDetail, type ProgressShareRecord,
+} from '../utils/progressShareRecord';
 
 /** The public Adventurer's Log page for a shared run (index.tsx, #/log/<id>). */
 export const adventurersLogUrl = (id: string): string =>
@@ -137,21 +139,48 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
   const [link, setLink] = useState<LinkState>({ kind: 'idle' });
   const [now, setNow] = useState(() => Date.now());
 
+  // A move to a new id (replaceRefusedShare) while the window is open shows its new Log link.
+  useEffect(() => {
+    const onChange = (event: Event) => {
+      if ((event as CustomEvent<ProgressShareEventDetail>).detail?.storageKey === storageKey) setRecord(readProgressShare(storageKey));
+    };
+    window.addEventListener(PROGRESS_SHARE_EVENT, onChange);
+    return () => window.removeEventListener(PROGRESS_SHARE_EVENT, onChange);
+  }, [storageKey]);
+
   useEffect(() => {
     if (link.kind !== 'code') return;
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [link.kind]);
 
-  /** Publish the run's summary now, as `next` says (public or not), instead of waiting for the driver. */
-  const publishNow = useCallback(async (next: ProgressShareRecord) => {
+  /**
+   * Publish the run's summary now, as `next` says (public or not), instead of
+   * waiting for the driver. A tab that does not own the save holds older
+   * progress, so it only saves the record: the owner tab's driver publishes it.
+   */
+  const publishNow = useCallback(async (next: ProgressShareRecord): Promise<PublishResult | { ok: false; held: true }> => {
+    if (game.saveOwnershipStatus !== 'owner') return { ok: false, held: true };
     const { buildProgressSnapshot } = await import('../utils/progressSnapshot');
     const snapshot = buildProgressSnapshot({
       unlocks: game.unlocks, history: game.history, gameModeId: game.gameModeId,
       customMode: game.customMode, linkedAccount: game.linkedAccount, publicLog: next.publicLog === true,
     });
     return publishProgress(relaySync.base(), next, snapshot);
-  }, [game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
+  }, [game.saveOwnershipStatus, game.unlocks, game.history, game.gameModeId, game.customMode, game.linkedAccount]);
+
+  /**
+   * Publish `next`; when the relay refuses this run's id because another token
+   * holds it, move the run to a new id (which tells the player) and publish that.
+   */
+  const publishOrMove = useCallback(async (next: ProgressShareRecord) => {
+    const published = await publishNow(next);
+    if (published.ok || !('error' in published) || published.error !== 'forbidden') return { published, record: next };
+    const moved = replaceRefusedShare(storageKey, next);
+    if (!moved || moved.id === next.id) return { published, record: next };
+    setRecord(moved);
+    return { published: await publishNow(moved), record: moved, moved: true };
+  }, [storageKey, publishNow]);
 
   const getCode = useCallback(async () => {
     setLink({ kind: 'working' });
@@ -161,25 +190,26 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     setRecord(next);
     const base = relaySync.base();
     // A code needs a published run, so publish now. A refusal within a minute means one is already there.
-    const published = await publishNow(next);
+    const { published, record: shared } = await publishOrMove(next);
     if (!published.ok && 'error' in published) {
       setLink({ kind: 'error', message: published.error === 'network'
         ? 'Could not reach the relay. Check your connection and try again.'
-        : 'The relay refused this run\'s progress. Turn sharing off and on, then try again.' });
+        : 'The relay refused this run\'s progress. Try again later.' });
       return;
     }
-    const issued = await requestLinkCode(base, next);
+    const issued = await requestLinkCode(base, shared);
     setNow(Date.now());
     setLink(issued.ok
       ? { kind: 'code', code: issued.code, expiresAt: issued.expiresAt }
       : { kind: 'error', message: 'Could not get a link code. Try again in a minute.' });
-  }, [storageKey, publishNow]);
+  }, [storageKey, publishOrMove]);
 
   const [logBusy, setLogBusy] = useState(false);
   /**
    * Make the run's Adventurer's Log public (sharing turns on with it) or
    * private again. The change is published straight away; if the relay asks
-   * to wait, ProgressShareDriver sends it once the minute is up.
+   * to wait, ProgressShareDriver sends it within a few minutes, and the toast
+   * says so rather than claiming it is done.
    */
   const setPublicLog = useCallback(async (on: boolean) => {
     setLogBusy(true);
@@ -188,16 +218,22 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
     const next: ProgressShareRecord = on ? { ...base, publicLog: true } : { id: base.id, token: base.token, enabled: base.enabled };
     writeProgressShare(storageKey, next);
     setRecord(next);
-    const published = next.enabled ? await publishNow(next) : { ok: true };
+    const { published, moved } = next.enabled ? await publishOrMove(next) : { published: { ok: true }, moved: false };
     setLogBusy(false);
-    if (!published.ok && 'error' in published) {
+    if (moved) {
+      // replaceRefusedShare has told the player the link changed.
+    } else if (!published.ok && 'held' in published) {
+      showToast('Saved. It goes to the relay from the tab that is saving your progress.');
+    } else if (!published.ok && 'error' in published) {
       showToast('Could not reach the relay. It will try again shortly.');
+    } else if (!published.ok) {
+      showToast(on ? 'Your Adventurer\'s Log goes public within a few minutes' : 'Your Adventurer\'s Log goes private within a few minutes');
     } else if (on) {
       showToast('Your Adventurer\'s Log is public');
     } else {
       showToast('Your Adventurer\'s Log is private again');
     }
-  }, [storageKey, publishNow]);
+  }, [storageKey, publishOrMove]);
 
   const copyLogLink = useCallback(async () => {
     if (!record) return;
@@ -239,6 +275,11 @@ const ProgressLinkSection: React.FC<{ storageKey: string; expanded: boolean; onE
             Share a summary of this run (your linked account name, mode, start date, areas, quests,
             diaries, Combat Achievements and your last few unlocks) so <span className="text-gray-200">/progress</span> in the Fate Locked
             Discord can show it. Your save never leaves this device.
+          </p>
+          <p className="text-[12px] text-gray-400 mb-2">
+            Once you <span className="text-gray-200">/link</span>, new unlocks post in #live-unlocks with your Discord server name,
+            and the tracker&apos;s Clan chat shows those posts to everyone who opens the tracker.
+            {' '}<span className="text-gray-200">/unlink</span> stops new posts but does not remove ones already posted.
           </p>
           {link.kind === 'code' && secondsLeft > 0 ? (
             <div className="bg-black/40 border border-indigo-500/40 rounded-lg p-3 mb-2 text-center">

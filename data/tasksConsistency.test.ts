@@ -1,3 +1,4 @@
+import { OCEAN_CHUNK_KEYS } from '../utils/oceanAccess';
 import { describe, it, expect } from 'vitest';
 import { ALL_CA_TASKS } from './caTasks';
 import { ALL_DIARY_TASKS } from './diaryTasks';
@@ -137,10 +138,10 @@ describe('Quest data integrity', () => {
     ...(q.oneOf ?? []).flatMap(option => option.locations ?? []),
   ];
 
-  it('classifies all 219 journal entries with an explicit kind and access policy', () => {
+  it('classifies all 220 journal entries with an explicit kind and access policy', () => {
     const quests = Object.values(QUEST_DATA);
-    expect(quests).toHaveLength(219);
-    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(200); // two quests each on 3, 11 and 18 Nov 2026, and Daddy's Home became one
+    expect(quests).toHaveLength(220);
+    expect(quests.filter(quest => quest.kind === 'quest')).toHaveLength(201);
     expect(quests.filter(quest => quest.kind === 'miniquest')).toHaveLength(19);
     expect(quests.filter(quest =>
       !['quest', 'miniquest'].includes(quest.kind),
@@ -217,7 +218,7 @@ describe('Quest data integrity', () => {
         }
         for (const coord of location.chunkOptions) {
           const key = chunkKey(coord);
-          if (!VALID_CHUNK.has(key)) badChunks.push(questId + ' -> ' + location.id + ' -> ' + key);
+          if (!VALID_CHUNK.has(key) && !OCEAN_CHUNK_KEYS.has(key)) badChunks.push(questId + ' -> ' + location.id + ' -> ' + key);
         }
       }
     }

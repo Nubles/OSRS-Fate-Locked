@@ -84,20 +84,22 @@ describe('quest Wilderness access', () => {
   });
 
   it.each([
-    ['sequence 1', ['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]],
+    ['sequence 1', ['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]],
     ['sequence 2', ['Wilderness Bandit Camp', 'Graveyard of Shadows', 'Port Sarim', 'Edgeville', 'Slayer Tower']],
     ['sequence 3', ['Bandit Camp', 'Lava Maze', 'Tree Gnome Stronghold', 'Falador', 'Edgeville']],
-  ])('allows Curse of the Empty Lord through %s without the full Wilderness', (_name, route) => {
+  ])('allows Curse of the Empty Lord through %s without the full Wilderness', (name, route) => {
     const result = evaluateQuestEligibility(QUEST_DATA['Curse of the Empty Lord'], unlocked({
       regions: ['Baxtorian Falls', ...route],
-      skills: { Thieving: 6 },
-      levels: { Thieving: 53 },
+      skills: { Thieving: 6, Prayer: name === 'sequence 2' ? 4 : 0 },
+      levels: { Thieving: 53, Prayer: name === 'sequence 2' ? 31 : 1 },
       equipment: { Ring: 1, Neck: 1 },
     }), 'vanilla');
 
     expect(result.machineEligible).toBe(true);
     expect(result.blockers).toEqual([]);
     expect(result.manualChecks).toEqual([
+      'Can reach the ghosts in the sequence Valdez assigned, including the upstairs monastery for sequence 2',
+      'Can wear a ghostspeak amulet, or Morytania legs 2 or better outside the Entrana sequence',
       'Started Desert Treasure I', 'Started The Restless Ghost',
     ]);
   });

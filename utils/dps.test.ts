@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   effectiveLevel, maxHitFromStr, maxHitMagic, attackRoll, defenceRoll,
-  hitChance, potionBoost, computeDps, POTIONS, DpsInput, formatTimeToKill,
+  hitChance, potionBoost, computeDps, POTIONS, PRAYERS, DpsInput, formatTimeToKill,
 } from './dps';
 
 describe('formatTimeToKill', () => {
@@ -135,6 +135,46 @@ describe('dps formulas', () => {
     expect(lowStrength.effStr).toBe(73);
   });
 
+  it('takes monster flat armour off successful melee and ranged hits, never below 0', () => {
+    // Wiki "Flat armour" (rev 15382660): subtracted from the final damage roll of
+    // successful melee and ranged attacks; negative values add damage; misses stay 0;
+    // player magic ignores it. The Wiki DPS calculator floors the result at 0.
+    const perHit = (r: { dps: number; hitChance: number; attackInterval: number }) => (r.dps * r.attackInterval) / r.hitChance;
+    const melee = (flatArmour: number, meleeStr = 82) => computeDps({
+      ...baseInput(), gear: { ...baseInput().gear, meleeStr }, monster: { ...baseInput().monster, flatArmour },
+    });
+    const plain = melee(0);
+    expect(computeDps(baseInput()).dps).toBe(plain.dps); // No flat armour: unchanged.
+    const max = plain.maxHit;
+    expect(perHit(plain)).toBeCloseTo(max / 2 + 1 / (max + 1), 10);
+    // Veiled kraken, 15: rolls 0..max, a 0 becomes 1, then 15 comes off each.
+    let sum = 0;
+    for (let d = 0; d <= max; d++) sum += Math.max(0, Math.max(1, d) - 15);
+    const kraken = melee(15);
+    expect(perHit(kraken)).toBeCloseTo(sum / (max + 1), 10);
+    expect(kraken.hitChance).toBe(plain.hitChance); // Accuracy is untouched.
+    // A max hit below the armour deals nothing.
+    const weak = melee(15, -60);
+    expect(weak.maxHit).toBeLessThanOrEqual(15);
+    expect(weak.dps).toBe(0);
+    expect(weak.ttk).toBe(Infinity);
+    // Blue Moon, -5: five more damage on every successful hit.
+    expect(perHit(melee(-5))).toBeCloseTo(max / 2 + 1 / (max + 1) + 5, 10);
+    // Ranged is reduced too.
+    const ranged = (flatArmour: number) => computeDps({
+      ...baseInput(), style: 'ranged', attackType: 'ranged', stanceId: 'accurate',
+      gear: { ...baseInput().gear, rangedStr: 60 }, monster: { ...baseInput().monster, flatArmour },
+    });
+    expect(ranged(4).dps).toBeLessThan(ranged(0).dps);
+    // Player magic ignores both positive and negative flat armour.
+    const magic = (flatArmour: number) => computeDps({
+      ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'standard', baseSpellMax: 30,
+      monster: { ...baseInput().monster, flatArmour },
+    }).dps;
+    expect(magic(15)).toBe(magic(0));
+    expect(magic(-5)).toBe(magic(0));
+  });
+
   it('adds magic prayer damage to equipment damage before rounding the max hit', () => {
     const input: DpsInput = { ...baseInput(), style: 'magic', attackType: 'magic', stanceId: 'standard', baseSpellMax: 50 };
     expect(computeDps({ ...input, prayerId: 'mystic' }).maxHit).toBe(51);
@@ -169,5 +209,54 @@ describe('dps formulas', () => {
     const acc = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'accurate', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
     const rapid = computeDps({ ...baseInput(), style: 'ranged', stanceId: 'rapid', gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
     expect(rapid.attackInterval).toBeLessThan(acc.attackInterval);
+  });
+
+  it('takes the atlatl\'s max hit from Strength and melee strength, its accuracy from Ranged', () => {
+    // Wiki "Eclipse atlatl": max hit from the melee strength bonus and visible Strength boosts,
+    // accuracy from the ranged bonus; ranged prayers boost both.
+    const atlatl = (over: Partial<DpsInput> = {}, meleeStr = 40): DpsInput => ({
+      ...baseInput(), style: 'ranged', attackType: 'ranged', stanceId: 'rapid', weaponName: 'Eclipse atlatl',
+      levels: { attack: 1, strength: 99, ranged: 99, magic: 1 },
+      gear: { accuracy: 87, meleeStr, rangedStr: 0, magicDmgPct: 0, speedTicks: 5 }, ...over,
+    });
+    expect(computeDps(atlatl()).maxHit).toBe(17);                   // floor(0.5 + 107 * 104 / 640)
+    expect(computeDps(atlatl({}, 50)).maxHit).toBe(19);             // + amulet of strength (+10)
+    expect(computeDps(atlatl({ prayerId: 'rigour' })).maxHit).toBe(21); // floor(99 * 1.23) + 8 = 129
+    expect(computeDps(atlatl({ stanceId: 'accurate' })).effStr).toBe(110);
+    // A Ranging potion boosts Ranged (accuracy) but not Strength (damage).
+    const potion = computeDps(atlatl({ potionId: 'ranging' }));
+    expect(potion.maxHit).toBe(17);
+    expect(potion.effAtk).toBe(99 + 4 + 9 + 8);
+    // Ranged level and ranged strength no longer move the max hit; Strength does.
+    expect(computeDps(atlatl({ levels: { attack: 1, strength: 99, ranged: 75, magic: 1 } })).maxHit).toBe(17);
+    expect(computeDps(atlatl({ levels: { attack: 1, strength: 70, ranged: 99, magic: 1 } })).maxHit).toBe(13);
+    // Any other ranged weapon still uses Ranged and ranged strength.
+    expect(computeDps(atlatl({ weaponName: 'Magic shortbow' })).maxHit).toBe(11);
+  });
+
+  it('offers the 15% melee pair, Hawk Eye, Deadeye, Mystic Lore and Mystic Vigour', () => {
+    const run = (over: Partial<DpsInput>) => computeDps({ ...baseInput(), ...over });
+    // 99 Strength, Aggressive, Ultimate Strength: floor(99 * 1.15) + 3 + 8 = 124.
+    const ultimate = run({ prayerId: 'ultimate' });
+    expect(ultimate.effStr).toBe(124);
+    expect(ultimate.effAtk).toBe(113 + 8);
+    const ranged = (prayerId: string) => run({ style: 'ranged', attackType: 'ranged', stanceId: 'rapid', prayerId,
+      gear: { accuracy: 70, meleeStr: 0, rangedStr: 70, magicDmgPct: 0, speedTicks: 5 } });
+    expect(ranged('hawk').effAtk).toBe(108 + 8);
+    expect(ranged('hawk').effStr).toBe(108 + 8);
+    expect(ranged('deadeye').effAtk).toBe(116 + 8);
+    expect(ranged('deadeye').effStr).toBe(116 + 8);
+    const magic = (prayerId: string) => run({ style: 'magic', attackType: 'magic', stanceId: 'standard', prayerId, baseSpellMax: 40,
+      gear: { accuracy: 70, meleeStr: 0, rangedStr: 0, magicDmgPct: 0, speedTicks: 5 } });
+    expect(magic('lore').effAtk).toBe(108 + 9);
+    expect(magic('lore').maxHit).toBe(40);     // floor(40 * 1.01)
+    expect(magic('vigour').effAtk).toBe(116 + 9);
+    expect(magic('vigour').maxHit).toBe(41);   // floor(40 * 1.03)
+  });
+
+  it('lists each style\'s prayers in Prayer-level order', () => {
+    expect(PRAYERS.melee.map(p => p.id)).toEqual(['none', 'clarity', 'ultimate', 'chivalry', 'piety']);
+    expect(PRAYERS.ranged.map(p => p.id)).toEqual(['none', 'hawk', 'eagle', 'deadeye', 'rigour']);
+    expect(PRAYERS.magic.map(p => p.id)).toEqual(['none', 'lore', 'mystic', 'vigour', 'augury']);
   });
 });

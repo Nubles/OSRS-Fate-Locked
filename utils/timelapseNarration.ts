@@ -1,5 +1,19 @@
-import { LogEntry } from '../types';
+import { LogEntry, TableType } from '../types';
 import { formatKeyPercent, formatKeyRollValue } from './keyRoll';
+import { tableDisplayName } from './tableDisplay';
+import { chunkLabelWithCoords } from './chunkLabelWithCoords';
+import { BANK_BY_ID } from '../data/banks';
+
+// An unlock's item the way its History card names it. Chunks are stored as
+// their key ("49,50") and banks as their chunk id ("13618"); the reducer logs
+// the place name, so the caption under the card does too.
+const unlockItemLabel = (e: LogEntry): string | undefined => {
+  const item = e.meta?.item;
+  if (typeof item !== 'string' || !item) return undefined;
+  if (e.meta?.category === TableType.BANKS) return BANK_BY_ID[item]?.name ?? item;
+  if (e.meta?.category === TableType.CHUNKS && /^-?\d+,-?\d+$/.test(item)) return chunkLabelWithCoords(item);
+  return item;
+};
 
 // Narrator voice — short, slightly dramatic, never cringe. Each returns a
 // single sentence to display under the event card during playback.
@@ -15,17 +29,28 @@ export const narrate = (e: LogEntry): string => {
       } vs ${
         e.threshold === undefined ? '?' : formatKeyPercent(e.threshold)
       }.`;
-    case 'PITY':
-      return `Fate, grown heavy at 50, tips the scales. A key regardless.`;
+    case 'PITY': {
+      // The threshold the run had when this Key came (legacy Casual 30,
+      // Region Rush 45, Custom 10 to 100). Older entries do not record it.
+      const at = e.meta?.pityThreshold;
+      const heavy = Number.isInteger(at) && at > 0 ? `grown heavy at ${at}` : 'grown heavy';
+      return `Fate, ${heavy}, tips the scales. A key regardless.`;
+    }
     case 'ROLL_FAIL':
       return `${e.source ?? 'It'} turns up empty. Another grain of fate settles.`;
     case 'UNLOCK': {
-      const item = e.meta?.item ?? 'something new';
-      const category = e.meta?.category ?? '';
-      return `${item} is unlocked${category ? ` — a new ${category.toLowerCase()} bows open` : ''}.`;
+      const item = unlockItemLabel(e) ?? 'Something new';
+      const category = typeof e.meta?.category === 'string' ? e.meta.category : '';
+      // The table's Spend Keys name, which may be singular, plural or a mass noun.
+      return `${item} is unlocked${category ? ` under ${tableDisplayName(category)}` : ''}.`;
     }
-    case 'ALTAR':
-      return `The altar flares: ${e.message.toLowerCase()}.`;
+    case 'ALTAR': {
+      // Ritual names, places and Keys keep their capitals; a message that
+      // already ends in a mark ('Void Gambit lost.') gets no second one.
+      const said = (e.message ?? '').trim();
+      if (!said) return 'The altar flares.';
+      return `The altar flares: ${said}${/[.!?]$/.test(said) ? '' : '.'}`;
+    }
     case 'LEVEL_UP':
       return /Chaos Key Drop/.test(e.message)
         ? `A crack of Chaos — the world rewards persistence.`
@@ -60,7 +85,7 @@ export const detectMilestones = (history: LogEntry[]): Milestone[] => {
     if (e.type === 'PET' && !seen.has('pet')) { seen.add('pet'); push('First pet!', 'Vorki.png'); }
     if (e.type === 'PITY' && !seen.has('pity')) { seen.add('pity'); push('First Pity Key', 'Shield_slot.png'); }
     if (e.type === 'ROLL_SUCCESS' && !seen.has('success')) { seen.add('success'); push('First Key earned', 'Brass_key.png'); }
-    if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${e.meta?.item ?? '?'}`, 'Brass_key.png'); }
+    if (e.type === 'UNLOCK' && !seen.has('unlock')) { seen.add('unlock'); push(`First unlock: ${unlockItemLabel(e) ?? '?'}`, 'Brass_key.png'); }
     if (e.type === 'LEVEL_UP' && !seen.has('level')) { seen.add('level'); push('First level up', 'Stats_icon.png'); }
     // Chunked's start-chunk Keys log as XTREME_MILESTONE too, so the label names neither mode.
     if (e.type === 'XTREME_MILESTONE') push('Start-area milestone Key', 'Crystal_key.png');

@@ -59,6 +59,28 @@ export const GoalRouteView: React.FC<{ goalId: string }> = ({ goalId }) => {
             ))}
           </div>
         )}
+        {!!route.keys?.length && (
+          <div>
+            <Head icon={<Dices size={11} />} label="Keys" done={met(route.keys)} total={route.keys.length} />
+            {route.keys.map(key => (
+              <div key={key.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={key.met} />
+                <span className={key.met ? 'text-green-300/80' : 'text-gray-300'}>{key.name}</span>
+                {key.detail && <span className="ml-auto font-mono text-[9px] text-gray-500">{key.detail}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+        {!!route.blockers?.length && (
+          <div>
+            <Head icon={<BookOpen size={11} />} label="Also needed" done={met(route.blockers)} total={route.blockers.length} />
+            {route.blockers.map(blocker => (
+              <div key={blocker.name} className="flex items-start gap-1.5 py-px">
+                <Tick met={blocker.met} /><span className="text-gray-300">{blocker.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {route.quests.length > 0 && (
           <div className="md:col-span-2">
             <Head icon={<BookOpen size={11} />} label="Quest chain (in order)" done={met(route.quests)} total={route.quests.length} />

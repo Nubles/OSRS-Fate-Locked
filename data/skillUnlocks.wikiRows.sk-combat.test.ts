@@ -51,7 +51,7 @@ describe('combat skill lists follow the Wiki level-up tables', () => {
     ['Strength', 'Yanille Grapple', 38],
     ['Strength', 'Dorgesh-Kaan Cave Crossing', 70],
     ['Strength', 'Dual Macuahuitl', 75],
-    ['Strength', "Statius's Warhammer", 75],
+    ['Strength', "Statius’s Warhammer", 75],
     ['Strength', 'Crimson Kisten', 85],
     ['Prayer', 'Vestment Robe Tops & Legs', 20],
     ['Prayer', 'Ectoplasmators', 40],

@@ -24,12 +24,20 @@ import {
   resetPendingSavesForTest,
 } from './utils/pendingSaves';
 import { runDrawFloat } from './utils/seededRng';
+import { exportRuneliteBundle } from './utils/runeliteExport';
 
 // Every run draws from its seed or hidden salt (runDrawFloat), never
 // Math.random, so a test that needs a given draw sets it here.
 vi.mock('./utils/seededRng', async importOriginal => {
   const actual = await importOriginal<typeof import('./utils/seededRng')>();
   return { ...actual, runDrawFloat: vi.fn(actual.runDrawFloat) };
+});
+
+// The RuneLite export keeps its real behaviour; a test can make it reject once
+// to stand in for its code failing to load after a deploy.
+vi.mock('./utils/runeliteExport', async importOriginal => {
+  const actual = await importOriginal<typeof import('./utils/runeliteExport')>();
+  return { ...actual, exportRuneliteBundle: vi.fn(actual.exportRuneliteBundle) };
 });
 
 const PROFILE_ID = 'changelog-lifecycle-profile';
@@ -737,6 +745,25 @@ describe('App changelog lifecycle', () => {
     await user.click(within(rules).getByRole('button', { name: 'Close the Rules' }));
     expect(await screen.findByRole('button', { name: 'Next' }, { timeout: 10_000 })).toBeTruthy();
     expect(screen.queryByRole('dialog', { name: 'Rules' })).toBeNull();
+  }, 25_000);
+
+  it('tells the player when the RuneLite export fails instead of doing nothing', async () => {
+    const readyState = JSON.parse(seedOnboardingRun());
+    readyState.hasSeenOnboarding = true;
+    storage.setItem(profileBaseKey(PROFILE_ID), JSON.stringify(readyState));
+    storage.setItem(changelogStorageKey, latestChangelogId);
+    vi.mocked(exportRuneliteBundle).mockRejectedValueOnce(new TypeError(
+      'Failed to fetch dynamically imported module: https://x/assets/runeliteExport-abc.js',
+    ));
+    const user = userEvent.setup();
+    render(<App />);
+
+    // The classic header's RuneLite button exports on its own click.
+    await user.click(await screen.findByTitle(/^Export your run for the RuneLite plugin/, {}, { timeout: 10_000 }));
+
+    expect(await screen.findByText(
+      'Couldn\'t export for RuneLite. Reload the page and try again.', {}, { timeout: 10_000 },
+    )).toBeTruthy();
   }, 25_000);
 
   it('opens the RuneLite guide from the persistent settings menu', async () => {

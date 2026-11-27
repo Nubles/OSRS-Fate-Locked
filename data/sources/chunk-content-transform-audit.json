@@ -33,8 +33,8 @@
     },
     "taskUnlocks": {
       "source": 1958,
-      "imported": 1300,
-      "normalized": 654,
+      "imported": 1295,
+      "normalized": 659,
       "excluded": 4,
       "unresolved": 0
     },
@@ -2013,7 +2013,7 @@
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Agility/Access the Burg de Rot fence shortcut"
+        "Agility/Access the Burgh de Rott fence shortcut"
       ]
     },
     {
@@ -2387,7 +2387,7 @@
       "disposition": "imported",
       "reason": "base-record",
       "targetKeys": [
-        "Agility/Access the Giant's Plateau rock scramble shortcut"
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
       ]
     },
     {
@@ -140393,6 +140393,17 @@
       "sourceKey": "13617",
       "terminal": false,
       "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Rocks (Giants' Plateau)"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
+    },
+    {
+      "category": "chunks",
+      "sourceKey": "13617",
+      "terminal": false,
+      "disposition": "normalized",
       "reason": "section-merged",
       "targetKeys": [
         "13617"
@@ -178214,6 +178225,22 @@
     },
     {
       "category": "lite",
+      "sourceKey": "11316/mon",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "lite-cap",
+      "targetKeys": [
+        "Black demon",
+        "Chicken",
+        "Monk",
+        "Unicorn",
+        "Zombie",
+        "Zombie (Entrana Dungeon)"
+      ],
+      "detail": "8 source values capped at 6"
+    },
+    {
+      "category": "lite",
       "sourceKey": "11318/mon",
       "terminal": false,
       "disposition": "normalized",
@@ -178607,14 +178634,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Ankou",
-        "Greater demon",
-        "Green dragon",
+        "Ghost",
         "Grizzly bear",
-        "Ice giant",
-        "Lesser demon"
+        "Revenant cyclops",
+        "Revenant dark beast",
+        "Revenant ork",
+        "Revenant pyrefiend"
       ],
-      "detail": "18 source values capped at 6"
+      "detail": "11 source values capped at 6"
     },
     {
       "category": "lite",
@@ -178623,14 +178650,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Ankou",
-        "Black demon",
-        "Greater demon",
+        "Black chinchompa (Hunter)",
         "Green dragon",
-        "Ice giant",
-        "Lesser demon"
+        "Revenant cyclops",
+        "Revenant imp",
+        "Revenant ork",
+        "Revenant pyrefiend"
       ],
-      "detail": "20 source values capped at 6"
+      "detail": "13 source values capped at 6"
     },
     {
       "category": "lite",
@@ -179027,14 +179054,14 @@
       "disposition": "normalized",
       "reason": "lite-cap",
       "targetKeys": [
-        "Deadly red spider",
+        "Bloodveld",
+        "Crawling Hand",
         "Giant rat",
-        "Goblin",
-        "Hobgoblin",
+        "Mutated Bloodveld",
         "Rat",
         "Werewolf"
       ],
-      "detail": "27 source values capped at 6"
+      "detail": "30 source values capped at 6"
     },
     {
       "category": "lite",
@@ -179822,6 +179849,83 @@
     },
     {
       "category": "overrides",
+      "sourceKey": "npc-rename/Arthur the Clue Hunter",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12598"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Arthur?oldid=15403573"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Crafting tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Cadmus?oldid=15392208"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Fishing tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12849"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Finlay?oldid=15391237"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Melee combat tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Captain_Harlan?oldid=15397099"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Mining tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12849"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Monlum?oldid=15392174"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Smithing apprentice",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Feoras?oldid=15392250"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "npc-rename/Woodsman tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Wilfred?oldid=15396491"
+    },
+    {
+      "category": "overrides",
       "sourceKey": "npc/Chase",
       "terminal": false,
       "disposition": "normalized",
@@ -179976,6 +180080,223 @@
     },
     {
       "category": "overrides",
+      "sourceKey": "removal/Revenant Caves/Monsters",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12701",
+        "12702",
+        "12703",
+        "12957",
+        "12958",
+        "12959"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Revenant_Caves?oldid=15397220"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Arcis",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6457",
+        "6458"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Arcis?oldid=14768650"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 1)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5690"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_1)?oldid=14768573"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 2)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5691"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_2)?oldid=14768574"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 3)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5691"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_3)?oldid=14768575"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 4)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5690"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_4)?oldid=14768576"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Armourer (tier 5)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5946"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Armourer_(tier_5)?oldid=14768577"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Banker tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Banker_tutor?oldid=15397103"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Cooking tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12849"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Cooking_tutor?oldid=15394354"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Dodgy geezer",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12082"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Dodgy_geezer?oldid=14769468"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Ethereal Lady",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6991"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ethereal_Lady?oldid=15353426"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Ethereal Man",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6991"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ethereal_Man?oldid=15353427"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Master smithing tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12597"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Sani?oldid=15392266"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Piliar",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6457",
+        "7226"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Piliar?oldid=15079282"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Prayer tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Prayer_tutor?oldid=15394355"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Ranged combat tutor",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "12850"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Ranged_combat_tutor?oldid=15399998"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/NPCs/Shayda",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "5943",
+        "6457"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Shayda?oldid=14857329"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/Objects/Dead mushroom ring",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "6460"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Dead_mushroom_ring?oldid=14538407"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "removed/Objects/Pot-boiler",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "13366"
+      ],
+      "detail": "https://oldschool.runescape.wiki/w/Pot-boiler?oldid=15408868"
+    },
+    {
+      "category": "overrides",
       "sourceKey": "requirements/Objects/Anima patch/4922",
       "terminal": false,
       "disposition": "normalized",
@@ -180083,6 +180404,105 @@
         "4922"
       ],
       "detail": "https://oldschool.runescape.wiki/w/Farming_Guild?oldid=15274002"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the Catacombs of Kourend northern crack shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the Catacombs of Kourend northern crack shortcut"
+      ],
+      "detail": "Crack (Catacombs of Kourend, north) rev 15091412: 'It requires 34 Agility to use', |location = [[Catacombs of Kourend]], |quest = No"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the Catacombs of Kourend southern crack shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the Catacombs of Kourend southern crack shortcut"
+      ],
+      "detail": "Crack (Catacombs of Kourend, south) rev 15091411: 'It requires 17 Agility to use', |location = [[Catacombs of Kourend]], |quest = No"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the stepping stones by the waterfall east of Shilo Village shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the stepping stones by the waterfall east of Shilo Village shortcut"
+      ],
+      "detail": "Stepping stones (Karamja) rev 15232652: 'It requires 30 Agility to use the shortcut', east of Shilo Village, map x=2926 y=2950 (region 45,46), |quest = No"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Agility/Access the wrecked ghost ship rocks shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Agility/Access the wrecked ghost ship rocks shortcut"
+      ],
+      "detail": "Rock (wrecked ghost ship) rev 14924635: 'the player requires at least level 25 Agility', north-west of Port Phasmatys, map x=3601 y=3556 (region 56,55); used during Ghosts Ahoy, so no completion gate"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-add/Construction/Access the mausoleum bridge jump shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-content-override",
+      "targetKeys": [
+        "Construction/Access the mausoleum bridge jump shortcut"
+      ],
+      "detail": "Bridge (Mausoleum) rev 15359087: 'Repairing this shortcut requires 59 Construction', {{Agility info |skill2name = Construction |skill2lvl = 59}}"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-level/Agility/Access the Cairn Isle rock slide climb shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Agility/Access the Cairn Isle rock slide climb shortcut"
+      ],
+      "detail": "Rock slide (Cairn Isle) rev 15385418: 'Level 15 Agility is required to attempt using the shortcut', {{Agility info |level = 15}}"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-name/Agility/Access the Burg de Rot fence shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Burgh de Rott fence shortcut"
+      ],
+      "detail": "Low fence rev 15016580: |location = [[Burgh de Rott]]; Burgh de Rott rev 15321957"
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-name/Agility/Access the Giant's Plateau rock scramble shortcut",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: |location = [[Giants' Plateau]]; Giants' Plateau rev 15356442."
+    },
+    {
+      "category": "overrides",
+      "sourceKey": "shortcut-object/Agility/Access the Giants' Plateau rock scramble shortcut/Rocks (Giant's Plateau)",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "name-typo-corrected",
+      "targetKeys": [
+        "Agility/Access the Giants' Plateau rock scramble shortcut"
+      ],
+      "detail": "Rocks (Giants' Plateau) rev 15297332: the page's own title and |map = {{Map|name=Rocks (Giants' Plateau)|x=3393|y=3155}}. Renamed in chunk object lists and shortcut rows alike, so the shortcut still places in the chunk that lists the rocks."
     },
     {
       "category": "questSections",
@@ -220905,6 +221325,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Earth warrior champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -221678,6 +222109,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Ghoul champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -221717,6 +222159,17 @@
       "targetKeys": [
         "Giant champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Giant champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -221792,6 +222245,17 @@
       "targetKeys": [
         "Goblin champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Goblin champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -222448,6 +222912,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Hobgoblin champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -222523,6 +222998,17 @@
       "targetKeys": [
         "Imp champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Imp champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -222877,6 +223363,17 @@
       "targetKeys": [
         "Jogre champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Jogre champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -224099,6 +224596,17 @@
       "targetKeys": [
         "Lesser demon champion scroll^/*"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Lesser demon champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -226954,6 +227462,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Skeleton champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -229322,6 +229841,17 @@
       "terminal": false,
       "disposition": "normalized",
       "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Items/Zombie champion scroll^/*",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
       "targetKeys": [],
       "detail": "F2P Only"
     },
@@ -230057,6 +230587,17 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Monsters/Chicken/12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Chicken/12596-1",
       "terminal": true,
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
@@ -230225,6 +230766,18 @@
       "targetKeys": [
         "Demonic Brutus/12851"
       ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Demonic Brutus/Brutus' Arena",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "Abyssal potato",
+        "Desert Treasure II - The Fallen Empire completed"
+      ],
+      "detail": "Unlock demonic brutus"
     },
     {
       "category": "taskUnlocks",
@@ -230495,6 +231048,17 @@
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
       "targetKeys": []
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Monsters/Evil Chicken/12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
@@ -234249,6 +234813,17 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Objects/Range/12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Objects/Range/12596-1",
       "terminal": true,
       "disposition": "normalized",
       "reason": "subarea-suffix-collapsed",
@@ -235047,10 +235622,10 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Aaron's Archery Appendages./10549",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Aaron's Archery Appendages./10549"
+        "Aaron's Archery Appendages/10549"
       ]
     },
     {
@@ -235058,9 +235633,9 @@
       "sourceKey": "Shops/Ali's Discount Wares./13106-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Ali's Discount Wares./13106"
+        "Ali's Discount Wares/13106"
       ]
     },
     {
@@ -235234,19 +235809,19 @@
       "sourceKey": "Shops/Arnold's Eclectic Supplies./9273-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Arnold's Eclectic Supplies./9273"
+        "Arnold's Eclectic Supplies/9273"
       ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Authentic Throwing Weapons./10549",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Authentic Throwing Weapons./10549"
+        "Authentic Throwing Weapons/10549"
       ]
     },
     {
@@ -235309,9 +235884,9 @@
       "sourceKey": "Shops/Blades by Urbi./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Blades by Urbi./13099"
+        "Blades by Urbi/13099"
       ]
     },
     {
@@ -235710,10 +236285,10 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Dargaud's Bow and Arrows./10549",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Dargaud's Bow and Arrows./10549"
+        "Dargaud's Bow and Arrows/10549"
       ]
     },
     {
@@ -236140,19 +236715,19 @@
       "sourceKey": "Shops/Fernahei's Fishing Hut./11310-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Fernahei's Fishing Hut./11310"
+        "Fernahei's Fishing Hut/11310"
       ]
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Fishing Guild Shop./10293",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Fishing Guild Shop./10293"
+        "Fishing Guild Shop/10293"
       ]
     },
     {
@@ -236189,7 +236764,7 @@
       "sourceKey": "Shops/Frincos' Fabulous Herb Store./11060-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236197,9 +236772,9 @@
       "sourceKey": "Shops/Gabooty's Tai Bwo Wannai Cooperative./11055-2",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gabooty's Tai Bwo Wannai Cooperative./11055"
+        "Gabooty's Tai Bwo Wannai Cooperative/11055"
       ]
     },
     {
@@ -236207,9 +236782,9 @@
       "sourceKey": "Shops/Gabooty's Tai Bwo Wannai Drinky Store./11055-2",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Gabooty's Tai Bwo Wannai Drinky Store./11055"
+        "Gabooty's Tai Bwo Wannai Drinky Store/11055"
       ]
     },
     {
@@ -236226,7 +236801,7 @@
       "sourceKey": "Shops/Gaius' Two Handed Shop./11573-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236302,10 +236877,10 @@
       "category": "taskUnlocks",
       "sourceKey": "Shops/Grud's Herblore Stall./10031",
       "terminal": true,
-      "disposition": "imported",
-      "reason": "base-record",
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Grud's Herblore Stall./10031"
+        "Grud's Herblore Stall/10031"
       ]
     },
     {
@@ -236313,9 +236888,9 @@
       "sourceKey": "Shops/Happy Heroes' H'emporium./11574-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Happy Heroes' H'emporium./11574"
+        "Happy Heroes' H'emporium/11574"
       ]
     },
     {
@@ -236332,7 +236907,7 @@
       "sourceKey": "Shops/Harry's Fishing Shop./11317-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236349,7 +236924,7 @@
       "sourceKey": "Shops/Hickton's Archery Emporium./11317-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236387,9 +236962,9 @@
       "sourceKey": "Shops/Jamila's Craft Stall./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Jamila's Craft Stall./13099"
+        "Jamila's Craft Stall/13099"
       ]
     },
     {
@@ -236406,7 +236981,7 @@
       "sourceKey": "Shops/Jatix's Herblore Shop./11573-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {
@@ -236461,9 +237036,9 @@
       "sourceKey": "Shops/Legends Guild General Store./10804-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Legends Guild General Store./10804"
+        "Legends Guild General Store/10804"
       ]
     },
     {
@@ -236471,9 +237046,9 @@
       "sourceKey": "Shops/Legends Guild Shop of Useful Items./10804-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Legends Guild Shop of Useful Items./10804"
+        "Legends Guild Shop of Useful Items/10804"
       ]
     },
     {
@@ -236483,7 +237058,17 @@
       "disposition": "normalized",
       "reason": "named-location-mapped",
       "targetKeys": [
-        "Mage Arena Staffs./12349"
+        "Mage Arena Staffs/12349"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Mage Arena Staffs./Mage Arena bank",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Mage Arena Staffs/12349"
       ]
     },
     {
@@ -236523,7 +237108,17 @@
       "disposition": "normalized",
       "reason": "named-location-mapped",
       "targetKeys": [
-        "Martin Thwait's Lost and Found./11575"
+        "Martin Thwait's Lost and Found/11575"
+      ]
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Martin Thwait's Lost and Found./Rogues' Den",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "variant-name-cleaned",
+      "targetKeys": [
+        "Martin Thwait's Lost and Found/11575"
       ]
     },
     {
@@ -236618,9 +237213,9 @@
       "sourceKey": "Shops/Nathifa's Bake Stall./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Nathifa's Bake Stall./13099"
+        "Nathifa's Bake Stall/13099"
       ]
     },
     {
@@ -236628,9 +237223,9 @@
       "sourceKey": "Shops/Obli's General Store./11310-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Obli's General Store./11310"
+        "Obli's General Store/11310"
       ]
     },
     {
@@ -236734,9 +237329,9 @@
       "sourceKey": "Shops/Raetul and Co's Cloth Store./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Raetul and Co's Cloth Store./13099"
+        "Raetul and Co's Cloth Store/13099"
       ]
     },
     {
@@ -236764,9 +237359,9 @@
       "sourceKey": "Shops/Razmire Builders Merchants./13875-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Razmire Builders Merchants./13875"
+        "Razmire Builders Merchants/13875"
       ]
     },
     {
@@ -236774,9 +237369,9 @@
       "sourceKey": "Shops/Razmire General Store./13875-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Razmire General Store./13875"
+        "Razmire General Store/13875"
       ]
     },
     {
@@ -236803,17 +237398,28 @@
       "sourceKey": "Shops/Sarah's Farming shop./12083-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Scavvo's Rune Store./12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
     },
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Scavvo's Rune Store./12596-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Scavvo's Rune Store./12596"
+        "Scavvo's Rune Store/12596"
       ]
     },
     {
@@ -237019,9 +237625,9 @@
       "sourceKey": "Shops/The Spice Is Right./13099-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "The Spice Is Right./13099"
+        "The Spice Is Right/13099"
       ]
     },
     {
@@ -237098,11 +237704,22 @@
     {
       "category": "taskUnlocks",
       "sourceKey": "Shops/Valaine's Shop of Champions./12596-1",
+      "terminal": false,
+      "disposition": "normalized",
+      "reason": "reviewed-requirement-rewritten",
+      "targetKeys": [
+        "32 Quest Points"
+      ],
+      "detail": "Champions Guild Questpoints"
+    },
+    {
+      "category": "taskUnlocks",
+      "sourceKey": "Shops/Valaine's Shop of Champions./12596-1",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": [
-        "Valaine's Shop of Champions./12596"
+        "Valaine's Shop of Champions/12596"
       ]
     },
     {
@@ -237199,7 +237816,7 @@
       "sourceKey": "Shops/Ye olde Tea Shoppe./13109-2",
       "terminal": true,
       "disposition": "normalized",
-      "reason": "subarea-suffix-collapsed",
+      "reason": "variant-name-cleaned",
       "targetKeys": []
     },
     {

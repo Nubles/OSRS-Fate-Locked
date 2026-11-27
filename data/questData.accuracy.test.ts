@@ -3,15 +3,24 @@ import { DropSource } from '../types';
 import { QUEST_DATA } from './questData';
 import * as questDataModule from './questData';
 import chunkDoc from '../public/chunk-content.json';
+import type { UnlockState } from '../types';
+import { evaluateQuestEligibility, questRequirementOptionMet } from '../utils/journalStatus';
 
 describe('audited current quest requirements', () => {
-  it("puts A Ruff Situation's Outlaw Camp fight in 48,54, not the Grand Exchange chunk", () => {
+  it("puts A Ruff Situation's Outlaw Camp fight in 48,54 and keeps the first puppy in 49,54", () => {
     // OSRS Wiki 'Outlaw Camp' (rev 15394973): map x=3123 y=3472 r=6, all inside chunk 48,54.
     expect(QUEST_DATA['A Ruff Situation'].locations?.find(location => location.id === 'outlaw-camp'))
       .toMatchObject({ standardAreas: ['Edgeville'], chunkOptions: [{ cx: 48, cy: 54 }] });
     const chunks = chunkDoc.chunks as Record<string, { q?: Record<string, string> }>;
     expect(chunks['12342'].q?.['A Ruff Situation']).toBe('step');
-    expect(chunks['12598'].q?.['A Ruff Situation']).toBeUndefined();
+    // Wiki 'A Ruff Situation' (rev 15402249) ==== First puppy ====: "the dog will stop just north of
+    // the Cooks' Guild, where a cutscene will play" (the Guild's north wall is y 3454). The export's
+    // only 49,54 task is "Follow the dog until the first puppy is found"; the dog stops at 3146,3456,
+    // and waits before the outlaw fight at 3136,3467, both in 49,54 (12598).
+    expect(chunks['12598'].q?.['A Ruff Situation']).toBe('step');
+    expect(Object.entries(chunkDoc.chunks as Record<string, { q?: Record<string, string> }>)
+      .filter(([, entry]) => entry.q?.['A Ruff Situation']).map(([id, entry]) => `${id}:${entry.q!['A Ruff Situation']}`).sort())
+      .toEqual(['12086:first', '12341:step', '12342:step', '12597:step', '12598:step']);
   });
 
   it("pins Witch's Potion to Rimmington without enforcing all Asgarnia", () => {
@@ -103,8 +112,22 @@ describe('18 November 2026 quests (OSRS Wiki, 22 Nov revisions)', () => {
     expect(QUEST_DATA['Rag and Bone Man III'].equipmentRequirements?.map(requirement => requirement.slot)).toEqual(['Head', 'Weapon']);
   });
 
-  it('adds up to the Wiki total of 354 quest points', () => {
-    expect(Object.values(QUEST_DATA).reduce((total, quest) => total + quest.points, 0)).toBe(354);
+});
+
+describe('25 November 2026 quest update', () => {
+  it('tracks The Graveyard with its required levels, quests and starting chunk', () => {
+    const quest = QUEST_DATA['The Graveyard'];
+    expect(quest).toMatchObject({
+      kind: 'quest', points: 3, difficulty: DropSource.QUEST_MASTER, series: 'Fremennik',
+      skills: { Sailing: 65, Agility: 65, Woodcutting: 56, Fletching: 54 },
+      prereqs: ["Olaf's Quest", 'The Fremennik Exiles', 'Pandemonium'],
+    });
+    expect(quest.locations?.[0].chunkOptions).toEqual([{ cx: 42, cy: 58 }]);
+    expect(quest.combatLevel).toBeUndefined();
+  });
+
+  it('adds up to the Wiki total of 357 quest points', () => {
+    expect(Object.values(QUEST_DATA).reduce((total, quest) => total + quest.points, 0)).toBe(357);
   });
 });
 
@@ -146,5 +169,408 @@ describe('quest cape eligibility', () => {
     expect(questCapeIds).not.toContain("Alfred Grimhand's Barcrawl");
     expect(questCapeIds).not.toContain('Mage Arena II');
     expect(questCapeIds?.every(id => QUEST_DATA[id].points > 0)).toBe(true);
+  });
+});
+
+describe('quest item gates checked on the Wiki (23 Nov 2026)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+
+  it("gates Enakhra's Lament's sandstone and granite on Mining 45", () => {
+    // Wiki Enakhra's Lament (rev 15411975): ironman field "Mining 45 to mine granite";
+    // sandstone needs Mining 35. Neither stone has a shop or monster source.
+    expect(QUEST_DATA["Enakhra's Lament"].skills).toEqual({ Crafting: 50, Magic: 39, Prayer: 43, Mining: 45 });
+  });
+
+  it("accepts Enakhra's Lament's logs from any permitted source", () => {
+    expect(QUEST_DATA["Enakhra's Lament"].preparationRequirements).toEqual([
+      { skill: 'Woodcutting', level: 45, action: 'cut the four types of logs',
+        alternative: 'you have normal, oak, willow and maple logs from sources permitted by your run' },
+    ]);
+  });
+
+  it('gates The Fremennik Isles on the Woodcutting and Crafting it makes you use', () => {
+    // Wiki The Fremennik Isles (rev 15413385): ironman field Woodcutting 56 (split logs, Neitiznot
+    // shield) and Crafting 46 (yak-hide armour); no shop or monster gives any of them.
+    expect(QUEST_DATA['The Fremennik Isles'].skills).toEqual({ Construction: 20, Woodcutting: 56, Crafting: 46 });
+  });
+
+  it.each(['Observatory Quest', 'Horror from the Deep', 'Desert Treasure I'])(
+    '%s asks for Crafting 1 to make its molten glass, as Sheep Shearer does for spinning', id => {
+      // Wiki Molten glass (rev 15288555): "cannot be bought in any shop"; made at Crafting 1.
+      expect(QUEST_DATA[id].preparationRequirements).toContainEqual({
+        skill: 'Crafting', level: 1, action: 'make molten glass',
+        alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
+      });
+    });
+
+  it('does not call Observatory Quest ready while Crafting is locked', () => {
+    const quest = QUEST_DATA['Observatory Quest'];
+    const regions = [...quest.regions, ...(quest.locations ?? []).flatMap(location => location.standardAreas)];
+    const locked = evaluateQuestEligibility(quest, unlocks({ regions }), 'vanilla');
+    expect(locked.eligible).toBe(false);
+    expect(locked.manualChecks).toContainEqual(expect.stringContaining('Crafting (level 1) to make molten glass'));
+    const open = evaluateQuestEligibility(quest, unlocks({ regions, skills: { Crafting: 1 }, levels: { Crafting: 1 } }), 'vanilla');
+    expect(open).toMatchObject({ eligible: true, manualChecks: [] });
+  });
+});
+
+describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+  const at = (levels: Record<string, number>) => ({
+    skills: Object.fromEntries(Object.entries(levels).map(([skill, level]) => [skill, Math.ceil(level / 10)])),
+    levels,
+  });
+  const routes = (id: string, state: UnlockState) =>
+    (QUEST_DATA[id].oneOf ?? []).filter(option => questRequirementOptionMet(option, state, 'vanilla'));
+
+  it('accepts alternate Desert Treasure I supplies and lets Fareed be fought without gloves', () => {
+    const quest = QUEST_DATA['Desert Treasure I'];
+    const result = (levels: Record<string, number>, regions: string[] = []) =>
+      evaluateQuestEligibility(quest, unlocks({ ...at(levels), regions }), 'vanilla');
+    const untrained = result({});
+    expect(untrained.manualChecks.join(' ')).toContain('six steel bars from a permitted source');
+    expect(untrained.manualChecks.join(' ')).toContain('twelve magic logs from a permitted source');
+    expect(untrained.blockers.some(blocker => blocker.kind === 'equipment' && blocker.slot === 'Gloves')).toBe(false);
+    const wintertodt = result({ Woodcutting: 50, Firemaking: 50, Smithing: 30 }, ['Wintertodt Camp']);
+    expect(wintertodt.manualChecks.join(' ')).not.toMatch(/magic logs|steel bars/);
+    expect(result({ Woodcutting: 50, Firemaking: 50 }).manualChecks.join(' ')).toContain('twelve magic logs');
+  });
+
+  it('gates the blessed holy symbol for Animal Magnetism on Prayer 31', () => {
+    // Wiki Animal Magnetism (rev 15395095) ironman field: "Holy symbol (Prayer 31, not boostable)";
+    // Wiki Holy symbol (rev 15295070): Brother Jered is upstairs in the monastery (Prayer 31 to enter),
+    // a god book needs Prayer 50, and Davon's Amulet Store stocks none.
+    expect(QUEST_DATA['Animal Magnetism'].skills).toEqual({ Slayer: 18, Crafting: 19, Ranged: 30, Woodcutting: 35, Prayer: 31 });
+  });
+
+  it('lets Animal Magnetism buy its mithril axe only from Lunami in Auburnvale', () => {
+    // Wiki Lunami's Axe Shop (rev 15211381): "the only way to buy a mithril or adamant axe without the
+    // 60 Woodcutting requirement to enter the Woodcutting Guild".
+    const axeShopRoutes = (QUEST_DATA['Animal Magnetism'].oneOf ?? []).filter(option => option.merchants?.includes('Axe Shops'));
+    expect(axeShopRoutes).toHaveLength(4);
+    expect(axeShopRoutes.every(option => option.regions?.includes('Auburnvale'))).toBe(true);
+  });
+
+  it('gives Tears of Guthix a route to the bullseye lantern for its sapphire lantern', () => {
+    // Wiki Tears of Guthix (rev 15292296) ironman field lists Miltog, Smithing 49, Tarn's Lair
+    // skeletons, cave goblins (Thieving 36), wall beasts (Slayer 35) and the Darkmeyer spawn.
+    const quest = QUEST_DATA['Tears of Guthix'];
+    expect(quest.oneOf).toHaveLength(6);
+    expect(routes('Tears of Guthix', unlocks())).toEqual([]);
+    expect(routes('Tears of Guthix', unlocks(at({ Smithing: 49 })))).toHaveLength(1);
+    expect(routes('Tears of Guthix', unlocks(at({ Slayer: 35 })))).toHaveLength(1);
+    expect(routes('Tears of Guthix', unlocks({ merchants: ['Candle Shops'], quests: ['Death to the Dorgeshuun'] }))).toHaveLength(1);
+  });
+
+  it("gives Icthlarin's Little Helper and Sleeping Giants a route to their logs", () => {
+    // Wiki Icthlarin's Little Helper (rev 15401465): willow log from Woodcutting 30, Vampyre Juvinates
+    // (In Aid of the Myreque) or swamp crabs (Priest in Peril). Wiki Sleeping Giants (rev 15241064):
+    // 3 oak logs from Woodcutting 15, small salvage at Sailing 15, or Brutus after The Ides of Milk.
+    expect(QUEST_DATA["Icthlarin's Little Helper"].oneOf).toEqual([
+      { skills: { Woodcutting: 30 } }, { quests: ['In Aid of the Myreque'] }, { quests: ['Priest in Peril'] },
+    ]);
+    expect(QUEST_DATA['Sleeping Giants'].oneOf).toEqual([
+      { skills: { Woodcutting: 15 } }, { skills: { Sailing: 15 }, quests: ['Pandemonium'] }, { quests: ['The Ides of Milk'] },
+    ]);
+    expect(routes("Icthlarin's Little Helper", unlocks(at({ Woodcutting: 29 })))).toEqual([]);
+    expect(routes('Sleeping Giants', unlocks(at({ Woodcutting: 14 })))).toEqual([]);
+  });
+
+  it('asks The Giant Dwarf for a redberry pie route, and Prying Times for Cam Torum with Food Shops', () => {
+    // Wiki The Giant Dwarf (rev 15412711) items: Redberry pie (earlier quests' pies do not count).
+    // Wiki Redberry pie: Cooking 10, or the Pie Shop (Cooks' Guild, Cooking 32) or Yarnio (Cam Torum).
+    const gems = { merchants: ['Gem Shops', 'Ore Merchants'] };
+    expect(routes('The Giant Dwarf', unlocks(gems))).toEqual([]);
+    expect(routes('The Giant Dwarf', unlocks({ merchants: [...gems.merchants, 'Food Shops'] }))).toEqual([]);
+    expect(routes('The Giant Dwarf', unlocks({ merchants: [...gems.merchants, 'Food Shops'], regions: ['Cam Torum'] }))).toHaveLength(1);
+    expect(routes('The Giant Dwarf', unlocks({ ...gems, ...at({ Cooking: 10 }) }))).toHaveLength(1);
+    expect(QUEST_DATA['Prying Times'].oneOf).toEqual([
+      { skills: { Cooking: 10 } }, { merchants: ['Food Shops'], regions: ['Cam Torum'] },
+    ]);
+  });
+
+  it("does not take a guild route the player cannot enter (Cooks' Guild Cooking 32, Warriors' Guild door)", () => {
+    // Wiki Cooks' Guild (rev 15394637): Cooking 32. Wiki Warriors' Guild (rev 15366588): combined Attack
+    // and Strength of 130, or 99 in either.
+    const plague = unlocks({ guilds: ["Cooks' Guild"], regions: ['Rimmington'], ...at({ Farming: 99, Cooking: 31 }) });
+    expect(routes('Plague City', plague)).toEqual([]);
+    expect(routes('Plague City', { ...plague, ...at({ Farming: 99, Cooking: 32 }) })).toHaveLength(2);
+    const dave = unlocks({ guilds: ["Warriors' Guild"], merchants: ['Food Shops'], ...at({ Attack: 60, Strength: 60 }) });
+    expect(routes('RFD: Evil Dave', dave)).toEqual([]);
+    expect(routes('RFD: Evil Dave', { ...dave, ...at({ Attack: 70, Strength: 60 }) })).toHaveLength(1);
+    expect(routes('RFD: Evil Dave', { ...dave, ...at({ Strength: 99 }) })).toHaveLength(1);
+  });
+
+  it('keeps Nature Spirit locked behind Crafting 18 when Weapon Shops is all the run has', () => {
+    // Wiki Silver sickle (rev 15322375): sold only by Ivan's, Efaritay's and Old Man Ral's Supplies,
+    // which open after Sins of the Father or The Blood Moon Rises; both need Nature Spirit.
+    expect(QUEST_DATA['Nature Spirit'].oneOf).toEqual([{ skills: { Crafting: 18 } }]);
+    expect(routes('Nature Spirit', unlocks({ merchants: ['Weapon Shops'] }))).toEqual([]);
+  });
+
+  it('asks Dragon Slayer I for an inn or the Lighthouse store as well as Durrik\'s Goods', () => {
+    // Wiki storeline bucket for Wizard's mind bomb (23 Nov; page rev 15404365): sold by four inns and
+    // The Lighthouse Store (rev 15318804, after Horror from the Deep). Durrik's Goods sells silk but no mind bomb.
+    const deepfin = unlocks({
+      ...at({ Smithing: 34, Sailing: 67 }),
+      regions: ['Varrock', 'Edgeville', 'Draynor Village', 'Lumbridge', 'Rimmington', 'Port Sarim', 'Crandor', 'Dwarven Mine', 'Deepfin Point'],
+      quests: ['Pandemonium'],
+      merchants: ['General Stores'],
+    });
+    expect(routes('Dragon Slayer I', deepfin)).toEqual([]);
+    expect(routes('Dragon Slayer I', { ...deepfin, merchants: ['General Stores', 'Bars & Inns'] })).toHaveLength(1);
+    expect(routes('Dragon Slayer I', {
+      ...deepfin,
+      regions: [...deepfin.regions, 'Lighthouse'],
+      quests: ['Pandemonium', 'Horror from the Deep'],
+    })).toHaveLength(1);
+  });
+
+  it.each<[string, string, Partial<UnlockState>?]>([
+    // Durrik's Goods (rev 15372124) in the Deepfin Mine (Sailing 67) is the only General Store with silk or spice.
+    ['Dragon Slayer I', 'General Stores'], ['Ghosts Ahoy', 'General Stores'], ['Enlightened Journey', 'General Stores'],
+    ['Cold War', 'General Stores'], ['Desert Treasure I', 'General Stores'],
+    // Frankie's Fishing Emporium (Port Piscarilius) is the only fishmonger with raw shark.
+    ['The Fremennik Trials', 'Fishing Shops'],
+    // Razmire Builders Merchants (Mort'ton, after Shades of Mort'ton) is the only limestone seller.
+    ['Regicide', 'Real Estate Agents'],
+    // The Lighthouse Store (after Horror from the Deep) is the only General Store with vodka.
+    ["Eadgar's Ruse", 'General Stores'], ['Bone Voyage', 'General Stores'],
+    // Stew in a Food Shop: only Prifddinas Foodstuffs and the Warriors' Guild food shop.
+    ['The Queen of Thieves', 'Food Shops'],
+    // No shop sells cooked shrimps.
+    ['Family Crest', 'Food Shops'],
+    // ~ Uglug's stuffsies ~ (Jiggig, after Zogre Flesh Eaters) is the only bow string seller.
+    ['Devious Minds', 'Archery Shops'],
+  ])('%s does not count %s alone as a route for its item', (id, merchant, extra = {}) => {
+    const quest = QUEST_DATA[id];
+    const extraMerchants = [...new Set((quest.oneOf ?? []).flatMap(option => option.merchants ?? []))];
+    // Every merchant the quest's routes name, and nothing else: no region, quest or guild, and no level
+    // beyond what the case adds.
+    const state = unlocks({ ...extra, merchants: extraMerchants });
+    const met = routes(id, state).filter(option => option.merchants?.includes(merchant));
+    expect(met).toEqual([]);
+  });
+});
+
+describe('quest places checked on the Wiki (24 Nov 2026)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: { Slayer: 40 }, levels: { Slayer: 40 }, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+
+  it("asks Rag and Bone Man II for the only areas that hold some of its bones", () => {
+    // Wiki Rag and Bone Man II (rev 15413780) ==List== and the monster pages' LocLines:
+    // Mogre only at Mudskipper Point (46,48); Undead cow only at Alice's farm (56,55, Port
+    // Phasmatys); Ghoul only in 53,54 (Paterdomus). The bat wing is 'Near the Odd Old Man (must be
+    // the bats near the limestone quarry)': the Bat page's Silvarea LocLine is 52,54. Nothing else
+    // on the list stands at the Slayer Tower (53,55) or in the Haunted Woods, so both are dropped.
+    expect(QUEST_DATA['Rag and Bone Man II'].regions).toEqual([
+      'Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah', 'Rellekka',
+      'Canifis', "Fenkenstrain's Castle", 'Mudskipper Point', 'Port Phasmatys', 'Paterdomus',
+    ]);
+  });
+
+  it("names Rag and Bone Man II's either-or bone areas as checks the player confirms", () => {
+    // Vulture: north of Sophanem (51,44), the Agility Pyramid (52,44) or Menaphos (50,44).
+    // Troll: Death Plateau, Troll Stronghold and Trollheim (Burthorpe), the Keldagrim entrance
+    // (43,58, Mountain Camp), south of Mount Quidamortem, Wyrmscraig Cavern. Basilisk: the
+    // Fremennik Slayer Dungeon (2797,3616, Mountain Camp) or Jormungand's Prison. Dagannoth:
+    // Lighthouse, Waterbirth Island, Catacombs of Kourend, Jormungand's Prison. Jogre: Tai Bwo
+    // Wannai (45,47), Shilo Village (45,46), the Ardougne Zoo (40,51) or the God Wars Dungeon.
+    const manual = QUEST_DATA['Rag and Bone Man II'].manualRequirements ?? [];
+    expect(manual).toEqual(expect.arrayContaining([
+      'Reached vultures north of Sophanem, the Agility Pyramid or Menaphos',
+      'Reached trolls in Burthorpe (Death Plateau, Trollheim, Troll Stronghold), Mountain Camp (the Keldagrim entrance), Mount Quidamortem or Wyrmscraig Cavern',
+      "Reached basilisks in the Fremennik Slayer Dungeon (Mountain Camp) or Jormungand's Prison after The Fremennik Exiles",
+      "Reached dagannoths at the Lighthouse after Horror from the Deep, Waterbirth Island after starting The Fremennik Trials, the Catacombs of Kourend or Jormungand's Prison after The Fremennik Exiles",
+      'Reached jogres in Tai Bwo Wannai, Shilo Village, the God Wars Dungeon or the Ardougne Zoo in East Ardougne (with Telekinetic Grab)',
+    ]));
+    expect(manual.filter(line => line.includes('dagannoth'))).toHaveLength(1);
+  });
+
+  it('does not call Rag and Bone Man II available without Mudskipper Point and Port Phasmatys', () => {
+    const quest = QUEST_DATA['Rag and Bone Man II'];
+    // Neither the Slayer Tower nor the Haunted Woods is open here: the quest must open without them.
+    const oldRegions = ['Silvarea', 'Draynor Village', 'Taverley', 'Tree Gnome Stronghold', 'Feldip Hills', 'Nardah',
+      'Rellekka', 'Canifis', "Fenkenstrain's Castle", 'Port Sarim', 'Musa Point'];
+    const state = { quests: ['Rag and Bone Man I', 'Skippy and the Mogres'], merchants: ['Wine Traders', 'Slayer Equipment'] };
+    const locked = evaluateQuestEligibility(quest, unlocks({ ...state, regions: oldRegions }), 'vanilla');
+    expect(locked.blockers.filter(blocker => blocker.kind === 'region').map(blocker => blocker.label))
+      .toEqual(['Mudskipper Point', 'Port Phasmatys']);
+    const open = evaluateQuestEligibility(quest,
+      unlocks({ ...state, regions: [...oldRegions, 'Mudskipper Point', 'Port Phasmatys'] }), 'vanilla');
+    expect(open.blockers).toEqual([]);
+    expect(open.manualChecks).toContainEqual('Reached vultures north of Sophanem, the Agility Pyramid or Menaphos');
+  });
+});
+
+describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
+  const unlocks = (patch: Partial<UnlockState> = {}): UnlockState => ({
+    equipment: {}, skills: {}, levels: {}, regions: [], chunks: [], mobility: [],
+    arcana: [], housing: [], merchants: [], minigames: [], bosses: [], storage: [],
+    guilds: [], farming: [], slayerUnlocks: [], quests: [], diaries: [], cas: [],
+    completedTasks: [], collectionLog: {}, ...patch,
+  });
+  const regionBlockers = (id: string, patch: Partial<UnlockState>, mode = 'vanilla') =>
+    evaluateQuestEligibility(QUEST_DATA[id], unlocks(patch), mode).blockers
+      .filter(blocker => blocker.kind === 'region').map(blocker => blocker.label);
+
+  it("requires the Key Master's lair permission even with no Chunked content loaded", () => {
+    const chunks = ['25,59', '28,60', '26,59'];
+    expect(regionBlockers('Bear Your Soul', { regions: ['Arceuus'] })).toEqual(["Key Master in Cerberus' Lair"]);
+    expect(regionBlockers('Bear Your Soul', { chunks }, 'chunked')).toEqual(["Key Master in Cerberus' Lair"]);
+    expect(regionBlockers('Bear Your Soul', { chunks: [...chunks, '45,53'] }, 'chunked')).toEqual([]);
+    const result = evaluateQuestEligibility(QUEST_DATA['Bear Your Soul'], unlocks({ chunks: [...chunks, '45,53'] }), 'chunked');
+    expect(result.manualChecks).toContain(QUEST_DATA['Bear Your Soul'].manualRequirements![0]);
+  });
+
+  it('checks both sides of the Piscarilius house without a separate jail confirmation', () => {
+    const quest = QUEST_DATA["The Writing's on the Wall"];
+    const chunks = ['23,53', '27,55', '27,59', '23,56', '22,56', '25,55'];
+    expect(regionBlockers(quest.id, { chunks }, 'chunked')).toEqual(["Captain Jensen's top-floor bed"]);
+    const result = evaluateQuestEligibility(quest, unlocks({ chunks: [...chunks, '27,58'] }), 'chunked');
+    expect(result.manualChecks).toEqual([]);
+    expect(result.blockers.filter(b => b.kind === 'region')).toEqual([]);
+  });
+
+  it('checks the Graveyard mooring as open sea and never suggests buying it', () => {
+    const quest = QUEST_DATA['The Graveyard'];
+    const mooring = quest.locations!.find(place => place.id === 'graveyard-mooring')!;
+    const chunks = ['42,58', '41,57', '41,56'];
+    const before = evaluateQuestEligibility(quest, unlocks({ chunks: [...chunks, '43,62'] }), 'chunked');
+    expect(before.blockers).toContainEqual({ kind: 'region', label: mooring.label, location: { areas: [], chunks: [] } });
+    expect(regionBlockers(quest.id, { regions: ['Rellekka'] })).toEqual([mooring.label]);
+    const sailor = unlocks({ chunks, quests: quest.prereqs, skills: { Sailing: 7 }, levels: { Sailing: 65 } });
+    const ready = evaluateQuestEligibility(quest, sailor, 'chunked');
+    expect(ready.evidence).toContain(mooring.label);
+    expect(regionBlockers(quest.id, { ...sailor, regions: ['Rellekka'] })).toEqual([]);
+    expect(ready.manualChecks).toContain(quest.manualRequirements![0]);
+    const stranded = evaluateQuestEligibility(quest, sailor, 'chunked', { strandedAreas: new Set(), strandedChunks: new Set(['43,62']) });
+    expect(stranded.blockers).toContainEqual(expect.objectContaining({ label: 'No route to ' + mooring.label }));
+  });
+
+  it("asks The Writing's on the Wall for every place its walkthrough visits", () => {
+    // Wiki The Writing's on the Wall (rev 15412011) ==Walkthrough==: Betty at Land's End (1519,3438);
+    // "Betty's uncle's house, north west of Tithe Farm" (1784-1790,3521-3527) and Joyce (1774,3526);
+    // "House of Captain Jensen, north west corner Port Piscarilius" (1753-1759,3774-3784); "Go to the
+    // War Tent in the Shayzien Encampment" (1485,3636); the commissioner's house and Kyle (1452,3629);
+    // "Cross the bridge to the island west of Watson's House" (1615,3582).
+    const places = (QUEST_DATA["The Writing's on the Wall"].locations ?? [])
+      .map(place => `${place.standardAreas.join('|')} ${place.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`).join(' ')}`);
+    expect(places).toEqual([
+      "Land's End 23,53", 'Hosidius 27,55', 'Piscarilius 27,58', 'Arceuus 27,59', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
+    ]);
+    expect(regionBlockers("The Writing's on the Wall", { regions: ["Land's End"] })).toEqual([
+      "Betty's uncle's house by the Tithe Farm", "Captain Jensen's top-floor bed", "Captain Jensen's body and the Piscarilius jail cell",
+      'War Tent in the Shayzien Encampment', "The commissioner's house in Shayzien", "Island west of Watson's house",
+    ]);
+    expect(regionBlockers("The Writing's on the Wall",
+      { regions: ["Land's End", 'Hosidius', 'Piscarilius', 'Arceuus', 'Shayzien'] })).toEqual([]);
+    expect(regionBlockers("The Writing's on the Wall", { chunks: ['23,53', '27,55', '27,58', '23,56', '25,55'] }, 'chunked'))
+      .toEqual(["Captain Jensen's body and the Piscarilius jail cell", "The commissioner's house in Shayzien"]);
+  });
+
+  it("requires the warrior outlaw's graveyard instead of the neighbouring cow field", () => {
+    const startAndOutlaws = ['50,50', '49,51', '49,50'];
+    expect(regionBlockers("Mudfoot's Big Adventure", { chunks: [...startAndOutlaws, '50,51'] }, 'chunked'))
+      .toEqual(['Warrior outlaw in Lumbridge Graveyard']);
+    expect(regionBlockers("Mudfoot's Big Adventure", { chunks: [...startAndOutlaws, '50,49'] }, 'chunked'))
+      .toEqual([]);
+  });
+
+  it('requires each of the eleven Enchanted Key digs even when another dig shares its Standard area', () => {
+    const digs = ['42,56', '40,50', '37,52', '38,53', '47,53', '46,51', '47,49', '49,49', '51,50', '51,52', '49,54'];
+    expect(regionBlockers('The Enchanted Key', { chunks: digs }, 'chunked')).toEqual([]);
+    for (const dig of digs) {
+      expect(regionBlockers('The Enchanted Key', { chunks: digs.filter(chunk => chunk !== dig) }, 'chunked'))
+        .toHaveLength(1);
+    }
+  });
+
+  it("asks Curse of the Empty Lord's first sequence for the Chaos Altar, where Kharrim stands", () => {
+    // Wiki Curse of the Empty Lord (rev 15365488) ===Sequence 1===: Kharrim at 2950,3820, "The Chaos
+    // Temple (church) altar in Level 38 Wilderness". 2950,3820 is chunk 46,59, the tracker's Chaos Altar;
+    // its Chaos Temple area is the level 12 temple (50-52,56-59), where no ghost stands.
+    const quest = QUEST_DATA['Curse of the Empty Lord'];
+    expect(quest.oneOf?.[0].regions).toEqual(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]);
+    const route = (areas: string[]) => unlocks({ regions: ['Baxtorian Falls', ...areas] });
+    expect(questRequirementOptionMet(quest.oneOf![0],
+      route(['Wilderness Agility Course', 'Chaos Temple', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(false);
+    expect(questRequirementOptionMet(quest.oneOf![0],
+      route(['Wilderness Agility Course', 'Chaos Altar', "Rogues' Castle", 'Entrana', "Wizards' Tower"]), 'vanilla')).toBe(true);
+  });
+
+  it('requires 31 Prayer only for the upstairs monastery on ghost sequence two', () => {
+    const option = QUEST_DATA['Curse of the Empty Lord'].oneOf![1];
+    const regions = option.regions!;
+    const atLevel = (level: number) => unlocks({ regions, skills: { Prayer: 4 }, levels: { Prayer: level } });
+    expect(questRequirementOptionMet(option, atLevel(30), 'vanilla')).toBe(false);
+    expect(questRequirementOptionMet(option, atLevel(31), 'vanilla')).toBe(true);
+  });
+
+  it('accepts an alternative into Isafdar when the Roving Elves overland route is unavailable', () => {
+    const quest = QUEST_DATA['Roving Elves'];
+    const account = unlocks({ regions: ['Isafdar', 'Baxtorian Falls'], quests: ['Regicide', 'Waterfall Quest'] });
+    const result = evaluateQuestEligibility(quest, account, 'vanilla');
+    expect(result.blockers).toEqual([]);
+    expect(result.manualChecks).toContain('Can reach Islwyn in Isafdar using a permitted charter ship to Port Tyras or an Iorwerth camp teleport');
+  });
+
+  it("does not ask The General's Shadow for the Tree Gnome Stronghold or Falador", () => {
+    // Wiki The General's Shadow (rev 15404136) scout table: Gnomish scout at 2461,3374 "Entrance to the
+    // Tree Gnome Stronghold" (38,52, East Ardougne); Falador Scout at 3072,3344 "Just between the east
+    // wall of Falador and the Draynor Manor western fence" (48,52, Draynor Village).
+    expect(QUEST_DATA["The General's Shadow"].regions)
+      .toEqual(['Rellekka', "Seers' Village", 'Shilo Village', 'Draynor Village', 'Shantay Pass']);
+    expect(regionBlockers("The General's Shadow", {
+      regions: ['Rellekka', "Seers' Village", 'Shilo Village', 'Draynor Village', 'Shantay Pass', 'East Ardougne', 'Fishing Guild'],
+      quests: ['Fight Arena', 'Curse of the Empty Lord'],
+    })).toEqual([]);
+  });
+
+  it('does not ask The Enchanted Key for the Observatory', () => {
+    // Wiki The Enchanted Key (rev 15336907) ==Treasure locations==, 11 sites: 2716,3606 Rellekka;
+    // 2621,3239 East Ardougne; 2417,3382 Arandar; 2448,3443 Tree Gnome Stronghold; 3033,3437 and
+    // 2972,3304 Falador; 3016,3166 Port Sarim; 3161,3176 Lumbridge; 3291,3220 Al Kharid; 3299,3349 and
+    // 3160,3490 Varrock. The page never names the Observatory.
+    expect(QUEST_DATA['The Enchanted Key'].regions).toEqual([
+      'Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid',
+    ]);
+  });
+
+  it("warns Wanted! about Solus's three random chase stops without gating on them", () => {
+    // Wiki Wanted! (rev 15391809) ===Chasing Solus===: "There are seven locations in total, and each
+    // location is random, except for the Champions' Guild, the Dorgesh-Kaan Mine, and the Rune essence
+    // mine, which are always the third, fifth, and seventh locations". ====Random items==== ("vary from
+    // player to player"): Rellekka, Musa Point, Wizards' Tower, Ardougne Market, Castle Wars, the Grand
+    // Tree, Canifis Slayer Tower, Brimhaven pub, Ali Morrisane in Al Kharid, Lumbridge Swamp Caves,
+    // Goblin Village, Dragon Inn (Yanille), McGrubor's Wood, Diango in Draynor Village, Shrine of Scorpius.
+    const quest = QUEST_DATA['Wanted!'];
+    expect(quest.regions).toEqual(['Falador', 'Taverley', 'Varrock', 'Canifis']);
+    expect(quest.oneOf).toBeUndefined();
+    expect(quest.manualRequirements).toHaveLength(1);
+    const line = quest.manualRequirements![0];
+    for (const place of [
+      'Rellekka', 'Musa Point', "Wizards' Tower", 'Ardougne Market (East Ardougne)', 'Castle Wars',
+      'Grand Tree (Tree Gnome Stronghold)', 'Slayer Tower', 'Brimhaven', 'Al Kharid', 'Lumbridge Swamp Caves',
+      'Goblin Village', 'Yanille', "McGrubor's Wood (Seers' Village)", 'Draynor Village', 'Shrine of Scorpius (Ourania Altar)',
+    ]) expect(line).toContain(place);
+    // A check the player confirms, never a region blocker.
+    const result = evaluateQuestEligibility(quest, unlocks({ regions: ['Falador', 'Taverley', 'Varrock', 'Canifis'] }), 'vanilla');
+    expect(result.blockers.filter(blocker => blocker.kind === 'region')).toEqual([]);
+    expect(result.manualChecks).toContain(line);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { join } from 'node:path';
 import {
   ENTRY_GZIP_BUDGET_KB,
   entryScriptPath,
@@ -9,7 +10,7 @@ describe('entry chunk budget', () => {
   it('finds the module entry script that index.html loads', () => {
     const html = '<script type="module" crossorigin src="/OSRS-Fate-Locked/assets/index-AbC123.js"></script>'
       + '<link rel="modulepreload" href="/OSRS-Fate-Locked/assets/vendor-react-X.js">';
-    expect(entryScriptPath('dist', html)).toBe('dist/assets/index-AbC123.js');
+    expect(entryScriptPath('dist', html)).toBe(join('dist', 'assets', 'index-AbC123.js'));
     expect(() => entryScriptPath('dist', '<html></html>')).toThrow('no module entry script');
   });
 

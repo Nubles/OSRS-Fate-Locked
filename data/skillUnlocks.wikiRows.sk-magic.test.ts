@@ -49,7 +49,7 @@ describe('Magic unlocks filled from the Wiki level-up table', () => {
     ['Magic', 'West Ardougne Teleport', 61],
     ['Magic', 'Superior Demonbane', 62],
     ['Magic', 'Warped Sceptre', 62],
-    ['Magic', 'Ape Atoll Teleport (Recipe for Disaster)', 64],
+    ['Magic', 'Ape Atoll Teleport (Freeing King Awowogei for the teleport)', 64],
     ['Magic', 'Lesser Corruption', 64],
     ['Magic', 'Geomancy', 65],
     ['Magic', 'Harmony Island Teleport', 65],

@@ -135,6 +135,23 @@ describe('slayerReachability', () => {
     expect(r.masters[0].rows.map(row => row.status)).toEqual(['area-locked', 'area-locked']);
   });
 
+  // own.d1[3]: a plainly unmet quest wins over a line that can only be asked, as places read (routeStatus).
+  it('reads quest-locked when a definite quest blocker sits beside a question', () => {
+    const konar: SlayerMasters = { 'Test Master': {
+      'Blue dragons - Ruins of Tapoyauik': { weight: 0.67, combat: 65, req: ['Dragon Slayer I 1', 'The Heart of Darkness Complete the quest'] },
+      'Dark beasts - Iorwerth Dungeon': { weight: 2.5, combat: 90, slayer: 90, req: ["Mourning's End Part II 2", 'Song of the Elves Complete the quest'] },
+    } };
+    const strong = { Slayer: 99, Attack: 99, Strength: 99, Defence: 99, Hitpoints: 99, Prayer: 99, Ranged: 99, Magic: 99 };
+    const unlocks = (quests: string[]) => base({ skills: { Slayer: 10 }, levels: strong, quests });
+    const without = slayerReachability(konar, unlocks([]), locate);
+    expect(statusOf(without, 'Blue dragons - Ruins of Tapoyauik')).toBe('quest-locked');
+    expect(statusOf(without, 'Dark beasts - Iorwerth Dungeon')).toBe('quest-locked');
+    // With the quest done only the progress line is open: still a question.
+    const done = slayerReachability(konar, unlocks(['The Heart of Darkness', 'Song of the Elves']), locate);
+    expect(statusOf(done, 'Blue dragons - Ruins of Tapoyauik')).toBe('access-unknown');
+    expect(statusOf(done, 'Dark beasts - Iorwerth Dungeon')).toBe('access-unknown');
+  });
+
   it('asks for Mortimer quest progress without demanding full completion', () => {
     const r = mortimerReach(mortimerUnlocks({ quests: [] }));
 
@@ -207,13 +224,23 @@ describe('slayerReachability', () => {
       const blocked = standardMasterReach(master, base({
         skills: { Slayer: 10 }, levels: { Slayer: 99 }, chunks,
       }), 'chunked');
-      expect(blocked.masters[0].masterBlocker).toEqual({ status: 'area-locked', label: 'Master: Edgeville (48, 54)' });
+      // Vannaka is also reached through the 51 Agility pipe from the Varrock Sewers (area-access.d3[1]).
+      const label = master === 'Vannaka' ? 'Master: Edgeville (48, 54) or Varrock (50, 54) with Agility level 51' : 'Master: Edgeville (48, 54)';
+      expect(blocked.masters[0].masterBlocker).toEqual({ status: 'area-locked', label });
 
       const ready = standardMasterReach(master, base({
         skills: { Slayer: 10 }, levels: { Slayer: 99 }, chunks: [...chunks, '48,54'],
       }), 'chunked');
       expect(ready.masters[0]).not.toHaveProperty('masterBlocker');
     }
+  });
+
+  it('counts the 51 Agility pipe to Vannaka only at 51 Agility (area-access.d3[1])', () => {
+    const at = (agility: number) => standardMasterReach('Vannaka', base({
+      skills: { Slayer: 10, Agility: 6 }, levels: { Slayer: 99, Agility: agility }, chunks: ['50,51', '50,52', '50,53', '50,54'],
+    }), 'chunked').masters[0];
+    expect(at(51)).not.toHaveProperty('masterBlocker');
+    expect(at(50).masterBlocker).toEqual({ status: 'area-locked', label: 'Master: Edgeville (48, 54) or Varrock (50, 54) with Agility level 51' });
   });
 
   it('keeps the named-area master rule outside Chunked', () => {

@@ -36,7 +36,9 @@ after a burst of changes settles, at most every 30 minutes, and earlier when
 the page is hidden with a change waiting, at most every 15 minutes. **Back up
 now** and turning backup on upload at once. An unchanged run is not sent again. Only the tab that owns the
 save uploads. A failed upload is tried again after 5 minutes, and the Online
-tab says why it failed until one works.
+tab says why it failed until one works. When the relay asks it to wait, it
+waits that long, doubled for each refusal in a row (at most 30 minutes), and
+hiding the page does not cut that wait short.
 
 The browser keeps the code and the last upload's time, checksum, run id and
 History length in its own record per profile (`<profile>__onlineBackup`,

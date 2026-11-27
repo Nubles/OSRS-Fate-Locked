@@ -39,7 +39,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Emir's Arena": ["52,50"],
   "Farming Guild": ["19,58"],
   "Fishing Guild": ["40,53"],
-  "Fishing Trawler": ["41,49", "41,50"],
+  "Fishing Trawler": ["41,49"],
   "Fortis Colosseum": ["28,48"],
   "Gemstone Crab": ["19,47", "19,49", "21,48"],
   "General Graardor": ["45,58"],
@@ -53,7 +53,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Heroes' Guild": ["45,54"],
   "Hespori": ["19,58"],
   "Hunter Guild": ["24,47"],
-  "Impetuous Impulses": ["20,57", "21,45", "25,56", "26,47", "27,55", "34,53", "38,54", "39,60", "40,48", "41,52", "43,50", "44,54", "45,53", "46,50", "46,53", "48,51", "49,51", "49,54", "50,49", "50,52", "57,46", "59,44"],
+  "Impetuous Impulses": ["20,57", "21,45", "25,56", "26,47", "27,55", "34,53", "38,54", "39,60", "40,48", "41,52", "43,50", "44,54", "45,53", "46,50", "46,53", "48,51", "49,51", "49,54", "50,52", "57,46", "59,44"],
   "Inferno": ["44,49"],
   "Intelligence Gathering": ["23,56"],
   "K'ril Tsutsaroth": ["45,58"],
@@ -66,7 +66,7 @@ export const ACTIVITY_CHUNKS: Readonly<Record<string, readonly string[]>> = {
   "Mage Arena": ["48,61"],
   "Mage Training Arena": ["52,51"],
   "Maggot King": ["56,52"],
-  "Mahogany Homes": ["27,56", "40,51", "47,52", "50,52"],
+  "Mahogany Homes": ["27,56", "41,51", "46,52", "50,54"],
   "Mastering Mixology": ["21,45"],
   "Mess": ["25,56"],
   "Mining Guild": ["47,52"],
@@ -160,4 +160,19 @@ export const FARM_SLAYER_CARD_CHUNKS: Readonly<Record<string, readonly string[]>
   "Steve": ["38,53"],
   "Turael": ["45,55"],
   "Vannaka": ["48,54"],
+};
+
+/**
+ * Ways in that carry their own requirement, by the name in the tables above:
+ * owning the chunk counts only once every requirement string is met
+ * (utils/activityAccess.ts enterableChunk); label is what players read.
+ * Not in the tables above.
+ */
+export const GATED_ENTRANCE_CHUNKS: Readonly<Record<string, readonly { chunk: string; needs: readonly string[]; label: string }[]>> = {
+  "Obor": [{ chunk: "50,54", needs: ["Agility level 51"], label: "Agility level 51" }],
+  "Tears of Guthix": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Temple Trekking": [{ chunk: "53,54", needs: ["Darkness of Hallowvale completed"], label: "Darkness of Hallowvale" }],
+  "The Fractured Archive": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Tormented Demons": [{ chunk: "50,50", needs: ["Started The Lost Tribe"], label: "The Lost Tribe started" }],
+  "Vannaka": [{ chunk: "50,54", needs: ["Agility level 51"], label: "Agility level 51" }],
 };

@@ -1,5 +1,5 @@
 {
-  "reviewedAt": "2026-09-21",
+  "reviewedAt": "2026-11-23",
   "runeliteSource": {
     "url": "https://github.com/runelite/runelite/blob/master/runelite-client/src/main/java/net/runelite/client/plugins/slayer/Task.java",
     "sha256": "3518aebf230a1bb448f03b2a9fa9bf09813dd0644b1bd762ddceb8d8f397fc68"
@@ -482,7 +482,9 @@
       "Chicken",
       "Chompy bird",
       "Duck",
+      "Duckling",
       "Entrana firebird",
+      "Mounted terrorbird gnome",
       "Oomlie bird",
       "Penguin (monster)",
       "Rooster",
@@ -543,7 +545,8 @@
     "chaos druids": [
       "Chaos druid",
       "Chaos druid warrior",
-      "Elder Chaos druid"
+      "Elder Chaos druid",
+      "Salarin the twisted"
     ],
     "cockatrice": [
       "Cockatrice",
@@ -582,6 +585,8 @@
       "Dagannoth",
       "Dagannoth (Waterbirth Island)",
       "Dagannoth Prime",
+      "Dagannoth Rex",
+      "Dagannoth Supreme",
       "Dagannoth fledgeling",
       "Dagannoth spawn"
     ],
@@ -652,6 +657,20 @@
       "Death wing",
       "Forgotten Soul",
       "Ghost",
+      "Ghost (Grave of Scorpius)",
+      "Ghost (Melzar's Maze)",
+      "Haze",
+      "Revenant cyclops",
+      "Revenant dark beast",
+      "Revenant demon",
+      "Revenant dragon",
+      "Revenant goblin",
+      "Revenant hellhound",
+      "Revenant hobgoblin",
+      "Revenant imp",
+      "Revenant knight",
+      "Revenant ork",
+      "Revenant pyrefiend",
       "Tortured soul"
     ],
     "ghouls": [
@@ -662,7 +681,13 @@
       "Cave goblin guard",
       "Cave goblin miner",
       "Goblin",
+      "Goblin (Goblin Village)",
+      "Goblin (God Wars Dungeon)",
       "Goblin (Vault of War)",
+      "Goblin guard",
+      "Guard (Cave goblin)",
+      "Sergeant Grimspike",
+      "Sergeant Steelwill",
       "Sergeant Strongstack"
     ],
     "greater demons": [
@@ -692,6 +717,8 @@
     ],
     "hill giants": [
       "Cyclops",
+      "Cyclops (Ardougne Zoo)",
+      "Cyclops (Catacombs of Kourend)",
       "Cyclops (God Wars Dungeon)",
       "Hill Giant",
       "Obor"
@@ -795,8 +822,10 @@
     ],
     "monkeys": [
       "Demonic gorilla",
+      "Maniacal Monkey Archer",
       "Maniacal monkey",
       "Monkey (monster)",
+      "Monkey Archer",
       "Monkey Guard",
       "Monkey Zombie",
       "Monkey guard",
@@ -812,8 +841,12 @@
       "Nechryael"
     ],
     "ogres": [
+      "City guard",
+      "Enclave guard",
+      "Gorad",
       "Mogre",
       "Ogre",
+      "Ogre chieftain",
       "Ogress Shaman",
       "Ogress Warrior",
       "Skogre",
@@ -824,13 +857,15 @@
     ],
     "pirates": [
       "Pirate",
-      "Pirate Guard"
+      "Pirate Guard",
+      "Zombie pirate"
     ],
     "pyrefiends": [
       "Pyrefiend",
       "Pyrelord"
     ],
     "rats": [
+      "Blessed giant rat",
       "Brine rat",
       "Crypt rat",
       "Dungeon rat",
@@ -874,6 +909,7 @@
       "Poison Scorpion",
       "Scorpia",
       "Scorpia's guardian",
+      "Scorpia's offspring (monster)",
       "Scorpion"
     ],
     "sea snakes": [
@@ -897,16 +933,30 @@
     ],
     "skeletons": [
       "Calvar'ion",
+      "Giant skeleton (Shadow Dungeon)",
+      "Giant skeleton (Tarn's Lair)",
+      "Skeletal miner",
       "Skeleton",
       "Skeleton (Ape Atoll)",
       "Skeleton (Barrows)",
+      "Skeleton (Catacombs of Kourend)",
       "Skeleton (Draynor Manor)",
+      "Skeleton (Forthos Ruin)",
+      "Skeleton (Lucien's camp)",
       "Skeleton (Melzar's Maze)",
       "Skeleton (Shayzien Crypts)",
       "Skeleton (Tarn's Lair)",
+      "Skeleton (Wilderness Agility Course)",
       "Skeleton (mage)",
       "Skeleton Mage",
+      "Skeleton brute",
+      "Skeleton fremennik",
+      "Skeleton heavy",
+      "Skeleton hero",
+      "Skeleton thug",
+      "Skeleton warlord",
       "Skogre",
+      "Undead one",
       "Vet'ion"
     ],
     "smoke devils": [
@@ -1022,6 +1072,7 @@
       "Armoured zombie (Zemouregal's Base)",
       "Armoured zombie (Zemouregal's Fort)",
       "Monkey Zombie",
+      "Skogre",
       "Sorebones",
       "Undead Druid",
       "Undead Lumberjack",
@@ -1031,8 +1082,17 @@
       "Vorkath",
       "Zogre",
       "Zombie",
+      "Zombie (Entrana Dungeon)",
+      "Zombie (Kourend)",
+      "Zombie (Melzar's Maze)",
+      "Zombie (Sepulchre of Death)",
+      "Zombie (Shayzien Crypts)",
+      "Zombie (Stronghold of Security)",
+      "Zombie (Tarn's Lair)",
+      "Zombie (Wilderness)",
       "Zombie pirate",
       "Zombie pirate (Braindeath Island)",
+      "Zombie pirate (Harmony Island)",
       "Zombie rat",
       "Zombie swab"
     ],

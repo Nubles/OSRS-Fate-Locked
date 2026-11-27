@@ -10,6 +10,7 @@ import { evaluateDiaryTierEligibility } from '../utils/journalStatus';
 import { Pin, Trash2, CheckCircle2, AlertCircle, Route } from 'lucide-react';
 import { enforcedQuestAreas } from '../utils/questGeographyDisplay';
 import { importWithRetry, lazyWithRetry } from '../utils/lazyRetry';
+import { resolvePinnedGoal } from '../utils/pinnedGoal';
 
 // The Resource Engine (its 3,800-item table) and the route planner load only
 // when a pinned goal needs them, not for every run that pins a quest.
@@ -19,7 +20,8 @@ const GoalRouteView = lazyWithRetry(() => import('./GoalRouteView').then(m => ({
 
 /** The requirement a quest or strategy goal is measured against, if it is one. */
 const goalRequirement = (id: string): ContentRequirement | undefined => {
-  const quest = QUEST_DATA[id];
+  // An older save may hold a quest pinned by its name; it reads as that quest.
+  const quest = QUEST_DATA[resolvePinnedGoal(id)];
   // Quest facts and readiness always come from the canonical journal.
   if (quest) {
     return {
@@ -110,7 +112,7 @@ export const GoalTracker: React.FC = () => {
             <div key={id} className={`relative bg-[#1a1a1a] border rounded-lg p-3 group transition-all ${isComplete ? 'border-green-500/30 bg-green-900/5' : 'border-white/10 hover:border-white/20'}`}>
               
               <div className="flex justify-between items-start mb-2">
-                <h4 className={`font-bold text-sm leading-tight pr-4 ${isComplete ? 'text-green-400' : 'text-gray-200'}`}>{id}</h4>
+                <h4 className={`font-bold text-sm leading-tight pr-4 ${isComplete ? 'text-green-400' : 'text-gray-200'}`}>{QUEST_DATA[resolvePinnedGoal(id)]?.name ?? id}</h4>
                 <div className="absolute top-2 right-2 flex items-center gap-1">
                   <button
                     onClick={() => setRouteFor(r => (r === id ? null : id))}

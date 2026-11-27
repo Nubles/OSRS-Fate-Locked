@@ -14,7 +14,7 @@ import { chunkUnlocked, placeOf, chunkUnlockRequirement } from './chunkLocations
 import { ALL_DIARY_TASKS, DiaryTaskRequirementOption, DiaryLocationRequirement, DiaryEquipmentRequirement } from '../data/diaryTasks';
 import { DiaryTier } from '../data/diaryData';
 import { UnlockState } from '../types';
-import { chunkKey, isChunkUnlocked } from './chunkAdjacency';
+import { OCEAN_CHUNK_KEYS, canNavigateOcean } from './oceanAccess';
 import { isAreaReachable } from './reachability';
 import { getFreeAreas } from './freeAreas';
 import { actualCombatLevel, effectiveSkillLevel } from './slayerReach';
@@ -130,6 +130,13 @@ export const meetsSkillRequirement = (
   return tier > 0 && effectiveSkillLevel(unlocks, skill) >= required;
 };
 
+/** The Warriors' Guild door: 99 Attack or Strength, or 130 combined. Tier-capped,
+ *  like the diary's "Enter the Warriors' Guild" task. A quest route through the
+ *  guild needs it as well as the guild unlock. */
+export const meetsWarriorsGuildEntry = (unlocks: Pick<UnlockState, 'skills' | 'levels'>): boolean =>
+  meetsSkillRequirement(unlocks, 'Attack', 99) || meetsSkillRequirement(unlocks, 'Strength', 99)
+  || effectiveSkillLevel(unlocks, 'Attack') + effectiveSkillLevel(unlocks, 'Strength') >= 130;
+
 export const countMetSkillRequirements = (
   requirements: Record<string, number> | undefined,
   unlocks: Pick<UnlockState, 'skills' | 'levels'>,
@@ -180,15 +187,16 @@ export const withSkillGateQuests = (
   ...skillGateQuests(Object.keys(skills ?? {}), [...(quests ?? []), ...(self === undefined ? [] : [self])]),
 ];
 
+const isOceanChunk = ({ cx, cy }: { cx: number; cy: number }): boolean => OCEAN_CHUNK_KEYS.has(`${cx},${cy}`);
+
 export const locationRequirementMet = (
   location: QuestLocationRequirement,
   unlocks: UnlockState,
   gameModeId?: string,
 ): boolean => gameModeId === 'chunked'
-  ? location.chunkOptions.some(coord =>
-      isChunkUnlocked(chunkKey(coord), unlocks.chunks ?? []))
-  : location.standardAreas.every(area =>
-      isAreaReachable(area, unlocks, gameModeId));
+  ? location.chunkOptions.some(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId))
+  : location.standardAreas.every(area => isAreaReachable(area, unlocks, gameModeId))
+    && (!location.chunkOptions.every(isOceanChunk) || canNavigateOcean(unlocks));
 
 export const locationUnlockTargets = (
   location: QuestLocationRequirement,
@@ -197,7 +205,7 @@ export const locationUnlockTargets = (
 ): LocationUnlockTargets => locationRequirementMet(location, unlocks, gameModeId)
   ? { areas: [], chunks: [] }
   : gameModeId === 'chunked'
-    ? { areas: [], chunks: location.chunkOptions }
+    ? { areas: [], chunks: location.chunkOptions.filter(coord => !isOceanChunk(coord)) }
     : { areas: location.standardAreas.filter(area => !isAreaReachable(area, unlocks, gameModeId)), chunks: [] };
 
 export const questRequirementOptionMet = (
@@ -210,7 +218,8 @@ export const questRequirementOptionMet = (
   (!option.anyOfRegions?.length || option.anyOfRegions.some(region =>
     isAreaReachable(region, unlocks, gameModeId))) &&
   (option.guilds ?? []).every(guild =>
-    unlocks.guilds.includes(guild)) &&
+    unlocks.guilds.includes(guild)
+    && (guild !== "Warriors' Guild" || meetsWarriorsGuildEntry(unlocks))) &&
   (option.locations ?? []).every(location =>
     locationRequirementMet(location, unlocks, gameModeId)) &&
   Object.entries(option.skills ?? {}).every(([skill, level]) =>
@@ -231,8 +240,11 @@ const strandedLocation = (
   areaRoutes?: AreaRoutes | null,
 ): boolean => {
   if (!areaRoutes) return false;
-  if (gameModeId !== 'chunked') return location.standardAreas.some(area => strandedArea(area, areaRoutes));
-  const owned = location.chunkOptions.filter(coord => isChunkUnlocked(chunkKey(coord), unlocks.chunks ?? []));
+  if (gameModeId !== 'chunked') {
+    if (location.standardAreas.some(area => strandedArea(area, areaRoutes))) return true;
+    if (!location.chunkOptions.every(isOceanChunk)) return false;
+  }
+  const owned = location.chunkOptions.filter(({ cx, cy }) => chunkUnlocked(cx, cy, unlocks, gameModeId));
   return owned.length > 0 && owned.every(({ cx, cy }) => areaRoutes.strandedChunks.has(`${cx},${cy}`));
 };
 
@@ -385,6 +397,9 @@ export function evaluateQuestEligibility(
   for (const preparation of quest.preparationRequirements ?? []) {
     if (meetsSkillRequirement(unlocks, preparation.skill, preparation.level)) {
       evidence.push(`${preparation.skill} ${preparation.level} to ${preparation.action}`);
+    } else if (preparation.alternateRoute && questRequirementOptionMet(preparation.alternateRoute, unlocks, gameModeId)
+      && !strandedOption(preparation.alternateRoute, unlocks, gameModeId, areaRoutes)) {
+      evidence.push(questRequirementOptionLabel(preparation.alternateRoute));
     } else {
       manualChecks.push(`Unlock ${preparation.skill} (level ${preparation.level}) to ${preparation.action}, or confirm ${preparation.alternative}`);
     }

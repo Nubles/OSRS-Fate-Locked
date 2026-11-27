@@ -228,10 +228,10 @@ const TABLETS: readonly TravelMethod[] = [
   tablet('arceuus', 'Battlefront teleport', [22949], ['21,58'], 15189104),
 ];
 
-// The Guthixian temple scroll lands at 4062,4556, in a region no area or
-// interior covers, so it is left out; so is the Revenant cave scroll, which
-// offers three entrances.
+// The Revenant cave scroll offers three entrances.
 const SCROLLS: readonly TravelMethod[] = [
+  item('scroll:guthixian-temple-teleport', 'Guthixian temple teleport scroll', [29684], [],
+    { Teleport: { to: ['63,71'], quests: ['While Guthix Sleeps'] } }, 'Guthixian temple teleport', 15403048),
   scroll('Nardah teleport', 12402, ['53,45'], 15186014),
   scroll('Digsite teleport', 12403, ['51,53'], 15186009),
   scroll('Feldip hills teleport', 12404, ['39,45'], 15186010),
@@ -546,7 +546,9 @@ const anyStop = (stops: readonly string[], ...options: string[]) =>
 
 /**
  * Each fairy ring code and where it lands, from the wiki's combinations
- * tables. Yu'biusk (BLQ) has no chunk in the app yet.
+ * tables. Yu'biusk (BLQ) has no chunk in the app yet. Grimstone's ring (DLP,
+ * pin 2923,10454, oldid 15397230) lands in Grimstone Dungeon, the chunk
+ * content's interior 45,163, entered from Grimstone (45,63).
  */
 const FAIRY_RING_CODES: Readonly<Record<string, readonly string[]>> = {
   AIQ: ['46,48'], AIR: ['42,50'], AIS: ['22,51'], AJP: ['25,47'], AJQ: ['42,81'], AJR: ['43,56'], AJS: ['39,60'],
@@ -557,7 +559,7 @@ const FAIRY_RING_CODES: Readonly<Record<string, readonly string[]>> = {
   CIP: ['39,60'], CIQ: ['39,48'], CIR: ['20,58'], CIS: ['25,60'], CJQ: ['49,38'], CJR: ['42,55'], CKP: ['32,75'],
   CKQ: ['21,45'], CKR: ['43,46'], CKS: ['53,54'], CLP: ['48,50'], CLR: ['42,42'], CLS: ['41,48'],
   DIP: ['47,74'], DIR: ['47,83'], DIS: ['48,49'], DJP: ['41,50'], DJR: ['22,57'], DKP: ['45,48'], DKR: ['48,54'],
-  DKS: ['42,58'], DLQ: ['53,47'], DLR: ['34,48'], DLS: ['53,153'],
+  DKS: ['42,58'], DLP: ['45,163'], DLQ: ['53,47'], DLR: ['34,48'], DLS: ['53,153'],
 };
 
 /** The charter ports, from the charter ship page's map. Tempestus and Barracuda HQ have no pin there. */
@@ -592,18 +594,23 @@ const NETWORKS: readonly TravelMethod[] = [
   // say where each goes. Last-destination names its code, as in "Last-destination (CKS)".
   network('fairy-ring', 'Fairy ring', 'Fairy Rings', { objects: [29495, 29560] }, { Zanaris: { to: ['37,69'] } },
     'Fairy ring', 15345150, Object.fromEntries(Object.entries(FAIRY_RING_CODES).map(([code, to]) => [code, { to }]))),
-  // The ancient, young and Prifddinas trees; the trees players grow have ids of their own.
-  network('spirit-tree', 'Spirit tree', 'Spirit Trees', { objects: [26259, 26260, 26261, 26262, 26263, 35949, 35950] },
+  // The ancient, young and Prifddinas trees, then the five patches players grow a tree in (RuneLite's
+  // FARMING_SPIRIT_TREE_PATCH_1 to _5): a Travel click on a grown tree carries its patch's id, as
+  // RuneLite notes every object option but Examine sends the base id, not the grown tree's 8355.
+  network('spirit-tree', 'Spirit tree', 'Spirit Trees', {
+    objects: [26259, 26260, 26261, 26262, 26263, 35949, 35950, 8338, 8382, 8383, 27116, 33733],
+  },
     anyStop([
       '39,49', '38,53', '39,50', '49,54', '38,44', '36,48', '51,95', '18,43',
       '40,60', '47,50', '43,50', '26,55', '19,58',
     ], 'Travel', 'Last-destination'),
     'Spirit tree', 15356739),
   // The pilots: Gnormadium Avlafrim, Captains Bleemadge, Errdo, Dalbur, Klemfoodle and Shoracks. A pilot's id
-  // changes with the player's last destination: Captain Shoracks' are 10486-10491 (RuneLite's PILOT_APEATOLL_*).
+  // changes with the player's last destination: Captain Shoracks' are 10486-10491 (RuneLite's PILOT_APEATOLL_*),
+  // Gnormadium Avlafrim's 10445-10448, 10450 and 10451 (RuneLite's GNORMADIUM_AVLAFRIM_*; 10449 is not his).
   network('gnome-glider', 'Gnome glider', 'Gnome Gliders', {
     npcs: [7516, 7517, 10459, ...range(10461, 10466), ...range(10467, 10473), 6091, ...range(10452, 10458),
-      ...range(10479, 10485), 7178, ...range(10486, 10491)],
+      ...range(10479, 10485), 7178, ...range(10486, 10491), ...range(10445, 10448), 10450, 10451],
   }, {
     ...anyStop(['38,54', '44,54', '51,53', '51,50', '39,46', '42,43', '46,46'], 'Glider'),
     'Glider-to Gandius': { to: ['46,46'] },

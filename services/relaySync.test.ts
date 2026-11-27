@@ -333,6 +333,131 @@ describe('RelaySyncService', () => {
     });
   });
 
+  describe('Confirming a pairing link', () => {
+    const A = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    const B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+    const TOKEN_A = '070707070707070707070707070707070707';
+    const nextTask = () => new Promise((resolve) => setTimeout(resolve, 0));
+    // A relay that keeps the first token each code was written with.
+    const fakeRelay = (down: (body: any) => boolean = () => false) => {
+      const owners = new Map<string, string>();
+      const log: string[] = [];
+      const fetchMock = vi.fn(async (url: string, init: any) => {
+        const code = url.split('/r/')[1];
+        const body = JSON.parse(init.body);
+        log.push(`${body.gone ? 'gone' : 'publish'} ${code} ${JSON.parse(storage[SESSION_KEY] ?? '{}').code}`);
+        if (down(body)) throw new TypeError('Failed to fetch');
+        const owner = owners.get(code);
+        if (owner !== undefined && owner !== body.token) return { ok: false, status: 403 };
+        owners.set(code, body.token);
+        return { ok: true, status: 200 };
+      });
+      vi.stubGlobal('fetch', fetchMock);
+      localStorage.setItem('fate_relay_base', 'https://relay.test');
+      return { fetchMock, log, owners };
+    };
+
+    it('marks the replaced code gone once, with its token, after the new pairing is stored', async () => {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      const relay = fakeRelay();
+      service.adoptCode(A);
+      const publishA = deferred<{ ok: boolean; status: number }>();
+      relay.fetchMock.mockImplementationOnce(() => publishA.promise);
+      const pushedA = service.push('bundle-a');
+      await Promise.resolve();
+
+      expect(service.adoptCode(B)).toBe(true);
+      expect(JSON.parse(storage[SESSION_KEY]).code).toBe(B);
+      // Not before the publish on its way to A lands.
+      await nextTask();
+      expect(relay.fetchMock).toHaveBeenCalledTimes(1);
+      publishA.resolve({ ok: true, status: 200 });
+      await expect(pushedA).resolves.toBe(false);
+      await expect(service.push('bundle-b')).resolves.toBe(true);
+      await nextTask();
+
+      const gone = relay.fetchMock.mock.calls.filter(([, init]) => JSON.parse(init.body).gone);
+      expect(gone).toHaveLength(1);
+      expect(gone[0][0]).toBe(`https://relay.test/r/${A}`);
+      expect(JSON.parse(gone[0][1].body)).toEqual({ token: TOKEN_A, gone: true });
+      expect(relay.log).toContain(`gone ${A} ${B}`);
+      expect(relay.log).not.toContain(`gone ${B} ${B}`);
+      expect(service.code).toBe(B);
+      expect(service.status).toBe('synced');
+    });
+
+    it('keeps the token when the code is the one it holds, so publishes still reach RuneLite', async () => {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      const relay = fakeRelay();
+      service.adoptCode(A);
+      await expect(service.push('first')).resolves.toBe(true);
+      const stored = storage[SESSION_KEY];
+      const revision = service.pushRequestRevision;
+
+      expect(service.adoptCode(A)).toBe(true);
+      expect(storage[SESSION_KEY]).toBe(stored);
+      expect(JSON.parse(stored).token).toBe(TOKEN_A);
+      expect(service.pushRequestRevision).toBe(revision + 1);
+      await expect(service.push('second')).resolves.toBe(true);
+      await nextTask();
+      expect(relay.log.filter((line) => line.startsWith('gone'))).toEqual([]);
+      expect(service.status).toBe('synced');
+
+      // A different code still gets a token of its own.
+      service.adoptCode(B);
+      expect(JSON.parse(storage[SESSION_KEY]).token).not.toBe(TOKEN_A);
+      await expect(service.push('third')).resolves.toBe(true);
+    });
+
+    it('marks nothing gone for an old pairing without a write token', async () => {
+      storage[SESSION_KEY] = JSON.stringify({ code: A, token: '' });
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      const relay = fakeRelay();
+      service.adoptCode(B);
+      await expect(service.push('bundle-b')).resolves.toBe(true);
+      await nextTask();
+      expect(relay.log).toEqual([`publish ${B} ${B}`]);
+    });
+
+    it('still publishes the new pairing when the relay cannot take the mark', async () => {
+      const { RelaySyncService } = await import('./relaySync');
+      const service = new RelaySyncService();
+      const relay = fakeRelay((body) => body.gone === true);
+      service.adoptCode(A);
+      await expect(service.push('bundle-a')).resolves.toBe(true);
+
+      expect(service.adoptCode(B)).toBe(true);
+      await expect(service.push('bundle-b')).resolves.toBe(true);
+      await nextTask();
+      expect(relay.log).toEqual([`publish ${A} ${A}`, `gone ${A} ${B}`, `publish ${B} ${B}`]);
+      expect(service.code).toBe(B);
+      expect(service.status).toBe('synced');
+      expect(service.failures).toBe(0);
+      expect(service.lastError).toBeNull();
+    });
+
+    it('marks nothing gone from a tab that picks the new pairing up from another', async () => {
+      const tabs = new EventTarget();
+      vi.stubGlobal('window', tabs);
+      const { RelaySyncService } = await import('./relaySync');
+      const first = new RelaySyncService();
+      const second = new RelaySyncService();
+      const relay = fakeRelay();
+      first.adoptCode(A);
+      tabs.dispatchEvent(Object.assign(new Event('storage'), { key: SESSION_KEY }));
+      expect(second.code).toBe(A);
+
+      first.adoptCode(B);
+      tabs.dispatchEvent(Object.assign(new Event('storage'), { key: SESSION_KEY }));
+      expect(second.code).toBe(B);
+      await nextTask();
+      expect(relay.log).toEqual([`gone ${A} ${B}`]);
+    });
+  });
+
   describe('shared by tabs that each show their own profile', () => {
     const CODE = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     let tabs: EventTarget;
@@ -359,6 +484,18 @@ describe('RelaySyncService', () => {
       localStorage.setItem('fate_relay_base', 'https://relay.test');
       fetchMock = vi.fn().mockResolvedValue({ ok: true });
       vi.stubGlobal('fetch', fetchMock);
+    });
+
+    it('reports the profile its pairing is for in a tab showing another profile', async () => {
+      const main = await openTab('main');
+      const alt = await openTab('alt');
+      expect(alt.pairedProfileId).toBeUndefined();
+      main.adoptCode(CODE, 'main');
+      storageEvent();
+      expect(alt.enabled).toBe(false);
+      expect(alt.code).toBeNull();
+      expect(alt.pairedProfileId).toBe('main');
+      expect(main.pairedProfileId).toBe('main');
     });
 
     it('publishes only from a tab showing the paired profile', async () => {
@@ -427,5 +564,13 @@ describe('current RuneLite connection source boundary', () => {
     expect(service).not.toContain('/state');
     expect(service).not.toContain('fetchPluginState');
     expect(onboarding).not.toContain('Plugin connected');
+  });
+});
+
+describe('pairing dialog wiring in App', () => {
+  it('passes the profile the pairing is for to the dialog', () => {
+    const app = readFileSync('App.tsx', 'utf8');
+    const dialog = app.slice(app.indexOf('<RunelitePairingDialog'), app.indexOf('onConfirm=', app.indexOf('<RunelitePairingDialog')));
+    expect(dialog).toContain('pairedProfileId={relaySync.pairedProfileId}');
   });
 });

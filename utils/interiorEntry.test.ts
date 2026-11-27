@@ -4,8 +4,11 @@ import { initialState } from '../context/GameContext';
 import { interiorArea } from '../data/interiorAreas';
 import { ChunkContentService } from '../services/ChunkContentService';
 import type { UnlockState } from '../types';
+import { chunkEntries } from './chunkEntries';
+import { buildChunkPermissionSnapshot } from './chunkPermissionSnapshot';
 import { chunkForPlace } from './chunkLocations';
 import { evaluateEntityAccess } from './entityAccess';
+import { isAreaReachable } from './reachability';
 import { interiorEntry, type InteriorContext, type InteriorRecord } from './interiorEntry';
 
 const service = new ChunkContentService();
@@ -71,6 +74,19 @@ describe('interiorEntry', () => {
       .toBe('ALLOWED');
   });
 
+  it('maps the temple scroll landing and raid lobby to the same two surface permissions', () => {
+    const floor = records.get('63,71')!;
+    const lobby = records.get('64,86')!;
+    const finished = run({ quests: ['While Guthix Sleeps'] });
+    const ctx = (unlocks: UnlockState): InteriorContext => ({ ...context(unlocks), gameModeId: 'chunked' });
+    expect(floor.entrances.map(route => route.chunkId)).toEqual(['12593', '12850']);
+    expect(lobby.entrances.map(route => route.chunkId)).toEqual(['12593', '12850']);
+    expect(interiorEntry(floor, ctx(run({ quests: [] })))).toBe('UNKNOWN');
+    expect(interiorEntry(lobby, ctx(run({ quests: [] })))).toBe('NOT_READY');
+    expect(interiorEntry(floor, ctx(finished))).toBe('ALLOWED');
+    expect(interiorEntry(lobby, ctx(finished))).toBe('ALLOWED');
+  });
+
   it('needs What Lies Below for the Chaos altar through the Tunnel of Chaos (51,54)', () => {
     // OSRS Wiki 'Chaos Altar': the tunnel opens after partial completion of What Lies Below.
     const chaos = [...records.values()].find(record => record.name === 'Chaos altar')!;
@@ -80,6 +96,19 @@ describe('interiorEntry', () => {
     expect(interiorEntry(chaos, chunked(run({ chunks: ['51,54'], quests: ['What Lies Below'] })))).toBe('ALLOWED');
     // The Wilderness ruins (47,56) need no quest.
     expect(interiorEntry(chaos, chunked(run({ chunks: ['47,56'], quests: [] })))).toBe('ALLOWED');
+  });
+
+  it('opens the Motherlode Mine from the Ice Mountain camp (47,53) as well as Falador (47,52)', () => {
+    // OSRS Wiki 'Motherlode Mine' revision 15383536: the Dwarven Mine camp in Ice Mountain's foothills leads
+    // to the north entrance; 'Dwarven Mine' revision 15376949 puts that camp entrance in 47,53.
+    const mine = records.get('58,88')!;
+    expect(mine.name).toBe('Motherlode Mine');
+    const chunked = (unlocks: UnlockState): InteriorContext => ({ ...context(unlocks), gameModeId: 'chunked' });
+    const iceMountain = run({ chunks: ['47,53'], regions: [], quests: [] });
+    expect(isAreaReachable('Motherlode Mine', iceMountain, 'chunked')).toBe(true);
+    expect(interiorEntry(mine, chunked(iceMountain))).toBe('ALLOWED');
+    expect(interiorEntry(mine, chunked(run({ chunks: ['47,52'], regions: [], quests: [] })))).toBe('ALLOWED');
+    expect(interiorEntry(mine, chunked(run({ chunks: ['46,53'], regions: [], quests: [] })))).toBe('LOCKED');
   });
 
   it("holds an interior to its entrance chunk's own requirements", () => {
@@ -155,6 +184,69 @@ describe('interiorEntry', () => {
   });
 });
 
+/**
+ * A route that is plainly blocked (a quest not held) reads NOT_READY even when it
+ * also has a requirement the save can't answer; UNKNOWN only when every blocker
+ * is one of those (status-precedence). The real routes are moved to an owned
+ * Lumbridge entrance so only the route's own requirements decide.
+ */
+describe("a blocked route's status", () => {
+  const throughLumbridge = (key: string, name: string): InteriorRecord => {
+    const record = records.get(key)!;
+    expect(record.name).toBe(name);
+    return { ...record, entrances: record.entrances.map((entrance) => ({ ...entrance, chunkId: idOf(chunkForPlace('Lumbridge')!) })) };
+  };
+
+  it('keeps The Scar not ready without Temple of the Eye, unknown with it, open with Desert Treasure II too', () => {
+    const scar = throughLumbridge('31,100', 'The Scar');
+    expect(interiorEntry(scar, context(run({})))).toBe('NOT_READY');
+    expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye'] })))).toBe('UNKNOWN');
+    expect(interiorEntry(scar, context(run({ quests: ['Temple of the Eye', 'Desert Treasure II'] })))).toBe('ALLOWED');
+  });
+
+  it('holds the Shellbane Gryphon Cave to Troubled Tortugans, and asks about the task or clue', () => {
+    const cave = throughLumbridge('49,138', 'Shellbane Gryphon Cave');
+    expect(cave.entrances.map((entrance) => entrance.requirements)).toEqual([[
+      'Troubled Tortugans Complete the quest',
+      'Shellbane Gryphon Cave: a gryphon Slayer task or the elite clue to kill the shellbane gryphon needs confirmation',
+    ]]);
+    expect(interiorEntry(cave, context(run({ quests: ['The Curse of Arrav'] })))).toBe('NOT_READY');
+    expect(interiorEntry(cave, context(run({ quests: ['Troubled Tortugans'] })))).toBe('UNKNOWN');
+  });
+
+  it('lets a run into the Slayer lairs the Wiki says need no task to enter, and keeps their monsters gated', () => {
+    // Kraken Cove, the Smoke Devil Dungeon and Cerberus' Lair may be entered without a task; the
+    // Slayer level and task are for killing what is inside, which the monsters carry themselves.
+    const base = run({});
+    const slayer60 = run({ skills: { ...base.skills, Slayer: 1 }, levels: { ...base.levels, Slayer: 60 } });
+    const lairs: [string, string][] = [['35,156', 'Kraken Cove'], ['36,147', 'Smoke Devil Dungeon'], ['20,19', "Cerberus' Lair"]];
+    for (const [key, name] of lairs) {
+      const lair = throughLumbridge(key, name);
+      expect(lair.entrances.map((entrance) => entrance.requirements)).toEqual([[]]);
+      expect(interiorEntry(lair, context(slayer60))).toBe('ALLOWED');
+    }
+    // What the plugin is sent (rules.chunkEntries), with the entrance chunks owned in Chunked.
+    const owned = { ...slayer60, chunks: ['35,56', '37,47', '45,53'] };
+    const reachable = new Set(['35,56', '37,47', '45,53'].map((key) => { const [cx, cy] = key.split(',').map(Number); return idOf({ cx, cy }); }));
+    const entries = chunkEntries(service, owned, 'chunked', reachable);
+    for (const key of ['35,156', '36,147', '37,147', '20,19']) expect(entries[key]).toBe('ALLOWED');
+    // The entrance chunk's snapshot carries the lair's monsters. Waterfiends need Slayer 1 but a task in the
+    // cove: a question, never "not ready". Cave kraken and smoke devils keep their 87 and 93 Slayer.
+    const combat = (cx: number, cy: number, name: string) => buildChunkPermissionSnapshot(service.contentFor(cx, cy)!, { cx, cy },
+      { unlocks: owned, gameModeId: 'chunked', contentService: service, reachableChunks: reachable }).categories.COMBAT?.find((row) => row.name === name)?.status;
+    expect(combat(35, 56, 'Waterfiend')).toBe('UNKNOWN');
+    expect(combat(37, 47, 'Smoke devil')).toBe('NOT_READY');
+    expect(combat(35, 56, 'Cave kraken')).toBe('NOT_READY');
+  });
+
+  it('keeps a route with only requirements the save cannot answer unknown', () => {
+    const cave: InteriorRecord = { key: '1,1', name: 'Test Cave', entrances: [{
+      chunkId: idOf(chunkForPlace('Lumbridge')!), requirements: ['Test Cave: a task needs confirmation', 'Started Ratcatchers'],
+    }] };
+    expect(interiorEntry(cave, context(run({})))).toBe('UNKNOWN');
+  });
+});
+
 describe("the app's own content checks", () => {
   it('agree with the entry for the interior the content is in', () => {
     // TzHaar-Ket live in Mor Ul Rek's outer area, 39,80, entered from Musa Point's 44,49.
@@ -180,5 +272,31 @@ describe('ChunkContentService.interiorRecords', () => {
       name: 'Keldagrim',
       entrances: [{ chunkId: idOf({ cx: 43, cy: 58 }), requirements: ['Started The Giant Dwarf'] }],
     });
+  });
+});
+
+describe("Brutus' Arena", () => {
+  // OSRS Wiki 'Brutus' (oldid 15406730): fought again after The Ides of Milk; Demonic Brutus needs
+  // Desert Treasure II and an abyssal potato ('Demonic Brutus' oldid 15384017). The arena's gate in
+  // the Lumbridge cow field (50,51) asks for The Ides of Milk only (audit plugin-ui.d3[0]).
+  const row = (unlocks: UnlockState, name: string) => buildChunkPermissionSnapshot(service.contentFor(50, 51)!, { cx: 50, cy: 51 },
+    { unlocks, gameModeId: 'vanilla', contentService: service }).categories.COMBAT?.find((entry) => entry.name === name);
+
+  it('decides plain Brutus from The Ides of Milk alone', () => {
+    expect(row(run({ quests: ['The Ides of Milk'] }), 'Brutus')).toMatchObject({ status: 'ALLOWED' });
+    const before = row(run({}), 'Brutus');
+    expect(before?.status).toBe('NOT_READY');
+    expect(before?.detail).not.toMatch(/Desert Treasure|abyssal potato/i);
+  });
+
+  it('keeps Desert Treasure II and the abyssal potato on Demonic Brutus', () => {
+    const demonic = row(run({ quests: ['The Ides of Milk'] }), 'Demonic Brutus');
+    expect(demonic?.status).toBe('NOT_READY');
+    expect(demonic?.detail).toMatch(/Desert Treasure II/);
+    expect(demonic?.detail).not.toMatch(/Unlock demonic brutus/i);
+    // The potato is carried in, which the save cannot tell.
+    const ready = row(run({ quests: ['The Ides of Milk', 'Desert Treasure II'] }), 'Demonic Brutus');
+    expect(ready?.status).toBe('UNKNOWN');
+    expect(ready?.detail).toMatch(/Abyssal potato/);
   });
 });

@@ -3,7 +3,7 @@ import type { GameModeRules } from '../config/gameModes';
 import { BANK_BY_ID } from '../data/banks';
 import { randomUnlockPool } from './gameEngine';
 import { hopeLine, hopeOdds, hopeParts, hopesInPool } from './hopes';
-import { OUTLOOK_TABLES, tableOutlook } from './tableOutlook';
+import { OUTLOOK_TABLES, tableOutlook, type OutlookRoutes } from './tableOutlook';
 import { outlookLine, outlookShort } from './tableOutlookText';
 import type { SpendNote } from './spendNoteTypes';
 
@@ -15,6 +15,10 @@ const hopeName = (table: TableType, id: string): string =>
  * use, hooks/useSpendNotes.ts) so the home screen doesn't carry the sums:
  * - the outlook (Settings: Table outlook): how many draws you could use now;
  * - the hope list's odds: which of your hopes a Key here could land.
+ *
+ * `routing` holds the area routes (hooks/useAreaRoutes.ts). While they are on
+ * their way (`pending`), the outlooks that depend on them are held back, as
+ * the journal summary holds its counts, and only the Banks one is shown.
  */
 export const spendNotes = (
   unlocks: UnlockState,
@@ -22,6 +26,7 @@ export const spendNotes = (
   customMode: GameModeRules | undefined,
   hopes: readonly string[] | undefined,
   outlookOn: boolean,
+  routing?: OutlookRoutes & { pending?: boolean },
 ): Map<TableType, SpendNote> => {
   const out = new Map<TableType, SpendNote>();
   const note = (table: TableType): SpendNote => {
@@ -31,7 +36,8 @@ export const spendNotes = (
   };
   if (outlookOn) {
     for (const table of OUTLOOK_TABLES) {
-      const outlook = tableOutlook(table, unlocks, gameModeId, customMode);
+      if (routing?.pending && table !== TableType.BANKS) continue;
+      const outlook = tableOutlook(table, unlocks, gameModeId, customMode, routing);
       if (outlook && outlook.left > 0) note(table).outlook = { ...outlook, short: outlookShort(outlook), line: outlookLine(outlook) };
     }
   }

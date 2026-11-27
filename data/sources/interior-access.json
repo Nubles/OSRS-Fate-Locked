@@ -40,6 +40,13 @@
         "Lost City Complete the quest"
       ]
     },
+    "Dorgesh-Kaan mine": {
+      "entrances": [
+        { "chunkId": "12850", "requirements": ["The Lost Tribe started", "17 Mining", "13 Agility"] }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/The_Lost_Tribe",
+      "note": "From Lumbridge Castle cellar, mine the rubble and squeeze through the gap to reach the tunnels."
+    },
     "Dorgesh-Kaan": {
       "requirements": [
         "Death to the Dorgeshuun Complete the quest"
@@ -146,6 +153,13 @@
         "11066"
       ]
     },
+    "Dorgesh-Kaan-Keldagrim Train Platforms": {
+      "requirements": [
+        "Another Slice of H.A.M. Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Dorgesh-Kaan%E2%80%93Keldagrim_train_system?oldid=15211839",
+      "note": "Completion of Another Slice of H.A.M. is required to use the train. It is the only link on the route from Keldagrim to the north of Dorgesh-Kaan, so that route carries the quest too (areas.d1[1])."
+    },
     "Mor Ul Rek#Outer Area": {
       "anchors": [
         "11313"
@@ -162,9 +176,13 @@
     },
     "Motherlode Mine": {
       "anchors": [
-        "12084"
+        "12084",
+        "12085"
       ],
-      "requirements": []
+      "requirements": [],
+      "source": "https://oldschool.runescape.wiki/w/Motherlode_Mine?oldid=15383536",
+      "evidence": ["https://oldschool.runescape.wiki/w/Dwarven_Mine?oldid=15376949"],
+      "note": "Reached through the Dwarven Mine, from north-east Falador (47,52) or from the camp in the southern foothills of Ice Mountain (main entrance 3018,3450, 47,53)."
     },
     "Ancient Cavern": {
       "anchors": [
@@ -392,11 +410,13 @@
     },
     "Blood altar": {
       "entrances": [
-        { "chunkId": "14387", "requirements": [] },
+        { "chunkId": "14387", "requirements": ["Sins of the Father: killed the mutated bloodveld"] },
+        { "chunkId": "13878", "requirements": ["Sins of the Father Complete the quest"] },
         { "chunkId": "12343", "requirements": ["Enter the Abyss Complete the quest", "Sins of the Father Complete the quest"] }
       ],
-      "source": "https://oldschool.runescape.wiki/w/Blood_rift",
-      "note": "The True Blood Altar. The blood rift in the Abyss leads here once Sins of the Father is complete. The Meiyerditch entrance is kept as generated. Kourend's Blood Altar is a surface chunk of its own and is not changed."
+      "source": "https://oldschool.runescape.wiki/w/Meiyerditch_Laboratories?oldid=15385627",
+      "evidence": ["https://oldschool.runescape.wiki/w/Blood_Altar?oldid=15404832", "https://oldschool.runescape.wiki/w/Hair_of_the_Dog?oldid=15356764", "https://oldschool.runescape.wiki/w/Blood_rift"],
+      "note": "The True Blood Altar, in the northern part of the Meiyerditch Laboratories. From Meiyerditch (56,51) the complete laboratory opens once the mutated bloodveld of Sins of the Father is killed; the inner laboratory rooms are reached through this record and carry the same gate, while the outer rooms Darkness of Hallowvale visits stay open. The trapdoor behind the Hair of the Dog in Canifis (54,54) leads through the Myreque tunnels and the tomb of Ivandis to the end of the laboratory, a way the Wiki lists after Sins of the Father. The blood rift in the Abyss leads here once Sins of the Father is complete. Kourend's Blood Altar is a surface chunk of its own and is not changed."
     },
     "Death altar": {
       "entrances": [
@@ -407,35 +427,204 @@
       "note": "The first entrance is the physical route through the Mourner Tunnels and Temple of Light. The second is the death rift in the Abyss, entered through the Mage of Zamorak, which also needs Mourning's End Part II. Guardians of the Rift is not asserted."
     },
     "Rune essence mine": {
-      "anchors": [
-        "12853",
-        "12337",
-        "10547"
+      "entrances": [
+        { "chunkId": "12853", "requirements": [] },
+        { "chunkId": "12337", "requirements": [] },
+        { "chunkId": "10547", "requirements": [] },
+        { "chunkId": "10288", "requirements": ["Access the Wizards' Guild", "Magic level 66"] },
+        { "chunkId": "9525", "requirements": [] }
       ],
       "requirements": [
         "Rune Mysteries Complete the quest"
       ],
-      "source": "https://oldschool.runescape.wiki/w/Rune_essence_mine?oldid=15236022",
-      "note": "Reviewed teleport hosts: Aubury in Varrock, Sedridor via the Wizards' Tower basement, and Cromperty in East Ardougne. Guild and Brimstail alternatives remain outside this reviewed set."
+      "coordinates": [{ "x": 2591, "y": 3088 }, { "x": 2402, "y": 3419 }],
+      "source": "https://oldschool.runescape.wiki/w/Rune_essence_mine?oldid=15366104",
+      "evidence": ["https://oldschool.runescape.wiki/w/Wizard_Distentor?oldid=15347803", "https://oldschool.runescape.wiki/w/Brimstail?oldid=15376477", "https://oldschool.runescape.wiki/w/Brimstail%27s_cave?oldid=15376470"],
+      "note": "Teleport hosts: Aubury in Varrock, Sedridor via the Wizards' Tower basement, Cromperty in East Ardougne, Wizard Distentor in the Wizards' Guild in Yanille (40,48; the guild needs 66 Magic) and Brimstail in his cave in the Tree Gnome Stronghold (cave entrance 37,53)."
     },
     "God Wars Entrance": {
       "anchors": [
         "11578"
       ],
       "requirements": [
-        "God Wars Dungeon: entry route, rope and 60 Strength or Agility need confirmation"
+        "60 Strength or 60 Agility"
       ],
-      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15348774",
-      "note": "Source 11346 contains Armadyl-area content. This establishes geography only; the dungeon and encampment gates are not inferred from chunk ownership.",
+      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15384639",
+      "note": "Source 11346 contains Armadyl-area content. The boulder (60 Strength) or the crack (60 Agility) on the way to the hole gates the whole dungeon; the one-time rope is carried equipment and is not inferred. The encampment gates are not inferred from chunk ownership.",
       "coordinates": [
         {
           "x": 2918,
           "y": 3745
         }
       ]
+    },
+    "God Wars Dungeon": {
+      "requirements": [
+        "60 Strength or 60 Agility"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/God_Wars_Dungeon?oldid=15384639",
+      "evidence": ["https://oldschool.runescape.wiki/w/Boulder_(God_Wars_Dungeon)", "https://oldschool.runescape.wiki/w/Little_crack"],
+      "note": "The Trollheim God Wars Dungeon is entered past a boulder that needs 60 Strength or a crack that needs 60 Agility (slayer.d1[0])."
+    },
+    "Entrana Dungeon": {
+      "anchors": [
+        "11316"
+      ],
+      "requirements": [],
+      "coordinates": [
+        {
+          "x": 2820,
+          "y": 3374
+        }
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Entrana_Dungeon?oldid=15353043",
+      "note": "Entered by the ladder on Entrana. The magic door to level 32 Wilderness (3250,3772) is a one-way exit, not an entrance."
+    },
+    "Jormungand's Prison": {
+      "requirements": [
+        "The Fremennik Exiles Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Jormungand%27s_Prison?oldid=15271568",
+      "note": "Haskell sails to the Island of Stone during and after The Fremennik Exiles; the dagannoths and basilisks are there after the quest."
+    },
+    "Myth's Guild#Basement": {
+      "requirements": [
+        "Dragon Slayer II Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Corsair_Cove_Dungeon?oldid=15369031",
+      "note": "The western side of the Corsair Cove Dungeon. Its eastern, ogress side is open to all and is a separate record."
+    },
+    "Heroes' Guild#Basement": {
+      "requirements": [
+        "Heroes' Quest Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Heroes%27_Guild?oldid=15352680"
+    },
+    "Legends' Guild#Dungeon": {
+      "requirements": [
+        "Legends' Quest Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Legends%27_Guild?oldid=15352122",
+      "note": "The grounds need the quest started; the building, and the dungeon below it, need it completed."
+    },
+    "Smoke Dungeon": {
+      "requirements": [
+        "Started Desert Treasure I"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Smoke_Dungeon?oldid=15386435",
+      "note": "Opens once Desert Treasure I reaches the mystical mirrors; completion meets it."
+    },
+    "Shadow Dungeon": {
+      "requirements": [
+        "Started Desert Treasure I"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Shadow_Dungeon?oldid=15127725",
+      "note": "The ladder shows only to a player wearing the ring of visibility (Desert Treasure I) or the ring of shadows (Desert Treasure II, which needs Desert Treasure I)."
+    },
+    "Waterfall Dungeon": {
+      "requirements": [
+        "Started Waterfall Quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Waterfall_Dungeon?oldid=15372021",
+      "note": "Open during and after the Waterfall Quest."
+    },
+    "Glarial's Tomb": {
+      "requirements": [
+        "Started Waterfall Quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Glarial%27s_Tomb?oldid=15322676",
+      "note": "Glarial's pebble comes from the Waterfall Quest; the tomb can be re-entered after it."
+    },
+    "Lighthouse#Dungeon": {
+      "requirements": [
+        "Started Horror from the Deep"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Lighthouse?oldid=15375076",
+      "note": "The Lighthouse opens during and after Horror from the Deep."
+    },
+    "Yama's Domain": {
+      "requirements": [
+        "A Kingdom Divided Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Yama?oldid=15411202",
+      "evidence": ["https://oldschool.runescape.wiki/w/Yama%27s_Domain?oldid=15212079"],
+      "note": "Reached through the Voice of Yama at the bottom of the Chasm of Fire once A Kingdom Divided is complete."
+    },
+    "Vampyrium": {
+      "requirements": [
+        "The Blood Moon Rises Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Vampyrium?oldid=15333623",
+      "note": "The quest The Blood Moon Rises unlocks access to Vampyrium."
+    },
+    "Ghorrock Dungeon": {
+      "requirements": [
+        "Secrets of the North Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Ghorrock_Dungeon?oldid=15317457",
+      "note": "Uncovered during Secrets of the North, through the Salt Mine under Weiss."
+    },
+    "Ghorrock Prison": {
+      "requirements": [
+        "Desert Treasure II: reached Ghorrock Prison"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Ghorrock_Prison?oldid=15234059",
+      "note": "Entered from the Ghorrock Dungeon, whose gate it also carries, during and after Desert Treasure II. Duke Sucellus can be fought again after the quest."
+    },
+    "Tolna's rift": {
+      "requirements": [
+        "A Soul's Bane Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Tolna%27s_rift?oldid=15407315",
+      "note": "A dungeon that can be accessed after completing A Soul's Bane."
+    },
+    "Daeyalt essence mine": {
+      "requirements": [
+        "Sins of the Father Complete the quest"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Daeyalt_essence_mine?oldid=15367373",
+      "note": "The essence mine becomes available after completion of Sins of the Father."
+    },
+    "The Scar": {
+      "requirements": [
+        "Desert Treasure II: reached the Scar"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/The_Scar?oldid=15380683",
+      "note": "Partial completion of Desert Treasure II is required to access the Scar. The Catalytic Guardian in the Temple of the Eye sends players there, so the route keeps that gate too."
+    },
+    "Scar essence mine": {
+      "requirements": [
+        "Desert Treasure II: reached the Scar",
+        "Mining level 64"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Scar_essence_mine?oldid=15397253",
+      "note": "Partial completion of Desert Treasure II and 64 Mining, for Hagus's permission to use the mine."
     }
   },
   "records": {
+    "16199": {
+      "name": "Chasm of Tears#Ancient Guthixian Temple entrance",
+      "mapTile": { "x": 4050, "y": 4567 },
+      "anchors": ["12593", "12850"],
+      "requirements": ["While Guthix Sleeps: reached the Ancient Guthixian Temple"],
+      "source": "https://oldschool.runescape.wiki/w/Special:PermanentLink/15404462",
+      "note": "Game map object 62542 leads to the Archive lobby. The lantern and Guthixian temple scroll reach this floor. The swamp and castle are the two surface permissions. Reaching this stage of While Guthix Sleeps entails The Lost Tribe."
+    },
+    "16470": {
+      "name": "The Fractured Archive#Lobby",
+      "mapTile": { "x": 4123, "y": 5562 },
+      "anchors": ["12593", "12850"],
+      "requirements": ["While Guthix Sleeps Complete the quest"],
+      "source": "https://oldschool.runescape.wiki/w/Special:PermanentLink/15414647",
+      "note": "The chasm entrance opens into this lobby. Game map object 62768 is the entrance from the lobby into the raid."
+    },
+    "12190": {
+      "requirements": [
+        "60 Strength or 60 Agility"
+      ],
+      "source": "https://oldschool.runescape.wiki/w/Wilderness_God_Wars_Dungeon?oldid=15303152",
+      "note": "The main Wilderness God Wars Dungeon lies past the boulder (60 Strength) or the jutting wall (60 Agility) and the crevice behind them; the antechamber holding the obstacles stays open (slayer.d1[0])."
+    },
     "12690": {
       "name": "Kalphite Lair (potato cactus chamber)",
       "anchors": ["12848"],

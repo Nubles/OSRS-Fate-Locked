@@ -46,7 +46,7 @@ describe('resourceReqFor', () => {
       // A "\b" after the bracket left karambwan spots at level 1.
       ['Fishing spot (karambwan)', 'Fishing', 65],
       ['Fishing spot (karambwanji)', 'Fishing', 5],
-      ['Daeyalt Essence rock', 'Mining', 60], ['Daeyalt Essence', 'Mining', 60], ['Daeyalt rocks', 'Mining', 60],
+      ['Daeyalt Essence rock', 'Mining', 60], ['Daeyalt Essence', 'Mining', 60], ['Daeyalt rocks', 'Mining', 20],
       ['Silver rocks', 'Mining', 20],
       ['Blisterwood Tree', 'Woodcutting', 62], ['Camphor tree', 'Woodcutting', 66], ['Ironwood tree', 'Woodcutting', 80],
       ['Rosewood tree', 'Woodcutting', 92], ['Jatoba tree', 'Woodcutting', 40],

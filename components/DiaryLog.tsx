@@ -25,10 +25,11 @@ import {
   type EligibilityBlocker,
 } from '../utils/journalStatus';
 import { requestDiaryTaskAttestation } from '../utils/manualAttestation';
-import { questIdWikiUrl } from '../utils/questWikiUrl';
+import { diaryWikiUrl, questIdWikiUrl } from '../utils/questWikiUrl';
 import { farmingPatchLabel } from '../utils/farmingPatches';
 import { useIsOsrsUi } from '../utils/uiStyle';
 import { lazyWithRetry } from '../utils/lazyRetry';
+import { foldedIncludes } from '../utils/textFold';
 import './osrs/osrs-journal.css';
 
 // OSRS layout only: the in-game diary list and the tier's journal scroll.
@@ -108,7 +109,8 @@ export const useDiaryJournal = (externalSearch = '') => {
   const [localSearch, setLocalSearch] = useState('');
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [skillPopover, setSkillPopover] = useState<SkillPopoverState | null>(null);
-  const searchTerm = externalSearch || localSearch;
+  // Trimmed once, so a stray space (a phone keyboard adds one) hides nothing.
+  const searchTerm = (externalSearch || localSearch).trim();
 
   const focusCard = (id: string) => {
     setExpandedId(id);
@@ -147,25 +149,7 @@ export const useDiaryJournal = (externalSearch = '') => {
     getDiaryStatus(diary, unlocks, gameModeId, areaRoutes)
   );
 
-  const getDiaryWikiLink = (tierId: string) => {
-    const [region, tier] = tierId.split(' ');
-    const map: Record<string, string> = {
-        'Ardougne': 'Ardougne_Diary',
-        'Desert': 'Desert_Diary',
-        'Falador': 'Falador_Diary',
-        'Fremennik': 'Fremennik_Diary',
-        'Kandarin': 'Kandarin_Diary',
-        'Karamja': 'Karamja_Diary',
-        'Kourend': 'Kourend_%26_Kebos_Diary',
-        'Lumbridge': 'Lumbridge_%26_Draynor_Diary',
-        'Morytania': 'Morytania_Diary',
-        'Varrock': 'Varrock_Diary',
-        'Western': 'Western_Provinces_Diary',
-        'Wilderness': 'Wilderness_Diary'
-    };
-    const page = map[region] || 'Achievement_Diary';
-    return `https://oldschool.runescape.wiki/w/${page}#${tier}`;
-  };
+  const getDiaryWikiLink = diaryWikiUrl;
 
   const diaries = useMemo(() => {
     return Object.values(DIARY_DATA).map(d => {
@@ -188,10 +172,9 @@ export const useDiaryJournal = (externalSearch = '') => {
       }
 
       if (!searchTerm) return true;
-      const lowerSearch = searchTerm.toLowerCase();
-      if (d.id.toLowerCase().includes(lowerSearch)) return true;
+      if (foldedIncludes(d.id, searchTerm)) return true;
       const tasks = ALL_DIARY_TASKS.filter(t => t.tierId === d.id);
-      return tasks.some(t => t.description.toLowerCase().includes(lowerSearch));
+      return tasks.some(t => foldedIncludes(t.description, searchTerm));
   });
 
   const regions = Array.from(new Set(Object.values(DIARY_DATA).map(d => d.region))).sort();
@@ -499,7 +482,7 @@ export const DiaryLog: React.FC<DiaryLogProps> = ({ searchTerm: externalSearch =
                             ? `Complete diary task: ${task.description}`
                             : 'Complete diary task';
                           
-                          if (searchTerm && !task.description.toLowerCase().includes(searchTerm.toLowerCase()) && !diary.id.toLowerCase().includes(searchTerm.toLowerCase())) return null;
+                          if (searchTerm && !foldedIncludes(task.description, searchTerm) && !foldedIncludes(diary.id, searchTerm)) return null;
 
                           return (
                             <div

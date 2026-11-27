@@ -153,6 +153,25 @@ describe('boost prayers', () => {
     prayers,
   });
 
+  it('plans the Eclipse atlatl from Strength and melee strength, as the DPS tools do', () => {
+    const atlatl = (weaponName: string): PlayerCombat => ({
+      levels: { attack: 50, strength: 99, ranged: 75, magic: 1, hitpoints: 70 },
+      gear: { bonuses: { ...ZERO_BONUSES, ranged: 87, meleeStr: 40 }, speedTicks: 5, category: 'Bow', weaponName },
+      boostsOn: false,
+    });
+    // Ranged strength 0: only the atlatl rule gives this setup any damage beyond 0-1 hits.
+    expect(planBoss(atlatl('Eclipse atlatl'), graardor).maxHit).toBeGreaterThan(planBoss(atlatl('Magic shortbow'), graardor).maxHit);
+  });
+
+  it('takes the boss\'s flat armour off melee hits', () => {
+    // Wiki "Flat armour": subtracted from successful melee and ranged hits.
+    const plain = planBoss(whip7070(), graardor);
+    const armoured = planBoss(whip7070(), { ...graardor, flatArmour: 4 });
+    const weak = planBoss(whip7070(), { ...graardor, flatArmour: -2 });
+    expect(armoured.dps).toBeLessThan(plain.dps);
+    expect(weak.dps).toBeGreaterThan(plain.dps);
+  });
+
   it('assumes no prayer without the Prayer levels or Arcana unlocks', () => {
     expect(bestBoostPrayers(unlocks())).toEqual({ melee: 'none', ranged: 'none' });
     // Raw Prayer 99 is capped at 10 by tier 1.
@@ -160,18 +179,20 @@ describe('boost prayers', () => {
   });
 
   it('falls back to the standard prayers the tier-capped Prayer level reaches', () => {
-    expect(bestBoostPrayers(skilled(43, 1))).toEqual({ melee: 'clarity', ranged: 'none' });
-    expect(bestBoostPrayers(skilled(44, 1))).toEqual({ melee: 'clarity', ranged: 'eagle' });
+    expect(bestBoostPrayers(skilled(25, 1))).toEqual({ melee: 'clarity', ranged: 'none' });
+    expect(bestBoostPrayers(skilled(33, 1))).toEqual({ melee: 'clarity', ranged: 'hawk' });
+    expect(bestBoostPrayers(skilled(43, 1))).toEqual({ melee: 'ultimate', ranged: 'hawk' });
+    expect(bestBoostPrayers(skilled(44, 1))).toEqual({ melee: 'ultimate', ranged: 'eagle' });
     // Piety's levels without its Arcana unlock are not Piety.
-    expect(bestBoostPrayers(skilled(99, 99, { quests: ["King's Ransom"] }))).toEqual({ melee: 'clarity', ranged: 'eagle' });
+    expect(bestBoostPrayers(skilled(99, 99, { quests: ["King's Ransom"] }))).toEqual({ melee: 'ultimate', ranged: 'eagle' });
   });
 
   it('uses Piety, Chivalry and Rigour only with their unlock and every level and quest gate', () => {
     const knight = { arcana: ['Piety', 'Chivalry'], quests: ["King's Ransom"] };
     expect(bestBoostPrayers(skilled(70, 70, knight)).melee).toBe('piety');
     expect(bestBoostPrayers(skilled(69, 70, knight)).melee).toBe('chivalry');
-    expect(bestBoostPrayers(skilled(70, 64, knight)).melee).toBe('clarity');
-    expect(bestBoostPrayers(skilled(70, 70, { ...knight, quests: [] })).melee).toBe('clarity');
+    expect(bestBoostPrayers(skilled(70, 64, knight)).melee).toBe('ultimate');
+    expect(bestBoostPrayers(skilled(70, 70, { ...knight, quests: [] })).melee).toBe('ultimate');
     // Prayer 70 capped at 60 by tier 6 reaches Chivalry, not Piety.
     expect(bestBoostPrayers(skilled(70, 70, { ...knight, skills: { Prayer: 6, Defence: 7 } })).melee).toBe('chivalry');
     expect(bestBoostPrayers(skilled(74, 70, { arcana: ['Rigour'] })).ranged).toBe('rigour');
@@ -361,6 +382,8 @@ const EXPECTED_CHANGES: string[] = [
   'The Leviathan (strong melee): undergeared -> slow',
   'The Whisperer (strong melee): undergeared -> slow',
   'The Whisperer (strong ranged): undergeared -> slow',
+  // Vardorvis is planned at his Wiki Defence (215) since the catalogue override.
+  'Vardorvis (strong ranged): undergeared -> slow',
   'Phantom Muspah (strong melee): undergeared -> slow',
   'Yama (strong melee): undergeared -> slow',
   'Yama (strong ranged): undergeared -> slow',
