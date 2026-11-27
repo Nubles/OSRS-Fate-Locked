@@ -30,6 +30,7 @@ import type {
   RouteGate,
 } from './model';
 import { rankRoutes } from './ranker';
+import { compileRawRequirements, evaluateRouteGates } from './accountRequirements';
 import { questRouteStatusForItems } from './questRouteStatus';
 
 export type QuestRouteStatus =
@@ -316,6 +317,30 @@ const copiedEntityLocations = (
   locations: hit.locations.map(location => ({ ...location })),
 }));
 
+/**
+ * One chunk can hold several copies of a station, each with its own way in:
+ * Groats' Farm's dairy cows are in the open, while Brutus' arena's, listed at
+ * the same chunk, are behind its entrance. Any one copy will do, so a station
+ * needs only what its easiest copy needs, not what every copy needs together.
+ */
+const easiestStationAccess = (
+  copies: readonly { rawRequirements: readonly RawRouteRequirement[] }[],
+  account: UnlockState,
+): readonly RawRouteRequirement[] => {
+  if (copies.length <= 1) return copies[0]?.rawRequirements ?? [];
+  let best: readonly RawRouteRequirement[] = [];
+  let bestScore = Infinity;
+  for (const { rawRequirements } of copies) {
+    const { blockers, hasDataGap } = evaluateRouteGates(compileRawRequirements(rawRequirements), account);
+    const score = blockers.length * 2 + (hasDataGap ? 1 : 0);
+    if (score < bestScore) {
+      best = rawRequirements;
+      bestScore = score;
+    }
+  }
+  return best;
+};
+
 const resolverSnapshotFrom = (
   snapshot: QuestRouteAnalysisSnapshot,
   fingerprint: string,
@@ -396,6 +421,7 @@ const resolverSnapshotFrom = (
   const connectGraph: ConnectGraph = Object.fromEntries(
     Object.entries(snapshot.connectGraph).map(([from, destinations]) => [from, [...destinations]]),
   );
+  const account = resolverUnlocks(snapshot.unlocks);
 
   return {
     resolution: {
@@ -423,10 +449,8 @@ const resolverSnapshotFrom = (
         (entityLocationByKey.get(entityKey(name, kind))?.advisory.locations.length ?? 0) > 0
       ),
       stationRequirements: (name, kind, chunk) => (
-        stationRequirementsByKey.get(stationRequirementKey(name, kind, chunk)) ?? []
-      ).flatMap(requirement => (
-        requirement.rawRequirements.map(evidence => ({ ...evidence }))
-      )),
+        easiestStationAccess(stationRequirementsByKey.get(stationRequirementKey(name, kind, chunk)) ?? [], account)
+      ).map(evidence => ({ ...evidence })),
       connectGraph,
       fingerprint,
     },

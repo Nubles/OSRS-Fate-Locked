@@ -23,6 +23,7 @@ import type {
   ItemSourceRecord,
 } from '../../services/ChunkContentService';
 import type { UnlockState } from '../../types';
+import type { RawRouteRequirement } from './model';
 
 export interface RuneProofContentService {
   init(): Promise<boolean>;
@@ -31,6 +32,12 @@ export interface RuneProofContentService {
   entityLocations(name: string, kinds?: EntityKind[]): EntityHit | null;
   taskRequirements(name: string, kind: EntityKind, cx: number, cy: number): string[];
   chunkEntryRequirements(cx: number, cy: number): string[];
+  /**
+   * What reaching one physical copy of an entity needs. For a copy inside an
+   * interior (Zanaris's dairy cow and hopper, entered from the Lumbridge Swamp
+   * shed) this is the interior's way in, not just its entrance chunk.
+   */
+  entityRequirementOptions?(name: string, kind: EntityKind, cx: number, cy: number, sourceId?: string): RawRouteRequirement[][];
   connectGraph(): ConnectGraph;
 }
 
@@ -219,7 +226,13 @@ export const materializeQuestRouteSnapshot = (
       appendEntityHit(hit);
 
       hit.locations.forEach((location) => {
-        const rawRequirements = [
+        // A copy inside an interior is listed at its entrance chunk, but owning
+        // that chunk is not getting in: Zanaris's cow and hopper sit behind the
+        // Lumbridge Swamp shed's door, which needs Lost City and a Dramen staff.
+        const interior = location.sourceId
+          ? contentService.entityRequirementOptions?.(hit.name, hit.kind, location.cx, location.cy, location.sourceId)?.[0]
+          : undefined;
+        const rawRequirements = interior?.map(requirement => ({ ...requirement })) ?? [
           ...contentService
             .taskRequirements(hit.name, hit.kind, location.cx, location.cy)
             .map(raw => ({ raw, origin: 'ENTITY' as const })),

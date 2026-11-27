@@ -105,6 +105,41 @@ describe('Chunked quests count only in their own chunks', () => {
     expect(row.bucket).not.toBe('DOABLE');
   });
 
+  // A player's report (8 November 2026): Lumbridge and the swamp chunk south
+  // of it, and the tracker found Cook's Assistant's milk at Zanaris's dairy
+  // cow, whose way in (the shed in that chunk) needs Lost City and a Dramen staff.
+  it("does not count Zanaris's dairy cow for Cook's Assistant before Lost City", () => {
+    const unlocks = fresh({ chunks: ['50,49'] });
+    const journal = evaluateQuestEligibility(QUEST_DATA["Cook's Assistant"], unlocks, 'chunked');
+    expect(journal.eligible).toBe(false);
+    expect(journal.blockers.map(blocker => blocker.label)).toContain('Bucket of milk (no source in your chunks yet)');
+    const row = chunkedQuestRows(unlocks, 'chunked').find(r => r.id === "Cook's Assistant")!;
+    expect(row.bucket).not.toBe('DOABLE');
+  });
+
+  it("still finds Groats' Farm's open-air cows, which share a chunk with Brutus' arena", () => {
+    const snapshot = materializeQuestRouteSnapshot(
+      "Cook's Assistant", materializeRuneProofAccount(fresh({ chunks: ['50,51'] }), 'chunked'),
+      chunkContentService, CHUNK_CONTENT_DATA_VERSION,
+    );
+    expect(questItemsObtainableNow("Cook's Assistant", snapshot).missing).not.toContain('Bucket of milk');
+  });
+
+  it.each([
+    ["Cook's Assistant", 'Dairy cow', '50,49', 'Lost City'],
+    ["Cook's Assistant", 'Hopper', '50,49', 'Lost City'],
+    ["Cook's Assistant", 'Wheat', '50,49', 'Lost City'],
+    ["Doric's Quest", 'Iron rocks', '47,52', '60 Mining'],
+    ["Doric's Quest", 'Copper rocks', '43,58', 'Started The Giant Dwarf'],
+  ])('%s: a %s inside an interior entered from %s needs its way in (%s)', (questId, name, chunk, needs) => {
+    const snapshot = materializeQuestRouteSnapshot(
+      questId, materializeRuneProofAccount(fresh(), 'chunked'), chunkContentService, CHUNK_CONTENT_DATA_VERSION,
+    );
+    const copies = snapshot.stationRequirements.filter(station => station.name === name && station.chunk === chunk);
+    expect(copies.length).toBeGreaterThan(0);
+    expect(copies.some(copy => copy.rawRequirements.some(requirement => requirement.raw === needs))).toBe(true);
+  });
+
   it('the Journal and the Doable tab agree on grown runs', () => {
     for (let i = 1; i <= 6; i++) {
       const unlocks = maxed(walk(i * 7919, 30));
