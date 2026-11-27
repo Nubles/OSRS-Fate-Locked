@@ -68,6 +68,9 @@ const EXPECTED_TZ_INSTANCE_EVIDENCE: Record<string, string[]> = {
   'The Grand Tree': [
     "The Grand Tree root tunnels and Glough's trapdoor cave and black-demon tunnel.",
   ],
+  'The Graveyard': [
+    'The quest expedition reaches the shipwrecks, the echoes and Ræun from the Graveyard mooring.',
+  ],
   'The Great Brain Robbery': [
     "The underwater tunnel, Fenkenstrain's windmill basement surgery, and the instanced Barrelchest fight.",
   ],
@@ -158,8 +161,8 @@ const EXPECTED_TZ_SURFACE_ONLY = [
   "Witch's Potion",
   'X Marks the Spot',
 ];
-/** Released 3, 11 and 18 Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
-const NEWER_THAN_CHUNK_PICKER = ['A New Leaf', 'A Shell of a Friend', "Mudfoot's Big Adventure", 'Rag and Bone Man III', 'The Birds and the Wasps', "The Writing's on the Wall"];
+/** Released in Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
+const NEWER_THAN_CHUNK_PICKER = ['A New Leaf', 'A Shell of a Friend', "Mudfoot's Big Adventure", 'Rag and Bone Man III', 'The Birds and the Wasps', 'The Graveyard', "The Writing's on the Wall"];
 const expectReviewedBatch = (start: string, end?: string) => {
   const rows = audit.entries.filter(entry =>
     entry.kind === 'quest' &&
@@ -220,11 +223,11 @@ describe('official quest and miniquest audit coverage', () => {
   });
 
   it('pins the current reviewed baseline by explicit kind', () => {
-    expect(official.entries).toHaveLength(219);
-    expect(audit.entries).toHaveLength(219);
-    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(200);
+    expect(official.entries).toHaveLength(220);
+    expect(audit.entries).toHaveLength(220);
+    expect(official.entries.filter(entry => entry.kind === 'quest')).toHaveLength(201);
     expect(official.entries.filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
-    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(200);
+    expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'quest')).toHaveLength(201);
     expect(Object.values(QUEST_DATA).filter(entry => entry.kind === 'miniquest')).toHaveLength(19);
   });
 
