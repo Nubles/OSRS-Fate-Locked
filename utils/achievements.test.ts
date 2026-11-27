@@ -114,8 +114,8 @@ describe('achievements engine', () => {
     const evaluated = evaluateAchievements(emptyUnlocks({ quests: [...QUEST_CAPE_QUEST_IDS] }), 'vanilla');
     const questCape = evaluated.find(achievement => achievement.title === 'Quest Cape');
 
-    expect(questCape?.current).toBe(QUEST_CAPE_QUEST_IDS.length);
-    expect(questCape?.target).toBe(QUEST_CAPE_QUEST_IDS.length);
+    expect(questCape?.current).toBe(192);
+    expect(questCape?.target).toBe(192);
     expect(questCape?.earned).toBe(true);
   });
 

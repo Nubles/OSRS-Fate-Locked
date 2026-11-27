@@ -18,7 +18,7 @@ import {
   SKILLS_LIST, REGIONS_LIST, EQUIPMENT_SLOTS, EQUIPMENT_TIER_MAX,
 } from '../constants';
 import { completionPercent } from './completion';
-import { QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
+import { completedOfficialQuestCount, OFFICIAL_QUEST_COUNT, QUEST_DATA, QUEST_CAPE_QUEST_IDS } from '../data/questData';
 import { DIARY_DATA } from '../data/diaryData';
 import { ALL_DIARY_TASKS } from '../data/diaryTasks';
 import { CA_DATA } from '../data/caData';
@@ -102,7 +102,6 @@ export interface EvaluatedAchievement extends Achievement {
 }
 
 // ── Totals (derived once from the data sets) ───────────────────────────────
-const TOTAL_QUESTS = QUEST_CAPE_QUEST_IDS.length;
 const TOTAL_DIARIES = Object.keys(DIARY_DATA).length;
 const TOTAL_CA = Object.keys(CA_DATA).length;
 const TOTAL_SKILLS = SKILLS_LIST.length;
@@ -383,8 +382,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     { title: 'Veteran', description: 'Complete 50 quests', target: 50, fate: 15 },
     { title: 'Centurion', description: 'Complete 100 quests', target: 100, fate: 15 },
     { title: 'Loremaster', description: 'Complete 150 quests', target: 150, fate: 25 },
-    // A fixed id, so adding a quest neither drops nor repays it (utils/questCapeAchievement).
-    { title: 'Quest Cape', description: 'Complete every quest', target: TOTAL_QUESTS, icon: 'crown', fate: 25, freeRituals: 1, id: QUEST_CAPE_ACHIEVEMENT_ID },
+  ]),
+  ...tiers('quests', 'Quests', 'crown', ({ u }) => completedOfficialQuestCount(u.quests), [
+    { title: 'Quest Cape', description: 'Complete every quest', target: OFFICIAL_QUEST_COUNT, fate: 25, freeRituals: 1, id: QUEST_CAPE_ACHIEVEMENT_ID },
   ]),
   ...tiers('qp', 'Quests', 'star', questPoints, [
     { title: "Champions' Guild", description: "Earn 32 Quest Points, enough to enter the Champions' Guild", target: 32 },
