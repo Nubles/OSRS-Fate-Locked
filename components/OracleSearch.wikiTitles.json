@@ -1,6 +1,6 @@
 {
-"note": "OSRS Wiki titles every Oracle row links to, each checked to exist (redirects followed) with one batched query on 24 Nov 2026. Rebuild it from a fresh check when a new Oracle row links somewhere new.",
-"checked": "2026-11-24",
+"note": "OSRS Wiki titles every Oracle row links to, checked in a batch on 24 Nov 2026 with redirects followed. The Graveyard was checked on 27 Nov 2026 at revision 15417666. Check new targets before adding them.",
+"checked": "2026-11-27",
 "titles": [
 "3rd Age amulet",
 "3rd Age axe",
@@ -2121,6 +2121,7 @@
 "The Giant Dwarf",
 "The Golem",
 "The Grand Tree",
+"The Graveyard",
 "The Great Brain Robbery",
 "The Great Conch",
 "The Hand in the Sand",
