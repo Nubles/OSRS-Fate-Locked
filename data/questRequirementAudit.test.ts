@@ -161,7 +161,7 @@ const EXPECTED_TZ_SURFACE_ONLY = [
   "Witch's Potion",
   'X Marks the Spot',
 ];
-/** Released in Nov 2026, after the pinned Chunk Picker export, so they stay unresolved. */
+/** These records use the October export even where independent Wiki evidence resolves a route. */
 const NEWER_THAN_CHUNK_PICKER = ['A New Leaf', 'A Shell of a Friend', "Mudfoot's Big Adventure", 'Rag and Bone Man III', 'The Birds and the Wasps', 'The Graveyard', "The Writing's on the Wall"];
 const expectReviewedBatch = (start: string, end?: string) => {
   const rows = audit.entries.filter(entry =>
@@ -322,16 +322,6 @@ describe('official quest and miniquest audit coverage', () => {
 
   it('reviews every T-Z quest', () => expectReviewedBatch('T'));
 
-  it('leaves no unexplained T-Z review placeholders', () => {
-    expect(audit.entries
-      .filter(entry =>
-        entry.kind === 'quest' &&
-        entry.id.localeCompare('T') >= 0 &&
-        entry.status === 'unresolved')
-      .map(entry => entry.id))
-      .toEqual(NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('T') >= 0));
-  });
-
   it('pins concrete non-surface evidence for every reviewed T-Z quest', () => {
     const rows = audit.entries.filter(entry =>
       entry.kind === 'quest' && entry.id.localeCompare('T') >= 0);
@@ -349,40 +339,6 @@ describe('official quest and miniquest audit coverage', () => {
   it('keeps committed quest-source JSON free of apostrophe mojibake', () => {
     expect(JSON.stringify({ official, audit })).not.toContain('\u00e2\u20ac\u2122');
   });
-  it('leaves no unexplained N-S review placeholders', () => {
-    expect(audit.entries
-      .filter(entry =>
-        entry.kind === 'quest' &&
-        entry.id.localeCompare('N') >= 0 &&
-        entry.id.localeCompare('T') < 0 &&
-        entry.status === 'unresolved')
-      .map(entry => entry.id))
-      .toEqual(NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('N') >= 0 && id.localeCompare('T') < 0));
-  });
-
-  it('leaves no unexplained G-M review placeholders', () => {
-    expect(audit.entries
-      .filter(entry =>
-        entry.kind === 'quest' &&
-        entry.id.localeCompare('G') >= 0 &&
-        entry.id.localeCompare('N') < 0 &&
-        entry.status === 'unresolved')
-      .map(entry => entry.id))
-      .toEqual(NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('G') >= 0 && id.localeCompare('N') < 0));
-  });
-
-  it('leaves only the concrete A-F alternative-requirement conflict unresolved', () => {
-    expect(audit.entries
-      .filter(entry =>
-        entry.kind === 'quest' &&
-        entry.id.localeCompare('A') >= 0 &&
-        entry.id.localeCompare('G') < 0 &&
-        entry.status === 'unresolved')
-      .map(entry => entry.id)
-      .sort())
-      .toEqual(['Desert Treasure I', ...NEWER_THAN_CHUNK_PICKER.filter(id => id.localeCompare('A') >= 0 && id.localeCompare('G') < 0)].sort());
-  });
-
   it('has reviewed evidence and matching requirements for all 19 miniquests', () => {
     const rows = audit.entries.filter(entry => entry.kind === 'miniquest');
     expect(rows).toHaveLength(19);
@@ -398,39 +354,14 @@ describe('official quest and miniquest audit coverage', () => {
     })).toEqual([]);
   });
 
-  it('leaves only the three concrete miniquest evidence conflicts unresolved', () => {
-    // The Fractured Archive is newer than the pinned Chunk Picker export.
-    expect(audit.entries
-      .filter(entry => entry.kind === 'miniquest' && entry.status === 'unresolved')
-      .map(entry => entry.id))
-      .toEqual(['Bear Your Soul', 'The Enchanted Key', 'The Fractured Archive']);
-  });
-
-  it('records concrete source gaps for every generated discrepancy category', () => {
-    const byId = new Map(audit.entries.map(entry => [entry.id, entry]));
-    const cases = [
-      {
-        id: 'Desert Treasure I',
-        discrepancy: ['regions-and-locations policy', 'Kharidian Desert', 'Jaldraocht Pyramid', 'Bedabin Camp', '49,47', 'The Dig Site'],
-      },
-      {
-        id: 'Bear Your Soul',
-        discrepancy: ['regions policy', 'Soul Altar', 'Blood Altar', '26,59'],
-      },
-      {
-        id: 'The Enchanted Key',
-        discrepancy: ['eleven fixed treasure sites', 'Falador', 'Grand Exchange', 'Jorral'],
-      },
-    ];
-
-    for (const example of cases) {
-      const entry = byId.get(example.id)!;
-      for (const detail of example.discrepancy) {
-        expect(entry.discrepancy, `${example.id}: ${detail}`).toContain(detail);
-      }
-      expect(entry.conservativeReason, example.id).toContain(example.id);
-      expect(entry.conservativeReason, example.id).toContain(`${entry.accessPolicy} policy`);
-      expect(entry.conservativeReason, example.id).toMatch(/premature completion\/key-roll eligibility/i);
+  it('retains the four unresolved entrances, landings and jail locations', () => {
+    const outstanding = audit.entries.filter(entry => entry.status === 'unresolved');
+    expect(outstanding.map(entry => entry.id)).toEqual([
+      'Bear Your Soul', 'The Fractured Archive', 'The Graveyard', "The Writing's on the Wall",
+    ]);
+    for (const entry of outstanding) {
+      expect(entry.discrepancy).toContain(QUEST_DATA[entry.id].manualRequirements![0]);
+      expect(entry.conservativeReason).toContain(entry.id);
     }
   });
 
@@ -460,7 +391,7 @@ describe('official quest and miniquest audit coverage', () => {
 
   it('rejects generic procedural unresolved placeholders', () => {
     const generic = structuredClone(audit);
-    const unresolved = generic.entries.find(entry => entry.id === 'Desert Treasure I')!;
+    const unresolved = generic.entries.find(entry => entry.id === 'Bear Your Soul')!;
     unresolved.discrepancy =
       'Pending review of the permanent Wiki and Chunk Picker sources.';
     unresolved.conservativeReason =

@@ -49,6 +49,7 @@ export const CHANGELOG_RELEASES = [
         'Quest Cape and Discord progress count Recipe for Disaster once after all ten parts. The full list is now 192 quests and 357 quest points.',
         'Diary checklists show the net trap for black salamanders and the axe for Wilderness Ents. You can catch a snowy knight without a butterfly jar.',
         'The Journal checks your assigned ghost route, accepts other sources of logs for Enakhra’s Lament and lets you reach Islwyn without visiting Port Tyras.',
+        'Chunked checks all eleven Enchanted Key digs and Mudfoot’s graveyard fight. Skill guides now distinguish the Slayer helmet, comp ogre bow and ammo parts.',
       ],
     },
   },

@@ -99,12 +99,12 @@
     {
       "id": "A New Leaf",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-22",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_New_Leaf&oldid=15412103",
-        "revision": 15412103,
-        "revisionTimestamp": "2026-11-22T16:53:30Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_New_Leaf&oldid=15417379",
+        "revision": 15417379,
+        "revisionTimestamp": "2026-11-27T06:52:53Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
@@ -115,17 +115,14 @@
           "Wiki revision 15412103 lists two cabbages, compost, cabbage, rosemary and potato seeds and four bowls (all obtainable during the quest), a vial of water and a spade."
         ],
         "travel": [
-          "Wiki revision 15412103 starts by picking and eating a communication cabbage in the cabbage field south of Hosidius; its startmap is empty, so the chunk (27,55) is taken from the Cabbage page's Hosidius cabbage patch.",
-          "Dishop Dennis is at his farm south-east of the Farming Guild (20,58); the stew goes to Guildmaster Jane and a sergeant at the Farming Guild (19,58), Mary at the farm south of it (19,57) and Konar on top of Mount Karuulm (20,59); Allanna in the guild gives the potion book only after a farming contract.",
-          "Sprout spies go on the ranges in the White Knights' Castle in Falador (46,52), the Hosidius Mess Hall (25,56), the Gnome Restaurant in the Tree Gnome Stronghold (38,54), Port Phasmatys (57,54) and the Al Kharid kebab shop (51,49)."
+          "The start map now pins the Hosidius cabbage at 1747,3551 (27,55). Dishop Dennis is at 1298,3723 (20,58), Jane and Allanna share 19,58, Mary and the sergeant share 19,57, and Konar is at 1309,3785 (20,59). The contract and the five spy ranges remain required.",
+          "The five range pins are 2967,3333, 1648,3629, 2451,3512, 3676,3469 and 3271,3182. The final fight is entered by speaking to Dennis."
         ],
         "instances": [
           "Wiki revision 15412103 ends with a fight against five melee enemies in an instance of the wheat field south of Dishop Dennis's house."
         ],
         "partialCompletion": []
-      },
-      "discrepancy": "A New Leaf uses the locations policy with the Hosidius cabbage field (27,55), Dishop Dennis's farm (20,58), the Farming Guild (19,58), Mary's farm (19,57), Mount Karuulm (20,59), the White Knights' Castle (46,52), the Hosidius Mess Hall (25,56), the Gnome Restaurant (38,54), Port Phasmatys (57,54) and the Al Kharid kebab shop (51,49), plus the Farming Guild guild and the confirmed manual requirement \"Completed at least one farming contract\". It was released on 18 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The Wiki gives no start map; the start chunk follows the Cabbage page's Hosidius patch and the rest follow the stable Wiki revision's walkthrough map pins.",
-      "conservativeReason": "Keeping A New Leaf's current locations policy requirements (the ten walkthrough locations; the Farming Guild; Farming 45, Cooking 35, Herblore 32; Priest in Peril; one farming contract) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      }
     },
     {
       "id": "A Night at the Theatre",
@@ -257,12 +254,12 @@
     {
       "id": "A Shell of a Friend",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-12",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Shell_of_a_Friend&oldid=15400784",
-        "revision": 15400784,
-        "revisionTimestamp": "2026-11-12T05:39:55Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=A_Shell_of_a_Friend&oldid=15411858",
+        "revision": 15411858,
+        "revisionTimestamp": "2026-11-22T08:55:49Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
@@ -273,13 +270,11 @@
           "Wiki revision 15400784 lists any woodcutting axe, with a bronze axe spawning by the island during the quest."
         ],
         "travel": [
-          "Wiki revision 15400784 starts with the juvenile snail on the island close to fairy ring ALQ in the eastern Haunted Woods and every step stays around that island."
+          "The walkthrough map pins the snail and all fifteen resource spawns. Their x coordinates span 3564–3583 and their y coordinates span 3478–3513, all inside 55,54. Both fights take place at the shelter."
         ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "A Shell of a Friend uses the locations policy with the Snail island in the Haunted Woods (55,54), and runtime regions [Morytania]. It was released on 11 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The location follows the stable Wiki revision's walkthrough around the island.",
-      "conservativeReason": "Keeping A Shell of a Friend's current locations policy requirements (the Snail island in the Haunted Woods; Herblore 16, Construction 15; Priest in Peril) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      }
     },
     {
       "id": "A Soul's Bane",
@@ -650,15 +645,15 @@
       "id": "Bear Your Soul",
       "kind": "miniquest",
       "status": "unresolved",
-      "reviewedAt": "2026-09-03",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Bear_Your_Soul&oldid=15237156",
-        "revision": 15237156,
-        "revisionTimestamp": "2026-06-21T16:35:01Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Bear_Your_Soul&oldid=15413323",
+        "revision": 15413323,
+        "revisionTimestamp": "2026-11-23T08:06:22Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Arceuus\",\"Taverley\"],\"skills\":{},\"prereqs\":[],\"points\":0}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Arceuus\",\"Taverley\"],\"locations\":[{\"chunkOptions\":[{\"cx\":25,\"cy\":59}],\"id\":\"arceuus-library\",\"label\":\"Arceuus Library\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":28,\"cy\":60}],\"id\":\"aretha-soul-altar\",\"label\":\"Aretha near the Soul Altar\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":26,\"cy\":59}],\"id\":\"arceuus-church\",\"label\":\"Arceuus church crypt\",\"standardAreas\":[\"Arceuus\"]}],\"skills\":{},\"prereqs\":[],\"manualRequirements\":[\"Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "25,59",
@@ -681,16 +676,15 @@
           "A spade plus a dusty key, sufficient Agility, or a Key master teleport is needed; item possession and route choice are not machine-enforced."
         ],
         "travel": [
-          "The Wiki route is Arceuus Library, Aretha at the Soul Altar, the Arceuus church crypt, and the Key Master in Cerberus' Lair.",
-          "The catalogue-wide parent-region audit replaced Kourend & Kebos, Asgarnia with the exact tracked access set: Arceuus, Taverley."
+          "The three mandatory Arceuus stops are the library (1633,3808), Aretha (1814,3854) and the church crypt (1698,3794). The Blood Altar marker in 26,59 describes the church chunk, not Aretha's position in 28,60. The Key Master is inside a dungeon with a direct teleport as well as walking routes."
         ],
         "instances": [
           "Cerberus' Lair is reached through Taverley Dungeon or by Key master teleport."
         ],
         "partialCompletion": []
       },
-      "discrepancy": "Bear Your Soul uses the regions policy with runtime regions [Kourend & Kebos, Asgarnia]. The pinned Wiki requires the Arceuus Library, Aretha at the Soul Altar, the Arceuus church crypt, and the Key Master in Cerberus' Lair, while the pinned Chunk Picker records first Arceuus Library (chunk 25,59), step Blood Altar (chunk 26,59), and step South Taverley (chunk 45,53). The Blood Altar label does not identify the Wiki-required Soul Altar or church crypt, so the evidence cannot support a narrower exact-location policy without guessing.",
-      "conservativeReason": "Keeping Bear Your Soul's corrected regions policy requirements (regions [Arceuus, Taverley]; skills [none]; prerequisites [none]) prevents this source-label conflict from allowing premature completion/key-roll eligibility while avoiding the unsupported Client of Kourend prerequisite."
+      "discrepancy": "Bear Your Soul uses the regions-and-locations policy including Arceuus Library. The pinned South Taverley (45,53) marks a surface approach. A key master teleport lands inside Cerberus' Lair, so one exact surface entrance cannot represent both routes. The player confirms: Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport.",
+      "conservativeReason": "The regions-and-locations policy for Bear Your Soul retains Arceuus Library and the route confirmation to prevent premature completion/key-roll eligibility."
     },
     {
       "id": "Below Ice Mountain",
@@ -1821,8 +1815,8 @@
     {
       "id": "Desert Treasure I",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-23",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
         "url": "https://oldschool.runescape.wiki/w/index.php?title=Desert_Treasure_I&oldid=15391860",
         "revision": 15391860,
@@ -1830,7 +1824,7 @@
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
       "accessPolicy": "regions-and-locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Smithing\":30,\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the ring of visibility for the Damis fight\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear ice gloves to fight Fareed\",\"slot\":\"Gloves\",\"tier\":1},{\"reason\":\"Wear spiked boots to climb the ice ledge\",\"slot\":\"Boots\",\"tier\":1}],\"preparationRequirements\":[{\"action\":\"make molten glass\",\"alternative\":\"molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest\",\"level\":1,\"skill\":\"Crafting\"}],\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Spice Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"Food Shops\"],\"skills\":{\"Woodcutting\":75}},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67,\"Woodcutting\":75}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"skills\":{\"Thieving\":65,\"Woodcutting\":75}},{\"merchants\":[\"Spice Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"merchants\":[\"Food Shops\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Wintertodt Camp\",\"Deepfin Point\"],\"skills\":{\"Firemaking\":50,\"Sailing\":67,\"Woodcutting\":50}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Thieving\":65,\"Woodcutting\":50}}],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Bandit Camp\",\"Bedabin Camp\",\"Pollnivneach\",\"Entrana\",\"Burthorpe\",\"Baxtorian Falls\",\"Canifis\",\"Mort Myre Swamp\",\"Mountain Camp\",\"Digsite\",\"Draynor Village\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":45}],\"id\":\"jaldraocht-pyramid\",\"label\":\"Jaldraocht Pyramid\",\"standardAreas\":[\"Bandit Camp\"]}],\"skills\":{\"Firemaking\":50,\"Magic\":50,\"Slayer\":10,\"Thieving\":53},\"equipmentRequirements\":[{\"reason\":\"Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wear the ring of visibility for the Damis fight\",\"slot\":\"Ring\",\"tier\":1},{\"reason\":\"Wear spiked boots to climb the ice ledge\",\"slot\":\"Boots\",\"tier\":1}],\"preparationRequirements\":[{\"action\":\"make molten glass\",\"alternative\":\"molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest\",\"level\":1,\"skill\":\"Crafting\"},{\"action\":\"smelt six steel bars\",\"alternative\":\"six steel bars from a permitted source\",\"level\":30,\"skill\":\"Smithing\"},{\"action\":\"cut twelve magic logs\",\"alternateRoute\":{\"regions\":[\"Wintertodt Camp\"],\"skills\":{\"Firemaking\":50,\"Woodcutting\":50}},\"alternative\":\"twelve magic logs from a permitted source\",\"level\":75,\"skill\":\"Woodcutting\"}],\"prereqs\":[\"The Dig Site\",\"Temple of Ikov\",\"The Tourist Trap\",\"Troll Stronghold\",\"Priest in Peril\",\"Waterfall Quest\"],\"oneOf\":[{\"merchants\":[\"Spice Shops\"]},{\"merchants\":[\"Food Shops\"]},{\"merchants\":[\"General Stores\"],\"quests\":[\"Pandemonium\"],\"regions\":[\"Deepfin Point\"],\"skills\":{\"Sailing\":67}},{\"anyOfRegions\":[\"East Ardougne\",\"Civitas illa Fortis\",\"Port Roberts\",\"Prifddinas\"],\"skills\":{\"Thieving\":65}}],\"skillAlternatives\":[{\"manualRequirements\":[\"Have a gas mask from Plague City for the smoke dungeon (alternative to Slayer 10)\"],\"quests\":[\"Plague City\"],\"skill\":\"Slayer\"}],\"points\":3}",
       "chunkEvidence": [
         {
           "chunkId": "39,53",
@@ -1895,7 +1889,9 @@
           "Judgement-call item gate review (the owner chose to gate them) 2026-10-10: gated for 12 magic logs; 6 steel bars, so an ironman can get or wear them with the run's unlocks (shop-only items need the shop, skill-only items need the skill, worn items need the slot).",
           "Item alternatives rechecked 2026-10-13 (the owner asked to make sure no gate misses a way to get the item): lockpicks are pickpocketed from bandits (53 Thieving); spice also from a spice stall (65 Thieving); Wintertodt gives magic logs at 50 Woodcutting.",
           "Item gate review 2026-11-23: molten glass is made at Crafting 1 and no shop sells it, so Crafting 1 is a preparation requirement; the only drops (Thermonuclear smoke devil, Phantom Muspah, Monumental chest) can be confirmed instead.",
-          "Item gate review 2026-11-23 (shops): the General Stores spice routes now need Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with spice."
+          "Item gate review 2026-11-23 (shops): the General Stores spice routes now need Sailing 67 and Deepfin Point, because Durrik's Goods in the Deepfin Mine is the only General Store with spice.",
+          "The smoke dungeon accepts the Plague City gas mask instead of 10 Slayer. The skill alternative already checks Plague City and the player's mask confirmation.",
+          "Fareed can be defeated with manually cast water spells and runes, so the glove slot is optional. Six steel bars and twelve magic logs may be obtained from permitted sources. Smelting, cutting and the Wintertodt route remain automatic preparation checks."
         ],
         "travel": [
           "The route crosses the desert, Asgarnia, Kandarin, Morytania, and Misthalin; Wilderness was not unavoidable in the pinned route.",
@@ -1910,9 +1906,7 @@
         "partialCompletion": [
           "Slayer 10 is one route; completed Plague City with a manually confirmed gas mask is an alternative, not an additional universal quest requirement."
         ]
-      },
-      "discrepancy": "Desert Treasure I retains the regions-and-locations policy with regions across the Kharidian Desert, Asgarnia, Kandarin, Morytania and Misthalin, the Jaldraocht Pyramid stand-in location, prerequisite The Dig Site and Slayer 10. The pinned Wiki permits Slayer 10 or a gas mask, but item possession is not tracked; the pinned Chunk Picker includes Bedabin Camp (chunk 49,47), so the alternative cannot be encoded without weakening eligibility.",
-      "conservativeReason": "Keeping Desert Treasure I's regions-and-locations policy, including Bedabin Camp, the Jaldraocht Pyramid and Slayer 10, prevents premature completion/key-roll eligibility when the gas-mask alternative cannot be observed by runtime state."
+      }
     },
     {
       "id": "Desert Treasure II",
@@ -4873,29 +4867,27 @@
     {
       "id": "Mudfoot's Big Adventure",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-03",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mudfoot's_Big_Adventure&oldid=15392295",
-        "revision": 15392295,
-        "revisionTimestamp": "2026-11-03T17:03:46Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Mudfoot's_Big_Adventure&oldid=15401967",
+        "revision": 15401967,
+        "revisionTimestamp": "2026-11-13T10:17:51Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-general-store\",\"label\":\"Lumbridge General Store\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":51}],\"id\":\"lumbridge-cow-field\",\"label\":\"Cow field across the River Lum\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":51}],\"id\":\"lumbridge-chicken-field\",\"label\":\"Chicken field south of the windmill\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":50}],\"id\":\"ham-hideout\",\"label\":\"H.A.M. hideout\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-general-store\",\"label\":\"Lumbridge General Store and Lozar's house\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":51}],\"id\":\"lumbridge-chicken-field\",\"label\":\"Chicken field south of the windmill\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":50}],\"id\":\"ham-hideout\",\"label\":\"Outside the H.A.M. hideout\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":50,\"cy\":49}],\"id\":\"lumbridge-graveyard\",\"label\":\"Warrior outlaw in Lumbridge Graveyard\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Wiki revision 15392295 lists no required items; it recommends Magic or Ranged combat gear for the final outlaw."
         ],
         "travel": [
-          "Wiki revision 15392295 starts at Captain Harlan outside the Lumbridge General Store and visits the cow field across the River Lum, the chicken field south of the windmill, the H.A.M. hideout and the Lumbridge graveyard."
+          "The start and Lozar's house share 50,50. The walkthrough pins the ranger at 3166,3288 (49,51), the mage outside the H.A.M. hideout at 3172,3240 (49,50), and the warrior in Lumbridge Graveyard at 3243,3197 (50,49)."
         ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "Mudfoot's Big Adventure uses the locations policy with the Lumbridge General Store (50,50), the cow field across the River Lum (50,51), the chicken field south of the windmill (49,51) and the H.A.M. hideout (49,50), and runtime regions [Misthalin]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The locations follow the stable Wiki revision's route around Lumbridge.",
-      "conservativeReason": "Keeping Mudfoot's Big Adventure's current locations policy requirements (the Lumbridge General Store, the cow field across the River Lum, the chicken field south of the windmill and the H.A.M. hideout; it has no quest or skill prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      }
     },
     {
       "id": "Murder Mystery",
@@ -5592,31 +5584,29 @@
     {
       "id": "Rag and Bone Man III",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-22",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_III&oldid=15412074",
-        "revision": 15412074,
-        "revisionTimestamp": "2026-11-22T16:18:01Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=Rag_and_Bone_Man_III&oldid=15416997",
+        "revision": 15416997,
+        "revisionTimestamp": "2026-11-27T00:44:55Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":54}],\"id\":\"odd-old-man-house\",\"label\":\"Odd Old Man's house in Silvarea\",\"standardAreas\":[\"Silvarea\"]}],\"skills\":{\"Slayer\":58},\"equipmentRequirements\":[{\"reason\":\"Wear earmuffs or a Slayer helmet to fight the ancient banshee\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wield Sedridor's staff to kill Tolna's heads\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"Rag and Bone Man II\",\"Dragon Slayer I\",\"The Great Brain Robbery\",\"Defender of Varrock\",\"Tower of Life\",\"A Soul's Bane\"],\"points\":3}",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":52,\"cy\":54}],\"id\":\"odd-old-man-house\",\"label\":\"Odd Old Man's house in Silvarea\",\"standardAreas\":[\"Silvarea\"]}],\"skills\":{\"Slayer\":58},\"equipmentRequirements\":[{\"reason\":\"Wear earmuffs or a Slayer helmet to fight the ancient banshee\",\"slot\":\"Head\",\"tier\":1},{\"reason\":\"Wield Sedridor's staff to kill Tolna's heads\",\"slot\":\"Weapon\",\"tier\":1}],\"prereqs\":[\"Rag and Bone Man II\",\"Dragon Slayer I\",\"The Great Brain Robbery\",\"Defender of Varrock\",\"Tower of Life\",\"A Soul's Bane\"],\"manualRequirements\":[\"Can obtain two different bones on the Odd Old Man’s wish list from permitted sources\"],\"points\":3}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Wiki revision 15412074 lists a Slayer helmet or earmuffs (obtainable during the quest), worn for the ancient banshee; Sedridor's staff is wielded in the death loop to kill Tolna's heads."
         ],
         "travel": [
-          "Wiki revision 15412074 starts with the Odd Old Man at his house in northern Silvarea (startmap 3362,3507, chunk 52,54). Any two wish-list bones will do; the nearest are the armoured zombies round the mountain and the angry giant rats in Tolna's rift, behind the required Defender of Varrock and A Soul's Bane."
+          "Start with the Odd Old Man in 52,54. The wish list accepts two different listed bones. Cow and chicken are possible choices and no particular monster location is compulsory. The death loop, asylum and final fight are entered through the Odd Old Man."
         ],
         "instances": [
-          "Wiki revision 15412074: the death loop (Death's Office, Oblivion, an illusory Tutorial Island, the Ruins of Camdozaal, the Wizards' Tower basement and Tolna's Rift) and the Ancient Asylum under the Odd Old Man's house are entered through him."
+          "The illusory death loop and the ancient asylum are entered through the Odd Old Man. The asylum is beneath the Digsite and Tolna's rift."
         ],
         "partialCompletion": []
-      },
-      "discrepancy": "Rag and Bone Man III uses the locations policy with the Odd Old Man's house in Silvarea (52,54), the Head and Weapon slots, and runtime regions [Misthalin]. It was released on 18 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The location follows the stable Wiki revision's startmap; the two wish-list bones have many sources and are not pinned to one chunk.",
-      "conservativeReason": "Keeping Rag and Bone Man III's current locations policy requirements (the Odd Old Man's house in Silvarea; Slayer 58; Rag and Bone Man II, Dragon Slayer I, The Great Brain Robbery, Defender of Varrock, Tower of Life and A Soul's Bane; the Head and Weapon slots) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      }
     },
     {
       "id": "Ratcatchers",
@@ -7419,12 +7409,12 @@
     {
       "id": "The Birds and the Wasps",
       "kind": "quest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-12",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Birds_and_the_Wasps&oldid=15400869",
-        "revision": 15400869,
-        "revisionTimestamp": "2026-11-12T10:17:11Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Birds_and_the_Wasps&oldid=15407112",
+        "revision": 15407112,
+        "revisionTimestamp": "2026-11-19T01:33:51Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
@@ -7432,16 +7422,14 @@
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "Wiki revision 15400869 lists insect repellent, a beekeeper's or bee hunter's hat, an insect net and bird snares, all obtainable during the quest from the crate next to Farmer Bea."
+          "The net, repellent, hat and bird snares are obtained during the quest. The player wears the hat and wields the insect net."
         ],
         "travel": [
-          "Wiki revision 15400869 starts with Farmer Bea at Bea's farm, east of the south-east Varrock mine, and makes one trip to the bee dealer inside the Grand Exchange's east entrance."
+          "Farmer Bea and the hunting grounds are on the Digsite ridge (51,52). The bee dealer stands at 3187,3493 (49,54). The net, hat, repellent and snares are available at the farm."
         ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "The Birds and the Wasps uses the locations policy with Bea's farm (51,52) and the Grand Exchange (49,54), and runtime regions [Misthalin]. It was released on 11 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The locations follow the stable Wiki revision's route between Bea's farm and the Grand Exchange.",
-      "conservativeReason": "Keeping The Birds and the Wasps's current locations policy requirements (Bea's farm and the Grand Exchange; the bee hunter's hat and insect net slots; it has no quest or skill prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      }
     },
     {
       "id": "The Blood Moon Rises",
@@ -7672,16 +7660,16 @@
     {
       "id": "The Enchanted Key",
       "kind": "miniquest",
-      "status": "unresolved",
-      "reviewedAt": "2026-11-24",
+      "status": "verified-with-notes",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Enchanted_Key&oldid=15237155",
-        "revision": 15237155,
-        "revisionTimestamp": "2026-06-21T16:34:58Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Enchanted_Key&oldid=15336907",
+        "revision": 15336907,
+        "revisionTimestamp": "2026-09-09T08:48:56Z"
       },
       "chunkSourceCommit": "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
-      "accessPolicy": "regions",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"regions\",\"regions\":[\"Rellekka\",\"Tree Gnome Stronghold\",\"East Ardougne\",\"Arandar\",\"Port Sarim\",\"Falador\",\"Lumbridge\",\"Varrock\",\"Al Kharid\"],\"skills\":{},\"prereqs\":[\"Making History\"],\"points\":0}",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Rellekka\",\"Tree Gnome Stronghold\",\"East Ardougne\",\"Arandar\",\"Port Sarim\",\"Falador\",\"Lumbridge\",\"Varrock\",\"Al Kharid\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":56}],\"id\":\"rellekka-dig\",\"label\":\"South of Rellekka\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":40,\"cy\":50}],\"id\":\"ardougne-dig\",\"label\":\"South of Ardougne\",\"standardAreas\":[\"East Ardougne\"]},{\"chunkOptions\":[{\"cx\":37,\"cy\":52}],\"id\":\"arandar-dig\",\"label\":\"South of the Gnome Stronghold\",\"standardAreas\":[\"Arandar\"]},{\"chunkOptions\":[{\"cx\":38,\"cy\":53}],\"id\":\"stronghold-dig\",\"label\":\"Inside the Gnome Stronghold\",\"standardAreas\":[\"Tree Gnome Stronghold\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":53}],\"id\":\"body-altar-dig\",\"label\":\"Near the Body Altar\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":46,\"cy\":51}],\"id\":\"falador-dig\",\"label\":\"South of Falador\",\"standardAreas\":[\"Falador\"]},{\"chunkOptions\":[{\"cx\":47,\"cy\":49}],\"id\":\"mudskipper-dig\",\"label\":\"Mudskipper Point\",\"standardAreas\":[\"Port Sarim\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":49}],\"id\":\"swamp-dig\",\"label\":\"Lumbridge Swamp\",\"standardAreas\":[\"Lumbridge\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":50}],\"id\":\"al-kharid-dig\",\"label\":\"Al Kharid\",\"standardAreas\":[\"Al Kharid\"]},{\"chunkOptions\":[{\"cx\":51,\"cy\":52}],\"id\":\"varrock-mine-dig\",\"label\":\"South-east Varrock mine\",\"standardAreas\":[\"Varrock\"]},{\"chunkOptions\":[{\"cx\":49,\"cy\":54}],\"id\":\"ge-dig\",\"label\":\"Grand Exchange\",\"standardAreas\":[\"Varrock\"]}],\"skills\":{},\"prereqs\":[\"Making History\"],\"points\":0}",
       "chunkEvidence": [
         {
           "chunkId": "37,52",
@@ -7739,15 +7727,11 @@
           "The enchanted key and a spade are required; item possession is not machine-enforced."
         ],
         "travel": [
-          "The Wiki fixes eleven treasure sites across Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, and the Kharidian Desert.",
-          "The catalogue-wide parent-region audit replaced Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert with the exact tracked access set: Rellekka, Observatory, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock, Al Kharid.",
-          "Place review 2026-11-24 (Wiki rev 15336907 ==Treasure locations==, mapped through data/subAreaChunks.ts): the 11 sites are in 42,56 Rellekka, 40,50 East Ardougne, 37,52 Arandar, 38,53 Tree Gnome Stronghold, 47,53 and 46,51 Falador, 47,49 Port Sarim, 49,49 Lumbridge, 51,50 Al Kharid, and 51,52 and 49,54 Varrock; the silver merchant who replaces the key is in 41,51 East Ardougne. The page never names the Observatory (37,49 and 38,49), so it was dropped from the regions, leaving Rellekka, Tree Gnome Stronghold, East Ardougne, Arandar, Port Sarim, Falador, Lumbridge, Varrock and Al Kharid."
+          "All eleven dig squares on the Wiki map to owned surface chunks. In table order they are 42,56, 40,50, 37,52, 38,53, 47,53, 46,51, 47,49, 49,49, 51,50, 51,52 and 49,54. The key comes from Making History. Reclaiming it at the silver merchant is optional. The Jorral marker and the nine Picker steps are retained as historical evidence."
         ],
         "instances": [],
         "partialCompletion": []
-      },
-      "discrepancy": "The Enchanted Key uses the regions policy with runtime regions [Fremennik, Kandarin, Tirannwn, Asgarnia, Misthalin, Kharidian Desert]. The pinned Chunk Picker records Jorral's Outpost as first (chunk 38,52) and nine treasure steps, while the pinned Wiki starts from the enchanted key and requires eleven fixed treasure sites; the picker omits the Falador and Grand Exchange sites and its Jorral's Outpost first record is not one of those eleven sites. This conflict prevents a trustworthy exact-location policy.",
-      "conservativeReason": "Keeping The Enchanted Key's corrected regions policy requirements across the full Wiki route, including Rellekka, with prerequisite [Making History], prevents the missing and extra picker records from allowing premature completion/key-roll eligibility until exact location evidence agrees."
+      }
     },
     {
       "id": "The Eyes of Glouphrie",
@@ -7943,28 +7927,28 @@
       "id": "The Fractured Archive",
       "kind": "miniquest",
       "status": "unresolved",
-      "reviewedAt": "2026-10-22",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fractured_Archive_(miniquest)&oldid=15379009",
-        "revision": 15379009,
-        "revisionTimestamp": "2026-10-22T01:21:09Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Fractured_Archive_(miniquest)&oldid=15386187",
+        "revision": 15386187,
+        "revisionTimestamp": "2026-10-30T12:16:20Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-swamp-caves\",\"label\":\"Lumbridge Swamp Caves\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[\"While Guthix Sleeps\"],\"points\":0}",
+      "requirementFingerprint": "{\"kind\":\"miniquest\",\"accessPolicy\":\"locations\",\"regions\":[\"Misthalin\"],\"locations\":[{\"chunkOptions\":[{\"cx\":49,\"cy\":49},{\"cx\":50,\"cy\":50}],\"id\":\"lumbridge-swamp-caves\",\"label\":\"Lumbridge Swamp Caves\",\"standardAreas\":[\"Lumbridge\"]}],\"skills\":{},\"prereqs\":[\"While Guthix Sleeps\"],\"manualRequirements\":[\"Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport\"],\"points\":0}",
       "chunkEvidence": [],
       "notes": {
         "items": [
-          "Wiki revision 15379009 lists no required items."
+          "The miniquest lists combat gear and supplies. The raid includes the Archive Guardian, three branching encounters and Ocellus."
         ],
         "travel": [
-          "Wiki revision 15379009 starts the miniquest near the entrance of the Ancient Guthixian Temple and recommends a Guthixian temple teleport. The Fractured Archive raid page reaches the Chasm of Tears through the Tears of Guthix cave in the Lumbridge Swamp Caves."
+          "The miniquest starts by the Ancient Guthixian Temple at 4052,4562 in the Chasm of Tears. The raid page describes the light creature route with a lit sapphire lantern and the direct Guthixian temple teleport. The two surface cave entries are only a proxy for permission to enter the area."
         ],
         "instances": [],
         "partialCompletion": []
       },
-      "discrepancy": "The Fractured Archive uses the locations policy with the Lumbridge Swamp Caves location (49,49 or 50,50) and runtime regions [Misthalin]. It was released on 20 October 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The stable Wiki revision starts it near the Ancient Guthixian Temple in the Chasm of Tears, which the Wiki reaches through the Tears of Guthix cave in the Lumbridge Swamp Caves, so the runtime uses the same location as Tears of Guthix.",
-      "conservativeReason": "Keeping The Fractured Archive's current locations policy requirements (the Lumbridge Swamp Caves location and While Guthix Sleeps) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the Chasm of Tears content is pinned and reviewed."
+      "discrepancy": "The Fractured Archive uses the locations policy including Lumbridge Swamp Caves. There is no pinned Chunk Picker first/step activity chunk for this quest. The Wiki's start tile is in the dungeon. A Guthixian temple teleport skips the surface cave entrances, and the pinned tracker map has no separate Archive entrance. The player confirms: Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport.",
+      "conservativeReason": "The locations policy for The Fractured Archive retains Lumbridge Swamp Caves and the route confirmation to prevent premature completion/key-roll eligibility. The prerequisite is While Guthix Sleeps."
     },
     {
       "id": "The Fremennik Exiles",
@@ -8432,9 +8416,9 @@
       "status": "unresolved",
       "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Graveyard&oldid=15417666",
-        "revision": 15417666,
-        "revisionTimestamp": "2026-11-27T17:27:20Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Graveyard&oldid=15417876",
+        "revision": 15417876,
+        "revisionTimestamp": "2026-11-27T20:51:09Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
       "accessPolicy": "locations",
@@ -8445,15 +8429,16 @@
           "Olaf's parchment or a spade to retrieve it, a knife, seven arctic pine logs, 21 soul runes and a hammer or chisel. An axe and spyglass are available on the route. Infuse the stakes at a usable runic altar; the Kourend Blood and Soul altars and Ourania do not work."
         ],
         "travel": [
-          "Olaf starts the quest at 2722,3727 (42,58). Volf and Brundt are in Rellekka (41,57), and Fossegrimen is in 41,56. Sail to Weissmere by ice-ready boat or pay Volf 5,000 coins. Plan a way back to Rellekka after the fight."
+          "Olaf starts the quest at 2722,3727 (42,58). Volf and Brundt are in Rellekka (41,57), and Fossegrimen is in 41,56. Sail to Weissmere by ice-ready boat or pay Volf 5,000 coins. Plan a way back to Rellekka after the fight.",
+          "The Mooring point table (Wiki revision 15415761) pins the dock at 2760,3975, in 43,62. On this map pin the tracker treats 43,62 as navigable water and has no ownable Graveyard landing."
         ],
         "instances": [
           "The quest expedition reaches the shipwrecks, the echoes and Ræun from the Graveyard mooring."
         ],
         "partialCompletion": []
       },
-      "discrepancy": "The Graveyard uses the locations policy for Olaf Hradson's camp and the Rellekka stops. The November release has no pinned Chunk Picker first/step activity chunk in the October export. The island mooring therefore uses the manual check: Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins.",
-      "conservativeReason": "The Graveyard locations policy retains Olaf Hradson's camp, the other two land stops, the skills and prerequisites including Pandemonium, and confirmations for the voyage and the altar to prevent premature completion/key-roll eligibility."
+      "discrepancy": "The Graveyard uses the locations policy including Olaf Hradson's camp. There is no pinned Chunk Picker first/step activity chunk for this quest. The Mooring point table (Wiki revision 15415761) pins the dock at 2760,3975, in 43,62. On this map pin the tracker treats 43,62 as navigable water and has no ownable Graveyard landing. The player confirms: Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins.",
+      "conservativeReason": "The locations policy for The Graveyard retains Olaf Hradson's camp and the route confirmation to prevent premature completion/key-roll eligibility. The prerequisite is Olaf's Quest."
     },
     {
       "id": "The Great Brain Robbery",
@@ -9081,29 +9066,29 @@
       "id": "The Writing's on the Wall",
       "kind": "quest",
       "status": "unresolved",
-      "reviewedAt": "2026-11-24",
+      "reviewedAt": "2026-11-27",
       "source": {
-        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15392368",
-        "revision": 15392368,
-        "revisionTimestamp": "2026-11-03T17:50:12Z"
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Writing's_on_the_Wall&oldid=15417487",
+        "revision": 15417487,
+        "revisionTimestamp": "2026-11-27T12:52:55Z"
       },
       "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
-      "accessPolicy": "locations",
-      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Kourend & Kebos\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"bettys-uncles-house\",\"label\":\"Betty's uncle's house by the Tithe Farm\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":58}],\"id\":\"captain-jensens-house\",\"label\":\"Captain Jensen's house in Port Piscarilius\",\"standardAreas\":[\"Piscarilius\"]},{\"chunkOptions\":[{\"cx\":23,\"cy\":56}],\"id\":\"shayzien-war-tent\",\"label\":\"War Tent in the Shayzien Encampment\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":22,\"cy\":56}],\"id\":\"shayzien-commissioners-house\",\"label\":\"The commissioner's house in Shayzien\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":55}],\"id\":\"river-hos-island\",\"label\":\"Island west of Watson's house\",\"standardAreas\":[\"Hosidius\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"points\":1}",
+      "accessPolicy": "regions-and-locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"regions-and-locations\",\"regions\":[\"Piscarilius\"],\"locations\":[{\"chunkOptions\":[{\"cx\":23,\"cy\":53}],\"id\":\"lands-end\",\"label\":\"Land's End\",\"standardAreas\":[\"Land's End\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":55}],\"id\":\"bettys-uncles-house\",\"label\":\"Betty's uncle's house by the Tithe Farm\",\"standardAreas\":[\"Hosidius\"]},{\"chunkOptions\":[{\"cx\":27,\"cy\":59}],\"id\":\"captain-jensens-house\",\"label\":\"Captain Jensen's house in Port Piscarilius\",\"standardAreas\":[\"Arceuus\"]},{\"chunkOptions\":[{\"cx\":23,\"cy\":56}],\"id\":\"shayzien-war-tent\",\"label\":\"War Tent in the Shayzien Encampment\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":22,\"cy\":56}],\"id\":\"shayzien-commissioners-house\",\"label\":\"The commissioner's house in Shayzien\",\"standardAreas\":[\"Shayzien\"]},{\"chunkOptions\":[{\"cx\":25,\"cy\":55}],\"id\":\"river-hos-island\",\"label\":\"Island west of Watson's house\",\"standardAreas\":[\"Hosidius\"]}],\"skills\":{\"Agility\":22,\"Thieving\":20},\"prereqs\":[],\"manualRequirements\":[\"Can reach the Port Piscarilius jail cell and return to inspect the writing\"],\"points\":1}",
       "chunkEvidence": [],
       "notes": {
         "items": [
           "Wiki revision 15392368 lists no required items."
         ],
         "travel": [
-          "Wiki revision 15392368 starts with Betty at Land's End and keeps the quest at Land's End.",
-          "Place review 2026-11-24 (Wiki rev 15412011 ==Walkthrough==, mapped through data/subAreaChunks.ts): after Land's End (1519,3438, 23,53) the quest goes to Betty's uncle's house north-west of the Tithe Farm (1784-1790,3521-3527, 27,55 Hosidius) with Joyce and the monk beside it, the Port Piscarilius jail and Captain Jensen's house in its north-west corner (1753-1759,3774-3784, asked as 27,58 Piscarilius; the body upstairs at 1755,3780 is in 27,59, which the map gives to Arceuus), the War Tent in the Shayzien Encampment (1485,3636, 23,56), the commissioner's house with Kyle on the path south of it (1452,3629, 22,56 Shayzien), and the island west of Watson's house (1615,3582, 25,55 Hosidius). Each is now a location."
+          "Betty starts in 23,53. The uncle's house is in 27,55. Captain Jensen's upstairs body is at 1755,3780 (27,59), although the building straddles 27,58/59. The War Tent, Commissioner Edwards and final trapdoor are in 23,56, 22,56 and 25,55 respectively. The arrest and return to the jail cell are separate steps.",
+          "The tracker assigns the upstairs body tile to Arceuus in Standard mode. The separate arrest and jail visit still require Piscarilius."
         ],
         "instances": [],
         "partialCompletion": []
       },
-      "discrepancy": "The Writing's on the Wall uses the locations policy with the Land's End (23,53), Hosidius (27,55 and 25,55), Piscarilius (27,58) and Shayzien (23,56 and 22,56) locations and runtime regions [Kourend & Kebos]. It was released on 3 November 2026, after the pinned Chunk Picker export (629e9fe, 7 October 2026), so there is no pinned Chunk Picker first/step activity chunk for it. The current Wiki revision starts at Land's End and then visits Hosidius, Port Piscarilius, Shayzien and the island in the River Hos.",
-      "conservativeReason": "Keeping The Writing's on the Wall's current locations policy requirements (the Land's End, Hosidius, Piscarilius and Shayzien locations, 22 Agility and 20 Thieving; it has no quest prerequisites) prevents this unresolved source gap from allowing premature completion/key-roll eligibility until a Chunk Picker export that includes the quest is pinned and reviewed."
+      "discrepancy": "The Writing's on the Wall uses the regions-and-locations policy including Land's End. There is no pinned Chunk Picker first/step activity chunk for this quest. Captain Jensen's body has an exact Wiki pin. The walkthrough requires returning to the jail cell to inspect the blood but does not pin its tile. The player confirms: Can reach the Port Piscarilius jail cell and return to inspect the writing.",
+      "conservativeReason": "The regions-and-locations policy for The Writing's on the Wall retains Land's End and the route confirmation to prevent premature completion/key-roll eligibility."
     },
     {
       "id": "Throne of Miscellania",

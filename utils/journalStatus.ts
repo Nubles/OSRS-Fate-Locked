@@ -393,6 +393,9 @@ export function evaluateQuestEligibility(
   for (const preparation of quest.preparationRequirements ?? []) {
     if (meetsSkillRequirement(unlocks, preparation.skill, preparation.level)) {
       evidence.push(`${preparation.skill} ${preparation.level} to ${preparation.action}`);
+    } else if (preparation.alternateRoute && questRequirementOptionMet(preparation.alternateRoute, unlocks, gameModeId)
+      && !strandedOption(preparation.alternateRoute, unlocks, gameModeId, areaRoutes)) {
+      evidence.push(questRequirementOptionLabel(preparation.alternateRoute));
     } else {
       manualChecks.push(`Unlock ${preparation.skill} (level ${preparation.level}) to ${preparation.action}, or confirm ${preparation.alternative}`);
     }

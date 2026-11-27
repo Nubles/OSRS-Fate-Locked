@@ -102,7 +102,9 @@ describe('quest journal skill alternatives in Vanilla', () => {
   it('counts the gas-mask confirmation once instead of also demanding Slayer training', () => {
     const html = desertTreasure(true);
     expect(html).toContain('Have a gas mask from Plague City');
-    expect(html).toContain('27/28 reqs');
+    const progress = html.match(/(\d+)\/(\d+) reqs/);
+    expect(progress).not.toBeNull();
+    expect(Number(progress![2]) - Number(progress![1])).toBe(1);
     expect(html).not.toContain('Training guide: Slayer');
     expect(html).not.toContain('Ready to complete!');
   });

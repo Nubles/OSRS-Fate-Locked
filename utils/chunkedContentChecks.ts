@@ -89,8 +89,14 @@ export function createChunkedChecks(service: ChunkContentService) {
     if (chunks === undefined) {
       const hit = service.entityLocations(questId, ['quest']);
       const seen = new Map<string, QuestChunk>();
+      // Making History already gives the enchanted key. Only the eleven Wiki dig
+      // sites are mandatory. The Picker also marks Jorral's outpost as a start.
+      const digSites = questId === 'The Enchanted Key'
+        ? new Set(QUEST_DATA[questId].locations!.flatMap(place => place.chunkOptions.map(keyOf)))
+        : undefined;
       for (const { cx, cy } of hit?.locations ?? []) {
         const key = `${cx},${cy}`;
+        if (digSites && !digSites.has(key)) continue;
         if (!seen.has(key)) seen.set(key, { cx, cy, key, id: String(cx * 256 + cy) });
       }
       chunks = seen.size ? Object.assign([...seen.values()], { keys: new Set(seen.keys()) }) : null;

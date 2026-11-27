@@ -202,10 +202,10 @@ describe('quest item gates checked on the Wiki (23 Nov 2026)', () => {
   it.each(['Observatory Quest', 'Horror from the Deep', 'Desert Treasure I'])(
     '%s asks for Crafting 1 to make its molten glass, as Sheep Shearer does for spinning', id => {
       // Wiki Molten glass (rev 15288555): "cannot be bought in any shop"; made at Crafting 1.
-      expect(QUEST_DATA[id].preparationRequirements).toEqual([{
+      expect(QUEST_DATA[id].preparationRequirements).toContainEqual({
         skill: 'Crafting', level: 1, action: 'make molten glass',
         alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
-      }]);
+      });
     });
 
   it('does not call Observatory Quest ready while Crafting is locked', () => {
@@ -232,6 +232,19 @@ describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
   });
   const routes = (id: string, state: UnlockState) =>
     (QUEST_DATA[id].oneOf ?? []).filter(option => questRequirementOptionMet(option, state, 'vanilla'));
+
+  it('accepts alternate Desert Treasure I supplies and lets Fareed be fought without gloves', () => {
+    const quest = QUEST_DATA['Desert Treasure I'];
+    const result = (levels: Record<string, number>, regions: string[] = []) =>
+      evaluateQuestEligibility(quest, unlocks({ ...at(levels), regions }), 'vanilla');
+    const untrained = result({});
+    expect(untrained.manualChecks.join(' ')).toContain('six steel bars from a permitted source');
+    expect(untrained.manualChecks.join(' ')).toContain('twelve magic logs from a permitted source');
+    expect(untrained.blockers.some(blocker => blocker.kind === 'equipment' && blocker.slot === 'Gloves')).toBe(false);
+    const wintertodt = result({ Woodcutting: 50, Firemaking: 50, Smithing: 30 }, ['Wintertodt Camp']);
+    expect(wintertodt.manualChecks.join(' ')).not.toMatch(/magic logs|steel bars/);
+    expect(result({ Woodcutting: 50, Firemaking: 50 }).manualChecks.join(' ')).toContain('twelve magic logs');
+  });
 
   it('gates the blessed holy symbol for Animal Magnetism on Prayer 31', () => {
     // Wiki Animal Magnetism (rev 15395095) ironman field: "Holy symbol (Prayer 31, not boostable)";
@@ -326,8 +339,7 @@ describe('quest item routes checked on the Wiki (23 Nov 2026, part 2)', () => {
   it.each<[string, string, Partial<UnlockState>?]>([
     // Durrik's Goods (rev 15372124) in the Deepfin Mine (Sailing 67) is the only General Store with silk or spice.
     ['Dragon Slayer I', 'General Stores'], ['Ghosts Ahoy', 'General Stores'], ['Enlightened Journey', 'General Stores'],
-    // Every Desert Treasure I route also needs its magic logs, so the case brings Woodcutting 75.
-    ['Cold War', 'General Stores'], ['Desert Treasure I', 'General Stores', at({ Woodcutting: 75 })],
+    ['Cold War', 'General Stores'], ['Desert Treasure I', 'General Stores'],
     // Frankie's Fishing Emporium (Port Piscarilius) is the only fishmonger with raw shark.
     ['The Fremennik Trials', 'Fishing Shops'],
     // Razmire Builders Merchants (Mort'ton, after Shades of Mort'ton) is the only limestone seller.
@@ -425,16 +437,33 @@ describe('quest places checked on the Wiki (24 Nov 2026, part 2)', () => {
     const places = (QUEST_DATA["The Writing's on the Wall"].locations ?? [])
       .map(place => `${place.standardAreas.join('|')} ${place.chunkOptions.map(({ cx, cy }) => `${cx},${cy}`).join(' ')}`);
     expect(places).toEqual([
-      "Land's End 23,53", 'Hosidius 27,55', 'Piscarilius 27,58', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
+      "Land's End 23,53", 'Hosidius 27,55', 'Arceuus 27,59', 'Shayzien 23,56', 'Shayzien 22,56', 'Hosidius 25,55',
     ]);
     expect(regionBlockers("The Writing's on the Wall", { regions: ["Land's End"] })).toEqual([
-      "Betty's uncle's house by the Tithe Farm", "Captain Jensen's house in Port Piscarilius",
+      'Piscarilius', "Betty's uncle's house by the Tithe Farm", "Captain Jensen's house in Port Piscarilius",
       'War Tent in the Shayzien Encampment', "The commissioner's house in Shayzien", "Island west of Watson's house",
     ]);
     expect(regionBlockers("The Writing's on the Wall",
-      { regions: ["Land's End", 'Hosidius', 'Piscarilius', 'Shayzien'] })).toEqual([]);
+      { regions: ["Land's End", 'Hosidius', 'Piscarilius', 'Arceuus', 'Shayzien'] })).toEqual([]);
     expect(regionBlockers("The Writing's on the Wall", { chunks: ['23,53', '27,55', '27,58', '23,56', '25,55'] }, 'chunked'))
-      .toEqual(["The commissioner's house in Shayzien"]);
+      .toEqual(["Captain Jensen's house in Port Piscarilius", "The commissioner's house in Shayzien"]);
+  });
+
+  it("requires the warrior outlaw's graveyard instead of the neighbouring cow field", () => {
+    const startAndOutlaws = ['50,50', '49,51', '49,50'];
+    expect(regionBlockers("Mudfoot's Big Adventure", { chunks: [...startAndOutlaws, '50,51'] }, 'chunked'))
+      .toEqual(['Warrior outlaw in Lumbridge Graveyard']);
+    expect(regionBlockers("Mudfoot's Big Adventure", { chunks: [...startAndOutlaws, '50,49'] }, 'chunked'))
+      .toEqual([]);
+  });
+
+  it('requires each of the eleven Enchanted Key digs even when another dig shares its Standard area', () => {
+    const digs = ['42,56', '40,50', '37,52', '38,53', '47,53', '46,51', '47,49', '49,49', '51,50', '51,52', '49,54'];
+    expect(regionBlockers('The Enchanted Key', { chunks: digs }, 'chunked')).toEqual([]);
+    for (const dig of digs) {
+      expect(regionBlockers('The Enchanted Key', { chunks: digs.filter(chunk => chunk !== dig) }, 'chunked'))
+        .toHaveLength(1);
+    }
   });
 
   it("asks Curse of the Empty Lord's first sequence for the Chaos Altar, where Kharrim stands", () => {

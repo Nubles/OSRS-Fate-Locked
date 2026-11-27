@@ -42,7 +42,7 @@ describe('reviewed skill-reference facts', () => {
   it('names the Brimhaven level-40 obstacles and zenyte products accurately', () => {
     expect(SKILL_UNLOCK_DATA.Agility[4]).toContain('Lvl 40: Brimhaven Agility Arena (High Obstacles)');
     expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 92: Zenyte Necklace (Anguish)');
-    expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 98: Zenyte Amulet (Torture)');
+    expect(SKILL_UNLOCK_DATA.Crafting[10]).toContain('Lvl 98: Craft an Unstrung Zenyte Amulet');
   });
 
   it('keeps the valid neighbors when splitting different thresholds', () => {
@@ -65,7 +65,7 @@ describe('reviewed skill-reference facts', () => {
     expect(rowsFor('Ranged').some(row => row.text.includes("Iban's Staff"))).toBe(false);
     expect(rowsFor('Attack').some(row => row.level === 50 && row.text.includes("Iban's Staff"))).toBe(true);
     expect(rowsFor('Magic').some(row => row.level === 50 && row.text.includes('Iban Blast'))).toBe(true);
-    expect(rowsFor('Fletching').some(row => row.text.includes('Ogre Bows'))).toBe(false);
+    expect(rowsFor('Fletching').some(row => /\bOgre Bows?\b/i.test(row.text) && !/Comp Ogre Bows?/i.test(row.text))).toBe(false);
     expect(rowsFor('Construction').some(row => row.level === 37 && row.text.includes('Spirit Tree'))).toBe(false);
   });
 
@@ -77,10 +77,10 @@ describe('reviewed skill-reference facts', () => {
     }
   });
 
-  it('preserves the earlier cape fix and excludes unresolved audit candidates', () => {
+  it('checks the cape, Slayer equipment and ogre bow distinctions against their Wiki pages', () => {
     expect(SKILL_UNLOCK_DATA.Agility[10]).toContain('Lvl 99: Agility Cape (Graceful substitute; daily energy restore + 1-minute stamina)');
-    expect(SKILL_UNLOCK_DATA.Slayer[4]).toContain('Lvl 35: Wall Beasts, Slayer Helmet');
-    expect(SKILL_UNLOCK_DATA.Fletching[3]).toContain('Lvl 30: Steel Arrows, Composite Bows');
+    expect(SKILL_UNLOCK_DATA.Slayer[4]).toContain('Lvl 35: Slay Wall Beasts');
+    expect(SKILL_UNLOCK_DATA.Fletching[3]).toContain('Lvl 30: Steel Arrows and Comp Ogre Bows (start Zogre Flesh Eaters for the bow)');
     expect(SKILL_UNLOCK_DATA.Thieving[3]).toContain('Lvl 30: The Feud (Blackjack)');
   });
 });
@@ -106,7 +106,7 @@ describe('unlocks added in the 9 November 2026 review', () => {
     ['Herblore', 'Haemostatic Dressing', 56], ['Herblore', 'Super Fishing Potion', 62], ['Herblore', 'Extreme Energy', 66],
     ['Herblore', 'Super Hunter Potion', 67], ['Herblore', 'Armadyl Brew', 89],
     ['Hitpoints', 'Heal +15 HP with Anglerfish', 75], ['Hitpoints', 'Necklace of Rupture', 90],
-    ['Fletching', 'Wasp Darts (The Birds and the Wasps)', 1], ['Fletching', 'Killer Wasp Darts', 15],
+    ['Fletching', 'Make Wasp Darts for Farmer Bea (The Birds and the Wasps)', 1], ['Fletching', 'Killer Wasp Darts', 15],
     ['Hunter', 'Honey Buzzards, Wasps', 1], ['Hunter', 'Killer Wasps', 12], ['Hunter', 'Black Honey Buzzards', 17],
     ['Hunter', 'Pyre Foxes', 57], ['Hunter', 'Letvek', 76], ['Hunter', 'Stymphikes', 82],
     ['Magic', 'Teleport to Boat', 67],
@@ -116,7 +116,7 @@ describe('unlocks added in the 9 November 2026 review', () => {
     ['Ranged', 'Camphor Blowpipe', 45], ['Ranged', 'Ironwood Blowpipe', 55], ['Ranged', 'Dragon Cannon (Sailing 92)', 60],
     ['Ranged', 'Rosewood Blowpipe', 65],
     ['Runecraft', 'Mist Runes', 6], ['Runecraft', 'Aether Runes', 90],
-    ['Slayer', 'Witchwood Icon', 35], ['Slayer', 'Vyrewatch', 38], ['Slayer', 'Master: Mortimer', 70], ['Slayer', 'Venators', 74],
+    ['Slayer', 'Witchwood Icon', 35], ['Slayer', 'Vyrewatch', 38], ['Slayer', 'Mortimer Assignments', 70], ['Slayer', 'Venators', 74],
     ['Smithing', 'Cupronickel Bars', 74],
     ['Woodcutting', 'Bloodwood Trees', 77],
   ] as const)('%s: %s is listed at its Wiki level', (skill, name, level) => {
@@ -133,7 +133,7 @@ describe('unlocks added in the 9 November 2026 review', () => {
   });
 
   it('keeps the black mask on the cave horror row beside the witchwood icon they need', () => {
-    expect(SKILL_UNLOCK_DATA.Slayer[6]).toContain('Lvl 58: Cave Horrors (Witchwood Icon), Black Mask');
+    expect(SKILL_UNLOCK_DATA.Slayer[6]).toContain('Lvl 58: Slay Cave Horrors for a Black Mask (Cabin Fever and a worn Witchwood Icon)');
   });
 
   // The Fractured Archive (20 Oct 2026): read from each skill's level-up table on 22 Nov 2026.
@@ -195,7 +195,7 @@ describe('unlocks added in the 9 November 2026 review', () => {
 describe('unlocks corrected in the 23 November 2026 deep pass', () => {
   it.each([
     ['Agility', 'God Wars Dungeon Access (Little Crack)', 60],
-    ['Construction', 'Crude Furniture', 1],
+    ['Construction', 'Crude Wooden Chair', 1],
     ['Construction', 'Clay Fireplace', 3],
     ['Sailing', 'Remote Island', 45],
     ['Sailing', 'Dock Red Rock (The Red Reef)', 52],
@@ -251,13 +251,13 @@ describe('quest notes added in the 23 November 2026 deep pass', () => {
     ['Smithing', 'Crystal Body (Crafting 74; Song of the Elves)', 74],
     ['Smithing', 'Crystal Tools (Crafting 76; Song of the Elves)', 76],
     ['Smithing', 'Crystal Weapon/Shield (Crafting 78; Song of the Elves)', 78],
-    ['Smithing', 'Crystal Key/Teleport (Crafting 80; Song of the Elves)', 80],
-    ['Smithing', 'Bronze Darts (The Tourist Trap)', 4],
-    ['Smithing', 'Iron Darts (The Tourist Trap)', 19],
-    ['Smithing', 'Steel Darts (The Tourist Trap)', 34],
-    ['Smithing', 'Mithril Darts (The Tourist Trap)', 54],
-    ['Smithing', 'Adamant Darts (The Tourist Trap)', 74],
-    ['Smithing', 'Rune Darts (The Tourist Trap)', 89],
+    ['Smithing', 'Enhanced Crystal Key and Eternal Teleport Crystal (Crafting 80; Song of the Elves)', 80],
+    ['Smithing', 'Bronze Dart Tips (The Tourist Trap)', 4],
+    ['Smithing', 'Iron Dart Tips (The Tourist Trap)', 19],
+    ['Smithing', 'Steel Dart Tips (The Tourist Trap)', 34],
+    ['Smithing', 'Mithril Dart Tips (The Tourist Trap)', 54],
+    ['Smithing', 'Adamant Dart Tips (The Tourist Trap)', 74],
+    ['Smithing', 'Rune Dart Tips (The Tourist Trap)', 89],
     ['Fletching', 'Bronze Brutal Arrows (Zogre Flesh Eaters)', 7],
     ['Fletching', 'Iron Brutal Arrows (Zogre Flesh Eaters)', 18],
     ['Fletching', 'Steel Brutal Arrows (Zogre Flesh Eaters)', 33],
@@ -266,7 +266,7 @@ describe('quest notes added in the 23 November 2026 deep pass', () => {
     ['Fletching', 'Adamant Brutal Arrows (Zogre Flesh Eaters)', 62],
     ['Fletching', 'Rune Brutal Arrows (Zogre Flesh Eaters)', 77],
     ['Sailing', 'Recruit Captain Siad (The Tourist Trap)', 50],
-    ['Sailing', 'Recruit Cabin Boy Jenkins (Dragon Slayer I; The Restless Ghost)', 60],
+    ['Sailing', 'Recruit Cabin Boy Jenkins (Dragon Slayer I, The Restless Ghost and ghostspeak equipment)', 60],
     ['Sailing', 'Recruit Oarswoman Olga (In Aid of the Myreque)', 65],
     ['Sailing', 'Recruit Bosun Zarah (Royal Trouble; Hard Fremennik Diary)', 80],
   ] as const)('%s: %s is listed with its quest at its Wiki level', (skill, name, level) => {

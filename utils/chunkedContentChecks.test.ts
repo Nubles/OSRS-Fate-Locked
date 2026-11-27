@@ -73,6 +73,14 @@ const doableNow = (unlocks: UnlockState) => chunkedQuestRows(unlocks, 'chunked')
   .filter(row => row.bucket === 'DOABLE').map(row => row.id).sort();
 
 describe('Chunked quests count only in their own chunks', () => {
+  it('accepts all eleven treasure sites without a visit to Jorral to start The Enchanted Key', () => {
+    const digs = ['42,56', '40,50', '37,52', '38,53', '47,53', '46,51', '47,49', '49,49', '51,50', '51,52', '49,54'];
+    const checks = createChunkedChecks(chunkContentService);
+    const markers = checks.questChunks('The Enchanted Key')!;
+    expect(markers.length).toBeGreaterThan(0);
+    expect(markers.every(marker => digs.includes(marker.key))).toBe(true);
+    expect(checks.quest(QUEST_DATA['The Enchanted Key'], maxed(digs, { quests: Object.keys(QUEST_DATA) }))?.blockers).toEqual([]);
+  });
   it('a fresh run has only Learning the Ropes ready, in the Journal and the Doable tab alike', () => {
     const unlocks = fresh();
     expect(journalReady(unlocks)).toEqual(['Learning the Ropes']);

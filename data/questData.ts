@@ -46,7 +46,13 @@ export interface QuestData {
   /** Kept separate from official OSRS level requirements and inventory-only items. */
   equipmentRequirements?: QuestEquipmentRequirement[];
   /** A preparation method can be replaced by confirming supplies obtained elsewhere. */
-  preparationRequirements?: Array<{ skill: string; level: number; action: string; alternative: string }>;
+  preparationRequirements?: Array<{
+    skill: string;
+    level: number;
+    action: string;
+    alternative: string;
+    alternateRoute?: QuestRequirementOption;
+  }>;
   combatLevel?: number;
   manualRequirements?: string[];
   questProgress?: QuestProgressRequirement[];
@@ -409,36 +415,34 @@ export const QUEST_DATA: Record<string, QuestData> = {
     kind: 'quest', accessPolicy: 'locations',
     id: 'Mudfoot\'s Big Adventure', name: 'Mudfoot\'s Big Adventure',
     regions: ['Misthalin'],
-    // Released 3 Nov 2026. Starts with Captain Harlan outside the Lumbridge General
-    // Store (the final outlaw is in the graveyard), finds Mudfoot by the cow field
-    // across the River Lum, visits the chicken field south of the windmill and
-    // confronts an outlaw in the H.A.M. hideout.
+    // The walkthrough pins Mudfoot south of the cow field, then three outdoor outlaw fights.
     locations: [
-      { id: 'lumbridge-general-store', label: 'Lumbridge General Store', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 50 }] },
-      { id: 'lumbridge-cow-field', label: 'Cow field across the River Lum', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 51 }] },
+      { id: 'lumbridge-general-store', label: "Lumbridge General Store and Lozar's house", standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 50 }] },
       { id: 'lumbridge-chicken-field', label: 'Chicken field south of the windmill', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 51 }] },
-      { id: 'ham-hideout', label: 'H.A.M. hideout', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 50 }] },
+      { id: 'ham-hideout', label: 'Outside the H.A.M. hideout', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 50 }] },
+      { id: 'lumbridge-graveyard', label: 'Warrior outlaw in Lumbridge Graveyard', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 50, cy: 49 }] },
     ],
     skills: {}, prereqs: [], points: 1,
     difficulty: DropSource.QUEST_NOVICE
   },
   // A members' quest (3 Nov 2026), left here so the order of QUEST_DATA does not move.
   'The Writing\'s on the Wall': {
-    kind: 'quest', accessPolicy: 'locations',
+    kind: 'quest', accessPolicy: 'regions-and-locations',
     id: 'The Writing\'s on the Wall', name: 'The Writing\'s on the Wall',
-    regions: ['Kourend & Kebos'],
+    regions: ['Piscarilius'],
     // Released 3 Nov 2026: starts with Betty at Land's End, then (Wiki rev 15412011) her uncle's
-    // house by the Tithe Farm (27,55), the Port Piscarilius jail and Captain Jensen's house (27,58),
+    // house by the Tithe Farm (27,55), Captain Jensen's body upstairs in Port Piscarilius (1755,3780),
     // the War Tent (23,56) and the commissioner's house with Kyle (22,56) in Shayzien, and the
     // island west of Watson's house (1615,3582, 25,55).
     locations: [
       { id: 'lands-end', label: "Land's End", standardAreas: ["Land's End"], chunkOptions: [{ cx: 23, cy: 53 }] },
       { id: 'bettys-uncles-house', label: "Betty's uncle's house by the Tithe Farm", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 27, cy: 55 }] },
-      { id: 'captain-jensens-house', label: "Captain Jensen's house in Port Piscarilius", standardAreas: ['Piscarilius'], chunkOptions: [{ cx: 27, cy: 58 }] },
+      { id: 'captain-jensens-house', label: "Captain Jensen's house in Port Piscarilius", standardAreas: ['Arceuus'], chunkOptions: [{ cx: 27, cy: 59 }] },
       { id: 'shayzien-war-tent', label: 'War Tent in the Shayzien Encampment', standardAreas: ['Shayzien'], chunkOptions: [{ cx: 23, cy: 56 }] },
       { id: 'shayzien-commissioners-house', label: "The commissioner's house in Shayzien", standardAreas: ['Shayzien'], chunkOptions: [{ cx: 22, cy: 56 }] },
       { id: 'river-hos-island', label: "Island west of Watson's house", standardAreas: ['Hosidius'], chunkOptions: [{ cx: 25, cy: 55 }] },
     ],
+    manualRequirements: ['Can reach the Port Piscarilius jail cell and return to inspect the writing'],
     skills: { 'Agility': 22, 'Thieving': 20 }, prereqs: [], points: 1, series: 'Twisted Tales',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -1190,28 +1194,30 @@ export const QUEST_DATA: Record<string, QuestData> = {
       // The Jaldraocht Pyramid (50,45) belongs to Bandit Camp; it is reached on foot from the Bandit Camp (49,46).
       { id: 'jaldraocht-pyramid', label: 'Jaldraocht Pyramid', standardAreas: ['Bandit Camp'], chunkOptions: [{ cx: 50, cy: 45 }] },
     ],
-    skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50, 'Smithing': 30 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
-    // Items checked on the Wiki: Spice; 20-50+ lockpicks; Facemask, ring of visibility, ice gloves, spiked boots; 12 magic logs; 6 steel bars; 6 molten glass (23 Nov).
+    skills: { 'Thieving': 53, 'Firemaking': 50, 'Slayer': 10, 'Magic': 50 }, prereqs: ['The Dig Site', 'Temple of Ikov', 'The Tourist Trap', 'Troll Stronghold', 'Priest in Peril', 'Waterfall Quest'], points: 3, series: 'Mahjarrat',
+    // Items checked on the Wiki: Spice; 20-50+ lockpicks; Facemask, ring of visibility, spiked boots; 12 magic logs; 6 steel bars; 6 molten glass (23 Nov).
     // The only General Store with spice is Durrik's Goods in the Deepfin Mine (Sailing 67, 23 Nov).
     preparationRequirements: [{
       skill: 'Crafting', level: 1, action: 'make molten glass',
       alternative: 'molten glass from the Thermonuclear smoke devil, the Phantom Muspah or the Monumental chest',
+    }, {
+      skill: 'Smithing', level: 30, action: 'smelt six steel bars',
+      alternative: 'six steel bars from a permitted source',
+    }, {
+      skill: 'Woodcutting', level: 75, action: 'cut twelve magic logs',
+      alternateRoute: { skills: { Firemaking: 50, Woodcutting: 50 }, regions: ['Wintertodt Camp'] },
+      alternative: 'twelve magic logs from a permitted source',
     }],
     equipmentRequirements: [
       { slot: 'Head', tier: 1, reason: 'Wear a facemask/gas mask/slayer helmet in the Smoke Dungeon' },
       { slot: 'Ring', tier: 1, reason: 'Wear the ring of visibility for the Damis fight' },
-      { slot: 'Gloves', tier: 1, reason: 'Wear ice gloves to fight Fareed' },
       { slot: 'Boots', tier: 1, reason: 'Wear spiked boots to climb the ice ledge' },
     ],
     oneOf: [
-      { skills: { 'Woodcutting': 75 }, merchants: ['Spice Shops'] },
-      { skills: { 'Woodcutting': 75 }, merchants: ['Food Shops'] },
-      { skills: { 'Woodcutting': 75, 'Sailing': 67 }, merchants: ['General Stores'], regions: ['Deepfin Point'], quests: ['Pandemonium'] },
-      { skills: { 'Woodcutting': 75, 'Thieving': 65 }, anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
-      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['Spice Shops'], regions: ['Wintertodt Camp'] },
-      { skills: { 'Firemaking': 50, 'Woodcutting': 50 }, merchants: ['Food Shops'], regions: ['Wintertodt Camp'] },
-      { skills: { 'Firemaking': 50, 'Woodcutting': 50, 'Sailing': 67 }, merchants: ['General Stores'], regions: ['Wintertodt Camp', 'Deepfin Point'], quests: ['Pandemonium'] },
-      { skills: { 'Firemaking': 50, 'Woodcutting': 50, 'Thieving': 65 }, regions: ['Wintertodt Camp'], anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
+      { merchants: ['Spice Shops'] },
+      { merchants: ['Food Shops'] },
+      { skills: { Sailing: 67 }, merchants: ['General Stores'], regions: ['Deepfin Point'], quests: ['Pandemonium'] },
+      { skills: { Thieving: 65 }, anyOfRegions: ['East Ardougne', 'Civitas illa Fortis', 'Port Roberts', 'Prifddinas'] },
     ],
     difficulty: DropSource.QUEST_MASTER,
     // Alternatives rechecked on the Wiki (13 Oct): lockpicks are pickpocketed from bandits (53 Thieving); spice also from a spice stall (65 Thieving); Wintertodt gives magic logs at 50 Woodcutting.
@@ -2782,8 +2788,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
     id: 'A New Leaf', name: 'A New Leaf',
     regions: ['Kourend & Kebos', 'Asgarnia', 'Kandarin', 'Morytania', 'Kharidian Desert'],
     // Released 18 Nov 2026. Starts by eating a cabbage from the field in south
-    // Hosidius (the Wiki gives no start map; the chunk is the Cabbage page's
-    // Hosidius patch), then works for Dishop Dennis by the Farming Guild: stew
+    // Hosidius (1747,3551), then works for Dishop Dennis by the Farming Guild: stew
     // for Jane, Mary, a sergeant and Konar, a potion from Allanna's book, and a
     // sprout spy on five ranges around the world.
     locations: [
@@ -2813,10 +2818,11 @@ export const QUEST_DATA: Record<string, QuestData> = {
     // wish-list bones will do; the nearest (armoured zombies round the
     // mountain, angry giant rats in Tolna's rift) sit behind the required
     // Defender of Varrock and A Soul's Bane. The death loop and the asylum
-    // under his house are reached through him.
+    // are reached through him.
     locations: [
       { id: 'odd-old-man-house', label: "Odd Old Man's house in Silvarea", standardAreas: ['Silvarea'], chunkOptions: [{ cx: 52, cy: 54 }] },
     ],
+    manualRequirements: ['Can obtain two different bones on the Odd Old Man’s wish list from permitted sources'],
     skills: { 'Slayer': 58 }, prereqs: ['Rag and Bone Man II', 'Dragon Slayer I', 'The Great Brain Robbery', 'Defender of Varrock', 'Tower of Life', "A Soul's Bane"], points: 3, series: 'Rag and Bone Man',
     // Slots checked on the Wiki (22 Nov): the earmuffs are on a desk in the asylum.
     equipmentRequirements: [
@@ -2872,9 +2878,15 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
   'Bear Your Soul': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'regions-and-locations',
     id: 'Bear Your Soul', name: 'Bear Your Soul',
     regions: ['Arceuus', 'Taverley'],
+    locations: [
+      { id: 'arceuus-library', label: 'Arceuus Library', standardAreas: ['Arceuus'], chunkOptions: [{ cx: 25, cy: 59 }] },
+      { id: 'aretha-soul-altar', label: 'Aretha near the Soul Altar', standardAreas: ['Arceuus'], chunkOptions: [{ cx: 28, cy: 60 }] },
+      { id: 'arceuus-church', label: 'Arceuus church crypt', standardAreas: ['Arceuus'], chunkOptions: [{ cx: 26, cy: 59 }] },
+    ],
+    manualRequirements: ["Can reach the Key Master in Cerberus' Lair using a dusty key, an Agility shortcut or a key master teleport"],
     skills: {}, prereqs: [], points: 0, series: 'Great Kourend',
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -2916,10 +2928,23 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_NOVICE
   },
   'The Enchanted Key': {
-    kind: 'miniquest', accessPolicy: 'regions',
+    kind: 'miniquest', accessPolicy: 'locations',
     id: 'The Enchanted Key', name: 'The Enchanted Key',
     // The areas of the Wiki's 11 treasure sites (rev 15336907); none is at the Observatory.
     regions: ['Rellekka', 'Tree Gnome Stronghold', 'East Ardougne', 'Arandar', 'Port Sarim', 'Falador', 'Lumbridge', 'Varrock', 'Al Kharid'],
+    locations: [
+      { id: 'rellekka-dig', label: 'South of Rellekka', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 56 }] },
+      { id: 'ardougne-dig', label: 'South of Ardougne', standardAreas: ['East Ardougne'], chunkOptions: [{ cx: 40, cy: 50 }] },
+      { id: 'arandar-dig', label: 'South of the Gnome Stronghold', standardAreas: ['Arandar'], chunkOptions: [{ cx: 37, cy: 52 }] },
+      { id: 'stronghold-dig', label: 'Inside the Gnome Stronghold', standardAreas: ['Tree Gnome Stronghold'], chunkOptions: [{ cx: 38, cy: 53 }] },
+      { id: 'body-altar-dig', label: 'Near the Body Altar', standardAreas: ['Falador'], chunkOptions: [{ cx: 47, cy: 53 }] },
+      { id: 'falador-dig', label: 'South of Falador', standardAreas: ['Falador'], chunkOptions: [{ cx: 46, cy: 51 }] },
+      { id: 'mudskipper-dig', label: 'Mudskipper Point', standardAreas: ['Port Sarim'], chunkOptions: [{ cx: 47, cy: 49 }] },
+      { id: 'swamp-dig', label: 'Lumbridge Swamp', standardAreas: ['Lumbridge'], chunkOptions: [{ cx: 49, cy: 49 }] },
+      { id: 'al-kharid-dig', label: 'Al Kharid', standardAreas: ['Al Kharid'], chunkOptions: [{ cx: 51, cy: 50 }] },
+      { id: 'varrock-mine-dig', label: 'South-east Varrock mine', standardAreas: ['Varrock'], chunkOptions: [{ cx: 51, cy: 52 }] },
+      { id: 'ge-dig', label: 'Grand Exchange', standardAreas: ['Varrock'], chunkOptions: [{ cx: 49, cy: 54 }] },
+    ],
     skills: {}, prereqs: ['Making History'], points: 0,
     difficulty: DropSource.QUEST_INTERMEDIATE
   },
@@ -3091,6 +3116,7 @@ export const QUEST_DATA: Record<string, QuestData> = {
       id: 'lumbridge-swamp-caves', label: 'Lumbridge Swamp Caves', standardAreas: ['Lumbridge'],
       chunkOptions: [{ cx: 49, cy: 49 }, { cx: 50, cy: 50 }]
     }],
+    manualRequirements: ['Can reach the Archive entrance by light creature with a lit sapphire lantern or by a Guthixian temple teleport'],
     skills: {}, prereqs: ['While Guthix Sleeps'], points: 0,
     difficulty: DropSource.QUEST_GRANDMASTER
   }
