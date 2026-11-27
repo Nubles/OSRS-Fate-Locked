@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "reviewedAt": "2026-11-22",
+  "reviewedAt": "2026-11-27",
   "chunkSourceCommits": [
     "ba2fcebf8b26c84c74f8d9ab328a0ede802be926",
     "a9a5c74760eb76dbe39f90d2b04f023fc1de3746",
@@ -8421,6 +8421,35 @@
           "No additional unavoidable manual or alternative completion gate was identified beyond the recorded runtime fields."
         ]
       }
+    },
+    {
+      "id": "The Graveyard",
+      "kind": "quest",
+      "status": "unresolved",
+      "reviewedAt": "2026-11-27",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Graveyard&oldid=15417666",
+        "revision": 15417666,
+        "revisionTimestamp": "2026-11-27T17:27:20Z"
+      },
+      "chunkSourceCommit": "629e9fee6183773e8df26d7e4bc5db792290ce0b",
+      "accessPolicy": "locations",
+      "requirementFingerprint": "{\"kind\":\"quest\",\"accessPolicy\":\"locations\",\"regions\":[\"Rellekka\"],\"locations\":[{\"chunkOptions\":[{\"cx\":42,\"cy\":58}],\"id\":\"olafs-camp\",\"label\":\"Olaf Hradson's camp\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":57}],\"id\":\"rellekka\",\"label\":\"Rellekka longhall and harbour\",\"standardAreas\":[\"Rellekka\"]},{\"chunkOptions\":[{\"cx\":41,\"cy\":56}],\"id\":\"fossegrimen\",\"label\":\"Fossegrimen's lake\",\"standardAreas\":[\"Rellekka\"]}],\"skills\":{\"Agility\":65,\"Fletching\":54,\"Sailing\":65,\"Woodcutting\":56},\"prereqs\":[\"Olaf's Quest\",\"The Fremennik Exiles\",\"Pandemonium\"],\"manualRequirements\":[\"Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins\",\"Can make the seven binding stakes with 7 arctic pine logs, 21 soul runes and a usable runic altar\"],\"points\":3}",
+      "chunkEvidence": [],
+      "notes": {
+        "items": [
+          "Olaf's parchment or a spade to retrieve it, a knife, seven arctic pine logs, 21 soul runes and a hammer or chisel. An axe and spyglass are available on the route. Infuse the stakes at a usable runic altar; the Kourend Blood and Soul altars and Ourania do not work."
+        ],
+        "travel": [
+          "Olaf starts the quest at 2722,3727 (42,58). Volf and Brundt are in Rellekka (41,57), and Fossegrimen is in 41,56. Sail to Weissmere by ice-ready boat or pay Volf 5,000 coins. Plan a way back to Rellekka after the fight."
+        ],
+        "instances": [
+          "The quest expedition reaches the shipwrecks, the echoes and Ræun from the Graveyard mooring."
+        ],
+        "partialCompletion": []
+      },
+      "discrepancy": "The Graveyard uses the locations policy for Olaf Hradson's camp and the Rellekka stops. The November release has no pinned Chunk Picker first/step activity chunk in the October export. The island mooring therefore uses the manual check: Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins.",
+      "conservativeReason": "The Graveyard locations policy retains Olaf Hradson's camp, the other two land stops, the skills and prerequisites including Pandemonium, and confirmations for the voyage and the altar to prevent premature completion/key-roll eligibility."
     },
     {
       "id": "The Great Brain Robbery",

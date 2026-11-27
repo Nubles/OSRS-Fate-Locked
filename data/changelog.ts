@@ -37,6 +37,19 @@ export interface ChangelogRelease {
  */
 export const CHANGELOG_RELEASES = [
   {
+    id: '2026-11-27-the-graveyard',
+    title: 'The Graveyard',
+    date: '2026-11-27',
+    sections: {
+      added: [
+        'The Graveyard, a Master quest worth 3 quest points, starts at Olaf’s camp east of Rellekka. Its Prison of Ræun course is in the Agility guide.',
+      ],
+      fixed: [
+        'Quest Cape and Discord progress count Recipe for Disaster once after all ten parts. The full list is now 192 quests and 357 quest points.',
+      ],
+    },
+  },
+  {
     id: '2026-11-27-gated-quest-items',
     title: 'Quest items behind locked doors',
     date: '2026-11-27',

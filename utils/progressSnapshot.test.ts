@@ -38,7 +38,7 @@ describe('buildProgressSnapshot', () => {
       modeId: 'vanilla',
       account: 'Nubles',
       startedAt: 1000,
-      quests: { done: 1, total: QUEST_CAPE_QUEST_IDS.length },
+      quests: { done: 1, total: 192 },
       diaryTasks: { done: 1, total: ALL_DIARY_TASKS.length },
       ca: { points: 0, tier: null },
     });
@@ -52,10 +52,16 @@ describe('buildProgressSnapshot', () => {
     const miniquests = Object.values(QUEST_DATA).filter(quest => quest.kind === 'miniquest').map(quest => quest.id);
     expect(miniquests.length).toBeGreaterThan(0);
     const allQuests = buildProgressSnapshot({ unlocks: run({ quests: [...QUEST_CAPE_QUEST_IDS] }), history: [], gameModeId: 'vanilla' });
-    expect(allQuests.quests).toEqual({ done: QUEST_CAPE_QUEST_IDS.length, total: QUEST_CAPE_QUEST_IDS.length });
+    expect(allQuests.quests).toEqual({ done: 192, total: 192 });
     const onlyMiniquests = buildProgressSnapshot({ unlocks: run({ quests: [...miniquests, miniquests[0], 'Not a quest'] }), history: [], gameModeId: 'vanilla' });
-    expect(onlyMiniquests.quests).toEqual({ done: 0, total: QUEST_CAPE_QUEST_IDS.length });
+    expect(onlyMiniquests.quests).toEqual({ done: 0, total: 192 });
     expect(validProgressSnapshot(allQuests)).not.toBeNull();
+  });
+
+  it.each(['The Graveyard', 'RFD: Dwarf', 'RFD: Finale'])('needs %s for the last official quest', missing => {
+    const quests = QUEST_CAPE_QUEST_IDS.filter(id => id !== missing);
+    const snapshot = buildProgressSnapshot({ unlocks: run({ quests: [...quests, quests[0]] }), history: [] });
+    expect(snapshot.quests).toEqual({ done: 191, total: 192 });
   });
 
   it('lists the five newest unlocks, newest first, with the table players see', () => {

@@ -120,6 +120,7 @@ export const SKILL_UNLOCK_DATA: Record<string, Record<number, string[]>> = {
       'Lvl 62: Mount Karuulm Upper Rocks',
       'Lvl 63: Darkmeyer Wall & Taverley Railing',
       'Lvl 65: Revenant Caves Easy Pillar',
+      'Lvl 65: Prison of Ræun Agility Course (The Graveyard)',
       'Lvl 66: Taverley Rocks & Lumbridge Swamp Stone',
       'Lvl 68: Catherby Rocks (No Grapple)',
       'Lvl 70: Pollnivneach Rooftop & Dorgesh-Kaan Courses',

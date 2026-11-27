@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-11-22",
+  "reviewedAt": "2026-11-27",
   "listSource": {
     "url": "https://oldschool.runescape.wiki/w/index.php?title=Quests%2FList&oldid=15366661",
     "revision": 15366661,
     "revisionTimestamp": "2026-10-06T09:31:48Z"
   },
   "parsedCounts": {
-    "quests": 201,
+    "quests": 202,
     "miniquests": 19
   },
   "drift": {
     "runtimeEntriesMissingFromLiveList": [],
     "liveOnlyEntries": [],
-    "note": "The live official rows reconcile with the approved normalized 200/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
+    "note": "The live official rows reconcile with the approved normalized 201/19 baseline (Recipe for Disaster remains expanded into its existing parent-step IDs)."
   },
   "entries": [
     {
@@ -1864,6 +1864,16 @@
         "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Grand_Tree&oldid=15225321",
         "revision": 15225321,
         "revisionTimestamp": "2026-06-04T17:08:14Z"
+      }
+    },
+    {
+      "id": "The Graveyard",
+      "kind": "quest",
+      "pageTitle": "The Graveyard",
+      "source": {
+        "url": "https://oldschool.runescape.wiki/w/index.php?title=The_Graveyard&oldid=15417666",
+        "revision": 15417666,
+        "revisionTimestamp": "2026-11-27T17:27:20Z"
       }
     },
     {

@@ -112,8 +112,22 @@ describe('18 November 2026 quests (OSRS Wiki, 22 Nov revisions)', () => {
     expect(QUEST_DATA['Rag and Bone Man III'].equipmentRequirements?.map(requirement => requirement.slot)).toEqual(['Head', 'Weapon']);
   });
 
-  it('adds up to the Wiki total of 354 quest points', () => {
-    expect(Object.values(QUEST_DATA).reduce((total, quest) => total + quest.points, 0)).toBe(354);
+});
+
+describe('25 November 2026 quest update', () => {
+  it('tracks The Graveyard with its required levels, quests and starting chunk', () => {
+    const quest = QUEST_DATA['The Graveyard'];
+    expect(quest).toMatchObject({
+      kind: 'quest', points: 3, difficulty: DropSource.QUEST_MASTER, series: 'Fremennik',
+      skills: { Sailing: 65, Agility: 65, Woodcutting: 56, Fletching: 54 },
+      prereqs: ["Olaf's Quest", 'The Fremennik Exiles', 'Pandemonium'],
+    });
+    expect(quest.locations?.[0].chunkOptions).toEqual([{ cx: 42, cy: 58 }]);
+    expect(quest.combatLevel).toBeUndefined();
+  });
+
+  it('adds up to the Wiki total of 357 quest points', () => {
+    expect(Object.values(QUEST_DATA).reduce((total, quest) => total + quest.points, 0)).toBe(357);
   });
 });
 

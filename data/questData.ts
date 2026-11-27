@@ -2825,6 +2825,25 @@ export const QUEST_DATA: Record<string, QuestData> = {
     difficulty: DropSource.QUEST_EXPERIENCED
   },
 
+  'The Graveyard': {
+    kind: 'quest', accessPolicy: 'locations',
+    id: 'The Graveyard', name: 'The Graveyard', series: 'Fremennik',
+    regions: ['Rellekka'],
+    locations: [
+      { id: 'olafs-camp', label: "Olaf Hradson's camp", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 42, cy: 58 }] },
+      { id: 'rellekka', label: 'Rellekka longhall and harbour', standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 57 }] },
+      { id: 'fossegrimen', label: "Fossegrimen's lake", standardAreas: ['Rellekka'], chunkOptions: [{ cx: 41, cy: 56 }] },
+    ],
+    skills: { Sailing: 65, Agility: 65, Woodcutting: 56, Fletching: 54 },
+    prereqs: ["Olaf's Quest", 'The Fremennik Exiles', 'Pandemonium'],
+    // The pinned map predates the new mooring. Volf's boat is available even without an eternal brazier.
+    manualRequirements: [
+      "Can reach the Graveyard in Weissmere on your own ice-ready boat or with Volf for 5,000 coins",
+      'Can make the seven binding stakes with 7 arctic pine logs, 21 soul runes and a usable runic altar',
+    ],
+    points: 3, difficulty: DropSource.QUEST_MASTER,
+  },
+
   // --- Miniquests ---
   'Alfred Grimhand\'s Barcrawl': {
     kind: 'miniquest', accessPolicy: 'locations',
@@ -3086,3 +3105,14 @@ export const hasCompletedQuestCapeRequirements = (
   const completed = new Set(completedQuestIds);
   return QUEST_CAPE_QUEST_IDS.every(id => completed.has(id));
 };
+
+// The journal tracks each Recipe for Disaster stage. The game counts all ten together as one quest.
+const recipeStages = QUEST_CAPE_QUEST_IDS.filter(id => QUEST_DATA[id].series === 'Recipe for Disaster');
+const standaloneQuestIds = QUEST_CAPE_QUEST_IDS.filter(id => QUEST_DATA[id].series !== 'Recipe for Disaster');
+export const OFFICIAL_QUEST_COUNT = standaloneQuestIds.length + 1;
+
+export function completedOfficialQuestCount(completedIds: readonly string[]): number {
+  const completed = new Set(completedIds);
+  return standaloneQuestIds.filter(id => completed.has(id)).length
+    + Number(recipeStages.every(id => completed.has(id)));
+}
